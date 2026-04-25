@@ -22,8 +22,9 @@ jp-<mod名>/ ├── fxmanifest.lua ├── config.lua ├── locales/ �
 4. FiveMクライアントから localhost:30120 で接続して確認
 5. F8でエラーログを確認、問題があればCursorに戻って修正
 
-## テストサーバーのパス
-C:\FiveMServer\server-data\resources\[jp-mods]\
+## パス情報
+- 開発フォルダ: H:\CURSOR\Dev\fivem-mods\
+- テストサーバー: C:\FiveMServer\server-data\resources\[jp-mods]\
 
 ## イベント命名規則
 すべてのイベント名は `jp-<mod名>:アクション名` とする。
