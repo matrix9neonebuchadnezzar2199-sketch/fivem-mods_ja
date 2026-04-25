@@ -103,15 +103,6 @@ MIT License
 ---
 
 ## 9. スクショ付きガイド（受注UI / マップ / 報告）
-
-このREADMEは、次の3枚を追加するとより分かりやすくなります。
-
-- `docs/screenshots/order-ui.png`（受注UI画面）
-- `docs/screenshots/map-route.png`（マップとナビ）
-- `docs/screenshots/report-flow.png`（報告手順）
-
-> 画像ファイルを上記パスに置いたら、そのままREADME上に表示されます。
-
 ### 9-1. 受注UI
 
 受注NPCに `E` で話しかけると、このメニューからコースを選びます。
