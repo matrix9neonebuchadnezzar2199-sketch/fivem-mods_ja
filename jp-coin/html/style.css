@@ -1,0 +1,123 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+    pointer-events: none;
+    font-family: "Segoe UI", "Meiryo", sans-serif;
+}
+
+#coin-container {
+    display: none;
+    position: fixed;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 30px;
+    background: rgba(0, 0, 0, 0.25);
+    perspective: 800px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+#coin-container.visible {
+    display: flex;
+    opacity: 1;
+}
+
+#coin-container.hiding {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+#coin {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    transform-style: preserve-3d;
+}
+
+#coin.tossing {
+    animation-name: coinToss;
+    animation-duration: var(--animation-duration, 2000ms);
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation-fill-mode: forwards;
+}
+
+.coin-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid #555;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.coin-heads {
+    background: radial-gradient(circle at 35% 35%, #e8e8e8, #a0a0a0, #707070);
+}
+
+.coin-tails {
+    background: radial-gradient(circle at 35% 35%, #d0d0d0, #909090, #606060);
+    transform: rotateX(180deg);
+}
+
+.skull {
+    font-size: 60px;
+    color: #2a2a2a;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.tail-inner-ring {
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+#result-text {
+    opacity: 0;
+    font-size: 36px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    transition: opacity 0.3s ease;
+}
+
+#result-text.show {
+    opacity: 1;
+}
+
+@keyframes coinToss {
+    0% {
+        transform: translateY(0) rotateX(0deg) scale(1);
+    }
+    15% {
+        transform: translateY(-250px) rotateX(540deg) scale(1.1);
+    }
+    30% {
+        transform: translateY(-350px) rotateX(1080deg) scale(1.15);
+    }
+    50% {
+        transform: translateY(-200px) rotateX(1620deg) scale(1.1);
+    }
+    70% {
+        transform: translateY(-50px) rotateX(1980deg) scale(1.05);
+    }
+    85% {
+        transform: translateY(20px) rotateX(2100deg) scale(0.98);
+    }
+    100% {
+        transform: translateY(0) rotateX(var(--final-rotation, 2160deg)) scale(1);
+    }
+}
