@@ -1,0 +1,57 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  font-family: "Segoe UI", "Meiryo", "Yu Gothic", sans-serif;
+  overflow: hidden; cursor: default; user-select: none;
+}
+/* 既定は非表示。Lua から type: "open" を受け取るまで表示しない */
+#nuiRoot.nui-hidden { display: none; }
+#nuiRoot.nui-visible { display: block; }
+#nuiRoot {
+  position: fixed; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  pointer-events: auto;
+}
+.dim {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 0;
+}
+.phone {
+  position: fixed; left: 50%; top: 50%;
+  width: 640px; min-height: 1000px; margin-left: -320px; margin-top: -520px;
+  z-index: 1;
+  background: #1a1a2e;
+  color: #eee; border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  padding: 20px; display: flex; flex-direction: column;
+  border: 1px solid #2a2a4a;
+}
+.phone header h1 {
+  margin: 0 0 10px; font-size: 2.1rem; font-weight: 700; color: #e94560;
+  text-align: center;
+}
+.sub { font-size: 1.2rem; color: #bbb; line-height: 1.5; text-align: center; margin: 0 0 18px; }
+.panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.is-hidden { display: none !important; }
+.courseList { display: flex; flex-direction: column; gap: 8px; }
+.btn {
+  background: #e94560; color: #fff; border: 0; border-radius: 10px; padding: 10px 12px;
+  font-size: 1.35rem; cursor: pointer; font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 0 #7c2030;
+}
+.btn small { display: block; font-weight: 400; color: #ffd7dd; font-size: 1.0rem; margin-top: 6px; }
+.btn:hover { background: #ff5c77; }
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7c2030; }
+.btn.ghost { background: #2c2c44; color: #ccc; box-shadow: 0 4px 0 #101020; }
+.btn.ghost:hover { background: #343450; }
+.btn.subbtn { background: #3b3b55; box-shadow: 0 4px 0 #1a1a2e; }
+.btn.danger { background: #4a1e28; box-shadow: 0 4px 0 #1a0a0e; }
+footer { margin-top: 12px; }
+.progressText { text-align: center; margin: 0; font-size: 1.35rem; }
+.barOuter {
+  width: 100%; height: 10px; background: #0f0f1a; border-radius: 8px; overflow: hidden; margin: 8px 0 4px;
+}
+.barIn { height: 100%; width: 0; background: linear-gradient(90deg, #e94560, #ff7a8c); transition: width 0.2s; }
+.earn { text-align: center; color: #9e9; margin: 0 0 8px; font-size: 1.25rem; }
+.row2 { display: flex; flex-direction: column; gap: 6px; }

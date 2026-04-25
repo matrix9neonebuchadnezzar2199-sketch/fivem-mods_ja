@@ -1,7 +1,7 @@
 @echo off
 SET MOD_NAME=%1
 SET DEV_DIR=H:\CURSOR\Dev\fivem-mods\%MOD_NAME%
-SET SERVER_DIR=C:\FiveMServer\server-data\resources\[jp-mods]\%MOD_NAME%
+SET SERVER_DIR=H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\[jp-mods]\%MOD_NAME%
 
 IF "%MOD_NAME%"=="" (
     echo エラー: MOD名を指定してください

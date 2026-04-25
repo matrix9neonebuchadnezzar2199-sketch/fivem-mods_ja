@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>クイックデリバリー</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nuiRoot" class="nui-hidden">
+  <div class="dim" id="appDim"></div>
+  <div class="phone" id="appRoot" role="dialog" aria-label="配達アプリ">
+    <header>
+      <h1 id="screenTitle">クイックデリバリー</h1>
+    </header>
+    <p class="sub" id="subText">荷物を届けて報酬をもらおう！ コースを選んでスタート！</p>
+
+    <div id="idlePanel" class="panel">
+      <div class="courseList">
+        <button type="button" class="btn" data-c="5" id="btn5">5個コース<small>（完遂目安: ボーナス 付）</small></button>
+        <button type="button" class="btn" data-c="10" id="btn10">10個コース<small>（完遂目安: ボーナス 付）</small></button>
+        <button type="button" class="btn" data-c="20" id="btn20">20個コース<small>（完遂目安: ボーナス 付）</small></button>
+      </div>
+    </div>
+
+    <div id="workPanel" class="panel is-hidden" aria-hidden="true">
+      <p class="progressText" id="workProgress">配達状況: 0 / 0 件完了</p>
+      <div class="barOuter"><div class="barIn" id="workBar" style="width:0%"></div></div>
+      <p class="earn" id="earnText">今回の累計: $0</p>
+      <div class="row2">
+        <button type="button" class="btn subbtn" id="btnRestart">最初からやり直す</button>
+        <button type="button" class="btn danger" id="btnAbort">作業を中止する</button>
+      </div>
+    </div>
+
+    <footer>
+      <button type="button" class="btn ghost" id="btnClose">閉じる</button>
+    </footer>
+  </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
