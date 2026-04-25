@@ -37,6 +37,16 @@ ensure jp-card
 チャットで `/card` と入力するだけです。  
 クールダウン中に再実行すると「少し待ってください」が表示されます。
 
+## スクリーンショット
+
+### 1. `/card` コマンド入力時
+
+![card-command](./docs/screenshots/card-command.png)
+
+### 2. カード表示演出
+
+![card-display](./docs/screenshots/card-display.png)
+
 ## 活用例
 
 - ちんちろ代わりの簡易ランダム判定
