@@ -49,6 +49,20 @@ add_principal identifier.fivem:18943003 group.police
 - 市民: チャットで `/110` と入力して通報
 - 警察: 右上通知を確認し、マップの赤点滅ポイントへ向かう
 
+## スクリーンショット
+
+### 1. `/110` の入力場面
+
+![call-110-command](./docs/screenshots/call-110-command.png)
+
+### 2. 通知の表示
+
+![radio-notification](./docs/screenshots/radio-notification.png)
+
+### 3. MAP上での表示
+
+![map-blip-110](./docs/screenshots/map-blip-110.png)
+
 ## トラブルシューティング
 
 - 通報しても通知が出ない  

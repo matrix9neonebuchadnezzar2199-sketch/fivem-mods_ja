@@ -16,20 +16,20 @@ body {
 #radio-container {
     display: none;
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 40px;
+    right: 40px;
     z-index: 9999;
     pointer-events: none;
 }
 
 #radio-notification {
-    width: 320px;
+    width: 640px;
     background: rgba(10, 10, 10, 0.85);
-    border-left: 4px solid #cc0000;
-    border-radius: 4px;
-    padding: 12px 16px;
+    border-left: 8px solid #cc0000;
+    border-radius: 8px;
+    padding: 24px 32px;
     display: flex;
-    gap: 12px;
+    gap: 24px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
     transform: translateX(100%);
     opacity: 0;
@@ -46,15 +46,15 @@ body {
 .radio-indicator {
     display: flex;
     align-items: flex-start;
-    padding-top: 4px;
+    padding-top: 8px;
 }
 
 .radio-lamp {
-    width: 12px;
-    height: 12px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: #cc0000;
-    box-shadow: 0 0 8px #ff0000, 0 0 16px #ff0000;
+    box-shadow: 0 0 16px #ff0000, 0 0 32px #ff0000;
     animation: lampBlink 0.8s infinite alternate;
 }
 
@@ -63,19 +63,19 @@ body {
 }
 
 .radio-title {
-    font-size: 16px;
+    font-size: 32px;
     font-weight: bold;
     color: #ff3333;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     letter-spacing: 2px;
 }
 
 .radio-body {
-    font-size: 13px;
+    font-size: 26px;
     color: #cccccc;
     white-space: nowrap;
     overflow: hidden;
-    border-right: 2px solid #cc0000;
+    border-right: 4px solid #cc0000;
     width: 0;
 }
 
