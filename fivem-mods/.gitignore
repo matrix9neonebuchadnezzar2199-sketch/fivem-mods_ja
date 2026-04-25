@@ -1,0 +1,14 @@
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# エディタ
+*.swp
+*~
+.vscode/
+.idea/
+
+# 一時・ログ
+*.log
+nul

@@ -1,0 +1,454 @@
+十分な情報が集まりました。ここから、Cursor用の完全な開発指示書として設計します。
+
+---
+
+## FiveM MOD開発 ── Cursor用 完全開発ガイド
+
+以下のすべてを、そのままCursorプロジェクトにコピーして使える形で記述します。
+
+---
+
+### PHASE 0：全体像（開発の流れ）
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  あなたのPC上に2つのフォルダが存在する状態を作る         │
+│                                                         │
+│  ① 開発フォルダ（Cursorで編集）                         │
+│     C:\Dev\fivem-mods\                                  │
+│     └─ Cursorで開き、ここでコードを書く                 │
+│                                                         │
+│  ② テストサーバー（FXServer + txAdmin）                 │
+│     C:\FiveMServer\                                     │
+│     └─ server-data\resources\[jp-mods]\  ← ここにMODを置く│
+│                                                         │
+│  流れ:                                                  │
+│  Cursorで書く → ビルドスクリプトでコピー → サーバーで    │
+│  refresh & restart → FiveMクライアントで動作確認        │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### PHASE 1：環境構築
+
+#### 1-1. テスト用ローカルサーバーを立てる
+
+FiveMの公式手順に従い、自分のPC上にローカルサーバーを構築します。これはMODの動作確認専用です。
+
+```
+手順:
+1. https://runtime.fivem.net/artifacts/fivem/build_server_windows/master/
+   から「Latest recommended」をダウンロード
+
+2. C:\FiveMServer\ に展開
+
+3. FXServer.exe を実行 → ブラウザでtxAdminが開く
+
+4. Cfx.reアカウントでログイン（無料）
+   https://portal.cfx.re/ でサーバーキーを発行
+
+5. テンプレートは「FiveM Basic Server (CFX Default)」を選択
+
+6. 起動後、FiveMクライアントから「localhost」で接続できることを確認
+```
+
+完了すると以下のフォルダ構造になります:
+
+```
+C:\FiveMServer\
+├── FXServer.exe
+├── server-data\
+│   ├── server.cfg
+│   └── resources\
+│       ├── [cfx-default]\ ... （標準リソース）
+│       └── [jp-mods]\         ← ★ ここにあなたのMODを置く
+```
+
+`resources` フォルダの中に `[jp-mods]` というカテゴリフォルダを手動で作成してください。角括弧`[]`で囲んだフォルダはFiveMが「カテゴリ」として認識し、中に入れた個々のリソースを独立して管理できます。
+
+#### 1-2. server.cfg に追記
+
+`C:\FiveMServer\server-data\server.cfg` の末尾に以下を追加:
+
+```cfg
+# === JP-MODS（開発中MOD） ===
+# 個別に start する。新しいMODを追加したら行を足す
+start jp-taxi
+start jp-gps-tracker
+```
+
+#### 1-3. 開発フォルダを作る
+
+```
+C:\Dev\fivem-mods\           ← Cursorでこのフォルダを開く
+├── .cursor\
+│   └── rules\
+│       └── fivem-dev.mdc    ← Cursorルールファイル（後述）
+├── AGENTS.md                ← Cursor指示書（後述）
+├── scripts\
+│   └── deploy.bat           ← ビルド＆コピー用バッチ
+├── shared-lib\              ← 全MOD共通ライブラリ
+│   ├── config-loader.lua
+│   ├── locale.lua
+│   └── utils.lua
+├── jp-taxi\                 ← MOD①：タクシー運転手
+│   ├── fxmanifest.lua
+│   ├── config.lua
+│   ├── locales\
+│   │   └── ja.lua
+│   ├── client\
+│   │   └── main.lua
+│   ├── server\
+│   │   └── main.lua
+│   └── html\               （NUI が必要な場合のみ）
+│       ├── index.html
+│       ├── style.css
+│       └── script.js
+├── jp-gps-tracker\          ← MOD②：投擲GPS
+│   ├── fxmanifest.lua
+│   ├── config.lua
+│   ├── locales\
+│   │   └── ja.lua
+│   ├── client\
+│   │   └── main.lua
+│   └── server\
+│       └── main.lua
+└── README.md
+```
+
+---
+
+### PHASE 2：Cursorルール設定
+
+#### 2-1. `.cursor/rules/fivem-dev.mdc`
+
+このファイルをプロジェクト内に置くと、Cursorがコードを書くとき常にこのルールに従います。
+
+```markdown
+---
+description: FiveM Lua MOD開発のルール
+globs: "**/*.lua"
+alwaysApply: true
+---
+
+# FiveM MOD 開発ルール
+
+## 基本方針
+- 言語: Lua 5.4（fxmanifestに `lua54 'yes'` を必ず記述）
+- FiveM fx_version: 'cerulean'
+- game: 'gta5'
+- すべてのUIテキスト・メッセージは日本語をデフォルトとする
+- config.lua で日本語/英語を切り替え可能にする
+
+## ファイル構造の規約
+各MODは1つの独立したリソースフォルダとする。構造は以下に従う:
+
+```
+jp-<mod名>/
+├── fxmanifest.lua        # マニフェスト（必須）
+├── config.lua            # 設定値（サーバー運営者が編集する唯一のファイル）
+├── locales/
+│   └── ja.lua            # 日本語テキスト定義
+├── client/
+│   └── main.lua          # クライアントサイドスクリプト
+├── server/
+│   └── main.lua          # サーバーサイドスクリプト
+└── html/                 # NUI（必要な場合のみ）
+```
+
+## fxmanifest.lua テンプレート
+新しいMODを作成する際は必ず以下の形式で開始:
+
+```lua
+fx_version 'cerulean'
+game 'gta5'
+lua54 'yes'
+
+author 'JP-Mods'
+description '（MODの日本語説明）'
+version '1.0.0'
+
+shared_script 'config.lua'
+
+client_scripts {
+    'client/*.lua'
+}
+
+server_scripts {
+    'server/*.lua'
+}
+
+-- NUIがある場合のみ以下を追加
+-- ui_page 'html/index.html'
+-- files { 'html/index.html', 'html/style.css', 'html/script.js' }
+```
+
+## コーディング規約
+
+### 名前空間の分離（最重要）
+- 各MODは他のMODに一切依存しないこと（standalone設計）
+- グローバル変数を使わない。すべて `local` で宣言する
+- イベント名は必ず `jp-<mod名>:` プレフィックスをつける
+  例: `jp-taxi:startShift`, `jp-gps-tracker:throwDevice`
+- export関数名も同様に `jp-<mod名>` のリソース名で名前空間が分離される
+
+### config.lua の設計
+- サーバー運営者がコードを読めなくても設定できるよう、
+  すべての設定項目に日本語コメントを付与する
+- 例:
+```lua
+Config = {}
+Config.Locale = 'ja'                    -- 言語設定 ('ja' または 'en')
+Config.TaxiBaseRate = 50                -- 初乗り料金（ゲーム内通貨）
+Config.TaxiPerKmRate = 120              -- 1kmあたりの料金
+Config.MaxSimultaneousDrivers = 10      -- 同時に勤務できる最大人数
+```
+
+### クライアント/サーバー分離
+- ゲーム描画・プレイヤー操作 → client/
+- データ保存・検証・他プレイヤーへの通知 → server/
+- クライアント↔サーバー間は TriggerServerEvent / TriggerClientEvent で通信
+- クライアントからの入力はサーバー側で必ず検証する（チート対策）
+
+### パフォーマンス
+- フレーム毎ループ（Citizen.CreateThread + Wait(0)）は最小限にする
+- 常時ループが必要な場合でも Wait(500) 以上の間隔を基本とする
+- 不要になったエンティティは SetEntityAsNoLongerNeeded で解放する
+- モデルロード後は SetModelAsNoLongerNeeded で解放する
+
+### NativeDB関数
+- FiveMネイティブ関数のリファレンス: https://docs.fivem.net/natives/
+- ネイティブ関数はPascalCase表記を使う（例: GetEntityCoords, SetPedIntoVehicle）
+- Hash引数にはGetHashKeyまたは文字列直接指定を使用
+
+## 禁止事項
+- 他のMODフォルダ内のファイルを直接参照しない
+- フレームワーク依存（ESX, QBCore等）を前提にしない（standaloneで動くこと）
+- GTA内の実在固有名詞をそのまま使わない（独自名称にする）
+```
+
+#### 2-2. `AGENTS.md`（プロジェクトルート）
+
+```markdown
+# FiveM JP-Mods 開発プロジェクト
+
+## プロジェクト概要
+日本語FiveM RPサーバー運営者向けの無料MODを開発するプロジェクト。
+各MODは完全に独立（standalone）で、他のMODやフレームワーク（ESX/QBCore）に依存しない。
+
+## 開発ワークフロー
+1. `jp-<mod名>/` フォルダを新規作成
+2. fxmanifest.lua → config.lua → locales/ja.lua → client/main.lua → server/main.lua の順で実装
+3. `scripts/deploy.bat <mod名>` でテストサーバーにコピー
+4. テストサーバーのコンソールで `refresh; restart jp-<mod名>` を実行
+5. FiveMクライアントから localhost で接続して動作確認
+
+## MOD追加時のチェックリスト
+- [ ] fxmanifest.lua に `lua54 'yes'` が記述されている
+- [ ] config.lua の全項目に日本語コメントがある
+- [ ] イベント名がすべて `jp-<mod名>:` で始まっている
+- [ ] グローバル変数を使っていない（Config テーブルのみ shared_script 経由で共有）
+- [ ] 他のリソースへの dependency がない
+- [ ] server.cfg への `start jp-<mod名>` 追記手順がREADMEにある
+
+## ディレクトリ構造の規約
+詳細は .cursor/rules/fivem-dev.mdc を参照。
+
+## テストサーバーのパス
+C:\FiveMServer\server-data\resources\[jp-mods]\
+```
+
+---
+
+### PHASE 3：デプロイ（開発→テストサーバーへコピー）
+
+#### `scripts/deploy.bat`
+
+```bat
+@echo off
+REM === FiveM MOD デプロイスクリプト ===
+REM 使い方: deploy.bat <mod名>
+REM 例:     deploy.bat jp-taxi
+
+SET MOD_NAME=%1
+SET DEV_DIR=C:\Dev\fivem-mods\%MOD_NAME%
+SET SERVER_DIR=C:\FiveMServer\server-data\resources\[jp-mods]\%MOD_NAME%
+
+IF "%MOD_NAME%"=="" (
+    echo エラー: MOD名を指定してください
+    echo 使い方: deploy.bat jp-taxi
+    exit /b 1
+)
+
+IF NOT EXIST "%DEV_DIR%" (
+    echo エラー: %DEV_DIR% が見つかりません
+    exit /b 1
+)
+
+echo [1/3] 古いファイルを削除中...
+IF EXIST "%SERVER_DIR%" rmdir /s /q "%SERVER_DIR%"
+
+echo [2/3] コピー中: %DEV_DIR% → %SERVER_DIR%
+xcopy "%DEV_DIR%" "%SERVER_DIR%" /E /I /Q
+
+echo [3/3] 完了！
+echo.
+echo 次のステップ:
+echo   テストサーバーのコンソールで以下を実行してください:
+echo   refresh; restart %MOD_NAME%
+echo.
+```
+
+#### `scripts/deploy-all.bat`（全MODを一括デプロイ）
+
+```bat
+@echo off
+REM === 全MODを一括デプロイ ===
+
+SET DEV_ROOT=C:\Dev\fivem-mods
+SET SERVER_ROOT=C:\FiveMServer\server-data\resources\[jp-mods]
+
+echo 全MODをデプロイ中...
+
+FOR /D %%d IN ("%DEV_ROOT%\jp-*") DO (
+    SET MOD_NAME=%%~nxd
+    echo   → %%~nxd
+    IF EXIST "%SERVER_ROOT%\%%~nxd" rmdir /s /q "%SERVER_ROOT%\%%~nxd"
+    xcopy "%%d" "%SERVER_ROOT%\%%~nxd" /E /I /Q >nul
+)
+
+echo.
+echo 完了！テストサーバーで refresh を実行してください。
+```
+
+---
+
+### PHASE 4：開発→テスト→修正のサイクル（実際の作業手順）
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    日常の開発サイクル                          │
+│                                                              │
+│  ❶ Cursorでコードを書く                                      │
+│     C:\Dev\fivem-mods\ を開いた状態で                        │
+│     Cursorのチャットに指示を出す（例は後述）                  │
+│                                                              │
+│  ❷ デプロイ                                                  │
+│     Cursorのターミナルで:                                     │
+│     > cd scripts                                             │
+│     > deploy.bat jp-taxi                                     │
+│                                                              │
+│  ❸ テストサーバーでリロード                                  │
+│     txAdmin（ブラウザ http://localhost:40120 ）の             │
+│     Live Consoleタブで:                                       │
+│     > refresh                                                │
+│     > restart jp-taxi                                        │
+│                                                              │
+│  ❹ FiveMクライアントで確認                                   │
+│     ・FiveMを起動 → Direct Connect → localhost:30120         │
+│     ・ゲーム内で動作を確認                                   │
+│     ・F8キーでコンソールを開くとエラーログが見える            │
+│                                                              │
+│  ❺ 問題があればCursorに戻って修正 → ❷から繰り返し            │
+│                                                              │
+│  ポイント: ゲームを閉じる必要はない。                        │
+│  コード修正 → deploy → restart だけで即座に反映される。      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### PHASE 5：MODのモジュラー設計（互いに干渉しない体系）
+
+設計の核心は「各MODが完全に独立したFiveMリソースであること」です。
+
+```
+resources/
+└── [jp-mods]/
+    ├── jp-taxi/          ← リソースA（独立）
+    ├── jp-gps-tracker/   ← リソースB（独立）
+    ├── jp-delivery/      ← リソースC（独立）
+    ├── jp-fishing/       ← リソースD（独立）
+    └── jp-mechanic/      ← リソースE（独立）
+
+ それぞれが独自の fxmanifest.lua を持ち、
+ 独自のイベント名空間を持ち、
+ 他のリソースを dependency に書かない。
+
+ → どれか1つを止めても、追加しても、他は一切影響を受けない。
+ → サーバー運営者は server.cfg の start 行を足すだけで導入できる。
+```
+
+#### なぜこれで干渉しないのか
+
+FiveMのリソースシステムは、各リソースが独立したLuaランタイムで動作します。`jp-taxi/client/main.lua` の中で宣言した `local` 変数は `jp-gps-tracker` からは一切見えません。イベント名を `jp-taxi:` や `jp-gps-tracker:` で始めることで、イベントの衝突も起きません。
+
+仮に将来「タクシーにGPSを仕掛けられるようにしたい」というようなMOD間連携が必要になった場合でも、FiveMの `exports` 機能を使えば、疎結合のままAPI的に呼び出すことができます。その場合も、GPS側のexportが存在しないときにタクシー側がエラーにならないよう `pcall` でラップするだけです。
+
+---
+
+### PHASE 6：Cursorへの指示例（実践プロンプト）
+
+#### 新しいMODを作るとき
+
+```
+新しいFiveM MODを作成してください。
+
+MOD名: jp-taxi
+概要: プレイヤーがタクシー運転手として勤務できる職業システム
+
+機能:
+- NPCの近くでEキーを押すと「勤務開始」「勤務終了」を選択できる
+- 勤務中はマップ上にタクシーアイコンが表示される
+- 乗客NPCがランダムに出現し、目的地まで送ると報酬を受け取れる
+- 料金は config.lua の初乗り料金 + 距離料金で計算
+- すべてのUIテキストは日本語
+
+.cursor/rules/fivem-dev.mdc のルールに完全に従ってください。
+fxmanifest.lua, config.lua, locales/ja.lua, client/main.lua, server/main.lua を
+すべて生成してください。
+```
+
+#### 既存MODに機能を追加するとき
+
+```
+jp-taxi に以下の機能を追加してください:
+
+- 勤務中に /taxi-stats コマンドで今日の売上・乗車回数を表示
+- 他のMODには一切影響を与えないこと
+- 新しいイベント名は jp-taxi: プレフィックスを使うこと
+```
+
+#### バグを修正するとき
+
+```
+jp-gps-tracker でこのエラーがF8コンソールに出ます:
+
+SCRIPT ERROR: @jp-gps-tracker/client/main.lua:45: attempt to index a nil value
+
+該当箇所を確認して修正してください。
+```
+
+---
+
+### クイックリファレンス：コマンド早見表
+
+| やること | コマンド・操作 |
+|---|---|
+| MODを1つデプロイ | `scripts\deploy.bat jp-taxi` |
+| 全MODデプロイ | `scripts\deploy-all.bat` |
+| リソース再読み込み | txAdminコンソール: `refresh` |
+| MOD再起動 | txAdminコンソール: `restart jp-taxi` |
+| テストサーバー接続 | FiveMクライアント → Direct Connect → `localhost:30120` |
+| ゲーム内コンソール | F8キー |
+| ゲーム内チャット | Tキー |
+| テストコマンド実行 | チャットで `/taxi-start` 等 |
+
+---
+
+### まとめ：全体の流れを一言で
+
+**Cursorでコードを書く → バッチでサーバーにコピー → txAdminでrestartする → ゲームで確認する。** この4ステップの繰り返しです。ゲームもサーバーも閉じる必要がなく、コード変更から動作確認まで30秒以内で回せます。MODは `jp-<名前>` フォルダ単位で完全に独立しているので、新しいMODを追加するときはフォルダを増やして `server.cfg` に1行足すだけです。
+
+何か特定のMOD（タクシーやGPSトラッカー）の具体的な実装設計に踏み込みたい場合は、そのまま聞いてください。

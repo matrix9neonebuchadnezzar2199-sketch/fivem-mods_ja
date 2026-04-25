@@ -1,0 +1,57 @@
+---
+description: FiveM Lua開発のコーディング規約と技術仕様
+globs: "**/*.lua"
+alwaysApply: true
+---
+
+# FiveM Lua コーディングルール
+
+## マニフェスト
+- fx_version: 'cerulean'
+- game: 'gta5'
+- 必ず `lua54 'yes'` を記述する
+
+## fxmanifest.lua テンプレート
+新しいMODでは必ずこの形で開始する:
+```lua
+fx_version 'cerulean'
+game 'gta5'
+lua54 'yes'
+
+author 'JP-Mods'
+description '（日本語で説明）'
+version '1.0.0'
+
+shared_script 'config.lua'
+client_scripts { 'client/*.lua' }
+server_scripts { 'server/*.lua' }
+
+変数とスコープ
+すべての変数は local で宣言する（グローバル禁止）
+唯一の例外は config.lua の Config = {} テーブル（shared_scriptで共有）
+config.lua の書き方
+
+Config = {}
+Config.Locale = 'ja'           -- 言語設定 ('ja' / 'en')
+Config.SomeValue = 100         -- 日本語で説明を書く
+
+全項目に日本語コメント必須。運営者がここだけ触れば設定完了する設計にする。
+
+クライアント・サーバー間通信
+・クライアント→サーバー: TriggerServerEvent('jp-<mod名>:イベント名', ...)
+・サーバー→クライアント: TriggerClientEvent('jp-<mod名>:イベント名', source, ...)
+・サーバー側では引数を必ず検証する（チート対策）
+
+パフォーマンス
+・Wait(0) のループは極力避ける。最低 Wait(500) を基本とする
+・モデルロード後は SetModelAsNoLongerNeeded で解放
+・エンティティ不要時は SetEntityAsNoLongerNeeded で解放
+・RequestModel 後は HasModelLoaded を while ループで待つ
+
+ネイティブ関数
+・PascalCase表記を使う（GetEntityCoords, CreateVehicle 等）
+・リファレンス: https://docs.fivem.net/natives/
+
+他MODとの関係
+・dependency を書かない（完全standalone）
+・他MODと連携したい場合は exports + pcall でラップ
