@@ -2,6 +2,7 @@
     "notify": {
         "missing-item": "Bunu yapmak için bir şeyler eksik",
         "not-experienced": "Bunu yapacak kadar deneyimli olduğumu sanmıyorum",
+        "shop-need-level": "Your mining level is %s, but you need at least %s to buy this",
         "missing-pickaxe": "Kullanabileceğim bir kazmaya ihtiyacım var",
         "pickaxe-no-durability": "Kazmamın durumu berbat...",
         "nighttime": "Gece madencilik yapmama izin verildiğini sanmıyorum",

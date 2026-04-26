@@ -1,7 +1,8 @@
 {
     "notify": {
         "missing-item": "I am missing something to do this",
-        "not-experienced": "I don't think I'm experienced enough to do this",
+        "not-experienced": "My mining level isn't high enough to do this",
+        "shop-need-level": "Your mining level is %s, but you need at least %s to buy this",
         "missing-pickaxe": "I need a pickaxe I can actually use",
         "pickaxe-no-durability": "My pickaxe is in terrible condition..",
         "nighttime": "I don't think I'm permitted to mine at night",

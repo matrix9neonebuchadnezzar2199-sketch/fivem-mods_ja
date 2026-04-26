@@ -46,6 +46,13 @@ local function GetPlayerData(source, key)
         if not row or type(row) ~= 'table' then
             return
         end
+        -- ドライバ差で大文字キーが混ざる例への対策
+        if row.level == nil and row.Level ~= nil then
+            row.level = row.Level
+        end
+        if row.exp == nil and row.Exp ~= nil then
+            row.exp = row.Exp
+        end
         -- MySQL / ドライバによって level が文字列のことがあり、
         -- shared.experience[ player.level ] が取れない（"5" と 5 のキー差）・比較が壊れるのを防ぐ
         if row.level ~= nil then
@@ -157,7 +164,7 @@ local function SetPlayerMiningLevel(targetSource, newLevel)
         SET `level` = ?, `exp` = ?
         WHERE `identifier` = ?
     ]]
-    MySQL.update(query, {data.level, data.exp, identifier})
+    MySQL.update.await(query, {data.level, data.exp, identifier})
     return true
 end
 

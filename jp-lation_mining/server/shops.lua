@@ -12,14 +12,21 @@ local mining = exports['jp-lation_mining']
 RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
     if not source or not itemId or not input then return end
     local source = source
+    -- メニュー等から来る id が文字列 "5" の場合、items[5] だけ当たり、items["5"] は nil になって弾かれる
+    itemId = math.floor(tonumber(itemId) or 0)
+    input = math.floor(tonumber(input) or 0)
+    if itemId < 1 or input < 1 then return end
 
     local item = shared.shops.mine.items[itemId]
     if not item then return end
 
     if item.level then
-        local level = mining:GetPlayerData(source, 'level')
-        if level < item.level then
-            TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.not-experienced'), 'error')
+        -- 「経験」ではなく**採掘（鉱山）レベル**の比較。水・石以外は多く item.level あり。
+        local pl = math.max(1, math.floor(tonumber(mining:GetPlayerData(source, 'level')) or 1))
+        local need = math.floor(tonumber(item.level) or 0)
+        if need < 1 then need = 1 end
+        if pl < need then
+            TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.shop-need-level', pl, need), 'error')
             return
         end
     end

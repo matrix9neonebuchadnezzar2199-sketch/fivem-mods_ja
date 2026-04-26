@@ -2,6 +2,7 @@
     "notify": {
         "missing-item": "Chybí mi něco, abych to mohl udělat",
         "not-experienced": "Nemyslím si, že mám dostatek zkušeností na to, abych to udělal",
+        "shop-need-level": "Your mining level is %s, but you need at least %s to buy this",
         "missing-pickaxe": "Potřebuji krumpáč, který mohu skutečně použít",
         "pickaxe-no-durability": "Můj krumpáč je ve strašném stavu..",
         "nighttime": "Nemyslím si, že mám povolení těžit v noci",

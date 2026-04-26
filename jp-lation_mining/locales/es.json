@@ -2,6 +2,7 @@
     "notify": {
         "missing-item": "Me falta algo para hacer esto",
         "not-experienced": "No creo tener suficiente experiencia para hacer esto",
+        "shop-need-level": "Your mining level is %s, but you need at least %s to buy this",
         "missing-pickaxe": "Necesito un pico que realmente pueda usar",
         "pickaxe-no-durability": "Mi pico está en muy mal estado...",
         "nighttime": "No creo que se me permita minar de noche",

@@ -1,7 +1,8 @@
 {
     "notify": {
         "missing-item": "必要なアイテムが足りません",
-        "not-experienced": "経験が足りないようです",
+        "not-experienced": "採掘（鉱山）のレベルが足りないようです",
+        "shop-need-level": "採掘レベル %s では買えません（この商品はレベル %s 以上が必要）",
         "missing-pickaxe": "使えるツルハシを持っていません",
         "pickaxe-no-durability": "ツルハシがボロボロです…",
         "nighttime": "夜間の採掘は許可されていないようです",

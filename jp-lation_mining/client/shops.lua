@@ -254,7 +254,11 @@ AddEventHandler('jp-lation_mining:shops:selectquantity', function(id)
         }
     })
     if not input or not input[1] then return end
-    TriggerServerEvent('jp-lation_mining:completepurchase', id, input[1])
+    local sid = math.floor(tonumber(id) or 0)
+    if sid < 1 then return end
+    local qty = math.floor(tonumber(input[1]) or 0)
+    if qty < 1 then return end
+    TriggerServerEvent('jp-lation_mining:completepurchase', sid, qty)
 end)
 
 -- Select quantity
