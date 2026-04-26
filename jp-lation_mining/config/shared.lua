@@ -107,6 +107,9 @@ return {
             enable = true,
             -- Use cash or bank when purchasing here?
             account = 'cash',
+            -- ox_inventory: true のときだけ、下の各 item.metadata を AddItem 第4引数に渡す。
+            -- false（既定）: 第4引数 nil（ox の items 定義に任せる）。独自 durability 付きと items.lua の degrade 等が不整合のとき、買えない原因になりやすいのは「メタ手渡し」。
+            ox_pass_shop_item_metadata = false,
             -- Items available for sale in this shop
             items = {
                 -- item: item spawn name

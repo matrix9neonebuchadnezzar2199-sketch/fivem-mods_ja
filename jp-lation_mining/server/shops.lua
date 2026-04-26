@@ -49,10 +49,16 @@ RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
     local dist = #(vec3(coords.x, coords.y, coords.z) - GetEntityCoords(GetPlayerPed(source))) <= 15
     if not dist then return end
 
-    -- ox + durability 付き: CanCarryItem が偽陰性になり「これ以上持てません」だけ出ることが多い。AddItem の戻りを正とし、通ったら課金
+    -- ox: CanCarry は偽陰性のことがある。AddItem の戻りを正とし、通ったら課金。メタdata は config により省略可（多くのサーバで items 定義と 100% 等が噛み合わず失敗しやすい）
     if Inventory == 'ox_inventory' and item.metadata then
-        local a, b = exports.ox_inventory:AddItem(source, item.item, input, item.metadata)
-        if a == false then
+        local passMeta
+        if shared.shops.mine.ox_pass_shop_item_metadata == true then
+            passMeta = item.metadata
+        else
+            passMeta = nil
+        end
+        local a, b = exports.ox_inventory:AddItem(source, item.item, input, passMeta)
+        if a == false or a == nil then
             local msg = (type(b) == 'string' and b and b ~= '') and b or locale('notify.cant-carry')
             TriggerClientEvent('jp-lation_mining:notify', source, msg, 'error')
             return
