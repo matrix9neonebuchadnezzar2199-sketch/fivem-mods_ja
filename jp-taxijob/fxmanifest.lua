@@ -13,6 +13,7 @@ shared_scripts {
 }
 
 client_scripts {
+    'client/bootstrap.lua',
     '@qbx_core/modules/playerdata.lua',
     'client/main.lua',
 }

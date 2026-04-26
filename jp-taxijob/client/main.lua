@@ -1,5 +1,26 @@
-local config = require 'config.client'
-local sharedConfig = require 'config.shared'
+-- ここまで来ない場合は @qbx_core/modules/playerdata.lua か shared_script が落ちています
+print('^2[jp-taxijob]^7 [2/3] main.lua: requires 開始…')
+local config
+local sharedConfig
+do
+    local ok, a = pcall(function()
+        return require 'config.client'
+    end)
+    if not ok then
+        error(('[jp-taxijob] require config.client に失敗: %s\n→ config を fxmanifest files に入れているか、パス config/client.lua か確認'):format(
+            tostring(a)
+        )))
+    end
+    config = a
+    local ok2, b = pcall(function()
+        return require 'config.shared'
+    end)
+    if not ok2 then
+        error(('[jp-taxijob] require config.shared に失敗: %s'):format(tostring(b)))
+    end
+    sharedConfig = b
+end
+print('^2[jp-taxijob]^7 [3/3] main.lua: require OK。本体初期化へ')
 
 -- ===== locale (locales/<lang>.json) =====
 local localeDict = nil
