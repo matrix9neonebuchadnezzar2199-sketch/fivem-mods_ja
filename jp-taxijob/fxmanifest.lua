@@ -7,18 +7,22 @@ author 'JP-Mods'
 version '1.0.0'
 repository 'https://github.com/jp-mods/jp-taxijob'
 
-shared_scripts {
-    '@ox_lib/init.lua',
-    '@qbx_core/modules/lib.lua',
-}
-
+-- 重要: shared_script は常に client より先に走る。ここで失敗すると bootstrap まで届かない。
+-- なので lib は client/server に分け、bootstrap を「本当の先頭」にする。
 client_scripts {
     'client/bootstrap.lua',
+    '@ox_lib/init.lua',
+    '@qbx_core/modules/lib.lua',
     '@qbx_core/modules/playerdata.lua',
     'client/main.lua',
 }
 
-server_script 'server/main.lua'
+server_scripts {
+    'server/bootstrap.lua',
+    '@ox_lib/init.lua',
+    '@qbx_core/modules/lib.lua',
+    'server/main.lua',
+}
 
 ui_page 'html/hud.html'
 

@@ -214,19 +214,4 @@ AddEventHandler('playerDropped', function()
     forgetCompanyCab(src)
 end)
 
--- チャットの「/コマンド」はサーバー側に届くことが多い。クライアント直の RegisterCommand だけだと反応しない環境向け。
-RegisterCommand('jp_taxijob_debug', function(source, _args, _raw)
-    if source == 0 then
-        return
-    end
-    log('debugDepot: src=%s name=%s', tostring(source), tostring(GetPlayerName(source)))
-    TriggerClientEvent('jp-taxijob:client:debugDepot', source)
-end, false)
-
--- チャットから「届くか」だけ切り分け（クライアントの bootstrap.lua が受信する）
-RegisterCommand('jp_taxijob_ping', function(source, _args, _raw)
-    if source == 0 then
-        return
-    end
-    TriggerClientEvent('jp-taxijob:client:bootstrapFromServer', source)
-end, false)
+-- チャット用コマンドは server/bootstrap.lua で登録（main より前）

@@ -16,14 +16,21 @@ local function notifTitle(title, msg)
 end
 
 RegisterCommand('jp_taxijob_ping', function()
+    pcall(function()
+        PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', true)
+    end)
     notifTitle('jp-taxijob', 'PING OK（クライアントは動作中）')
-    print('^2[jp-taxijob]^7 jp_taxijob_ping コマンド実行')
+    print('^2[jp-taxijob]^7 jp_taxijob_ping クライアント直コマンド実行')
 end, false)
 
 RegisterKeyMapping('jp_taxijob_ping', 'jp-taxijob: 接続テスト', 'keyboard', 'F7')
 
-RegisterNetEvent('jp-taxijob:client:bootstrapFromServer', function()
-    notifTitle('jp-taxijob', 'サーバーから受信: クライアント生きてます')
+RegisterNetEvent('jp-taxijob:client:bootstrapFromServer')
+AddEventHandler('jp-taxijob:client:bootstrapFromServer', function()
+    pcall(function()
+        PlaySoundFrontend(-1, 'NAV', 'HUD_AMMO_SHOP_SOUNDSET', true)
+    end)
+    notifTitle('jp-taxijob', 'サーバー→クライアント: /jp_taxijob_ping 届きました')
 end)
 
 CreateThread(function()
