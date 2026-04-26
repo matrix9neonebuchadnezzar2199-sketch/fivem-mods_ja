@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>jp-gacha</title>
+</head>
+<body>
+    <div id="admin-container" class="hidden">
+        <div id="admin-box">
+            <div id="admin-header">
+                <span>🎰 ガチャマシン管理</span>
+                <button type="button" id="admin-close" aria-label="閉じる">×</button>
+            </div>
+            <div id="admin-content">
+                <h3>基本設定</h3>
+                <div class="admin-field">
+                    <label for="admin-title">タイトル</label>
+                    <input type="text" id="admin-title" value="ガチャマシン" autocomplete="off" />
+                </div>
+                <div class="admin-field">
+                    <label for="admin-cost">1回あたりの価格</label>
+                    <input type="number" id="admin-cost" value="500" min="0" step="1" />
+                </div>
+                <div class="admin-field">
+                    <label for="admin-theme">テーマ</label>
+                    <select id="admin-theme">
+                        <option value="neon">ネオン</option>
+                        <option value="classic">クラシック</option>
+                        <option value="gold">ゴールド</option>
+                    </select>
+                </div>
+                <h3>レアリティ排出率設定</h3>
+                <div id="admin-rarity-hint">合計排出率: <span id="admin-rarity-total">100</span>%（100%にしてください）</div>
+                <div id="admin-rarity-fields"></div>
+                <h3>排出アイテム設定</h3>
+                <div id="admin-items-hint">スタッシュ内のアイテム（レア内で均等確率で抽選／Config 併用時は cfg 枠を表示します）</div>
+                <div id="admin-items-list"></div>
+            </div>
+            <div id="admin-footer">
+                <button type="button" id="admin-save">保存</button>
+                <button type="button" id="admin-cancel" class="btn-muted">キャンセル</button>
+            </div>
+        </div>
+        <div id="admin-toast" class="hidden">保存しました</div>
+    </div>
+
+    <div id="gacha-menu-container" class="hidden">
+        <div id="gacha-menu-box">
+            <button type="button" id="gacha-menu-close" aria-label="閉じる">×</button>
+            <div id="gacha-menu-title">ガチャマシン</div>
+            <div id="gacha-menu-subtitle">排出アイテム</div>
+            <div id="gacha-menu-items"></div>
+            <div id="gacha-menu-custom-row">
+                <span class="gacha-hope-label">希望数（1〜10連）</span>
+                <input type="number" id="gacha-hope-input" min="1" max="10" value="1" />
+                <span id="gacha-hope-price" class="price-line"></span>
+            </div>
+            <div id="gacha-menu-buttons">
+                <button type="button" id="btn-single" class="btn-mega btn-red">🎰 ガチャを引く</button>
+                <button type="button" id="btn-multi10" class="btn-mega btn-orange">🎲 10連</button>
+                <button type="button" id="btn-hope" class="btn-mega btn-hope">希望数で回す</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="menu-container" class="hidden">
+        <div id="menu-box">
+            <div id="menu-title"></div>
+            <div id="menu-options"></div>
+            <div id="menu-close-hint">ESC で閉じる</div>
+        </div>
+    </div>
+
+    <div id="input-container" class="hidden">
+        <div id="input-box">
+            <div id="input-title"></div>
+            <input type="number" id="input-field" min="1" max="10" value="1">
+            <div id="input-buttons">
+                <button type="button" id="input-submit">決定</button>
+                <button type="button" id="input-cancel">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gacha-container" class="hidden">
+        <div id="bg-layer">
+            <img id="bg-image" src="" alt="">
+        </div>
+
+        <div id="flash-layer" class="hidden">
+            <img src="img/flash_white.png" alt="">
+        </div>
+
+        <div id="particle-layer"></div>
+
+        <div id="single-capsule-area" class="hidden">
+            <img id="capsule-img" src="" alt="">
+        </div>
+
+        <div id="cutin-layer" class="hidden">
+            <img id="cutin-img" src="" alt="">
+        </div>
+
+        <div id="result-layer" class="hidden">
+            <div id="result-rarity"></div>
+            <div id="result-item-name"></div>
+        </div>
+
+        <div id="multi-capsule-area" class="hidden"></div>
+
+        <div id="multi-result-area" class="hidden">
+            <div id="multi-result-title">ガチャ結果</div>
+            <div id="multi-result-list"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
