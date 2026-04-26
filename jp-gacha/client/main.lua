@@ -1,134 +1,206 @@
 local isPlaying = false
 local lastDrawTime = 0
 local machineProps = {}
-local esxObj, qbObj = nil, nil
+local ESX, QBCore = nil, nil
 
-CreateThread(function()
-    pcall(function()
-        esxObj = exports['es_extended']:getSharedObject()
+Citizen.CreateThread(function()
+    local success = pcall(function()
+        ESX = exports['es_extended']:getSharedObject()
     end)
-    if not esxObj then
+    if not success then
         pcall(function()
-            qbObj = exports['qb-core']:GetCoreObject()
+            QBCore = exports['qb-core']:GetCoreObject()
         end)
     end
 end)
 
--- 各環境用の短い通知
-local function notify(msg)
-    if qbObj then
-        qbObj.Functions.Notify(msg, 'error', 3000)
-    elseif esxObj then
-        esxObj.ShowNotification(msg)
+local function Notify(msg)
+    if QBCore then
+        QBCore.Functions.Notify(msg, 'error', 3000)
+    elseif ESX then
+        ESX.ShowNotification(msg)
     else
         TriggerEvent('chat:addMessage', {
             color = { 255, 100, 100 },
-            args = { "ガチャ", msg },
+            args = { "ガチャ", msg }
         })
     end
 end
 
--- 各マシン: ブリップ＋代用プロップ
-CreateThread(function()
+function StartGachaPull(count)
+    if isPlaying then
+        return
+    end
+    local now = GetGameTimer()
+    if (now - lastDrawTime) / 1000 < Config.Cooldown then
+        Notify("少し待ってください")
+        return
+    end
+    isPlaying = true
+    lastDrawTime = now
+    TriggerServerEvent('jp-gacha:requestMultiDraw', count)
+end
+
+-- メニュー表示
+local function ShowGachaMenu()
+    if isPlaying then
+        return
+    end
+
+    local options = {}
+    for _, opt in ipairs(Config.MenuOptions) do
+        if opt.count == 0 then
+            table.insert(options, {
+                label = opt.label,
+                value = 'custom'
+            })
+        else
+            local cost = Config.Cost * opt.count
+            table.insert(options, {
+                label = opt.label:format(cost),
+                value = opt.count
+            })
+        end
+    end
+
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        type = 'showMenu',
+        title = Config.MenuTitle,
+        options = options,
+        scale = Config.UIScale
+    })
+end
+
+RegisterNUICallback('menuSelect', function(data, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+
+    local selected = data.value
+    if selected == 'custom' then
+        SetNuiFocus(true, true)
+        SendNUIMessage({
+            type = 'showInput',
+            title = '回数を入力（1〜' .. Config.MaxPullCount .. '）',
+            max = Config.MaxPullCount,
+            scale = Config.UIScale
+        })
+    elseif type(selected) == 'number' and selected > 0 then
+        StartGachaPull(selected)
+    end
+end)
+
+RegisterNUICallback('inputSubmit', function(data, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+
+    local count = tonumber(data.count)
+    if count and count >= 1 and count <= Config.MaxPullCount then
+        StartGachaPull(math.floor(count))
+    else
+        Notify('1〜' .. Config.MaxPullCount .. 'の数字を入力してください')
+    end
+end)
+
+RegisterNUICallback('menuClose', function(_, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+end)
+
+-- マシン設置 & Blip
+Citizen.CreateThread(function()
     for i, machine in ipairs(Config.Machines) do
-        local b = AddBlipForCoord(machine.coords.x, machine.coords.y, machine.coords.z)
-        SetBlipSprite(b, Config.Blip.sprite)
-        SetBlipDisplay(b, 4)
-        SetBlipScale(b, Config.Blip.scale)
-        SetBlipColour(b, Config.Blip.color)
-        SetBlipAsShortRange(b, true)
+        local blip = AddBlipForCoord(machine.coords.x, machine.coords.y, machine.coords.z)
+        SetBlipSprite(blip, Config.Blip.sprite)
+        SetBlipDisplay(blip, 4)
+        SetBlipScale(blip, Config.Blip.scale)
+        SetBlipColour(blip, Config.Blip.color)
+        SetBlipAsShortRange(blip, true)
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentSubstringPlayerName(Config.Blip.label)
-        EndTextCommandSetBlipName(b)
+        EndTextCommandSetBlipName(blip)
 
-        -- machine.png は NUI 専用。プロップは重そうな筐体系
-        local modelHash = `prop_weighstation_02`
+        local modelHash = GetHashKey('prop_weighstation_02')
         RequestModel(modelHash)
-        local t = 0
-        while not HasModelLoaded(modelHash) and t < 200 do
+        local timeout = 0
+        while not HasModelLoaded(modelHash) and timeout < 50 do
             Wait(100)
-            t = t + 1
+            timeout = timeout + 1
         end
-        if not HasModelLoaded(modelHash) then
-            if Config.Debug then
-                print('[jp-gacha] モデル読み込み失敗: ' .. tostring(modelHash))
-            end
-        else
+        if HasModelLoaded(modelHash) then
             local prop = CreateObject(modelHash, machine.coords.x, machine.coords.y, machine.coords.z, false, false, false)
             SetEntityHeading(prop, machine.heading)
             FreezeEntityPosition(prop, true)
             SetEntityInvincible(prop, true)
-            machineProps[i] = prop
             SetModelAsNoLongerNeeded(modelHash)
+            machineProps[i] = prop
+        elseif Config.Debug then
+            print('[jp-gacha] Failed to load model for machine ' .. i)
         end
     end
 end)
 
--- 近接時ヘルプと E
-CreateThread(function()
+-- インタラクション
+Citizen.CreateThread(function()
     while true do
         local sleep = 1000
-        local pcoords = GetEntityCoords(PlayerPedId())
+        local playerCoords = GetEntityCoords(PlayerPedId())
+
         for _, machine in ipairs(Config.Machines) do
-            local dist = #(pcoords - machine.coords)
+            local dist = #(playerCoords - machine.coords)
             if dist < Config.InteractDistance + 2.0 then
                 sleep = 0
-            end
-            if dist < Config.InteractDistance then
-                BeginTextCommandDisplayHelp("STRING")
-                if Config.Cost > 0 then
-                    AddTextComponentSubstringPlayerName(("~INPUT_CONTEXT~ ガチャを回す ($%d)"):format(Config.Cost))
-                else
+                if dist < Config.InteractDistance then
+                    BeginTextCommandDisplayHelp("STRING")
                     AddTextComponentSubstringPlayerName("~INPUT_CONTEXT~ ガチャを回す")
-                end
-                EndTextCommandDisplayHelp(0, false, true, -1)
+                    EndTextCommandDisplayHelp(0, false, true, -1)
 
-                if IsControlJustReleased(0, 38) and not isPlaying then
-                    local now = GetGameTimer()
-                    if (now - lastDrawTime) / 1000 < Config.Cooldown then
-                        notify("少し待ってください")
-                    else
-                        isPlaying = true
-                        lastDrawTime = now
-                        TriggerServerEvent('jp-gacha:requestDraw')
+                    if IsControlJustReleased(0, 38) then
+                        ShowGachaMenu()
                     end
                 end
             end
         end
+
         Wait(sleep)
     end
 end)
 
-RegisterNetEvent('jp-gacha:drawResult', function(data)
+RegisterNetEvent('jp-gacha:multiDrawResult', function(results, count)
     SetNuiFocus(true, false)
     SendNUIMessage({
-        type = 'startGacha',
-        rarity = data.rarityId,
-        rarityName = data.rarityName,
-        rarityColor = data.rarityColor,
-        capsule = data.capsule,
-        bg = data.bg,
-        cutin = data.cutin,
-        itemName = data.itemName,
-        itemImage = data.itemImage,
+        type = 'startMultiGacha',
+        results = results,
+        count = count,
         timing = Config.Timing,
+        scale = Config.UIScale,
+        skipEnabled = Config.SkipEnabled
     })
+end)
 
-    SetTimeout(Config.Timing.totalDuration + 500, function()
-        SetNuiFocus(false, false)
-        isPlaying = false
-    end)
+-- スキップ用キー監視
+Citizen.CreateThread(function()
+    while true do
+        if isPlaying and Config.SkipEnabled then
+            if IsControlJustPressed(0, Config.SkipKey) then
+                SendNUIMessage({ type = 'skipGacha' })
+            end
+            Wait(0)
+        else
+            Wait(500)
+        end
+    end
 end)
 
 RegisterNetEvent('jp-gacha:drawDenied', function(reason)
     isPlaying = false
-    if reason == 'nomoney' then
-        lastDrawTime = 0
-    end
+    lastDrawTime = 0
     if reason == 'cooldown' then
-        notify("少し待ってください")
+        Notify("少し待ってください")
     elseif reason == 'nomoney' then
-        notify("お金が足りません")
+        Notify("お金が足りません")
+    elseif reason == 'invalid' then
+        Notify("無効な回数です")
     end
 end)
 

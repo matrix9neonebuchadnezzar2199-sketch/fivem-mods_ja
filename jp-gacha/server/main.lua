@@ -1,7 +1,6 @@
 local ESX, QBCore = nil, nil
 
--- フレームワーク検出（es_extended / qb-core。無ければ nil のまま）
-CreateThread(function()
+Citizen.CreateThread(function()
     if Config.Framework == 'auto' or Config.Framework == 'esx' then
         local success = pcall(function()
             ESX = exports['es_extended']:getSharedObject()
@@ -29,7 +28,6 @@ CreateThread(function()
     end
 end)
 
--- 現金の所持確認と支払い
 local function TryChargeMoney(source, amount)
     if ESX then
         local xPlayer = ESX.GetPlayerFromId(source)
@@ -39,22 +37,20 @@ local function TryChargeMoney(source, amount)
         end
         return false
     elseif QBCore then
-        local player = QBCore.Functions.GetPlayer(source)
-        if player then
-            local cash = player.PlayerData.money['cash'] or 0
+        local Player = QBCore.Functions.GetPlayer(source)
+        if Player then
+            local cash = Player.PlayerData.money['cash'] or 0
             if cash >= amount then
-                player.Functions.RemoveMoney('cash', amount, 'gacha')
+                Player.Functions.RemoveMoney('cash', amount, 'gacha')
                 return true
             end
         end
         return false
     else
-        -- スタンドアロン: 課金不可のため常に true（コスト0運用想定）
         return true
     end
 end
 
--- 重み付き抽選（レアリティ）
 local function DrawRarity()
     local totalWeight = 0
     for _, r in ipairs(Config.Rarities) do
@@ -71,80 +67,113 @@ local function DrawRarity()
     return Config.Rarities[1]
 end
 
--- 指定レアリティからアイテムを等確率抽選
 local function DrawItem(rarityId)
     local pool = {}
     for _, item in ipairs(Config.Items) do
         if item.rarity == rarityId then
-            pool[#pool + 1] = item
+            table.insert(pool, item)
         end
     end
     if #pool == 0 then
         return { name = "不明なアイテム", rarity = rarityId, image = "" }
     end
-    return pool[math.random(1, #pool)]
+    return pool[math.random(#pool)]
 end
 
--- 接続毎の最終成功時刻（os.time 秒）
-local playerCooldowns = {}
+local PlayerCooldowns = {}
 
-RegisterNetEvent('jp-gacha:requestDraw', function()
+-- 複数回ガチャ対応
+RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
     local source = source
     local now = os.time()
 
-    if playerCooldowns[source] and (now - playerCooldowns[source]) < Config.Cooldown then
+    -- バリデーション
+    if type(count) ~= 'number' or count < 1 or count > Config.MaxPullCount then
+        TriggerClientEvent('jp-gacha:drawDenied', source, 'invalid')
+        return
+    end
+    count = math.floor(count)
+
+    -- クールダウン
+    if PlayerCooldowns[source] and (now - PlayerCooldowns[source]) < Config.Cooldown then
         TriggerClientEvent('jp-gacha:drawDenied', source, 'cooldown')
         return
     end
 
-    if Config.Cost > 0 and not TryChargeMoney(source, Config.Cost) then
-        TriggerClientEvent('jp-gacha:drawDenied', source, 'nomoney')
-        return
+    -- 合計コスト計算 & 課金
+    local totalCost = Config.Cost * count
+    if totalCost > 0 then
+        if not TryChargeMoney(source, totalCost) then
+            TriggerClientEvent('jp-gacha:drawDenied', source, 'nomoney')
+            return
+        end
     end
 
-    playerCooldowns[source] = now
+    PlayerCooldowns[source] = now
 
-    local rarity = DrawRarity()
-    local item = DrawItem(rarity.id)
+    -- 複数回抽選
+    local results = {}
+    for i = 1, count do
+        local rarity = DrawRarity()
+        local item = DrawItem(rarity.id)
+        table.insert(results, {
+            index = i,
+            rarityId = rarity.id,
+            rarityName = rarity.name,
+            rarityColor = rarity.color,
+            capsule = rarity.capsule,
+            bg = rarity.bg,
+            cutin = rarity.cutin,
+            itemName = item.name,
+            itemImage = item.image,
+        })
+    end
 
-    local resultData = {
-        rarityId = rarity.id,
-        rarityName = rarity.name,
-        rarityColor = rarity.color,
-        capsule = rarity.capsule,
-        bg = rarity.bg,
-        cutin = rarity.cutin,
-        itemName = item.name,
-        itemImage = item.image,
-    }
+    -- クライアントへ送信
+    TriggerClientEvent('jp-gacha:multiDrawResult', source, results, count)
 
-    TriggerClientEvent('jp-gacha:drawResult', source, resultData)
-
+    -- ログ & チャット
     local playerName = GetPlayerName(source) or "Unknown"
-    print(('[jp-gacha] %s が %s（%s）を引いた'):format(playerName, item.name, rarity.id))
+    for _, r in ipairs(results) do
+        print(('[jp-gacha] %s が %s（%s）を引いた'):format(playerName, r.itemName, r.rarityId))
+    end
 
-    if rarity.id == 'SR' or rarity.id == 'SSR' or rarity.id == 'UR' then
+    -- SR以上が含まれていたら全体通知
+    local hasRare = false
+    local rareItems = {}
+    for _, r in ipairs(results) do
+        if r.rarityId == 'SR' or r.rarityId == 'SSR' or r.rarityId == 'UR' then
+            hasRare = true
+            table.insert(rareItems, ('【%s】%s'):format(r.rarityName, r.itemName))
+        end
+    end
+
+    if hasRare then
         TriggerClientEvent('chat:addMessage', -1, {
             color = { 255, 215, 0 },
             multiline = false,
             args = {
                 "🎰 ガチャ",
-                ('%s が【%s】%s を引き当てた！'):format(playerName, rarity.name, item.name),
-            },
+                ('%s が %s を引き当てた！'):format(playerName, table.concat(rareItems, '、'))
+            }
         })
     else
+        -- 本人のみ
+        local itemNames = {}
+        for _, r in ipairs(results) do
+            table.insert(itemNames, r.itemName)
+        end
         TriggerClientEvent('chat:addMessage', source, {
             color = { 200, 200, 200 },
             multiline = false,
             args = {
                 "🎰 ガチャ",
-                ('%s を手に入れた'):format(item.name),
-            },
+                ('%s を手に入れた'):format(table.concat(itemNames, '、'))
+            }
         })
     end
 end)
 
 AddEventHandler('playerDropped', function()
-    local src = source
-    playerCooldowns[src] = nil
+    PlayerCooldowns[source] = nil
 end)

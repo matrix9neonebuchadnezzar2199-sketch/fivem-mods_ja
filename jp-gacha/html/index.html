@@ -7,6 +7,25 @@
     <title>jp-gacha</title>
 </head>
 <body>
+    <div id="menu-container" class="hidden">
+        <div id="menu-box">
+            <div id="menu-title"></div>
+            <div id="menu-options"></div>
+            <div id="menu-close-hint">ESC で閉じる</div>
+        </div>
+    </div>
+
+    <div id="input-container" class="hidden">
+        <div id="input-box">
+            <div id="input-title"></div>
+            <input type="number" id="input-field" min="1" max="10" value="1">
+            <div id="input-buttons">
+                <button id="input-submit">決定</button>
+                <button id="input-cancel">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
     <div id="gacha-container" class="hidden">
         <div id="bg-layer">
             <img id="bg-image" src="" alt="">
@@ -18,7 +37,7 @@
 
         <div id="particle-layer"></div>
 
-        <div id="capsule-area">
+        <div id="single-capsule-area" class="hidden">
             <img id="capsule-img" src="" alt="">
         </div>
 
@@ -29,6 +48,17 @@
         <div id="result-layer" class="hidden">
             <div id="result-rarity"></div>
             <div id="result-item-name"></div>
+        </div>
+
+        <div id="multi-capsule-area" class="hidden"></div>
+
+        <div id="multi-result-area" class="hidden">
+            <div id="multi-result-title">ガチャ結果</div>
+            <div id="multi-result-list"></div>
+        </div>
+
+        <div id="skip-hint" class="hidden">
+            <span>SPACE でスキップ</span>
         </div>
     </div>
 
