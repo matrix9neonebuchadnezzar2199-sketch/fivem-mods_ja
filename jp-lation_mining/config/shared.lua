@@ -1,8 +1,8 @@
 return {
 
-    -- ⚠️ WARNING: When you are working with this script, never do "restart lation_mining"
+    -- ⚠️ WARNING: When you are working with this script, never do "restart jp-lation_mining"
     -- ⚠️ This will cause issues, data loss & more! You must restart the script like this:
-    -- ⚠️ "stop lation_mining" ..wait a couple seconds.. then "ensure lation_mining"
+    -- ⚠️ "stop jp-lation_mining" ..wait a couple seconds.. then "ensure jp-lation_mining"
 
     -- 🔎 Looking for more high quality scripts?
     -- 🛒 Shop Now: https://lationscripts.com

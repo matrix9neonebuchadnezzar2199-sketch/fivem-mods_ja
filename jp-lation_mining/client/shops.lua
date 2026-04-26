@@ -4,7 +4,7 @@ local client = require 'config.client'
 local icons = require 'config.icons'
 
 -- Localize export
-local mining = exports.lation_mining
+local mining = exports['jp-lation_mining']
 
 -- Initialize table to store shop(s) data
 -- .items, .zone, .ped
@@ -128,7 +128,7 @@ local function openShop()
             menu = 'mine-leaderboards'
         }
 
-        local players = lib.callback.await('lation_mining:gettopplayers', false)
+        local players = lib.callback.await('jp-lation_mining:gettopplayers', false)
         if not players or #players == 0 then players = {} end
         for rank, data in ipairs(players) do
             leaderboard[#leaderboard + 1] = {
@@ -201,8 +201,8 @@ local function createShop()
             description = locale('shop-menu.item-desc', itemData.label, math.groupdigits(data.price)),
             icon = data.icon or 'fas fa-triangle-exclamation',
             iconColor = data.iconColor or '',
-            image = isPick and 'nui://lation_mining/install/images/'..data.item..'.png' or nil,
-            event = 'lation_mining:shops:selectquantity',
+            image = isPick and 'nui://jp-lation_mining/install/images/'..data.item..'.png' or nil,
+            event = 'jp-lation_mining:shops:selectquantity',
             args = id
         }
     end
@@ -221,7 +221,7 @@ local function createShop()
             description = locale('pawn-menu.item-desc', itemData.label, math.groupdigits(data.price)),
             icon = data.icon or 'fas fa-triangle-exclamation',
             iconColor = data.iconColor or '',
-            event = 'lation_mining:pawn:selectquantity',
+            event = 'jp-lation_mining:pawn:selectquantity',
             args = id
         }
     end
@@ -235,7 +235,7 @@ end
 
 -- Select quantity
 --- @param id number
-AddEventHandler('lation_mining:shops:selectquantity', function(id)
+AddEventHandler('jp-lation_mining:shops:selectquantity', function(id)
     if not id then return end
     local config = shared.shops.mine.items[id]
     if not config then return end
@@ -254,12 +254,12 @@ AddEventHandler('lation_mining:shops:selectquantity', function(id)
         }
     })
     if not input or not input[1] then return end
-    TriggerServerEvent('lation_mining:completepurchase', id, input[1])
+    TriggerServerEvent('jp-lation_mining:completepurchase', id, input[1])
 end)
 
 -- Select quantity
 --- @param id number
-AddEventHandler('lation_mining:pawn:selectquantity', function(id)
+AddEventHandler('jp-lation_mining:pawn:selectquantity', function(id)
     if not id then return end
     local config = shared.shops.pawn.items[id]
     if not config then return end
@@ -278,7 +278,7 @@ AddEventHandler('lation_mining:pawn:selectquantity', function(id)
         }
     })
     if not input or not input[1] then return end
-    TriggerServerEvent('lation_mining:completesale', id, input[1])
+    TriggerServerEvent('jp-lation_mining:completesale', id, input[1])
 end)
 
 -- Create zone
@@ -327,7 +327,7 @@ local function createZone()
 end
 
 -- Initialize script
-AddEventHandler('lation_mining:onPlayerLoaded', function()
+AddEventHandler('jp-lation_mining:onPlayerLoaded', function()
     createBlip(shared.shops.location, shared.shops.blip)
     createShop()
     createZone()

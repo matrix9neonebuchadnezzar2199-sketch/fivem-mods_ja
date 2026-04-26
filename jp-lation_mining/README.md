@@ -98,11 +98,11 @@ The following resources are **required** in order to setup this resource:
 * **Step 1**
   - Install (*or ensure you have the latest of*) each dependency listed above
 * **Step 2**
-  - Download the latest release of ```lation_mining```
+  - Download the latest release of ```jp-lation_mining```
 * **Step 3**
   - Extract the zipped folder into your servers main ```resources``` directory
 * **Step 4**
-  - Add ```ensure lation_mining``` in your ```server.cfg``` file *after* all dependencies
+  - Add ```ensure jp-lation_mining``` in your ```server.cfg``` file *after* all dependencies
 * **Step 5**
   - Add items & images from ```install``` folder into your inventory resource
   - There is no need to execute the ```.sql``` file - *the script will auto-insert*

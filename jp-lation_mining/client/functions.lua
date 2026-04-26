@@ -31,7 +31,7 @@ end
 -- Display a notification from server
 --- @param message string
 --- @param type string
-RegisterNetEvent('lation_mining:notify', function(message, type)
+RegisterNetEvent('jp-lation_mining:notify', function(message, type)
     ShowNotification(message, type)
 end)
 

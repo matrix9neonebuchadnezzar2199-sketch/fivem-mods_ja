@@ -4,7 +4,7 @@ local shared = require 'config.shared'
 -- Returns player data from server
 --- @param type any
 local function GetPlayerData(type)
-    return lib.callback.await('lation_mining:getplayerdata', false, type)
+    return lib.callback.await('jp-lation_mining:getplayerdata', false, type)
 end
 
 -- Return xp data

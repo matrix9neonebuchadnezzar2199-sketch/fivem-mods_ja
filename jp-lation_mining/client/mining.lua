@@ -10,7 +10,7 @@ local ores = {}
 local inside = false
 
 -- Localize export
-local mining = exports.lation_mining
+local mining = exports['jp-lation_mining']
 
 -- Mine an ore
 --- @param zoneId number
@@ -42,7 +42,7 @@ local function mineOre(zoneId, oreId)
         return
     end
 
-    local metadata = lib.callback.await('lation_mining:getmetadata', false, item)
+    local metadata = lib.callback.await('jp-lation_mining:getmetadata', false, item)
     local metatype = GetDurabilityType()
     local degrade = shared.pickaxes[level].degrade
     if not metadata or not metadata[metatype] or metadata[metatype] < degrade then
@@ -65,7 +65,7 @@ local function mineOre(zoneId, oreId)
     if ProgressBar(anim) then
         DeleteEntity(ore.entity)
         ores[zoneId][oreId] = { respawn = GetGameTimer() + zone.respawn }
-        TriggerServerEvent('lation_mining:minedore', zoneId, oreId)
+        TriggerServerEvent('jp-lation_mining:minedore', zoneId, oreId)
     end
 end
 
@@ -158,7 +158,7 @@ CreateThread(function()
 end)
 
 -- Setup on player loaded
-AddEventHandler('lation_mining:onPlayerLoaded', function()
+AddEventHandler('jp-lation_mining:onPlayerLoaded', function()
     lib.zones.sphere({
         coords = shared.mining.center,
         radius = 400,

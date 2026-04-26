@@ -132,14 +132,14 @@ local function GetTopPlayers()
 end
 
 -- Register a callback for client-side requests
-lib.callback.register('lation_mining:gettopplayers', function()
+lib.callback.register('jp-lation_mining:gettopplayers', function()
     return GetTopPlayers()
 end)
 
 -- Callback used to return players data from lation_mining
 --- @param source number
 --- @param type string|nil
-lib.callback.register('lation_mining:getplayerdata', function(source, type)
+lib.callback.register('jp-lation_mining:getplayerdata', function(source, type)
     return GetPlayerData(source, type)
 end)
 

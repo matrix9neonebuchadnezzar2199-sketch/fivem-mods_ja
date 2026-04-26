@@ -3,12 +3,12 @@ local shared = require 'config.shared'
 local server = require 'config.server'
 
 -- Localize export
-local mining = exports.lation_mining
+local mining = exports['jp-lation_mining']
 
 -- Complete a purchase from The Mines shop
 --- @param itemId number
 --- @param input number
-RegisterNetEvent('lation_mining:completepurchase', function(itemId, input)
+RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
     if not source or not itemId or not input then return end
     local source = source
 
@@ -18,7 +18,7 @@ RegisterNetEvent('lation_mining:completepurchase', function(itemId, input)
     if item.level then
         local level = mining:GetPlayerData(source, 'level')
         if level < item.level then
-            TriggerClientEvent('lation_mining:notify', source, locale('notify.not-experienced'), 'error')
+            TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.not-experienced'), 'error')
             return
         end
     end
@@ -28,12 +28,12 @@ RegisterNetEvent('lation_mining:completepurchase', function(itemId, input)
 
     local balance = GetPlayerBalance(source, shared.shops.mine.account)
     if not balance or balance < total then
-        TriggerClientEvent('lation_mining:notify', source, locale('notify.no-money'), 'error')
+        TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.no-money'), 'error')
         return
     end
 
     if not CanCarry(source, item.item, input) then
-        TriggerClientEvent('lation_mining:notify', source, locale('notify.cant-carry'), 'error')
+        TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
         return
     end
 
@@ -62,7 +62,7 @@ end)
 -- Complete a sale from The Mines pawn
 --- @param itemId number
 --- @param input number
-RegisterNetEvent('lation_mining:completesale', function(itemId, input)
+RegisterNetEvent('jp-lation_mining:completesale', function(itemId, input)
     if not source or not itemId or not input then return end
 
     local item = shared.shops.pawn.items[itemId]
@@ -73,7 +73,7 @@ RegisterNetEvent('lation_mining:completesale', function(itemId, input)
 
     local hasItem = GetItemCount(source, item.item) >= input
     if not hasItem then
-        TriggerClientEvent('lation_mining:notify', source, locale('notify.no-item'), 'error')
+        TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.no-item'), 'error')
         return
     end
 

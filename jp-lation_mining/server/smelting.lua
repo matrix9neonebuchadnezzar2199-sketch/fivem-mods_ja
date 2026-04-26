@@ -3,14 +3,14 @@ local shared = require 'config.shared'
 local server = require 'config.server'
 
 -- Localize export
-local mining = exports.lation_mining
+local mining = exports['jp-lation_mining']
 
 -- Initialize table to store players
 local players = {}
 
 -- Complete smelting action
 --- @param ingotId number
-RegisterNetEvent('lation_mining:completesmelt', function(ingotId)
+RegisterNetEvent('jp-lation_mining:completesmelt', function(ingotId)
     if not source or not ingotId then return end
     local source = source
 
@@ -25,7 +25,7 @@ RegisterNetEvent('lation_mining:completesmelt', function(ingotId)
         end
     end
     if not hasItems then
-        TriggerClientEvent('lation_mining:notify', source, locale('notify.missing-item'), 'error')
+        TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.missing-item'), 'error')
         return
     end
 
@@ -40,7 +40,7 @@ RegisterNetEvent('lation_mining:completesmelt', function(ingotId)
         end
     end
     if not canCarry then
-        TriggerClientEvent('lation_mining:notify', source, locale('notify.cant-carry'), 'error')
+        TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
         return
     end
 

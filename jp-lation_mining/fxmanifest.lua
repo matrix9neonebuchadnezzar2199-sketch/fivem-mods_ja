@@ -1,7 +1,7 @@
 fx_version 'cerulean'
 lua54 'yes'
 game 'gta5'
-name 'lation_mining'
+name 'jp-lation_mining'
 author 'iamlation'
 version '2.0.3'
 repository 'https://github.com/IamLation/lation_mining'

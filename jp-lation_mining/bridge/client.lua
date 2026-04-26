@@ -13,7 +13,7 @@ local function InitializeFramework()
         RegisterNetEvent('esx:playerLoaded', function(xPlayer)
             PlayerData = xPlayer
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
 
         RegisterNetEvent('esx:onPlayerLogout', function()
@@ -25,7 +25,7 @@ local function InitializeFramework()
             if GetCurrentResourceName() ~= resourceName then return end
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
 
     elseif GetResourceState('qbx_core') == 'started' then
@@ -34,7 +34,7 @@ local function InitializeFramework()
         AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
 
         RegisterNetEvent('qbx_core:client:playerLoggedOut', function()
@@ -46,7 +46,7 @@ local function InitializeFramework()
             if GetCurrentResourceName() ~= resourceName then return end
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
     elseif GetResourceState('qb-core') == 'started' then
         QBCore = exports['qb-core']:GetCoreObject()
@@ -55,7 +55,7 @@ local function InitializeFramework()
         AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
 
         RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
@@ -67,7 +67,7 @@ local function InitializeFramework()
             if GetCurrentResourceName() ~= resourceName then return end
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
     elseif GetResourceState('ox_core') == 'started' then
         Ox = require '@ox_core.lib.init'
@@ -76,7 +76,7 @@ local function InitializeFramework()
         AddEventHandler('ox:playerLoaded', function()
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
 
         AddEventHandler('ox:playerLogout', function()
@@ -88,7 +88,7 @@ local function InitializeFramework()
             if GetCurrentResourceName() ~= resourceName then return end
             PlayerData = GetPlayerData()
             PlayerLoaded = true
-            TriggerEvent('lation_mining:onPlayerLoaded')
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
         end)
     else
         -- Add custom framework here
@@ -195,7 +195,7 @@ function GetItemData(item)
     else
         if Framework == 'esx' then
             -- Unlikely to need anything here but.. just in case..
-            print('^1[ERROR]: An error has occured with lation_mining - please contact support^0')
+            print('^1[ERROR]: An error has occured with jp-lation_mining - please contact support^0')
         elseif Framework == 'qb' then
             return QBCore.Shared.Items[item]
         elseif Framework == 'qbx' then

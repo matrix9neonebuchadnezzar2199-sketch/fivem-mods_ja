@@ -2,7 +2,7 @@
 local sh_config = require 'config.shared'
 
 -- Set resource
-local resourceName = 'lation_mining'
+local resourceName = 'jp-lation_mining'
 local currentVersion = GetResourceMetadata(resourceName, 'version', 0)
 local currentName = GetCurrentResourceName()
 

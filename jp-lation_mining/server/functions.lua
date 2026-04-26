@@ -82,7 +82,7 @@ end
 -- Return item metadata to client
 --- @param source number
 --- @param item string
-lib.callback.register('lation_mining:getmetadata', function(source, item)
+lib.callback.register('jp-lation_mining:getmetadata', function(source, item)
     return GetMetadata(source, item)
 end)
 
@@ -106,7 +106,7 @@ function PlayerLog(source, title, message)
         exports['fm-logs']:createLog({
             LogType = 'Player',
             Message = message,
-            Resource = 'lation_mining',
+            Resource = 'jp-lation_mining',
             Source = source,
         }, { Screenshot = server.logs.screenshots })
     elseif server.logs.service == 'discord' then

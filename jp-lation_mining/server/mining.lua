@@ -3,7 +3,7 @@ local shared = require 'config.shared'
 local server = require 'config.server'
 
 -- Localize export
-local mining = exports.lation_mining
+local mining = exports['jp-lation_mining']
 
 -- Initialize table to store ore data
 local ores = {}
@@ -11,7 +11,7 @@ local ores = {}
 -- Ore has been mined
 --- @param zoneId number
 --- @param oreId number
-RegisterNetEvent('lation_mining:minedore', function(zoneId, oreId)
+RegisterNetEvent('jp-lation_mining:minedore', function(zoneId, oreId)
     if not source or not zoneId or not oreId then return end
     local source = source
 
@@ -52,7 +52,7 @@ RegisterNetEvent('lation_mining:minedore', function(zoneId, oreId)
         if math.random(100) <= chance then
             local quantity = math.random(add.min, add.max)
             if not CanCarry(source, add.item, quantity) then
-                TriggerClientEvent('lation_mining:notify', source, locale('notify.cant-carry'), 'error')
+                TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
                 return
             end
             AddItem(source, add.item, quantity)

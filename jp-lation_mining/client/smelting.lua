@@ -4,7 +4,7 @@ local client = require 'config.client'
 local icons  = require 'config.icons'
 
 -- Localize export
-local mining = exports.lation_mining
+local mining = exports['jp-lation_mining']
 
 -- Initialize table to store smelting menu
 local menu = {}
@@ -41,7 +41,7 @@ local function buildMenu()
             title = data.name,
             description = locale('smelt-menu.ingot-desc', table.concat(desc, ', ')),
             icon = data.icon,
-            event = 'lation_mining:smelting:selectquantity',
+            event = 'jp-lation_mining:smelting:selectquantity',
             args = ingotId
         }
     end
@@ -106,7 +106,7 @@ local function startSmelting(ingotId, count)
         end
 
         smelted += 1
-        TriggerServerEvent('lation_mining:completesmelt', ingotId)
+        TriggerServerEvent('jp-lation_mining:completesmelt', ingotId)
     end
 
     ClearPedTasks(cache.ped)
@@ -116,7 +116,7 @@ end
 
 -- Select quantity
 --- @param ingotId number
-AddEventHandler('lation_mining:smelting:selectquantity', function(ingotId)
+AddEventHandler('jp-lation_mining:smelting:selectquantity', function(ingotId)
     if not ingotId then return end
     local ingot = shared.smelting.ingots[ingotId]
     if not ingot then return end
@@ -138,7 +138,7 @@ AddEventHandler('lation_mining:smelting:selectquantity', function(ingotId)
 end)
 
 -- Setup on player loaded
-AddEventHandler('lation_mining:onPlayerLoaded', function()
+AddEventHandler('jp-lation_mining:onPlayerLoaded', function()
     lib.zones.sphere({
         coords = shared.smelting.coords,
         radius = 200,
