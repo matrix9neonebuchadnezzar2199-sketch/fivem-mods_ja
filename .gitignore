@@ -1,0 +1,17 @@
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# エディタ
+*.swp
+*~
+.vscode/
+.idea/
+
+# 一時・ログ
+*.log
+nul
+
+# UP品: GitHub 非公開。ローカルまたは ZIP 配布のみ
+jp-taxijob/
