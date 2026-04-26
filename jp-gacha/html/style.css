@@ -555,24 +555,6 @@ body {
     margin-top: calc(4px * var(--scale));
 }
 
-#skip-hint {
-    position: absolute;
-    bottom: calc(40px * var(--scale));
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 30;
-    background: rgba(0, 0, 0, 0.6);
-    padding: calc(8px * var(--scale)) calc(20px * var(--scale));
-    border-radius: calc(20px * var(--scale));
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-#skip-hint span {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: calc(12px * var(--scale));
-    font-weight: 600;
-}
-
 #gacha-container.screen-shake {
     animation: screenShake 0.5s ease-in-out;
 }

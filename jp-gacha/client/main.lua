@@ -173,23 +173,8 @@ RegisterNetEvent('jp-gacha:multiDrawResult', function(results, count)
         results = results,
         count = count,
         timing = Config.Timing,
-        scale = Config.UIScale,
-        skipEnabled = Config.SkipEnabled
+        scale = Config.UIScale
     })
-end)
-
--- スキップ用キー監視
-Citizen.CreateThread(function()
-    while true do
-        if isPlaying and Config.SkipEnabled then
-            if IsControlJustPressed(0, Config.SkipKey) then
-                SendNUIMessage({ type = 'skipGacha' })
-            end
-            Wait(0)
-        else
-            Wait(500)
-        end
-    end
 end)
 
 RegisterNetEvent('jp-gacha:drawDenied', function(reason)

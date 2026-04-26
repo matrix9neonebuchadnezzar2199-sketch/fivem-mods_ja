@@ -19,11 +19,9 @@ const resultItemName = document.getElementById('result-item-name');
 const multiCapsuleArea = document.getElementById('multi-capsule-area');
 const multiResultArea = document.getElementById('multi-result-area');
 const multiResultList = document.getElementById('multi-result-list');
-const skipHint = document.getElementById('skip-hint');
 const inputSubmitButton = document.getElementById('input-submit');
 const inputCancelButton = document.getElementById('input-cancel');
 
-let skipRequested = false;
 let allTimers = [];
 let currentMultiData = null;
 
@@ -80,7 +78,6 @@ function safeTimeout(fn, delay) {
 
 function resetAll() {
     clearAllTimers();
-    skipRequested = false;
     gachaContainer.classList.add('hidden');
     gachaContainer.classList.remove('screen-shake');
     bgLayer.classList.remove('active');
@@ -99,7 +96,6 @@ function resetAll() {
     multiCapsuleArea.innerHTML = '';
     multiResultArea.classList.add('hidden');
     multiResultList.innerHTML = '';
-    skipHint.classList.add('hidden');
     clearParticles();
 }
 
@@ -187,8 +183,7 @@ inputField.addEventListener('keydown', function (e) {
 
 function showSingleResult(data) {
     singleCapsuleArea.classList.add('hidden');
-    skipHint.classList.add('hidden');
-    resultRarity.textContent = data.rarityName;
+    resultRarity.textContent = data.rarityId;
     resultRarity.style.color = data.rarityColor;
     resultItemName.textContent = data.itemName;
     resultLayer.classList.remove('hidden');
@@ -207,12 +202,9 @@ function findBestResult(results) {
     return best;
 }
 
-function startSingleGacha(data, timing, skipEnabled) {
+function startSingleGacha(data, timing) {
     resetAll();
     gachaContainer.classList.remove('hidden');
-    if (skipEnabled) {
-        skipHint.classList.remove('hidden');
-    }
 
     bgImage.src = 'img/bg_normal.png';
     bgLayer.classList.add('active');
@@ -222,21 +214,17 @@ function startSingleGacha(data, timing, skipEnabled) {
     capsuleImg.classList.add('drop');
     playSound('gacha_roll.mp3');
 
+    const hasCutin = data.rarityId === 'SR' || data.rarityId === 'SSR' || data.rarityId === 'UR';
+
     safeTimeout(function () {
-        if (skipRequested) {
-            return;
-        }
         capsuleImg.src = 'img/capsule_crack1.png';
         capsuleImg.classList.remove('drop');
         capsuleImg.classList.add('shake');
         playSound('crack.mp3');
     }, timing.crack1Delay);
 
-    if (data.cutin) {
+    if (hasCutin) {
         safeTimeout(function () {
-            if (skipRequested) {
-                return;
-            }
             capsuleImg.src = 'img/capsule_crack2.png';
             capsuleImg.classList.remove('shake');
             void capsuleImg.offsetWidth;
@@ -245,9 +233,6 @@ function startSingleGacha(data, timing, skipEnabled) {
     }
 
     safeTimeout(function () {
-        if (skipRequested) {
-            return;
-        }
         capsuleImg.src = 'img/capsule_open.png';
         capsuleImg.classList.remove('shake');
         capsuleImg.classList.add('explode');
@@ -276,11 +261,8 @@ function startSingleGacha(data, timing, skipEnabled) {
         }
     }, timing.breakDelay);
 
-    if (data.cutin) {
+    if (hasCutin) {
         safeTimeout(function () {
-            if (skipRequested) {
-                return;
-            }
             const cutinMap = { SR: 'cutin_sr.png', SSR: 'cutin_ssr.png', UR: 'cutin_ur.png' };
             const cutinFile = cutinMap[data.rarityId];
             if (cutinFile) {
@@ -297,16 +279,10 @@ function startSingleGacha(data, timing, skipEnabled) {
     }
 
     safeTimeout(function () {
-        if (skipRequested) {
-            return;
-        }
         showSingleResult(data);
     }, timing.resultDelay);
 
     safeTimeout(function () {
-        if (skipRequested) {
-            return;
-        }
         resetAll();
         notifyComplete();
     }, timing.totalDuration);
@@ -314,7 +290,6 @@ function startSingleGacha(data, timing, skipEnabled) {
 
 function showMultiResult(results) {
     multiCapsuleArea.classList.add('hidden');
-    skipHint.classList.add('hidden');
     multiResultList.innerHTML = '';
 
     results.forEach(function (r, i) {
@@ -325,7 +300,7 @@ function showMultiResult(results) {
 
         const rarityDiv = document.createElement('div');
         rarityDiv.classList.add('card-rarity');
-        rarityDiv.textContent = r.rarityName;
+        rarityDiv.textContent = r.rarityId;
         rarityDiv.style.color = r.rarityColor;
 
         const itemDiv = document.createElement('div');
@@ -357,16 +332,13 @@ function startMultiGacha(data) {
 
     setScale(data.scale);
     gachaContainer.classList.remove('hidden');
-    if (data.skipEnabled) {
-        skipHint.classList.remove('hidden');
-    }
 
     const bestResult = findBestResult(results);
     bgImage.src = 'img/bg_normal.png';
     bgLayer.classList.add('active');
 
     if (count === 1) {
-        startSingleGacha(results[0], timing, data.skipEnabled);
+        startSingleGacha(results[0], timing);
         return;
     }
 
@@ -394,7 +366,7 @@ function startMultiGacha(data) {
 
     let currentIndex = 0;
     function openNext() {
-        if (skipRequested || currentIndex >= count) {
+        if (currentIndex >= count) {
             return;
         }
 
@@ -404,9 +376,6 @@ function startMultiGacha(data) {
         playSound('crack.mp3');
 
         safeTimeout(function () {
-            if (skipRequested) {
-                return;
-            }
             slot.img.classList.remove('opening');
             slot.img.classList.add('opened');
             playSound('break_open.mp3');
@@ -421,11 +390,8 @@ function startMultiGacha(data) {
             }
 
             safeTimeout(function () {
-                if (skipRequested) {
-                    return;
-                }
                 slot.img.style.opacity = '0';
-                slot.label.textContent = '[' + slot.result.rarityName + '] ' + slot.result.itemName;
+                slot.label.textContent = '[' + slot.result.rarityId + '] ' + slot.result.itemName;
                 slot.label.classList.add('visible');
 
                 currentIndex = currentIndex + 1;
@@ -444,9 +410,6 @@ function startMultiGacha(data) {
                     }
 
                     safeTimeout(function () {
-                        if (skipRequested) {
-                            return;
-                        }
                         showMultiResult(results);
                     }, 1500);
                 }
@@ -463,40 +426,6 @@ function startMultiGacha(data) {
     }, maxTime);
 }
 
-function handleSkip() {
-    if (skipRequested) {
-        return;
-    }
-    skipRequested = true;
-    clearAllTimers();
-
-    clearParticles();
-    flashLayer.classList.add('hidden');
-    flashLayer.classList.remove('flash-anim');
-    cutinLayer.classList.add('hidden');
-    cutinLayer.classList.remove('slide-in');
-    singleCapsuleArea.classList.add('hidden');
-    multiCapsuleArea.classList.add('hidden');
-    skipHint.classList.add('hidden');
-    gachaContainer.classList.remove('screen-shake');
-
-    if (currentMultiData && currentMultiData.count > 1) {
-        const bestResult = findBestResult(currentMultiData.results);
-        bgImage.src = 'img/bg_' + bestResult.bg + '.png';
-        bgLayer.classList.add('active');
-        showMultiResult(currentMultiData.results);
-    } else if (currentMultiData && currentMultiData.count === 1) {
-        const r = currentMultiData.results[0];
-        bgImage.src = 'img/bg_' + r.bg + '.png';
-        bgLayer.classList.add('active');
-        showSingleResult(r);
-        safeTimeout(function () {
-            resetAll();
-            notifyComplete();
-        }, 3000);
-    }
-}
-
 window.addEventListener('message', function (event) {
     const data = event.data;
     switch (data.type) {
@@ -510,9 +439,6 @@ window.addEventListener('message', function (event) {
             setScale(data.scale);
             currentMultiData = data;
             startMultiGacha(data);
-            break;
-        case 'skipGacha':
-            handleSkip();
             break;
         default:
             break;

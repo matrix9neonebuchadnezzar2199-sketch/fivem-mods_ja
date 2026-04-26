@@ -31,17 +31,13 @@ Config.MenuOptions = {
     { label = '回数指定ガチャ',     count = 0  },  -- 0 = 入力プロンプト
 }
 
--- スキップ
-Config.SkipKey = 57  -- Space キー（FiveM control index）
-Config.SkipEnabled = true
-
 -- レアリティ定義（weight は相対値、合計不問）
 Config.Rarities = {
-    { id = 'N',   name = 'ノーマル',       color = '#aaaaaa', weight = 60, capsule = 'normal', bg = 'normal', cutin = false },
-    { id = 'R',   name = 'レア',           color = '#4488ff', weight = 25, capsule = 'normal', bg = 'rare',   cutin = false },
-    { id = 'SR',  name = 'スーパーレア',   color = '#ffaa00', weight = 10, capsule = 'gold',   bg = 'sr',     cutin = true  },
-    { id = 'SSR', name = 'SSレア',         color = '#ff4444', weight = 4,  capsule = 'gold',   bg = 'ssr',    cutin = true  },
-    { id = 'UR',  name = 'ウルトラレア',   color = '#ff00ff', weight = 1,  capsule = 'rainbow', bg = 'ur',    cutin = true  },
+    { id = 'N',   name = 'N',   color = '#aaaaaa', weight = 60, capsule = 'normal', bg = 'normal', cutin = false },
+    { id = 'R',   name = 'R',   color = '#4488ff', weight = 25, capsule = 'normal', bg = 'rare',   cutin = false },
+    { id = 'SR',  name = 'SR',  color = '#ffaa00', weight = 10, capsule = 'gold',   bg = 'sr',     cutin = true  },
+    { id = 'SSR', name = 'SSR', color = '#ff4444', weight = 4,  capsule = 'gold',   bg = 'ssr',    cutin = true  },
+    { id = 'UR',  name = 'UR',  color = '#ff00ff', weight = 1,  capsule = 'rainbow', bg = 'ur',    cutin = true  },
 }
 
 -- 排出アイテム定義
