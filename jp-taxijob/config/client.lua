@@ -9,8 +9,8 @@ return {
     -- ======== 拠点 ========
     -- NPCに話しかけて受注/終了する場所
     depot = {
-        -- 受付 NPC の立ち位置
-        coords = vec4(894.93, -179.12, 74.7, 237.09),
+        -- 受付 NPC の立ち位置（デバッグ用に配置）
+        coords = vec4(135.29, -1086.21, 29.19, 357.40),
         -- 受付付近の「黄色い円」判定（プレイヤー/車が入るとEで会話）
         -- 半径(m)
         interactRadius = 8.0,
@@ -29,7 +29,8 @@ return {
 
     -- 互換/内部用：従来 qbx の main 座標（Blip 用）
     locations = {
-        main = { coords = vec4(909.5, -177.35, 74.22, 238.5) },
+        -- Blip 用（setCompanyBlip は main を depot より優先するため、デバッグ座標に合わせる）
+        main = { coords = vec4(135.29, -1086.21, 29.19, 357.40) },
     },
 
     -- 互換: qbx_taxijob の挙動に合わせ、乗降は PolyZone ベース（E）
