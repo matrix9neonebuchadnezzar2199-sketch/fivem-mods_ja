@@ -33,7 +33,8 @@ local function buildMenu()
         local desc = {}
 
         for _, req in ipairs(data.required) do
-            local label = GetItemData(req.item).label or req.item
+            local itemData = GetItemData(req.item)
+            local label = (itemData and itemData.label) or req.item
             desc[#desc + 1] = string.format("x%d %s", req.quantity, label)
         end
 

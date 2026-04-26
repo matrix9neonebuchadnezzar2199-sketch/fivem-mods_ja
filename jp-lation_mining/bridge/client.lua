@@ -34,7 +34,13 @@ local function InitializeFramework()
     elseif GetResourceState('qbx_core') == 'started' then
         Framework = 'qbx'
 
-        AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+        RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+            PlayerData = GetPlayerData()
+            PlayerLoaded = true
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
+        end)
+
+        RegisterNetEvent('qbx_core:client:onPlayerLoaded', function()
             PlayerData = GetPlayerData()
             PlayerLoaded = true
             TriggerEvent('jp-lation_mining:onPlayerLoaded')
@@ -47,9 +53,12 @@ local function InitializeFramework()
 
         AddEventHandler('onResourceStart', function(resourceName)
             if GetCurrentResourceName() ~= resourceName then return end
-            PlayerData = GetPlayerData()
-            PlayerLoaded = true
-            TriggerEvent('jp-lation_mining:onPlayerLoaded')
+            Wait(2000)
+            if GetResourceState('qbx_core') == 'started' then
+                PlayerData = GetPlayerData()
+                PlayerLoaded = true
+                TriggerEvent('jp-lation_mining:onPlayerLoaded')
+            end
         end)
     elseif GetResourceState('qb-core') == 'started' then
         QBCore = exports['qb-core']:GetCoreObject()
@@ -98,15 +107,26 @@ local function InitializeFramework()
     end
 end
 
--- 初回同期の直後は qbx_core 未起動の可能性あり。二重登録を避け、上で失敗した場合のみ再試行
+-- 初回同期の直後は qbx_core 未起動の可能性あり。上で失敗した場合は再試行
 CreateThread(function()
     for _ = 1, 29 do
         Wait(500)
-        if Framework then return end
+        if Framework then break end
         InitializeFramework()
     end
     if not Framework then
-        print('^1[jp-lation_mining] フレーム未検出（qbx_core / es_extended 等）のため、Blip/メニュー用イベントが出ません。server.cfg で先に ensure してください^0')
+        print('^1[jp-lation_mining] フレームワーク未検出（qbx_core / es_extended 等）のため、Blip/メニュー用イベントが出ません。server.cfg で先に ensure してください^0')
+        return
+    end
+    -- フレームワーク検出後、既にプレイヤーがロード済みなら手動で発火
+    Wait(2000)
+    if not PlayerLoaded then
+        local pd = GetPlayerData()
+        if pd and (pd.citizenid or pd.identifier or pd.charId) then
+            PlayerData = pd
+            PlayerLoaded = true
+            TriggerEvent('jp-lation_mining:onPlayerLoaded')
+        end
     end
 end)
 
