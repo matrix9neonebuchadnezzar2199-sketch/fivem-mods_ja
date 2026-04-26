@@ -4,8 +4,11 @@ Framework, Inventory = nil, nil
 -- Initialize global player variables
 PlayerLoaded, PlayerData = nil, {}
 
--- Get framework
+-- Get framework（起動直後に qbx_core より採掘が先に立ち上がると GetResourceState が not started になり
+-- jp-lation_mining:onPlayerLoaded が一度も走らない → マップ Blip なしになるため、下で遅延再試行する）
 local function InitializeFramework()
+    if Framework then return end
+
     if GetResourceState('es_extended') == 'started' then
         ESX = exports['es_extended']:getSharedObject()
         Framework = 'esx'
@@ -94,6 +97,18 @@ local function InitializeFramework()
         -- Add custom framework here
     end
 end
+
+-- 初回同期の直後は qbx_core 未起動の可能性あり。二重登録を避け、上で失敗した場合のみ再試行
+CreateThread(function()
+    for _ = 1, 29 do
+        Wait(500)
+        if Framework then return end
+        InitializeFramework()
+    end
+    if not Framework then
+        print('^1[jp-lation_mining] フレーム未検出（qbx_core / es_extended 等）のため、Blip/メニュー用イベントが出ません。server.cfg で先に ensure してください^0')
+    end
+end)
 
 -- Get inventory
 local function InitializeInventory()
