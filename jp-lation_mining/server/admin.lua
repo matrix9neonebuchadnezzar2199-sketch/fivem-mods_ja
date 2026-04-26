@@ -64,4 +64,5 @@ local function onSetLevel(source, args)
     TriggerClientEvent('jp-lation_mining:notify', tid, locale('admin.setlevel-notify-target', newLevel), 'info')
 end
 
-RegisterCommand(server.admin.command, onSetLevel, true)
+-- false: FiveM/チャットの「制限付きコマンド」扱いにせず、ここでは IsPlayerAceAllowed のみで弾く（制限 true だと先に script:chat で Access denied）
+RegisterCommand(server.admin.command, onSetLevel, false)

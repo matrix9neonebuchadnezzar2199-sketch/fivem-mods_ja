@@ -37,11 +37,17 @@ return {
         }
     },
 
-    -- 管理者: 採掘レベルをサーバー上で上書きする /mining_setlevel（ACE で制限。運営者だけ server.cfg で許可する）
+    -- 管理者: 採掘レベル上書き。ゲーム内は mining_setlevel [id] [lv]、省略時 lv=5
+    -- ACE の付け方: ゲーム内のチャットで add_ace を打っても**サーバには入らない**。次のいずれかに書く:
+    --   ・server.cfg に1行入れて from 0 で再起動、または
+    --   ・txAdmin 左の「**サーバーコンソール**」（F8/ゲーム内ではない）に貼る
+    -- 例1: 管理者名義に一括（group.admin 所属者）
+    --   add_ace group.admin command.mining_setlevel allow
+    -- 例2: 自分の識別子だけ直付け（QBCore 等で group に入れない人向け）
+    --   add_ace identifier.license:xxxxxxxx command.mining_setlevel allow
+    -- 権限が無い人がコマンドを使うと通知のみ拒否（エンジン側の Access denied にはならないようRegisterは非制限）
     admin = {
-        -- コマンド名（/mining_setlevel [プレイヤーID] [レベル]）
         command = 'mining_setlevel',
-        -- プレイヤー用に与える ACE（例: add_ace group.admin command.mining_setlevel allow）
         ace = 'command.mining_setlevel',
     },
 
