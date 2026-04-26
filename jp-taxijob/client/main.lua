@@ -830,34 +830,45 @@ local function setCompanyBlip()
 end
 
 --- jp-LetterCarrier と同様: 足元Zの補正 + mission entity（道路上の vector4 でも取り残されにくい）
-local function createReceptionPed()
+--- @param forceNetworked boolean|nil 設定を上書きして再試行するときtrue（再生成用）
+local function createReceptionPed(forceNetworked)
     if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
-        return
+        return true
     end
     local m = joaat(config.depot.pedModel)
     lib.requestModel(m)
     if not HasModelLoaded(m) then
-        if config.debug then
-            print('[jp-taxijob] reception ped: model load failed: ' .. tostring(config.depot.pedModel))
-        end
+        print('[jp-taxijob] reception ped: model load failed: ' .. tostring(config.depot.pedModel))
         SetModelAsNoLongerNeeded(m)
-        return
+        return false
     end
     local c = config.depot.coords
+    -- 受付座標周りのコリジョンを先に流す（未ロードで CreatePed が沈む/消えるのを防ぐ）
+    RequestCollisionAtCoord(c.x, c.y, c.z)
+    local t0 = GetGameTimer()
+    while not HasCollisionLoadedAroundEntity(PlayerPedId()) and GetGameTimer() - t0 < 3000 do
+        RequestCollisionAtCoord(c.x, c.y, c.z)
+        Wait(0)
+    end
+
     local spawnZ = c.z
     local probeOk, probeZ = GetGroundZFor_3dCoord(c.x, c.y, c.z + 5.0, false)
     if probeOk and math.abs(probeZ - c.z) <= 0.8 then
         spawnZ = probeZ + 0.02
     end
 
-    -- pedType 4 = mission（jp-LetterCarrier と同じ）
-    local ped = CreatePed(4, m, c.x, c.y, spawnZ, c.w, false, true)
+    local net
+    if forceNetworked == nil then
+        net = config.depot.useNetworkedDepotPed == true
+    else
+        net = forceNetworked == true
+    end
+    -- pedType 4 = mission。isNetwork: config.useNetworkedDepotPed
+    local ped = CreatePed(4, m, c.x, c.y, spawnZ, c.w, net, true)
     SetModelAsNoLongerNeeded(m)
     if not ped or ped == 0 or not DoesEntityExist(ped) then
-        if config.debug then
-            print('[jp-taxijob] reception ped: CreatePed failed')
-        end
-        return
+        print(('[jp-taxijob] reception ped: CreatePed failed (networked=%s)'):format(tostring(net)))
+        return false
     end
     receptionPed = ped
     SetEntityAsMissionEntity(receptionPed, true, true)
@@ -868,16 +879,32 @@ local function createReceptionPed()
     FreezeEntityPosition(receptionPed, true)
     SetEntityHeading(receptionPed, c.w)
 
-    exports.ox_target:addLocalEntity(receptionPed, {
-        {
-            name = 'jp_taxijob_depot',
-            icon = 'fa-solid fa-taxi',
-            label = tr('target_label'),
-            onSelect = function()
-                openDepotMenu()
-            end,
-        }
-    })
+    if GetResourceState('ox_target') ~= 'started' then
+        print('[jp-taxijob] ox_target が started ではありません。Eキー＋球体ゾーンは使えます。ensure ox_target を確認してください。')
+    else
+        local tOk, tErr = pcall(function()
+            exports.ox_target:addLocalEntity(receptionPed, {
+                {
+                    name = 'jp_taxijob_depot',
+                    icon = 'fa-solid fa-taxi',
+                    label = tr('target_label'),
+                    onSelect = function()
+                        openDepotMenu()
+                    end,
+                }
+            })
+        end)
+        if not tOk then
+            print('[jp-taxijob] ox_target addLocalEntity 失敗: ' .. tostring(tErr) .. '（受付は Eキー＋円内で会話可）')
+        end
+    end
+    if config.debug then
+        local p = GetEntityCoords(receptionPed)
+        print(('[jp-taxijob] reception ped ok id=%s pos=%.2f %.2f %.2f net=%s'):format(
+            tostring(receptionPed), p.x, p.y, p.z, tostring(net)
+        ))
+    end
+    return true
 end
 
 local function createDepotZone()
@@ -905,25 +932,74 @@ local function createDepotZone()
     })
 end
 
--- 受付周りの初期化（jp-LetterCarrier: 待たずに出す＋Qbox では PlayerLoaded でも再実行）
+-- 受付周りの初期化（エラーは握り潰さず F8 に出す。ox_target 失敗時も Ped は出す）
+local function logInitErr(phase, err)
+    print(('[jp-taxijob] init FAIL [%s]: %s'):format(phase, tostring(err)))
+end
+
 local function initDepotClient()
-    pcall(setCompanyBlip)
-    pcall(createReceptionPed)
-    pcall(createDepotZone)
+    local ok, err = pcall(setCompanyBlip)
+    if not ok then logInitErr('setCompanyBlip', err) end
+    ok = createReceptionPed(nil)
+    if not ok or receptionPed == 0 or not DoesEntityExist(receptionPed) then
+        if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
+            DeleteEntity(receptionPed)
+        end
+        receptionPed = 0
+        -- 設定と逆のネットワーク扱いでもう一度
+        createReceptionPed(not (config.depot.useNetworkedDepotPed == true))
+    end
+    if receptionPed == 0 or not DoesEntityExist(receptionPed) then
+        print('[jp-taxijob] 受付Pedが生成できませんでした。/jp_taxijob_debug で状態確認してください。')
+    end
+    ok, err = pcall(createDepotZone)
+    if not ok then logInitErr('createDepotZone', err) end
+end
+
+local function waitForLocalPlayerReady()
+    local deadline = GetGameTimer() + 60000
+    while GetGameTimer() < deadline do
+        if NetworkIsPlayerActive(PlayerId()) then
+            local lp = PlayerPedId()
+            if lp and lp ~= 0 and DoesEntityExist(lp) then
+                return true
+            end
+        end
+        Wait(200)
+    end
+    return false
 end
 
 CreateThread(function()
-    -- ストリーム/セッション初期化待ち（LetterCarrierは即CreatePedだが、軽い遅延で十分）
+    -- world / ped が揃うまで待つ（早すぎる CreatePed は取り残されやすい）
+    if not waitForLocalPlayerReady() then
+        print('[jp-taxijob] 警告: ローカルプレイヤー待ちタイムアウト。受付は遅延生成を試行します。')
+    end
     Wait(500)
     initDepotClient()
+    -- 念のため再試行（初回だけコリジョン未ロード等）
+    if receptionPed == 0 or not DoesEntityExist(receptionPed) then
+        Wait(2000)
+        if receptionPed == 0 or not DoesEntityExist(receptionPed) then
+            print('[jp-taxijob] 受付Pedを再生成します（既存を削除してから）…')
+            if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
+                DeleteEntity(receptionPed)
+            end
+            receptionPed = 0
+            createReceptionPed(not (config.depot.useNetworkedDepotPed == true))
+        end
+    end
 end)
 
 CreateThread(function()
     local c = vec3(config.depot.coords.x, config.depot.coords.y, config.depot.coords.z)
     while true do
-        local p = GetEntityCoords(cache.ped)
-        if #(p - c) < 40.0 then
-            DrawMarker(1, c.x, c.y, c.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, (config.depot.interactRadius or 8.0) * 2.0, (config.depot.interactRadius or 8.0) * 2.0, 0.5, 255, 220, 50, 90, false, true, 2, false, nil, nil, false)
+        local myPed = PlayerPedId()
+        if myPed ~= 0 then
+            local p = GetEntityCoords(myPed)
+            if #(p - c) < 40.0 then
+                DrawMarker(1, c.x, c.y, c.z - 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, (config.depot.interactRadius or 8.0) * 2.0, (config.depot.interactRadius or 8.0) * 2.0, 0.5, 255, 220, 50, 90, false, true, 2, false, nil, nil, false)
+            end
         end
         Wait(0)
     end
@@ -980,3 +1056,42 @@ CreateThread(function()
         Wait(200)
     end
 end)
+
+-- デバッグ: 受付NPC・依存リソースの状態（F8コンソール）
+RegisterCommand('jp_taxijob_debug', function()
+    local res = GetCurrentResourceName()
+    local c = config.depot.coords
+    local my = PlayerPedId()
+    local d = -1.0
+    if my ~= 0 then
+        local pos = GetEntityCoords(my)
+        d = #(pos - vector3(c.x, c.y, c.z))
+    end
+    print(('[jp-taxijob] resource=%s ox_lib=%s ox_target=%s qbx_core=%s'):format(
+        res,
+        GetResourceState('ox_lib'),
+        GetResourceState('ox_target'),
+        GetResourceState('qbx_core')
+    ))
+    print(('[jp-taxijob] depot vec4(%.2f, %.2f, %.2f, %.2f) あなたからの距離=%.1fm'):format(c.x, c.y, c.z, c.w, d))
+    print(('[jp-taxijob] receptionPed=%s exist=%s networked cfg=%s'):format(
+        tostring(receptionPed),
+        tostring(receptionPed ~= 0 and DoesEntityExist(receptionPed)),
+        tostring(config.depot.useNetworkedDepotPed)
+    ))
+    if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
+        local p = GetEntityCoords(receptionPed)
+        print(('[jp-taxijob] ped pos=%.2f %.2f %.2f'):format(p.x, p.y, p.z))
+    else
+        print('[jp-taxijob] 受付Pedを強制再生成します…')
+        if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
+            DeleteEntity(receptionPed)
+        end
+        receptionPed = 0
+        createReceptionPed(true)
+        if not DoesEntityExist(receptionPed) then
+            receptionPed = 0
+            createReceptionPed(false)
+        end
+    end
+end, false)

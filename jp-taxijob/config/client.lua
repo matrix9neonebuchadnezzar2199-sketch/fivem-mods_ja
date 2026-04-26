@@ -11,6 +11,9 @@ return {
     depot = {
         -- 受付 NPC の立ち位置（デバッグ用に配置）
         coords = vec4(135.29, -1086.21, 29.19, 357.40),
+        -- true: ネットワーク管理で生成（OneSync で出ない・すぐ消える時は true 推奨）
+        -- false: クライアント専用（jp-LetterCarrier 寄り。無問題なら false 可）
+        useNetworkedDepotPed = true,
         -- 受付付近の「黄色い円」判定（プレイヤー/車が入るとEで会話）
         -- 半径(m)
         interactRadius = 8.0,
