@@ -215,6 +215,23 @@ RegisterNetEvent('jp-gacha:drawDenied', function(reason)
     end
 end)
 
+-- 演出中の誤入力対策（左クリック連打で殴る/撃つのを防止）
+Citizen.CreateThread(function()
+    while true do
+        if isPlaying then
+            DisableControlAction(0, 24, true)  -- INPUT_ATTACK
+            DisableControlAction(0, 25, true)  -- INPUT_AIM
+            DisableControlAction(0, 140, true) -- INPUT_MELEE_ATTACK_LIGHT
+            DisableControlAction(0, 141, true) -- INPUT_MELEE_ATTACK_HEAVY
+            DisableControlAction(0, 142, true) -- INPUT_MELEE_ATTACK_ALTERNATE
+            DisableControlAction(0, 257, true) -- INPUT_ATTACK2
+            Wait(0)
+        else
+            Wait(250)
+        end
+    end
+end)
+
 RegisterNUICallback('gachaComplete', function(_, cb)
     SetNuiFocus(false, false)
     isPlaying = false

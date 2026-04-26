@@ -40,6 +40,34 @@ NUI では再生前に存在確認（`fetch` HEAD 等）を行い、ファイル
 - `Config.Blip` – 地図アイコン
 - `Config.Debug` – デバッグ出力
 
+### 運営向け: 課金とフレームワーク判定の仕組み
+
+`Config.Framework = 'auto'` の場合、起動時に次の順で判定します。
+
+1. ESX が使えるなら ESX モード
+2. ESX が無く QBCore が使えるなら QBCore モード
+3. どちらも無い場合は standalone モード
+
+#### お金の判定（重要）
+
+- ESX: **現金（`getMoney()`）のみ**を参照
+- QBCore: **現金（`money['cash']`）のみ**を参照
+- 銀行口座（bank）は参照しません
+
+#### 回せる / 回せない判定
+
+- メニューで回数を選んだ直後、サーバー側で必要額を計算して即チェック
+- 必要額を持っていなければ演出は開始せず、`お金が足りません` で拒否
+- `standalone` は経済基盤が無いため、実装上は課金なし扱いで回せます
+
+#### 判定ログの見方
+
+`Config.Debug = true` にして `restart jp-gacha` すると、サーバーコンソールに以下のいずれかが出ます。
+
+- `[jp-gacha] ESX detected`
+- `[jp-gacha] QBCore detected`
+- `[jp-gacha] Standalone mode`
+
 ### アイテム設定場所（運営向け）
 
 `config.lua` の `Config.ItemsByRarity` が、出現アイテム一覧です。

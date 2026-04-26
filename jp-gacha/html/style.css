@@ -403,7 +403,7 @@ body {
 }
 
 #result-rarity {
-    font-size: calc(48px * var(--scale));
+    font-size: calc(72px * var(--scale));
     font-weight: 900;
     text-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
     margin-bottom: calc(16px * var(--scale));
@@ -411,7 +411,7 @@ body {
 }
 
 #result-item-name {
-    font-size: calc(32px * var(--scale));
+    font-size: calc(48px * var(--scale));
     font-weight: 700;
     color: #ffffff;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
@@ -492,7 +492,7 @@ body {
 .multi-capsule-label {
     position: absolute;
     bottom: 0;
-    font-size: calc(10px * var(--scale));
+    font-size: calc(16px * var(--scale));
     font-weight: 700;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
     opacity: 0;
@@ -519,7 +519,7 @@ body {
 }
 
 #multi-result-title {
-    font-size: calc(28px * var(--scale));
+    font-size: calc(42px * var(--scale));
     font-weight: 900;
     color: #ffd700;
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
@@ -555,13 +555,13 @@ body {
 }
 
 .multi-result-card .card-rarity {
-    font-size: calc(10px * var(--scale));
+    font-size: calc(16px * var(--scale));
     font-weight: 900;
     letter-spacing: 2px;
 }
 
 .multi-result-card .card-item {
-    font-size: calc(11px * var(--scale));
+    font-size: calc(18px * var(--scale));
     font-weight: 600;
     color: #ffffff;
     margin-top: calc(4px * var(--scale));
