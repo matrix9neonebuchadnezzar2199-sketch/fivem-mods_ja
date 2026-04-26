@@ -106,7 +106,6 @@ local healthWatchThread = nil
 local nextMissionAt = 0
 
 -- ===== qbx 相当: ミッション/メーター =====
-local isLoggedIn = LocalPlayer.state.isLoggedIn
 local meterIsOpen = false
 local meterActive = false
 local lastLocation = nil
@@ -830,18 +829,44 @@ local function setCompanyBlip()
     EndTextCommandSetBlipName(companyBlip)
 end
 
+--- jp-LetterCarrier と同様: 足元Zの補正 + mission entity（道路上の vector4 でも取り残されにくい）
 local function createReceptionPed()
     if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
         return
     end
     local m = joaat(config.depot.pedModel)
     lib.requestModel(m)
+    if not HasModelLoaded(m) then
+        if config.debug then
+            print('[jp-taxijob] reception ped: model load failed: ' .. tostring(config.depot.pedModel))
+        end
+        SetModelAsNoLongerNeeded(m)
+        return
+    end
     local c = config.depot.coords
-    receptionPed = CreatePed(0, m, c.x, c.y, c.z - 1.0, c.w, false, true)
+    local spawnZ = c.z
+    local probeOk, probeZ = GetGroundZFor_3dCoord(c.x, c.y, c.z + 5.0, false)
+    if probeOk and math.abs(probeZ - c.z) <= 0.8 then
+        spawnZ = probeZ + 0.02
+    end
+
+    -- pedType 4 = mission（jp-LetterCarrier と同じ）
+    local ped = CreatePed(4, m, c.x, c.y, spawnZ, c.w, false, true)
     SetModelAsNoLongerNeeded(m)
+    if not ped or ped == 0 or not DoesEntityExist(ped) then
+        if config.debug then
+            print('[jp-taxijob] reception ped: CreatePed failed')
+        end
+        return
+    end
+    receptionPed = ped
+    SetEntityAsMissionEntity(receptionPed, true, true)
     SetBlockingOfNonTemporaryEvents(receptionPed, true)
-    FreezeEntityPosition(receptionPed, true)
+    SetPedCanRagdoll(receptionPed, false)
     SetEntityInvincible(receptionPed, true)
+    SetEntityCoordsNoOffset(receptionPed, c.x, c.y, spawnZ, false, false, false)
+    FreezeEntityPosition(receptionPed, true)
+    SetEntityHeading(receptionPed, c.w)
 
     exports.ox_target:addLocalEntity(receptionPed, {
         {
@@ -880,13 +905,17 @@ local function createDepotZone()
     })
 end
 
+-- 受付周りの初期化（jp-LetterCarrier: 待たずに出す＋Qbox では PlayerLoaded でも再実行）
+local function initDepotClient()
+    pcall(setCompanyBlip)
+    pcall(createReceptionPed)
+    pcall(createDepotZone)
+end
+
 CreateThread(function()
-    while not isLoggedIn do
-        Wait(200)
-    end
-    setCompanyBlip()
-    createReceptionPed()
-    createDepotZone()
+    -- ストリーム/セッション初期化待ち（LetterCarrierは即CreatePedだが、軽い遅延で十分）
+    Wait(500)
+    initDepotClient()
 end)
 
 CreateThread(function()
@@ -924,10 +953,7 @@ end)
 
 -- ===== player/qbx events =====
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    isLoggedIn = true
-    setCompanyBlip()
-    createReceptionPed()
-    createDepotZone()
+    initDepotClient()
 end)
 
 AddEventHandler('onResourceStop', function(res)
