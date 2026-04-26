@@ -15,9 +15,10 @@ RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
     local item = shared.shops.mine.items[itemId]
     if not item then return end
 
+    -- 鉱山レベル: 水・食料は item.level なし。ツルハシだけ level 必須。DB/型で 0 や nil のとき、水は買えてツルハシだけ弾かれる症状になる。
     if item.level then
-        local level = mining:GetPlayerData(source, 'level')
-        if level < item.level then
+        local pl = math.max(1, math.floor(tonumber(mining:GetPlayerData(source, 'level')) or 1))
+        if pl < item.level then
             TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.not-experienced'), 'error')
             return
         end
