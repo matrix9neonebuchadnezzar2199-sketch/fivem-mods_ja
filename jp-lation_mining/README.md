@@ -129,7 +129,7 @@ ZIP を展開し、次のように置きます（`[jp-mods]` は任意のカテ�
 | ファイル | 内容の例 |
 |----------|----------|
 | `config/shared.lua` | デバッグ、ox_target 等、ショップ・採掘・精錬の**座標・価格・ゾーン・ブリップ**、インゴット名（表示用）等 |
-| `config/client.lua` | アニメ・進捗表示、統計表示の有無 等 |
+| `config/client.lua` | アニメ・進捗表示、統計表示、**`ui`**（`scale=2.0` でメニュー精錬 TextUI 等を約2倍。コンテキストは `#` 見出し併用） 等 |
 | `config/server.lua` | ログ、Webhook、経済 等（詳細はオリジナル同様 `config` 内のコメント・公式 README を参照） |
 | `config/icons.lua` | アイコン |  
 
