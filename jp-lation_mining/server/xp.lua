@@ -92,6 +92,53 @@ local function AddPlayerData(source, dataType, amount)
     end
 end
 
+-- 採掘レベルを直接上書き（管理コマンド用）。経験値はそのレベル帯の下限（config.experience[レベル]）に合わせる。
+--- @param targetSource number
+--- @param newLevel number
+--- @return boolean
+local function SetPlayerMiningLevel(targetSource, newLevel)
+    if not targetSource or not newLevel then
+        return false
+    end
+    newLevel = math.floor(tonumber(newLevel) or 0)
+    local maxLv = 0
+    for k in pairs(shared.experience) do
+        if type(k) == 'number' and k > maxLv then
+            maxLv = k
+        end
+    end
+    if maxLv < 1 then
+        return false
+    end
+    if newLevel < 1 then
+        newLevel = 1
+    end
+    if newLevel > maxLv then
+        newLevel = maxLv
+    end
+    local identifier = GetIdentifier(targetSource)
+    if not identifier then
+        return false
+    end
+    local data = GetPlayerData(targetSource)
+    if not data then
+        return false
+    end
+    data.level = newLevel
+    data.exp = shared.experience[newLevel] or 0
+    if cache[identifier] then
+        cache[identifier].level = data.level
+        cache[identifier].exp = data.exp
+    end
+    local query = [[
+        UPDATE `lation_mining`
+        SET `level` = ?, `exp` = ?
+        WHERE `identifier` = ?
+    ]]
+    MySQL.update(query, {data.level, data.exp, identifier})
+    return true
+end
+
 -- Save player data to database
 --- @param identifier string
 local function SavePlayerData(identifier)
@@ -173,3 +220,4 @@ exports('GetPlayerData', GetPlayerData) -- returns player data from lation_minin
 exports('AddPlayerData', AddPlayerData) -- edit player data in lation_mining table (params: source, type, amount)
 exports('GetLevelData', getLevelData) -- returns level data from shared.experience table
 exports('getLevelData', getLevelData) -- alias for GetLevelData
+exports('SetPlayerMiningLevel', SetPlayerMiningLevel) -- 管理: 採掘レベルを (source, レベル) で上書き

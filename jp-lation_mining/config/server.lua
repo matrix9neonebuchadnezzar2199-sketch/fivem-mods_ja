@@ -37,4 +37,12 @@ return {
         }
     },
 
+    -- 管理者: 採掘レベルをサーバー上で上書きする /mining_setlevel（ACE で制限。運営者だけ server.cfg で許可する）
+    admin = {
+        -- コマンド名（/mining_setlevel [プレイヤーID] [レベル]）
+        command = 'mining_setlevel',
+        -- プレイヤー用に与える ACE（例: add_ace group.admin command.mining_setlevel allow）
+        ace = 'command.mining_setlevel',
+    },
+
 }

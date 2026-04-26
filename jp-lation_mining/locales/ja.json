@@ -76,5 +76,14 @@
         "purchased-message": "%s (ID: %s) が x%d 個の %s を購入しました",
         "pawned-title": "買取所売却",
         "pawned-message": "%s (ID: %s) が x%d 個の %s を売却しました"
+    },
+    "admin": {
+        "no-permission": "このコマンドを使う権限がありません",
+        "setlevel-usage": "使い方: /%s [サーバーID] [レベル（省略で5）]",
+        "player-offline": "そのIDのプレイヤーはオンラインではありません",
+        "setlevel-badlevel": "レベルは1以上の数で指定してください",
+        "setlevel-fail": "採掘レベルの更新に失敗しました（識別子の取得失敗の可能性）",
+        "setlevel-ok": "%s (ID: %d) の採掘レベルを %d に設定しました",
+        "setlevel-notify-target": "採掘レベルが管理者操作で %d に設定されました"
     }
 }

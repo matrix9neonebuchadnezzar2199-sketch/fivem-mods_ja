@@ -76,5 +76,14 @@
         "purchased-message": "%s (identifier: %s) has purchased x%d %s",
         "pawned-title": "Pawn Shop Sale",
         "pawned-message": "%s (identifier: %s) has sold x%d %s"
+    },
+    "admin": {
+        "no-permission": "You are not allowed to use this command",
+        "setlevel-usage": "Usage: /%s [server id] [level, default 5]",
+        "player-offline": "No player is online with that id",
+        "setlevel-badlevel": "Level must be 1 or higher",
+        "setlevel-fail": "Could not set mining level (e.g. identifier not available)",
+        "setlevel-ok": "Set %s (id %d) mining level to %d",
+        "setlevel-notify-target": "Your mining level was set to %d by an admin"
     }
 }
