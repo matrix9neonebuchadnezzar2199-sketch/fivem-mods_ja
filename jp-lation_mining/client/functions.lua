@@ -1,9 +1,65 @@
 -- Initialize config(s)
 local shared = require 'config.shared'
+local cl = require 'config.client'
 
 -- You can change the textUI script here
 -- Options: 'lation_ui', 'ox_lib', 'jg-textui', 'okokTextUI', 'qbcore' & 'custom'
 local textui = 'ox_lib'
+
+-- ui.scale（採掘メニュー・TextUI 等）既定 1.0=変更なし。config.client の ui 参照
+local function getUiScale()
+    if cl and cl.ui and type(cl.ui.scale) == 'number' and cl.ui.scale > 0 then
+        return cl.ui.scale
+    end
+    return 1.0
+end
+
+local function textUiOptionsForOxs(scale, position)
+    local s = scale or 1.0
+    if s <= 1.0 or s == nil then
+        return { position = position or 'left-center' }
+    end
+    return {
+        position = position or 'left-center',
+        style = {
+            transform = string.format('scale(%s)', s),
+            transformOrigin = (position or 'left-center') == 'right-center' and 'right center' or 'left center',
+        },
+    }
+end
+
+-- ox_lib コンテキスト: 直接 scale できないため Markdown 見出し（# ）で大きく表示
+local function contextWithMarkdownIfLarge(data, scale, useMd)
+    if not data or (not useMd) or not scale or scale < 1.2 then
+        return data
+    end
+    local c = {}
+    for k, v in pairs(data) do
+        c[k] = v
+    end
+    if c.title and type(c.title) == 'string' and not c.title:match('^#+%s') then
+        c.title = '# ' .. c.title
+    end
+    if c.options and type(c.options) == 'table' then
+        local out = {}
+        for i, opt in ipairs(c.options) do
+            if type(opt) == 'table' then
+                local o = {}
+                for k, v in pairs(opt) do
+                    o[k] = v
+                end
+                if o.title and type(o.title) == 'string' and not o.title:match('^#+%s') then
+                    o.title = '## ' .. o.title
+                end
+                out[i] = o
+            else
+                out[i] = opt
+            end
+        end
+        c.options = out
+    end
+    return c
+end
 
 -- Display a notification
 --- @param message string
@@ -12,7 +68,15 @@ function ShowNotification(message, type)
     if shared.setup.notify == 'lation_ui' then
         exports.lation_ui:notify({ title = 'Mining', message = message, type = type, icon = 'fas fa-fire' })
     elseif shared.setup.notify == 'ox_lib' then
-        lib.notify({ description = message, type = type, icon = 'fas fa-fire' })
+        local s = getUiScale()
+        local n = { description = message, type = type, icon = 'fas fa-fire' }
+        if s and s > 1.0 then
+            n.style = {
+                transform = string.format('scale(%s)', s),
+                transformOrigin = 'right top',
+            }
+        end
+        lib.notify(n)
     elseif shared.setup.notify == 'esx' then
         ESX.ShowNotification(message)
     elseif shared.setup.notify == 'qb' then
@@ -65,8 +129,13 @@ function ProgressBar(data)
     elseif shared.setup.progress == 'ox_lib' then
         -- Want to use ox_lib's progress circle instead of bar?
         -- Change "progressBar" to "progressCircle" below & done!
+        local progLabel = data.label
+        local s = getUiScale()
+        if s >= 1.2 and cl and cl.ui and (cl.ui.useLargeProgressLabel ~= false) and progLabel and not progLabel:find('^#%s') then
+            progLabel = '# ' .. progLabel
+        end
         if lib.progressBar({
-            label = data.label,
+            label = progLabel,
             duration = data.duration,
             position = data.position or 'bottom',
             useWhileDead = data.useWhileDead,
@@ -122,7 +191,10 @@ function RegisterMenu(data)
     if shared.setup.menu == 'lation_ui' then
         exports.lation_ui:registerMenu(data)
     elseif shared.setup.menu == 'ox_lib' then
-        lib.registerContext(data)
+        local s = getUiScale()
+        local useMd = cl.ui and (cl.ui.useLargeMarkdownInContext ~= false)
+        local ctx = contextWithMarkdownIfLarge(data, s, useMd)
+        lib.registerContext(ctx)
     elseif shared.setup.menu == 'custom' then
         -- Add 'custom' menu system here
     end
@@ -153,7 +225,7 @@ function ShowInput(data)
             options = data.options
         })
     elseif shared.setup.dialogs == 'ox_lib' then
-        return lib.inputDialog(data.title, data.options)
+        return lib.inputDialog(data.title, data.options, { allowCancel = true })
     elseif shared.setup.dialogs == 'custom' then
         -- Add your custom input dialog here
     end
@@ -169,10 +241,14 @@ function ShowTextUI(text, icon)
             icon = icon,
         })
     elseif textui == 'ox_lib' then
-        lib.showTextUI(text, {
-            position = 'left-center',
-            icon = icon
-        })
+        local s = getUiScale()
+        if s <= 1.0 then
+            lib.showTextUI(text, { position = 'left-center', icon = icon })
+        else
+            local o = textUiOptionsForOxs(s, 'left-center')
+            o.icon = icon
+            lib.showTextUI(text, o)
+        end
     elseif textui == 'jg-textui' then
         exports['jg-textui']:DrawText(text)
     elseif textui == 'okokTextUI' then

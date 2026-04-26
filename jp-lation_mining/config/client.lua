@@ -40,6 +40,21 @@ return {
     -- This shows the top 10 miners by XP
     -- 🗒️ Note: the leaderboard is not updated constantly
     -- It is only updated on server restarts & player logouts
-    leaderboard = true
+    leaderboard = true,
+
+    ----------------------------------------------
+    --     画面（UI）の大きさ — ox_lib 採用時
+    --     採掘メニュー・精錬 TextUI・通知・数入力などが小さく感じる場合
+    ----------------------------------------------
+    ui = {
+        -- 1.0 = 既定。2.0 なら文字含め感覚的に約2倍
+        -- TextUI: CSS transform(scale)。通知: style 利用可なら同様
+        -- ショップ等の「コンテキスト」: 見出し Markdown（# ）付与で大きく見せる
+        scale = 2.0,
+        -- true のとき、ox_lib コンテキストのタイトル行に # / ## を付与（大きい見出し扱い）
+        useLargeMarkdownInContext = true,
+        -- true のとき、採掘プログレスの表示ラベル前に少し強調用の記号（※2倍専用マークアウトに追随）
+        useLargeProgressLabel = true,
+    },
 
 }
