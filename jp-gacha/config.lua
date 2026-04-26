@@ -18,7 +18,8 @@ Config.Cost = 500
 -- クールダウン（秒）
 Config.Cooldown = 10
 
--- フレームワーク自動検出: 'auto', 'esx', 'qbcore', 'standalone'
+-- 課金: 'auto' 推奨。優先: qbx_core → es_extended → qb-core → ox_inventory(money) → 金なしで無料扱い
+-- 強制: 'qbox' | 'qbx' | 'esx' | 'es_extended' | 'qb' | 'qbcore' | 'oxinv' | 'ox_inventory'
 Config.Framework = 'auto'
 
 -- ガチャ回数設定
@@ -34,13 +35,13 @@ Config.MenuOptions = {
     { label = '回数指定ガチャ',     count = 0  },  -- 0 = 入力プロンプト
 }
 
--- レアリティ定義（weight は相対値、合計不問）
+-- レアリティ定義（weight は相対値、合計不問、100になるようにした方が直感的にわかっておすすめです）
 Config.Rarities = {
     { id = 'N',   name = 'N',   color = '#aaaaaa', weight = 50, capsule = 'normal', bg = 'normal', cutin = false },
-    { id = 'R',   name = 'R',   color = '#4488ff', weight = 35, capsule = 'normal', bg = 'rare',   cutin = false },
+    { id = 'R',   name = 'R',   color = '#4488ff', weight = 25, capsule = 'normal', bg = 'rare',   cutin = false },
     { id = 'SR',  name = 'SR',  color = '#ffaa00', weight = 10, capsule = 'gold',   bg = 'sr',     cutin = true  },
     { id = 'SSR', name = 'SSR', color = '#ff4444', weight = 4,  capsule = 'gold',   bg = 'ssr',    cutin = true  },
-    { id = 'UR',  name = 'UR',  color = '#ff00ff', weight = 1,  capsule = 'rainbow', bg = 'ur',    cutin = true  },
+    { id = 'UR',  name = 'UR',  color = '#ff00ff', weight = 10,  capsule = 'rainbow', bg = 'ur',    cutin = true  },
 }
 
 -- 排出アイテム定義（運営者向け）

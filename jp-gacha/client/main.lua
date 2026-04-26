@@ -1,4 +1,6 @@
 local isPlaying = false
+-- メニュー／数入力NUI表示中。isPlaying だけだと未抽選の間攻撃不可にならない
+local nuiMenuOrInputOpen = false
 local lastDrawTime = 0
 local machineProps = {}
 local ESX, QBCore = nil, nil
@@ -80,6 +82,7 @@ local function ShowGachaMenu()
         end
     end
 
+    nuiMenuOrInputOpen = true
     SetNuiFocus(true, true)
     SendNUIMessage({
         type = 'showMenu',
@@ -93,8 +96,10 @@ RegisterNUICallback('menuSelect', function(data, cb)
     SetNuiFocus(false, false)
     cb('ok')
 
-    local selected = data.value
+    -- JSON 由来で value が number 以外（文字列 "1" 等）のとき、type()=='number' で弾いていた
+    local selected = data and data.value
     if selected == 'custom' then
+        nuiMenuOrInputOpen = true
         SetNuiFocus(true, true)
         SendNUIMessage({
             type = 'showInput',
@@ -102,16 +107,21 @@ RegisterNUICallback('menuSelect', function(data, cb)
             max = Config.MaxPullCount,
             scale = Config.UIScale
         })
-    elseif type(selected) == 'number' and selected > 0 then
-        StartGachaPull(selected)
+    else
+        nuiMenuOrInputOpen = false
+        local count = math.floor(tonumber(selected) or 0)
+        if count > 0 then
+            StartGachaPull(count)
+        end
     end
 end)
 
 RegisterNUICallback('inputSubmit', function(data, cb)
     SetNuiFocus(false, false)
+    nuiMenuOrInputOpen = false
     cb('ok')
 
-    local count = tonumber(data.count)
+    local count = tonumber(data and data.count)
     if count and count >= 1 and count <= Config.MaxPullCount then
         StartGachaPull(math.floor(count))
     else
@@ -121,6 +131,7 @@ end)
 
 RegisterNUICallback('menuClose', function(_, cb)
     SetNuiFocus(false, false)
+    nuiMenuOrInputOpen = false
     cb('ok')
 end)
 
@@ -218,7 +229,7 @@ end)
 -- 演出中の誤入力対策（左クリック連打で殴る/撃つのを防止）
 Citizen.CreateThread(function()
     while true do
-        if isPlaying then
+        if isPlaying or nuiMenuOrInputOpen then
             DisableControlAction(0, 24, true)  -- INPUT_ATTACK
             DisableControlAction(0, 25, true)  -- INPUT_AIM
             DisableControlAction(0, 140, true) -- INPUT_MELEE_ATTACK_LIGHT

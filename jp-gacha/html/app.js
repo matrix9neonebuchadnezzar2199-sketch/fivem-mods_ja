@@ -129,9 +129,13 @@ function showMenu(data) {
         const btn = document.createElement('button');
         btn.classList.add('menu-option');
         btn.textContent = opt.label;
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (e) {
+            if (e) {
+                e.preventDefault();
+            }
             hideMenu();
-            postNui('menuSelect', { value: opt.value });
+            const v = (opt.value === 'custom') ? 'custom' : Number(opt.value);
+            postNui('menuSelect', { value: v });
         });
         menuOptions.appendChild(btn);
     });

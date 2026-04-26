@@ -1,54 +1,123 @@
+-- フレームワーク: auto 時は qbx / ESX / QBCore / ox(現金アイテム) の優先で検出
 local ESX, QBCore = nil, nil
+--- 'none' 'esx' 'qb' 'qbx' 'oxinv'（ox_core の口座は未対応のため ox_inv の money のみで代替）
+local MoneyMode = 'none'
 
-Citizen.CreateThread(function()
-    if Config.Framework == 'auto' or Config.Framework == 'esx' then
-        local success = pcall(function()
-            ESX = exports['es_extended']:getSharedObject()
-        end)
-        if success and ESX then
-            if Config.Debug then
-                print('[jp-gacha] ESX detected')
-            end
-            return
+local function InitFramework()
+    if Config.Framework == 'esx' or Config.Framework == 'es_extended' then
+        if pcall(function() ESX = exports['es_extended']:getSharedObject() end) and ESX then
+            MoneyMode = 'esx'
         end
+        return
     end
-    if Config.Framework == 'auto' or Config.Framework == 'qbcore' then
-        local success = pcall(function()
-            QBCore = exports['qb-core']:GetCoreObject()
-        end)
-        if success and QBCore then
-            if Config.Debug then
-                print('[jp-gacha] QBCore detected')
-            end
-            return
+    if Config.Framework == 'qb' or Config.Framework == 'qbcore' then
+        if pcall(function() QBCore = exports['qb-core']:GetCoreObject() end) and QBCore then
+            MoneyMode = 'qb'
         end
+        return
+    end
+    if Config.Framework == 'qbox' or Config.Framework == 'qbx' then
+        if GetResourceState('qbx_core') == 'started' then
+            MoneyMode = 'qbx'
+        end
+        return
+    end
+    if Config.Framework == 'oxinv' or Config.Framework == 'ox_inventory' then
+        if GetResourceState('ox_inventory') == 'started' then
+            MoneyMode = 'oxinv'
+        end
+        return
+    end
+    if GetResourceState('qbx_core') == 'started' then
+        MoneyMode = 'qbx'
+        if Config.Debug then
+            print('[jp-gacha] 自動: qbx_core (Qbox)')
+        end
+        return
+    end
+    if pcall(function() ESX = exports['es_extended']:getSharedObject() end) and ESX then
+        MoneyMode = 'esx'
+        if Config.Debug then print('[jp-gacha] 自動: es_extended') end
+        return
+    end
+    if pcall(function() QBCore = exports['qb-core']:GetCoreObject() end) and QBCore then
+        MoneyMode = 'qb'
+        if Config.Debug then print('[jp-gacha] 自動: qb-core') end
+        return
+    end
+    if GetResourceState('ox_inventory') == 'started' then
+        MoneyMode = 'oxinv'
+        if Config.Debug then
+            print('[jp-gacha] 自動: ox_inventory（money 現金）')
+        end
+        return
     end
     if Config.Debug then
-        print('[jp-gacha] Standalone mode')
+        print('[jp-gacha] 自動: 金検出なし（無料で回せるモード。Framework を設定するか esx/qb/ox 系を導入してください）')
     end
+end
+
+Citizen.CreateThread(function()
+    Wait(300) -- 起動順: qbx_core 等の export が揃うまで少し遅延
+    InitFramework()
 end)
 
 local function TryChargeMoney(source, amount)
-    if ESX then
+    if not amount or amount < 0 then
+        return true
+    end
+    if amount == 0 then
+        return true
+    end
+    if MoneyMode == 'esx' and ESX then
         local xPlayer = ESX.GetPlayerFromId(source)
-        if xPlayer and xPlayer.getMoney() >= amount then
+        if not xPlayer then
+            return false
+        end
+        if xPlayer.getMoney and xPlayer.getMoney() >= amount and xPlayer.removeMoney then
             xPlayer.removeMoney(amount)
             return true
         end
         return false
-    elseif QBCore then
-        local Player = QBCore.Functions.GetPlayer(source)
-        if Player then
-            local cash = Player.PlayerData.money['cash'] or 0
-            if cash >= amount then
-                Player.Functions.RemoveMoney('cash', amount, 'gacha')
-                return true
-            end
+    end
+    if (MoneyMode == 'qb' and QBCore) or MoneyMode == 'qbx' then
+        local Player
+        if MoneyMode == 'qbx' then
+            Player = exports.qbx_core:GetPlayer(source)
+        else
+            Player = QBCore.Functions.GetPlayer(source)
+        end
+        if not Player or not Player.PlayerData or not Player.PlayerData.money then
+            return false
+        end
+        local cash = Player.PlayerData.money.cash
+        if cash == nil then
+            cash = 0
+        end
+        if type(cash) == 'string' then
+            cash = tonumber(cash) or 0
+        end
+        if cash < amount then
+            return false
+        end
+        if not Player.Functions or not Player.Functions.RemoveMoney then
+            return false
+        end
+        local r = Player.Functions.RemoveMoney('cash', amount, 'jp-gacha')
+        return r ~= false
+    end
+    if MoneyMode == 'oxinv' and GetResourceState('ox_inventory') == 'started' then
+        local have = exports.ox_inventory:Search(source, 'count', 'money') or 0
+        if have < amount then
+            return false
+        end
+        if exports.ox_inventory:RemoveItem(source, 'money', amount) then
+            return true
         end
         return false
-    else
-        return true
     end
+    -- 従来: フレーム未検出時は通す（本番は Framework / ox 導入推奨）
+    return true
 end
 
 local function DrawRarity()
@@ -97,33 +166,33 @@ local PlayerCooldowns = {}
 -- 複数回ガチャ対応
 RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
     local source = source
-    local now = os.time()
-
-    -- バリデーション
-    if type(count) ~= 'number' or count < 1 or count > Config.MaxPullCount then
+    if type(source) == 'string' then
+        source = tonumber(source)
+    end
+    if not source or source < 1 then
+        return
+    end
+    -- 必ず数値化（Cfx のイベント型ゆらぎ）
+    count = math.floor(tonumber(count) or 0)
+    if count < 1 or count > Config.MaxPullCount then
         TriggerClientEvent('jp-gacha:drawDenied', source, 'invalid')
         return
     end
-    count = math.floor(count)
 
-    -- クールダウン
+    local now = os.time()
     if PlayerCooldowns[source] and (now - PlayerCooldowns[source]) < Config.Cooldown then
         TriggerClientEvent('jp-gacha:drawDenied', source, 'cooldown')
         return
     end
 
-    -- 合計コスト計算 & 課金
     local totalCost = Config.Cost * count
-    if totalCost > 0 then
-        if not TryChargeMoney(source, totalCost) then
-            TriggerClientEvent('jp-gacha:drawDenied', source, 'nomoney')
-            return
-        end
+    if totalCost > 0 and not TryChargeMoney(source, totalCost) then
+        TriggerClientEvent('jp-gacha:drawDenied', source, 'nomoney')
+        return
     end
 
     PlayerCooldowns[source] = now
 
-    -- 複数回抽選
     local results = {}
     for i = 1, count do
         local rarity = DrawRarity()
@@ -141,16 +210,13 @@ RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
         })
     end
 
-    -- クライアントへ送信
     TriggerClientEvent('jp-gacha:multiDrawResult', source, results, count)
 
-    -- ログ & チャット
     local playerName = GetPlayerName(source) or "Unknown"
     for _, r in ipairs(results) do
         print(('[jp-gacha] %s が %s（%s）を引いた'):format(playerName, r.itemName, r.rarityId))
     end
 
-    -- SR以上が含まれていたら全体通知
     local hasRare = false
     local rareItems = {}
     for _, r in ipairs(results) do
@@ -170,7 +236,6 @@ RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
             }
         })
     else
-        -- 本人のみ
         local itemNames = {}
         for _, r in ipairs(results) do
             table.insert(itemNames, r.itemName)
