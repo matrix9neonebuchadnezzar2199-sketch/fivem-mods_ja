@@ -257,16 +257,12 @@ end
 --- @param source number Player ID
 --- @param item string Item name
 --- @param count number Item quantity
---- @param metadata? table 購入・付与と同じ物を渡す（ox_inventory: 耐久付きツルハシ等は省略すると CanCarry が誤判定する）
-function CanCarry(source, item, count, metadata)
+function CanCarry(source, item, count)
     if count <= 0 then return true end
     local player = GetPlayer(source)
     if not player then return true end
     if Inventory then
         if Inventory == 'ox_inventory' then
-            if metadata then
-                return exports[Inventory]:CanCarryItem(source, item, count, metadata)
-            end
             return exports[Inventory]:CanCarryItem(source, item, count)
         elseif Inventory == 'qb-inventory' then
             return exports[Inventory]:CanAddItem(source, item, count)
