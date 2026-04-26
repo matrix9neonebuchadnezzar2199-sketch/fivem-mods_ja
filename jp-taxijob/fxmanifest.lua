@@ -41,8 +41,6 @@ lua54 'yes'
 use_experimental_fxv2_oal 'yes'
 ox_lib 'locale'
 
-dependencies {
-    'qbx_core',
-    'ox_lib',
-    'ox_target',
-}
+-- 注意: ここに dependencies を書くと、Qbox/ox 未導入・未起動のサーバーでは「リソース全体が1行も走らない」。
+-- 実装は qbx+ox+ox_target 前提だが、起動診断のためブロックは書かない（必須手順は README のみ）。
+-- dependencies { 'qbx_core', 'ox_lib', 'ox_target' }

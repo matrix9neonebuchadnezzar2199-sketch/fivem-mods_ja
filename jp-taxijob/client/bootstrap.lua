@@ -1,5 +1,6 @@
--- 最速・依存なし: qbx/ox より前に実行。ここで反応しなければリソースが ensure されていないか fxmanifest エラー
-print('^2[jp-taxijob]^7 [1/3] client/bootstrap.lua 読み込み OK')
+-- 最速・外部スクリプトより先に実行。色コードなし: txAdmin によっては ^2 が出ない
+print('jp-taxijob: client/bootstrap.lua LOADED [1/3]')
+print('[jp-taxijob] この行が F8 にも出なければ resources に jp-taxijob が無い or ensure されていない')
 
 --- 古いGTA系ヘルプ。ox / chat 不要
 local function notifBody(msg)

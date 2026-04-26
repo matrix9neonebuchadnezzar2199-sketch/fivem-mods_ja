@@ -1,5 +1,7 @@
--- require / ox / qbx より先に必ず実行（server/main が落ちてもここは動く）
-print('^2[jp-taxijob]^7 [server/1] bootstrap.lua — ここが見えないと jp-taxijob 自体が起動していません')
+-- require / ox / qbx より先に必ず実行。ASCII のみ: サーバーコンソール向け
+print('================================================================')
+print('jp-taxijob: server/bootstrap.lua LOADED (if you see this, ensure worked)')
+print('================================================================')
 
 -- どのスクリプトより先に常駐。チャット用。
 RegisterCommand('jp_taxijob_ping', function(source, _args, _raw)

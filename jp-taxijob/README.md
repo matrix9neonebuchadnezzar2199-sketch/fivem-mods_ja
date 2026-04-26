@@ -12,9 +12,19 @@ Qbox（`qbx_core` + `ox_lib` + `ox_target`）向けのタクシーNPCミッシ�
 ## 導入
 
 1. 本フォルダを `resources/[jp-mods]/jp-taxijob/` に配置
-2. `server.cfg` に `ensure jp-taxijob`（`qb-taxijob` / `qbx_taxijob` は併用しない想定）
-3. `config/client.lua` / `config/shared.lua` をサーバー方針に合わせて調整
-4. `refresh` → `ensure jp-taxijob`
+2. **Qbox 前提**: `qbx_core` / `ox_lib` / `ox_target` 本体を `resources` に**インストール済み**であること
+3. `server.cfg` では、**必ず** `ox_lib` → `qbx_core` 等を **`jp-taxijob` より上（先）**に `ensure` する
+   - **FiveM Basic Server** だけ（デフォ数個）だと `ox_lib` リソースが**無い** → クライアント2行目で止まる。先に [ox_lib](https://github.com/communityox/ox_lib) を導入する
+4. `server.cfg` に `ensure jp-taxijob`（`qb-taxijob` / `qbx_taxijob` は併用しない想定）
+5. `config/client.lua` / `config/shared.lua` をサーバー方針に合わせて調整
+6. `refresh` → `ensure jp-taxijob`
+
+#### 起動してるか分からないとき
+
+- サーバーコンソールに `server/bootstrap.lua LOADED`（`====` 区切り）→ サーバー側は起動できている
+- 何も出ない → `ensure jp-taxijob` 無し / デプロイ先が古い / `resources` のフォルダ名違い
+- F8 に `client/bootstrap.lua LOADED` → 先頭のクライアントは読めている
+- F7 無反応＋上記なし → **リソース未起動**、または `ox_lib` 未導入で2行目以降が読めていない
 
 ## 重要メモ
 
