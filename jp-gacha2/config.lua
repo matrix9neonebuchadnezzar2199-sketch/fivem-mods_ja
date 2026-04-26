@@ -127,8 +127,10 @@ Config.Debug = false
 
 -- 管理画面（/ コマンド。ACE で制限するなら requireAdminAce を true にし、add_ace で AdminAce を許可）
 -- command.<AdminCommand> でも通す
-Config.AdminCommand = 'gachaadmin'
-Config.RequireAdminAce = false -- 本番では true 推奨
+Config.AdminCommand = 'gachaadmin' -- 緊急: ACE command.<AdminCommand> 必須。マシンから入る用パスは KVS（初回は下記）
+-- マシンEキー→管理画面: KVS 保存のパスワードと照合。初期値 KVS 未設定時は本値を採用（サーバー起動で KVS に反映）
+Config.AdminPassword = 'admin'
+Config.RequireAdminAce = false -- 旧: save 周り。現行は j-gacha2 のセッション方式と併用
 Config.AdminAce = 'jp-gacha2.admin'
 
 -- ox_inventory: 景品用スタッシュID（未登録ならサーバー起動時に RegisterStash する）

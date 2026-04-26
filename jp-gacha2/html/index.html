@@ -7,6 +7,27 @@
     <title>jp-gacha</title>
 </head>
 <body>
+    <div id="top-menu-container" class="hidden">
+        <div id="top-menu-box">
+            <div id="top-menu-title">ガチャマシン</div>
+            <button type="button" class="top-menu-option" id="btn-gacha">🎰 ガチャる</button>
+            <button type="button" class="top-menu-option" id="btn-top-admin">⚙ 管理画面</button>
+            <div id="top-menu-close-hint">ESC で閉じる</div>
+        </div>
+    </div>
+
+    <div id="pass-container" class="hidden">
+        <div id="pass-box">
+            <div id="pass-title">管理パスワードを入力</div>
+            <input type="password" id="pass-field" placeholder="パスワード" autocomplete="off" />
+            <div id="pass-buttons">
+                <button type="button" id="pass-submit">確認</button>
+                <button type="button" id="pass-cancel">キャンセル</button>
+            </div>
+            <div id="pass-error" class="hidden">パスワードが違います</div>
+        </div>
+    </div>
+
     <div id="admin-container" class="hidden">
         <div id="admin-box">
             <div id="admin-header">
@@ -30,6 +51,18 @@
                         <option value="classic">クラシック</option>
                         <option value="gold">ゴールド</option>
                     </select>
+                </div>
+                <h3>管理パスワード（Eキー→管理画面用）</h3>
+                <div class="admin-field">
+                    <label for="admin-pass-cur">現在のパスワード</label>
+                    <input type="password" id="admin-pass-cur" placeholder="********" autocomplete="off" />
+                </div>
+                <div class="admin-field">
+                    <label for="admin-pass-new">新しいパスワード</label>
+                    <input type="password" id="admin-pass-new" placeholder="" autocomplete="off" />
+                </div>
+                <div class="admin-pw-btns">
+                    <button type="button" id="admin-pass-change">変更</button>
                 </div>
                 <h3>レアリティ排出率設定</h3>
                 <div id="admin-rarity-hint">合計排出率: <span id="admin-rarity-total">100</span>%（100%にしてください）</div>

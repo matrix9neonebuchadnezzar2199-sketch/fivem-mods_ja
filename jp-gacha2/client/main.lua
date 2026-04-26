@@ -62,13 +62,36 @@ function StartGachaPull(count)
     TriggerServerEvent('jp-gacha:requestMultiDraw', count)
 end
 
--- ガチャメニュー: サーバーに景品表を取りに行き NUI へ
-local function ShowGachaMenu()
+-- マシン: トップメニュー（ガチャ / 管理）→ 各導線
+local function ShowTopMenu()
     if isPlaying then
         return
     end
-    TriggerServerEvent('jp-gacha:requestGachaMenuData')
+    nuiMenuOrInputOpen = true
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        type = 'showTopMenu',
+        scale = Config.UIScale
+    })
 end
+
+RegisterNUICallback('topMenuSelect', function(data, cb)
+    cb('ok')
+    local v = data and data.value
+    if v == 'gacha' then
+        TriggerServerEvent('jp-gacha:requestGachaMenuData')
+    elseif v == 'admin' and data.password then
+        TriggerServerEvent('jp-gacha:verifyAdminPassword', tostring(data.password))
+    end
+end)
+
+RegisterNUICallback('changeAdminPassword', function(d, cb)
+    TriggerServerEvent('jp-gacha:changeAdminPassword', {
+        current = d and d.current and tostring(d.current) or '',
+        newPassword = d and d.newPassword and tostring(d.newPassword) or ''
+    })
+    cb('ok')
+end)
 
 RegisterNUICallback('menuSelect', function(data, cb)
     local selected = data and data.value
@@ -136,6 +159,7 @@ end)
 
 RegisterNUICallback('adminClose', function(_, cb)
     SetNuiFocus(false, false)
+    TriggerServerEvent('jp-gacha:adminSessionEnd')
     cb('ok')
 end)
 
@@ -182,6 +206,28 @@ RegisterNetEvent('jp-gacha:adminSaveResult', function(res)
     })
 end)
 
+-- 管理パス失敗
+RegisterNetEvent('jp-gacha:adminDenied', function()
+    SendNUIMessage({ type = 'adminDenied' })
+end)
+
+-- /gachaadmin: ACE なし
+RegisterNetEvent('jp-gacha:adminCommandDenied', function()
+    nuiMenuOrInputOpen = false
+    SetNuiFocus(false, false)
+    Notify('このコマンドを使う権限がありません（add_ace で command.' .. tostring(Config.AdminCommand) .. '）')
+end)
+
+-- パスワード変更の結果
+RegisterNetEvent('jp-gacha:changePasswordResult', function(res)
+    SendNUIMessage({
+        type = 'changePasswordResult',
+        ok = res and res.ok,
+        reason = res and res.reason
+    })
+end)
+
+-- 緊急: パスワード不要。ACE: command.<AdminCommand>（NUI フォーカスは adminData 受信時に付与）
 RegisterCommand(Config.AdminCommand, function()
     TriggerServerEvent('jp-gacha:requestAdminData')
 end, false)
@@ -250,7 +296,7 @@ Citizen.CreateThread(function()
                     EndTextCommandDisplayHelp(0, false, true, -1)
 
                     if IsControlJustReleased(0, 38) then
-                        ShowGachaMenu()
+                        ShowTopMenu()
                     end
                 end
             end

@@ -73,6 +73,9 @@ end)
 
 -- KVS: このリソースの KVP
 local KVP_KEY = 'jp_gacha_settings_v1'
+local KVP_ADMIN_PW = 'jp_gacha_admin_password'
+-- 管理画面: パスワード or /gachaadmin(ACE) で解除後に true
+local AdminUnlocked = {}
 
 local function NewDefaultGachaKvs()
     return {
@@ -158,15 +161,46 @@ local function SaveGachaKvs()
     end
 end
 
-local function AdminAllowed(src)
-    if not Config.RequireAdminAce then
-        return true
+local function KvpGetStr(key)
+    if GetResourceKvpString then
+        return GetResourceKvpString(key) or nil
     end
-    local ac = tostring(Config.AdminCommand or 'gachaadmin')
-    if IsPlayerAceAllowed(src, 'command.' .. ac) or IsPlayerAceAllowed(src, tostring(Config.AdminAce or 'jp-gacha2.admin')) then
-        return true
+    if GetResourceKvp then
+        return GetResourceKvp(key) or nil
     end
-    return false
+    return nil
+end
+
+local function KvpSetStr(key, val)
+    if SetResourceKvpString and val then
+        SetResourceKvpString(key, val)
+    elseif SetResourceKvp and val then
+        SetResourceKvp(key, val)
+    end
+end
+
+local function GetStoredAdminPassword()
+    local p = KvpGetStr(KVP_ADMIN_PW)
+    if not p or p == '' then
+        return tostring(Config.AdminPassword or 'admin')
+    end
+    return p
+end
+
+local function SetStoredAdminPassword(plain)
+    if type(plain) ~= 'string' or #plain < 1 then
+        return false
+    end
+    KvpSetStr(KVP_ADMIN_PW, plain)
+    return true
+end
+
+--- 初回のみ Config を KVS に焼き付け
+local function EnsureAdminPasswordKvp()
+    local p = KvpGetStr(KVP_ADMIN_PW)
+    if not p or p == '' then
+        SetStoredAdminPassword(tostring(Config.AdminPassword or 'admin'))
+    end
 end
 
 -- ox: アイテム表示名
@@ -552,10 +586,43 @@ end
 Citizen.CreateThread(function()
     Wait(800)
     RegisterStashIfNeeded()
+    EnsureAdminPasswordKvp()
     LoadGachaKvs()
 end)
 
 local PlayerCooldowns = {}
+
+local function SendAdminDataToClient(src)
+    LoadGachaKvs()
+    local catalog = BuildPrizeCatalog()
+    local outItems = {}
+    for _, e in ipairs(catalog) do
+        local s = GetItemSetting(e.id) or DefaultSettingForEntry(e)
+        outItems[#outItems + 1] = {
+            id = e.id,
+            name = e.name,
+            label = e.label,
+            count = e.isOx and (e.count or 0) or -1,
+            enabled = s.enabled,
+            rarity = s.rarity,
+        }
+    end
+    TriggerClientEvent('jp-gacha:adminData', src, {
+        settings = {
+            title = GachaKvs.title or Config.MenuTitle,
+            cost = GetEffectiveCost(),
+            theme = GachaKvs.theme or 'neon',
+            rarityPct = {
+                UR = (GachaKvs.rarityPct and GachaKvs.rarityPct.UR) or 10,
+                SSR = (GachaKvs.rarityPct and GachaKvs.rarityPct.SSR) or 4,
+                SR = (GachaKvs.rarityPct and GachaKvs.rarityPct.SR) or 10,
+                R = (GachaKvs.rarityPct and GachaKvs.rarityPct.R) or 76,
+            },
+        },
+        items = outItems,
+        rarities = Config.RarityDisplayNames
+    })
+end
 
 local function BuildMenuItemRows()
     local catalog = BuildPrizeCatalog()
@@ -613,48 +680,72 @@ RegisterNetEvent('jp-gacha:requestGachaMenuData', function()
     })
 end)
 
+-- 緊急: ACE command.<gachaadmin> 必須。パスワード不要
 RegisterNetEvent('jp-gacha:requestAdminData', function()
     local src = source
-    if not AdminAllowed(src) then
+    local cmd = 'command.' .. tostring(Config.AdminCommand or 'gachaadmin')
+    if not IsPlayerAceAllowed(src, cmd) then
+        TriggerClientEvent('jp-gacha:adminCommandDenied', src)
         if Config.Debug then
-            print('[jp-gacha] requestAdminData denied: ' .. tostring(src))
+            print(('[jp-gacha] /%s: ACE なし'):format(tostring(Config.AdminCommand)))
         end
         return
     end
-    LoadGachaKvs()
-    local catalog = BuildPrizeCatalog()
-    local outItems = {}
-    for _, e in ipairs(catalog) do
-        local s = GetItemSetting(e.id) or DefaultSettingForEntry(e)
-        outItems[#outItems + 1] = {
-            id = e.id,
-            name = e.name,
-            label = e.label,
-            count = e.isOx and (e.count or 0) or -1,
-            enabled = s.enabled,
-            rarity = s.rarity,
-        }
+    AdminUnlocked[src] = true
+    SendAdminDataToClient(src)
+end)
+
+-- マシン: KVS パスワードと照合
+RegisterNetEvent('jp-gacha:verifyAdminPassword', function(plain)
+    local src = source
+    if type(plain) ~= 'string' then
+        TriggerClientEvent('jp-gacha:adminDenied', src)
+        return
     end
-    TriggerClientEvent('jp-gacha:adminData', src, {
-        settings = {
-            title = GachaKvs.title or Config.MenuTitle,
-            cost = GetEffectiveCost(),
-            theme = GachaKvs.theme or 'neon',
-            rarityPct = {
-                UR = (GachaKvs.rarityPct and GachaKvs.rarityPct.UR) or 10,
-                SSR = (GachaKvs.rarityPct and GachaKvs.rarityPct.SSR) or 4,
-                SR = (GachaKvs.rarityPct and GachaKvs.rarityPct.SR) or 10,
-                R = (GachaKvs.rarityPct and GachaKvs.rarityPct.R) or 76,
-            },
-        },
-        items = outItems,
-        rarities = Config.RarityDisplayNames
-    })
+    if plain == GetStoredAdminPassword() then
+        AdminUnlocked[src] = true
+        SendAdminDataToClient(src)
+    else
+        TriggerClientEvent('jp-gacha:adminDenied', src)
+    end
+end)
+
+-- 管理パスワード変更（KVS）セッション中のみ
+RegisterNetEvent('jp-gacha:changeAdminPassword', function(data)
+    local src = source
+    if not AdminUnlocked[src] then
+        return
+    end
+    if type(data) ~= 'table' or type(data.current) ~= 'string' or type(data.newPassword) ~= 'string' then
+        TriggerClientEvent('jp-gacha:changePasswordResult', src, { ok = false, reason = 'invalid' })
+        return
+    end
+    if data.current ~= GetStoredAdminPassword() then
+        TriggerClientEvent('jp-gacha:changePasswordResult', src, { ok = false, reason = 'mismatch' })
+        return
+    end
+    if #data.newPassword < 1 then
+        TriggerClientEvent('jp-gacha:changePasswordResult', src, { ok = false, reason = 'empty' })
+        return
+    end
+    if SetStoredAdminPassword(data.newPassword) then
+        TriggerClientEvent('jp-gacha:changePasswordResult', src, { ok = true })
+    else
+        TriggerClientEvent('jp-gacha:changePasswordResult', src, { ok = false, reason = 'save' })
+    end
+end)
+
+RegisterNetEvent('jp-gacha:adminSessionEnd', function()
+    local src = source
+    AdminUnlocked[src] = nil
 end)
 
 RegisterNetEvent('jp-gacha:saveAdminData', function(data)
     local src = source
-    if not AdminAllowed(src) then
+    if not AdminUnlocked[src] then
+        if Config.Debug then
+            print('[jp-gacha] saveAdminData: セッションなし ' .. tostring(src))
+        end
         return
     end
     if type(data) ~= 'table' or type(data.rarityPct) ~= 'table' or type(data.items) ~= 'table' then
@@ -820,5 +911,9 @@ RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
 end)
 
 AddEventHandler('playerDropped', function()
-    PlayerCooldowns[source] = nil
+    local src = source
+    if PlayerCooldowns then
+        PlayerCooldowns[src] = nil
+    end
+    AdminUnlocked[src] = nil
 end)

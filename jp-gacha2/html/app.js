@@ -21,6 +21,18 @@ const multiResultArea = document.getElementById('multi-result-area');
 const multiResultList = document.getElementById('multi-result-list');
 const inputSubmitButton = document.getElementById('input-submit');
 const inputCancelButton = document.getElementById('input-cancel');
+const topMenuContainer = document.getElementById('top-menu-container');
+const topMenuTitle = document.getElementById('top-menu-title');
+const btnGacha = document.getElementById('btn-gacha');
+const btnTopAdmin = document.getElementById('btn-top-admin');
+const passContainer = document.getElementById('pass-container');
+const passField = document.getElementById('pass-field');
+const passSubmit = document.getElementById('pass-submit');
+const passCancel = document.getElementById('pass-cancel');
+const passError = document.getElementById('pass-error');
+const adminPassCur = document.getElementById('admin-pass-cur');
+const adminPassNew = document.getElementById('admin-pass-new');
+const adminPassChange = document.getElementById('admin-pass-change');
 const adminContainer = document.getElementById('admin-container');
 const adminBox = document.getElementById('admin-box');
 const adminClose = document.getElementById('admin-close');
@@ -47,6 +59,7 @@ let inputFromGacha = false;
 let lastGachaRarities = [];
 let adminRarityKeyOrder = ['UR', 'SSR', 'SR', 'R'];
 let lastMaxPull = 10;
+let inPassFlow = false;
 
 let allTimers = [];
 let currentMultiData = null;
@@ -163,9 +176,121 @@ function getRarityMeta(rarities, id) {
     return { label: id, color: '#999', icon: '' };
 }
 
+function hideTopAndPass() {
+    if (topMenuContainer) {
+        topMenuContainer.classList.add('hidden');
+    }
+    if (passContainer) {
+        passContainer.classList.add('hidden');
+    }
+    inPassFlow = false;
+}
+
+function showTopMenuView(data) {
+    setScale((data && data.scale) || 2);
+    inPassFlow = false;
+    if (passContainer) {
+        passContainer.classList.add('hidden');
+    }
+    if (passError) {
+        passError.classList.add('hidden');
+    }
+    if (inputContainer) {
+        inputContainer.classList.add('hidden');
+    }
+    gachaMenuContainer.classList.add('hidden');
+    adminContainer.classList.add('hidden');
+    menuContainer.classList.add('hidden');
+    if (topMenuTitle) {
+        topMenuTitle.textContent = 'ガチャマシン';
+    }
+    if (topMenuContainer) {
+        topMenuContainer.classList.remove('hidden');
+    }
+}
+
+if (btnGacha) {
+    btnGacha.addEventListener('click', function (e) {
+        if (e) {
+            e.preventDefault();
+        }
+        if (topMenuContainer) {
+            topMenuContainer.classList.add('hidden');
+        }
+        postNui('topMenuSelect', { value: 'gacha' });
+    });
+}
+if (btnTopAdmin) {
+    btnTopAdmin.addEventListener('click', function (e) {
+        if (e) {
+            e.preventDefault();
+        }
+        if (topMenuContainer) {
+            topMenuContainer.classList.add('hidden');
+        }
+        if (passField) {
+            passField.value = '';
+        }
+        if (passError) {
+            passError.classList.add('hidden');
+        }
+        inPassFlow = true;
+        if (passContainer) {
+            passContainer.classList.remove('hidden');
+        }
+        if (passField) {
+            passField.focus();
+        }
+    });
+}
+if (passSubmit) {
+    passSubmit.addEventListener('click', function (e) {
+        if (e) {
+            e.preventDefault();
+        }
+        const pw = (passField && passField.value) || '';
+        postNui('topMenuSelect', { value: 'admin', password: pw });
+    });
+}
+if (passCancel) {
+    passCancel.addEventListener('click', function (e) {
+        if (e) {
+            e.preventDefault();
+        }
+        inPassFlow = false;
+        if (passContainer) {
+            passContainer.classList.add('hidden');
+        }
+        if (passError) {
+            passError.classList.add('hidden');
+        }
+        if (topMenuContainer) {
+            topMenuContainer.classList.remove('hidden');
+        }
+    });
+}
+if (passField) {
+    passField.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && passSubmit) {
+            passSubmit.click();
+        }
+    });
+}
+if (adminPassChange) {
+    adminPassChange.addEventListener('click', function (e) {
+        if (e) {
+            e.preventDefault();
+        }
+        const cur = (adminPassCur && adminPassCur.value) || '';
+        const nw = (adminPassNew && adminPassNew.value) || '';
+        postNui('changeAdminPassword', { current: cur, newPassword: nw });
+    });
+}
+
 function showGachaMenuView(data) {
     setScale(data.scale);
     lastGachaRarities = data.rarities || [];
+    hideTopAndPass();
     gachaMenuContainer.classList.remove('hidden');
     adminContainer.classList.add('hidden');
     menuContainer.classList.add('hidden');
@@ -259,6 +384,13 @@ function showGachaMenuView(data) {
 
 function showAdminView(data) {
     setScale(data.scale);
+    hideTopAndPass();
+    if (adminPassCur) {
+        adminPassCur.value = '';
+    }
+    if (adminPassNew) {
+        adminPassNew.value = '';
+    }
     adminContainer.classList.remove('hidden');
     gachaMenuContainer.classList.add('hidden');
     menuContainer.classList.add('hidden');
@@ -451,6 +583,26 @@ inputCancelButton.addEventListener('click', function () {
 
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
+        if (passContainer && !passContainer.classList.contains('hidden')) {
+            if (passCancel) {
+                passCancel.click();
+            } else {
+                inPassFlow = false;
+                passContainer.classList.add('hidden');
+                if (topMenuContainer) {
+                    topMenuContainer.classList.remove('hidden');
+                }
+                if (passError) {
+                    passError.classList.add('hidden');
+                }
+            }
+            return;
+        }
+        if (topMenuContainer && !topMenuContainer.classList.contains('hidden')) {
+            topMenuContainer.classList.add('hidden');
+            postNui('menuClose', {});
+            return;
+        }
         if (!inputContainer.classList.contains('hidden')) {
             if (inputFromGacha) {
                 inputFromGacha = false;
@@ -748,11 +900,53 @@ window.addEventListener('message', function (event) {
         case 'showInput':
             showInput(data);
             break;
+        case 'showTopMenu':
+            showTopMenuView(data);
+            break;
         case 'showGachaMenu':
             showGachaMenuView(data);
             break;
         case 'showAdmin':
             showAdminView(data);
+            break;
+        case 'adminDenied':
+            if (passError) {
+                passError.classList.remove('hidden');
+            }
+            if (passContainer) {
+                passContainer.classList.remove('hidden');
+            }
+            if (topMenuContainer) {
+                topMenuContainer.classList.add('hidden');
+            }
+            inPassFlow = true;
+            break;
+        case 'changePasswordResult':
+            if (adminToast) {
+                if (data && data.ok) {
+                    adminToast.textContent = 'パスワードを変更しました';
+                    adminToast.classList.add('ok');
+                    if (adminPassCur) {
+                        adminPassCur.value = '';
+                    }
+                    if (adminPassNew) {
+                        adminPassNew.value = '';
+                    }
+                } else {
+                    var pm = 'パスワードの変更に失敗しました';
+                    if (data && data.reason === 'mismatch') {
+                        pm = '現在のパスワードが違います';
+                    } else if (data && data.reason === 'empty') {
+                        pm = '新しいパスワードを入力してください';
+                    }
+                    adminToast.textContent = pm;
+                    adminToast.classList.remove('ok');
+                }
+                adminToast.classList.remove('hidden');
+                setTimeout(function () {
+                    adminToast.classList.add('hidden');
+                }, 2200);
+            }
             break;
         case 'adminSaveResult':
             if (adminSave) {
