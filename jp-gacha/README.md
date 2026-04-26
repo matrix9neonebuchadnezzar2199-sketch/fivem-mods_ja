@@ -111,6 +111,10 @@ NUI では再生前に存在確認（`fetch` HEAD 等）を行い、ファイル
 ![10連 URカットイン](docs/screenshots/multi10-ur-cutin.png)
 ![10連 UR開封結果](docs/screenshots/multi10-ur-result.png)
 
+## ガチャの一連の流れ（動画）
+
+- [video1.mp4](docs/video1.mp4)
+
 ## ライセンス
 
 MIT
