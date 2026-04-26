@@ -1,0 +1,53 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  font-family: "Segoe UI", "Meiryo", "Yu Gothic", sans-serif;
+  overflow: hidden; cursor: default; user-select: none;
+}
+#nuiRoot.nui-hidden { display: none; }
+#nuiRoot.nui-visible { display: block; }
+#nuiRoot { position: fixed; inset: 0; z-index: 1; }
+.dim {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 0;
+}
+.phone {
+  position: fixed; left: 50%; top: 50%;
+  width: 600px; min-height: 420px; margin-left: -300px; margin-top: -260px;
+  z-index: 1;
+  background: #0d1b2a;
+  color: #e0e1dd;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  padding: 20px; display: flex; flex-direction: column;
+  border: 1px solid #1b3a5c;
+}
+.hdr { display: flex; align-items: center; justify-content: center; position: relative; }
+.phone header h1 {
+  margin: 0 0 10px; font-size: 1.85rem; font-weight: 700; color: #6ea8d8;
+  text-align: center;
+  flex: 1;
+}
+.btn-close {
+  position: absolute; right: 0; top: 0;
+  width: 36px; height: 36px; font-size: 1.4rem; line-height: 1;
+  background: #1b263b; color: #e0e1dd; border: 1px solid #415a77; border-radius: 8px;
+  cursor: pointer; padding: 0;
+}
+.btn-close:hover { background: #2a3f5c; }
+.sub { font-size: 1.05rem; color: #a0a3b0; line-height: 1.5; text-align: center; margin: 0 0 16px; }
+.panel { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.courseList { display: flex; flex-direction: column; gap: 8px; }
+.btn {
+  background: linear-gradient(180deg, #1e4d7b 0%, #134074 100%);
+  color: #fff; border: 1px solid #3d6ea3; border-radius: 10px; padding: 10px 12px;
+  font-size: 1.2rem; cursor: pointer; font-weight: 600;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 0 #0a1628;
+}
+.btn small { display: block; font-weight: 400; color: #9ec8ff; font-size: 0.95rem; margin-top: 6px; }
+.btn:hover { background: linear-gradient(180deg, #2560a0 0%, #134074 100%); }
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #0a1628; }
+.btn.ghost { background: #1b263b; color: #ccc; box-shadow: 0 4px 0 #0a0f18; border-color: #2d3c55; }
+.btn.ghost:hover { background: #24364f; }
+footer { margin-top: 12px; }

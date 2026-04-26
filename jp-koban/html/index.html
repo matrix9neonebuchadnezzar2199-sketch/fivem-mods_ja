@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>巡回パトロール</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="nuiRoot" class="nui-hidden">
+    <div class="dim" id="appDim"></div>
+    <div class="phone" id="appRoot" role="dialog" aria-label="巡回パトロール">
+      <header class="hdr">
+        <h1>巡回パトロール</h1>
+        <button type="button" class="btn-close" id="btnX" title="閉じる" aria-label="閉じる">×</button>
+      </header>
+      <p class="sub" id="subText">住宅地の巡回任務を受けてください</p>
+
+      <div id="idlePanel" class="panel">
+        <div class="courseList">
+          <button type="button" class="btn" id="btn5" data-c="5">5箇所コース<small>（報酬: $<span class="b5">2000</span>）</small></button>
+          <button type="button" class="btn" id="btn10" data-c="10">10箇所コース<small>（報酬: $<span class="b10">5000</span>）</small></button>
+        </div>
+      </div>
+      <footer>
+        <button type="button" class="btn ghost" id="btnClose">閉じる</button>
+      </footer>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
