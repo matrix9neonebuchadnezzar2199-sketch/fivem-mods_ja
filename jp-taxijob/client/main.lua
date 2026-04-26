@@ -1082,7 +1082,8 @@ local function showDebugToPlayer(summaryLines)
     end)
 end
 
-RegisterCommand('jp_taxijob_debug', function()
+-- チャットの /cmd は多くの環境でサーバーの RegisterCommand だけ届く。F8 はクライアント直なので両方使う。
+local function runTaxijobDebug()
     local res = GetCurrentResourceName()
     local c = config.depot.coords
     local my = PlayerPedId()
@@ -1132,4 +1133,12 @@ RegisterCommand('jp_taxijob_debug', function()
         summary[#summary + 1] = ('再生成結果: %s'):format(ok and 'OK' or '失敗（F8ログ参照）')
     end
     showDebugToPlayer(summary)
+end
+
+RegisterCommand('jp_taxijob_debug', function()
+    runTaxijobDebug()
 end, false)
+
+RegisterNetEvent('jp-taxijob:client:debugDepot', function()
+    runTaxijobDebug()
+end)

@@ -213,3 +213,12 @@ AddEventHandler('playerDropped', function()
     end
     forgetCompanyCab(src)
 end)
+
+-- チャットの「/コマンド」はサーバー側に届くことが多い。クライアント直の RegisterCommand だけだと反応しない環境向け。
+RegisterCommand('jp_taxijob_debug', function(source, _args, _raw)
+    if source == 0 then
+        return
+    end
+    log('debugDepot: src=%s name=%s', tostring(source), tostring(GetPlayerName(source)))
+    TriggerClientEvent('jp-taxijob:client:debugDepot', source)
+end, false)
