@@ -40,6 +40,30 @@ RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
         return
     end
 
+    local identifier = GetIdentifier(source)
+    if not identifier then return end
+    local name = GetName(source)
+    if not name then return end
+
+    local coords = shared.shops.location
+    local dist = #(vec3(coords.x, coords.y, coords.z) - GetEntityCoords(GetPlayerPed(source))) <= 15
+    if not dist then return end
+
+    -- ox + durability 付き: CanCarryItem が偽陰性になり「これ以上持てません」だけ出ることが多い。AddItem の戻りを正とし、通ったら課金
+    if Inventory == 'ox_inventory' and item.metadata then
+        local a, b = exports.ox_inventory:AddItem(source, item.item, input, item.metadata)
+        if a == false then
+            local msg = (type(b) == 'string' and b and b ~= '') and b or locale('notify.cant-carry')
+            TriggerClientEvent('jp-lation_mining:notify', source, msg, 'error')
+            return
+        end
+        RemoveMoney(source, shared.shops.mine.account, total)
+        if server.logs.events.purchased then
+            PlayerLog(source, locale('logs.purchased-title'), locale('logs.purchased-message', name, identifier, input, item.item))
+        end
+        return
+    end
+
     if item.metadata then
         if not CanCarry(source, item.item, input, item.metadata) then
             TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
@@ -51,15 +75,6 @@ RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
             return
         end
     end
-
-    local identifier = GetIdentifier(source)
-    if not identifier then return end
-    local name = GetName(source)
-    if not name then return end
-
-    local coords = shared.shops.location
-    local dist = #(vec3(coords.x, coords.y, coords.z) - GetEntityCoords(GetPlayerPed(source))) <= 15
-    if not dist then return end
 
     RemoveMoney(source, shared.shops.mine.account, total)
 
