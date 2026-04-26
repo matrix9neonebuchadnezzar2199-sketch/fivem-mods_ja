@@ -27,6 +27,23 @@ local function Notify(msg)
     end
 end
 
+local function DrawGroundCylinderMarker(pos, rgb)
+    local markerZ = pos.z + 0.05
+    local ok, groundZ = GetGroundZFor_3dCoord(pos.x, pos.y, pos.z + 1.0, false)
+    if ok then
+        markerZ = groundZ + 0.05
+    end
+    DrawMarker(
+        1,
+        pos.x, pos.y, markerZ,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.6, 0.6, 0.3,
+        rgb[1], rgb[2], rgb[3], 200,
+        false, true, 2, false, nil, nil, false
+    )
+end
+
 function StartGachaPull(count)
     if isPlaying then
         return
@@ -115,27 +132,31 @@ Citizen.CreateThread(function()
         SetBlipDisplay(blip, 4)
         SetBlipScale(blip, Config.Blip.scale)
         SetBlipColour(blip, Config.Blip.color)
-        SetBlipAsShortRange(blip, true)
+        SetBlipAsShortRange(blip, false)
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentSubstringPlayerName(Config.Blip.label)
         EndTextCommandSetBlipName(blip)
 
-        local modelHash = GetHashKey('prop_weighstation_02')
+        local modelName = Config.MachineModel or 'prop_weighstation_02'
+        local modelHash = GetHashKey(modelName)
         RequestModel(modelHash)
         local timeout = 0
         while not HasModelLoaded(modelHash) and timeout < 50 do
             Wait(100)
             timeout = timeout + 1
         end
+
         if HasModelLoaded(modelHash) then
             local prop = CreateObject(modelHash, machine.coords.x, machine.coords.y, machine.coords.z, false, false, false)
-            SetEntityHeading(prop, machine.heading)
-            FreezeEntityPosition(prop, true)
-            SetEntityInvincible(prop, true)
+            if prop and prop ~= 0 then
+                SetEntityHeading(prop, machine.heading)
+                FreezeEntityPosition(prop, true)
+                SetEntityInvincible(prop, true)
+                machineProps[i] = prop
+            end
             SetModelAsNoLongerNeeded(modelHash)
-            machineProps[i] = prop
         elseif Config.Debug then
-            print('[jp-gacha] Failed to load model for machine ' .. i)
+            print(('[jp-gacha] Failed to load model for machine %d (%s)'):format(i, modelName))
         end
     end
 end)
@@ -147,10 +168,15 @@ Citizen.CreateThread(function()
         local playerCoords = GetEntityCoords(PlayerPedId())
 
         for _, machine in ipairs(Config.Machines) do
-            local dist = #(playerCoords - machine.coords)
-            if dist < Config.InteractDistance + 2.0 then
+            local dx = playerCoords.x - machine.coords.x
+            local dy = playerCoords.y - machine.coords.y
+            local dist2d = math.sqrt((dx * dx) + (dy * dy))
+            if dist2d < 40.0 then
                 sleep = 0
-                if dist < Config.InteractDistance then
+
+                DrawGroundCylinderMarker(machine.coords, { 255, 220, 0 })
+
+                if dist2d < Config.InteractDistance then
                     BeginTextCommandDisplayHelp("STRING")
                     AddTextComponentSubstringPlayerName("~INPUT_CONTEXT~ ガチャを回す")
                     EndTextCommandDisplayHelp(0, false, true, -1)

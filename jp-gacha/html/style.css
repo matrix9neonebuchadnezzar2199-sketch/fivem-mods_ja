@@ -18,6 +18,18 @@ body {
     --scale: 2;
 }
 
+/* calc の乗算未対応環境向け: 必要ブロックを transform で2倍以上にする */
+:root.scale-fallback #menu-box,
+:root.scale-fallback #input-box,
+:root.scale-fallback #single-capsule-area,
+:root.scale-fallback #cutin-layer,
+:root.scale-fallback #result-layer,
+:root.scale-fallback #multi-capsule-area,
+:root.scale-fallback #multi-result-area {
+    transform: scale(var(--scale));
+    transform-origin: center center;
+}
+
 #menu-container {
     position: fixed;
     top: 0;

@@ -24,6 +24,7 @@ const inputCancelButton = document.getElementById('input-cancel');
 
 let allTimers = [];
 let currentMultiData = null;
+const supportsCalcMultiply = !!(window.CSS && CSS.supports && CSS.supports('width', 'calc(10px * 2)'));
 
 function getResourceName() {
     try {
@@ -35,7 +36,11 @@ function getResourceName() {
 }
 
 function setScale(scale) {
-    document.documentElement.style.setProperty('--scale', scale || 2);
+    const numeric = Number(scale) || 2;
+    const appliedScale = numeric < 2 ? 2 : numeric;
+    document.documentElement.style.setProperty('--scale', appliedScale);
+    // FiveM の Chromium 環境で calc(10px * 2) が効かない場合は transform スケールへフォールバック
+    document.documentElement.classList.toggle('scale-fallback', !supportsCalcMultiply);
 }
 
 function playSound(filename) {
@@ -191,6 +196,22 @@ function showSingleResult(data) {
     playSound(data.cutin ? 'result_rare.mp3' : 'result_normal.mp3');
 }
 
+function showCutinByRarity(rarityId, duration) {
+    const cutinMap = { SR: 'cutin_sr.png', SSR: 'cutin_ssr.png', UR: 'cutin_ur.png' };
+    const cutinFile = cutinMap[rarityId];
+    if (!cutinFile) {
+        return;
+    }
+    cutinImg.src = 'img/' + cutinFile;
+    cutinLayer.classList.remove('hidden');
+    cutinLayer.classList.add('slide-in');
+    playSound('cutin.mp3');
+    safeTimeout(function () {
+        cutinLayer.classList.add('hidden');
+        cutinLayer.classList.remove('slide-in');
+    }, duration);
+}
+
 function findBestResult(results) {
     const order = { N: 1, R: 2, SR: 3, SSR: 4, UR: 5 };
     let best = results[0];
@@ -263,18 +284,7 @@ function startSingleGacha(data, timing) {
 
     if (hasCutin) {
         safeTimeout(function () {
-            const cutinMap = { SR: 'cutin_sr.png', SSR: 'cutin_ssr.png', UR: 'cutin_ur.png' };
-            const cutinFile = cutinMap[data.rarityId];
-            if (cutinFile) {
-                cutinImg.src = 'img/' + cutinFile;
-                cutinLayer.classList.remove('hidden');
-                cutinLayer.classList.add('slide-in');
-                playSound('cutin.mp3');
-                safeTimeout(function () {
-                    cutinLayer.classList.add('hidden');
-                    cutinLayer.classList.remove('slide-in');
-                }, timing.cutinDuration);
-            }
+            showCutinByRarity(data.rarityId, timing.cutinDuration);
         }, timing.breakDelay + timing.flashDuration + 100);
     }
 
@@ -407,6 +417,10 @@ function startMultiGacha(data) {
                         spawnParticles(40, 'star');
                     } else if (bestResult.rarityId === 'SR') {
                         spawnParticles(20, 'star');
+                    }
+
+                    if (bestResult.rarityId === 'SR' || bestResult.rarityId === 'SSR' || bestResult.rarityId === 'UR') {
+                        showCutinByRarity(bestResult.rarityId, timing.cutinDuration);
                     }
 
                     safeTimeout(function () {

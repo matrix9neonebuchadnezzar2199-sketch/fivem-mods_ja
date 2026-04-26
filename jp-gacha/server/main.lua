@@ -68,6 +68,18 @@ local function DrawRarity()
 end
 
 local function DrawItem(rarityId)
+    if type(Config.ItemsByRarity) == 'table' and type(Config.ItemsByRarity[rarityId]) == 'table' then
+        local byRarityPool = Config.ItemsByRarity[rarityId]
+        if #byRarityPool > 0 then
+            local picked = byRarityPool[math.random(#byRarityPool)]
+            return {
+                name = picked.name or "不明なアイテム",
+                rarity = rarityId,
+                image = picked.image or ""
+            }
+        end
+    end
+
     local pool = {}
     for _, item in ipairs(Config.Items) do
         if item.rarity == rarityId then
