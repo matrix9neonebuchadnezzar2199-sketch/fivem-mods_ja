@@ -37,17 +37,37 @@ end
 
 -- Returns player data from lation_mining table
 ---@param source number
----@param type string|nil
-local function GetPlayerData(source, type)
+---@param key string|nil
+local function GetPlayerData(source, key)
     if not source then return end
     local identifier = GetIdentifier(source)
     if not identifier then return end
+    local function normalizeRow(row)
+        if not row or type(row) ~= 'table' then
+            return
+        end
+        -- MySQL / ドライバによって level が文字列のことがあり、
+        -- shared.experience[ player.level ] が取れない（"5" と 5 のキー差）・比較が壊れるのを防ぐ
+        if row.level ~= nil then
+            row.level = math.max(1, math.floor(tonumber(row.level) or 1))
+        end
+        if row.exp ~= nil then
+            row.exp = math.floor(tonumber(row.exp) or 0)
+        end
+        for _, f in ipairs({ 'mined', 'smelted', 'earned' }) do
+            if row[f] ~= nil then
+                row[f] = math.floor(tonumber(row[f]) or 0)
+            end
+        end
+    end
+
     local data = cache[identifier]
     if not data then
         local query = [[ SELECT * FROM `lation_mining` WHERE `identifier` = ? ]]
         local player = MySQL.query.await(query, {identifier})
         if player and #player > 0 then
             data = player[1]
+            normalizeRow(data)
             cache[identifier] = data
         else
             data = InsertPlayer(source)
@@ -55,9 +75,11 @@ local function GetPlayerData(source, type)
                 return
             end
         end
+    else
+        normalizeRow(data)
     end
-    if type then
-        return data[type]
+    if key then
+        return data[key]
     end
     return data
 end

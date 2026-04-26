@@ -33,9 +33,16 @@ RegisterNetEvent('jp-lation_mining:completepurchase', function(itemId, input)
         return
     end
 
-    if not CanCarry(source, item.item, input) then
-        TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
-        return
+    if item.metadata then
+        if not CanCarry(source, item.item, input, item.metadata) then
+            TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
+            return
+        end
+    else
+        if not CanCarry(source, item.item, input) then
+            TriggerClientEvent('jp-lation_mining:notify', source, locale('notify.cant-carry'), 'error')
+            return
+        end
     end
 
     local identifier = GetIdentifier(source)

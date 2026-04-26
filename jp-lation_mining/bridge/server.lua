@@ -254,15 +254,20 @@ function RemoveMoney(source, type, amount)
 end
 
 -- Returns if player can carry item
+-- metadata: ox で耐久付きなどを買うとき、本家（3引数）だけだと誤った拒否が出ることがあるため第4引数の場合のみ使う
 --- @param source number Player ID
 --- @param item string Item name
 --- @param count number Item quantity
-function CanCarry(source, item, count)
+--- @param metadata? table
+function CanCarry(source, item, count, metadata)
     if count <= 0 then return true end
     local player = GetPlayer(source)
     if not player then return true end
     if Inventory then
         if Inventory == 'ox_inventory' then
+            if metadata and next(metadata) ~= nil then
+                return exports[Inventory]:CanCarryItem(source, item, count, metadata)
+            end
             return exports[Inventory]:CanCarryItem(source, item, count)
         elseif Inventory == 'qb-inventory' then
             return exports[Inventory]:CanAddItem(source, item, count)
