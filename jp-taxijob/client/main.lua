@@ -1058,9 +1058,36 @@ CreateThread(function()
 end)
 
 -- デバッグ: 受付NPC・依存リソースの状態（F8コンソール）
---- 画面でも分かるように（print は F8 コンソール専用のため、チャット/通知併用）
+--- 通知・chat が無効な環境でも出る 2D 表示（GTA ネイティブ）
+local function drawDebugScreenText(lines, durationMs)
+    local tEnd = GetGameTimer() + (durationMs or 12000)
+    CreateThread(function()
+        while GetGameTimer() < tEnd do
+            local y = 0.20
+            for i = 1, #lines do
+                local line = tostring(lines[i] or '')
+                SetTextFont(4)
+                SetTextProportional(true)
+                SetTextScale(0.0, 0.35)
+                SetTextColour(255, 255, 200, 255)
+                SetTextDropshadow(0, 0, 0, 0, 255)
+                SetTextEdge(1, 0, 0, 0, 200)
+                SetTextEntry('STRING')
+                SetTextCentre(false)
+                AddTextComponentSubstringPlayerName(line)
+                DrawText(0.04, y)
+                y = y + 0.028
+            end
+            Wait(0)
+        end
+    end)
+end
+
+--- 画面でも分かるように（print は F8 コンソール専用のため、チャット/通知併用 + 2D 必須表示）
 local function showDebugToPlayer(summaryLines)
     local text = table.concat(summaryLines, '\n')
+    -- 他が全部死んでいても表示
+    drawDebugScreenText(summaryLines, 14000)
     pcall(function()
         lib.notify({
             title = 'jp-taxijob デバッグ',
@@ -1139,6 +1166,11 @@ RegisterCommand('jp_taxijob_debug', function()
     runTaxijobDebug()
 end, false)
 
-RegisterNetEvent('jp-taxijob:client:debugDepot', function()
+-- サーバーからの TriggerClientEvent 用（RegisterNetEvent + AddEventHandler が互換的に堅い）
+RegisterNetEvent('jp-taxijob:client:debugDepot')
+AddEventHandler('jp-taxijob:client:debugDepot', function()
     runTaxijobDebug()
 end)
+
+-- チャットがコマンドを食う環境用: F9 で必ずクライアント起動（設定→キー割当に「jp taxijob debug」）
+RegisterKeyMapping('jp_taxijob_debug', 'jp-taxijob: 受付デバッグ', 'keyboard', 'F9')
