@@ -1058,6 +1058,30 @@ CreateThread(function()
 end)
 
 -- デバッグ: 受付NPC・依存リソースの状態（F8コンソール）
+--- 画面でも分かるように（print は F8 コンソール専用のため、チャット/通知併用）
+local function showDebugToPlayer(summaryLines)
+    local text = table.concat(summaryLines, '\n')
+    pcall(function()
+        lib.notify({
+            title = 'jp-taxijob デバッグ',
+            description = text,
+            duration = 15000,
+            type = 'inform',
+            position = 'top-right',
+        })
+    end)
+    pcall(function()
+        exports.qbx_core:Notify(text, 'inform', 15000)
+    end)
+    pcall(function()
+        TriggerEvent('chat:addMessage', {
+            color = { 200, 220, 255 },
+            multiline = true,
+            args = { '[jp-taxijob]', text },
+        })
+    end)
+end
+
 RegisterCommand('jp_taxijob_debug', function()
     local res = GetCurrentResourceName()
     local c = config.depot.coords
@@ -1067,31 +1091,45 @@ RegisterCommand('jp_taxijob_debug', function()
         local pos = GetEntityCoords(my)
         d = #(pos - vector3(c.x, c.y, c.z))
     end
+    local oxl = GetResourceState('ox_lib')
+    local oxt = GetResourceState('ox_target')
+    local qbx = GetResourceState('qbx_core')
+    local existPed = receptionPed ~= 0 and DoesEntityExist(receptionPed)
+    local summary = {
+        ('resource: %s'):format(res),
+        ('ox_lib=%s ox_target=%s qbx=%s'):format(oxl, oxt, qbx),
+        ('depot: %.1f, %.1f, %.1f 距離: %.1fm'):format(c.x, c.y, c.z, d),
+        ('受付Ped: %s (exist=%s) netCfg=%s'):format(
+            tostring(receptionPed), tostring(existPed), tostring(config.depot.useNetworkedDepotPed)
+        ),
+    }
     print(('[jp-taxijob] resource=%s ox_lib=%s ox_target=%s qbx_core=%s'):format(
-        res,
-        GetResourceState('ox_lib'),
-        GetResourceState('ox_target'),
-        GetResourceState('qbx_core')
+        res, oxl, oxt, qbx
     ))
     print(('[jp-taxijob] depot vec4(%.2f, %.2f, %.2f, %.2f) あなたからの距離=%.1fm'):format(c.x, c.y, c.z, c.w, d))
     print(('[jp-taxijob] receptionPed=%s exist=%s networked cfg=%s'):format(
         tostring(receptionPed),
-        tostring(receptionPed ~= 0 and DoesEntityExist(receptionPed)),
+        tostring(existPed),
         tostring(config.depot.useNetworkedDepotPed)
     ))
     if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
         local p = GetEntityCoords(receptionPed)
         print(('[jp-taxijob] ped pos=%.2f %.2f %.2f'):format(p.x, p.y, p.z))
+        summary[#summary + 1] = ('ped位置: %.1f %.1f %.1f'):format(p.x, p.y, p.z)
     else
         print('[jp-taxijob] 受付Pedを強制再生成します…')
+        summary[#summary + 1] = '→ 受付を再スポーン試行中…'
         if receptionPed ~= 0 and DoesEntityExist(receptionPed) then
             DeleteEntity(receptionPed)
         end
         receptionPed = 0
         createReceptionPed(true)
-        if not DoesEntityExist(receptionPed) then
+        if receptionPed == 0 or not DoesEntityExist(receptionPed) then
             receptionPed = 0
             createReceptionPed(false)
         end
+        local ok = receptionPed ~= 0 and DoesEntityExist(receptionPed)
+        summary[#summary + 1] = ('再生成結果: %s'):format(ok and 'OK' or '失敗（F8ログ参照）')
     end
+    showDebugToPlayer(summary)
 end, false)
