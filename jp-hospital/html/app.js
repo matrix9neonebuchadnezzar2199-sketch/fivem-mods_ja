@@ -1,6 +1,10 @@
 /* jp-hospital NUI */
 (function () {
     const app = document.getElementById('app');
+    const diffView = document.getElementById('diffView');
+    const gameView = document.getElementById('gameView');
+    const diffButtons = document.getElementById('diffButtons');
+    const btnDiffCancel = document.getElementById('btnDiffCancel');
     const toast = document.getElementById('toast');
     const successFlash = document.getElementById('successFlash');
     const karteNo = document.getElementById('karteNo');
@@ -32,12 +36,27 @@
         return 'jp-hospital';
     }
 
+    function errMsgForShift(reason) {
+        if (reason === 'noplayer') {
+            return 'QBXで認識できません（qbx_core・キャラの読込を確認）';
+        }
+        if (reason === 'nokarte') {
+            return '出題庫が空です（kartes_*.lua 読込を確認）';
+        }
+        if (reason === 'noconfig') {
+            return '難易度設定に失敗しました';
+        }
+        return '勤務を開始できません';
+    }
+
     function postcb(path, data) {
         return fetch('https://' + getName() + '/' + path, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-            body: JSON.stringify(data || {})
-        }).catch(function () {});
+            body: JSON.stringify(data || {}),
+        }).catch(function () {
+            showToast('NUI 通信に失敗しました', true);
+        });
     }
 
     function showToast(msg, isWarn) {
@@ -83,6 +102,48 @@
             }
         }
         return s;
+    }
+
+    function setPhaseDiff() {
+        if (diffView) {
+            diffView.classList.remove('hidden');
+        }
+        if (gameView) {
+            gameView.classList.add('hidden');
+        }
+    }
+
+    function setPhaseGame() {
+        if (diffView) {
+            diffView.classList.add('hidden');
+        }
+        if (gameView) {
+            gameView.classList.remove('hidden');
+        }
+    }
+
+    function renderDifficulties(list) {
+        if (!diffButtons) {
+            return;
+        }
+        diffButtons.innerHTML = '';
+        (list || []).forEach(function (d) {
+            if (!d || !d.id) {
+                return;
+            }
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-diff';
+            b.setAttribute('data-diff-id', d.id);
+            b.innerHTML = '<span class="btn-diff-label">' + (d.label || d.id) + '</span>' + (d.description
+                ? '<span class="btn-diff-desc">' + d.description + '</span>'
+                : '');
+            b.addEventListener('click', function (e) {
+                e.preventDefault();
+                postcb('hospitalSelectDifficulty', { id: d.id });
+            });
+            diffButtons.appendChild(b);
+        });
     }
 
     function renderKarte(p) {
@@ -166,6 +227,12 @@
         dayReport.classList.add('hidden');
         postcb('hospitalDayReportClose', {});
     });
+    if (btnDiffCancel) {
+        btnDiffCancel.addEventListener('click', function (e) {
+            e.preventDefault();
+            postcb('hospitalDifficultyCancel', {});
+        });
+    }
 
     window.addEventListener('message', function (ev) {
         var d = ev.data;
@@ -173,10 +240,26 @@
             return;
         }
         switch (d.type) {
-            case 'open':
+            case 'open': {
                 app.classList.remove('hidden');
                 dayReport.classList.add('hidden');
+                var pl = d.payload;
+                if (pl && pl.difficulties && pl.difficulties.length) {
+                    renderDifficulties(pl.difficulties);
+                    setPhaseDiff();
+                } else {
+                    setPhaseGame();
+                }
                 break;
+            }
+            case 'beginGame':
+                setPhaseGame();
+                break;
+            case 'shiftStartFailed': {
+                var f = d.payload || {};
+                showToast(errMsgForShift(f.reason), true);
+                break;
+            }
             case 'karteData':
                 renderKarte(d.payload);
                 break;

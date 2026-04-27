@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'JP-Mods'
 description '病院カルテ整理・薬梱包ミニゲーム（NUI内職）'
-version '1.0.0'
+version '1.1.1'
 
 shared_script 'config.lua'
 client_script 'client/main.lua'

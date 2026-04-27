@@ -1,7 +1,7 @@
 -- jp-hospital 共有設定（NUI からは参照しない。運営は此処のみ触る想定）
 Config = {}
 
--- 1カルテクリアあたりの基礎報酬（現金・倍率前）
+-- 1カルテクリアあたりの基礎報酬（倍率前・難易度未指定時のフォールバック）
 Config.RewardPerKarte = 300
 
 -- 連続正解数に応じた掛け率（1～5段目。6連目以降は max と同扱い）
@@ -18,7 +18,7 @@ Config.JobPedScenario = 'WORLD_HUMAN_CLIPBOARD'
 Config.InteractRadius = 2.0
 -- 退勤・NUI 終了用チャットコマンド
 Config.ExitCommand = 'hospital'
--- 右のチェックリストに混ぜる「正解に含まれない薬」ダミー数
+-- 右のダミー数（難易度未設定時のフォールバック。通常は Config.Difficulties の decoyCount）
 Config.DecoyCount = 20
 -- サーバーセッション有効秒（カルテ完了前に放置した場合の古い正解捨て）
 Config.SessionTtlSec = 600
@@ -26,6 +26,37 @@ Config.SessionTtlSec = 600
 Config.MoneyReason = 'jp-hospital-karte'
 -- デバッグログ
 Config.Debug = false
+
+-- 難易度（kartesKey は Config 上の既存テーブル名。分割ファイルを使わない運営向けに同テーブル参照可）
+Config.Difficulties = {
+    {
+        id = 'easy',
+        label = '初級 ⭐',
+        description = '基本的な症状と薬の組み合わせ（正解 1〜4 個前後）',
+        kartesKey = 'Kartes',
+        rewardBase = 300,
+        decoyCount = 20,
+        timeLimit = 0,
+    },
+    {
+        id = 'medium',
+        label = '中級 ⭐⭐',
+        description = '似た薬の判別が必要（正解 3〜5 個前後）',
+        kartesKey = 'KartesMedium',
+        rewardBase = 500,
+        decoyCount = 22,
+        timeLimit = 0,
+    },
+    {
+        id = 'hard',
+        label = '上級 ⭐⭐⭐',
+        description = '合併症・禁忌の読み分け（正解 3〜6 個前後）',
+        kartesKey = 'KartesHard',
+        rewardBase = 800,
+        decoyCount = 25,
+        timeLimit = 0,
+    },
+}
 
 -- 薬マスタ（30 種：id は一意）
 Config.Medicines = {
@@ -174,3 +205,7 @@ Config.Kartes = {
         answers = { 'ice_pack', 'antiseptic', 'gauze', 'bandaid' },
     },
 }
+
+-- 中級・上級: 専用の 30 問ずつに差し替える場合は下の参照を分離定義（deploy で kartes_*.lua を忘れると空になる）
+Config.KartesMedium = Config.Kartes
+Config.KartesHard = Config.Kartes

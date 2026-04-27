@@ -2,6 +2,8 @@
 local localPed = 0
 local nuiOpen = false
 local jobActive = false
+--- 難易度を選ぶ前（勤務未開始）なら ESC も日報にしない
+local awaitingDifficulty = false
 --- 表示用集計（サーバーの値を優先）
 local currentCombo = 0
 local maxComboD = 0
@@ -19,9 +21,22 @@ local function sendToNui(etype, pl)
     })
 end
 
+-- 難易度未選択のまま閉じる（サーバー未開始＝日報不要）
+local function closeNuiWithoutShift()
+    awaitingDifficulty = false
+    nuiOpen = false
+    jobActive = false
+    nui(false)
+    sendToNui('forceClose', {})
+end
+
 -- 退勤: サーバーに集計依頼 → 日報を受信してからフォーカス・表示を制御
 local function requestEndShift()
     if not nuiOpen then
+        return
+    end
+    if awaitingDifficulty then
+        closeNuiWithoutShift()
         return
     end
     jobActive = false
@@ -35,15 +50,29 @@ local function openJobNui()
     end
     nuiOpen = true
     jobActive = true
+    awaitingDifficulty = false
     currentCombo = 0
     maxComboD = 0
     karteCleared = 0
     totalRewardD = 0
     nui(true, true)
-    sendToNui('open', {})
-    TriggerServerEvent('jp-hospital:startShift')
-    Wait(200)
-    TriggerServerEvent('jp-hospital:requestKarte')
+    local difflist = {}
+    for _, d in ipairs(Config.Difficulties or {}) do
+        if d and d.id then
+            difflist[#difflist + 1] = {
+                id = d.id,
+                label = d.label or d.id,
+                description = d.description or '',
+            }
+        end
+    end
+    if #difflist < 1 then
+        sendToNui('open', { difficulties = {} })
+        TriggerServerEvent('jp-hospital:startShift', 'easy')
+    else
+        awaitingDifficulty = true
+        sendToNui('open', { difficulties = difflist })
+    end
 end
 
 RegisterNUICallback('hospitalKarteSubmit', function(data, cb)
@@ -56,6 +85,47 @@ end)
 
 RegisterNUICallback('hospitalRequestNextKarte', function(_, cb)
     cb('ok')
+    TriggerServerEvent('jp-hospital:requestKarte')
+end)
+
+RegisterNUICallback('hospitalDifficultyCancel', function(_, cb)
+    cb('ok')
+    if not nuiOpen then
+        return
+    end
+    closeNuiWithoutShift()
+end)
+
+RegisterNUICallback('hospitalSelectDifficulty', function(data, cb)
+    cb('ok')
+    local id = 'easy'
+    if type(data) == 'string' and data ~= '' then
+        local ok, t = pcall(function()
+            return json.decode(data)
+        end)
+        if ok and type(t) == 'table' and t.id then
+            id = tostring(t.id)
+        end
+    elseif type(data) == 'table' and data and data.id then
+        id = tostring(data.id)
+    end
+    TriggerServerEvent('jp-hospital:startShift', id)
+end)
+
+RegisterNetEvent('jp-hospital:shiftStartFailed', function(p)
+    if not nuiOpen then
+        return
+    end
+    sendToNui('shiftStartFailed', p or {})
+end)
+
+RegisterNetEvent('jp-hospital:shiftStarted', function()
+    if not nuiOpen then
+        return
+    end
+    awaitingDifficulty = false
+    sendToNui('beginGame', {})
+    Wait(100)
     TriggerServerEvent('jp-hospital:requestKarte')
 end)
 

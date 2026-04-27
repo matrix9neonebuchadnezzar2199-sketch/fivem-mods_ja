@@ -129,6 +129,10 @@ body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.35rem 0.4rem;
+    align-content: start;
     background: #e8ecef;
     border-radius: 8px;
     border: 1px solid #ccd4dc;
@@ -138,10 +142,10 @@ body {
 .med-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.4rem;
+    gap: 0.45rem;
+    min-width: 0;
+    padding: 0.4rem 0.35rem;
     border-radius: 6px;
-    margin-bottom: 0.2rem;
     background: #fff;
     font-size: 0.9rem;
 }
@@ -155,8 +159,8 @@ body {
     accent-color: #2a9d4e;
 }
 
-.med-ico { font-size: 1.1rem; }
-.med-name { flex: 1; }
+.med-ico { font-size: 1.05rem; flex-shrink: 0; }
+.med-name { flex: 1; min-width: 0; line-height: 1.25; }
 
 .actions {
     display: flex;
@@ -259,4 +263,89 @@ body {
     border: none;
     border-radius: 8px;
     cursor: pointer;
+}
+
+/* 難易度選択 */
+.game-view { width: 100%; height: 100%; position: relative; }
+/* 非表示の本体が透明でもクリックを奪うのを防ぐ */
+.game-view.hidden { pointer-events: none !important; }
+
+.diff-view {
+    position: relative;
+    z-index: 4;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    background: linear-gradient(165deg, #f8fbff 0%, #e3eef8 100%);
+    border: 1px solid #a8c0e0;
+    border-radius: 12px;
+    gap: 0.75rem;
+}
+
+.diff-title { font-size: 1.2rem; color: #1a4a8a; margin: 0; }
+.diff-hint { font-size: 0.7rem; color: #4a5c78; max-width: 36rem; line-height: 1.45; }
+
+.diff-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+    max-width: 32rem;
+    margin-top: 0.4rem;
+}
+
+.btn-diff {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    background: #fff;
+    border: 2px solid #9ebce8;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #1a3050;
+    font-family: inherit;
+    line-height: 1.4;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-diff:hover {
+    border-color: #2b6fd6;
+    background: #f4f8ff;
+}
+
+.btn-diff-label { font-weight: 800; font-size: 0.9rem; }
+.btn-diff-desc { display: block; font-size: 0.7rem; color: #3d4a5a; font-weight: 500; margin-top: 0.2rem; }
+/* 内側テキストがクリックを奪い fetch が飛ばない CEF 対策 */
+.btn-diff .btn-diff-label,
+.btn-diff .btn-diff-desc {
+    pointer-events: none;
+}
+
+/* 難易度: 未開始のまま閉じる（日報なし） */
+.btn-diff-cancel {
+    margin-top: 0.4rem;
+    width: 100%;
+    max-width: 32rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #5a4a3a;
+    background: #f0ebe4;
+    border: 1px solid #c8b8a8;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s;
+}
+.btn-diff-cancel:hover {
+    background: #e8e0d6;
+    border-color: #a89888;
 }

@@ -70,23 +70,29 @@ local function getQbxPlayer(src)
     return nil
 end
 
-local function ensureShift(src)
-    if not Shifts[src] then
-        Shifts[src] = {
-            startTime = os.time(),
-            totalReward = 0,
-            karteCount = 0,
-            maxCombo = 0,
-            combo = 0,
-            lastKarteIdx = nil,
-        }
+---@return table|nil
+local function findDifficultyConfig(diffId)
+    if type(diffId) ~= 'string' or diffId == '' then
+        diffId = 'easy'
     end
-    return Shifts[src]
+    local dft
+    for _, d in ipairs(Config.Difficulties or {}) do
+        if d and d.id == 'easy' then
+            dft = d
+        end
+    end
+    for _, d in ipairs(Config.Difficulties or {}) do
+        if d and d.id == diffId then
+            return d
+        end
+    end
+    return dft
 end
 
 -- 前回と同じ出題を避けつつ 1 枚選ぶ
-local function pickKarteIndex(lastI)
-    local n = #Config.Kartes
+---@return integer
+local function pickKarteIndex(lastI, list)
+    local n = #list
     if n < 1 then
         return 1
     end
@@ -100,8 +106,13 @@ local function pickKarteIndex(lastI)
     return i
 end
 
+---@return table|nil
 local function buildKartePayloadForClient(src, shift, kIndex)
-    local karte = Config.Kartes[kIndex]
+    local t = (shift and shift.kartesKey) and Config[shift.kartesKey] or nil
+    if not t then
+        return nil
+    end
+    local karte = t[kIndex]
     if not karte then
         return nil
     end
@@ -127,7 +138,7 @@ local function buildKartePayloadForClient(src, shift, kIndex)
     end
     shuffleInPlace(pool)
 
-    local nDecoy = math.floor(tonumber(Config.DecoyCount) or 20)
+    local nDecoy = math.floor(tonumber(shift.decoyCount) or (Config.DecoyCount) or 20)
     local decoys = {}
     for d = 1, math.min(nDecoy, #pool) do
         decoys[#decoys + 1] = pool[d]
@@ -176,12 +187,16 @@ RegisterNetEvent('jp-hospital:requestKarte', function()
         dbg('requestKarte: プレイヤーなし ' .. tostring(src))
         return
     end
-    local sh = ensureShift(src)
-    local n = #Config.Kartes
-    if n < 1 then
+    local sh = Shifts[src]
+    if not sh or type(sh.kartesKey) ~= 'string' or sh.kartesKey == '' then
         return
     end
-    local idx = pickKarteIndex(sh.lastKarteIdx)
+    local list = Config[sh.kartesKey]
+    if not list or #list < 1 then
+        dbg('requestKarte: 出題0件 ' .. tostring(sh.kartesKey))
+        return
+    end
+    local idx = pickKarteIndex(sh.lastKarteIdx, list)
     local data = buildKartePayloadForClient(src, sh, idx)
     if not data then
         return
@@ -220,8 +235,10 @@ RegisterNetEvent('jp-hospital:karteComplete', function(payload)
         TriggerClientEvent('jp-hospital:verifyResult', src, { ok = false, combo = Shifts[src] and Shifts[src].combo or 0, totalReward = Shifts[src] and Shifts[src].totalReward or 0 })
         return
     end
-    -- 正解
-    Shifts[src] = Shifts[src] or ensureShift(src)
+    -- 正解（勤務シフト必須）
+    if not Shifts[src] then
+        return
+    end
     local sh = Shifts[src]
     sh.combo = (sh.combo or 0) + 1
     if sh.combo > (sh.maxCombo or 0) then
@@ -230,7 +247,7 @@ RegisterNetEvent('jp-hospital:karteComplete', function(payload)
     sh.karteCount = (sh.karteCount or 0) + 1
     local multI = math.min(sh.combo, tonumber(Config.MaxCombo) or 5)
     local mult = (Config.ComboMultiplier[multI]) or 1.0
-    local base = math.floor(tonumber(Config.RewardPerKarte) or 0)
+    local base = math.floor(tonumber(sh.rewardBase) or (Config.RewardPerKarte) or 0)
     local pay = math.floor(base * (mult * 1.0))
     sh.totalReward = (sh.totalReward or 0) + pay
 
@@ -250,15 +267,29 @@ RegisterNetEvent('jp-hospital:karteComplete', function(payload)
         maxCombo = sh.maxCombo,
         totalReward = sh.totalReward,
     })
-    dbg(('[jp-hospital] %d 本日報 %d$ combo=%d'):format(src, pay, sh.combo))
+    dbg(('[jp-hospital] %d 本日報 %d$ combo=%d base=%d'):format(src, pay, sh.combo, base))
 end)
 
-RegisterNetEvent('jp-hospital:startShift', function()
+RegisterNetEvent('jp-hospital:startShift', function(diffId)
     local src = source
     if not getQbxPlayer(src) then
+        dbg('startShift: プレイヤー取得不可（QBX 未接続等） ' .. tostring(src))
+        TriggerClientEvent('jp-hospital:shiftStartFailed', src, { reason = 'noplayer' })
         return
     end
     KarteSession[src] = nil
+    local dconf = findDifficultyConfig(type(diffId) == 'string' and diffId or 'easy')
+    if not dconf or type(dconf.kartesKey) ~= 'string' or dconf.kartesKey == '' then
+        dbg('startShift: 難易度定義が無い')
+        TriggerClientEvent('jp-hospital:shiftStartFailed', src, { reason = 'noconfig' })
+        return
+    end
+    local t = Config[dconf.kartesKey]
+    if not t or #t < 1 then
+        dbg('startShift: カルテ0件 ' .. dconf.kartesKey)
+        TriggerClientEvent('jp-hospital:shiftStartFailed', src, { reason = 'nokarte' })
+        return
+    end
     Shifts[src] = {
         startTime = os.time(),
         totalReward = 0,
@@ -266,8 +297,16 @@ RegisterNetEvent('jp-hospital:startShift', function()
         maxCombo = 0,
         combo = 0,
         lastKarteIdx = nil,
+        diffId = dconf.id,
+        kartesKey = dconf.kartesKey,
+        rewardBase = tonumber(dconf.rewardBase) or 300,
+        decoyCount = math.floor(tonumber(dconf.decoyCount) or 20),
+        timeLimit = tonumber(dconf.timeLimit) or 0,
     }
-    TriggerClientEvent('jp-hospital:shiftStarted', src, {})
+    TriggerClientEvent('jp-hospital:shiftStarted', src, {
+        id = dconf.id,
+        label = dconf.label or dconf.id,
+    })
 end)
 
 RegisterNetEvent('jp-hospital:endShift', function()
