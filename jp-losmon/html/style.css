@@ -170,6 +170,21 @@ html { font-size: 144px; }
 .flash.on { animation: fsh 0.3s; }
 @keyframes fsh { 0% { opacity: 0.8; } 100% { opacity: 0; } }
 .hatch { position: absolute; z-index: 3; top: 0.03rem; left: 0; right: 0; text-align: center; font-size: 0.14rem; color: #6cf; text-shadow: 0 0 0.04rem #000, 0 0.02rem 0.04rem #000; }
+/* 病気: キャラ右肩上あたりにドクロ点滅（スプライト上） */
+.sick-skull {
+  position: absolute; z-index: 4; top: 6%; right: 8%;
+  width: 0.28rem; height: 0.28rem; line-height: 0.28rem;
+  text-align: center; font-size: 0.22rem;
+  color: #e44; text-shadow: 0 0 0.04rem #000, 0 0.02rem 0.06rem #000;
+  pointer-events: none;
+  animation: sick-skull-blink 0.55s ease-in-out infinite;
+}
+.mini-sick-skull { top: 4%; right: 6%; width: 0.16rem; height: 0.16rem; line-height: 0.16rem; font-size: 0.12rem; }
+.sick-skull[hidden] { display: none !important; }
+@keyframes sick-skull-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.92); }
+}
 /* 右列: 上でステータス、下のボタン群は枠下へ */
 .ex-grid .col.right {
   display: flex;

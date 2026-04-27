@@ -150,6 +150,16 @@
     return state && state.sprite;
   }
 
+  function updateSickSkulls() {
+    var m = state && state.pet;
+    var ex = state && state.expanded;
+    var skM = document.getElementById('sick-skull-main');
+    var skI = document.getElementById('sick-skull-mini');
+    var sick = m && m.phase === 'sick';
+    if (skM) { skM.hidden = !sick || !ex; skM.setAttribute('aria-hidden', sick && ex ? 'false' : 'true'); }
+    if (skI) { skI.hidden = !sick; skI.setAttribute('aria-hidden', sick ? 'false' : 'true'); }
+  }
+
   function showFlash() {
     var f = document.getElementById('flash-fx');
     if (!f) { return; }
@@ -292,6 +302,7 @@
       b.classList.toggle('disabled', t > 0 || sck || eggB);
     });
     applyTickerIfNeeded();
+    updateSickSkulls();
     requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
   }
 
@@ -334,6 +345,7 @@
       else if (d.name === 'clean') { currentAction = 'clean'; }
       if (d.sprite) { state.sprite = d.sprite; }
       if (d.pet) { state.pet = d.pet; }
+      updateSickSkulls();
       setSprite(document.getElementById('sprite-el'), getSpriteSet(), currentAction);
       setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
       applySpriteWithMode(document.getElementById('sprite-el'), getSpriteSet(), false);
