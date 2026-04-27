@@ -182,6 +182,25 @@ html { font-size: 144px; }
 }
 .mini-sick-skull { top: 4%; right: 6%; width: 0.16rem; height: 0.16rem; line-height: 0.16rem; font-size: 0.12rem; }
 .sick-skull[hidden] { display: none !important; }
+.mini-lvup {
+  position: absolute; z-index: 5; left: 0; right: 0; top: 12%;
+  text-align: center; font-size: 0.1rem; font-weight: 800; letter-spacing: 0.01rem;
+  color: #ffdd22;
+  text-shadow: 0 0 0.04rem #000, 0 0.04rem 0.08rem #000;
+  pointer-events: none; line-height: 1.1; opacity: 0;
+}
+.mini-lvup[hidden] { display: none !important; }
+.mini-lvup.lvup-pulse {
+  animation: mini-lvup-pop 0.2s ease-out, mini-lvup-hold 2.45s 0.15s ease-in forwards;
+}
+@keyframes mini-lvup-pop {
+  0% { transform: scale(0.5); }
+  100% { transform: scale(1); }
+}
+@keyframes mini-lvup-hold {
+  0%, 18% { opacity: 1; }
+  100% { opacity: 0; }
+}
 @keyframes sick-skull-blink {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.2; transform: scale(0.92); }
@@ -203,7 +222,23 @@ html { font-size: 144px; }
 .bars li { margin: 0.04rem 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.04rem; }
 .barb { flex: 1; min-width: 0.3rem; height: 0.1rem; background: #1a1a1a; border: 0.01rem solid #2a2a2a; border-radius: 0.02rem; }
 .barb b { display: block; background: #5a5; max-width: 100%; }
+.barb.expb b { background: linear-gradient(90deg, #ea0, #fc3); }
+.ex-grid .right-top .barb.expb { width: 100%; flex: 0 0 auto; }
 .barb.sm b { background: #a85; }
+.name-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.04rem; }
+.name-text { min-width: 0; max-width: 2.2rem; overflow: hidden; text-overflow: ellipsis; }
+.btn-pencil {
+  flex: 0 0 auto; padding: 0.02rem 0.05rem; font-size: 0.15rem; line-height: 1.1;
+  color: #abe; background: #222a3a; border: 0.01rem solid #3a4a5a; border-radius: 0.03rem;
+  cursor: pointer; pointer-events: auto;
+}
+.btn-pencil:hover { color: #fff; background: #2a3a4a; }
+.name-input {
+  min-width: 0.4rem; max-width: 2.4rem; font-size: 0.16rem; padding: 0.04rem 0.06rem;
+  background: #1118; color: #eee; border: 0.01rem solid #3a3a5a; border-radius: 0.03rem;
+  pointer-events: auto; user-select: text; -webkit-user-select: text; outline: none;
+}
+.meta-sub { color: #8a9; font-size: 0.14rem; }
 .meta { font-size: 0.2rem; color: #bbc; }
 .meta.warn { color: #e88; }
 .btns-lower {

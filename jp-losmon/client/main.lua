@@ -145,6 +145,10 @@ local function createNewEggPet()
         stats = { hunger = 80, mood = 60, stamina = 30, clean = 50 },
         careCount = 0,
         lastAction = { feed = 0, play = 0, sleep = 0, clean = 0 },
+        -- 歩行・乗車の累積 m と EXP（KVS 保存。レベルは合計 EXP から算出）
+        expTotal = 0,
+        statWalkM = 0,
+        statDriveM = 0,
     }
 end
 
@@ -276,6 +280,15 @@ local function ensureStore(store)
     end
     if store.pet and store.pet.line == nil then
         store.pet.line = 'default'
+    end
+    if store.pet and (store.pet.expTotal == nil or type(store.pet.expTotal) ~= 'number') then
+        store.pet.expTotal = 0
+    end
+    if store.pet and (store.pet.statWalkM == nil or type(store.pet.statWalkM) ~= 'number') then
+        store.pet.statWalkM = 0
+    end
+    if store.pet and (store.pet.statDriveM == nil or type(store.pet.statDriveM) ~= 'number') then
+        store.pet.statDriveM = 0
     end
     return store
 end
@@ -423,6 +436,129 @@ local function spriteStripFramesForPet(pet)
     return (Config and Config.SpriteStripFrames) or 4
 end
 
+---@return number
+local function expBaseValue()
+    local b = (Config and Config.ExpBasePer100) and tonumber(Config.ExpBasePer100) or 100.0
+    if b < 0.1 then
+        b = 100.0
+    end
+    return b
+end
+
+---@param L number
+---@return number
+local function expMinForLevel(L)
+    L = math.max(1, math.floor((tonumber(L) or 1) + 0.5))
+    local b = expBaseValue()
+    return b * (L - 1) * L / 2.0
+end
+
+---@param e number|nil
+---@return number
+local function levelFromTotalExp(e)
+    e = math.max(0.0, (e or 0) + 0.0)
+    local maxLv = (Config and Config.LevelMax) or 999
+    if e <= 0 then
+        return 1
+    end
+    local b = expBaseValue()
+    local inner = 1.0 + 8.0 * e / b
+    if inner < 0.0 then
+        inner = 0.0
+    end
+    local Ld = (1.0 + math.sqrt(inner)) / 2.0
+    local L = math.floor(Ld + 0.0)
+    if L < 1 then
+        L = 1
+    end
+    if L > maxLv then
+        L = maxLv
+    end
+    return L
+end
+
+---@param pet table|nil
+---@return table
+local function buildLevelFields(pet)
+    local maxLv = (Config and Config.LevelMax) or 999
+    local mps = (Config and Config.MetersPerStepDisplay) and tonumber(Config.MetersPerStepDisplay) or 0.75
+    if mps < 0.1 then
+        mps = 0.75
+    end
+    local e, w, d = 0.0, 0.0, 0.0
+    if pet and hasPet(pet) then
+        e = (type(pet.expTotal) == 'number' and (pet.expTotal + 0.0)) or 0.0
+        w = (type(pet.statWalkM) == 'number' and (pet.statWalkM + 0.0)) or 0.0
+        d = (type(pet.statDriveM) == 'number' and (pet.statDriveM + 0.0)) or 0.0
+    end
+    local L = levelFromTotalExp(e)
+    local eMin = expMinForLevel(L)
+    local eMax = expMinForLevel(L + 1)
+    local inLv = e - eMin
+    local range = eMax - eMin
+    local toN = eMax - e
+    if toN < 0.0 then
+        toN = 0.0
+    end
+    local pct = 0.0
+    if L >= maxLv then
+        pct = 100.0
+    elseif range > 0.0001 then
+        pct = math.max(0.0, math.min(100.0, 100.0 * inLv / range))
+    else
+        pct = 0.0
+    end
+    return {
+        level = L,
+        levelMax = maxLv,
+        expTotal = e,
+        expInLevel = inLv,
+        expToNext = toN,
+        expLevelMin = eMin,
+        expLevelMax = eMax,
+        expLevelPct = pct,
+        walkMeters = w,
+        driveMeters = d,
+        stepCount = math.max(0, math.floor(w / mps + 0.0)),
+    }
+end
+
+---@param a any
+---@param b any
+---@return number
+local function vec3dist(a, b)
+    if not a or not b or type(a) ~= 'table' or type(b) ~= 'table' then
+        return 0.0
+    end
+    local ax, ay, az = a.x, a.y, a.z
+    local bx, by, bz = b.x, b.y, b.z
+    if not ax or not ay or not az or not bx or not by or not bz then
+        return 0.0
+    end
+    local dx, dy, dz = ax - bx, ay - by, az - bz
+    return math.sqrt(dx * dx + dy * dy + dz * dz)
+end
+
+---@param pet table
+---@param amount number
+---@return number|nil, number|nil
+local function addExpToPet(pet, amount)
+    if not pet or not isAlive(pet) or not (amount and amount > 0.0) then
+        return nil, nil
+    end
+    local oldL = levelFromTotalExp(pet.expTotal)
+    local add = (amount or 0.0) + 0.0
+    pet.expTotal = ((pet.expTotal or 0) + add) + 0.0
+    if pet.expTotal < 0.0 then
+        pet.expTotal = 0.0
+    end
+    local newL = levelFromTotalExp(pet.expTotal)
+    if newL > oldL then
+        SendNUIMessage({ type = 'levelUp', level = newL, from = oldL })
+    end
+    return oldL, newL
+end
+
 ---@param st table|nil
 local function nuiStatePayload(st, expanded)
     local s = st or readStore()
@@ -450,6 +586,11 @@ local function nuiStatePayload(st, expanded)
     if pet and hasPet(pet) and isAlive(pet) and pet.phase ~= 'egg' and pet.phase ~= 'dead' then
         al = true
     end
+    local lvf = buildLevelFields(pet)
+    local nameMax = (Config and Config.PetNameMaxLength) or 12
+    if nameMax < 1 then
+        nameMax = 12
+    end
     return {
         type = 'state',
         expanded = expanded or false,
@@ -466,6 +607,18 @@ local function nuiStatePayload(st, expanded)
             return { x = dx, y = dy }
         end)(),
         charName = pet and (pet.name or 'ぼく') or 'ぼく',
+        petNameMaxLength = nameMax,
+        level = lvf.level,
+        levelMax = lvf.levelMax,
+        expTotal = lvf.expTotal,
+        expInLevel = lvf.expInLevel,
+        expToNext = lvf.expToNext,
+        expLevelMin = lvf.expLevelMin,
+        expLevelMax = lvf.expLevelMax,
+        expLevelPct = lvf.expLevelPct,
+        walkMeters = lvf.walkMeters,
+        driveMeters = lvf.driveMeters,
+        stepCount = lvf.stepCount,
         evName = petDisplayName(pet),
         stageLabel = getStageLabel(pet),
         elapseSec = pet and n - (pet.bornAt or n) or 0,
@@ -546,6 +699,59 @@ RegisterNUICallback('setMiniPos', function(data, cb)
         stateCache.miniPos = { x = tonumber(data.x) or dx, y = tonumber(data.y) or dy }
         writeStore(stateCache)
     end
+    if cb then
+        cb('ok')
+    end
+end)
+
+---@param s string|nil
+---@param maxC number
+---@return string
+local function clampPetNameString(s, maxC)
+    local dname = (Config and Config.DefaultPetName) or 'ぼく'
+    if not s or type(s) ~= 'string' then
+        return dname
+    end
+    s = s:gsub('[\r\n\t%z]', ' '):gsub('^%s+', ''):gsub('%s+$', '')
+    if s == '' then
+        return dname
+    end
+    local mc = (type(maxC) == 'number' and maxC > 0) and maxC or 12
+    if utf8 and utf8.len and utf8.offset then
+        if utf8.len(s) > mc then
+            local cut = utf8.offset(s, mc + 1)
+            if cut and cut > 1 then
+                s = s:sub(1, cut - 1)
+            else
+                s = dname
+            end
+        end
+    else
+        if #s > mc then
+            s = s:sub(1, mc)
+        end
+    end
+    s = s:gsub('^%s+', ''):gsub('%s+$', '')
+    if s == '' then
+        return dname
+    end
+    return s
+end
+
+-- NUI: 通称（名前）の変更
+RegisterNUICallback('setPetName', function(data, cb)
+    if not stateCache or not hasPet(stateCache.pet) then
+        if cb then
+            cb('ok')
+        end
+        return
+    end
+    stateCache = ensureStore(stateCache)
+    local raw = data and tostring(data.name or data.text or '') or ''
+    local maxL = (Config and Config.PetNameMaxLength) or 12
+    stateCache.pet.name = clampPetNameString(raw, maxL)
+    writeStore(stateCache)
+    pushNui(stateCache, nuiShowExpanded)
     if cb then
         cb('ok')
     end
@@ -705,6 +911,52 @@ RegisterCommand((Config and Config.Command) or 'losmon', function()
     setNuiFocus(nuiShowExpanded)
     pushNui(stateCache, nuiShowExpanded)
 end, false)
+
+-- 歩行距離・乗車中の走行距離に応じて EXP を加算（KVS 保存。生存中のペットのみ）
+CreateThread(function()
+    local lastC = nil
+    while true do
+        Wait(1000)
+        if not stateCache or not hasPet(stateCache.pet) or not isAlive(stateCache.pet) then
+            lastC = nil
+        else
+            stateCache = ensureStore(stateCache)
+            local p = stateCache.pet
+            local ped = PlayerPedId()
+            if not ped or ped < 1 or (IsEntityDead and IsEntityDead(ped)) then
+                lastC = nil
+            else
+                local c = GetEntityCoords(ped, false)
+                if not lastC then
+                    lastC = c
+                else
+                    local d = vec3dist(lastC, c)
+                    local cap = (type(Config) == 'table' and (Config.ExpMaxDistancePerTick or 45.0)) or 45.0
+                    if d > cap then
+                        d = cap
+                    end
+                    lastC = c
+                    if d > 0.0005 then
+                        local wExp = 0.0
+                        if IsPedInAnyVehicle(ped, false) then
+                            p.statDriveM = (p.statDriveM or 0) + d
+                            wExp = d * (tonumber(Config.ExpPerMeterInVehicle) or 0) + 0.0
+                        elseif IsPedOnFoot(ped) then
+                            p.statWalkM = (p.statWalkM or 0) + d
+                            wExp = d * (tonumber(Config.ExpPerMeterOnFoot) or 0) + 0.0
+                        end
+                        if wExp > 0.0 then
+                            addExpToPet(p, wExp)
+                            stateCache = ensureStore(syncWorldTime(stateCache))
+                            writeStore(stateCache)
+                            pushNui(stateCache, nuiShowExpanded)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
 
 AddEventHandler('onClientResourceStart', function(name)
     if not GetCurrentResourceName or name ~= GetCurrentResourceName() then

@@ -14,6 +14,8 @@
   var tickerIdx = 0;
   var lastTickerKey = '';
   var hatchInterval = null;
+  var nameEditMode = false;
+  var lvupTimer = null;
 
   function post(name, data) {
     return fetch('https://' + res + '/' + name, {
@@ -188,6 +190,53 @@
     tickHatchCountdown();
   }
 
+  function showMiniLevelUp() {
+    var el = document.getElementById('mini-lvup');
+    if (!el) { return; }
+    el.classList.remove('lvup-pulse');
+    if (lvupTimer) { clearTimeout(lvupTimer); lvupTimer = null; }
+    el.hidden = false;
+    el.setAttribute('aria-hidden', 'false');
+    void el.offsetWidth;
+    el.classList.add('lvup-pulse');
+    lvupTimer = setTimeout(function () {
+      el.classList.remove('lvup-pulse');
+      el.hidden = true;
+      el.setAttribute('aria-hidden', 'true');
+      lvupTimer = null;
+    }, 2800);
+  }
+
+  function endPetNameEdit(commit) {
+    var inp = document.getElementById('meta-n-input');
+    var tx = document.getElementById('meta-n-text');
+    var pe = document.getElementById('btn-name-edit');
+    if (!inp) { return; }
+    if (commit) { post('setPetName', { name: (inp && inp.value) || '' }); }
+    else { inp.value = (state && state.charName) ? String(state.charName) : 'ぼく'; }
+    inp.classList.add('hidden');
+    if (tx) { tx.classList.remove('hidden'); }
+    if (pe) { pe.classList.remove('hidden'); }
+    nameEditMode = false;
+  }
+
+  function startPetNameEdit() {
+    if (!state || !state.expanded) { return; }
+    var inp = document.getElementById('meta-n-input');
+    var tx = document.getElementById('meta-n-text');
+    var pe = document.getElementById('btn-name-edit');
+    if (!inp || !tx) { return; }
+    nameEditMode = true;
+    inp.value = (state && state.charName) ? String(state.charName) : 'ぼく';
+    var nmx = (state.petNameMaxLength | 0) || 12;
+    if (nmx < 1) { nmx = 12; }
+    inp.setAttribute('maxlength', nmx);
+    tx.classList.add('hidden');
+    if (pe) { pe.classList.add('hidden'); }
+    inp.classList.remove('hidden');
+    setTimeout(function () { try { inp.focus(); inp.select(); } catch (e1) { /*  */ } }, 0);
+  }
+
   function updateSickSkulls() {
     var m = state && state.pet;
     var ex = state && state.expanded;
@@ -299,7 +348,35 @@
       document.getElementById('v-c').textContent = Math.floor(m.stats.clean);
     }
     if (m) {
-      document.getElementById('meta-n').textContent = '名前: ' + (state.charName || 'ぼく');
+      if (!nameEditMode) {
+        var mnt = document.getElementById('meta-n-text');
+        if (mnt) { mnt.textContent = (state.charName || 'ぼく'); }
+        var mni0 = document.getElementById('meta-n-input');
+        if (mni0) { mni0.setAttribute('maxlength', String((state.petNameMaxLength | 0) || 12)); }
+      }
+      var mnl = document.getElementById('meta-lv');
+      if (mnl) {
+        var lmax = (state.levelMax | 0) || 999;
+        var lcur = (state.level | 0) || 1;
+        var eTotF = (state.expTotal != null) ? Math.floor(Number(state.expTotal) + 0) : 0;
+        if (eTotF < 0) { eTotF = 0; }
+        if (lcur >= lmax) {
+          mnl.textContent = 'LV ' + lcur + ' (MAX)  ·  累計 EXP ' + eTotF;
+        } else {
+          var tnx = (state.expToNext != null) ? Math.max(0, Math.floor(Number(state.expToNext) + 0.5)) : 0;
+          mnl.textContent = 'LV ' + lcur + '  次: ' + tnx + ' EXP  ·  累計 ' + eTotF;
+        }
+      }
+      var bExp = document.getElementById('b-exp');
+      if (bExp) {
+        var epc = Number(state.expLevelPct);
+        if (isNaN(epc)) { epc = 0; }
+        bExp.style.width = Math.max(0, Math.min(100, epc)) + '%';
+      }
+      var mwk = document.getElementById('meta-walk');
+      if (mwk) {
+        mwk.textContent = '歩: ' + ((state.stepCount | 0) || 0) + ' 歩  ・  乗: ' + (Math.max(0, (state.driveMeters|0) + 0) | 0) + ' m';
+      }
       document.getElementById('meta-st').textContent = '成長: ' + (state.stageLabel || '—') + (m.evolutionId && m.evolutionId !== 'egg' && m.evolutionId !== 'grave' ? ' (' + (state.evName || '') + ')' : '');
       document.getElementById('meta-time').textContent = '経過: ' + elapseText(state.elapseSec || 0);
       var sickE = m.phase === 'sick';
@@ -406,6 +483,8 @@
       showFlash();
       if (actionTimer) { clearTimeout(actionTimer); }
       actionTimer = setTimeout(function () { currentAction = 'idle'; render(); }, 2800);
+    } else if (d.type === 'levelUp') {
+      showMiniLevelUp();
     } else if (d.type === 'zukan' && d.open === true) {
       if (d.zukan) { state = state || {}; state.zukan = d.zukan; }
       document.getElementById('zukan-modal').classList.remove('hidden');
@@ -452,6 +531,20 @@
     document.getElementById('travel-confirm').classList.add('hidden');
   });
   document.getElementById('btn-new').addEventListener('click', function () { post('newPetAfterDead', {}); });
+  (function nameEditUi() {
+    var bpe = document.getElementById('btn-name-edit');
+    var mni = document.getElementById('meta-n-input');
+    if (bpe) {
+      bpe.addEventListener('click', function (ev) { ev.stopPropagation(); startPetNameEdit(); });
+    }
+    if (mni) {
+      mni.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); endPetNameEdit(true); }
+        else if (ev.key === 'Escape') { ev.preventDefault(); endPetNameEdit(false); }
+      });
+      mni.addEventListener('blur', function () { if (nameEditMode) { endPetNameEdit(true); } });
+    }
+  })();
   document.querySelectorAll('.care[data-a=\"feed\"],.care[data-a=\"play\"],.care[data-a=\"sleep\"],.care[data-a=\"clean\"]').forEach(function (b) {
     b.addEventListener('click', function () {
       var a = b.getAttribute('data-a');

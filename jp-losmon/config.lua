@@ -31,6 +31,21 @@ Config.IdealCareIntervalSec = 1200
 Config.ChildToGoodChildThreshold = 50
 -- 幼年期の後半から成熟期へ。レアDの出現率（%）残り 90% は a/b/c を均等
 Config.AdultRarePercent = 10
+-- レベル（EXP）: 合計 EXP から L = min(LevelMax, floor((1+sqrt(1+8*E/ExpBasePer100))/2))。LV1 の領域は 0 〜 未満 ExpBasePer100
+-- レベル L へ到達に必要な累計 EXP（開始時点）: ExpBasePer100 * (L-1) * L / 2
+Config.LevelMax = 999
+-- 上式の 100 相当。変えると同じ EXP でも到達 L が変わる
+Config.ExpBasePer100 = 100.0
+-- 歩行（歩道・地上）1m あたり得る EXP（0 にすると歩行分なし）
+Config.ExpPerMeterOnFoot = 0.12
+-- 乗用車両同乗中 1m 走行あたり EXP（0 に車両分はなし）。運転席・同乗者とも距離分を加算
+Config.ExpPerMeterInVehicle = 0.04
+-- 歩行距離表示用: 1歩 ≒ 何 m とみなすか（EXP ではなく純粋表示向け。例: 0.75m/歩）
+Config.MetersPerStepDisplay = 0.75
+-- 1 秒で移動距離に換算しすぎない上限（m）。テレポート等の取りこぼし用
+Config.ExpMaxDistancePerTick = 45.0
+-- ペット名の最大文字数（NUI 入力の maxlength と一致させる）
+Config.PetNameMaxLength = 12
 -- NUI: 横4コマ1枚のスプライト（512×128 等）。1ポーズ1ファイルのときは 1
 Config.SpriteStripFrames = 4
 -- 卵・幼体・成長等と同じく横4コマ1枚。殻割れ `01_egg_crack` も同形式推奨

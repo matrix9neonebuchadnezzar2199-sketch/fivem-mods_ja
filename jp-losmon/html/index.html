@@ -54,7 +54,15 @@
             <li>体力 <div class="barb"><b id="b-s" style="width:30%"></b></div> <span id="v-s">30</span>%</li>
             <li>清潔 <div class="barb"><b id="b-c" style="width:50%"></b></div> <span id="v-c">50</span>%</li>
           </ul>
-          <p class="meta" id="meta-n">名前: —</p>
+          <p class="meta name-row" id="meta-n-row">
+            <span>名前: </span>
+            <span class="name-text" id="meta-n-text">—</span>
+            <button type="button" class="btn-pencil" id="btn-name-edit" title="名前を変える" aria-label="名前を変える">✎</button>
+            <input type="text" class="name-input hidden" id="meta-n-input" maxlength="12" autocomplete="off" />
+          </p>
+          <p class="meta" id="meta-lv">LV —</p>
+          <div class="barb expb"><b id="b-exp" style="width:0%"></b></div>
+          <p class="meta meta-sub" id="meta-walk">歩行 — / 乗車 —</p>
           <p class="meta" id="meta-st">成長: —</p>
           <p class="meta" id="meta-time">経過: —</p>
           <p class="meta warn" id="meta-sick" hidden>病気！空腹を戻し病気4時間未満で！</p>
@@ -72,6 +80,7 @@
     <div id="mini-pet" class="hidden mini-pet">
       <div class="mini-device" id="mini-device">
         <div class="mini-lcd" id="mini-lcd">
+          <div class="mini-lvup" id="mini-lvup" hidden aria-hidden="true">LvUP！</div>
           <div class="sick-skull mini-sick-skull" id="sick-skull-mini" hidden aria-hidden="true" title="病気">☠</div>
           <div class="mini-sprite" id="mini-sprite"></div>
         </div>
