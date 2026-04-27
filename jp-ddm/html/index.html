@@ -41,86 +41,102 @@
             <h1>🎬 jp-DDM モーションセット</h1>
         </header>
         <div class="ddm-grid">
-            <aside class="ddm-col ddm-left" aria-label="カタログとセットリスト">
-                <section class="left-block">
-                    <h2>🔍 カタログ</h2>
-                    <input type="search" id="catalog-search" placeholder="名前で検索..." />
-                    <select id="catalog-cat">
-                        <option value="all">すべて</option>
-                        <option value="dance">ダンス</option>
-                        <option value="emote">エモート</option>
-                        <option value="pose">ポーズ</option>
-                        <option value="other">その他</option>
-                    </select>
-                    <ul id="catalog-list" class="list-catalog"></ul>
-                </section>
+            <!-- 20%: カタログ＋カスタム（折りたたみ） -->
+            <aside class="ddm-col ddm-left" aria-label="カタログとカスタム">
+                <div class="fold-block" id="fold-block-catalog" data-default-open="1">
+                    <button type="button" class="fold-head" id="fold-toggle-catalog" aria-expanded="true" title="展開/折りたたみ">
+                        <span class="fold-ico" aria-hidden="true">▼</span> 🔍 カタログ
+                    </button>
+                    <div class="fold-body" id="fold-body-catalog">
+                        <input type="search" id="catalog-search" placeholder="名前で検索..." />
+                        <select id="catalog-cat">
+                            <option value="all">すべて</option>
+                            <option value="dance">ダンス</option>
+                            <option value="emote">エモート</option>
+                            <option value="pose">ポーズ</option>
+                            <option value="other">その他</option>
+                        </select>
+                        <ul id="catalog-list" class="list-catalog"></ul>
+                    </div>
+                </div>
                 <div class="left-sep" role="separator"></div>
-                <section class="left-block setlist-block">
-                    <h2>セットリスト <span id="set-count">0</span> / <span id="set-max">64</span></h2>
-                    <ul id="setlist" class="list-setlist"></ul>
-                    <p class="total">合計: <strong id="total-dur">0'00</strong></p>
-                </section>
-                <div class="left-sep" role="separator"></div>
-                <section class="add-custom left-block">
-                    <h2>カスタム追加</h2>
-                    <p class="help-dict" id="help-dict-clip">
-                        <strong>Dict</strong> は「アニメーションの辞書名」です。ゲーム内の一連の動き（.ycd 等）をまとめた識別子で、<code>anim@...</code> の形が多いです。<br />
-                        <strong>Clip</strong> はその中の <strong>1 つの動きの名前</strong>（どの振り付けを使うか）です。上のカタログは両方入り済みなので触らず選ぶだけでOK。自分で打つ場合は、ミスると足が滑るだけのことがあります（安全に動く保証はありません）。
-                    </p>
-                    <label>Dict <input type="text" id="c-dict" placeholder="anim@..." /></label>
-                    <label>Clip <input type="text" id="c-clip" placeholder="clip" /></label>
-                    <label>表示名 <input type="text" id="c-name" placeholder="（任意）" /></label>
-                    <label>秒 <input type="number" id="c-dur" min="1" max="600" value="10" /></label>
-                    <button type="button" id="btn-c-add">＋ リストに追加</button>
-                </section>
+                <div class="fold-block" id="fold-block-custom" data-default-open="1">
+                    <button type="button" class="fold-head" id="fold-toggle-custom" aria-expanded="true" title="展開/折りたたみ">
+                        <span class="fold-ico" aria-hidden="true">▼</span> カスタム追加
+                    </button>
+                    <div class="fold-body" id="fold-body-custom">
+                        <p class="help-dict" id="help-dict-clip">
+                            <strong>Dict</strong> は「アニメーションの辞書名」です。ゲーム内の一連の動き（.ycd 等）をまとめた識別子で、<code>anim@...</code> の形が多いです。<br />
+                            <strong>Clip</strong> はその中の <strong>1 つの動きの名前</strong>（どの振り付けを使うか）です。上のカタログは両方入り済みなので触らず選ぶだけでOK。自分で打つ場合は、ミスると足が滑るだけのことがあります（安全に動く保証はありません）。
+                        </p>
+                        <label>Dict <input type="text" id="c-dict" placeholder="anim@..." /></label>
+                        <label>Clip <input type="text" id="c-clip" placeholder="clip" /></label>
+                        <label>表示名 <input type="text" id="c-name" placeholder="（任意）" /></label>
+                        <label>秒 <input type="number" id="c-dur" min="1" max="600" value="10" /></label>
+                        <button type="button" id="btn-c-add">＋ リストに追加</button>
+                    </div>
+                </div>
             </aside>
 
+            <!-- 40%: プレビュー（透過窓） -->
             <div class="ddm-col ddm-center" id="ddm-center-peek" aria-hidden="true">
                 <span class="preview-label">プレビュー</span>
             </div>
 
-            <aside class="ddm-col ddm-right" aria-label="操作と音楽">
-                <p id="preview-status" class="preview-status hidden" role="status"></p>
-                <section class="right-block">
-                    <h2>スタート方法</h2>
-                    <p class="start-hint">画角はゲーム内カメラのまま。プレビュー＝<strong>この画面のまま</strong>自キャラだけがモーション。</p>
-                    <button type="button" class="act btn-preview-start" id="btn-start-preview">🎭 プレビュー</button>
-                    <button type="button" class="act" id="btn-start">📌 最小化してスタート</button>
-                    <h2 class="h2sub">本番中の制御</h2>
-                    <button type="button" class="act warn" id="btn-pause">⏸ 一時停止</button>
-                    <button type="button" class="act" id="btn-next">⏭ 次へ</button>
-                    <button type="button" class="act danger" id="btn-stop-ui">⏹ 停止</button>
-                    <label class="row-line loop-line"><input type="checkbox" id="loop-toggle" /> 🔁 ループ</label>
-                </section>
-                <div class="right-sep"></div>
-                <section class="right-block music-block">
-                    <h2>🎵 YouTube</h2>
-                    <label>URL
-                        <input type="url" id="youtube-url" placeholder="https://www.youtube.com/..." />
-                    </label>
-                    <label>開始位置（秒）
-                        <input type="number" id="youtube-start" min="0" value="0" />
-                    </label>
-                    <button type="button" class="act audio-toggle" id="btn-youtube-audio" title="YouTube 音声">🔊 音声ON</button>
-                </section>
-                <div class="right-sep"></div>
-                <section class="right-block preset-block">
-                    <h2>プリセット</h2>
-                    <input type="text" id="preset-name" placeholder="プリセット名" />
-                    <div class="row-line load-row">
-                        <select id="load-select"><option value="">-- 読込 --</option></select>
-                        <button type="button" class="act small" id="btn-load">📂 読込</button>
+            <!-- 40%: 左=セットリスト / 右=スタート・YouTube・プリセット -->
+            <div class="ddm-col ddm-right-wrap" aria-label="セットリストと操作">
+                <div class="ddm-r-split">
+                    <div class="ddm-r-col ddm-r-setlist" aria-label="セットリスト">
+                        <section class="setlist-block">
+                            <h2>セットリスト <span id="set-count">0</span> / <span id="set-max">64</span></h2>
+                            <ul id="setlist" class="list-setlist"></ul>
+                            <p class="total">合計: <strong id="total-dur">0'00</strong></p>
+                        </section>
                     </div>
-                    <button type="button" class="act" id="btn-save">💾 保存</button>
-                    <button type="button" class="act" id="btn-delete">🗑 削除</button>
-                    <button type="button" class="act" id="btn-export">📋 エクスポート</button>
-                    <button type="button" class="act" id="btn-import">📥 インポート</button>
-                </section>
-                <div class="right-sep"></div>
-                <section class="right-block">
-                    <button type="button" class="act btn-close-panel" id="btn-panel-close">閉じる</button>
-                </section>
-            </aside>
+                    <div class="ddm-r-col ddm-r-ctrl" aria-label="スタート方法と音楽">
+                        <p id="preview-status" class="preview-status hidden" role="status"></p>
+                        <section class="right-block">
+                            <h2>スタート方法</h2>
+                            <p class="start-hint">画角はゲーム内カメラのまま。プレビュー＝<strong>この画面のまま</strong>自キャラだけがモーション。</p>
+                            <button type="button" class="act btn-preview-start" id="btn-start-preview">🎭 プレビュー</button>
+                            <button type="button" class="act" id="btn-start">📌 最小化してスタート</button>
+                            <h2 class="h2sub">本番中の制御</h2>
+                            <button type="button" class="act warn" id="btn-pause">⏸ 一時停止</button>
+                            <button type="button" class="act" id="btn-next">⏭ 次へ</button>
+                            <button type="button" class="act danger" id="btn-stop-ui">⏹ 停止</button>
+                            <label class="row-line loop-line"><input type="checkbox" id="loop-toggle" /> 🔁 ループ</label>
+                        </section>
+                        <div class="right-sep"></div>
+                        <section class="right-block music-block">
+                            <h2>🎵 YouTube</h2>
+                            <label>URL
+                                <input type="url" id="youtube-url" placeholder="https://www.youtube.com/..." />
+                            </label>
+                            <label>開始位置（秒）
+                                <input type="number" id="youtube-start" min="0" value="0" />
+                            </label>
+                            <button type="button" class="act audio-toggle" id="btn-youtube-audio" title="YouTube 音声">🔊 音声ON</button>
+                        </section>
+                        <div class="right-sep"></div>
+                        <section class="right-block preset-block">
+                            <h2>プリセット</h2>
+                            <input type="text" id="preset-name" placeholder="プリセット名" />
+                            <div class="row-line load-row">
+                                <select id="load-select"><option value="">-- 読込 --</option></select>
+                                <button type="button" class="act small" id="btn-load">📂 読込</button>
+                            </div>
+                            <button type="button" class="act" id="btn-save">💾 保存</button>
+                            <button type="button" class="act" id="btn-delete">🗑 削除</button>
+                            <button type="button" class="act" id="btn-export">📋 エクスポート</button>
+                            <button type="button" class="act" id="btn-import">📥 インポート</button>
+                        </section>
+                        <div class="right-sep"></div>
+                        <section class="right-block">
+                            <button type="button" class="act btn-close-panel" id="btn-panel-close">閉じる</button>
+                        </section>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

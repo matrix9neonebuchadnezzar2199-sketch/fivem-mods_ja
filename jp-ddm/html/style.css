@@ -1,4 +1,4 @@
-/* jp-DDM: 3カラム。中央透過＝ゲーム内キャラがそのまま見える（pointer-events: none） */
+/* jp-DDM: 20% / 40% / 40%（左=カタログ+カスタム、中央=透過プレビュー、右=セット+操作2列） */
 /* 文字サイズ2倍: rem 基準（従来 28px 相当の2倍） */
 html {
     font-size: 56px;
@@ -67,12 +67,12 @@ body {
     cursor: pointer;
 }
 
-/* 3 カラム: 30% / 40% / 30% */
+/* 3 カラム: 20% / 40% / 40% */
 .ddm-grid {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 30% 40% 30%;
+    grid-template-columns: 20% 40% 40%;
     grid-template-rows: 1fr;
     gap: 0;
 }
@@ -88,10 +88,86 @@ body {
 
 /* 左右のみ背景（中央は完全透過） */
 .ddm-left,
-.ddm-right {
+.ddm-right-wrap {
     background: rgba(10, 10, 30, 0.88);
     border: 1px solid rgba(80, 50, 140, 0.4);
     pointer-events: auto;
+}
+
+/* 左: 折りたたみ（▼ / ▶） */
+.ddm-left {
+    overflow-x: hidden;
+    overflow-y: auto;
+    gap: 0;
+    padding: 6px 8px;
+}
+
+.fold-block {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#fold-block-catalog {
+    flex: 1 1 40%;
+    min-height: 120px;
+}
+
+#fold-block-custom {
+    flex: 0 0 auto;
+}
+
+.fold-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #c4b0ff;
+    padding: 4px 2px 6px;
+    margin: 0;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(100, 80, 150, 0.35);
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+}
+
+.fold-ico {
+    display: inline-block;
+    width: 0.55rem;
+    font-size: 0.55rem;
+    line-height: 1;
+    color: #8a7aaa;
+}
+
+.fold-block.is-collapsed .fold-ico {
+    color: #aa88cc;
+}
+
+.fold-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    padding: 2px 0 4px;
+    flex: 1;
+}
+
+.fold-block.is-collapsed .fold-body {
+    display: none;
+}
+
+#fold-block-custom .fold-body {
+    flex: 0 0 auto;
+}
+
+#fold-body-custom .help-dict {
+    max-height: 9rem;
+    overflow-y: auto;
 }
 
 /* 中央: 透過 + 操作をゲームへ通す。ラベルだけ見える */
@@ -128,7 +204,8 @@ body {
 }
 
 .left-block h2,
-.right-block h2 {
+.right-block h2,
+.setlist-block h2 {
     font-size: 0.75rem;
     color: #c4b0ff;
     flex-shrink: 0;
@@ -143,10 +220,54 @@ body {
     flex-shrink: 0;
 }
 
-/* 検索結果: 枠内スクロール */
+/* 右 40%: 内側 2 列（セットリスト | 操作） */
+.ddm-right-wrap {
+    padding: 0;
+    min-width: 0;
+}
+
+.ddm-r-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    min-width: 0;
+    gap: 0;
+}
+
+.ddm-r-col {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 8px;
+    overflow: hidden;
+}
+
+.ddm-r-setlist {
+    border-right: 1px solid rgba(80, 50, 140, 0.35);
+}
+
+.ddm-r-ctrl {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.setlist-block {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+    gap: 4px;
+}
+
+/* 検索結果: 枠内スクロール（左カラム内で高さ可変） */
 #catalog-list.list-catalog {
     list-style: none;
-    max-height: 35vh;
+    flex: 1 1 auto;
+    min-height: 80px;
+    max-height: none;
     overflow-y: auto;
     overflow-x: hidden;
     font-size: 0.6rem;
@@ -192,10 +313,12 @@ body {
     filter: brightness(1.1);
 }
 
-/* セットリスト */
+/* セットリスト（右列の左＝幅広） */
 #setlist.list-setlist {
     list-style: none;
-    max-height: 30vh;
+    flex: 1 1 auto;
+    min-height: 100px;
+    max-height: none;
     overflow-y: auto;
     overflow-x: hidden;
     font-size: 0.58rem;
@@ -297,7 +420,7 @@ input[type='number'] {
     width: 100%;
 }
 
-.add-custom label {
+#fold-body-custom label {
     display: block;
     font-size: 0.5rem;
     margin-bottom: 2px;

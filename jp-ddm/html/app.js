@@ -610,5 +610,21 @@
     $('btn-mini-next').addEventListener('click', () => nuiPost('nextStep', {}));
     $('btn-mini-stop').addEventListener('click', () => nuiPost('miniStop', {}));
 
+    (function initFoldLeft() {
+        const leftAside = document.querySelector('.ddm-left');
+        if (!leftAside) return;
+        leftAside.addEventListener('click', (e) => {
+            const head = e.target.closest('.fold-head');
+            if (!head) return;
+            e.preventDefault();
+            const block = head.closest('.fold-block');
+            if (!block) return;
+            const nowCollapsed = block.classList.toggle('is-collapsed');
+            head.setAttribute('aria-expanded', String(!nowCollapsed));
+            const ico = head.querySelector('.fold-ico');
+            if (ico) ico.textContent = nowCollapsed ? '▶' : '▼';
+        });
+    })();
+
     updateAudioButton();
 })();
