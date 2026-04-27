@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="mini-hud" class="hidden" aria-label="再生中">
+        <div id="mini-inner">
+            <div id="mini-line1">▶ <span id="mini-index">0/0</span> <span id="mini-name">—</span></div>
+            <div id="mini-line2">残り <span id="mini-remain">0</span> 秒 | <span id="mini-loop">ループ: OFF</span></div>
+            <div class="mini-btns">
+                <button type="button" id="btn-mini-pause">⏸</button>
+                <button type="button" id="btn-mini-next">⏭</button>
+                <button type="button" id="btn-mini-stop">⏹ 停止</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="hidden" role="status"></div>
+
+    <div id="import-modal" class="hidden">
+        <div id="import-modal-content">
+            <h3>📥 プリセットをインポート</h3>
+            <p>共有テキストを貼り付け、読み込む</p>
+            <textarea
+                id="import-textarea"
+                placeholder="マークダウンを貼り付け..."
+                rows="12"
+            ></textarea>
+            <div id="import-buttons">
+                <button type="button" id="btn-import-execute">読み込む</button>
+                <button type="button" id="btn-import-cancel" class="btn-muted">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-wrap" class="hidden">
+        <header class="app-header">
+            <h1>🎬 jp-DDM モーションセット</h1>
+            <button type="button" id="btn-close" class="icon-btn" title="閉じる" aria-label="閉じる">×</button>
+        </header>
+        <div class="app-grid">
+            <aside class="col left">
+                <h2>検索・カタログ</h2>
+                <input type="search" id="catalog-search" placeholder="名前で検索..." />
+                <select id="catalog-cat">
+                    <option value="all">すべて</option>
+                    <option value="dance">ダンス</option>
+                    <option value="emote">エモート</option>
+                    <option value="pose">ポーズ</option>
+                    <option value="other">その他</option>
+                </select>
+                <ul id="catalog-list" class="scroll"></ul>
+                <div class="add-custom">
+                    <h3>カスタム追加</h3>
+                    <label>Dict <input type="text" id="c-dict" placeholder="anim@..." /></label>
+                    <label>Clip <input type="text" id="c-clip" placeholder="clip" /></label>
+                    <label>表示名 <input type="text" id="c-name" placeholder="（任意）" /></label>
+                    <label>秒 <input type="number" id="c-dur" min="1" max="600" value="10" /></label>
+                    <button type="button" id="btn-c-add">追加</button>
+                </div>
+            </aside>
+            <section class="col center">
+                <h2>セットリスト <span id="set-count">0</span> / <span id="set-max">64</span></h2>
+                <ul id="setlist" class="scroll"></ul>
+                <p class="total">合計: <strong id="total-dur">0'00</strong></p>
+                <div class="music-block">
+                    <h2>音楽 (YouTube)</h2>
+                    <label>URL
+                        <input type="url" id="youtube-url" placeholder="https://www.youtube.com/..." />
+                    </label>
+                    <label>開始位置（秒）
+                        <input type="number" id="youtube-start" min="0" value="0" />
+                    </label>
+                </div>
+            </section>
+            <aside class="col controls">
+                <h2>操作</h2>
+                <label class="row-line"><input type="checkbox" id="loop-toggle" /> 🔁 ループ</label>
+                <input type="text" id="preset-name" placeholder="プリセット名" />
+                <button type="button" class="act" id="btn-start">▶ スタート</button>
+                <button type="button" class="act warn" id="btn-pause">⏸ 一時停止</button>
+                <button type="button" class="act" id="btn-next">⏭ 次へ</button>
+                <button type="button" class="act danger" id="btn-stop-ui">⏹ 停止</button>
+                <div class="sep"></div>
+                <button type="button" class="act" id="btn-save">💾 保存</button>
+                <div class="row-line">
+                    <select id="load-select"><option value="">-- 読込 --</option></select>
+                </div>
+                <button type="button" class="act" id="btn-load">📂 読込</button>
+                <button type="button" class="act" id="btn-delete">🗑 削除</button>
+                <div class="sep"></div>
+                <button type="button" class="act" id="btn-export">📋 エクスポート（コピー）</button>
+                <button type="button" class="act" id="btn-import">📥 インポート</button>
+            </aside>
+            <aside class="col preview-col">
+                <h2>プレビュー</h2>
+                <div id="preview-area">
+                    <p class="pv-hint">NUI 背面はゲーム映像（左カメラ）</p>
+                    <div id="now-playing-info">
+                        <div id="pv-dummy">キャラの正面（ズーム）</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="yt-player-wrapper" style="position: fixed; left: -9999px; width: 1px; height: 1px; overflow: hidden">
+        <div id="yt-player"></div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
