@@ -116,20 +116,42 @@ local function isAlive(p)
     return p.phase ~= 'dead'
 end
 
----@param pet table
----@param minutes integer
----@return boolean
-local function applyStatDecay(pet, minutes)
-    if minutes < 1 or not pet or not pet.stats or pet.phase == 'dead' or pet.phase == 'egg' then
-        return false
+---@type fun(pet: table|nil): boolean
+local isLotteryEligible
+---@type fun(weights: table): string|nil
+local pickByWeight
+---@type fun(store: table): string|nil
+local advanceAdultLottery
+
+---@param store table
+---@param n number 現在時刻
+---@return number 加算したオンライン秒
+local function tickOnline(store, n)
+    if not store or not store.pet or not hasPet(store.pet) then
+        return 0
     end
-    local d = (Config.StatDecayRate or 0) * minutes
-    local s = pet.stats
-    s.hunger = clamp((s.hunger or 0) - d, 0, 100)
-    s.mood = clamp((s.mood or 0) - d, 0, 100)
-    s.stamina = clamp((s.stamina or 0) - d, 0, 100)
-    s.clean = clamp((s.clean or 0) - d, 0, 100)
-    return true
+    local pet = store.pet
+    local last = pet.lastOnlineAt or n
+    local delta = n - last
+    pet.lastOnlineAt = n
+    if delta < 0 then
+        return 0
+    end
+    local threshold = Config.OfflineThresholdSec or 120
+    if delta > threshold then
+        return 0
+    end
+    if pet.phase ~= 'dead' and pet.phase ~= 'egg' and pet.stats then
+        local d = (Config.StatDecayRate or 0) * (delta / 60.0)
+        pet.stats.hunger = clamp((pet.stats.hunger or 0) - d, 0, 100)
+        pet.stats.mood = clamp((pet.stats.mood or 0) - d, 0, 100)
+        pet.stats.stamina = clamp((pet.stats.stamina or 0) - d, 0, 100)
+        pet.stats.clean = clamp((pet.stats.clean or 0) - d, 0, 100)
+    end
+    if pet.phase == 'egg' or pet.phase == 'baby' or pet.phase == 'child' then
+        pet.phaseElapsedSec = (pet.phaseElapsedSec or 0) + delta
+    end
+    return delta
 end
 
 ---@return table
@@ -145,10 +167,12 @@ local function createNewEggPet()
         stats = { hunger = 80, mood = 60, stamina = 30, clean = 50 },
         careCount = 0,
         lastAction = { feed = 0, play = 0, sleep = 0, clean = 0 },
-        -- 歩行・乗車の累積 m と EXP（KVS 保存。レベルは合計 EXP から算出）
         expTotal = 0,
         statWalkM = 0,
         statDriveM = 0,
+        phaseElapsedSec = 0,
+        lastOnlineAt = t,
+        lastLotteryAt = 0,
     }
 end
 
@@ -183,73 +207,73 @@ local function tryDeath(pet, n)
     return false
 end
 
+---@param pet table
+---@return boolean
+local function tryRecoverFromSick(pet)
+    if not pet or pet.phase ~= 'sick' or not pet.phaseBeforeSick then
+        return false
+    end
+    local h = pet.stats and (pet.stats.hunger or 0) or 0
+    local c = pet.stats and (pet.stats.clean or 0) or 0
+    local hT = Config.SickThreshold or 10
+    local cT = Config.SickCleanThreshold or 50
+    if h > hT and c >= cT then
+        pet.phase = pet.phaseBeforeSick
+        pet.sickAt = nil
+        pet.phaseBeforeSick = nil
+        return true
+    end
+    return false
+end
+
 ---@param store table
 ---@param n number
+---@return string|nil 進化した evolutionId
 local function advancePhases(store, n)
     local pet = store.pet
     if not hasPet(pet) or not isAlive(pet) or pet.phase == 'sick' then
-        return
+        return nil
     end
-    while true do
+    local evolved = nil
+    local guard = 0
+    while guard < 8 do
+        guard = guard + 1
         if pet.phase == 'dead' or pet.phase == 'sick' or pet.phase == 'adult' then
             break
         end
+        local elapsed = pet.phaseElapsedSec or 0
         if pet.phase == 'egg' then
-            local nxt = (pet.phaseStartAt or 0) + (Config.HatchTime or 1800)
-            if n < nxt then
+            local need = Config.HatchTime or 1800
+            if elapsed < need then
                 break
             end
             pet.phase = 'baby'
-            pet.evolutionId = (math.random(1, 2) == 1) and 'baby_a' or 'baby_b'
-            pet.phaseStartAt = nxt
+            pet.evolutionId = 'baby'
+            pet.phaseElapsedSec = elapsed - need
+            pet.phaseStartAt = n
             pet.careCount = 0
-            if pet.evolutionId then
-                zukanAdd(store.zukan, pet.evolutionId)
-            end
+            zukanAdd(store.zukan, 'baby')
+            evolved = 'baby'
         elseif pet.phase == 'baby' then
-            local nxt = (pet.phaseStartAt or 0) + (Config.GrowthInterval or 3600)
-            if n < nxt then
+            local need = Config.GrowthInterval or 14400
+            if elapsed < need then
                 break
-            end
-            local el = pet.phaseStartAt or 0
-            local idealB = math.max(1, math.floor((nxt - el) / (Config.IdealCareIntervalSec or 1200)))
-            local cRatio = ((pet.careCount or 0) / idealB) * 100.0
-            if cRatio >= (Config.ChildToGoodChildThreshold or 50) then
-                pet.evolutionId = 'child_a'
-                pet.childBranch = 'A'
-            else
-                pet.evolutionId = 'child_b'
-                pet.childBranch = 'B'
             end
             pet.phase = 'child'
-            pet.phaseStartAt = nxt
+            pet.evolutionId = 'child'
+            pet.phaseElapsedSec = elapsed - need
+            pet.phaseStartAt = n
             pet.careCount = 0
-            if pet.evolutionId then
-                zukanAdd(store.zukan, pet.evolutionId)
-            end
+            pet.lastLotteryAt = 0
+            zukanAdd(store.zukan, 'child')
+            evolved = 'child'
         elseif pet.phase == 'child' then
-            local nxt = (pet.phaseStartAt or 0) + (Config.GrowthInterval or 3600)
-            if n < nxt then
-                break
-            end
-            local rp = Config.AdultRarePercent or 10
-            if math.random(1, 100) <= rp then
-                pet.evolutionId = 'adult_d'
-            else
-                local u = math.random(1, 3)
-                pet.evolutionId = (u == 1) and 'adult_a' or (u == 2) and 'adult_b' or 'adult_c'
-            end
-            pet.phase = 'adult'
-            pet.phaseStartAt = nxt
-            pet.careCount = 0
-            if pet.evolutionId then
-                zukanAdd(store.zukan, pet.evolutionId)
-            end
             break
         else
             break
         end
     end
+    return evolved
 end
 
 ---@param store table
@@ -266,6 +290,25 @@ local function ensureStore(store)
         store.miniPos = { x = dx, y = dy }
     end
     store.zukan = zukanListify(store.zukan)
+    do
+        local zmap = { baby_a = 'baby', baby_b = 'baby', child_a = 'child', child_b = 'child' }
+        for i = 1, #store.zukan do
+            local zid = store.zukan[i]
+            if type(zid) == 'string' and zmap[zid] then
+                store.zukan[i] = zmap[zid]
+            end
+        end
+        local seen = {}
+        local newZ = {}
+        for i = 1, #store.zukan do
+            local zid = store.zukan[i]
+            if type(zid) == 'string' and not seen[zid] then
+                seen[zid] = true
+                newZ[#newZ + 1] = zid
+            end
+        end
+        store.zukan = newZ
+    end
     if not store.lastUpdateAt then
         store.lastUpdateAt = nowSec()
     end
@@ -290,6 +333,27 @@ local function ensureStore(store)
     if store.pet and (store.pet.statDriveM == nil or type(store.pet.statDriveM) ~= 'number') then
         store.pet.statDriveM = 0
     end
+    if store.pet then
+        if type(store.pet.phaseElapsedSec) ~= 'number' then
+            store.pet.phaseElapsedSec = 0
+        end
+        if type(store.pet.lastOnlineAt) ~= 'number' then
+            store.pet.lastOnlineAt = nowSec()
+        end
+        if type(store.pet.lastLotteryAt) ~= 'number' then
+            store.pet.lastLotteryAt = 0
+        end
+        if type(store.pet.bornAt) ~= 'number' then
+            store.pet.bornAt = store.pet.phaseStartAt or nowSec()
+        end
+        if type(store.pet.evolutionId) == 'string' then
+            if store.pet.evolutionId == 'baby_a' or store.pet.evolutionId == 'baby_b' then
+                store.pet.evolutionId = 'baby'
+            elseif store.pet.evolutionId == 'child_a' or store.pet.evolutionId == 'child_b' then
+                store.pet.evolutionId = 'child'
+            end
+        end
+    end
     return store
 end
 
@@ -297,26 +361,43 @@ end
 local function syncWorldTime(store)
     local n = nowSec()
     store = ensureStore(store)
-    local last = store.lastUpdateAt
-    if not last or last < 0 then
-        last = n
+
+    local evolved = nil
+    if store.pet and isAlive(store.pet) then
+        tickOnline(store, n)
     end
-    if last > n then
-        last = n
-    end
-    local minutes = math.floor((n - last) / 60)
-    if minutes > 0 and store.pet then
-        applyStatDecay(store.pet, minutes)
-    end
+
     if store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' then
-        advancePhases(store, n)
+        evolved = advancePhases(store, n)
     end
+
+    if store.pet and store.pet.phase == 'child' then
+        local lotteryResult = advanceAdultLottery(store)
+        if lotteryResult then
+            evolved = lotteryResult
+        end
+    end
+
     if store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' and store.pet.phase ~= 'egg' then
-        tryEnterSick(store.pet, n)
+        if tryEnterSick(store.pet, n) then
+            zukanAdd(store.zukan, 'sick')
+        end
     end
     if store.pet and store.pet.phase == 'sick' then
-        tryDeath(store.pet, n)
+        if tryDeath(store.pet, n) then
+            zukanAdd(store.zukan, 'grave')
+        end
     end
+
+    if evolved then
+        SendNUIMessage({
+            type = 'evolve',
+            evolutionId = evolved,
+            phase = store.pet.phase,
+            evName = (Config.FormNames and Config.FormNames[evolved]) or evolved,
+        })
+    end
+
     store.lastUpdateAt = n
     stateCache = store
     return store
@@ -350,12 +431,6 @@ local function getStageLabel(p)
         return '幼体'
     end
     if p.phase == 'child' then
-        if p.childBranch == 'A' then
-            return '成長期（良）'
-        end
-        if p.childBranch == 'B' then
-            return '成長期（悪）'
-        end
         return '成長期'
     end
     if p.phase == 'adult' then
@@ -394,8 +469,8 @@ local function getSpriteSetForPet(pet)
     if Config.Sprites.egg and pet.phase == 'egg' then
         return { egg = Config.Sprites.egg, crack = Config.Sprites.egg_crack, mode = 'egg' }
     end
-    if Config.Sprites and Config.Sprites.baby_a then
-        return { mode = 'id', set = Config.Sprites.baby_a }
+    if Config.Sprites and Config.Sprites.baby then
+        return { mode = 'id', set = Config.Sprites.baby }
     end
     return nil
 end
@@ -407,15 +482,17 @@ local function cooldownLeft(st, a)
     if not a or not st or not st.lastAction or not st.lastAction[a] then
         return 0
     end
-    local cd = 0
+    local cd
     if a == 'feed' then
         cd = Config.FeedCooldown or 30
     elseif a == 'play' then
         cd = Config.PlayCooldown or 60
     elseif a == 'sleep' then
         cd = Config.SleepCooldown or 120
-    else
+    elseif a == 'clean' then
         cd = Config.CleanCooldown or 60
+    else
+        return 0
     end
     local t = (st.lastAction[a] or 0) + cd
     return math.max(0, t - nowSec())
@@ -475,6 +552,76 @@ local function levelFromTotalExp(e)
         L = maxLv
     end
     return L
+end
+
+isLotteryEligible = function(pet)
+    if not pet or pet.phase ~= 'child' then
+        return false
+    end
+    if (pet.phaseElapsedSec or 0) < (Config.AdultLotteryMinChildSec or 1800) then
+        return false
+    end
+    local L = levelFromTotalExp(pet.expTotal or 0)
+    if L < (Config.AdultLotteryMinLevel or 5) then
+        return false
+    end
+    local mps = (Config.MetersPerStepDisplay and Config.MetersPerStepDisplay > 0.1) and Config.MetersPerStepDisplay or 0.75
+    local steps = math.floor((pet.statWalkM or 0) / mps)
+    if steps < (Config.AdultLotteryMinSteps or 1000) then
+        return false
+    end
+    return true
+end
+
+pickByWeight = function(weights)
+    local total = 0
+    for _, w in pairs(weights) do
+        total = total + (w or 0)
+    end
+    if total <= 0 then
+        return nil
+    end
+    local r = math.random() * total
+    local acc = 0
+    for k, w in pairs(weights) do
+        acc = acc + (w or 0)
+        if r <= acc then
+            return k
+        end
+    end
+    return nil
+end
+
+advanceAdultLottery = function(store)
+    local pet = store.pet
+    if not hasPet(pet) or pet.phase ~= 'child' then
+        return nil
+    end
+    if not isLotteryEligible(pet) then
+        return nil
+    end
+    local intervalSec = Config.AdultLotteryIntervalSec or 3600
+    local elapsed = pet.phaseElapsedSec or 0
+    local last = pet.lastLotteryAt or 0
+    if (elapsed - last) < intervalSec then
+        return nil
+    end
+    local chance = Config.AdultLotteryChancePercent or 10
+    pet.lastLotteryAt = last + intervalSec
+    if math.random(1, 100) > chance then
+        return nil
+    end
+    local form = pickByWeight(Config.AdultFormWeights or { adult_a = 30, adult_b = 30, adult_c = 30, adult_d = 10 })
+    if not form then
+        form = 'adult_a'
+    end
+    pet.phase = 'adult'
+    pet.evolutionId = form
+    pet.phaseStartAt = nowSec()
+    pet.phaseElapsedSec = 0
+    pet.careCount = 0
+    zukanAdd(store.zukan, form)
+    return form
 end
 
 ---@param pet table|nil
@@ -588,11 +735,11 @@ local function nuiStatePayload(st, expanded)
     local n = nowSec()
     local hLeft = 0
     if pet and hasPet(pet) and pet.phase == 'egg' then
-        hLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.HatchTime or 1800) - n)
+        hLeft = math.max(0, (Config.HatchTime or 1800) - (pet.phaseElapsedSec or 0))
     end
     local nPhaseLeft = 0
-    if pet and hasPet(pet) and isAlive(pet) and (pet.phase == 'baby' or pet.phase == 'child') then
-        nPhaseLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.GrowthInterval or 3600) - n)
+    if pet and hasPet(pet) and isAlive(pet) and pet.phase == 'baby' then
+        nPhaseLeft = math.max(0, (Config.GrowthInterval or 14400) - (pet.phaseElapsedSec or 0))
     end
     local zukanMap = buildZukanMap()
     local al = false
@@ -648,6 +795,19 @@ local function nuiStatePayload(st, expanded)
         nextPhaseInSec = nPhaseLeft,
         hatchLeftSec = hLeft,
         deathLeftSec = (pet and pet.phase == 'sick' and pet.sickAt) and math.max(0, (pet.sickAt + (Config.DeathTime or 14400)) - n) or 0,
+        adultLottery = (pet and pet.phase == 'child') and {
+            eligible = isLotteryEligible(pet),
+            intervalSec = Config.AdultLotteryIntervalSec or 3600,
+            chancePercent = Config.AdultLotteryChancePercent or 10,
+            nextLotteryInSec = math.max(0, ((pet.lastLotteryAt or 0) + (Config.AdultLotteryIntervalSec or 3600)) - (pet.phaseElapsedSec or 0)),
+            minLevel = Config.AdultLotteryMinLevel or 5,
+            minSteps = Config.AdultLotteryMinSteps or 1000,
+            minChildSec = Config.AdultLotteryMinChildSec or 1800,
+            currentLevel = levelFromTotalExp(pet.expTotal or 0),
+            currentSteps = math.floor((pet.statWalkM or 0) / ((Config.MetersPerStepDisplay and Config.MetersPerStepDisplay > 0.1) and Config.MetersPerStepDisplay or 0.75)),
+            currentChildSec = pet.phaseElapsedSec or 0,
+        } or nil,
+        phaseElapsedSec = pet and pet.phaseElapsedSec or 0,
         cooldowns = {
             feed = al and cooldownLeft(pet, 'feed') or 0,
             play = (al and (pet and pet.phase) ~= 'sick') and cooldownLeft(pet, 'play') or 0,
@@ -835,11 +995,7 @@ RegisterNUICallback('action', function(data, cb)
         pet.stats.clean = clamp((pet.stats.clean or 0) - 4, 0, 100)
         pet.lastAction.feed = n
         pet.careCount = (pet.careCount or 0) + 1
-        if pet.phase == 'sick' and (pet.stats.hunger or 0) > (Config.SickThreshold or 10) and pet.phaseBeforeSick then
-            pet.phase = pet.phaseBeforeSick
-            pet.sickAt = nil
-            pet.phaseBeforeSick = nil
-        end
+        tryRecoverFromSick(pet)
     elseif a == 'play' and pet.phase ~= 'sick' then
         pet.stats.mood = clamp((pet.stats.mood or 0) + 15, 0, 100)
         pet.stats.stamina = clamp((pet.stats.stamina or 0) - 10, 0, 100)
@@ -855,6 +1011,7 @@ RegisterNUICallback('action', function(data, cb)
         pet.stats.clean = clamp((pet.stats.clean or 0) + 20, 0, 100)
         pet.careCount = (pet.careCount or 0) + 1
         pet.lastAction.clean = n
+        tryRecoverFromSick(pet)
     else
     end
     stateCache = ensureStore(syncWorldTime(stateCache))
@@ -952,8 +1109,7 @@ CreateThread(function()
             if nowP and (was ~= nowP.phase) then
                 writeStore(stateCache)
             end
-            -- 卵中は表示（残り秒）を Lua 基準で再送。それ以外はフェーズ変化が主目的
-            if (nowP and (nowP.phase == 'egg' or was == 'egg' or was ~= nowP.phase)) and nowP then
+            if nowP and (nowP.phase == 'egg' or nowP.phase == 'baby' or nowP.phase == 'child') then
                 pushNui(stateCache, nuiShowExpanded)
             end
         end

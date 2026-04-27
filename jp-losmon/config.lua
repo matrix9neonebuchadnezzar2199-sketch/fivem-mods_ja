@@ -13,7 +13,7 @@ Config.EggShowCrackSec = 30
 Config.DefaultPetName = 'ぼく'
 -- 卵→幼体以降、各成長段階の長さ（秒）
 Config.GrowthInterval = 14400
--- 1 分あたり各ステータスが減少する量（%ポイント）
+-- 1 分あたり各ステータスが減少する量（%ポイント。オンライン中のみ tickOnline で適用）
 Config.StatDecayRate = 0.07
 -- この空腹 % 以下で病気
 Config.SickThreshold = 10
@@ -26,11 +26,48 @@ Config.SleepCooldown = 120
 Config.CleanCooldown = 60
 -- ミニ常駐の初期表示位置（画面 0〜1）
 Config.MiniPosDefault = { x = 0.12, y = 0.88 }
--- 照育: 幼年期→成長期の分岐。理想回数 = floor(経過秒/ここ)。回数比で 50% 超なら成長期（良）
-Config.IdealCareIntervalSec = 1200
-Config.ChildToGoodChildThreshold = 50
--- 幼年期の後半から成熟期へ。レアDの出現率（%）残り 90% は a/b/c を均等
-Config.AdultRarePercent = 10
+
+-- ===== 成熟期への抽選 =====
+-- 抽選周期（秒）。オンライン累積でこの間隔ごとに1回抽選
+Config.AdultLotteryIntervalSec = 3600
+-- 1回の抽選で adult に進化する確率（%）
+Config.AdultLotteryChancePercent = 10
+-- 抽選資格: 最低レベル
+Config.AdultLotteryMinLevel = 5
+-- 抽選資格: 最低歩数
+Config.AdultLotteryMinSteps = 1000
+-- 抽選資格: child フェーズ最低滞在秒
+Config.AdultLotteryMinChildSec = 1800
+
+-- ===== 成熟期の系統重み（合計値で正規化）=====
+Config.AdultFormWeights = {
+    adult_a = 30,
+    adult_b = 30,
+    adult_c = 30,
+    adult_d = 10,
+}
+
+-- ===== オフライン時の挙動 =====
+-- これ秒数以上更新がなければ「離席」として時間累積しない
+Config.OfflineThresholdSec = 120
+
+-- ===== 病気復帰条件 =====
+-- 復帰には hunger > SickThreshold かつ clean >= SickCleanThreshold が必要
+Config.SickCleanThreshold = 50
+
+-- ===== デバッグモード =====
+Config.Debug = false
+if Config.Debug then
+    Config.HatchTime = 60
+    Config.GrowthInterval = 120
+    Config.AdultLotteryIntervalSec = 30
+    Config.AdultLotteryMinChildSec = 30
+    Config.AdultLotteryMinLevel = 1
+    Config.AdultLotteryMinSteps = 0
+    Config.StatDecayRate = 1.0
+    Config.DeathTime = 180
+end
+
 -- レベル（EXP）: 合計 EXP から L = min(LevelMax, floor((1+sqrt(1+8*E/ExpBasePer100))/2))。LV1 の領域は 0 〜 未満 ExpBasePer100
 -- レベル L へ到達に必要な累計 EXP（開始時点）: ExpBasePer100 * (L-1) * L / 2
 Config.LevelMax = 999
@@ -54,17 +91,13 @@ Config.EggSpriteStripFrames = 4
 Config.GraveSpriteStripFrames = 1
 -- 旧仕様。未使用（互換用に残置）
 Config.EvolutionTree = { default = {} }
--- 図鑑 ID（新フォーム）
-Config.ZukanIds = {
-    'baby_a', 'baby_b', 'child_a', 'child_b', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave',
-}
+-- 図鑑 ID
+Config.ZukanIds = { 'baby', 'child', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave' }
 -- 画面・図鑑用の系統名（通称 / 名前差は通称。フォーム名は evName 側）
 Config.FormNames = {
     egg     = '卵',
-    baby_a  = '幼年A',
-    baby_b  = '幼年B',
-    child_a = '成長期（良）',
-    child_b = '成長期（悪）',
+    baby    = '幼年期',
+    child   = '成長期',
     adult_a = '成熟期A',
     adult_b = '成熟期B',
     adult_c = '成熟期C',
@@ -87,10 +120,8 @@ Config.Sprites = {
         happy = '01_egg/01_egg_crack.png',
         sleep = '01_egg/01_egg_crack.png',
     },
-    baby_a  = { idle  = '02_baby/02_baby_a-1.png', play  = '02_baby/02_baby_a-2.png', eat  = '02_baby/02_baby_a-3.png', sleep  = '02_baby/02_baby_a-4.png', happy  = '02_baby/02_baby_a-1.png', clean  = '02_baby/02_baby_a-1.png' },
-    baby_b  = { idle  = '02_baby/02_baby_b-1.png', play  = '02_baby/02_baby_b-2.png', eat  = '02_baby/02_baby_b-3.png', sleep  = '02_baby/02_baby_b-4.png', happy  = '02_baby/02_baby_b-1.png', clean  = '02_baby/02_baby_b-1.png' },
-    child_a = { idle  = '03_child/03_child_a-1.png', play  = '03_child/03_child_a-2.png', eat  = '03_child/03_child_a-3.png', sleep  = '03_child/03_child_a-4.png', happy  = '03_child/03_child_a-1.png', clean  = '03_child/03_child_a-1.png' },
-    child_b = { idle  = '03_child/03_child_b-1.png', play  = '03_child/03_child_b-2.png', eat  = '03_child/03_child_b-3.png', sleep  = '03_child/03_child_b-4.png', happy  = '03_child/03_child_b-1.png', clean  = '03_child/03_child_b-1.png' },
+    baby  = { idle  = '02_baby/02_baby_a-1.png', play  = '02_baby/02_baby_a-2.png', eat  = '02_baby/02_baby_a-3.png', sleep  = '02_baby/02_baby_a-4.png', happy  = '02_baby/02_baby_a-1.png', clean  = '02_baby/02_baby_a-1.png' },
+    child = { idle  = '03_child/03_child_a-1.png', play  = '03_child/03_child_a-2.png', eat  = '03_child/03_child_a-3.png', sleep  = '03_child/03_child_a-4.png', happy  = '03_child/03_child_a-1.png', clean  = '03_child/03_child_a-1.png' },
     adult_a = { idle  = '04_adult/04_adult_a-1.png', play  = '04_adult/04_adult_a-2.png', eat  = '04_adult/04_adult_a-3.png', sleep  = '04_adult/04_adult_a-4.png', happy  = '04_adult/04_adult_a-1.png', clean  = '04_adult/04_adult_a-1.png' },
     adult_b = { idle  = '04_adult/04_adult_b-1.png', play  = '04_adult/04_adult_b-2.png', eat  = '04_adult/04_adult_b-3.png', sleep  = '04_adult/04_adult_b-4.png', happy  = '04_adult/04_adult_b-1.png', clean  = '04_adult/04_adult_b-1.png' },
     adult_c = { idle  = '04_adult/04_adult_c-1.png', play  = '04_adult/04_adult_c-2.png', eat  = '04_adult/04_adult_c-3.png', sleep  = '04_adult/04_adult_c-4.png', happy  = '04_adult/04_adult_c-1.png', clean  = '04_adult/04_adult_c-1.png' },

@@ -422,6 +422,25 @@
       b.classList.toggle('disabled', t > 0 || sck || eggB);
     });
     applyTickerIfNeeded();
+    var lottElem = document.getElementById('meta-lottery');
+    if (lottElem) {
+      if (m && m.phase === 'child' && state.adultLottery) {
+        var al = state.adultLottery;
+        if (!al.eligible) {
+          var parts = [];
+          if (al.currentLevel < al.minLevel) { parts.push('Lv' + al.currentLevel + '/' + al.minLevel); }
+          if (al.currentSteps < al.minSteps) { parts.push(al.currentSteps + '/' + al.minSteps + '歩'); }
+          if (al.currentChildSec < al.minChildSec) { parts.push('滞在' + Math.floor(al.currentChildSec / 60) + '/' + Math.floor(al.minChildSec / 60) + '分'); }
+          lottElem.textContent = '成熟期まで: ' + parts.join(' · ');
+          lottElem.hidden = false;
+        } else {
+          lottElem.textContent = '次の進化抽選: ' + secondsToHMS(al.nextLotteryInSec) + ' (毎回' + al.chancePercent + '%)';
+          lottElem.hidden = false;
+        }
+      } else {
+        lottElem.hidden = true;
+      }
+    }
     updateSickSkulls();
     requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
   }
@@ -467,6 +486,16 @@
         nuiSetFocus(1);
       } else {
         nuiSetFocus(0);
+      }
+    } else if (d.type === 'evolve') {
+      showFlash();
+      if (state) {
+        var evName = d.evName || '次の段階';
+        var msg = '✨ ' + evName + ' に進化しました！';
+        tickerList = [msg, TIP];
+        tickerIdx = 0;
+        applyTickerSlide();
+        lastTickerKey = '';
       }
     } else if (d.type === 'playAction' && d.name) {
       currentAction = d.name;
@@ -595,18 +624,7 @@
   });
 
   if (tick) { clearInterval(tick); }
-  tick = setInterval(function () {
-    if (state && state.pet && state.pet.stats && (state.pet.stats.hunger|0) > 0) {
-      var c = (state && state.config) || { statDecay: 0.07 };
-      if (c.statDecay) {
-        state.pet.stats.hunger = Math.max(0, (state.pet.stats.hunger || 0) - c.statDecay);
-        state.pet.stats.mood = Math.max(0, (state.pet.stats.mood || 0) - c.statDecay);
-        state.pet.stats.stamina = Math.max(0, (state.pet.stats.stamina || 0) - c.statDecay);
-        state.pet.stats.clean = Math.max(0, (state.pet.stats.clean || 0) - c.statDecay);
-        render();
-      }
-    }
-  }, 60000);
+  tick = setInterval(function () { render(); }, 30000);
   function armSpriteResize() {
     if (window.ResizeObserver) {
       var r = new ResizeObserver(function () { syncSpriteLayout(); });
