@@ -23,11 +23,16 @@ local function readStore()
     local s = GetResourceKvpString and GetResourceKvpString(KVP_BLOB) or (GetResourceKvp and GetResourceKvp(KVP_BLOB) or nil)
     if s and s ~= '' then
         local ok, t = pcall(json.decode, s)
-        if ok and t and t.presets then
+        if ok and t and type(t) == 'table' then
+            t.presets = t.presets or {}
+            t.historyCatalog = t.historyCatalog or {}
+            if type(t.historyCatalog) ~= 'table' then
+                t.historyCatalog = {}
+            end
             return t
         end
     end
-    return { presets = {} }
+    return { presets = {}, historyCatalog = {} }
 end
 
 ---@param store table
@@ -185,9 +190,11 @@ local function openDdmUi()
     end
     SetNuiFocus(true, true)
     managerUiHidden = false
+    local st0 = readStore()
     SendNUIMessage({
         type = 'openDdm',
         catalog = Config.Catalog,
+        historyCatalog = st0.historyCatalog,
         maxSlots = Config.MaxSlots,
         defaultDuration = Config.DefaultDuration,
     })
@@ -346,6 +353,58 @@ RegisterNUICallback('deletePreset', function(data, cb)
     st.presets = np
     writeStore(st)
     cb({ ok = true })
+end)
+
+--- カスタム追加（Dict+Clip+リスト）が確定したら KVS 履歴に。カタログ「その他」下の「過去に入力…」用
+RegisterNUICallback('rememberCustomMotion', function(data, cb)
+    if type(data) ~= 'table' or type(data.dict) ~= 'string' or type(data.clip) ~= 'string' then
+        cb({ ok = false })
+        return
+    end
+    local d = (data.dict:gsub('^%s+', '')):gsub('%s+$', '')
+    local cl = (data.clip:gsub('^%s+', '')):gsub('%s+$', '')
+    if d == '' or cl == '' or #d > 220 or #cl > 220 then
+        cb({ ok = false })
+        return
+    end
+    for _, c in ipairs(Config.Catalog or {}) do
+        if c.dict == d and c.clip == cl then
+            local st0 = readStore()
+            cb({ ok = true, historyCatalog = st0.historyCatalog or {}, skipped = true })
+            return
+        end
+    end
+    local name = data.name
+    if type(name) ~= 'string' or name == '' then
+        name = cl
+    else
+        name = name:sub(1, 200)
+    end
+    local dur = tonumber(data.defaultDuration) or 10
+    if dur < 1 then dur = 1 end
+    if dur > 600 then dur = 600 end
+    local st = readStore()
+    st.historyCatalog = st.historyCatalog or {}
+    local maxH = 200
+    if type(Config.HistoryCatalogMax) == 'number' and Config.HistoryCatalogMax > 0 then
+        maxH = math.floor(Config.HistoryCatalogMax)
+    end
+    local found = false
+    for i, e in ipairs(st.historyCatalog) do
+        if type(e) == 'table' and e.dict == d and e.clip == cl then
+            st.historyCatalog[i] = { name = name, dict = d, clip = cl, defaultDuration = dur, category = 'other' }
+            found = true
+            break
+        end
+    end
+    if not found then
+        while #st.historyCatalog >= maxH do
+            table.remove(st.historyCatalog, 1)
+        end
+        st.historyCatalog[#st.historyCatalog + 1] = { name = name, dict = d, clip = cl, defaultDuration = dur, category = 'other' }
+    end
+    writeStore(st)
+    cb({ ok = true, historyCatalog = st.historyCatalog })
 end)
 
 --- プレビュー: 管理画面＋NUI フォーカスを維持。YouTube は鳴らさない

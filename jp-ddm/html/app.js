@@ -6,6 +6,7 @@
         typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'jp-ddm';
 
     let catalog = [];
+    let historyCatalog = [];
     let maxSlots = 64;
     let defaultDuration = 10;
     let ytPlayer = null;
@@ -170,40 +171,68 @@
         renumberSetlist();
     }
 
+    function matchCatalogQuery(c, q) {
+        if (!q) return true;
+        const n = (c.name || '').toLowerCase();
+        const d = (c.dict || '').toLowerCase();
+        const cl = (c.clip || '').toLowerCase();
+        return n.includes(q) || d.includes(q) || cl.includes(q);
+    }
+
+    function appendCatalogRow(c) {
+        const list = $('catalog-list');
+        const li = document.createElement('li');
+        const sp = document.createElement('span');
+        sp.className = 'cat-name';
+        const dur0 = c.defaultDuration || defaultDuration;
+        sp.textContent = `${c.name}（${dur0}秒）`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-add-cat';
+        btn.textContent = '＋追加';
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addSetlistItem({
+                name: c.name,
+                dict: c.dict,
+                clip: c.clip,
+                duration: dur0,
+            });
+        });
+        li.appendChild(sp);
+        li.appendChild(btn);
+        li.title = '行をクリックで試聴 ／ ＋追加でリストへ';
+        li.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-add-cat')) return;
+            playMotionPreview(c.dict, c.clip, c.name);
+        });
+        list.appendChild(li);
+    }
+
     function renderCatalog() {
         const list = $('catalog-list');
         const q = ($('catalog-search').value || '').toLowerCase();
         const cat = $('catalog-cat').value;
         list.innerHTML = '';
-        catalog.forEach((c) => {
+        (catalog || []).forEach((c) => {
             if (cat !== 'all' && c.category !== cat) return;
-            if (q && !c.name.toLowerCase().includes(q) && !c.dict.toLowerCase().includes(q)) return;
-            const li = document.createElement('li');
-            const sp = document.createElement('span');
-            sp.className = 'cat-name';
-            sp.textContent = `${c.name}（${c.defaultDuration}秒）`;
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn-add-cat';
-            btn.textContent = '＋追加';
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                addSetlistItem({
-                    name: c.name,
-                    dict: c.dict,
-                    clip: c.clip,
-                    duration: c.defaultDuration || defaultDuration,
-                });
-            });
-            li.appendChild(sp);
-            li.appendChild(btn);
-            li.title = '行をクリックで試聴 ／ ＋追加でリストへ';
-            li.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-add-cat')) return;
-                playMotionPreview(c.dict, c.clip, c.name);
-            });
-            list.appendChild(li);
+            if (!matchCatalogQuery(c, q)) return;
+            appendCatalogRow(c);
         });
+        if (cat === 'all' || cat === 'other') {
+            const hItems = (historyCatalog || []).filter(
+                (h) => h && h.dict && h.clip && matchCatalogQuery(h, q)
+            );
+            if (hItems.length > 0) {
+                const sub = document.createElement('li');
+                sub.className = 'cat-subhead';
+                sub.setAttribute('role', 'separator');
+                sub.setAttribute('aria-label', '過去に入力したモーション');
+                sub.textContent = '過去に入力したモーション';
+                list.appendChild(sub);
+                hItems.forEach((c) => appendCatalogRow(c));
+            }
+        }
     }
 
     function extractVideoId(url) {
@@ -257,6 +286,7 @@
         if (!d || !d.type) return;
         if (d.type === 'openDdm') {
             catalog = d.catalog || [];
+            historyCatalog = Array.isArray(d.historyCatalog) ? d.historyCatalog : [];
             maxSlots = d.maxSlots || 64;
             defaultDuration = d.defaultDuration || 10;
             $('set-max').textContent = String(maxSlots);
@@ -413,7 +443,7 @@
         playMotionPreview(dict, clip, name);
     });
 
-    $('btn-c-add').addEventListener('click', () => {
+    $('btn-c-add').addEventListener('click', async () => {
         const dict = ($('c-dict').value || '').trim();
         const clip = ($('c-clip').value || '').trim();
         if (!dict || !clip) {
@@ -423,6 +453,11 @@
         const name = ($('c-name').value || '').trim() || clip;
         const dur = parseInt($('c-dur').value, 10) || defaultDuration;
         addSetlistItem({ name, dict, clip, duration: dur });
+        const r = await nuiFetch('rememberCustomMotion', { name, dict, clip, defaultDuration: dur });
+        if (r && r.ok && r.historyCatalog) {
+            historyCatalog = r.historyCatalog;
+            renderCatalog();
+        }
     });
 
     $('btn-start').addEventListener('click', async () => {

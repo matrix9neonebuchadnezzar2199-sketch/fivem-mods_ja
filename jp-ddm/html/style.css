@@ -290,6 +290,19 @@ body {
     cursor: pointer;
 }
 
+#catalog-list li.cat-subhead {
+    display: block;
+    cursor: default;
+    background: rgba(30, 20, 50, 0.95);
+    border-color: rgba(120, 80, 180, 0.5);
+    color: #c8b0ff;
+    font-size: 0.5rem;
+    font-weight: 800;
+    margin-top: 4px;
+    padding: 4px 6px;
+    pointer-events: none;
+}
+
 #catalog-list li .cat-name {
     flex: 1;
     min-width: 0;

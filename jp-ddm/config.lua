@@ -11,6 +11,9 @@ Config.StopCommand = 'ddmstop'
 -- キーは GTA5 設定の「キーボード＞五体（Custom）」で **jp-ddm 用** として差し替え可（ここはデフォルト）
 Config.ReopenManagerKey = 'F12'
 
+-- カスタム追加を記録し「カタログ → その他」に並べる最大件数（KVS 肥大防止）
+Config.HistoryCatalogMax = 200
+
 -- セットリスト1プリセットあたりの最大ステップ数
 Config.MaxSlots = 64
 -- カタログから追加したときのデフォルト秒数
