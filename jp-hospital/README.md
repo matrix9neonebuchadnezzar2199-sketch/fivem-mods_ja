@@ -26,12 +26,12 @@
 
 1. `jp-hospital` を `resources` に置く。  
 2. `server.cfg` 例: `ensure jp-hospital`（依存リソースを先に起動）。  
-3. **主に触るのは** `config.lua`（NPC 座標・`Config.Difficulties`・`Config.Medicines`・`Config.Kartes` ほかは日本語コメント付き）。**`refresh` 後「出題庫が空」**になるときは、サーバーの `jp-hospital` フォルダに**ローカルと同じ `config.lua` が置けているか**（デプロイ漏れ）を確認してください。中・上級専用の 30 問に分けたい場合は、ファイル末の `Config.KartesMedium` / `Config.KartesHard` を、初級と別テーブルとして定義し直せます（現状は初級と同じ出題を参照）。
+3. **主に触るのは** `config.lua`（NPC 座標・`Config.Difficulties`・`Config.Medicines` など）と、**出題そのもの**は `data/kartes_easy.lua` / `data/kartes_medium.lua` / `data/kartes_hard.lua`（難易度ごとに `Config.Kartes` / `KartesMedium` / `KartesHard`）。**`refresh` 後「出題庫が空」**のときは、上記 3 ファイル＋`config.lua` のデプロイ漏れがないか確認（`jp-mechanic` と同じく `shared_script` 順で読み込み）。
 
 ## 仕様（簡易）
 
 - **正解の生成**はサーバ、クライアント表示と**サーバ検証**の二重化で、チート向けの単純な偽装を想定。  
-- カルテ内容・薬の種類は `config.lua` の `Config.Kartes` / `Config.Medicines` で拡張可能。
+- 薬の種類は `config.lua` の `Config.Medicines`、**カルテ出題**は `data/kartes_*.lua` で拡張可能（`answers` の id は `Medicines` と一致させる）。
 
 ## クレジット
 
