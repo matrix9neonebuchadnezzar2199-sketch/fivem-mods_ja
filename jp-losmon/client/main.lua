@@ -380,11 +380,14 @@ local function getSpriteSetForPet(pet)
     if not pet or not pet.phase then
         return nil
     end
-    if pet.phase == 'sick' then
-        return Config.Sprites and Config.Sprites.sick
+    -- 常に { mode, set } 形式にして NUI setSprite 側と図鑑/タイトルと一貫させる
+    if pet.phase == 'sick' and Config.Sprites and Config.Sprites.sick then
+        return { mode = 'id', set = Config.Sprites.sick }
     end
     if pet.phase == 'dead' or pet.evolutionId == 'grave' then
-        return Config.Sprites and Config.Sprites.grave
+        if Config.Sprites and Config.Sprites.grave then
+            return { mode = 'id', set = Config.Sprites.grave }
+        end
     end
     if pet.phase == 'egg' and Config.Sprites.egg and Config.Sprites.egg_crack then
         return { egg = Config.Sprites.egg, crack = Config.Sprites.egg_crack, mode = 'egg' }

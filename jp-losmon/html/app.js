@@ -54,7 +54,15 @@
       return;
     }
     if (def.set) {
-      var f2 = def.set[act] || def.set.idle;
+      var f2;
+      if (act === 'play') {
+        f2 = def.set.play || def.set.happy || def.set.idle;
+      } else if (act === 'clean') {
+        /* 掃除を happy に載せると原画差で「アクション毎に別のキャラ」に見える。差分を config.Sprites.*.clean で上書き可 */
+        f2 = def.set.clean || def.set.idle;
+      } else {
+        f2 = def.set[act] || def.set.idle;
+      }
       div.style.backgroundImage = 'url(' + nuiUrl(f2) + ')';
     }
   }
@@ -64,16 +72,52 @@
   }
 
   function applySpriteWithMode(div, def, isMini) {
+    if (!div) { return; }
+    if (isMini) { div.classList.add('mini-sprite'); }
     if (!def) { return; }
-    if (isMini) {
-      div.classList.add('mini-sprite');
+    /* background-size / keyframes: syncSpriteLayout（LCD 枠に合わせ可変） */
+  }
+
+  function syncSpriteLayout() {
+    var mEl = document.getElementById('sprite-el');
+    var iEl = document.getElementById('mini-sprite');
+    var wM = 200;
+    var wI = 120;
+    if (mEl) {
+      var rw = mEl.getBoundingClientRect();
+      wM = Math.max(1, Math.floor(rw.width));
+      var hM = Math.max(1, Math.floor(rw.height));
+      if (wM < 3) {
+        var lcdE = document.getElementById('device-lcd');
+        if (lcdE) {
+          var b = lcdE.getBoundingClientRect();
+          wM = Math.max(20, Math.floor(0.98 * Math.min(b.width, b.height)));
+          hM = wM;
+        }
+      }
+      mEl.style.backgroundSize = (4 * wM) + 'px ' + hM + 'px';
     }
-    var w = 512; var h = 128; var mW = 256; var mH = 64;
-    if (def.mode === 'id' && def.set) {
-      div.style.backgroundSize = (isMini ? mW * UI_S : w * UI_S) + 'px ' + (isMini ? mH * UI_S : h * UI_S) + 'px';
-    } else {
-      div.style.backgroundSize = (isMini ? mW * UI_S : w * UI_S) + 'px ' + (isMini ? mH * UI_S : h * UI_S) + 'px';
+    if (iEl) {
+      var rI = iEl.getBoundingClientRect();
+      wI = Math.max(1, Math.floor(rI.width));
+      var hI = Math.max(1, Math.floor(rI.height));
+      if (wI < 3) {
+        var mL = document.getElementById('mini-lcd');
+        if (mL) {
+          var b2 = mL.getBoundingClientRect();
+          wI = hI = Math.max(16, Math.floor(0.98 * Math.min(b2.width, b2.height)));
+        }
+      }
+      iEl.style.backgroundSize = (4 * wI) + 'px ' + hI + 'px';
     }
+    var st = document.getElementById('dyn-sprite-kf');
+    if (!st) {
+      st = document.createElement('style');
+      st.id = 'dyn-sprite-kf';
+      document.head.appendChild(st);
+    }
+    st.textContent = '@keyframes sprite-play{from{background-position:0 0}to{background-position:' + (-4 * wM) + 'px 0}}' +
+      '@keyframes sprite-min{from{background-position:0 0}to{background-position:' + (-4 * wI) + 'px 0}}';
   }
 
   function getSpriteSet() {
@@ -164,7 +208,6 @@
       posMini();
       setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
       applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
-      document.getElementById('mini-n').textContent = state.charName || 'ぼく';
       var h = m.stats ? (m.stats.hunger || 0) : 0;
       document.getElementById('mini-bh').style.width = h + '%';
     } else {
@@ -229,6 +272,7 @@
       b.classList.toggle('disabled', t > 0 || sck);
     });
     applyTickerIfNeeded();
+    requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
   }
 
   function posMini() {
@@ -238,7 +282,14 @@
     if (!el) { return; }
     if (p.x < 0.05) { p.x = 0.05; }
     if (p.y < 0.05) { p.y = 0.05; }
-    var hW = 60 * UI_S, hH = 120 * UI_S;
+    var hW, hH;
+    if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+      hW = el.offsetWidth * 0.5;
+      hH = el.offsetHeight * 0.5;
+    } else {
+      hW = 100 * UI_S;
+      hH = 100 * UI_S;
+    }
     el.style.left = Math.max(0, (window.innerWidth * p.x) - hW) + 'px';
     el.style.top = Math.max(0, (window.innerHeight * p.y) - hH) + 'px';
   }
@@ -295,13 +346,17 @@
       }
     } else if (d.type === 'playAction' && d.name) {
       currentAction = d.name;
-      if (d.name === 'feed' || d.name === 'play') { currentAction = d.name === 'feed' ? 'eat' : 'happy'; }
-      if (d.name === 'sleep') { currentAction = 'sleep'; }
-      if (d.name === 'clean') { currentAction = 'happy'; }
+      if (d.name === 'feed') { currentAction = 'eat'; }
+      else if (d.name === 'play') { currentAction = 'play'; }
+      else if (d.name === 'sleep') { currentAction = 'sleep'; }
+      else if (d.name === 'clean') { currentAction = 'clean'; }
       if (d.sprite) { state.sprite = d.sprite; }
       if (d.pet) { state.pet = d.pet; }
       setSprite(document.getElementById('sprite-el'), getSpriteSet(), currentAction);
       setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
+      applySpriteWithMode(document.getElementById('sprite-el'), getSpriteSet(), false);
+      applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
+      syncSpriteLayout();
       showFlash();
       if (actionTimer) { clearTimeout(actionTimer); }
       actionTimer = setTimeout(function () { currentAction = 'idle'; render(); }, 2800);
@@ -391,7 +446,7 @@
     if (lastDragPx < 3) { return; }
     var el = mpet, r = el.getBoundingClientRect();
     var rw = window.innerWidth || 1, rh = window.innerHeight || 1;
-    var hx = 60 * UI_S, hy = 100 * UI_S;
+    var hx = r.width * 0.5, hy = r.height * 0.5;
     var rx = (r.left + hx) / rw;
     var ry = (r.top + hy) / rh;
     rx = Math.max(0.01, Math.min(0.99, rx));
@@ -412,5 +467,20 @@
       }
     }
   }, 60000);
-  window.addEventListener('resize', posMini);
+  function armSpriteResize() {
+    if (window.ResizeObserver) {
+      var r = new ResizeObserver(function () { syncSpriteLayout(); });
+      var dw = document.getElementById('device-wrap');
+      var md = document.getElementById('mini-device');
+      if (dw) { r.observe(dw); }
+      if (md) { r.observe(md); }
+    }
+    requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', armSpriteResize);
+  } else {
+    armSpriteResize();
+  }
+  window.addEventListener('resize', function () { posMini(); syncSpriteLayout(); });
 })();
