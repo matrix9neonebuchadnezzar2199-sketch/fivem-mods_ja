@@ -33,8 +33,9 @@ Config.ChildToGoodChildThreshold = 50
 Config.AdultRarePercent = 10
 -- NUI: 横4コマ1枚のスプライト（512×128 等）。1ポーズ1ファイルのときは 1
 Config.SpriteStripFrames = 4
--- 卵（単一画）・旅立ち（05_d 単一画）は 1
-Config.EggSpriteStripFrames = 1
+-- 卵・幼体・成長等と同じく横4コマ1枚。殻割れ `01_egg_crack` も同形式推奨
+Config.EggSpriteStripFrames = 4
+-- 旅立ち（05_d 単一画）のみ 1
 Config.GraveSpriteStripFrames = 1
 -- 旧仕様。未使用（互換用に残置）
 Config.EvolutionTree = { default = {} }

@@ -415,7 +415,7 @@ local function spriteStripFramesForPet(pet)
         return (Config and Config.SpriteStripFrames) or 4
     end
     if pet.phase == 'egg' then
-        return (Config and Config.EggSpriteStripFrames) or 1
+        return (Config and Config.EggSpriteStripFrames) or 4
     end
     if pet.phase == 'dead' or pet.evolutionId == 'grave' then
         return (Config and Config.GraveSpriteStripFrames) or 1

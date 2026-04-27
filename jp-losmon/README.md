@@ -8,7 +8,7 @@ FiveM 用の育成型 NUI ミニゲーム（Los-Mon）。チャットで `/losmo
 
 ## 画像
 
-`config.lua` の `Config.Sprites` を参照。フォルダ例: `html/img/01_egg/`, `02_baby/`, `03_child/`, `04_adult/`。幼体〜成体は **横4コマ1枚** 前提で `Config.SpriteStripFrames = 4`（NUI は `background-size: 4×` + `steps(4)` アニメ）。卵・旅立ち単一画は `EggSpriteStripFrames` / `GraveSpriteStripFrames` で 1。
+`config.lua` の `Config.Sprites` を参照。フォルダ例: `html/img/01_egg/`, `02_baby/`, `03_child/`, `04_adult/`。幼体〜成体・**卵**は **横4コマ1枚** 前提（`SpriteStripFrames` / `EggSpriteStripFrames` = 4。NUI は `background-size: 4×` + `steps(4)`）。旅立ち `05_d` など単一画だけ `GraveSpriteStripFrames = 1`。
 
 - 病気・墓: 従来通り `html/img/` 直下（`09_` / `10_`）想定。必要ならパスを `config.lua` で差し替え。
 
