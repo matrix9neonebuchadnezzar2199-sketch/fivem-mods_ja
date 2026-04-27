@@ -527,11 +527,18 @@ end
 ---@param b any
 ---@return number
 local function vec3dist(a, b)
-    if not a or not b or type(a) ~= 'table' or type(b) ~= 'table' then
+    if not a or not b then
         return 0.0
     end
-    local ax, ay, az = a.x, a.y, a.z
-    local bx, by, bz = b.x, b.y, b.z
+    -- FiveM: GetEntityCoords は vector3（type は "vector3" 等。table ではない）。旧実装の table 判定で距離が常に0だった
+    local function xyz(v)
+        if not v or v.x == nil or v.y == nil or v.z == nil then
+            return nil, nil, nil
+        end
+        return v.x + 0.0, v.y + 0.0, v.z + 0.0
+    end
+    local ax, ay, az = xyz(a)
+    local bx, by, bz = xyz(b)
     if not ax or not ay or not az or not bx or not by or not bz then
         return 0.0
     end
