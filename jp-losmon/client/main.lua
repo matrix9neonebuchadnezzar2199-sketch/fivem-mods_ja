@@ -1,6 +1,5 @@
 -- jp-losmon クライアント: KVS 保存、時間経過シミュ、NUI 制御
 local KVP_BLOB = 'losmon_v1'
-local nuiHasFocus = false
 local nuiShowExpanded = false
 local stateCache = nil
 -- デバッグ: 強制進化の予約状態
@@ -372,11 +371,11 @@ local function syncWorldTime(store)
     local n = nowSec()
     store = ensureStore(store)
 
-    local forceEvolved = applyDebugForceEvolve(store, n)
-
-    if not forceEvolved and store.pet and isAlive(store.pet) then
+    if store.pet and isAlive(store.pet) then
         tickOnline(store, n)
     end
+
+    local forceEvolved = applyDebugForceEvolve(store, n)
 
     local evolved = nil
     if not forceEvolved and store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' then
@@ -670,6 +669,7 @@ applyDebugForceEvolve = function(store, n)
         pet.phaseElapsedSec = 0
         pet.phaseStartAt = n
         pet.careCount = 0
+        pet.lastLotteryAt = 0
         pet.sickAt = nil
         pet.phaseBeforeSick = nil
     elseif target == 'child' then
@@ -687,6 +687,7 @@ applyDebugForceEvolve = function(store, n)
         pet.phaseElapsedSec = 0
         pet.phaseStartAt = n
         pet.careCount = 0
+        pet.lastLotteryAt = 0
         pet.sickAt = nil
         pet.phaseBeforeSick = nil
     elseif target == 'sick' then
@@ -843,6 +844,7 @@ local function nuiStatePayload(st, expanded)
     if nameMax < 1 then
         nameMax = 12
     end
+    local notSick = pet and pet.phase ~= 'sick'
     return {
         type = 'state',
         expanded = expanded or false,
@@ -911,8 +913,8 @@ local function nuiStatePayload(st, expanded)
         debugTargets = Config.DebugForceEvolveEnabled and (Config.DebugEvolveTargets) or nil,
         cooldowns = {
             feed = al and cooldownLeft(pet, 'feed') or 0,
-            play = (al and (pet and pet.phase) ~= 'sick') and cooldownLeft(pet, 'play') or 0,
-            sleep = (al and (pet and pet.phase) ~= 'sick') and cooldownLeft(pet, 'sleep') or 0,
+            play = (al and notSick) and cooldownLeft(pet, 'play') or 0,
+            sleep = (al and notSick) and cooldownLeft(pet, 'sleep') or 0,
             clean = al and cooldownLeft(pet, 'clean') or 0,
         },
         resName = (GetCurrentResourceName and GetCurrentResourceName() or 'jp-losmon'),
@@ -931,7 +933,6 @@ end
 
 ---@param focus boolean
 local function setNuiFocus(focus)
-    nuiHasFocus = focus
     if SetNuiFocus then
         if focus then
             SetNuiFocus(true, true)
@@ -945,7 +946,7 @@ local function saveAuto()
     if not stateCache then
         return
     end
-    -- 歩行なしの待機中は advancePhases（孵化・成長）が走らないケースを防ぐ
+    -- オフライン化前の最終保存・tickOnline 経由の進行反映用（60秒ごと）
     stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
     writeStore(stateCache)
 end
@@ -1095,7 +1096,9 @@ RegisterNUICallback('action', function(data, cb)
         pet.stats.mood = clamp((pet.stats.mood or 0) + 5, 0, 100)
         pet.stats.clean = clamp((pet.stats.clean or 0) - 4, 0, 100)
         pet.lastAction.feed = n
-        pet.careCount = (pet.careCount or 0) + 1
+        if pet.phase ~= 'sick' then
+            pet.careCount = (pet.careCount or 0) + 1
+        end
         tryRecoverFromSick(pet)
     elseif a == 'play' and pet.phase ~= 'sick' then
         pet.stats.mood = clamp((pet.stats.mood or 0) + 15, 0, 100)
@@ -1110,7 +1113,9 @@ RegisterNUICallback('action', function(data, cb)
         pet.lastAction.sleep = n
     elseif a == 'clean' then
         pet.stats.clean = clamp((pet.stats.clean or 0) + 20, 0, 100)
-        pet.careCount = (pet.careCount or 0) + 1
+        if pet.phase ~= 'sick' then
+            pet.careCount = (pet.careCount or 0) + 1
+        end
         pet.lastAction.clean = n
         tryRecoverFromSick(pet)
     else
@@ -1175,6 +1180,18 @@ RegisterNUICallback('debugForceEvolve', function(data, cb)
     if not allowed then
         if cb then
             cb('invalid')
+        end
+        return
+    end
+    local pet = stateCache.pet
+    if target == 'sick' and (pet.phase == 'sick' or pet.phase == 'dead' or pet.phase == 'egg') then
+        SendNUIMessage({
+            type = 'debugEvolveRejected',
+            target = target,
+            reason = 'invalid_phase',
+        })
+        if cb then
+            cb('invalid_phase')
         end
         return
     end

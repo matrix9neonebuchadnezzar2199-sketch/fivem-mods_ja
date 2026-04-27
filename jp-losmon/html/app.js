@@ -270,13 +270,19 @@
       sick: '病気', grave: '旅立ち'
     };
     var fn2 = (state && state.formNames) || formNames;
+    var ph = state.pet && state.pet.phase;
     targets.forEach(function (t) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'btn-sec debug-evolve-btn';
       b.textContent = (fn2 && fn2[t]) || formNames[t] || t;
       b.setAttribute('data-target', t);
+      if (t === 'sick' && (ph === 'egg' || ph === 'dead' || ph === 'sick')) {
+        b.disabled = true;
+        b.title = '現在のフェーズでは病気にできません';
+      }
       b.addEventListener('click', function () {
+        if (b.disabled) { return; }
         post('debugForceEvolve', { target: t });
       });
       list.appendChild(b);
@@ -546,6 +552,15 @@
     } else if (d.type === 'debugEvolveCancelled') {
       if (state) { state.debugForceEvolve = null; }
       refreshDebugEvolveStatus();
+    } else if (d.type === 'debugEvolveRejected') {
+      if (state) {
+        var rej = '⚠ 現在のフェーズでは病気にできません';
+        if (d.reason && d.reason !== 'invalid_phase') { rej = '⚠ 強制進化を実行できません (' + d.reason + ')'; }
+        tickerList = [rej, TIP];
+        tickerIdx = 0;
+        applyTickerSlide();
+        lastTickerKey = '';
+      }
     } else if (d.type === 'evolve') {
       showFlash();
       if (state) {
