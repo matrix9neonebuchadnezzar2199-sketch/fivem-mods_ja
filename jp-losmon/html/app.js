@@ -13,6 +13,7 @@
   var tickerList = [];
   var tickerIdx = 0;
   var lastTickerKey = '';
+  var hatchInterval = null;
 
   function post(name, data) {
     return fetch('https://' + res + '/' + name, {
@@ -150,6 +151,43 @@
     return state && state.sprite;
   }
 
+  function liveHatchLeftSec() {
+    if (!state) { return 0; }
+    if (state._hatchSyncAt == null) { return (state.hatchLeftSec | 0); }
+    var elapsed = Math.floor((Date.now() - state._hatchSyncAt) / 1000);
+    return Math.max(0, (state._hatchBaseSec | 0) - elapsed);
+  }
+
+  function stopHatchCountdownTicker() {
+    if (hatchInterval) { clearInterval(hatchInterval); hatchInterval = null; }
+  }
+
+  function tickHatchCountdown() {
+    if (!state || !state.pet || state.pet.phase !== 'egg' || state._hatchSyncAt == null) {
+      stopHatchCountdownTicker();
+      return;
+    }
+    var left = liveHatchLeftSec();
+    state.hatchLeftSec = left;
+    var htxt = document.getElementById('hatch-text');
+    if (htxt) { htxt.textContent = left > 0 ? ('あと ' + secondsToHMS(left)) : ''; }
+    setSprite(document.getElementById('sprite-el'), getSpriteSet(), 'idle');
+    setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
+    applySpriteWithMode(document.getElementById('sprite-el'), getSpriteSet(), false);
+    applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
+    applyTickerIfNeeded();
+    requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
+    if (left <= 0) { stopHatchCountdownTicker(); }
+  }
+
+  function startHatchCountdownTicker() {
+    stopHatchCountdownTicker();
+    if (!state || !state.pet || state.pet.phase !== 'egg' || state._hatchSyncAt == null) { return; }
+    if (liveHatchLeftSec() <= 0) { return; }
+    hatchInterval = setInterval(tickHatchCountdown, 1000);
+    tickHatchCountdown();
+  }
+
   function updateSickSkulls() {
     var m = state && state.pet;
     var ex = state && state.expanded;
@@ -228,6 +266,9 @@
 
   function render() {
     if (!state) { return; }
+    if (state.pet && state.pet.phase === 'egg' && state._hatchSyncAt != null) {
+      state.hatchLeftSec = liveHatchLeftSec();
+    }
     var m = state.pet;
     var ex = state.expanded;
     var showExp = ex;
@@ -330,6 +371,17 @@
     if (!d || !d.type) { return; }
     if (d.type === 'state') {
       state = d; state._uiS = UI_S;
+      if (d.pet && d.pet.phase === 'egg' && d.hatchLeftSec != null) {
+        state._hatchSyncAt = Date.now();
+        state._hatchBaseSec = d.hatchLeftSec | 0;
+      } else {
+        state._hatchSyncAt = null;
+        state._hatchBaseSec = null;
+      }
+      stopHatchCountdownTicker();
+      if (d.pet && d.pet.phase === 'egg' && (d.hatchLeftSec | 0) > 0) {
+        startHatchCountdownTicker();
+      }
       if (d.resName) { res = d.resName; }
       render();
       if (d.expanded) {
