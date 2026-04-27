@@ -4,21 +4,14 @@ lua54 'yes'
 
 author 'JP-Mods'
 description '病院カルテ整理・薬梱包ミニゲーム（NUI内職）'
-version '1.2.2'
+version '1.2.3'
 
--- 出題庫は server_scripts で列挙（server_script{単数}の { } 展開が環境で無視される例がある）
-shared_scripts {
-    'config.lua',
-}
-client_scripts {
-    'client/main.lua',
-}
-server_scripts {
-    'data/kartes_easy.lua',
-    'data/kartes_medium.lua',
-    'data/kartes_hard.lua',
-    'server/main.lua',
-}
+shared_script 'config.lua'
+shared_script 'data/kartes_easy.lua'
+shared_script 'data/kartes_medium.lua'
+shared_script 'data/kartes_hard.lua'
+client_script 'client/main.lua'
+server_script 'server/main.lua'
 
 ui_page 'html/index.html'
 

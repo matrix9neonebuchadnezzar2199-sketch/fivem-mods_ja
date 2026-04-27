@@ -92,4 +92,4 @@ Config.Medicines = {
     { id = 'throat_lozenge',  name = 'のど飴（医療用）',  icon = '🍬' },
 }
 
--- 症状カルテ出題: data/kartes_*.lua（fxmanifest の server_script で読込。answers は上記 Medicines の id 配列）
+-- 症状カルテ出題: data/kartes_*.lua（config の次に shared_script 読み込み。answers は上記 Medicines の id 配列）

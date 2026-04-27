@@ -26,7 +26,7 @@
 
 1. `jp-hospital` を `resources` に置く。  
 2. `server.cfg` 例: `ensure jp-hospital`（依存リソースを先に起動）。  
-3. **主に触るのは** `config.lua`（NPC 座標・`Config.Difficulties`・`Config.Medicines` など）と、**出題そのもの**は `data/kartes_easy.lua` / `data/kartes_medium.lua` / `data/kartes_hard.lua`（難易度ごとに `Config.Kartes` / `KartesMedium` / `KartesHard`）。これらは **サーバー専用**（`fxmanifest` の `server_scripts { ... }` で列挙）。**「出題庫が空」**のときは、サーバーに `data/*.lua` が揃っているか、tx コンソールのスクリプト赤ログがないか、`server_script` 単数＋ `{ }` 表記（環境によっては出題ファイルが無視）になっていないかを確認。
+3. **主に触るのは** `config.lua`（NPC 座標・`Config.Difficulties`・`Config.Medicines` など）と、**出題**は `data/kartes_easy.lua` / `data/kartes_medium.lua` / `data/kartes_hard.lua`（難易度ごとに `Config.Kartes` / `KartesMedium` / `KartesHard`）。読み込み順は **`jp-mechanic` と同じ** — `config.lua` の直後に上記 3 ファイルを `fxmanifest` の `shared_script` で列挙。**「出題庫が空」**のときは、サーバー上の `jp-hospital/data` に 3 ファイルが揃っているか（デプロイ漏れ）、tx コンソールに Lua エラーが出ていないかを確認。
 
 ## 仕様（簡易）
 
