@@ -89,4 +89,4 @@ Config.Parts = {
     { id = 'fuse',             name = 'ヒューズ',                icon = '⚡' },
 }
 
--- 出題庫: data/slips_easy.lua / slips_medium.lua / slips_hard.lua
+-- 出題庫: data/slips_*.lua（fxmanifest の server_script。サーバー上の data フォルダに配置）

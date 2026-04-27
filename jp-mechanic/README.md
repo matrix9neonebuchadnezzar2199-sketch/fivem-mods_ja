@@ -82,7 +82,7 @@
 
 ## 出題庫の編集
 
-- 初級 / 中級 / 上級はそれぞれ `data/slips_easy.lua` / `slips_medium.lua` / `slips_hard.lua`
+- 初級 / 中級 / 上級はそれぞれ `data/slips_easy.lua` / `slips_medium.lua` / `slips_hard.lua`（**`fxmanifest` では `server_script` 読み込み**・サーバー上の `data/` に必ず配布）
 - 各レコードは `symptom`, `vehicle`, `diagnosis`, `answers`（部品 `id` の配列）
 - 再生成・一括生成には `tools/gen_slips.py`（`python tools/gen_slips.py`）を利用可能
 
