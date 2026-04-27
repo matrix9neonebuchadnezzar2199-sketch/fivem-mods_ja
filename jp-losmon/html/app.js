@@ -371,18 +371,17 @@
     var ex = state.expanded;
     var showExp = ex;
     document.getElementById('main-expanded').classList.toggle('hidden', !showExp);
-    if (m && m.phase !== 'dead') {
-      document.getElementById('mini-pet').classList.remove('hidden');
-      posMini();
-      setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
-      applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
-      var h = m.stats ? (m.stats.hunger || 0) : 0;
-      document.getElementById('mini-bh').style.width = h + '%';
-    } else {
-      document.getElementById('mini-pet').classList.add('hidden');
-    }
     var mpetE = document.getElementById('mini-pet');
     if (mpetE) {
+      var showMini = Boolean(m && m.phase !== 'dead' && !ex);
+      mpetE.hidden = !showMini;
+      if (showMini) {
+        posMini();
+        setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
+        applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
+        var h = m.stats ? (m.stats.hunger || 0) : 0;
+        document.getElementById('mini-bh').style.width = h + '%';
+      }
       mpetE.classList.toggle('mini--drag', Boolean(ex && m && m.phase !== 'dead'));
       mpetE.style.zIndex = (ex && m) ? '10020' : '10040';
     }

@@ -2,6 +2,8 @@
 local KVP_BLOB = 'losmon_v1'
 local nuiShowExpanded = false
 local stateCache = nil
+--- /losmon が一度でも実行されるまで NUI へ state を送らない（起動直後のミニ表示を防ぐ。KVS 非保存）
+local losmonActivated = false
 -- デバッグ: 強制進化の予約状態
 local debugForceEvolve = {
     target = nil,
@@ -413,7 +415,7 @@ local function syncWorldTime(store)
     end
 
     local notify = forceEvolved or evolved
-    if notify then
+    if notify and losmonActivated then
         SendNUIMessage({
             type = 'evolve',
             evolutionId = notify,
@@ -821,7 +823,7 @@ local function addExpToPet(pet, amount)
         pet.expTotal = 0.0
     end
     local newL = levelFromTotalExp(pet.expTotal)
-    if newL > oldL then
+    if newL > oldL and losmonActivated then
         SendNUIMessage({ type = 'levelUp', level = newL, from = oldL })
     end
     return oldL, newL
@@ -959,6 +961,9 @@ end
 local function pushNui(s, ex)
     if s ~= nil then
         stateCache = ensureStore(s)
+    end
+    if not losmonActivated then
+        return
     end
     SendNUIMessage(nuiStatePayload(stateCache, ex))
 end
@@ -1295,6 +1300,7 @@ RegisterNUICallback('newPetAfterDead', function(_, cb)
 end)
 
 RegisterCommand((Config and Config.Command) or 'losmon', function()
+    losmonActivated = true
     stateCache = readStore()
     stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
     if not hasPet(stateCache.pet) then
@@ -1424,7 +1430,6 @@ AddEventHandler('onClientResourceStart', function(name)
     end
     nuiShowExpanded = false
     setNuiFocus(false)
-    pushNui(stateCache, false)
 end)
 
 CreateThread(function()
