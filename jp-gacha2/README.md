@@ -1,119 +1,97 @@
-# jp-gacha
+# jp-gacha2
 
-FiveM 用ガチャポン。マシン付近で **E** キーを押すとフルスクリーン NUI で
-カプセル落下 → ヒビ → 割れ → 背景変化 → カットイン（SR 以上）→ 結果表示の流れが再生されます。
+FiveM 用**ガチャマシン（v2）**。マシン付近で **E** キーでトップメニューが開き、**カプセル演出**（落下 → ヒビ → 割れ → 背景 → カットイン → 結果）が NUI 再生されます。  
+**ox_inventory** のスタッシュを景品在庫として使い、**KVS 保存の管理画面**で排出率・景品ON/OFF・タイトル等を変更できます（フレームワーク非依存のスタンドアロン想定）。
+
+リポジトリ: [fivem-mods_ja / jp-gacha2](https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/tree/main/jp-gacha2)
 
 ## 特徴
 
-- フルスクリーン NUI 演出（N / R / SR / SSR / UR）
-- SR 以上はカットイン、SSR/UR は画面揺れ＋星パーティクル
-- フレームワーク自動検出（ESX / QBCore）＋ スタンドアロン
-- 排出物・重み・座標・演出時間は `config.lua` で調整
+- トップ: 「ガチャる」「在庫管理（スタッシュ）」「管理画面（パス）」
+- 景品は原則 **ox スタッシュ**（既定 `gacha_prizes`）＋在庫から抽選。結果は**商品画像**表示（`https://cfx-nui-ox_inventory/web/images/<item>.png` 等）
+- 管理 UI: 左右分割（基本・レア率・**排出アイテム一覧**）。`/gachaadmin`（ACE）で緊急メニュー可
+- 演出: N / R / SR / SSR / UR、SR 以上カットイン、SSR/UR 揺れ＋パーティクル
+- 課金: `Config.Framework` の `auto` で ESX / QBCore(Qbx) / ox 現金 等を優先。現金（銀行は使わない扱いが基本）
 
 ## インストール
 
-1. 本フォルダを `resources/[jp-mods]/jp-gacha/` に置く
-2. `server.cfg` に `ensure jp-gacha` を追加
-3. `config.lua` で `Config.Machines`・`Config.Cost`・`Config.ItemsByRarity` 等を編集
-4. 任意: `html/sounds/` に下表の MP3 を入れる（無くても動作する）
+1. 本フォルダを `resources/[jp-mods]/jp-gacha2/` などに置く（フォルダ名＝起動名）
+2. `server.cfg` に `ensure jp-gacha2` を追加
+3. **ox_inventory** を導入済み想定。`config.lua` の `Config.StashName` 等でスタッシュ名を合わせる
+4. `config.lua` で `Config.Machines`・`Config.Cost`・`Config.AdminPassword` 等を編集
+5. 任意: `html/sounds/` に下表の MP3（無くても動作）
 
 ## 効果音（任意）
 
-| ファイル名 | 用途 |
-|------------|------|
-| gacha_roll.mp3 | カプセル落下 |
-| crack.mp3 | ヒビ |
-| break_open.mp3 | 割れ |
-| cutin.mp3 | カットイン |
-| result_normal.mp3 | N/R 結果 |
-| result_rare.mp3 | SR 以上 結果 |
+| ファイル名        | 用途        |
+|-------------------|-------------|
+| gacha_roll.mp3    | カプセル落下 |
+| crack.mp3         | ヒビ        |
+| break_open.mp3    | 割れ        |
+| cutin.mp3         | カットイン  |
+| result_normal.mp3 | N/R 結果    |
+| result_rare.mp3   | SR 以上結果 |
 
-NUI では再生前に存在確認（`fetch` HEAD 等）を行い、ファイルが無い場合にコンソールエラーを出さないようにしてあります。
-
-## 主な設定（config.lua）
+## 主な設定（`config.lua` 抜粋）
 
 - `Config.Machines` – マシン座標・向き
-- `Config.Cost` / `Config.Cooldown` – 1 回の料金（現金）とクールダウン
-- `Config.Rarities` – 確率と演出定義
-- `Config.ItemsByRarity` – レアリティごとの排出候補（運営者はここを編集）
-- `Config.Timing` – 演出タイムライン（ms）
+- `Config.Cost` / 管理画面の価格（KVS）/ `Config.Cooldown`
+- `Config.UIScale` – NUI 拡大率（例: `4.0`）
+- `Config.StashName` / `StashLabel` / `StashSlots` / `StashMaxWeight` – 景品スタッシュ
+- `Config.FallbackToConfigIfStashEmpty` – スタッシュ空のとき `Config` 枠に戻すか
+- `Config.CatalogStashOnly` – 景品一覧をスタッシュ在庫のみにする
+- `Config.RarityDisplayNames` – 4段階（レジェ〜コモン）管理 UI 用
+- `Config.Timing` – 演出 ms
 - `Config.Blip` – 地図アイコン
-- `Config.Debug` – デバッグ出力
-
-### 運営向け: 課金とフレームワーク判定の仕組み
-
-`Config.Framework = 'auto'` の場合、起動時に次の順で判定します。
-
-1. ESX が使えるなら ESX モード
-2. ESX が無く QBCore が使えるなら QBCore モード
-3. どちらも無い場合は standalone モード
-
-#### お金の判定（重要）
-
-- ESX: **現金（`getMoney()`）のみ**を参照
-- QBCore: **現金（`money['cash']`）のみ**を参照
-- 銀行口座（bank）は参照しません
-
-#### 回せる / 回せない判定
-
-- メニューで回数を選んだ直後、サーバー側で必要額を計算して即チェック
-- 必要額を持っていなければ演出は開始せず、`お金が足りません` で拒否
-- `standalone` は経済基盤が無いため、実装上は課金なし扱いで回せます
-
-#### 判定ログの見方
-
-`Config.Debug = true` にして `restart jp-gacha` すると、サーバーコンソールに以下のいずれかが出ます。
-
-- `[jp-gacha] ESX detected`
-- `[jp-gacha] QBCore detected`
-- `[jp-gacha] Standalone mode`
-
-### アイテム設定場所（運営向け）
-
-`config.lua` の `Config.ItemsByRarity` が、出現アイテム一覧です。
-
-- `N` / `R` / `SR` / `SSR` / `UR` の各配列に景品を追加
-- 各要素は `{ name = "表示名", image = "" }`
-- `image` は将来の画像URLやNUI用パスを入れる想定（空でOK）
+- `Config.Debug` – デバッグ
 
 ## 使い方
 
-1. マップのガチャアイコンへ向かう  
-2. マシンに近づく（プロップ＋NUI 用 `machine.png`）  
-3. E でガチャ  
-4. SR 以上は全体チャット、N/R は本人チャット
+1. 地図の Blip へ向かい、マシンに近づく  
+2. **E** → トップメニュー → **ガチャる** または 管理/在庫（パス認証）  
+3. 排出はサーバーで抽選。在庫が無い枠は排出されない設定が基本  
 
-## 説明画像（README用）
+## 説明画像（GitHub 用・推奨パス）
 
-画像は `jp-gacha/docs/screenshots/` に配置してください。  
-下記ファイル名で置くと、そのまま README に貼れます。
+画像は `docs/readme-images/` に置きます。ファイル名の目安は同フォルダの `画像ファイル名の目安.txt` を参照。
 
-- `menu-selection.png`（ガチャのメニュー選択画面）
-- `single-normal.png`（単発 / ノーマル）
-- `multi10-sr.png`（10連 / SR当選）
-- `multi10-ssr.png`（10連 / SSR当選）
-- `multi10-ur-before.png`（10連 / UR当選 / 開封前）
-- `multi10-ur-cutin.png`（10連 / UR当選 / URカットイン）
-- `multi10-ur-result.png`（10連 / UR当選 / 開封結果）
+| シーン | 推奨ファイル名 |
+|--------|----------------|
+| メニュー | `menu.png` |
+| 管理者パスワード画面 | `admin-password.png` |
+| 管理画面（例: 左カラム） | `admin-1.png` |
+| 管理画面（例: 右カラム） | `admin-2.png` |
+| 在庫管理（ox スタッシュ） | `inventory-stash.png` |
+| ガチャ画面（景品一覧・回数） | `gacha-screen.png` |
+| ガチャ結果 | `gacha-result.png` |
 
-### スクリーンショット
+### スクリーンショット（`docs/readme-images`）
 
-#### メニュー
-![ガチャメニュー](docs/screenshots/menu-selection.png)
+![メニュー](docs/readme-images/menu.png)
 
-#### 単発
-![単発 ノーマル](docs/screenshots/single-normal.png)
+![管理者パスワード](docs/readme-images/admin-password.png)
 
-#### 10連（SR/SSR/UR）
-![10連 SR当選](docs/screenshots/multi10-sr.png)
-![10連 SSR当選](docs/screenshots/multi10-ssr.png)
-![10連 UR当選 開封前](docs/screenshots/multi10-ur-before.png)
-![10連 URカットイン](docs/screenshots/multi10-ur-cutin.png)
-![10連 UR開封結果](docs/screenshots/multi10-ur-result.png)
+![管理画面 1](docs/readme-images/admin-1.png)
 
-## ガチャの一連の流れ（動画）
+![管理画面 2](docs/readme-images/admin-2.png)
 
-- [video1.mp4](docs/video1.mp4)
+![在庫管理](docs/readme-images/inventory-stash.png)
+
+![ガチャ画面](docs/readme-images/gacha-screen.png)
+
+![ガチャ結果](docs/readme-images/gacha-result.png)
+
+### 補足: 旧スクリーンショット用フォルダ（10連 等）
+
+`docs/screenshots/` に 10 連系のファイル用プレースホルダ用パスがあります（必要に応じて同様に `![...](...)` を追加）。
+
+- `docs/screenshots/menu-selection.png`
+- `docs/screenshots/single-normal.png`
+- `docs/screenshots/multi10-*.png` 等
+
+## デモ動画
+
+- [docs/video1.mp4](docs/video1.mp4)
 
 ## ライセンス
 
