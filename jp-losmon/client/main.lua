@@ -13,6 +13,14 @@ local function nowSec()
     return os.time and os.time() or 0
 end
 
+---@return number, number
+local function getMiniDefault()
+    if Config and Config.MiniPosDefault and Config.MiniPosDefault.x and Config.MiniPosDefault.y then
+        return tonumber(Config.MiniPosDefault.x) or 0.12, tonumber(Config.MiniPosDefault.y) or 0.88
+    end
+    return 0.12, 0.88
+end
+
 ---@return table
 local function readStore()
     local s = GetResourceKvpString and GetResourceKvpString(KVP_BLOB) or (GetResourceKvp and GetResourceKvp(KVP_BLOB) or nil)
@@ -22,7 +30,8 @@ local function readStore()
             return t
         end
     end
-    return { version = 1, lastUpdateAt = nowSec(), pet = nil, zukan = {}, miniPos = { x = 0.85, y = 0.80 }, noPetMenuDismissed = false }
+    local dx, dy = getMiniDefault()
+    return { version = 1, lastUpdateAt = nowSec(), pet = nil, zukan = {}, miniPos = { x = dx, y = dy }, noPetMenuDismissed = false }
 end
 
 ---@param store table
@@ -259,7 +268,8 @@ local function ensureStore(store)
         store.zukan = {}
     end
     if type(store.miniPos) ~= 'table' or not store.miniPos.x then
-        store.miniPos = { x = 0.85, y = 0.80 }
+        local dx, dy = getMiniDefault()
+        store.miniPos = { x = dx, y = dy }
     end
     store.zukan = zukanListify(store.zukan)
     if not store.lastUpdateAt then
@@ -446,6 +456,10 @@ local function nuiStatePayload(st, expanded, eggSel)
         zukanIds = Config.ZukanIds,
         zukanMap = zukanMap,
         miniPos = s.miniPos,
+        miniPosDefault = (function()
+            local dx, dy = getMiniDefault()
+            return { x = dx, y = dy }
+        end)(),
         charName = pet and (pet.name or 'ぼく') or 'ぼく',
         evName = petDisplayName(pet),
         stageLabel = getStageLabel(pet),
@@ -523,9 +537,28 @@ RegisterNUICallback('setMiniPos', function(data, cb)
     end
     if stateCache and data and data.x and data.y then
         stateCache = ensureStore(stateCache)
-        stateCache.miniPos = { x = tonumber(data.x) or 0.85, y = tonumber(data.y) or 0.80 }
+        local dx, dy = getMiniDefault()
+        stateCache.miniPos = { x = tonumber(data.x) or dx, y = tonumber(data.y) or dy }
         writeStore(stateCache)
     end
+    if cb then
+        cb('ok')
+    end
+end)
+
+--- ミニ常駐を `Config.MiniPosDefault` へ戻し KVS 保存
+RegisterNUICallback('resetMiniPos', function(_, cb)
+    if not stateCache or not hasPet(stateCache.pet) or not isAlive(stateCache.pet) then
+        if cb then
+            cb('ok')
+        end
+        return
+    end
+    stateCache = ensureStore(stateCache)
+    local dx, dy = getMiniDefault()
+    stateCache.miniPos = { x = dx, y = dy }
+    writeStore(stateCache)
+    pushNui(stateCache, nuiShowExpanded, isEggSelect)
     if cb then
         cb('ok')
     end

@@ -232,7 +232,8 @@
   }
 
   function posMini() {
-    var p = (state && state.miniPos) || { x: 0.85, y: 0.8 };
+    var d = (state && state.miniPosDefault) || { x: 0.12, y: 0.88 };
+    var p = (state && state.miniPos) || d;
     var el = document.getElementById('mini-pet');
     if (!el) { return; }
     if (p.x < 0.05) { p.x = 0.05; }
@@ -331,6 +332,8 @@
   document.getElementById('close-ex').addEventListener('click', function () {
     post('closeExpanded', {});
   });
+  var btnR = document.getElementById('btn-reset-mini');
+  if (btnR) { btnR.addEventListener('click', function () { post('resetMiniPos', {}); }); }
   var eggD = document.getElementById('egg-dismiss');
   if (eggD) {
     eggD.addEventListener('click', function () { post('dismissNoPet', {}); });

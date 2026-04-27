@@ -20,6 +20,8 @@ Config.FeedCooldown = 30
 Config.PlayCooldown = 60
 Config.SleepCooldown = 120
 Config.CleanCooldown = 60
+-- ミニ常駐の初期表示位置（画面 0〜1: 左→右・上→下。左下寄せが既定）
+Config.MiniPosDefault = { x = 0.12, y = 0.88 }
 -- 成長期→成熟期の照育スコア用: 理想お世話回数 = floor(成長期経過秒 / ここ)（最低1）
 Config.IdealCareIntervalSec = 1200
 -- 成年系スプライト未用意時に 06 をグレー代用（normal 向け、JS/CSS で指定）
