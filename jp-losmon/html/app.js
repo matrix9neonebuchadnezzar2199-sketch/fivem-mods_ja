@@ -8,6 +8,10 @@
   var actionTimer = null;
   var miniDrag = { active: false, sx: 0, sy: 0, sl: 0, st: 0, acc: 0 };
   var lastDragPx = 0;
+  var tickerTimer = null;
+  var tickerList = [];
+  var tickerIdx = 0;
+  var lastTickerKey = '';
 
   function post(name, data) {
     return fetch('https://' + res + '/' + name, {
@@ -80,6 +84,65 @@
     f.classList.remove('on');
     void f.offsetWidth;
     f.classList.add('on');
+  }
+
+  var TIP = '💡 ミニペットの位置はドラッグで移動できます';
+
+  function buildTickerMessages(st) {
+    if (!st) { return [TIP]; }
+    if (st.showEgg) { return [TIP, '🥚 卵の種類をタップしてはじめよう']; }
+    var p = st.pet;
+    if (!p) { return [TIP]; }
+    if (p.phase === 'dead') { return [TIP, 'また新しい出会いを /losmon から']; }
+    if (p.phase === 'sick') { return ['🚨 病気です！ごはんと掃除で治療してください', TIP]; }
+    var h = (p.stats && p.stats.hunger) | 0;
+    if (h < 35) { return ['⚠ お腹が空いています！ごはんをあげましょう', TIP]; }
+    if (h >= 88) { return ['😊 お腹いっぱいで満足そうです', TIP]; }
+    var g = (st.config && st.config.growth) | 0; if (!g) { g = 14400; }
+    var tP = (st.config && st.config.tickerNearPhase) | 0; if (!tP) { tP = 600; }
+    var maxNear = Math.min(tP, (g * 0.2) | 0);
+    var hl = (st.hatchLeftSec | 0);
+    var np = (st.nextPhaseInSec | 0);
+    var tH = (st.config && st.config.tickerNearHatch) | 0; if (!tH) { tH = 90; }
+    if ((hl > 0 && hl <= tH) || (np > 0 && np <= maxNear)) {
+      return ['✨ もうすぐ進化しそうです…', TIP];
+    }
+    return [TIP];
+  }
+
+  function restartTickerAnim() {
+    var el = document.getElementById('ticker-marq');
+    if (!el) { return; }
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  }
+
+  function applyTickerSlide() {
+    if (!tickerList.length) { return; }
+    var el = document.getElementById('ticker-marq');
+    if (!el) { return; }
+    el.textContent = tickerList[tickerIdx % tickerList.length];
+    restartTickerAnim();
+  }
+
+  function applyTickerIfNeeded() {
+    if (!state || !state.expanded) {
+      if (tickerTimer) { clearInterval(tickerTimer); tickerTimer = null; }
+      lastTickerKey = '';
+      return;
+    }
+    var list = buildTickerMessages(state);
+    var key = list.join('‖');
+    if (key === lastTickerKey) { return; }
+    lastTickerKey = key;
+    if (tickerTimer) { clearInterval(tickerTimer); tickerTimer = null; }
+    tickerList = list;
+    tickerIdx = 0;
+    applyTickerSlide();
+    if (tickerList.length > 1) {
+      tickerTimer = setInterval(function () { tickerIdx += 1; applyTickerSlide(); }, 7000);
+    }
   }
 
   function render() {
@@ -163,6 +226,7 @@
       b.disabled = t > 0 || sck;
       b.classList.toggle('disabled', t > 0 || sck);
     });
+    applyTickerIfNeeded();
   }
 
   function posMini() {

@@ -417,6 +417,10 @@ local function nuiStatePayload(st, expanded, eggSel)
     if pet and hasPet(pet) and pet.phase == 'egg' then
         hLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.HatchTime or 180) - n)
     end
+    local nPhaseLeft = 0
+    if pet and hasPet(pet) and isAlive(pet) and (pet.phase == 'baby' or pet.phase == 'child') then
+        nPhaseLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.GrowthInterval or 3600) - n)
+    end
     local zukanMap = {}
     if Config and Config.ZukanIds and Config.Sprites then
         for _, zid in ipairs(Config.ZukanIds) do
@@ -448,8 +452,11 @@ local function nuiStatePayload(st, expanded, eggSel)
             growth = Config.GrowthInterval,
             sickT = Config.SickThreshold,
             statDecay = Config.StatDecayRate,
+            tickerNearHatch = Config.TickerNearHatchMaxSec or 90,
+            tickerNearPhase = Config.TickerNearPhaseMaxSec or 600,
         },
         sprite = getSpriteSetForPet(pet),
+        nextPhaseInSec = nPhaseLeft,
         hatchLeftSec = hLeft,
         deathLeftSec = (pet and pet.phase == 'sick' and pet.sickAt) and math.max(0, (pet.sickAt + (Config.DeathTime or 14400)) - n) or 0,
         cooldowns = {

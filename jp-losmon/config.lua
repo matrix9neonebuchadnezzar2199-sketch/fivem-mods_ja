@@ -112,3 +112,6 @@ Config.EvolutionThresholds = {
 
 -- 成長期 A / B 分岐は 50% 乱数
 Config.ChildBranchRandom = true
+-- NUI ティッカー用。次の孵化/進化が近いと「もうすぐ」メッセージ
+Config.TickerNearHatchMaxSec = 90
+Config.TickerNearPhaseMaxSec = 600

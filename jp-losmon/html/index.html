@@ -30,7 +30,10 @@
     </div>
     <div id="main-expanded" class="hidden main-expanded">
       <div class="titlebar" id="ex-drag-lane">
-        <span>🐾 Los-Mon</span>
+        <span class="titlebar-brand">🐾 Los-Mon</span>
+        <div class="ticker-outer" aria-label="お知らせ">
+          <p class="ticker-marq" id="ticker-marq">💡 ミニペットの位置はドラッグで移動できます</p>
+        </div>
         <button type="button" class="xbtn" id="close-ex" title="拡大を閉じる">✕</button>
       </div>
       <div class="ex-grid" id="ex-content">
@@ -58,7 +61,6 @@
           <p class="meta" id="meta-time">経過: —</p>
           <p class="meta warn" id="meta-sick" hidden>病気！空腹を戻し病気4時間未満で！</p>
           <p class="meta" id="meta-dhead" hidden>死まで: —</p>
-          <p class="meta mini-hint">ミニ表示の位置: この画面を出したまま、端のミニをドラッグ（KVS 保存）。普段は <code>/losmon</code> で拡大。</p>
           <p class="btns-lower">
             <button type="button" id="btn-zukan" class="btn-sec">📖 図鑑</button>
             <button type="button" id="btn-travel" class="btn-sec" hidden>🛫 旅立たせる</button>
