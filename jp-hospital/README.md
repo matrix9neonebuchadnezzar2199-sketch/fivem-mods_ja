@@ -27,7 +27,7 @@
 1. `jp-hospital` を `resources` に置く。  
 2. `server.cfg` 例: `ensure jp-hospital`（依存リソースを先に起動）。  
 3. **主に触るのは** `config.lua` ＋ 出題 `data/kartes_*.lua` 3 つ。`fxmanifest` では `jp-mechanic` と同型（`config` → 出題3つを `shared_script` → `client` → `server`）。**「出題庫が空」**のとき: (1) サーバーの `jp-hospital` フォルダに **ローカルと同じ `data/kartes_*.lua` があるか** (2) `fxmanifest` の `files` に3ファイルが**含まれる**（1.2.4以降は同梱。古い展開では `LoadResourceFile` 失敗し得る）(3) リソース起動直後、tx コンソールの **`[jp-hospital] Config.XXX 出題0件`** や **Debug 時の件数**ログ。
-4. **初級だけ通る**のに中上級で「出題庫が空」→ 多くの場合、**`kartes_medium` / `kartes_hard` だけ** UTF-8 BOM 付き or 壊改行（PowerShell 等）で**パース失敗**し、`Config.KartesMedium` / `KartesHard` が作られていない。3 本とも **BOM なし UTF-8** で上書きする（1.2.5 でリポ上は統一）。空のとき用に `server/main.lua` から `LoadResourceFile` で再ロードするフォールバックあり。
+4. **初級だけ通る**のに中上級で「出題庫が空」→ `kartes_medium` / `hard` の **先頭に UTF-8 BOM**（`unexpected symbol near '<\239>'` 等）があると、**そのファイルだけ** shared 読み込み失敗。3 本とも **UTF-8（BOM 付けない）**で保存。1.2.6 以降はリポの `data/*.lua` を BOM 除去、`server/main.lua` の `LoadResourceFile` 再読込前にも BOM を取る処理あり（それでも CFX 起動時に**赤行**は出るので、デプロイは BOM なし推奨）。
 
 ## 仕様（簡易）
 

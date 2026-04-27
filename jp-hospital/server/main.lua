@@ -351,6 +351,18 @@ AddEventHandler('playerDropped', function()
 end)
 
 -- shared だけで出題が空になる環境向け: サーバ起動直後、files 同梱の出題3ファイルを再実行して Config を埋める
+-- UTF-8 BOM 付きファイルは shared / load の両方で先頭行が壊れるため除く
+local function stripUtf8Bom(s)
+    if not s or #s < 3 then
+        return s
+    end
+    local a, b, c = string.byte(s, 1, 3)
+    if a == 0xEF and b == 0xBB and c == 0xBF then
+        return s:sub(4)
+    end
+    return s
+end
+
 local function ensureKarteDataFromFile()
     local res = GetCurrentResourceName()
     local paths = {
@@ -361,7 +373,7 @@ local function ensureKarteDataFromFile()
     for _, p in ipairs(paths) do
         local t = Config[p.key]
         if not t or type(t) ~= 'table' or #t < 1 then
-            local s = LoadResourceFile(res, p.f)
+            local s = stripUtf8Bom(LoadResourceFile(res, p.f))
             if s and s ~= '' then
                 local fn, err = load(s, res .. '/' .. p.f, 't', _G)
                 if fn then

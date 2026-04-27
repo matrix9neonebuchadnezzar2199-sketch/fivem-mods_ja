@@ -1,0 +1,4 @@
+# 出題 Lua: BOM 付きは FiveM で "unexpected symbol near <239>" になる
+root = false
+[*.lua]
+charset = utf-8

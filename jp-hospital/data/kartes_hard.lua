@@ -1,4 +1,4 @@
-﻿-- 上級 出題庫（Config.Difficulties の kartesKey = KartesHard。他難易度と独立）
+-- 上級 出題庫（Config.Difficulties の kartesKey = KartesHard。他難易度と独立）
 -- answers は config.lua Config.Medicines の id 配列
 -- 初級と同じ出題数・中身。運用で専用問題に差し替え可。ファイルは初級と同一 UTF-8（BOM なし）で保存すること
 
