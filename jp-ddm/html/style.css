@@ -593,6 +593,37 @@ input[type='number'] {
     font-weight: 700;
 }
 
+/* 最小化中は NUI フォーカスが無いためカーソル非操作 → F12 / コマンド案内 */
+.mini-hint {
+    font-size: 0.4rem;
+    line-height: 1.3;
+    color: #c8c0e8;
+    margin: 0 0 6px 0;
+    padding: 4px 4px 6px;
+    background: rgba(40, 20, 80, 0.5);
+    border: 1px solid rgba(150, 100, 220, 0.4);
+    border-radius: 4px;
+    max-width: 100%;
+}
+
+.mini-hint strong {
+    color: #ffee88;
+    font-weight: 800;
+}
+
+.mini-hint code {
+    font-size: 0.9em;
+    color: #aaccff;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0 0.1em;
+    border-radius: 2px;
+}
+
+.mini-hint-sub {
+    color: #9988b8;
+    font-size: 0.9em;
+}
+
 .mini-btns.second {
     flex-wrap: wrap;
     margin-top: 4px;

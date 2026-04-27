@@ -206,6 +206,14 @@ RegisterCommand(Config.StopCommand, function()
     StopMotionPlayback()
 end, false)
 
+--- 最小化中は NUI フォーカスが無いためマウス不可 → F12 または /ddm（キーは GTA 設定で変更可）
+local reopenUiCmd = 'jp_ddm_reopen_ui'
+RegisterCommand(reopenUiCmd, function()
+    openDdmUi()
+end, false)
+local defaultKey = type(Config.ReopenManagerKey) == 'string' and Config.ReopenManagerKey ~= '' and Config.ReopenManagerKey or 'F12'
+RegisterKeyMapping(reopenUiCmd, 'jp-DDM: 管理に戻る (最小化中・マウス不可のため)', 'keyboard', defaultKey)
+
 TriggerEvent('chat:addSuggestion', ('/%s'):format(Config.OpenCommand), 'jp-DDM: 管理画面', {})
 TriggerEvent('chat:addSuggestion', ('/%s'):format(Config.StopCommand), 'jp-DDM: 停止', {})
 
@@ -393,7 +401,11 @@ RegisterNUICallback('startPlayback', function(data, cb)
     SetNuiFocus(false, false)
     managerUiHidden = true
     SendNUIMessage({ type = 'hideManager' })
-    SendNUIMessage({ type = 'showMini' })
+    SendNUIMessage({
+        type = 'showMini',
+        reopenKey = defaultKey,
+        openCommand = Config.OpenCommand,
+    })
     local ped = PlayerPedId()
     if ped and ped ~= 0 then
         ClearPedTasks(ped)

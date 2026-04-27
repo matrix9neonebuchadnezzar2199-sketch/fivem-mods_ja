@@ -7,6 +7,10 @@ Config = {}
 Config.OpenCommand = 'ddm'
 Config.StopCommand = 'ddmstop'
 
+-- 本番（最小化）中: 再びマウスで管理する＝F12 または /ddm
+-- キーは GTA5 設定の「キーボード＞五体（Custom）」で **jp-ddm 用** として差し替え可（ここはデフォルト）
+Config.ReopenManagerKey = 'F12'
+
 -- セットリスト1プリセットあたりの最大ステップ数
 Config.MaxSlots = 64
 -- カタログから追加したときのデフォルト秒数

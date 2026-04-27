@@ -66,6 +66,16 @@
         return `${m}'${s.toString().padStart(2, '0')}`;
     }
 
+    function setMiniReopenHint(reopenKey, openCommand) {
+        const el = $('mini-hint');
+        if (!el) return;
+        const k = reopenKey && String(reopenKey).trim() ? String(reopenKey).trim() : 'F12';
+        const c = openCommand && String(openCommand).trim() ? String(openCommand).trim() : 'ddm';
+        const esc = (s) =>
+            s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        el.innerHTML = `<strong>${esc(k)}</strong> または <code>/${esc(c)}</code> で管理に戻る（<span class="mini-hint-sub">本番中はマウス操作できません</span>）`;
+    }
+
     function refreshSetlistRowNumbers() {
         const items = document.querySelectorAll('#setlist li');
         items.forEach((li, i) => {
@@ -273,6 +283,7 @@
             }
         } else if (d.type === 'showMini') {
             $('mini-hud').classList.remove('hidden');
+            setMiniReopenHint(d.reopenKey, d.openCommand);
             miniPaused = false;
             updateMiniPauseLabel();
         } else if (d.type === 'hideMini') {
