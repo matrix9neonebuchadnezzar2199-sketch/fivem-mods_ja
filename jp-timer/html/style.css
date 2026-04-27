@@ -1,0 +1,72 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: transparent;
+    overflow: hidden;
+    user-select: none;
+}
+
+#timer-container {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    z-index: 9999;
+}
+
+#timer-display {
+    font-family: 'Courier New', monospace;
+    font-size: 48px;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow:
+        0 0 10px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 0, 0, 0.5),
+        2px 2px 4px rgba(0, 0, 0, 0.9);
+    letter-spacing: 2px;
+}
+
+#timer-display.running {
+    color: #ffffff;
+}
+
+#timer-display.warning {
+    color: #ff9500;
+}
+
+#timer-display.critical {
+    color: #ff2d2d;
+}
+
+#timer-display.expired {
+    color: #ff0000;
+    animation: blink 0.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.1;
+    }
+}
+
+#timer-container.fadeout {
+    animation: fadeOut 1s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
