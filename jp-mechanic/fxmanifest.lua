@@ -4,12 +4,16 @@ lua54 'yes'
 
 author 'JP-Mods'
 description '整備工場 伝票整理内職（NUI：症状→部品・作業）'
-version '1.0.1'
+version '1.0.2'
 
--- 出題庫はサーバーのみ（jp-hospital と同様。クライアントは config のみ要）
-shared_script 'config.lua'
-client_script 'client/main.lua'
-server_script {
+-- 出題庫は server_scripts で列挙（server_script{単数} より互換性が高い）
+shared_scripts {
+    'config.lua',
+}
+client_scripts {
+    'client/main.lua',
+}
+server_scripts {
     'data/slips_easy.lua',
     'data/slips_medium.lua',
     'data/slips_hard.lua',

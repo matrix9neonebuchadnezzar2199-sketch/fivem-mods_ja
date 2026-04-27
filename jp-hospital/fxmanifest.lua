@@ -4,12 +4,16 @@ lua54 'yes'
 
 author 'JP-Mods'
 description '病院カルテ整理・薬梱包ミニゲーム（NUI内職）'
-version '1.2.1'
+version '1.2.2'
 
--- 出題庫はサーバーのみで読み込み（Config[kartesKey] が空になる不具合を防ぐ。クライアントは config のみ要）
-shared_script 'config.lua'
-client_script 'client/main.lua'
-server_script {
+-- 出題庫は server_scripts で列挙（server_script{単数}の { } 展開が環境で無視される例がある）
+shared_scripts {
+    'config.lua',
+}
+client_scripts {
+    'client/main.lua',
+}
+server_scripts {
     'data/kartes_easy.lua',
     'data/kartes_medium.lua',
     'data/kartes_hard.lua',

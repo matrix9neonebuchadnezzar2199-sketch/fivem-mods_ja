@@ -93,7 +93,7 @@
 | 症状 | 確認 |
 |------|------|
 | 難易度を選んでも始まらない | `qbx_core` が起動しているか、F8 クライアントログ |
-| 出題が空 | `data/slips_*.lua` がサーバー側リソースに含まれているか（デプロイ漏れ） |
+| 出題が空 | `data/slips_*.lua` をサーバーに揃えたうえで、**`fxmanifest` の `server_scripts`（複数形）** で列挙されているか（`server_script {` だと出題スクリプトが無視される環境あり） |
 | 報酬が入らない | `Config.MoneyReason`、QBX の `AddMoney` エラー（サーバーログ） |
 | 画像が README に出ない | `docs/images/` に `order.png` 等の**ファイル名**で保存したか |
 
