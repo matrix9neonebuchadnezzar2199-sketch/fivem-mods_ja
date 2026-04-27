@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>jp-losmon</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="egg-select" class="hidden">
+      <div class="egg-panel">
+        <h1>🐾 Los-Mon 卵を選ぼう</h1>
+        <p>名前: <input type="text" id="new-name" maxlength="12" placeholder="リュウ" value="ぼく" /></p>
+        <div class="egg-grid" id="egg-list"></div>
+        <p class="hint">卵を1つタップ</p>
+      </div>
+    </div>
+    <div id="zukan-modal" class="zukan-overlay hidden">
+      <div class="zukan-panel">
+        <h2>📖 図鑑 <button type="button" class="xbtn" id="zukan-close" aria-label="とじる">✕</button></h2>
+        <div class="zukan-grid" id="zukan-body"></div>
+      </div>
+    </div>
+    <div id="travel-confirm" class="travel-dialog hidden">
+      <div class="td-inner">
+        <p>本当に旅立たせますか？<br>ペットのデータは消え、図鑑は残ります。</p>
+        <button type="button" id="travel-yes" class="btn-ok">はい</button>
+        <button type="button" id="travel-no" class="btn-ng">いいえ</button>
+      </div>
+    </div>
+    <div id="main-expanded" class="hidden main-expanded">
+      <div class="titlebar" id="ex-drag-lane">
+        <span>🐾 Los-Mon</span>
+        <button type="button" class="xbtn" id="close-ex" title="拡大を閉じる">✕</button>
+      </div>
+      <div class="ex-grid" id="ex-content">
+        <div class="col left">
+          <button type="button" class="care" data-a="feed"><span class="ico">🍖</span>ごはん <span class="cd" data-cd="feed"></span></button>
+          <button type="button" class="care" data-a="play"><span class="ico">🎮</span>あそぶ <span class="cd" data-cd="play"></span></button>
+          <button type="button" class="care" data-a="sleep"><span class="ico">💤</span>ねかす <span class="cd" data-cd="sleep"></span></button>
+          <button type="button" class="care" data-a="clean"><span class="ico">🧹</span>そうじ <span class="cd" data-cd="clean"></span></button>
+          <button type="button" class="care travel" data-a="openTravel"><span class="ico">🛫</span>旅立つ</button>
+        </div>
+        <div class="col center" id="sprite-arena">
+          <div class="hatch" id="hatch-text"></div>
+          <div class="flash" id="flash-fx"></div>
+          <div class="sprite sprite-anim" id="sprite-el"></div>
+        </div>
+        <div class="col right">
+          <ul class="bars">
+            <li>空腹 <div class="barb"><b id="b-h" style="width:40%"></b></div> <span id="v-h">40</span>%</li>
+            <li>機嫌 <div class="barb"><b id="b-m" style="width:60%"></b></div> <span id="v-m">60</span>%</li>
+            <li>体力 <div class="barb"><b id="b-s" style="width:30%"></b></div> <span id="v-s">30</span>%</li>
+            <li>清潔 <div class="barb"><b id="b-c" style="width:50%"></b></div> <span id="v-c">50</span>%</li>
+          </ul>
+          <p class="meta" id="meta-n">名前: —</p>
+          <p class="meta" id="meta-st">成長: —</p>
+          <p class="meta" id="meta-time">経過: —</p>
+          <p class="meta warn" id="meta-sick" hidden>病気！空腹を戻し病気4時間未満で！</p>
+          <p class="meta" id="meta-dhead" hidden>死まで: —</p>
+          <p class="btns-lower">
+            <button type="button" id="btn-zukan" class="btn-sec">📖 図鑑</button>
+            <button type="button" id="btn-travel" class="btn-sec" hidden>🛫 旅立たせる</button>
+            <button type="button" id="btn-new" class="btn-sec" hidden>新しい卵</button>
+          </p>
+        </div>
+      </div>
+    </div>
+    <div id="mini-pet" class="hidden mini-pet">
+      <div class="mini-sprite" id="mini-sprite"></div>
+      <div class="mini-name" id="mini-n">—</div>
+      <div class="barb sm"><b id="mini-bh" style="width:0%"></b></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
