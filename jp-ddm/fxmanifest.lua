@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'JP-Mods'
 description 'パフォーマンス用モーション連続再生＋YouTube 音楽同期（クライアントKVS）'
-version '1.0.11'
+version '1.0.12'
 
 client_scripts {
     'config.lua',
