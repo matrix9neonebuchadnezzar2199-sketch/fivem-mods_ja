@@ -1,4 +1,4 @@
-/* jp-DDM: 20% / 80%（左=カタログ+カスタム、右=セット+操作2列） */
+/* jp-DDM: 20% / 40% / 40%（左=カタログ+カスタム、中央=透過、右=セット+操作2列） */
 /* 文字サイズ2倍: rem 基準（従来 28px 相当の2倍） */
 html {
     font-size: 56px;
@@ -67,12 +67,12 @@ body {
     cursor: pointer;
 }
 
-/* 2 カラム: 20% / 80% */
+/* 3 カラム: 20% / 40% / 40% */
 .ddm-grid {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 20% 80%;
+    grid-template-columns: 20% 40% 40%;
     grid-template-rows: 1fr;
     gap: 0;
 }
@@ -86,12 +86,23 @@ body {
     overflow: hidden;
 }
 
-/* 左右パネル */
+/* 左右パネル（中央は下の .ddm-center で透過） */
 .ddm-left,
 .ddm-right-wrap {
     background: rgba(10, 10, 30, 0.88);
     border: 1px solid rgba(80, 50, 140, 0.4);
     pointer-events: auto;
+}
+
+/* 中央: 透過のみ（ラベル文字は出さない。操作はゲームへ通す） */
+.ddm-center {
+    position: relative;
+    background: transparent;
+    border-left: 1px solid rgba(150, 100, 255, 0.3);
+    border-right: 1px solid rgba(150, 100, 255, 0.3);
+    pointer-events: none;
+    min-height: 0;
+    padding: 0;
 }
 
 /* 左: 折りたたみ（▼ / ▶） */
@@ -195,7 +206,7 @@ body {
     flex-shrink: 0;
 }
 
-/* 右 80%: 内側 2 列（セットリスト | 操作） */
+/* 右 40%: 内側 2 列（セットリスト | 操作） */
 .ddm-right-wrap {
     padding: 0;
     min-width: 0;
