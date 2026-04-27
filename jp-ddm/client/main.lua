@@ -6,6 +6,10 @@ local function dbg(msg)
 end
 
 local KVP_BLOB = 'ddm_v1'
+--- 本番: 管理画面を隠して左手ミニ表示のとき true（/ddm で戻る）
+local managerUiHidden = false
+--- プレビュー: 画面を開いたままモーションだけ再生
+local previewMode = false
 local playbackActive = false
 local playbackPaused = false
 local skipToNext = false
@@ -38,6 +42,9 @@ end
 
 --- 再生ループ外から呼べる全停止
 function StopMotionPlayback()
+    local wasPreview = previewMode
+    previewMode = false
+    managerUiHidden = false
     playbackActive = false
     playbackPaused = false
     skipToNext = false
@@ -47,7 +54,11 @@ function StopMotionPlayback()
     end
     SendNUIMessage({ type = 'stopYoutube' })
     SendNUIMessage({ type = 'playbackEnded' })
-    SendNUIMessage({ type = 'hideMini' })
+    if wasPreview then
+        SendNUIMessage({ type = 'previewEnd' })
+    else
+        SendNUIMessage({ type = 'hideMini' })
+    end
     dbg('StopMotionPlayback')
 end
 
@@ -59,14 +70,18 @@ local function sendMiniState(remainMs, stepDurMs)
         name = setlist[currentIndex].name or setlist[currentIndex].clip or '—'
     end
     local remainSec = math.max(0, math.floor(remainMs / 1000))
-    SendNUIMessage({
+    local pay = {
         type = 'miniTick',
         current = currentIndex,
         total = totalSteps,
         name = name,
         remain = remainSec,
         loop = loopEnabled,
-    })
+    }
+    if previewMode then
+        pay.type = 'previewTick'
+    end
+    SendNUIMessage(pay)
 end
 
 function PlaySetlist()
@@ -138,21 +153,38 @@ function PlaySetlist()
                 end
             end
         end
+        local wasPreview = previewMode
+        previewMode = false
         playbackActive = false
         SendNUIMessage({ type = 'stopYoutube' })
         local ped2 = PlayerPedId()
         if ped2 and ped2 ~= 0 then
             ClearPedTasks(ped2)
         end
-        SendNUIMessage({ type = 'hideMini' })
+        if wasPreview then
+            SendNUIMessage({ type = 'previewEnd' })
+        else
+            SendNUIMessage({ type = 'hideMini' })
+        end
     end)
 end
 
 local function openDdmUi()
+    if playbackActive and managerUiHidden then
+        SetNuiFocus(true, true)
+        SendNUIMessage({ type = 'showManager' })
+        managerUiHidden = false
+        return
+    end
+    if playbackActive and previewMode then
+        SetNuiFocus(true, true)
+        return
+    end
     if playbackActive then
-        StopMotionPlayback()
+        return
     end
     SetNuiFocus(true, true)
+    managerUiHidden = false
     SendNUIMessage({
         type = 'openDdm',
         catalog = Config.Catalog,
@@ -178,7 +210,28 @@ TriggerEvent('chat:addSuggestion', ('/%s'):format(Config.OpenCommand), 'jp-DDM: 
 TriggerEvent('chat:addSuggestion', ('/%s'):format(Config.StopCommand), 'jp-DDM: 停止', {})
 
 RegisterNUICallback('close', function(_, cb)
+    StopMotionPlayback()
     closeDdmUi()
+    cb({ ok = true })
+end)
+
+--- 再生中: 管理画面（ツール）を再表示。モーションは継続
+RegisterNUICallback('reopenManager', function(_, cb)
+    if not playbackActive then
+        cb({ ok = false })
+        return
+    end
+    managerUiHidden = false
+    SetNuiFocus(true, true)
+    SendNUIMessage({ type = 'showManager' })
+    cb({ ok = true })
+end)
+
+--- ミニHUD: 全停止＋NUI フォーカス解放（オーバーレイ全閉じ）
+RegisterNUICallback('closeFromMini', function(_, cb)
+    StopMotionPlayback()
+    SetNuiFocus(false, false)
+    SendNUIMessage({ type = 'uiClosed' })
     cb({ ok = true })
 end)
 
@@ -287,6 +340,31 @@ RegisterNUICallback('deletePreset', function(data, cb)
     cb({ ok = true })
 end)
 
+--- プレビュー: 管理画面＋NUI フォーカスを維持。YouTube は鳴らさない
+RegisterNUICallback('startPreview', function(data, cb)
+    if type(data) ~= 'table' or type(data.setlist) ~= 'table' or #data.setlist < 1 then
+        cb('bad')
+        return
+    end
+    StopMotionPlayback()
+    Wait(80)
+    setlist = data.setlist
+    totalSteps = #setlist
+    loopEnabled = data.loop and true or false
+    currentIndex = 1
+    previewMode = true
+    managerUiHidden = false
+    playbackActive = true
+    playbackPaused = false
+    skipToNext = false
+    local ped = PlayerPedId()
+    if ped and ped ~= 0 then
+        ClearPedTasks(ped)
+    end
+    PlaySetlist()
+    cb('ok')
+end)
+
 RegisterNUICallback('startPlayback', function(data, cb)
     if type(data) ~= 'table' or type(data.setlist) ~= 'table' or #data.setlist < 1 then
         cb('bad')
@@ -294,6 +372,7 @@ RegisterNUICallback('startPlayback', function(data, cb)
     end
     StopMotionPlayback()
     Wait(100)
+    previewMode = false
     setlist = data.setlist
     totalSteps = #setlist
     loopEnabled = data.loop and true or false
@@ -312,6 +391,7 @@ RegisterNUICallback('startPlayback', function(data, cb)
         })
     end
     SetNuiFocus(false, false)
+    managerUiHidden = true
     SendNUIMessage({ type = 'hideManager' })
     SendNUIMessage({ type = 'showMini' })
     local ped = PlayerPedId()

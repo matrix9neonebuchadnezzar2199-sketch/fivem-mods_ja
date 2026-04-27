@@ -234,10 +234,25 @@
             $('set-max').textContent = String(maxSlots);
             $('c-dur').value = String(defaultDuration);
             $('ddm-container').classList.remove('hidden');
+            const ps0 = $('preview-status');
+            if (ps0) {
+                ps0.classList.add('hidden');
+                ps0.textContent = '';
+            }
             renderCatalog();
             loadPresetList();
         } else if (d.type === 'hideManager') {
             $('ddm-container').classList.add('hidden');
+        } else if (d.type === 'showManager') {
+            $('ddm-container').classList.remove('hidden');
+        } else if (d.type === 'uiClosed') {
+            $('ddm-container').classList.add('hidden');
+            $('mini-hud').classList.add('hidden');
+            const ps = $('preview-status');
+            if (ps) {
+                ps.classList.add('hidden');
+                ps.textContent = '';
+            }
         } else if (d.type === 'showMini') {
             $('mini-hud').classList.remove('hidden');
             miniPaused = false;
@@ -251,6 +266,20 @@
             $('mini-name').textContent = d.name || '—';
             $('mini-remain').textContent = String(d.remain != null ? d.remain : 0);
             $('mini-loop').textContent = d.loop ? 'ループ: ON' : 'ループ: OFF';
+        } else if (d.type === 'previewTick') {
+            const tot = d.total || 0;
+            const cur = d.current || 0;
+            const el = $('preview-status');
+            if (el) {
+                el.classList.remove('hidden');
+                el.textContent = `🎭 プレビュー  ${cur}/${tot || 1}  ${d.name || '—'}  ·  残り${d.remain != null ? d.remain : 0}秒  ${d.loop ? '（ループON）' : ''}`;
+            }
+        } else if (d.type === 'previewEnd') {
+            const el = $('preview-status');
+            if (el) {
+                el.classList.add('hidden');
+                el.textContent = '';
+            }
         } else if (d.type === 'playYoutube') {
             const audio = d.audioEnabled !== false;
             audioEnabled = audio;
@@ -318,7 +347,26 @@
         });
     };
 
-    $('btn-close').addEventListener('click', () => nuiPost('close', {}));
+    if ($('btn-panel-close')) {
+        $('btn-panel-close').addEventListener('click', () => nuiPost('close', {}));
+    }
+    if ($('btn-start-preview')) {
+        $('btn-start-preview').addEventListener('click', async () => {
+            const setlist = getSetlistItems();
+            if (setlist.length < 1) {
+                showToast('⚠ セットリストが空です', true);
+                return;
+            }
+            const loop = $('loop-toggle').checked;
+            await nuiFetch('startPreview', { setlist, loop });
+        });
+    }
+    if ($('btn-mini-reopen')) {
+        $('btn-mini-reopen').addEventListener('click', () => nuiPost('reopenManager', {}));
+    }
+    if ($('btn-mini-close')) {
+        $('btn-mini-close').addEventListener('click', () => nuiPost('closeFromMini', {}));
+    }
     if ($('btn-youtube-audio')) {
         $('btn-youtube-audio').addEventListener('click', () => toggleMuteUser());
     }

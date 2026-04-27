@@ -298,6 +298,53 @@ input[type='number'] {
     margin-bottom: 2px;
 }
 
+.help-dict {
+    font-size: 0.4rem;
+    line-height: 1.4;
+    color: #a8a0c0;
+    margin: 2px 0 8px;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+    border: 1px solid rgba(100, 80, 150, 0.35);
+}
+
+.help-dict code {
+    font-size: 0.9em;
+    color: #ccbbff;
+}
+
+#preview-status.preview-status {
+    font-size: 0.52rem;
+    color: #aaffcc;
+    background: rgba(0, 60, 40, 0.45);
+    border: 1px solid #2a8a5a;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin: 0 0 4px 0;
+}
+
+#preview-status.preview-status.hidden {
+    display: none;
+}
+
+.h2sub {
+    margin-top: 8px;
+    font-size: 0.7rem;
+}
+
+.start-hint {
+    font-size: 0.48rem;
+    color: #a0a0b8;
+    line-height: 1.35;
+    margin: 0 0 4px 0;
+}
+
+.btn-preview-start {
+    background: linear-gradient(135deg, #2a6a4a, #1a4a2a) !important;
+    margin-bottom: 4px;
+}
+
 #btn-c-add {
     width: 100%;
     margin-top: 4px;
@@ -407,7 +454,30 @@ input[type='number'] {
     border-radius: 8px;
     padding: 8px 10px;
     font-size: 0.6rem;
-    min-width: 200px;
+    min-width: 220px;
+    max-width: 92vw;
+}
+
+.mini-title {
+    font-size: 0.48rem;
+    color: #ccaaee;
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.mini-btns.second {
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.mini-btns .mini-wide {
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+.btn-close-soft {
+    background: #2a2a3a !important;
+    border-color: #666 !important;
 }
 
 #mini-line1,
