@@ -82,7 +82,7 @@
 
 ## 出題庫の編集
 
-- 初級 / 中級 / 上級はそれぞれ `data/slips_easy.lua` / `slips_medium.lua` / `slips_hard.lua`（**`fxmanifest` では `server_script` 読み込み**・サーバー上の `data/` に必ず配布）
+- 初級 / 中級 / 上級はそれぞれ `data/slips_easy.lua` / `slips_medium.lua` / `slips_hard.lua`（`config.lua` の次に `shared_script` 読み込み）
 - 各レコードは `symptom`, `vehicle`, `diagnosis`, `answers`（部品 `id` の配列）
 - 再生成・一括生成には `tools/gen_slips.py`（`python tools/gen_slips.py`）を利用可能
 
@@ -93,7 +93,7 @@
 | 症状 | 確認 |
 |------|------|
 | 難易度を選んでも始まらない | `qbx_core` が起動しているか、F8 クライアントログ |
-| 出題が空 | `data/slips_*.lua` をサーバーに揃えたうえで、**`fxmanifest` の `server_scripts`（複数形）** で列挙されているか（`server_script {` だと出題スクリプトが無視される環境あり） |
+| 出題が空 | `data/slips_*.lua` のデプロイ漏れがないか（サーバー上の `jp-mechanic/data` を確認） |
 | 報酬が入らない | `Config.MoneyReason`、QBX の `AddMoney` エラー（サーバーログ） |
 | 画像が README に出ない | `docs/images/` に `order.png` 等の**ファイル名**で保存したか |
 

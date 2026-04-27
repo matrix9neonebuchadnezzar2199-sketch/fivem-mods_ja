@@ -6,19 +6,12 @@ author 'JP-Mods'
 description '整備工場 伝票整理内職（NUI：症状→部品・作業）'
 version '1.0.2'
 
--- 出題庫は server_scripts で列挙（server_script{単数} より互換性が高い）
-shared_scripts {
-    'config.lua',
-}
-client_scripts {
-    'client/main.lua',
-}
-server_scripts {
-    'data/slips_easy.lua',
-    'data/slips_medium.lua',
-    'data/slips_hard.lua',
-    'server/main.lua',
-}
+shared_script 'config.lua'
+shared_script 'data/slips_easy.lua'
+shared_script 'data/slips_medium.lua'
+shared_script 'data/slips_hard.lua'
+client_script 'client/main.lua'
+server_script 'server/main.lua'
 
 ui_page 'html/index.html'
 
