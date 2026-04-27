@@ -26,7 +26,8 @@
 
 1. `jp-hospital` を `resources` に置く。  
 2. `server.cfg` 例: `ensure jp-hospital`（依存リソースを先に起動）。  
-3. **主に触るのは** `config.lua` ＋ 出題 `data/kartes_*.lua` 3 つ。`fxmanifest` では `jp-mechanic` と同型（`config` → 出題3つを `shared_script` → `client` → `server`）。**「出題庫が空」**のとき: (1) サーバーの `jp-hospital` フォルダに **ローカルと同じ `data/kartes_*.lua` があるか** (2) `fxmanifest` の `files` に3ファイルが**含まれる**（1.2.4以降は同梱。古い展開では `LoadResourceFile` 失敗し得る）(3) リソース起動直後、tx コンソールの **`[jp-hospital] Config.XXX 出題0件`** や **Debug 時の件数**ログ。サーバ側 `server/main.lua` で shared 後も空なら出題を再ロードするフォールバックあり。
+3. **主に触るのは** `config.lua` ＋ 出題 `data/kartes_*.lua` 3 つ。`fxmanifest` では `jp-mechanic` と同型（`config` → 出題3つを `shared_script` → `client` → `server`）。**「出題庫が空」**のとき: (1) サーバーの `jp-hospital` フォルダに **ローカルと同じ `data/kartes_*.lua` があるか** (2) `fxmanifest` の `files` に3ファイルが**含まれる**（1.2.4以降は同梱。古い展開では `LoadResourceFile` 失敗し得る）(3) リソース起動直後、tx コンソールの **`[jp-hospital] Config.XXX 出題0件`** や **Debug 時の件数**ログ。
+4. **初級だけ通る**のに中上級で「出題庫が空」→ 多くの場合、**`kartes_medium` / `kartes_hard` だけ** UTF-8 BOM 付き or 壊改行（PowerShell 等）で**パース失敗**し、`Config.KartesMedium` / `KartesHard` が作られていない。3 本とも **BOM なし UTF-8** で上書きする（1.2.5 でリポ上は統一）。空のとき用に `server/main.lua` から `LoadResourceFile` で再ロードするフォールバックあり。
 
 ## 仕様（簡易）
 
