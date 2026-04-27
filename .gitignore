@@ -13,6 +13,9 @@ desktop.ini
 *.log
 nul
 
+# 大きな映像（誤コミット防止）
+*.mp4
+
 # UP品: GitHub 非公開。ローカルまたは ZIP 配布のみ
 jp-taxijob/
 jp-lation_mining/
