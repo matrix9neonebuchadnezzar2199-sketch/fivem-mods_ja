@@ -7,16 +7,6 @@
 </head>
 <body>
   <div id="app">
-    <div id="egg-select" class="hidden">
-      <div class="egg-panel">
-        <h1>🐾 Los-Mon 卵を選ぼう</h1>
-        <p class="egg-lead">卵を1つタップ。閉じる（Esc相当）は「以下で閉じる」または /losmon でもう一度。</p>
-        <p>名前: <input type="text" id="new-name" maxlength="12" placeholder="リュウ" value="ぼく" /></p>
-        <div class="egg-grid" id="egg-list"></div>
-        <p class="egg-actions"><button type="button" class="btn-sec" id="egg-dismiss">閉じる（のち /losmon で再表示）</button></p>
-        <p class="hint">卵を1つタップ</p>
-      </div>
-    </div>
     <div id="zukan-modal" class="zukan-overlay hidden">
       <div class="zukan-panel">
         <h2>📖 図鑑 <button type="button" class="xbtn" id="zukan-close" aria-label="とじる">✕</button></h2>
@@ -47,11 +37,16 @@
           <button type="button" class="care travel" data-a="openTravel"><span class="ico">🛫</span>旅立つ</button>
         </div>
         <div class="col center" id="sprite-arena">
-          <div class="hatch" id="hatch-text"></div>
-          <div class="flash" id="flash-fx"></div>
-          <div class="sprite sprite-anim" id="sprite-el"></div>
+          <div class="device-wrap" id="device-wrap" aria-hidden="true">
+            <div class="device-lcd" id="device-lcd">
+              <div class="hatch" id="hatch-text"></div>
+              <div class="flash" id="flash-fx"></div>
+              <div class="sprite sprite-anim" id="sprite-el"></div>
+            </div>
+          </div>
         </div>
         <div class="col right">
+          <div class="right-top">
           <ul class="bars">
             <li>空腹 <div class="barb"><b id="b-h" style="width:40%"></b></div> <span id="v-h">40</span>%</li>
             <li>機嫌 <div class="barb"><b id="b-m" style="width:60%"></b></div> <span id="v-m">60</span>%</li>
@@ -63,6 +58,7 @@
           <p class="meta" id="meta-time">経過: —</p>
           <p class="meta warn" id="meta-sick" hidden>病気！空腹を戻し病気4時間未満で！</p>
           <p class="meta" id="meta-dhead" hidden>死まで: —</p>
+          </div>
           <p class="btns-lower">
             <button type="button" id="btn-reset-mini" class="btn-sec">ミニ版を初期位置へ</button>
             <button type="button" id="btn-zukan" class="btn-sec">📖 図鑑</button>
@@ -73,8 +69,11 @@
       </div>
     </div>
     <div id="mini-pet" class="hidden mini-pet">
-      <div class="mini-sprite" id="mini-sprite"></div>
-      <div class="mini-name" id="mini-n">—</div>
+      <div class="mini-device" id="mini-device">
+        <div class="mini-lcd" id="mini-lcd">
+          <div class="mini-sprite" id="mini-sprite"></div>
+        </div>
+      </div>
       <div class="barb sm"><b id="mini-bh" style="width:0%"></b></div>
     </div>
   </div>

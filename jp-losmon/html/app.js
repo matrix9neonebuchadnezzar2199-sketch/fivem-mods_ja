@@ -49,8 +49,13 @@
     if (!def) { return; }
     act = act || 'idle';
     if (def.mode === 'egg' && def.egg) {
-      var f = (state && state.pet && state.pet.phase === 'egg' && (state.hatchLeftSec != null) && state.hatchLeftSec < 12) ? (def.crack && def.crack[act] ? def.crack[act] : def.egg.idle) : (def.egg[act] || def.egg.idle);
-      div.style.backgroundImage = 'url(' + nuiUrl(f) + ')';
+      var sec = (state && (state.eggShowCrackSec|0)) || 30;
+      if (state && state.pet && state.pet.phase === 'egg' && (state.hatchLeftSec != null) && (state.hatchLeftSec|0) > 0 && (state.hatchLeftSec|0) <= sec) {
+        var cf = def.crack && (def.crack[act] || def.crack.idle);
+        if (cf) { div.style.backgroundImage = 'url(' + nuiUrl(cf) + ')'; return; }
+      }
+      var ef = def.egg[act] || def.egg.idle;
+      div.style.backgroundImage = 'url(' + nuiUrl(ef) + ')';
       return;
     }
     if (def.set) {
@@ -79,6 +84,9 @@
   }
 
   function syncSpriteLayout() {
+    var frames = 1;
+    if (state && state.config && (state.config.spriteStripFrames|0) > 0) { frames = state.config.spriteStripFrames|0; }
+    if (frames < 1) { frames = 1; }
     var mEl = document.getElementById('sprite-el');
     var iEl = document.getElementById('mini-sprite');
     var wM = 200;
@@ -95,7 +103,13 @@
           hM = wM;
         }
       }
-      mEl.style.backgroundSize = (4 * wM) + 'px ' + hM + 'px';
+      if (frames <= 1) {
+        mEl.style.backgroundSize = wM + 'px ' + hM + 'px';
+        mEl.classList.remove('sprite-anim');
+      } else {
+        mEl.classList.add('sprite-anim');
+        mEl.style.backgroundSize = (frames * wM) + 'px ' + hM + 'px';
+      }
     }
     if (iEl) {
       var rI = iEl.getBoundingClientRect();
@@ -108,7 +122,13 @@
           wI = hI = Math.max(16, Math.floor(0.98 * Math.min(b2.width, b2.height)));
         }
       }
-      iEl.style.backgroundSize = (4 * wI) + 'px ' + hI + 'px';
+      if (frames <= 1) {
+        iEl.style.backgroundSize = wI + 'px ' + hI + 'px';
+        iEl.style.animation = 'none';
+      } else {
+        iEl.style.backgroundSize = (frames * wI) + 'px ' + hI + 'px';
+        iEl.style.animation = '';
+      }
     }
     var st = document.getElementById('dyn-sprite-kf');
     if (!st) {
@@ -116,8 +136,12 @@
       st.id = 'dyn-sprite-kf';
       document.head.appendChild(st);
     }
-    st.textContent = '@keyframes sprite-play{from{background-position:0 0}to{background-position:' + (-4 * wM) + 'px 0}}' +
-      '@keyframes sprite-min{from{background-position:0 0}to{background-position:' + (-4 * wI) + 'px 0}}';
+    if (frames <= 1) {
+      st.textContent = '@keyframes sprite-play{from{background-position:0}to{background-position:0}}@keyframes sprite-min{from{background-position:0}to{background-position:0}}';
+    } else {
+      st.textContent = '@keyframes sprite-play{from{background-position:0 0}to{background-position:' + (-frames * wM) + 'px 0}}' +
+        '@keyframes sprite-min{from{background-position:0 0}to{background-position:' + (-frames * wI) + 'px 0}}';
+    }
   }
 
   function getSpriteSet() {
@@ -136,7 +160,6 @@
 
   function buildTickerMessages(st) {
     if (!st) { return [TIP]; }
-    if (st.showEgg) { return [TIP, '🥚 卵の種類をタップしてはじめよう']; }
     var p = st.pet;
     if (!p) { return [TIP]; }
     if (p.phase === 'dead') { return [TIP, 'また新しい出会いを /losmon から']; }
@@ -173,7 +196,7 @@
   }
 
   function applyTickerIfNeeded() {
-    if (!state || !state.expanded || state.showEgg) {
+    if (!state || !state.expanded) {
       if (tickerTimer) { clearInterval(tickerTimer); tickerTimer = null; }
       lastTickerKey = '';
       return;
@@ -193,17 +216,11 @@
 
   function render() {
     if (!state) { return; }
-    if (state.showEgg) {
-      document.getElementById('egg-select').classList.remove('hidden');
-      buildEggList();
-    } else {
-      document.getElementById('egg-select').classList.add('hidden');
-    }
     var m = state.pet;
     var ex = state.expanded;
-    var showExp = ex && !state.showEgg;
+    var showExp = ex;
     document.getElementById('main-expanded').classList.toggle('hidden', !showExp);
-    if (m && m.phase !== 'dead' && !state.showEgg) {
+    if (m && m.phase !== 'dead') {
       document.getElementById('mini-pet').classList.remove('hidden');
       posMini();
       setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
@@ -215,8 +232,8 @@
     }
     var mpetE = document.getElementById('mini-pet');
     if (mpetE) {
-      mpetE.classList.toggle('mini--drag', Boolean(ex && m && !state.showEgg && m.phase !== 'dead'));
-      mpetE.style.zIndex = (ex && m && !state.showEgg) ? '10020' : '10040';
+      mpetE.classList.toggle('mini--drag', Boolean(ex && m && m.phase !== 'dead'));
+      mpetE.style.zIndex = (ex && m) ? '10020' : '10040';
     }
     if (m && m.stats) {
       document.getElementById('b-h').style.width = m.stats.hunger + '%';
@@ -254,7 +271,7 @@
       document.getElementById('btn-travel').hidden = true;
     } else {
       document.getElementById('btn-new').hidden = true;
-      document.getElementById('btn-travel').hidden = m && m.phase && m.phase !== 'egg' ? false : true;
+      document.getElementById('btn-travel').hidden = !m || m.phase === 'dead';
     }
     var c = state.cooldowns || {};
     ['feed', 'play', 'sleep', 'clean'].forEach(function (a) {
@@ -268,8 +285,9 @@
       var b = document.querySelector('.care[data-a=\"' + a + '\"]');
       if (!b) { return; }
       var sck = m && m.phase === 'sick' && (a === 'play' || a === 'sleep');
-      b.disabled = t > 0 || sck;
-      b.classList.toggle('disabled', t > 0 || sck);
+      var eggB = m && m.phase === 'egg';
+      b.disabled = t > 0 || sck || eggB;
+      b.classList.toggle('disabled', t > 0 || sck || eggB);
     });
     applyTickerIfNeeded();
     requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
@@ -294,52 +312,14 @@
     el.style.top = Math.max(0, (window.innerHeight * p.y) - hH) + 'px';
   }
 
-  function buildEggList() {
-    var g = document.getElementById('egg-list');
-    g.innerHTML = '';
-    (state && state.eggList ? state.eggList : [
-      { id: 'green', name: '竜の卵' },
-      { id: 'cute', name: '精霊の卵' },
-      { id: 'navy', name: '獣の卵' }
-    ]).forEach(function (e) {
-      var d = document.createElement('div');
-      d.className = 'egg-cell';
-      d.setAttribute('data-egg', e.id);
-      var i = document.createElement('div');
-      i.className = 'egg-img';
-      i.style.backgroundImage = 'url(' + nuiUrl('01_egg_idle.png') + ')';
-      d.appendChild(i);
-      var t = document.createElement('div');
-      t.className = 't';
-      t.textContent = e.name;
-      t.className = 't egg-name';
-      t.style.color = '#ccc';
-      d.appendChild(t);
-      d.addEventListener('click', function () {
-        var nm = document.getElementById('new-name');
-        post('selectEgg', { eggType: e.id, name: nm && nm.value ? String(nm.value) : 'ぼく' });
-      });
-      g.appendChild(d);
-    });
-  }
-
   function onMsg(e) {
     var d = e.data;
     if (!d || !d.type) { return; }
     if (d.type === 'state') {
       state = d; state._uiS = UI_S;
-      if (!d.eggList) {
-        d.eggList = [
-          { id: 'green', name: '竜の卵' },
-          { id: 'cute', name: '精霊の卵' },
-          { id: 'navy', name: '獣の卵' }
-        ];
-      }
       if (d.resName) { res = d.resName; }
       render();
-      if (d.showEgg) {
-        nuiSetFocus(1);
-      } else if (d.expanded) {
+      if (d.expanded) {
         nuiSetFocus(1);
       } else {
         nuiSetFocus(0);
@@ -389,10 +369,6 @@
   });
   var btnR = document.getElementById('btn-reset-mini');
   if (btnR) { btnR.addEventListener('click', function () { post('resetMiniPos', {}); }); }
-  var eggD = document.getElementById('egg-dismiss');
-  if (eggD) {
-    eggD.addEventListener('click', function () { post('dismissNoPet', {}); });
-  }
   document.getElementById('btn-zukan').addEventListener('click', function () {
     post('zukan', { open: true });
   });
@@ -422,7 +398,7 @@
 
   var mpet = document.getElementById('mini-pet');
   mpet.addEventListener('mousedown', function (ev) {
-    if (!state || !state.expanded || state.showEgg) { return; }
+    if (!state || !state.expanded) { return; }
     if (state.pet && state.pet.phase === 'dead') { return; }
     if (!mpet.classList.contains('mini--drag')) { return; }
     ev.preventDefault();

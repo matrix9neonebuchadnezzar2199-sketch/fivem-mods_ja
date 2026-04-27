@@ -5,9 +5,13 @@ Config = {}
 
 -- 起動用チャットコマンド（/ を付けず識別子だけ）
 Config.Command = 'losmon'
--- 孵化にかかる秒数（テスト用に短め。本番は運営で調整）
-Config.HatchTime = 180
--- 卵→幼体以外の、各成長段階の長さ（秒）
+-- 新規: 常に卵1種からスタート。孵化までの秒数（30分=1800）
+Config.HatchTime = 1800
+-- 孵化直前、殻割れ画に切替える残り秒数（NUI 比較用）
+Config.EggShowCrackSec = 30
+-- 新規: 拡大画面で表示するペットの通称
+Config.DefaultPetName = 'ぼく'
+-- 卵→幼体以降、各成長段階の長さ（秒）
 Config.GrowthInterval = 14400
 -- 1 分あたり各ステータスが減少する量（%ポイント）
 Config.StatDecayRate = 0.07
@@ -20,100 +24,61 @@ Config.FeedCooldown = 30
 Config.PlayCooldown = 60
 Config.SleepCooldown = 120
 Config.CleanCooldown = 60
--- ミニ常駐の初期表示位置（画面 0〜1: 左→右・上→下。左下寄せが既定）
+-- ミニ常駐の初期表示位置（画面 0〜1）
 Config.MiniPosDefault = { x = 0.12, y = 0.88 }
--- 成長期→成熟期の照育スコア用: 理想お世話回数 = floor(成長期経過秒 / ここ)（最低1）
+-- 照育: 幼年期→成長期の分岐。理想回数 = floor(経過秒/ここ)。回数比で 50% 超なら成長期（良）
 Config.IdealCareIntervalSec = 1200
--- 成年系スプライト未用意時に 06 をグレー代用（normal 向け、JS/CSS で指定）
-
--- 卵の系統（3 種。見た目は 01_egg 系を共通利用し、ラベルで区別）
-Config.EggTypes = {
-    { id = 'green',  name = '竜の卵',   line = 'dragon' },
-    { id = 'cute',   name = '精霊の卵', line = 'spirit' },
-    { id = 'navy',   name = '獣の卵',   line = 'beast'  },
-}
-
--- 進化ツリー（系統 → 最終的な各段階のキャラID）
-Config.EvolutionTree = {
-    dragon = {
-        baby     = { id = 'baby_dino',   name = 'ベビードラゴ' },
-        childA   = { id = 'child_dino',  name = 'ドラゴキッズ' },
-        childB   = { id = 'child_water', name = 'アクアキッズ' },
-        adultGood   = { id = 'adult_good_gryphon', name = 'グリフォンLM' },
-        adultNormal = { id = 'adult_good_knight',  name = 'ナイトドラゴ' },
-        adultBad    = { id = 'adult_bad_beast',   name = 'ダークビースト' },
-    },
-    spirit = {
-        baby     = { id = 'baby_blob',   name = 'プチモン' },
-        childA   = { id = 'child_bird',  name = 'ウィングモン' },
-        childB   = { id = 'child_dragon',name = 'リトルウィング' },
-        adultGood   = { id = 'adult_good_kirin',   name = 'キリンLM' },
-        adultNormal = { id = 'adult_good_knight',  name = 'シルバーナイト' },
-        adultBad    = { id = 'adult_bad_dark',    name = 'ダークドラゴ' },
-    },
-    beast = {
-        baby     = { id = 'baby_cat',    name = 'ニャンモン' },
-        childA   = { id = 'child_spike', name = 'トゲニャン' },
-        childB   = { id = 'child_blue',  name = 'ブルーニャン' },
-        adultGood   = { id = 'adult_good_gryphon', name = 'ゴールドグリフォン' },
-        adultNormal = { id = 'adult_good_knight',  name = 'アーマービースト' },
-        adultBad    = { id = 'adult_bad_demon',   name = 'デモンビースト' },
-    },
-}
-
--- 図鑑用の分類用 ID 一覧（解放チェック用）
+Config.ChildToGoodChildThreshold = 50
+-- 幼年期の後半から成熟期へ。レアDの出現率（%）残り 90% は a/b/c を均等
+Config.AdultRarePercent = 10
+-- NUI: 1 ポーズ1ファイル。4コマ焼き込み1枚のときは 4 を指定
+Config.SpriteStripFrames = 1
+-- 旧仕様。未使用（互換用に残置）
+Config.EvolutionTree = { default = {} }
+-- 図鑑 ID（新フォーム）
 Config.ZukanIds = {
-    'baby_dino', 'baby_blob', 'baby_cat',
-    'child_dino', 'child_water', 'child_bird', 'child_dragon', 'child_spike', 'child_blue',
-    'adult_good_gryphon', 'adult_good_knight', 'adult_good_kirin',
-    'adult_bad_beast', 'adult_bad_dark', 'adult_bad_demon',
-    'sick', 'grave',
+    'baby_a', 'baby_b', 'child_a', 'child_b', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave',
 }
-
--- 実画像: html/img/ の 01_〜10_ 命名。アクション毎
--- idle / eat / happy / sleep — 病気は sick.*、墓は grave.*
+-- 画面・図鑑用の系統名（通称 / 名前差は通称。フォーム名は evName 側）
+Config.FormNames = {
+    egg     = '卵',
+    baby_a  = '幼年A',
+    baby_b  = '幼年B',
+    child_a = '成長期（良）',
+    child_b = '成長期（悪）',
+    adult_a = '成熟期A',
+    adult_b = '成熟期B',
+    adult_c = '成熟期C',
+    adult_d = '成熟期D（レア）',
+    sick    = '病気',
+    grave   = '旅立ち',
+}
+-- 実画像: html/img/ 下のサブフォルダ
+-- キー: idle=1通常 play=2遊び eat=3食事 sleep=4寝。happy は病気用フォールバック用に idle を想定
 Config.Sprites = {
     egg = {
-        idle  = '01_egg_idle.png',
-        eat   = '01_egg_eating.png',
-        happy = '01_egg_happy.png',
-        sleep = '01_egg_sleeping.png',
+        idle  = '01_egg/01_egg_sleeping.png',
+        eat   = '01_egg/01_egg_sleeping.png',
+        happy = '01_egg/01_egg_sleeping.png',
+        sleep = '01_egg/01_egg_sleeping.png',
     },
     egg_crack = {
-        idle  = '02_egg_crack_idle.png',
-        eat   = '02_egg_crack_eating.png',
-        happy = '02_egg_crack_happy.png',
-        sleep = '02_egg_crack_sleeping.png',
+        idle  = '01_egg/01_egg_crack.png',
+        eat   = '01_egg/01_egg_crack.png',
+        happy = '01_egg/01_egg_crack.png',
+        sleep = '01_egg/01_egg_crack.png',
     },
-    baby_dino  = { idle = '03_baby_idle.png',  eat = '03_baby_eating.png',  happy = '03_baby_happy.png',  sleep = '03_baby_sleeping.png' },
-    baby_blob  = { idle = '03_baby_idle.png',  eat = '03_baby_eating.png',  happy = '03_baby_happy.png',  sleep = '03_baby_sleeping.png' },
-    baby_cat   = { idle = '03_baby_idle.png',  eat = '03_baby_eating.png',  happy = '03_baby_happy.png',  sleep = '03_baby_sleeping.png' },
-    child_dino  = { idle = '04_child_a_idle.png',  eat = '04_child_a_eating.png',  happy = '04_child_a_happy.png',  sleep = '04_child_a_sleeping.png' },
-    child_bird  = { idle = '04_child_a_idle.png',  eat = '04_child_a_eating.png',  happy = '04_child_a_happy.png',  sleep = '04_child_a_sleeping.png' },
-    child_spike = { idle = '04_child_a_idle.png',  eat = '04_child_a_eating.png',  happy = '04_child_a_happy.png',  sleep = '04_child_a_sleeping.png' },
-    child_water  = { idle = '05_child_b_idle.png',  eat = '05_child_b_eating.png',  happy = '05_child_b_happy.png',  sleep = '05_child_b_sleeping.png' },
-    child_dragon = { idle = '05_child_b_idle.png',  eat = '05_child_b_eating.png',  happy = '05_child_b_happy.png',  sleep = '05_child_b_sleeping.png' },
-    child_blue  =  { idle = '05_child_b_idle.png',  eat = '05_child_b_eating.png',  happy = '05_child_b_happy.png',  sleep = '05_child_b_sleeping.png' },
-    adult_good_gryphon = { idle = '06_adult_good_idle.png',   eat = '06_adult_good_eating.png',  happy = '06_adult_good_happy.png',  sleep = '06_adult_good_sleeping.png' },
-    adult_good_kirin  =  { idle = '06_adult_good_idle.png',   eat = '06_adult_good_eating.png',  happy = '06_adult_good_happy.png',  sleep = '06_adult_good_sleeping.png' },
-    -- normal 系: 07（仕様: 同系 06 のグレー代用可 → ここでは 07 を割当）
-    adult_good_knight  = { idle = '07_adult_normal_idle.png', eat = '07_adult_normal_eating.png', happy = '07_adult_normal_happy.png', sleep = '07_adult_normal_sleeping.png' },
-    adult_bad_beast =   { idle = '08_adult_bad_idle.png',  eat = '08_adult_bad_eating.png',  happy = '08_adult_bad_happy.png',  sleep = '08_adult_bad_sleeping.png' },
-    adult_bad_dark  =   { idle = '08_adult_bad_idle.png',  eat = '08_adult_bad_eating.png',  happy = '08_adult_bad_happy.png',  sleep = '08_adult_bad_sleeping.png' },
-    adult_bad_demon =   { idle = '08_adult_bad_idle.png',  eat = '08_adult_bad_eating.png',  happy = '08_adult_bad_happy.png',  sleep = '08_adult_bad_sleeping.png' },
-    -- 病気: resting リソースは 09_sick_resting（必要なら NUI で切替可）
+    baby_a  = { idle  = '02_baby/02_baby_a-1.png', play  = '02_baby/02_baby_a-2.png', eat  = '02_baby/02_baby_a-3.png', sleep  = '02_baby/02_baby_a-4.png', happy  = '02_baby/02_baby_a-1.png', clean  = '02_baby/02_baby_a-1.png' },
+    baby_b  = { idle  = '02_baby/02_baby_b-1.png', play  = '02_baby/02_baby_b-2.png', eat  = '02_baby/02_baby_b-3.png', sleep  = '02_baby/02_baby_b-4.png', happy  = '02_baby/02_baby_b-1.png', clean  = '02_baby/02_baby_b-1.png' },
+    child_a = { idle  = '03_child/03_child_a-1.png', play  = '03_child/03_child_a-2.png', eat  = '03_child/03_child_a-3.png', sleep  = '03_child/03_child_a-4.png', happy  = '03_child/03_child_a-1.png', clean  = '03_child/03_child_a-1.png' },
+    child_b = { idle  = '03_child/03_child_b-1.png', play  = '03_child/03_child_b-2.png', eat  = '03_child/03_child_b-3.png', sleep  = '03_child/03_child_b-4.png', happy  = '03_child/03_child_b-1.png', clean  = '03_child/03_child_b-1.png' },
+    adult_a = { idle  = '04_adult/04_adult_a-1.png', play  = '04_adult/04_adult_a-2.png', eat  = '04_adult/04_adult_a-3.png', sleep  = '04_adult/04_adult_a-4.png', happy  = '04_adult/04_adult_a-1.png', clean  = '04_adult/04_adult_a-1.png' },
+    adult_b = { idle  = '04_adult/04_adult_b-1.png', play  = '04_adult/04_adult_b-2.png', eat  = '04_adult/04_adult_b-3.png', sleep  = '04_adult/04_adult_b-4.png', happy  = '04_adult/04_adult_b-1.png', clean  = '04_adult/04_adult_b-1.png' },
+    adult_c = { idle  = '04_adult/04_adult_c-1.png', play  = '04_adult/04_adult_c-2.png', eat  = '04_adult/04_adult_c-3.png', sleep  = '04_adult/04_adult_c-4.png', happy  = '04_adult/04_adult_c-1.png', clean  = '04_adult/04_adult_c-1.png' },
+    adult_d = { idle  = '04_adult/04_adult_d-1.png', play  = '04_adult/04_adult_d-2.png', eat  = '04_adult/04_adult_d-3.png', sleep  = '04_adult/04_adult_d-4.png', happy  = '04_adult/04_adult_d-1.png', clean  = '04_adult/04_adult_d-1.png' },
     sick  = { idle = '09_sick_idle.png',  eat = '09_sick_idle.png',  happy = '09_sick_sad.png', sleep = '09_sick_sleeping.png' },
     grave = { idle = '10_grave_idle.png', eat = '10_grave_idle.png', happy = '10_grave_memorial.png', sleep = '10_grave_idle.png' },
 }
-
--- 成長期→成熟の照育スコアしきい値
-Config.EvolutionThresholds = {
-    good = 80,
-    normal = 40,
-}
-
--- 成長期 A / B 分岐は 50% 乱数
-Config.ChildBranchRandom = true
--- NUI ティッカー用。次の孵化/進化が近いと「もうすぐ」メッセージ
+-- NUI ティッカー: 次の孵化/進化が近いと表示
 Config.TickerNearHatchMaxSec = 90
 Config.TickerNearPhaseMaxSec = 600

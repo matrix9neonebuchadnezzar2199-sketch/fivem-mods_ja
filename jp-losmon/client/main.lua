@@ -2,7 +2,6 @@
 local KVP_BLOB = 'losmon_v1'
 local nuiHasFocus = false
 local nuiShowExpanded = false
-local isEggSelect = false
 local stateCache = nil
 
 ---@return number
@@ -133,46 +132,20 @@ local function applyStatDecay(pet, minutes)
     return true
 end
 
----@param st table|nil
----@return table|nil
-local function treeForLine(st)
-    if st and st.line and Config.EvolutionTree[st.line] then
-        return Config.EvolutionTree[st.line]
-    end
-    return nil
-end
-
----@param n number|nil
----@return string
-local function toFixed1(n)
-    n = n or 0
-    return string.format('%.1f', n)
-end
-
----@param pet table
----@param zukan table
----@param tline table
----@param nChildEnd number
-local function evolveToAdult(pet, zukan, tline, nChildEnd)
-    if not pet or pet.phase ~= 'child' or not tline then
-        return
-    end
-    local el = pet.phaseStartAt or nChildEnd
-    local ideal = math.max(1, math.floor((nChildEnd - el) / (Config.IdealCareIntervalSec or 1200)))
-    local c = (pet.careCount or 0) / ideal
-    local careScore = math.max(0, math.min(100, c * 100))
-    pet.careScoreLast = toFixed1(careScore)
-    if careScore >= (Config.EvolutionThresholds and Config.EvolutionThresholds.good or 80) and tline.adultGood then
-        pet.evolutionId = tline.adultGood.id
-    elseif careScore >= (Config.EvolutionThresholds and Config.EvolutionThresholds.normal or 40) and tline.adultNormal then
-        pet.evolutionId = tline.adultNormal.id
-    else
-        pet.evolutionId = tline.adultBad and tline.adultBad.id
-    end
-    pet.phase = 'adult'
-    pet.phaseStartAt = nChildEnd
-    pet.careCount = 0
-    zukanAdd(zukan, pet.evolutionId)
+---@return table
+local function createNewEggPet()
+    local t = nowSec()
+    return {
+        line = 'default',
+        phase = 'egg',
+        evolutionId = 'egg',
+        name = (Config and Config.DefaultPetName) or 'ぼく',
+        bornAt = t,
+        phaseStartAt = t,
+        stats = { hunger = 80, mood = 60, stamina = 30, clean = 50 },
+        careCount = 0,
+        lastAction = { feed = 0, play = 0, sleep = 0, clean = 0 },
+    }
 end
 
 ---@param pet table
@@ -214,17 +187,16 @@ local function advancePhases(store, n)
         return
     end
     while true do
-        local tline = treeForLine(pet)
-        if not tline or pet.phase == 'dead' or pet.phase == 'sick' or pet.phase == 'adult' then
+        if pet.phase == 'dead' or pet.phase == 'sick' or pet.phase == 'adult' then
             break
         end
         if pet.phase == 'egg' then
-            local nxt = (pet.phaseStartAt or 0) + (Config.HatchTime or 180)
+            local nxt = (pet.phaseStartAt or 0) + (Config.HatchTime or 1800)
             if n < nxt then
                 break
             end
             pet.phase = 'baby'
-            pet.evolutionId = tline.baby and tline.baby.id
+            pet.evolutionId = (math.random(1, 2) == 1) and 'baby_a' or 'baby_b'
             pet.phaseStartAt = nxt
             pet.careCount = 0
             if pet.evolutionId then
@@ -235,11 +207,17 @@ local function advancePhases(store, n)
             if n < nxt then
                 break
             end
-            local useA = (not (Config.ChildBranchRandom ~= false)) and (math.random(1, 2) == 1)
-            pet.childBranch = useA and 'A' or 'B'
-            local ch = useA and tline.childA or tline.childB
+            local el = pet.phaseStartAt or 0
+            local idealB = math.max(1, math.floor((nxt - el) / (Config.IdealCareIntervalSec or 1200)))
+            local cRatio = ((pet.careCount or 0) / idealB) * 100.0
+            if cRatio >= (Config.ChildToGoodChildThreshold or 50) then
+                pet.evolutionId = 'child_a'
+                pet.childBranch = 'A'
+            else
+                pet.evolutionId = 'child_b'
+                pet.childBranch = 'B'
+            end
             pet.phase = 'child'
-            pet.evolutionId = ch and ch.id
             pet.phaseStartAt = nxt
             pet.careCount = 0
             if pet.evolutionId then
@@ -250,7 +228,19 @@ local function advancePhases(store, n)
             if n < nxt then
                 break
             end
-            evolveToAdult(pet, store.zukan, tline, nxt)
+            local rp = Config.AdultRarePercent or 10
+            if math.random(1, 100) <= rp then
+                pet.evolutionId = 'adult_d'
+            else
+                local u = math.random(1, 3)
+                pet.evolutionId = (u == 1) and 'adult_a' or (u == 2) and 'adult_b' or 'adult_c'
+            end
+            pet.phase = 'adult'
+            pet.phaseStartAt = nxt
+            pet.careCount = 0
+            if pet.evolutionId then
+                zukanAdd(store.zukan, pet.evolutionId)
+            end
             break
         else
             break
@@ -283,6 +273,9 @@ local function ensureStore(store)
     end
     if store.pet and type(store.pet.stats) ~= 'table' then
         store.pet.stats = { hunger = 80, mood = 60, stamina = 30, clean = 50 }
+    end
+    if store.pet and store.pet.line == nil then
+        store.pet.line = 'default'
     end
     return store
 end
@@ -320,23 +313,10 @@ end
 ---@return string|nil
 local function petDisplayName(pet)
     if not pet or not pet.evolutionId or pet.evolutionId == 'egg' then
-        if pet and pet.eggName then
-            return pet.eggName
-        end
-        if pet and pet.eggType then
-            for _, e in ipairs(Config.EggTypes or {}) do
-                if e.id == pet.eggType then
-                    return e.name
-                end
-            end
-        end
         return '卵'
     end
-    local tline = treeForLine(pet)
-    for _, a in ipairs({ 'baby', 'childA', 'childB', 'adultGood', 'adultNormal', 'adultBad' }) do
-        if tline and tline[a] and tline[a].id == pet.evolutionId then
-            return tline[a].name
-        end
+    if Config.FormNames and Config.FormNames[pet.evolutionId] then
+        return Config.FormNames[pet.evolutionId]
     end
     if pet.name then
         return pet.name
@@ -357,8 +337,11 @@ local function getStageLabel(p)
         return '幼体'
     end
     if p.phase == 'child' then
-        if p.childBranch == 'A' or p.childBranch == 'B' then
-            return '成長期 ' .. tostring(p.childBranch)
+        if p.childBranch == 'A' then
+            return '成長期（良）'
+        end
+        if p.childBranch == 'B' then
+            return '成長期（悪）'
         end
         return '成長期'
     end
@@ -398,7 +381,10 @@ local function getSpriteSetForPet(pet)
     if Config.Sprites.egg and pet.phase == 'egg' then
         return { egg = Config.Sprites.egg, crack = Config.Sprites.egg_crack, mode = 'egg' }
     end
-    return { mode = 'id', set = Config.Sprites.baby_dino }
+    if Config.Sprites and Config.Sprites.baby_a then
+        return { mode = 'id', set = Config.Sprites.baby_a }
+    end
+    return nil
 end
 
 ---@param st table|nil
@@ -423,7 +409,7 @@ local function cooldownLeft(st, a)
 end
 
 ---@param st table|nil
-local function nuiStatePayload(st, expanded, eggSel)
+local function nuiStatePayload(st, expanded)
     local s = st or readStore()
     s = ensureStore(syncWorldTime(ensureStore(s)))
     stateCache = s
@@ -431,7 +417,7 @@ local function nuiStatePayload(st, expanded, eggSel)
     local n = nowSec()
     local hLeft = 0
     if pet and hasPet(pet) and pet.phase == 'egg' then
-        hLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.HatchTime or 180) - n)
+        hLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.HatchTime or 1800) - n)
     end
     local nPhaseLeft = 0
     if pet and hasPet(pet) and isAlive(pet) and (pet.phase == 'baby' or pet.phase == 'child') then
@@ -452,8 +438,9 @@ local function nuiStatePayload(st, expanded, eggSel)
     return {
         type = 'state',
         expanded = expanded or false,
-        showEgg = (eggSel == true) or (not hasPet(s.pet) and (s.noPetMenuDismissed ~= true)),
-        eggList = Config and Config.EggTypes,
+        showEgg = false,
+        eggList = nil,
+        eggShowCrackSec = (Config and Config.EggShowCrackSec) or 30,
         pet = pet,
         zukan = s.zukan,
         zukanIds = Config.ZukanIds,
@@ -474,6 +461,7 @@ local function nuiStatePayload(st, expanded, eggSel)
             statDecay = Config.StatDecayRate,
             tickerNearHatch = Config.TickerNearHatchMaxSec or 90,
             tickerNearPhase = Config.TickerNearPhaseMaxSec or 600,
+            spriteStripFrames = (Config and Config.SpriteStripFrames) or 1,
         },
         sprite = getSpriteSetForPet(pet),
         nextPhaseInSec = nPhaseLeft,
@@ -492,11 +480,11 @@ end
 ---@param s table|nil
 ---@param ex boolean|nil
 ---@param es boolean|nil
-local function pushNui(s, ex, es)
+local function pushNui(s, ex)
     if s ~= nil then
         stateCache = ensureStore(s)
     end
-    SendNUIMessage(nuiStatePayload(stateCache, ex, es))
+    SendNUIMessage(nuiStatePayload(stateCache, ex))
 end
 
 ---@param focus boolean
@@ -523,8 +511,7 @@ RegisterNUICallback('closeExpanded', function(_, cb)
     if stateCache then
         stateCache = ensureStore(syncWorldTime(stateCache))
     end
-    pushNui(stateCache, false, false)
-    isEggSelect = not hasPet(stateCache and stateCache.pet)
+    pushNui(stateCache, false)
     if cb then
         cb('ok')
     end
@@ -561,7 +548,7 @@ RegisterNUICallback('resetMiniPos', function(_, cb)
     local dx, dy = getMiniDefault()
     stateCache.miniPos = { x = dx, y = dy }
     writeStore(stateCache)
-    pushNui(stateCache, nuiShowExpanded, isEggSelect)
+    pushNui(stateCache, nuiShowExpanded)
     if cb then
         cb('ok')
     end
@@ -636,7 +623,7 @@ RegisterNUICallback('action', function(data, cb)
     stateCache = ensureStore(syncWorldTime(stateCache))
     writeStore(stateCache)
     SendNUIMessage({ type = 'playAction', name = a, pet = stateCache.pet, sprite = getSpriteSetForPet(stateCache.pet) })
-    pushNui(stateCache, nuiShowExpanded, isEggSelect)
+    pushNui(stateCache, nuiShowExpanded)
     if cb then
         cb('ok')
     end
@@ -650,88 +637,16 @@ RegisterNUICallback('zukan', function(data, cb)
     end
 end)
 
-RegisterNUICallback('dismissNoPet', function(_, cb)
-    if not stateCache then
-        if cb then
-            cb('ok')
-        end
-        return
-    end
-    stateCache = ensureStore(stateCache)
-    if hasPet(stateCache.pet) then
-        if cb then
-            cb('ok')
-        end
-        return
-    end
-    stateCache.noPetMenuDismissed = true
-    nuiShowExpanded = false
-    isEggSelect = false
-    setNuiFocus(false)
-    writeStore(stateCache)
-    pushNui(stateCache, false, false)
-    if cb then
-        cb('ok')
-    end
-end)
-
-RegisterNUICallback('selectEgg', function(data, cb)
-    local eid = data and (data.eggType or data.egg)
-    if not eid or type(eid) ~= 'string' then
-        if cb then
-            cb('ok')
-        end
-        return
-    end
-    local line
-    for _, e in ipairs(Config.EggTypes or {}) do
-        if e.id == eid and e.line then
-            line = e.line
-            break
-        end
-    end
-    if not line then
-        if cb then
-            cb('ok')
-        end
-        return
-    end
-    stateCache = ensureStore(stateCache or readStore())
-    stateCache.noPetMenuDismissed = false
-    local t = nowSec()
-    stateCache.pet = {
-        eggType = eid,
-        line = line,
-        phase = 'egg',
-        evolutionId = 'egg',
-        name = tostring((data and data.name) or 'ぼく'),
-        bornAt = t,
-        phaseStartAt = t,
-        stats = { hunger = 80, mood = 60, stamina = 30, clean = 50 },
-        careCount = 0,
-        lastAction = { feed = 0, play = 0, sleep = 0, clean = 0 },
-    }
-    stateCache = ensureStore(syncWorldTime(stateCache))
-    isEggSelect = false
-    writeStore(stateCache)
-    nuiShowExpanded = false
-    setNuiFocus(false)
-    pushNui(stateCache, false, false)
-    if cb then
-        cb('ok')
-    end
-end)
-
 RegisterNUICallback('travel', function(data, cb)
     if data and (data.yes or data.confirmed) and stateCache then
-        stateCache.pet = nil
         stateCache = ensureStore(stateCache)
-        stateCache.noPetMenuDismissed = false
-        isEggSelect = true
+        stateCache.pet = createNewEggPet()
+        stateCache = ensureStore(syncWorldTime(stateCache))
+        stateCache.noPetMenuDismissed = true
         writeStore(stateCache)
         nuiShowExpanded = true
         setNuiFocus(true)
-        pushNui(stateCache, true, true)
+        pushNui(stateCache, true)
     end
     if cb then
         cb('ok')
@@ -745,13 +660,14 @@ RegisterNUICallback('newPetAfterDead', function(_, cb)
         end
         return
     end
-    stateCache.pet = nil
-    isEggSelect = true
-    stateCache.noPetMenuDismissed = false
-    writeStore(ensureStore(stateCache))
+    stateCache = ensureStore(stateCache)
+    stateCache.pet = createNewEggPet()
+    stateCache = ensureStore(syncWorldTime(stateCache))
+    stateCache.noPetMenuDismissed = true
+    writeStore(stateCache)
     nuiShowExpanded = true
     setNuiFocus(true)
-    pushNui(stateCache, true, true)
+    pushNui(stateCache, true)
     if cb then
         cb('ok')
     end
@@ -761,34 +677,18 @@ RegisterCommand((Config and Config.Command) or 'losmon', function()
     stateCache = readStore()
     stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
     if not hasPet(stateCache.pet) then
-        if stateCache.noPetMenuDismissed then
-            stateCache.noPetMenuDismissed = false
-            isEggSelect = true
-            nuiShowExpanded = true
-            setNuiFocus(true)
-            writeStore(stateCache)
-            pushNui(stateCache, true, true)
-        else
-            if nuiShowExpanded then
-                stateCache.noPetMenuDismissed = true
-                nuiShowExpanded = false
-                isEggSelect = false
-                setNuiFocus(false)
-                writeStore(stateCache)
-                pushNui(stateCache, false, false)
-            else
-                isEggSelect = true
-                nuiShowExpanded = true
-                setNuiFocus(true)
-                pushNui(stateCache, true, true)
-            end
-        end
-    else
-        isEggSelect = false
-        nuiShowExpanded = not nuiShowExpanded
-        setNuiFocus(nuiShowExpanded)
-        pushNui(stateCache, nuiShowExpanded, false)
+        stateCache.pet = createNewEggPet()
+        stateCache = ensureStore(syncWorldTime(stateCache))
+        stateCache.noPetMenuDismissed = true
+        writeStore(stateCache)
+        nuiShowExpanded = true
+        setNuiFocus(true)
+        pushNui(stateCache, true)
+        return
     end
+    nuiShowExpanded = not nuiShowExpanded
+    setNuiFocus(nuiShowExpanded)
+    pushNui(stateCache, nuiShowExpanded)
 end, false)
 
 AddEventHandler('onClientResourceStart', function(name)
@@ -797,12 +697,15 @@ AddEventHandler('onClientResourceStart', function(name)
     end
     stateCache = readStore()
     stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
-    if hasPet(stateCache and stateCache.pet) then
-        nuiShowExpanded = false
-        isEggSelect = false
-        setNuiFocus(false)
-        pushNui(stateCache, false, false)
+    if not hasPet(stateCache.pet) then
+        stateCache.pet = createNewEggPet()
+        stateCache = ensureStore(syncWorldTime(stateCache))
+        stateCache.noPetMenuDismissed = true
+        writeStore(stateCache)
     end
+    nuiShowExpanded = false
+    setNuiFocus(false)
+    pushNui(stateCache, false)
 end)
 
 CreateThread(function()
