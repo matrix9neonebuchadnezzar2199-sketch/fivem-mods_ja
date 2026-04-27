@@ -1,3 +1,8 @@
+/* 可読性のため UI を約2倍。rem は 32px 基準（従来 16px 相当の2倍） */
+html {
+    font-size: 32px;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -22,48 +27,48 @@ body {
     top: 50%;
     transform: translate(-50%, -50%);
     width: 90vw;
-    max-width: 1200px;
-    height: 85vh;
-    max-height: 800px;
+    max-width: 2400px;
+    height: 90vh;
+    max-height: 1600px;
     display: flex;
     flex-direction: column;
     background: rgba(8, 8, 20, 0.94);
-    border: 2px solid #9944ff;
-    border-radius: 16px;
+    border: 4px solid #9944ff;
+    border-radius: 32px;
     z-index: 100;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
 }
 
 .app-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 16px;
-    border-bottom: 1px solid #4422aa;
+    padding: 20px 32px;
+    border-bottom: 2px solid #4422aa;
 }
 
 .app-header h1 {
-    font-size: 1.1rem;
+    font-size: 2.2rem;
     font-weight: 700;
 }
 
 .icon-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 1.4rem;
+    width: 72px;
+    height: 72px;
+    font-size: 2.8rem;
     line-height: 1;
     border: none;
     background: #332266;
     color: #fff;
-    border-radius: 8px;
+    border-radius: 16px;
     cursor: pointer;
 }
 
 .app-grid {
     display: grid;
     grid-template-columns: 25% 30% 1fr 24%;
-    gap: 8px;
-    padding: 10px;
+    gap: 16px;
+    padding: 20px;
     flex: 1;
     min-height: 0;
 }
@@ -72,16 +77,16 @@ body {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    padding: 8px;
+    padding: 16px;
     background: rgba(20, 20, 40, 0.5);
-    border-radius: 12px;
-    border: 1px solid #3a2a5c;
+    border-radius: 24px;
+    border: 2px solid #3a2a5c;
 }
 
 .col h2,
 .col h3 {
-    font-size: 0.8rem;
-    margin-bottom: 6px;
+    font-size: 1.6rem;
+    margin-bottom: 12px;
     color: #c4b0ff;
 }
 
@@ -92,17 +97,17 @@ input[type='url'],
 input[type='search'],
 input[type='number'] {
     width: 100%;
-    margin-bottom: 6px;
-    padding: 6px 8px;
+    margin-bottom: 12px;
+    padding: 12px 16px;
     background: #0d0d1a;
-    border: 1px solid #555;
-    border-radius: 8px;
+    border: 2px solid #555;
+    border-radius: 16px;
     color: #e0e0e0;
-    font-size: 0.8rem;
+    font-size: 1.6rem;
 }
 
 #catalog-cat {
-    margin-bottom: 8px;
+    margin-bottom: 16px;
 }
 
 ul.scroll {
@@ -110,21 +115,21 @@ ul.scroll {
     flex: 1;
     min-height: 0;
     overflow: auto;
-    font-size: 0.75rem;
+    font-size: 1.5rem;
 }
 
 #catalog-list li,
 #setlist li {
-    padding: 6px 8px;
-    margin-bottom: 4px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
     background: #15152a;
-    border-radius: 6px;
-    border: 1px solid #333;
+    border-radius: 12px;
+    border: 2px solid #333;
     cursor: pointer;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
 }
 
 #catalog-list li:hover {
@@ -140,23 +145,24 @@ ul.scroll {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 1.5rem;
 }
 
 .set-item-sec {
-    width: 48px;
-    padding: 2px 4px;
-    font-size: 0.75rem;
+    width: 96px;
+    padding: 4px 8px;
+    font-size: 1.5rem;
 }
 
 .set-item-btns button {
-    padding: 2px 6px;
-    font-size: 0.65rem;
-    margin-left: 2px;
+    padding: 4px 12px;
+    font-size: 1.3rem;
+    margin-left: 4px;
     cursor: pointer;
     background: #333;
     color: #ccc;
-    border: 1px solid #555;
-    border-radius: 4px;
+    border: 2px solid #555;
+    border-radius: 8px;
 }
 
 .set-item-btns button.danger {
@@ -164,51 +170,64 @@ ul.scroll {
 }
 
 .add-custom {
-    margin-top: 8px;
-    font-size: 0.7rem;
+    margin-top: 16px;
+    font-size: 1.4rem;
+}
+
+.add-custom h3 {
+    font-size: 1.4rem;
 }
 
 .add-custom input {
     width: 100%;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    font-size: 1.4rem;
+    padding: 8px 12px;
 }
 
 #btn-c-add {
     width: 100%;
-    margin-top: 4px;
-    padding: 6px;
+    margin-top: 8px;
+    padding: 12px;
     background: #5533aa;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 16px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 1.4rem;
 }
 
 .total {
-    margin: 6px 0;
-    font-size: 0.9rem;
+    margin: 12px 0;
+    font-size: 1.8rem;
 }
 
 .music-block {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #3a2a5c;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid #3a2a5c;
 }
 
 .music-block h2 {
-    font-size: 0.8rem;
+    font-size: 1.6rem;
+}
+
+.music-block label {
+    font-size: 1.5rem;
+    display: block;
+    margin-top: 8px;
 }
 
 .controls .act {
     display: block;
     width: 100%;
-    margin: 4px 0;
-    padding: 8px 10px;
-    font-size: 0.8rem;
+    margin: 8px 0;
+    padding: 16px 20px;
+    font-size: 1.6rem;
     font-weight: bold;
     border: none;
-    border-radius: 8px;
+    border-radius: 16px;
     cursor: pointer;
     background: linear-gradient(135deg, #7744cc, #5522aa);
     color: #fff;
@@ -230,96 +249,103 @@ ul.scroll {
 .row-line {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    margin: 4px 0;
+    gap: 16px;
+    font-size: 1.6rem;
+    margin: 8px 0;
 }
 
 #load-select {
     width: 100%;
-    padding: 4px 6px;
+    padding: 8px 12px;
     background: #0d0d1a;
     color: #e0e0e0;
-    border-radius: 6px;
-    border: 1px solid #555;
-    font-size: 0.75rem;
+    border-radius: 12px;
+    border: 2px solid #555;
+    font-size: 1.5rem;
+}
+
+#preset-name {
+    font-size: 1.6rem !important;
+    padding: 12px 16px !important;
 }
 
 .sep {
-    height: 1px;
+    height: 2px;
     background: #3a2a5c;
-    margin: 8px 0;
+    margin: 16px 0;
 }
 
 #preview-area {
     flex: 1;
     min-height: 0;
     background: rgba(0, 0, 0, 0.3);
-    border: 2px solid #9944ff;
-    border-radius: 12px;
+    border: 4px solid #9944ff;
+    border-radius: 24px;
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 20px;
 }
 
 #now-playing-info {
     margin-top: auto;
     background: rgba(0, 0, 0, 0.6);
-    border-radius: 8px;
-    padding: 8px;
+    border-radius: 16px;
+    padding: 16px;
     text-align: center;
-    font-size: 0.7rem;
+    font-size: 1.4rem;
 }
 
 #pv-dummy,
 .pv-hint {
-    font-size: 0.7rem;
+    font-size: 1.4rem;
     color: #aaa;
-    margin: 4px 0;
+    margin: 8px 0;
 }
 
 #mini-hud {
     position: fixed;
-    left: 12px;
-    top: 12px;
+    left: 24px;
+    top: 24px;
     z-index: 2000;
     pointer-events: auto;
 }
 
 #mini-inner {
     background: rgba(0, 0, 0, 0.78);
-    border: 1px solid #6622cc;
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    min-width: 200px;
+    border: 2px solid #6622cc;
+    border-radius: 20px;
+    padding: 16px 24px;
+    font-size: 1.6rem;
+    min-width: 400px;
 }
 
 #mini-line1,
 #mini-line2 {
-    margin: 2px 0;
+    margin: 4px 0;
+    font-size: 1.6rem;
 }
 
 .mini-btns {
     display: flex;
-    gap: 6px;
-    margin-top: 6px;
+    gap: 12px;
+    margin-top: 12px;
 }
 
 .mini-btns button {
     flex: 1;
-    padding: 4px 6px;
-    font-size: 0.75rem;
+    padding: 8px 12px;
+    font-size: 1.5rem;
     cursor: pointer;
     background: #332255;
     color: #fff;
-    border: 1px solid #555;
-    border-radius: 6px;
+    border: 2px solid #555;
+    border-radius: 12px;
 }
 
 #btn-mini-stop {
     flex: 1.2;
     background: #552233;
+    font-size: 1.5rem;
 }
 
 #toast {
@@ -329,11 +355,11 @@ ul.scroll {
     transform: translateX(-50%);
     z-index: 20000;
     background: rgba(0, 0, 0, 0.9);
-    border: 1px solid #9944ff;
+    border: 2px solid #9944ff;
     color: #fff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 0.9rem;
+    padding: 20px 40px;
+    border-radius: 16px;
+    font-size: 1.8rem;
 }
 
 #toast.error {
@@ -359,43 +385,51 @@ ul.scroll {
 
 #import-modal-content {
     background: #1a1a2e;
-    border: 2px solid #9944ff;
-    border-radius: 16px;
-    padding: 24px;
-    width: min(600px, 90vw);
+    border: 4px solid #9944ff;
+    border-radius: 32px;
+    padding: 48px;
+    width: min(1200px, 90vw);
     color: #fff;
 }
 
 #import-modal-content h3 {
-    font-size: 1rem;
-    margin-bottom: 8px;
+    font-size: 2rem;
+    margin-bottom: 16px;
+}
+
+#import-modal-content p {
+    font-size: 1.5rem;
+    margin: 8px 0 16px;
 }
 
 #import-textarea {
     width: 100%;
     background: #0d0d1a;
     color: #e0e0e0;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 12px;
+    border: 2px solid #444;
+    border-radius: 16px;
+    padding: 24px;
     font-family: 'Consolas', 'Meiryo UI', monospace;
-    font-size: 12px;
+    font-size: 24px;
+    line-height: 1.4;
     resize: vertical;
-    margin: 10px 0;
+    margin: 20px 0;
+    min-height: 18rem;
 }
 
 #import-buttons {
     display: flex;
-    gap: 10px;
+    gap: 20px;
     justify-content: flex-end;
 }
 
 #import-buttons button {
     border: none;
-    padding: 8px 18px;
-    border-radius: 8px;
+    padding: 16px 36px;
+    border-radius: 16px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 1.6rem;
 }
 
 #btn-import-execute {
@@ -407,5 +441,12 @@ ul.scroll {
 .btn-muted {
     background: #333;
     color: #ccc;
-    border: 1px solid #555 !important;
+    border: 2px solid #555 !important;
 }
+
+/* プレビュー列 見出し */
+.preview-col h2 {
+    font-size: 1.6rem;
+}
+
+``` 
