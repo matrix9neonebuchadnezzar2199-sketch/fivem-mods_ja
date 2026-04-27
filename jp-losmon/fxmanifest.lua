@@ -8,7 +8,6 @@ version '1.0.0'
 description 'Los-Mon - ロスサントス育成モンスター'
 
 client_scripts { 'config.lua', 'client/main.lua' }
-server_scripts { 'server/main.lua' }
 ui_page 'html/index.html'
 
 files {

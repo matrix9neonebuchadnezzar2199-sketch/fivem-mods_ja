@@ -104,6 +104,12 @@
     } else {
       document.getElementById('mini-pet').classList.add('hidden');
     }
+    var mpetE = document.getElementById('mini-pet');
+    if (mpetE) {
+      mpetE.classList.toggle('mini--drag', Boolean(ex && m && !state.showEgg && m.phase !== 'dead'));
+      /* 拡大パネルより下のレイヤーにし、お世話操作を最優先。常駐時は前面のまま */
+      mpetE.style.zIndex = (ex && !state.showEgg) ? '10020' : '10040';
+    }
     if (m && m.stats) {
       document.getElementById('b-h').style.width = m.stats.hunger + '%';
       document.getElementById('b-m').style.width = m.stats.mood + '%';
@@ -285,10 +291,15 @@
 
   var mpet = document.getElementById('mini-pet');
   mpet.addEventListener('mousedown', function (ev) {
+    if (!state || !state.expanded || state.showEgg) { return; }
+    if (state.pet && state.pet.phase === 'dead') { return; }
+    if (!mpet.classList.contains('mini--drag')) { return; }
+    ev.preventDefault();
     miniDrag.active = true; miniDrag.sx = ev.clientX; miniDrag.sy = ev.clientY; miniDrag.acc = 0;
   });
   window.addEventListener('mousemove', function (ev) {
     if (!miniDrag.active) { return; }
+    if (!state || !state.expanded) { return; }
     var dx = ev.clientX - miniDrag.sx, dy = ev.clientY - miniDrag.sy;
     var el = mpet; var r = el.getBoundingClientRect();
     el.style.left = (r.left + dx) + 'px';
@@ -300,14 +311,15 @@
     if (!miniDrag.active) { return; }
     miniDrag.active = false;
     lastDragPx = miniDrag.acc;
-    if (lastDragPx < 5) {
-      post('miniClick', { dragPx: 0 });
-    } else {
-      var el = mpet, r = el.getBoundingClientRect();
-      var rx = (r.left + 60) / window.innerWidth;
-      var ry = (r.top + 100) / window.innerHeight;
-      post('setMiniPos', { x: rx, y: ry, dragPx: lastDragPx });
-    }
+    if (!state || !state.expanded) { return; }
+    if (lastDragPx < 3) { return; }
+    var el = mpet, r = el.getBoundingClientRect();
+    var rw = window.innerWidth || 1, rh = window.innerHeight || 1;
+    var rx = (r.left + 60) / rw;
+    var ry = (r.top + 100) / rh;
+    rx = Math.max(0.01, Math.min(0.99, rx));
+    ry = Math.max(0.01, Math.min(0.99, ry));
+    post('setMiniPos', { x: rx, y: ry, dragPx: lastDragPx });
   });
 
   if (tick) { clearInterval(tick); }

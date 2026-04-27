@@ -503,44 +503,14 @@ RegisterNUICallback('closeExpanded', function(_, cb)
     end
 end)
 
-RegisterNUICallback('miniOpen', function(_, cb)
-    nuiShowExpanded = true
-    setNuiFocus(true)
-    isEggSelect = false
-    if stateCache then
-        stateCache = ensureStore(syncWorldTime(stateCache))
-    end
-    pushNui(stateCache, true, false)
-    if cb then
-        cb('ok')
-    end
-end)
-
---- ミニのクリックは mousedown+mouseup 後に NUI から。仕様: miniClick 名
-RegisterNUICallback('miniClick', function(data, cb)
-    local dr = 0.0
-    if data and data.dragPx then
-        dr = tonumber(data.dragPx) or 0.0
-    end
-    if dr >= 5.0 then
+-- ミニ表示の位置: 拡大表示（SetNuiFocus あり）中のドラッグのみ。普段はマウス非表示のため NUI から setMiniPos は呼ばれない
+RegisterNUICallback('setMiniPos', function(data, cb)
+    if not nuiShowExpanded then
         if cb then
             cb('ok')
         end
         return
     end
-    nuiShowExpanded = true
-    setNuiFocus(true)
-    isEggSelect = false
-    if stateCache then
-        stateCache = ensureStore(syncWorldTime(stateCache))
-    end
-    pushNui(stateCache, true, false)
-    if cb then
-        cb('ok')
-    end
-end)
-
-RegisterNUICallback('setMiniPos', function(data, cb)
     if stateCache and data and data.x and data.y then
         stateCache = ensureStore(stateCache)
         stateCache.miniPos = { x = tonumber(data.x) or 0.85, y = tonumber(data.y) or 0.80 }
