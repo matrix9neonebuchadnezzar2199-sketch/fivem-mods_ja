@@ -20,6 +20,14 @@
         <button type="button" id="travel-no" class="btn-ng">いいえ</button>
       </div>
     </div>
+    <div id="debug-evolve-modal" class="zukan-overlay hidden">
+      <div class="zukan-panel">
+        <h2>🛠 強制進化（デバッグ）<button type="button" class="xbtn" id="debug-evolve-close">✕</button></h2>
+        <div id="debug-evolve-list" class="debug-evolve-list"></div>
+        <p id="debug-evolve-status" class="meta" hidden></p>
+        <button type="button" id="debug-evolve-cancel" class="btn-sec" hidden>カウントダウンをキャンセル</button>
+      </div>
+    </div>
     <div id="main-expanded" class="hidden main-expanded">
       <div class="titlebar" id="ex-drag-lane">
         <span class="titlebar-brand">🐾 Los-Mon</span>
@@ -74,6 +82,7 @@
             <button type="button" id="btn-zukan" class="btn-sec">📖 図鑑</button>
             <button type="button" id="btn-travel" class="btn-sec" hidden>🛫 旅立たせる</button>
             <button type="button" id="btn-new" class="btn-sec" hidden>新しい卵</button>
+            <button type="button" id="btn-debug-evolve" class="btn-sec" hidden>🛠 強制進化</button>
           </p>
         </div>
       </div>

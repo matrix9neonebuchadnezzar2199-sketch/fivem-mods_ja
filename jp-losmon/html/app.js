@@ -257,6 +257,49 @@
     f.classList.add('on');
   }
 
+  function openDebugEvolveModal() {
+    if (!state || !state.debugEnabled) { return; }
+    var modal = document.getElementById('debug-evolve-modal');
+    var list = document.getElementById('debug-evolve-list');
+    if (!modal || !list) { return; }
+    list.innerHTML = '';
+    var targets = state.debugTargets || [];
+    var formNames = {
+      baby: '幼年期', child: '成長期',
+      adult_a: '成熟期A', adult_b: '成熟期B', adult_c: '成熟期C', adult_d: '成熟期D（レア）',
+      sick: '病気', grave: '旅立ち'
+    };
+    var fn2 = (state && state.formNames) || formNames;
+    targets.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn-sec debug-evolve-btn';
+      b.textContent = (fn2 && fn2[t]) || formNames[t] || t;
+      b.setAttribute('data-target', t);
+      b.addEventListener('click', function () {
+        post('debugForceEvolve', { target: t });
+      });
+      list.appendChild(b);
+    });
+    refreshDebugEvolveStatus();
+    modal.classList.remove('hidden');
+  }
+
+  function refreshDebugEvolveStatus() {
+    var stat = document.getElementById('debug-evolve-status');
+    var cancel = document.getElementById('debug-evolve-cancel');
+    if (!stat || !cancel) { return; }
+    if (state && state.debugForceEvolve) {
+      var dfe = state.debugForceEvolve;
+      stat.textContent = '⏱ ' + (dfe.evName || dfe.target) + ' に進化まで ' + (dfe.remainSec | 0) + ' 秒';
+      stat.hidden = false;
+      cancel.hidden = false;
+    } else {
+      stat.hidden = true;
+      cancel.hidden = true;
+    }
+  }
+
   var TIP = '💡 ミニペットの位置はドラッグで移動できます';
 
   function buildTickerMessages(st) {
@@ -405,6 +448,8 @@
       document.getElementById('btn-new').hidden = true;
       document.getElementById('btn-travel').hidden = !m || m.phase === 'dead';
     }
+    var btnDbg = document.getElementById('btn-debug-evolve');
+    if (btnDbg) { btnDbg.hidden = !(state && state.debugEnabled); }
     var c = state.cooldowns || {};
     ['feed', 'play', 'sleep', 'clean'].forEach(function (a) {
       var b = document.querySelector('.cd[data-cd=\"' + a + '\"]');
@@ -482,11 +527,25 @@
       }
       if (d.resName) { res = d.resName; }
       render();
+      refreshDebugEvolveStatus();
       if (d.expanded) {
         nuiSetFocus(1);
       } else {
         nuiSetFocus(0);
       }
+    } else if (d.type === 'debugEvolveScheduled') {
+      showFlash();
+      if (state) {
+        var dmsg = '🛠 ' + (d.evName || d.target) + ' に ' + (d.delaySec | 0) + ' 秒後に進化…';
+        tickerList = [dmsg, TIP];
+        tickerIdx = 0;
+        applyTickerSlide();
+        lastTickerKey = '';
+      }
+      refreshDebugEvolveStatus();
+    } else if (d.type === 'debugEvolveCancelled') {
+      if (state) { state.debugForceEvolve = null; }
+      refreshDebugEvolveStatus();
     } else if (d.type === 'evolve') {
       showFlash();
       if (state) {
@@ -517,25 +576,35 @@
     } else if (d.type === 'levelUp') {
       showMiniLevelUp();
     } else if (d.type === 'zukan' && d.open === true) {
-      state = state || {};
-      if (d.zukan) { state.zukan = d.zukan; }
-      if (d.zukanMap) { state.zukanMap = d.zukanMap; }
-      if (d.zukanIds) { state.zukanIds = d.zukanIds; }
-      document.getElementById('zukan-modal').classList.remove('hidden');
+      var zModal = document.getElementById('zukan-modal');
       var zb = document.getElementById('zukan-body');
+      if (!zModal || !zb) { return; }
+      zModal.classList.remove('hidden');
       zb.innerHTML = '';
-      var have = state.zukan || [];
+      var have = d.zukan || [];
       if (typeof have.indexOf !== 'function') { have = Object.keys(have || {}); }
-      var m = state.zukanMap || {};
-      var order = state.zukanIds || Object.keys(m);
+      var zMap = d.zukanMap || {};
+      var zFrames = d.zukanFrames || {};
+      var order = d.zukanIds || Object.keys(zMap);
+      var formNames = d.formNames || (state && state.formNames) || {};
       order.forEach(function (k) {
-        if (!m[k]) { return; }
-        var c = document.createElement('div');
-        c.className = 'zk-cell' + (have.indexOf(k) < 0 ? ' zk-sil' : '');
-        c.style.backgroundImage = 'url(' + nuiUrl(m[k]) + ')';
-        c.title = k;
-        zb.appendChild(c);
+        if (!zMap[k]) { return; }
+        var cell = document.createElement('div');
+        var strip = (zFrames[k] | 0) > 1;
+        cell.className = 'zk-cell' + (have.indexOf(k) < 0 ? ' zk-sil' : '') + (strip ? ' zk-strip' : '');
+        cell.style.backgroundImage = 'url(' + nuiUrl(zMap[k]) + ')';
+        var displayName = formNames[k] || k;
+        cell.setAttribute('aria-label', displayName);
+        cell.title = displayName;
+        zb.appendChild(cell);
       });
+      if (state) {
+        state.zukan = have;
+        state.zukanMap = zMap;
+        state.zukanIds = order;
+        state.zukanFrames = zFrames;
+        if (d.formNames) { state.formNames = d.formNames; }
+      }
     } else if (d.type === 'zukan' && d.open === false) {
       document.getElementById('zukan-modal').classList.add('hidden');
     }
@@ -551,9 +620,28 @@
   document.getElementById('btn-zukan').addEventListener('click', function () {
     post('zukan', { open: true });
   });
+  var zukMo = document.getElementById('zukan-modal');
+  if (zukMo) {
+    zukMo.addEventListener('click', function (ev) {
+      if (ev.target === zukMo) { post('zukan', { open: false }); }
+    });
+  }
   document.getElementById('zukan-close').addEventListener('click', function () {
     post('zukan', { open: false });
   });
+  var bde = document.getElementById('btn-debug-evolve');
+  if (bde) { bde.addEventListener('click', openDebugEvolveModal); }
+  (function () {
+    var b = document.getElementById('debug-evolve-close');
+    var m = document.getElementById('debug-evolve-modal');
+    if (b && m) {
+      b.addEventListener('click', function () { m.classList.add('hidden'); });
+    }
+  })();
+  (function () {
+    var c = document.getElementById('debug-evolve-cancel');
+    if (c) { c.addEventListener('click', function () { post('debugCancelForceEvolve', {}); }); }
+  })();
   document.getElementById('btn-travel').addEventListener('click', function () {
     document.getElementById('travel-confirm').classList.remove('hidden');
   });

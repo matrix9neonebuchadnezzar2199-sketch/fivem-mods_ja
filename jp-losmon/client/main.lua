@@ -3,6 +3,11 @@ local KVP_BLOB = 'losmon_v1'
 local nuiHasFocus = false
 local nuiShowExpanded = false
 local stateCache = nil
+-- デバッグ: 強制進化の予約状態
+local debugForceEvolve = {
+    target = nil,
+    triggerAt = nil,
+}
 
 ---@return number
 local function nowSec()
@@ -89,7 +94,7 @@ end
 ---@param zukan table
 ---@param id string|nil
 local function zukanAdd(zukan, id)
-    if not id or id == 'egg' then
+    if not id then
         return
     end
     if type(zukan) ~= 'table' then
@@ -122,6 +127,8 @@ local isLotteryEligible
 local pickByWeight
 ---@type fun(store: table): string|nil
 local advanceAdultLottery
+---@type fun(store: table, n: number): string|nil
+local applyDebugForceEvolve
 
 ---@param store table
 ---@param n number 現在時刻
@@ -353,6 +360,9 @@ local function ensureStore(store)
                 store.pet.evolutionId = 'child'
             end
         end
+        if hasPet(store.pet) and store.pet.phase == 'egg' then
+            zukanAdd(store.zukan, 'egg')
+        end
     end
     return store
 end
@@ -362,39 +372,45 @@ local function syncWorldTime(store)
     local n = nowSec()
     store = ensureStore(store)
 
-    local evolved = nil
-    if store.pet and isAlive(store.pet) then
+    local forceEvolved = applyDebugForceEvolve(store, n)
+
+    if not forceEvolved and store.pet and isAlive(store.pet) then
         tickOnline(store, n)
     end
 
-    if store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' then
+    local evolved = nil
+    if not forceEvolved and store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' then
         evolved = advancePhases(store, n)
     end
 
-    if store.pet and store.pet.phase == 'child' then
+    if not forceEvolved and store.pet and store.pet.phase == 'child' then
         local lotteryResult = advanceAdultLottery(store)
         if lotteryResult then
             evolved = lotteryResult
         end
     end
 
-    if store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' and store.pet.phase ~= 'egg' then
-        if tryEnterSick(store.pet, n) then
-            zukanAdd(store.zukan, 'sick')
+    if not forceEvolved then
+        if store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' and store.pet.phase ~= 'egg' then
+            if tryEnterSick(store.pet, n) then
+                zukanAdd(store.zukan, 'sick')
+            end
         end
-    end
-    if store.pet and store.pet.phase == 'sick' then
-        if tryDeath(store.pet, n) then
-            zukanAdd(store.zukan, 'grave')
+        if store.pet and store.pet.phase == 'sick' then
+            if tryDeath(store.pet, n) then
+                zukanAdd(store.zukan, 'grave')
+            end
         end
     end
 
-    if evolved then
+    local notify = forceEvolved or evolved
+    if notify then
         SendNUIMessage({
             type = 'evolve',
-            evolutionId = evolved,
-            phase = store.pet.phase,
-            evName = (Config.FormNames and Config.FormNames[evolved]) or evolved,
+            evolutionId = notify,
+            phase = store.pet and store.pet.phase,
+            evName = (Config.FormNames and Config.FormNames[notify]) or notify,
+            forced = forceEvolved ~= nil,
         })
     end
 
@@ -624,6 +640,74 @@ advanceAdultLottery = function(store)
     return form
 end
 
+applyDebugForceEvolve = function(store, n)
+    if not Config.DebugForceEvolveEnabled then
+        return nil
+    end
+    if not debugForceEvolve.target or not debugForceEvolve.triggerAt then
+        return nil
+    end
+    if n < debugForceEvolve.triggerAt then
+        return nil
+    end
+    local target = debugForceEvolve.target
+    if not store or not hasPet(store.pet) then
+        debugForceEvolve.target = nil
+        debugForceEvolve.triggerAt = nil
+        return nil
+    end
+    local pet = store.pet
+    if target == 'sick' and (pet.phase == 'sick' or pet.phase == 'dead' or pet.phase == 'egg') then
+        debugForceEvolve.target = nil
+        debugForceEvolve.triggerAt = nil
+        return nil
+    end
+    debugForceEvolve.target = nil
+    debugForceEvolve.triggerAt = nil
+    if target == 'baby' then
+        pet.phase = 'baby'
+        pet.evolutionId = 'baby'
+        pet.phaseElapsedSec = 0
+        pet.phaseStartAt = n
+        pet.careCount = 0
+        pet.sickAt = nil
+        pet.phaseBeforeSick = nil
+    elseif target == 'child' then
+        pet.phase = 'child'
+        pet.evolutionId = 'child'
+        pet.phaseElapsedSec = 0
+        pet.phaseStartAt = n
+        pet.careCount = 0
+        pet.lastLotteryAt = 0
+        pet.sickAt = nil
+        pet.phaseBeforeSick = nil
+    elseif target == 'adult_a' or target == 'adult_b' or target == 'adult_c' or target == 'adult_d' then
+        pet.phase = 'adult'
+        pet.evolutionId = target
+        pet.phaseElapsedSec = 0
+        pet.phaseStartAt = n
+        pet.careCount = 0
+        pet.sickAt = nil
+        pet.phaseBeforeSick = nil
+    elseif target == 'sick' then
+        pet.phaseBeforeSick = pet.phase
+        pet.phase = 'sick'
+        pet.sickAt = n
+        if pet.stats then
+            pet.stats.hunger = math.min(pet.stats.hunger or 0, Config.SickThreshold or 10)
+        end
+    elseif target == 'grave' then
+        pet.phase = 'dead'
+        pet.evolutionId = 'grave'
+        pet.sickAt = nil
+        pet.phaseBeforeSick = nil
+    else
+        return nil
+    end
+    zukanAdd(store.zukan, target)
+    return target
+end
+
 ---@param pet table|nil
 ---@return table
 local function buildLevelFields(pet)
@@ -713,17 +797,25 @@ local function addExpToPet(pet, amount)
     return oldL, newL
 end
 
----@return table
+---@return table, table
 local function buildZukanMap()
     local zukanMap = {}
+    local zukanFrames = {}
     if Config and Config.ZukanIds and Config.Sprites then
         for _, zid in ipairs(Config.ZukanIds) do
             if Config.Sprites[zid] and Config.Sprites[zid].idle then
                 zukanMap[zid] = Config.Sprites[zid].idle
+                if zid == 'grave' then
+                    zukanFrames[zid] = Config.GraveSpriteStripFrames or 1
+                elseif zid == 'egg' then
+                    zukanFrames[zid] = Config.EggSpriteStripFrames or 4
+                else
+                    zukanFrames[zid] = Config.SpriteStripFrames or 4
+                end
             end
         end
     end
-    return zukanMap
+    return zukanMap, zukanFrames
 end
 
 ---@param st table|nil
@@ -741,7 +833,7 @@ local function nuiStatePayload(st, expanded)
     if pet and hasPet(pet) and isAlive(pet) and pet.phase == 'baby' then
         nPhaseLeft = math.max(0, (Config.GrowthInterval or 14400) - (pet.phaseElapsedSec or 0))
     end
-    local zukanMap = buildZukanMap()
+    local zukanMap, zukanFrames = buildZukanMap()
     local al = false
     if pet and hasPet(pet) and isAlive(pet) and pet.phase ~= 'egg' and pet.phase ~= 'dead' then
         al = true
@@ -761,6 +853,8 @@ local function nuiStatePayload(st, expanded)
         zukan = s.zukan,
         zukanIds = Config.ZukanIds,
         zukanMap = zukanMap,
+        zukanFrames = zukanFrames,
+        formNames = Config.FormNames or {},
         miniPos = s.miniPos,
         miniPosDefault = (function()
             local dx, dy = getMiniDefault()
@@ -808,6 +902,13 @@ local function nuiStatePayload(st, expanded)
             currentChildSec = pet.phaseElapsedSec or 0,
         } or nil,
         phaseElapsedSec = pet and pet.phaseElapsedSec or 0,
+        debugForceEvolve = (Config.DebugForceEvolveEnabled and debugForceEvolve.target) and {
+            target = debugForceEvolve.target,
+            evName = (Config.FormNames and Config.FormNames[debugForceEvolve.target]) or debugForceEvolve.target,
+            remainSec = math.max(0, (debugForceEvolve.triggerAt or 0) - nowSec()),
+        } or nil,
+        debugEnabled = Config.DebugForceEvolveEnabled and true or false,
+        debugTargets = Config.DebugForceEvolveEnabled and (Config.DebugEvolveTargets) or nil,
         cooldowns = {
             feed = al and cooldownLeft(pet, 'feed') or 0,
             play = (al and (pet and pet.phase) ~= 'sick') and cooldownLeft(pet, 'play') or 0,
@@ -1028,7 +1129,7 @@ RegisterNUICallback('zukan', function(data, cb)
     if stateCache then
         stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
     end
-    local zm = buildZukanMap()
+    local zm, zf = buildZukanMap()
     local zids = (Config and Config.ZukanIds) or {}
     SendNUIMessage({
         type = 'zukan',
@@ -1036,7 +1137,73 @@ RegisterNUICallback('zukan', function(data, cb)
         zukan = (stateCache and zukanListify(stateCache.zukan)) or {},
         zukanMap = zm,
         zukanIds = zids,
+        zukanFrames = zf,
+        formNames = Config.FormNames or {},
     })
+    if cb then
+        cb('ok')
+    end
+end)
+
+RegisterNUICallback('debugForceEvolve', function(data, cb)
+    if not Config.DebugForceEvolveEnabled then
+        if cb then
+            cb('disabled')
+        end
+        return
+    end
+    if not stateCache or not hasPet(stateCache.pet) then
+        if cb then
+            cb('nopet')
+        end
+        return
+    end
+    local target = data and tostring(data.target or '') or ''
+    if target == '' then
+        if cb then
+            cb('notarget')
+        end
+        return
+    end
+    local allowed = false
+    for _, v in ipairs(Config.DebugEvolveTargets or {}) do
+        if v == target then
+            allowed = true
+            break
+        end
+    end
+    if not allowed then
+        if cb then
+            cb('invalid')
+        end
+        return
+    end
+    local delay = Config.DebugForceEvolveDelaySec or 10
+    debugForceEvolve.target = target
+    debugForceEvolve.triggerAt = nowSec() + delay
+    SendNUIMessage({
+        type = 'debugEvolveScheduled',
+        target = target,
+        evName = (Config.FormNames and Config.FormNames[target]) or target,
+        delaySec = delay,
+    })
+    if stateCache then
+        stateCache = ensureStore(stateCache)
+        pushNui(stateCache, nuiShowExpanded)
+    end
+    if cb then
+        cb('ok')
+    end
+end)
+
+RegisterNUICallback('debugCancelForceEvolve', function(_, cb)
+    debugForceEvolve.target = nil
+    debugForceEvolve.triggerAt = nil
+    SendNUIMessage({ type = 'debugEvolveCancelled' })
+    if stateCache then
+        stateCache = ensureStore(stateCache)
+        pushNui(stateCache, nuiShowExpanded)
+    end
     if cb then
         cb('ok')
     end
@@ -1112,6 +1279,38 @@ CreateThread(function()
             if nowP and (nowP.phase == 'egg' or nowP.phase == 'baby' or nowP.phase == 'child') then
                 pushNui(stateCache, nuiShowExpanded)
             end
+        end
+    end
+end)
+
+-- デバッグ: 強制進化の発火を 0.5 秒粒度で拾う
+CreateThread(function()
+    while true do
+        Wait(500)
+        if debugForceEvolve.triggerAt and stateCache and hasPet(stateCache.pet) then
+            local n = nowSec()
+            if n >= (debugForceEvolve.triggerAt or 0) then
+                stateCache = ensureStore(syncWorldTime(stateCache))
+                writeStore(stateCache)
+                pushNui(stateCache, nuiShowExpanded)
+            end
+        end
+    end
+end)
+
+-- デバッグ: 残り秒表示の再送（1 秒）
+CreateThread(function()
+    while true do
+        Wait(1000)
+        if
+            (Config and Config.DebugForceEvolveEnabled)
+            and debugForceEvolve
+            and debugForceEvolve.triggerAt
+            and stateCache
+            and hasPet(stateCache.pet)
+        then
+            stateCache = ensureStore(stateCache)
+            pushNui(stateCache, nuiShowExpanded)
         end
     end
 end)

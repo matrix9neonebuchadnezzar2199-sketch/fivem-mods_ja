@@ -55,6 +55,11 @@ Config.OfflineThresholdSec = 120
 -- 復帰には hunger > SickThreshold かつ clean >= SickCleanThreshold が必要
 Config.SickCleanThreshold = 50
 
+-- デバッグ: 強制進化UI（NUI 参照用。有効化は Config.Debug ブロック内）
+Config.DebugForceEvolveEnabled = false
+Config.DebugForceEvolveDelaySec = 10
+Config.DebugEvolveTargets = { 'baby', 'child', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave' }
+
 -- ===== デバッグモード =====
 Config.Debug = false
 if Config.Debug then
@@ -66,6 +71,7 @@ if Config.Debug then
     Config.AdultLotteryMinSteps = 0
     Config.StatDecayRate = 1.0
     Config.DeathTime = 180
+    Config.DebugForceEvolveEnabled = true
 end
 
 -- レベル（EXP）: 合計 EXP から L = min(LevelMax, floor((1+sqrt(1+8*E/ExpBasePer100))/2))。LV1 の領域は 0 〜 未満 ExpBasePer100
@@ -91,8 +97,8 @@ Config.EggSpriteStripFrames = 4
 Config.GraveSpriteStripFrames = 1
 -- 旧仕様。未使用（互換用に残置）
 Config.EvolutionTree = { default = {} }
--- 図鑑 ID
-Config.ZukanIds = { 'baby', 'child', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave' }
+-- 図鑑 ID（先頭に卵。初回卵から1枠埋まり図鑑の存在に気づきやすい）
+Config.ZukanIds = { 'egg', 'baby', 'child', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave' }
 -- 画面・図鑑用の系統名（通称 / 名前差は通称。フォーム名は evName 側）
 Config.FormNames = {
     egg     = '卵',

@@ -25,7 +25,7 @@ html { font-size: 144px; }
 #mini-pet.mini--drag { pointer-events: auto; cursor: grab; }
 #mini-pet.mini--drag:active { cursor: grabbing; }
 
-#zukan-modal.zukan-overlay, #travel-confirm {
+#zukan-modal.zukan-overlay, #debug-evolve-modal, #travel-confirm {
   position: fixed; z-index: 13000; left: 0; top: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.55);
   display: flex; align-items: center; justify-content: center; pointer-events: auto;
@@ -66,9 +66,24 @@ html { font-size: 144px; }
   background-color: #1a1e2a;
   background-repeat: no-repeat;
   background-position: center;
-  /* cover はタイル端が切れる。図鑑は全体表示 */
+  /* cover はタイル端が切れる。図鑑は全体表示（1コマ画像用） */
   background-size: contain;
   image-rendering: pixelated; /* ドット絵 */
+}
+/* 横4コマシートの idle を図鑑用に1コマだけ見せる */
+.zk-cell.zk-strip {
+  background-size: 400% 100%;
+  background-position: 0% 50%;
+}
+.debug-evolve-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.05rem;
+  margin: 0.1rem 0;
+}
+.debug-evolve-btn {
+  text-align: center;
+  padding: 0.06rem;
 }
 /* 未開放: 真っ黒にならないよう、シルエット感を保つ */
 .zk-sil {
