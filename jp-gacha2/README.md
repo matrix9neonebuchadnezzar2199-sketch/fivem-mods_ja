@@ -81,14 +81,6 @@ FiveM 用**ガチャマシン（v2）**。マシン付近で **E** キーでト�
 
 ![ガチャ結果](docs/readme-images/gacha-result.png)
 
-### 補足: 旧スクリーンショット用フォルダ（10連 等）
-
-`docs/screenshots/` に 10 連系のファイル用プレースホルダ用パスがあります（必要に応じて同様に `![...](...)` を追加）。
-
-- `docs/screenshots/menu-selection.png`
-- `docs/screenshots/single-normal.png`
-- `docs/screenshots/multi10-*.png` 等
-
 ## デモ動画
 
 - [docs/video1.mp4](docs/video1.mp4)
