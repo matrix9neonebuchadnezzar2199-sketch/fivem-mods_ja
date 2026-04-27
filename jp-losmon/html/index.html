@@ -39,11 +39,28 @@
       </div>
       <div class="ex-grid" id="ex-content">
         <div class="col left">
-          <button type="button" class="care" data-a="feed"><span class="ico">🍖</span>ごはん <span class="cd" data-cd="feed"></span></button>
-          <button type="button" class="care" data-a="play"><span class="ico">🎮</span>あそぶ <span class="cd" data-cd="play"></span></button>
-          <button type="button" class="care" data-a="sleep"><span class="ico">💤</span>ねかす <span class="cd" data-cd="sleep"></span></button>
-          <button type="button" class="care" data-a="clean"><span class="ico">🧹</span>そうじ <span class="cd" data-cd="clean"></span></button>
-          <button type="button" class="care travel" data-a="openTravel"><span class="ico">🛫</span>旅立つ</button>
+          <div class="care-tiles">
+            <button type="button" class="care-tile tile-feed" data-a="feed">
+              <span class="tile-ico">🍖</span>
+              <span class="tile-label">ごはん</span>
+              <span class="tile-cd cd" data-cd="feed"></span>
+            </button>
+            <button type="button" class="care-tile tile-play" data-a="play">
+              <span class="tile-ico">🎮</span>
+              <span class="tile-label">あそぶ</span>
+              <span class="tile-cd cd" data-cd="play"></span>
+            </button>
+            <button type="button" class="care-tile tile-sleep" data-a="sleep">
+              <span class="tile-ico">💤</span>
+              <span class="tile-label">ねかす</span>
+              <span class="tile-cd cd" data-cd="sleep"></span>
+            </button>
+            <button type="button" class="care-tile tile-clean" data-a="clean">
+              <span class="tile-ico">🧹</span>
+              <span class="tile-label">そうじ</span>
+              <span class="tile-cd cd" data-cd="clean"></span>
+            </button>
+          </div>
         </div>
         <div class="col center" id="sprite-arena">
           <div class="device-wrap" id="device-wrap" aria-hidden="true">
@@ -56,35 +73,69 @@
           </div>
         </div>
         <div class="col right">
-          <div class="right-top">
-          <ul class="bars">
-            <li>空腹 <div class="barb"><b id="b-h" style="width:40%"></b></div> <span id="v-h">40</span>%</li>
-            <li>機嫌 <div class="barb"><b id="b-m" style="width:60%"></b></div> <span id="v-m">60</span>%</li>
-            <li>体力 <div class="barb"><b id="b-s" style="width:30%"></b></div> <span id="v-s">30</span>%</li>
-            <li>清潔 <div class="barb"><b id="b-c" style="width:50%"></b></div> <span id="v-c">50</span>%</li>
-          </ul>
-          <p class="meta name-row" id="meta-n-row">
-            <span>名前: </span>
-            <span class="name-text" id="meta-n-text">—</span>
-            <button type="button" class="btn-pencil" id="btn-name-edit" title="名前を変える" aria-label="名前を変える">✎</button>
-            <input type="text" class="name-input hidden" id="meta-n-input" maxlength="12" autocomplete="off" />
-          </p>
-          <p class="meta" id="meta-lv">LV —</p>
-          <div class="barb expb"><b id="b-exp" style="width:0%"></b></div>
-          <p class="meta meta-sub" id="meta-walk">歩行 — / 乗車 —</p>
-          <p class="meta" id="meta-st">成長: —</p>
-          <p class="meta" id="meta-lottery" hidden></p>
-          <p class="meta" id="meta-time">経過: —</p>
-          <p class="meta warn" id="meta-sick" hidden>病気！空腹を戻し病気4時間未満で！</p>
-          <p class="meta" id="meta-dhead" hidden>死まで: —</p>
+          <div class="info-card card-pet">
+            <div class="card-row name-row" id="meta-n-row">
+              <span class="name-text" id="meta-n-text">—</span>
+              <button type="button" class="btn-pencil" id="btn-name-edit" title="名前を変える" aria-label="名前を変える">✎</button>
+              <input type="text" class="name-input hidden" id="meta-n-input" maxlength="12" autocomplete="off" />
+            </div>
+            <div class="card-row level-row">
+              <span class="level-label" id="meta-lv">LV —</span>
+            </div>
+            <div class="exp-bar barb expb"><b id="b-exp" style="width:0%"></b></div>
+            <div class="card-row meta-sub" id="meta-walk">— / —</div>
           </div>
-          <p class="btns-lower">
-            <button type="button" id="btn-debug-evolve" class="btn-sec" hidden>🛠 デバッグ</button>
-            <button type="button" id="btn-reset-mini" class="btn-sec">ミニ版を初期位置へ</button>
-            <button type="button" id="btn-zukan" class="btn-sec">📖 図鑑</button>
-            <button type="button" id="btn-travel" class="btn-sec" hidden>🛫 旅立たせる</button>
-            <button type="button" id="btn-new" class="btn-sec" hidden>新しい卵</button>
-          </p>
+          <div class="info-card card-stats">
+            <div class="stat-row">
+              <span class="stat-ico" aria-hidden="true">🍖</span>
+              <div class="stat-bar barb"><b id="b-h" class="bar-h" style="width:40%"></b></div>
+              <span class="stat-val" id="v-h">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-ico" aria-hidden="true">😊</span>
+              <div class="stat-bar barb"><b id="b-m" class="bar-m" style="width:60%"></b></div>
+              <span class="stat-val" id="v-m">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-ico" aria-hidden="true">💪</span>
+              <div class="stat-bar barb"><b id="b-s" class="bar-s" style="width:30%"></b></div>
+              <span class="stat-val" id="v-s">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-ico" aria-hidden="true">🛁</span>
+              <div class="stat-bar barb"><b id="b-c" class="bar-c" style="width:50%"></b></div>
+              <span class="stat-val" id="v-c">—</span>
+            </div>
+          </div>
+          <div class="info-card card-meta">
+            <div class="meta-line" id="meta-st">成長: —</div>
+            <div class="meta-line" id="meta-time">経過: —</div>
+            <div class="meta-line" id="meta-lottery" hidden></div>
+            <div class="meta-line warn" id="meta-sick" hidden>⚠ 病気です。ごはんと掃除で治療を</div>
+            <div class="meta-line" id="meta-dhead" hidden></div>
+          </div>
+        </div>
+        <div class="footer-toolbar">
+          <button type="button" class="footer-btn footer-btn-debug" id="btn-debug-evolve" hidden>
+            <span class="footer-ico" aria-hidden="true">🛠</span>
+            <span class="footer-label">デバッグ</span>
+          </button>
+          <button type="button" class="footer-btn" id="btn-zukan">
+            <span class="footer-ico" aria-hidden="true">📖</span>
+            <span class="footer-label">図鑑</span>
+          </button>
+          <button type="button" class="footer-btn" id="btn-reset-mini">
+            <span class="footer-ico" aria-hidden="true">↻</span>
+            <span class="footer-label">ミニ位置</span>
+          </button>
+          <button type="button" class="footer-btn footer-btn-travel" id="btn-travel" hidden>
+            <span class="footer-ico" aria-hidden="true">🛫</span>
+            <span class="footer-label">旅立たせる</span>
+          </button>
+          <button type="button" class="footer-btn footer-btn-new" id="btn-new" hidden>
+            <span class="footer-ico" aria-hidden="true">🥚</span>
+            <span class="footer-label">新しい卵</span>
+          </button>
         </div>
       </div>
     </div>

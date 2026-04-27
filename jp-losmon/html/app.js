@@ -391,10 +391,10 @@
       document.getElementById('b-m').style.width = m.stats.mood + '%';
       document.getElementById('b-s').style.width = m.stats.stamina + '%';
       document.getElementById('b-c').style.width = m.stats.clean + '%';
-      document.getElementById('v-h').textContent = Math.floor(m.stats.hunger);
-      document.getElementById('v-m').textContent = Math.floor(m.stats.mood);
-      document.getElementById('v-s').textContent = Math.floor(m.stats.stamina);
-      document.getElementById('v-c').textContent = Math.floor(m.stats.clean);
+      document.getElementById('v-h').textContent = Math.floor(m.stats.hunger) + '%';
+      document.getElementById('v-m').textContent = Math.floor(m.stats.mood) + '%';
+      document.getElementById('v-s').textContent = Math.floor(m.stats.stamina) + '%';
+      document.getElementById('v-c').textContent = Math.floor(m.stats.clean) + '%';
     }
     if (m) {
       if (!nameEditMode) {
@@ -424,7 +424,7 @@
       }
       var mwk = document.getElementById('meta-walk');
       if (mwk) {
-        mwk.textContent = '歩: ' + ((state.stepCount | 0) || 0) + ' 歩  ・  乗: ' + (Math.max(0, (state.driveMeters|0) + 0) | 0) + ' m';
+        mwk.textContent = '🚶 ' + ((state.stepCount | 0) || 0) + ' / 🚗 ' + (Math.max(0, (state.driveMeters|0) + 0) | 0) + ' m';
       }
       document.getElementById('meta-st').textContent = '成長: ' + (state.stageLabel || '—') + (m.evolutionId && m.evolutionId !== 'egg' && m.evolutionId !== 'grave' ? ' (' + (state.evName || '') + ')' : '');
       document.getElementById('meta-time').textContent = '経過: ' + elapseText(state.elapseSec || 0);
@@ -463,7 +463,7 @@
     });
     ['feed', 'play', 'sleep', 'clean'].forEach(function (a) {
       var t = c[a] | 0;
-      var b = document.querySelector('.care[data-a=\"' + a + '\"]');
+      var b = document.querySelector('.care-tile[data-a=\"' + a + '\"]');
       if (!b) { return; }
       var sck = m && m.phase === 'sick' && (a === 'play' || a === 'sleep');
       var eggB = m && m.phase === 'egg';
@@ -686,14 +686,11 @@
       mni.addEventListener('blur', function () { if (nameEditMode) { endPetNameEdit(true); } });
     }
   })();
-  document.querySelectorAll('.care[data-a=\"feed\"],.care[data-a=\"play\"],.care[data-a=\"sleep\"],.care[data-a=\"clean\"]').forEach(function (b) {
+  document.querySelectorAll('.care-tile[data-a=\"feed\"],.care-tile[data-a=\"play\"],.care-tile[data-a=\"sleep\"],.care-tile[data-a=\"clean\"]').forEach(function (b) {
     b.addEventListener('click', function () {
       var a = b.getAttribute('data-a');
-      if (a && a !== 'openTravel') { post('action', { name: a }); }
+      if (a) { post('action', { name: a }); }
     });
-  });
-  document.querySelectorAll('.care.travel, .care[data-a=\"openTravel\"]').forEach(function (b) {
-    b.addEventListener('click', function () { document.getElementById('btn-travel').click(); });
   });
 
   var mpet = document.getElementById('mini-pet');
