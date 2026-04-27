@@ -100,6 +100,19 @@
         refreshSetlistRowNumbers();
     }
 
+    /** 1モーションをゲーム内で試聴（カタログ行／セット行のクリック用） */
+    async function playMotionPreview(dict, clip, nameLabel) {
+        if (!dict || !clip) return;
+        const r = await nuiFetch('preview', { dict, clip });
+        if (r && r.err === 'noload') {
+            showToast('⚠ このモーションは読み込めません: ' + (nameLabel || clip), true);
+        } else if (r && r.err) {
+            showToast('⚠ 試聴に失敗しました', true);
+        } else {
+            showToast('▶ 試聴: ' + (nameLabel || clip));
+        }
+    }
+
     function addSetlistItem(item) {
         if (getSetlistItems().length >= maxSlots) {
             showToast('⚠ 上限に達しています', true);
@@ -174,6 +187,11 @@
             });
             li.appendChild(sp);
             li.appendChild(btn);
+            li.title = '行をクリックで試聴 ／ ＋追加でリストへ';
+            li.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-add-cat')) return;
+                playMotionPreview(c.dict, c.clip, c.name);
+            });
             list.appendChild(li);
         });
     }
@@ -372,6 +390,17 @@
     }
     $('catalog-search').addEventListener('input', renderCatalog);
     $('catalog-cat').addEventListener('change', renderCatalog);
+
+    /** 中段セットリスト: 行クリック＝試聴（数値・🗑・± 以外） */
+    $('setlist').addEventListener('click', (e) => {
+        const li = e.target.closest('#setlist li[data-dict]');
+        if (!li) return;
+        if (e.target.closest('button, .set-sec, .set-dur-ctrl')) return;
+        const dict = li.getAttribute('data-dict');
+        const clip = li.getAttribute('data-clip');
+        const name = li.getAttribute('data-name') || clip;
+        playMotionPreview(dict, clip, name);
+    });
 
     $('btn-c-add').addEventListener('click', () => {
         const dict = ($('c-dict').value || '').trim();
