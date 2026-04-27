@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+  var UI_S = 3; /* 画面・文字の拡大倍率（NUI 全体） */
 
   var res = 'jp-losmon';
   var state = null;
@@ -67,10 +68,11 @@
     if (isMini) {
       div.classList.add('mini-sprite');
     }
+    var w = 512; var h = 128; var mW = 256; var mH = 64;
     if (def.mode === 'id' && def.set) {
-      div.style.backgroundSize = (isMini ? 256 : 512) + 'px ' + (isMini ? 64 : 128) + 'px';
+      div.style.backgroundSize = (isMini ? mW * UI_S : w * UI_S) + 'px ' + (isMini ? mH * UI_S : h * UI_S) + 'px';
     } else {
-      div.style.backgroundSize = (isMini ? 256 : 512) + 'px ' + (isMini ? 64 : 128) + 'px';
+      div.style.backgroundSize = (isMini ? mW * UI_S : w * UI_S) + 'px ' + (isMini ? mH * UI_S : h * UI_S) + 'px';
     }
   }
 
@@ -127,7 +129,7 @@
   }
 
   function applyTickerIfNeeded() {
-    if (!state || !state.expanded) {
+    if (!state || !state.expanded || state.showEgg) {
       if (tickerTimer) { clearInterval(tickerTimer); tickerTimer = null; }
       lastTickerKey = '';
       return;
@@ -155,7 +157,8 @@
     }
     var m = state.pet;
     var ex = state.expanded;
-    document.getElementById('main-expanded').classList.toggle('hidden', !ex);
+    var showExp = ex && !state.showEgg;
+    document.getElementById('main-expanded').classList.toggle('hidden', !showExp);
     if (m && m.phase !== 'dead' && !state.showEgg) {
       document.getElementById('mini-pet').classList.remove('hidden');
       posMini();
@@ -170,8 +173,7 @@
     var mpetE = document.getElementById('mini-pet');
     if (mpetE) {
       mpetE.classList.toggle('mini--drag', Boolean(ex && m && !state.showEgg && m.phase !== 'dead'));
-      /* 拡大パネルより下のレイヤーにし、お世話操作を最優先。常駐時は前面のまま */
-      mpetE.style.zIndex = (ex && !state.showEgg) ? '10020' : '10040';
+      mpetE.style.zIndex = (ex && m && !state.showEgg) ? '10020' : '10040';
     }
     if (m && m.stats) {
       document.getElementById('b-h').style.width = m.stats.hunger + '%';
@@ -235,8 +237,9 @@
     if (!el) { return; }
     if (p.x < 0.05) { p.x = 0.05; }
     if (p.y < 0.05) { p.y = 0.05; }
-    el.style.left = Math.max(0, (window.innerWidth * p.x) - 60) + 'px';
-    el.style.top = Math.max(0, (window.innerHeight * p.y) - 120) + 'px';
+    var hW = 60 * UI_S, hH = 120 * UI_S;
+    el.style.left = Math.max(0, (window.innerWidth * p.x) - hW) + 'px';
+    el.style.top = Math.max(0, (window.innerHeight * p.y) - hH) + 'px';
   }
 
   function buildEggList() {
@@ -257,7 +260,7 @@
       var t = document.createElement('div');
       t.className = 't';
       t.textContent = e.name;
-      t.style.fontSize = '0.6rem';
+      t.className = 't egg-name';
       t.style.color = '#ccc';
       d.appendChild(t);
       d.addEventListener('click', function () {
@@ -272,7 +275,7 @@
     var d = e.data;
     if (!d || !d.type) { return; }
     if (d.type === 'state') {
-      state = d;
+      state = d; state._uiS = UI_S;
       if (!d.eggList) {
         d.eggList = [
           { id: 'green', name: '竜の卵' },
@@ -282,7 +285,9 @@
       }
       if (d.resName) { res = d.resName; }
       render();
-      if (d.expanded) {
+      if (d.showEgg) {
+        nuiSetFocus(1);
+      } else if (d.expanded) {
         nuiSetFocus(1);
       } else {
         nuiSetFocus(0);
@@ -326,6 +331,10 @@
   document.getElementById('close-ex').addEventListener('click', function () {
     post('closeExpanded', {});
   });
+  var eggD = document.getElementById('egg-dismiss');
+  if (eggD) {
+    eggD.addEventListener('click', function () { post('dismissNoPet', {}); });
+  }
   document.getElementById('btn-zukan').addEventListener('click', function () {
     post('zukan', { open: true });
   });
@@ -379,8 +388,9 @@
     if (lastDragPx < 3) { return; }
     var el = mpet, r = el.getBoundingClientRect();
     var rw = window.innerWidth || 1, rh = window.innerHeight || 1;
-    var rx = (r.left + 60) / rw;
-    var ry = (r.top + 100) / rh;
+    var hx = 60 * UI_S, hy = 100 * UI_S;
+    var rx = (r.left + hx) / rw;
+    var ry = (r.top + hy) / rh;
     rx = Math.max(0.01, Math.min(0.99, rx));
     ry = Math.max(0.01, Math.min(0.99, ry));
     post('setMiniPos', { x: rx, y: ry, dragPx: lastDragPx });

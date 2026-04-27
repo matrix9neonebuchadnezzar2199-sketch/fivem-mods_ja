@@ -22,7 +22,7 @@ local function readStore()
             return t
         end
     end
-    return { version = 1, lastUpdateAt = nowSec(), pet = nil, zukan = {}, miniPos = { x = 0.85, y = 0.80 } }
+    return { version = 1, lastUpdateAt = nowSec(), pet = nil, zukan = {}, miniPos = { x = 0.85, y = 0.80 }, noPetMenuDismissed = false }
 end
 
 ---@param store table
@@ -265,6 +265,9 @@ local function ensureStore(store)
     if not store.lastUpdateAt then
         store.lastUpdateAt = nowSec()
     end
+    if store.noPetMenuDismissed == nil then
+        store.noPetMenuDismissed = false
+    end
     if store.pet and type(store.pet.lastAction) ~= 'table' then
         store.pet.lastAction = { feed = 0, play = 0, sleep = 0, clean = 0 }
     end
@@ -436,7 +439,7 @@ local function nuiStatePayload(st, expanded, eggSel)
     return {
         type = 'state',
         expanded = expanded or false,
-        showEgg = (eggSel == true) or not hasPet(s.pet),
+        showEgg = (eggSel == true) or (not hasPet(s.pet) and (s.noPetMenuDismissed ~= true)),
         eggList = Config and Config.EggTypes,
         pet = pet,
         zukan = s.zukan,
@@ -503,7 +506,7 @@ RegisterNUICallback('closeExpanded', function(_, cb)
     if stateCache then
         stateCache = ensureStore(syncWorldTime(stateCache))
     end
-    pushNui(stateCache, false, not hasPet(stateCache and stateCache.pet))
+    pushNui(stateCache, false, false)
     isEggSelect = not hasPet(stateCache and stateCache.pet)
     if cb then
         cb('ok')
@@ -611,6 +614,31 @@ RegisterNUICallback('zukan', function(data, cb)
     end
 end)
 
+RegisterNUICallback('dismissNoPet', function(_, cb)
+    if not stateCache then
+        if cb then
+            cb('ok')
+        end
+        return
+    end
+    stateCache = ensureStore(stateCache)
+    if hasPet(stateCache.pet) then
+        if cb then
+            cb('ok')
+        end
+        return
+    end
+    stateCache.noPetMenuDismissed = true
+    nuiShowExpanded = false
+    isEggSelect = false
+    setNuiFocus(false)
+    writeStore(stateCache)
+    pushNui(stateCache, false, false)
+    if cb then
+        cb('ok')
+    end
+end)
+
 RegisterNUICallback('selectEgg', function(data, cb)
     local eid = data and (data.eggType or data.egg)
     if not eid or type(eid) ~= 'string' then
@@ -633,6 +661,7 @@ RegisterNUICallback('selectEgg', function(data, cb)
         return
     end
     stateCache = ensureStore(stateCache or readStore())
+    stateCache.noPetMenuDismissed = false
     local t = nowSec()
     stateCache.pet = {
         eggType = eid,
@@ -661,6 +690,7 @@ RegisterNUICallback('travel', function(data, cb)
     if data and (data.yes or data.confirmed) and stateCache then
         stateCache.pet = nil
         stateCache = ensureStore(stateCache)
+        stateCache.noPetMenuDismissed = false
         isEggSelect = true
         writeStore(stateCache)
         nuiShowExpanded = true
@@ -681,6 +711,7 @@ RegisterNUICallback('newPetAfterDead', function(_, cb)
     end
     stateCache.pet = nil
     isEggSelect = true
+    stateCache.noPetMenuDismissed = false
     writeStore(ensureStore(stateCache))
     nuiShowExpanded = true
     setNuiFocus(true)
@@ -694,10 +725,28 @@ RegisterCommand((Config and Config.Command) or 'losmon', function()
     stateCache = readStore()
     stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
     if not hasPet(stateCache.pet) then
-        isEggSelect = true
-        nuiShowExpanded = true
-        setNuiFocus(true)
-        pushNui(stateCache, true, true)
+        if stateCache.noPetMenuDismissed then
+            stateCache.noPetMenuDismissed = false
+            isEggSelect = true
+            nuiShowExpanded = true
+            setNuiFocus(true)
+            writeStore(stateCache)
+            pushNui(stateCache, true, true)
+        else
+            if nuiShowExpanded then
+                stateCache.noPetMenuDismissed = true
+                nuiShowExpanded = false
+                isEggSelect = false
+                setNuiFocus(false)
+                writeStore(stateCache)
+                pushNui(stateCache, false, false)
+            else
+                isEggSelect = true
+                nuiShowExpanded = true
+                setNuiFocus(true)
+                pushNui(stateCache, true, true)
+            end
+        end
     else
         isEggSelect = false
         nuiShowExpanded = not nuiShowExpanded
