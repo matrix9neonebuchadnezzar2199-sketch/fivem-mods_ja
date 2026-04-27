@@ -373,9 +373,10 @@
     document.getElementById('main-expanded').classList.toggle('hidden', !showExp);
     var mpetE = document.getElementById('mini-pet');
     if (mpetE) {
-      var showMini = Boolean(m && m.phase !== 'dead' && !ex);
-      mpetE.hidden = !showMini;
+      /* 拡大表示中もミニを表示。死んだペットだけ is-hidden（初回 /losmon 前は is-ready 未付与のまま CSS で非表示） */
+      var showMini = Boolean(m && m.phase !== 'dead');
       if (showMini) {
+        mpetE.classList.remove('is-hidden');
         posMini();
         setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
         applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
@@ -388,6 +389,8 @@
           if (lcurM >= lmaxM) { epcM = 100; }
           mef.style.width = Math.max(0, Math.min(100, epcM)) + '%';
         }
+      } else {
+        mpetE.classList.add('is-hidden');
       }
       mpetE.classList.toggle('mini--drag', Boolean(ex && m && m.phase !== 'dead'));
       mpetE.style.zIndex = (ex && m) ? '10020' : '10040';
@@ -536,6 +539,8 @@
         startHatchCountdownTicker();
       }
       if (d.resName) { res = d.resName; }
+      var mpu = document.getElementById('mini-pet');
+      if (mpu) { mpu.classList.add('is-ready'); }
       render();
       refreshDebugEvolveStatus();
       if (d.expanded) {

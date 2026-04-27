@@ -21,9 +21,7 @@ body,
 html { font-size: 144px; }
 .hidden { display: none !important; }
 .main-expanded, .zukan-overlay, .travel-dialog { pointer-events: auto; }
-#mini-pet { pointer-events: none; }
-#mini-pet.mini--drag { pointer-events: auto; cursor: grab; }
-#mini-pet.mini--drag:active { cursor: grabbing; }
+/* #mini-pet: 下のブロック＋.is-ready で表示制御 */
 
 #zukan-modal.zukan-overlay, #debug-evolve-modal, #travel-confirm {
   position: fixed; z-index: 13000; left: 0; top: 0; right: 0; bottom: 0;
@@ -558,11 +556,19 @@ html { font-size: 144px; }
   border-radius: 0;
   box-shadow: none;
   backdrop-filter: none;
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  display: none;
   gap: 0.04rem;
   pointer-events: none;
 }
-#mini-pet[hidden] { display: none !important; }
+#mini-pet.is-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+#mini-pet.is-ready.is-hidden { display: none !important; }
+#mini-pet.mini--drag { pointer-events: auto; cursor: grab; }
+#mini-pet.mini--drag:active { cursor: grabbing; }
 /* ミニ: レベル内 EXP（メインの expLevelPct と同一指標） */
 .mini-exp {
   display: flex;
