@@ -684,7 +684,8 @@ input[type='number'] {
     border-color: #ff4444;
 }
 
-#import-modal {
+#import-modal,
+#export-fallback-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -698,11 +699,13 @@ input[type='number'] {
     pointer-events: auto;
 }
 
-#import-modal.hidden {
+#import-modal.hidden,
+#export-fallback-modal.hidden {
     display: none;
 }
 
-#import-modal-content {
+#import-modal-content,
+#export-fallback-content {
     background: #1a1a2e;
     border: 2px solid #9944ff;
     border-radius: 12px;
@@ -713,11 +716,13 @@ input[type='number'] {
     overflow: auto;
 }
 
-#import-modal-content h3 {
+#import-modal-content h3,
+#export-fallback-content h3 {
     font-size: 0.8rem;
 }
 
-#import-textarea {
+#import-textarea,
+#export-fallback-text {
     width: 100%;
     min-height: 10rem;
     background: #0d0d1a;
@@ -731,13 +736,21 @@ input[type='number'] {
     margin: 8px 0;
 }
 
-#import-buttons {
+#import-textarea[readonly],
+#export-fallback-text[readonly] {
+    user-select: all;
+    cursor: text;
+}
+
+#import-buttons,
+#export-fallback-btns {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
 }
 
-#import-buttons button {
+#import-buttons button,
+#export-fallback-btns button {
     border: none;
     padding: 6px 12px;
     border-radius: 6px;

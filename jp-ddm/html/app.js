@@ -506,7 +506,63 @@
         return decodeURIComponent(escape(atob(s)));
     }
 
-    function exportPreset() {
+    /** FiveM NUI では `navigator.clipboard` が弾かれることが多い → 同期の execCommand を先に */
+    function copyTextExecCommand(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.setAttribute('tabindex', '-1');
+        ta.setAttribute('aria-hidden', 'true');
+        ta.style.cssText = 'position:fixed;inset:0;opacity:0;pointer-events:none;';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        let ok = false;
+        try {
+            ok = document.execCommand('copy') === true;
+        } catch (e) {
+            ok = false;
+        }
+        document.body.removeChild(ta);
+        return ok;
+    }
+
+    async function copyStringToClipboard(text) {
+        if (copyTextExecCommand(text)) {
+            return true;
+        }
+        if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    function openExportFallbackModal(text) {
+        const wrap = $('export-fallback-modal');
+        const el = $('export-fallback-text');
+        if (!wrap || !el) {
+            return false;
+        }
+        el.value = text;
+        wrap.classList.remove('hidden');
+        setTimeout(() => {
+            el.focus();
+            el.select();
+        }, 100);
+        return true;
+    }
+
+    function closeExportFallbackModal() {
+        const w = $('export-fallback-modal');
+        if (w) w.classList.add('hidden');
+    }
+
+    async function exportPreset() {
         const presetName = ($('preset-name').value || '').trim() || '無題';
         const youtubeUrl = ($('youtube-url').value || '').trim();
         const youtubeStart = parseInt($('youtube-start').value, 10) || 0;
@@ -542,15 +598,12 @@
         md += `- 合計再生時間: ${totalMin}分${String(totalSec).padStart(2, '0')}秒\n\n`;
         md += `<!-- jp-ddm-data:${base64} -->\n`;
 
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard
-                .writeText(md)
-                .then(
-                    () => showToast('📋 クリップボードにコピー'),
-                    () => showToast('コピー失敗。手で選択してください', true)
-                );
+        if (await copyStringToClipboard(md)) {
+            showToast('📋 クリップボードにコピー');
+        } else if (openExportFallbackModal(md)) {
+            showToast('下の窓を Ctrl+A → Ctrl+C（自動コピー失敗）');
         } else {
-            showToast('Clipboard 未対応', true);
+            showToast('コピーに失敗。もう一度お試しください', true);
         }
     }
 
@@ -604,7 +657,14 @@
         }
     }
 
-    $('btn-export').addEventListener('click', exportPreset);
+    $('btn-export').addEventListener('click', () => {
+        void exportPreset();
+    });
+    if ($('btn-export-fallback-close')) {
+        $('btn-export-fallback-close').addEventListener('click', () => {
+            closeExportFallbackModal();
+        });
+    }
     $('btn-import').addEventListener('click', showImportDialog);
     $('btn-import-execute').addEventListener('click', executeImport);
     $('btn-import-cancel').addEventListener('click', closeImportModal);
