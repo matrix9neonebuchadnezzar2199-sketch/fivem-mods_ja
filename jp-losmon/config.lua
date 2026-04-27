@@ -77,7 +77,8 @@ Config.Sprites = {
     adult_c = { idle  = '04_adult/04_adult_c-1.png', play  = '04_adult/04_adult_c-2.png', eat  = '04_adult/04_adult_c-3.png', sleep  = '04_adult/04_adult_c-4.png', happy  = '04_adult/04_adult_c-1.png', clean  = '04_adult/04_adult_c-1.png' },
     adult_d = { idle  = '04_adult/04_adult_d-1.png', play  = '04_adult/04_adult_d-2.png', eat  = '04_adult/04_adult_d-3.png', sleep  = '04_adult/04_adult_d-4.png', happy  = '04_adult/04_adult_d-1.png', clean  = '04_adult/04_adult_d-1.png' },
     sick  = { idle = '09_sick_idle.png',  eat = '09_sick_idle.png',  happy = '09_sick_sad.png', sleep = '09_sick_sleeping.png' },
-    grave = { idle = '10_grave_idle.png', eat = '10_grave_idle.png', happy = '10_grave_memorial.png', sleep = '10_grave_idle.png' },
+    -- 死亡：単一画（NUI は idle 基準。playAction 等で同画を出す）
+    grave = { idle = '05_d/05_d.png', eat = '05_d/05_d.png', happy = '05_d/05_d.png', sleep = '05_d/05_d.png' },
 }
 -- NUI ティッカー: 次の孵化/進化が近いと表示
 Config.TickerNearHatchMaxSec = 90
