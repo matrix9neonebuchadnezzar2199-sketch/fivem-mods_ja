@@ -31,12 +31,50 @@ html { font-size: 144px; }
   display: flex; align-items: center; justify-content: center; pointer-events: auto;
 }
 .zukan-panel, .td-inner { background: #1a1a24; color: #eee; padding: 0.2rem; border-radius: 0.12rem; max-width: 90vw; }
-.zukan-panel h2 { font-size: 0.22rem; position: relative; }
-.zukan-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, 1.1rem); gap: 0.1rem; max-height: 50vh; overflow: auto; margin-top: 0.1rem;
+/* 図鑑: 列がパネルより横に伸びて横スクロール・切り抜きが出ないよう、幅に収める */
+.zukan-panel {
+  width: min(4.2rem, 90vw);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
-.zk-cell { width: 1.1rem; height: 1.1rem; border: 0.01rem solid #456; border-radius: 0.05rem; background: #1118 center/ cover no-repeat; }
-.zk-sil { filter: brightness(0) blur(0.5px); }
+.zukan-panel h2 {
+  font-size: 0.22rem; position: relative; margin: 0 0 0.04rem 0; padding: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.1rem; flex-wrap: nowrap;
+}
+.zukan-panel h2 .xbtn { float: none; flex: 0 0 auto; margin: 0; }
+.zukan-grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.08rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 0.1rem;
+}
+.zk-cell {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  height: auto;
+  border: 0.01rem solid #456;
+  border-radius: 0.05rem;
+  background-color: #1a1e2a;
+  background-repeat: no-repeat;
+  background-position: center;
+  /* cover はタイル端が切れる。図鑑は全体表示 */
+  background-size: contain;
+  image-rendering: pixelated; /* ドット絵 */
+}
+/* 未開放: 真っ黒にならないよう、シルエット感を保つ */
+.zk-sil {
+  filter: grayscale(1) brightness(0.5) contrast(0.85);
+  opacity: 0.75;
+}
 .travel-dialog .td-inner p { margin-bottom: 0.1rem; line-height: 1.5; }
 .btn-ok, .btn-ng, .xbtn, .care, .btn-sec { cursor: pointer; color: #eee; font-size: 0.2rem; }
 .xbtn { float: right; border: none; background: #333; border-radius: 0.04rem; padding: 0.04rem 0.1rem; }

@@ -488,14 +488,17 @@
     } else if (d.type === 'levelUp') {
       showMiniLevelUp();
     } else if (d.type === 'zukan' && d.open === true) {
-      if (d.zukan) { state = state || {}; state.zukan = d.zukan; }
+      state = state || {};
+      if (d.zukan) { state.zukan = d.zukan; }
+      if (d.zukanMap) { state.zukanMap = d.zukanMap; }
+      if (d.zukanIds) { state.zukanIds = d.zukanIds; }
       document.getElementById('zukan-modal').classList.remove('hidden');
       var zb = document.getElementById('zukan-body');
       zb.innerHTML = '';
-      var have = (state && state.zukan) || [];
+      var have = state.zukan || [];
       if (typeof have.indexOf !== 'function') { have = Object.keys(have || {}); }
-      var m = (state && state.zukanMap) || {};
-      var order = (state && state.zukanIds) || Object.keys(m);
+      var m = state.zukanMap || {};
+      var order = state.zukanIds || Object.keys(m);
       order.forEach(function (k) {
         if (!m[k]) { return; }
         var c = document.createElement('div');

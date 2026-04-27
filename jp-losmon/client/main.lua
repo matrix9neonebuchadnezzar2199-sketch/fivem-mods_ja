@@ -559,6 +559,19 @@ local function addExpToPet(pet, amount)
     return oldL, newL
 end
 
+---@return table
+local function buildZukanMap()
+    local zukanMap = {}
+    if Config and Config.ZukanIds and Config.Sprites then
+        for _, zid in ipairs(Config.ZukanIds) do
+            if Config.Sprites[zid] and Config.Sprites[zid].idle then
+                zukanMap[zid] = Config.Sprites[zid].idle
+            end
+        end
+    end
+    return zukanMap
+end
+
 ---@param st table|nil
 local function nuiStatePayload(st, expanded)
     local s = st or readStore()
@@ -574,14 +587,7 @@ local function nuiStatePayload(st, expanded)
     if pet and hasPet(pet) and isAlive(pet) and (pet.phase == 'baby' or pet.phase == 'child') then
         nPhaseLeft = math.max(0, (pet.phaseStartAt or 0) + (Config.GrowthInterval or 3600) - n)
     end
-    local zukanMap = {}
-    if Config and Config.ZukanIds and Config.Sprites then
-        for _, zid in ipairs(Config.ZukanIds) do
-            if Config.Sprites[zid] and (Config.Sprites[zid].idle) then
-                zukanMap[zid] = Config.Sprites[zid].idle
-            end
-        end
-    end
+    local zukanMap = buildZukanMap()
     local al = false
     if pet and hasPet(pet) and isAlive(pet) and pet.phase ~= 'egg' and pet.phase ~= 'dead' then
         al = true
@@ -855,7 +861,18 @@ end)
 
 RegisterNUICallback('zukan', function(data, cb)
     local o = data and (data.open == true)
-    SendNUIMessage({ type = 'zukan', open = o, zukan = (stateCache and zukanListify(stateCache.zukan)) or {} })
+    if stateCache then
+        stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
+    end
+    local zm = buildZukanMap()
+    local zids = (Config and Config.ZukanIds) or {}
+    SendNUIMessage({
+        type = 'zukan',
+        open = o,
+        zukan = (stateCache and zukanListify(stateCache.zukan)) or {},
+        zukanMap = zm,
+        zukanIds = zids,
+    })
     if cb then
         cb('ok')
     end
