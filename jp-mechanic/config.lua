@@ -11,8 +11,8 @@ Config.ComboResetOnFail = true
 
 -- 就業用 NPC（整備工場 MLO 付近。運営で座標調整）
 Config.JobPedModel = 's_m_m_autoshop_01'
--- 目安: LS カーミーティング辺り（要調整）
-Config.JobPedCoords = vector4(731.0, -1088.0, 22.17, 0.0)
+-- テスト配置: x, y, z, heading
+Config.JobPedCoords = vector4(221.12, -808.97, 30.66, 60.93)
 Config.JobPedScenario = 'WORLD_HUMAN_HAMMERING'
 Config.InteractRadius = 2.0
 -- E キーで NUI 開始（併用で ox_target 可）
