@@ -16,5 +16,6 @@
 - [jp-hospital](jp-hospital/README.md) — 病院カルテ整理・薬梱包（NUI 内職・Qbox）
 - [jp-koban](jp-koban/README.md) — 警察向け住宅地巡回パトロール（Qbox・完遂ボーナス）
 - [jp-LetterCarrier](jp-LetterCarrier/README.md) — 配達ジョブ（NUI/配送車/報酬）
+- [jp-mechanic](jp-mechanic/README.md) — 整備工場 伝票整理内職（NUI・部品照合・Qbox）
 
 [ライセンス（MIT）](LICENSE)

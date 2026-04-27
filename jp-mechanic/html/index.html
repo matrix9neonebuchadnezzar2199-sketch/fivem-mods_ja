@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <title>整備工場 伝票</title>
+</head>
+<body>
+    <div id="app" class="hidden">
+        <div id="diffView" class="diff-view hidden">
+            <h2 class="diff-title">難易度を選ぶ</h2>
+            <p class="diff-hint">出題数・正解部品数・ダミー数・基礎報酬が難易度で変わります。</p>
+            <div id="diffButtons" class="diff-buttons" role="group" aria-label="難易度"></div>
+            <button type="button" id="btnDiffCancel" class="btn-diff-cancel" aria-label="難易度選択をやめる">中止</button>
+        </div>
+        <div id="gameView" class="game-view hidden">
+        <div class="frame">
+            <div class="panel left-panel">
+                <h2 class="h-karte">📄 伝票 <span id="karteNo">#1</span></h2>
+                <div class="card field">
+                    <div class="flabel">車種</div>
+                    <p id="vehicle" class="serif sm"></p>
+                </div>
+                <div class="card field">
+                    <div class="flabel">症状</div>
+                    <p id="symptom" class="serif"></p>
+                </div>
+                <div class="card field">
+                    <div class="flabel">整備内容（診断）</div>
+                    <p id="diagnosis" class="serif sm"></p>
+                </div>
+                <div class="card field">
+                    <div class="flabel">必要な部品・作業</div>
+                    <ul id="requiredMeds" class="reqlist"></ul>
+                </div>
+                <div class="stats">
+                    <span class="combo-line"><span class="fi">🔥</span> 連続 <strong id="comboN">0</strong></span>
+                    <span>累計 <strong id="totalG">$0</strong></span>
+                </div>
+            </div>
+            <div class="panel right-panel">
+                <h2>🔧 部品・作業リスト</h2>
+                <div id="medList" class="med-scroll" tabindex="0"></div>
+                <div class="actions">
+                    <button type="button" id="btnPack" class="btn-pack">📤 発注する</button>
+                    <button type="button" id="btnQuit" class="btn-quit">🚪 退勤する</button>
+                </div>
+            </div>
+        </div>
+        <div id="successFlash" class="success-flash hidden" aria-hidden="true"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+
+    <div id="dayReport" class="day-report hidden" aria-hidden="true">
+        <div class="day-box">
+            <h2>日報 / 退勤</h2>
+            <p class="y">お疲れ様でした。</p>
+            <ul class="rep-list">
+                <li>発注した伝票: <strong id="repK">0</strong> 件</li>
+                <li>最大コンボ: <strong id="repMaxC">0</strong></li>
+                <li>合計獲得: <strong id="repTot">$0</strong></li>
+                <li>勤務（目安）: 約 <strong id="repMin">0</strong> 分</li>
+            </ul>
+            <button type="button" id="dayClose" class="btn-day-close">閉じる</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
