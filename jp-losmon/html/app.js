@@ -106,9 +106,11 @@
       if (frames <= 1) {
         mEl.style.backgroundSize = wM + 'px ' + hM + 'px';
         mEl.classList.remove('sprite-anim');
+        mEl.style.animation = 'none';
       } else {
         mEl.classList.add('sprite-anim');
         mEl.style.backgroundSize = (frames * wM) + 'px ' + hM + 'px';
+        mEl.style.animation = 'sprite-play 0.8s steps(' + frames + ') infinite';
       }
     }
     if (iEl) {
@@ -127,7 +129,7 @@
         iEl.style.animation = 'none';
       } else {
         iEl.style.backgroundSize = (frames * wI) + 'px ' + hI + 'px';
-        iEl.style.animation = '';
+        iEl.style.animation = 'sprite-min 0.8s steps(' + frames + ') infinite';
       }
     }
     var st = document.getElementById('dyn-sprite-kf');

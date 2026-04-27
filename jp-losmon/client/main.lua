@@ -408,6 +408,21 @@ local function cooldownLeft(st, a)
     return math.max(0, t - nowSec())
 end
 
+---@param pet table|nil
+---@return number
+local function spriteStripFramesForPet(pet)
+    if not pet or not hasPet(pet) then
+        return (Config and Config.SpriteStripFrames) or 4
+    end
+    if pet.phase == 'egg' then
+        return (Config and Config.EggSpriteStripFrames) or 1
+    end
+    if pet.phase == 'dead' or pet.evolutionId == 'grave' then
+        return (Config and Config.GraveSpriteStripFrames) or 1
+    end
+    return (Config and Config.SpriteStripFrames) or 4
+end
+
 ---@param st table|nil
 local function nuiStatePayload(st, expanded)
     local s = st or readStore()
@@ -461,7 +476,7 @@ local function nuiStatePayload(st, expanded)
             statDecay = Config.StatDecayRate,
             tickerNearHatch = Config.TickerNearHatchMaxSec or 90,
             tickerNearPhase = Config.TickerNearPhaseMaxSec or 600,
-            spriteStripFrames = (Config and Config.SpriteStripFrames) or 1,
+            spriteStripFrames = spriteStripFramesForPet(pet),
         },
         sprite = getSpriteSetForPet(pet),
         nextPhaseInSec = nPhaseLeft,

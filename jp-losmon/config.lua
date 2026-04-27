@@ -31,8 +31,11 @@ Config.IdealCareIntervalSec = 1200
 Config.ChildToGoodChildThreshold = 50
 -- 幼年期の後半から成熟期へ。レアDの出現率（%）残り 90% は a/b/c を均等
 Config.AdultRarePercent = 10
--- NUI: 1 ポーズ1ファイル。4コマ焼き込み1枚のときは 4 を指定
-Config.SpriteStripFrames = 1
+-- NUI: 横4コマ1枚のスプライト（512×128 等）。1ポーズ1ファイルのときは 1
+Config.SpriteStripFrames = 4
+-- 卵（単一画）・旅立ち（05_d 単一画）は 1
+Config.EggSpriteStripFrames = 1
+Config.GraveSpriteStripFrames = 1
 -- 旧仕様。未使用（互換用に残置）
 Config.EvolutionTree = { default = {} }
 -- 図鑑 ID（新フォーム）
