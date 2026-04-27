@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'JP-Mods'
 description '整備工場 伝票整理内職（NUI：症状→部品・作業）'
-version '1.0.2'
+version '1.0.3'
 
 shared_script 'config.lua'
 shared_script 'data/slips_easy.lua'
@@ -19,6 +19,9 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
+    'data/slips_easy.lua',
+    'data/slips_medium.lua',
+    'data/slips_hard.lua',
 }
 
 dependencies {

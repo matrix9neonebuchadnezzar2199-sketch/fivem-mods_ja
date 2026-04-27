@@ -29,7 +29,7 @@ Config.Difficulties = {
     {
         id = 'easy',
         label = '初級 ⭐',
-        description = '基本的な整備（正解 1～2 個前後）',
+        description = '基本的な整備（出題30問・正解 1～2 個前後）',
         kartesKey = 'Slips',
         rewardBase = 300,
         decoyCount = 20,
@@ -38,7 +38,7 @@ Config.Difficulties = {
     {
         id = 'medium',
         label = '中級 ⭐⭐',
-        description = '複合トラブル（正解 2～4 個前後）',
+        description = '複合トラブル（出題30問・正解 2～4 個前後）',
         kartesKey = 'SlipsMedium',
         rewardBase = 500,
         decoyCount = 22,
@@ -47,7 +47,7 @@ Config.Difficulties = {
     {
         id = 'hard',
         label = '上級 ⭐⭐⭐',
-        description = '総合整備・紛らわし（正解 3～6 個前後）',
+        description = '総合整備・紛らわし（出題30問・正解 3～6 個前後）',
         kartesKey = 'SlipsHard',
         rewardBase = 800,
         decoyCount = 25,

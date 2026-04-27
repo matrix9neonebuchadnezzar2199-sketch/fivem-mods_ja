@@ -1,5 +1,5 @@
--- 初級 出題庫（Config.Difficulties の kartesKey = Kartes）
--- answers は config.lua Config.Medicines の id 配列
+-- 初級 30 問: 基本的な症状と薬の対応
+-- answers は config.lua Config.Medicines の id
 
 Config.Kartes = {
     {
@@ -111,5 +111,45 @@ Config.Kartes = {
         symptom = '子供が転んで額を打った、たんこぶ、軽い出血',
         diagnosis = '頭部打撲＋小切傷',
         answers = { 'ice_pack', 'antiseptic', 'gauze', 'bandaid' },
+    },
+    {
+        symptom = '喉がイガイガする、声がかすれている、咳は出ない',
+        diagnosis = '急性咽頭炎',
+        answers = { 'throat_lozenge', 'antibiotic' },
+    },
+    {
+        symptom = '鼻血が出た、ティッシュで押さえても10分止まらない',
+        diagnosis = '鼻出血',
+        answers = { 'gauze', 'ice_pack' },
+    },
+    {
+        symptom = 'ランニング後にふくらはぎがつった、痛くて歩けない',
+        diagnosis = '腓腹筋痙攣（こむら返り）',
+        answers = { 'compress_hot', 'painkiller', 'ointment' },
+    },
+    {
+        symptom = '紙で指を切った、小さいが血がにじんでいる',
+        diagnosis = '小切傷',
+        answers = { 'antiseptic', 'bandaid' },
+    },
+    {
+        symptom = '二日酔い、頭痛、吐き気、胃がムカムカする',
+        diagnosis = '急性アルコール性胃炎',
+        answers = { 'stomach_med', 'anti_nausea', 'painkiller', 'saline' },
+    },
+    {
+        symptom = '肘をぶつけた、少し腫れている、動かすと痛い',
+        diagnosis = '肘打撲',
+        answers = { 'ice_pack', 'compress_cold', 'painkiller' },
+    },
+    {
+        symptom = '日焼けで肩と背中が真っ赤、ヒリヒリ痛い',
+        diagnosis = '日光皮膚炎（サンバーン）',
+        answers = { 'ointment', 'ice_pack', 'saline' },
+    },
+    {
+        symptom = '咳が長引いている、熱はない、夜に悪化する',
+        diagnosis = '咳喘息の疑い',
+        answers = { 'cough_tablet', 'throat_lozenge' },
     },
 }

@@ -32,7 +32,7 @@ Config.Difficulties = {
     {
         id = 'easy',
         label = '初級 ⭐',
-        description = '基本的な症状と薬の組み合わせ（正解 1〜4 個前後）',
+        description = '基本的な症状と薬の組み合わせ（出題30問・正解 1〜4 個前後）',
         kartesKey = 'Kartes',
         rewardBase = 300,
         decoyCount = 20,
@@ -41,7 +41,7 @@ Config.Difficulties = {
     {
         id = 'medium',
         label = '中級 ⭐⭐',
-        description = '似た薬の判別が必要（正解 3〜5 個前後）',
+        description = '似た薬の判別が必要（出題30問・正解 3〜5 個前後）',
         kartesKey = 'KartesMedium',
         rewardBase = 500,
         decoyCount = 22,
@@ -50,7 +50,7 @@ Config.Difficulties = {
     {
         id = 'hard',
         label = '上級 ⭐⭐⭐',
-        description = '合併症・禁忌の読み分け（正解 3〜6 個前後）',
+        description = '合併症・禁忌の読み分け（出題30問・正解 3〜6 個前後）',
         kartesKey = 'KartesHard',
         rewardBase = 800,
         decoyCount = 25,
@@ -92,4 +92,4 @@ Config.Medicines = {
     { id = 'throat_lozenge',  name = 'のど飴（医療用）',  icon = '🍬' },
 }
 
--- 症状カルテ出題: data/kartes_*.lua（config の次に shared_script 読み込み。answers は上記 Medicines の id 配列）
+-- 症状カルテ出題: data/kartes_{easy,medium,hard}.lua（各難易度 30 問。config の次に shared_script 読み込み。answers は上記 Medicines の id 配列）
