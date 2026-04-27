@@ -668,9 +668,12 @@ local function setNuiFocus(focus)
 end
 
 local function saveAuto()
-    if stateCache then
-        writeStore(stateCache)
+    if not stateCache then
+        return
     end
+    -- 歩行なしの待機中は advancePhases（孵化・成長）が走らないケースを防ぐ
+    stateCache = ensureStore(syncWorldTime(ensureStore(stateCache)))
+    writeStore(stateCache)
 end
 
 RegisterNUICallback('closeExpanded', function(_, cb)
@@ -911,6 +914,27 @@ RegisterCommand((Config and Config.Command) or 'losmon', function()
     setNuiFocus(nuiShowExpanded)
     pushNui(stateCache, nuiShowExpanded)
 end, false)
+
+-- 2 秒ごと: 孵化・成長の time 通過をクライアント常時に反映（静止中でも卵が孵る）
+CreateThread(function()
+    while true do
+        Wait(2000)
+        if not stateCache or not hasPet(stateCache.pet) or not isAlive(stateCache.pet) then
+        else
+            stateCache = ensureStore(stateCache)
+            local was = stateCache.pet.phase
+            stateCache = syncWorldTime(stateCache)
+            local nowP = stateCache.pet
+            if nowP and (was ~= nowP.phase) then
+                writeStore(stateCache)
+            end
+            -- 卵中は表示（残り秒）を Lua 基準で再送。それ以外はフェーズ変化が主目的
+            if (nowP and (nowP.phase == 'egg' or was == 'egg' or was ~= nowP.phase)) and nowP then
+                pushNui(stateCache, nuiShowExpanded)
+            end
+        end
+    end
+end)
 
 -- 歩行距離・乗車中の走行距離に応じて EXP を加算（KVS 保存。生存中のペットのみ）
 CreateThread(function()

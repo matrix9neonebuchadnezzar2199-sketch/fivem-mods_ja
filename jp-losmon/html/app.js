@@ -53,7 +53,9 @@
     act = act || 'idle';
     if (def.mode === 'egg' && def.egg) {
       var sec = (state && (state.eggShowCrackSec|0)) || 30;
-      if (state && state.pet && state.pet.phase === 'egg' && (state.hatchLeftSec != null) && (state.hatchLeftSec|0) > 0 && (state.hatchLeftSec|0) <= sec) {
+      /* 殻: 直前 N 秒、または 0 以下でまだ phase=卵（Lua の孵化まち）。NUI 先走りで「また通常卵」に戻るのを防ぐ */
+      var hL = (state && state.pet && state.pet.phase === 'egg' && (state.hatchLeftSec != null)) ? (state.hatchLeftSec|0) : 99999;
+      if (state && state.pet && state.pet.phase === 'egg' && hL <= sec) {
         var cf = def.crack && (def.crack[act] || def.crack.idle);
         if (cf) { div.style.backgroundImage = 'url(' + nuiUrl(cf) + ')'; return; }
       }
