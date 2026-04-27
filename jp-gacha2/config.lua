@@ -112,7 +112,7 @@ Config.Timing = {
 }
 
 -- 表示スケール
-Config.UIScale = 2.0  -- 1.0 = デフォルト、2.0 = 2倍
+Config.UIScale = 4.0  -- 1.0 = デフォルト。大きいほどNUI拡大（NUI内 --scale として使用）
 
 -- マップBlip
 Config.Blip = {
@@ -138,8 +138,10 @@ Config.StashName = 'gacha_prizes'
 Config.StashLabel = 'ガチャ景品保管'
 Config.StashSlots = 100
 Config.StashMaxWeight = 2000000
--- スタッシュが空のとき、Config.ItemsByRarity へフォールバックする
-Config.FallbackToConfigIfStashEmpty = true
+-- スタッシュが空のとき、Config.ItemsByRarity へフォールバックする（false 推奨: 景品は全てスタッシュ軸）
+Config.FallbackToConfigIfStashEmpty = false
+-- 景品一覧をスタッシュ在庫のみにする（false の場合は旧 Config 枠も併用）
+Config.CatalogStashOnly = true
 
 -- ガチャUIテーマ（NUI で色変数に使う。ネオン/クラシック/ゴールド）
 Config.Themes = {

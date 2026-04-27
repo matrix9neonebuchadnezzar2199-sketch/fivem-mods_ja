@@ -1,0 +1,17 @@
+README 用スクリーンショット（任意の PNG / JPG で可）
+
+推奨ファイル名（相対パス: docs/readme-images/ から）
+--------------------
+・メニュー             → menu.png
+・管理者パスワード画面  → admin-password.png
+・管理画面１           → admin-1.png
+・管理画面２           → admin-2.png
+・在庫管理             → inventory-stash.png
+・ガチャ画面            → gacha-screen.png
+・ガチャ結果            → gacha-result.png
+
+README から貼る例 (Markdown)
+--------------------
+![メニュー](docs/readme-images/menu.png)
+![ガチャ画面](docs/readme-images/gacha-screen.png)
+![ガチャ結果](docs/readme-images/gacha-result.png)

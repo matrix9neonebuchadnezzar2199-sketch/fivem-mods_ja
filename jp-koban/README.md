@@ -1,85 +1,55 @@
 # jp-koban
 
-警察向け**住宅地巡回パトロール**（Qbox + ox_lib + ox_target + qbx_core）。
+**警察向けの住宅地巡回パトロール**リソースです。Qbox 系（`qbx_core`）を想定し、**DB なし**で完遂時に現金ボーナスを一括付与します。
 
-## 紹介画像
+## スクリーンショット
 
-`docs/images/` に、次の**ファイル名**で PNG などを置くと、下に表示されます（未配置の間は表示されない場合があります）。
+| 内容 |  |
+| --- | --- |
+| 受注（5 箇所 / 10 箇所コース） | ![受注画面](docs/images/01-order.png) |
+| 次の地点まで道なりナビ | ![自動ナビ](docs/images/02-auto-nav.png) |
+| 住宅地周辺の巡回 | ![住宅地パトロール](docs/images/03-residential-patrol.png) |
+| 1 箇所の巡回確認が完了したところ | ![1 箇所完了](docs/images/04-checkpoint-done.png) |
 
-### 1. 受注画面
+## 遊び方（プレイヤー）
 
-巡回コース（5 箇所 / 10 箇所）を選ぶ**受付 NUI**。
+1. **受付用 NPC**（`config.lua` の座標）の警察官に近づき、**E** または `ox_target` でメニュー。
+2. コースを選ぶと、**ランダムな地点**に順番にナビ（ウェイポイント＋ルート）が付く。
+3. 各地点の近くで**徒歩**、**E**（巡回確認）— 全箇所を踏んだら受付に戻り、**巡回報告**で報酬受取。
 
-![受注画面](docs/images/01-order.png)
+画面左のテキストで、**何箇所目／何箇所中**と**完遂時の想定額**が出ます。巡回中の連打や車内確認は想定外なので、案内に従ってください。
 
-### 2. パトロールの経路は自動でナビ設定
+## 導入（サーバ運営者）
 
-巡回開始後、**次の地点へ道なり**が**ウェイポイント＋ルート**付きで用意されます。
+| 前提 | 備考 |
+| --- | --- |
+| `qbx_core` | ジョブ参照に使用 |
+| `ox_lib` | 通知・プログレス等 |
+| `ox_target` | 受付 NPC（併用） |
+| 現金付与 | サーバ側の設計（本 MOD の `server/main.lua` 参照）に合わせて利用してください |
 
-![自動ナビ](docs/images/02-auto-nav.png)
+1. リポジトリから `jp-koban` を `resources` に置く。  
+2. `server.cfg` 例: `ensure jp-koban`（依存先が先に起動するように）  
+3. `config.lua` の**座標・報酬・必須ジョブ**を、自サーバの地図・給与に合わせる。
 
-### 3. 住宅をパトロール
+`config.lua` には**日本語コメント**で各項目を説明しています。主なのは次の通りです。
 
-**住宅地まわり**の巡回点へ向かうイメージ。
+- **`Config.RequiredJob`**: 受注・報告を許可する職名（Qbox の `job.name`）。例: `police`
+- **`Config.CompletionBonus5` / `CompletionBonus10`**: 5 箇所・10 箇所コース**完遂**時の一括ボーナス
+- **`Config.PatrolLocations`**: 候補から**ランダムに**抜き、所要数まで巡回させます。点数が足りないと受注失敗扱いになります。
+- **`Config.JobPedCoords` / `JobPedZOffset`**: 受付 NPCの位置。署内 MLO では**足が沈む／浮く**なら `JobPedZOffset` だけ小さく調整してください。
 
-![住宅地パトロール](docs/images/03-residential-patrol.png)
+## 仕様（簡易）
 
-### 4. 一か所完了した場面
+- **受注・完遂**は、クライアント表示と**サーバのジョブ検証**の双方で、設定した職名と一致する場合に限り有効化されます（不正向けの二重チェック）。
+- **他フレームワーク依存はありません**（Qbox 前提の箇所は `qbx_core` の `GetPlayerData` 等。移植時は同ファイルを置き換え）。
+- 途中キャンセルは `config.lua` の **`Config.CancelCommand`** から（既定 `patrol`）。
 
-1 箇所で **E 巡回確認**が終わり、**次の地点**へ向かう直前／直後のイメージ。
+## クレジット
 
-![1 箇所完了](docs/images/04-checkpoint-done.png)
+- プロジェクト: [AGENTS.md](../AGENTS.md) の方針に従う **jp-mods** 風味のスタンドアロン実装。  
+- 紹介画像: 上記 4 枚。パスは `docs/images/01-order.png` 等。
 
----
+## バージョン
 
-## 導入
-
-- `config.lua` の座標・報酬を確認
-- `server.cfg` 例: `ensure jp-koban`（`ox_lib` / `ox_target` / `qbx_core` 前提）
-
----
-
-## ジョブ制限
-
-- **NPC への `ox_target` インタラクト**に `canInteract` を付与
-- `exports.qbx_core:GetPlayerData().job.name == 'police'`（設定値: `config.lua` の `Config.RequiredJob`）のとき**のみ**、巡回受付・巡回報告のターゲットを表示
-- 条件を満たさないプレイヤーには**ターゲットが出ない**（従来どおり、誤爆通知は出さない）
-- **サーバー**の `jp-koban:completePatrol` 受信時に、再度 `player.PlayerData.job.name == Config.RequiredJob` を検証し、不正な報酬付与を防ぐ
-- ジョブ名の変更は `config.lua` の次を編集（運営用コメント付き）:
-
-```lua
-Config.RequiredJob = 'police'
-```
-
-### 実装参照
-
-**config.lua**
-
-```lua
--- ジョブ制限（Qbox: job.name と一致するプレイヤーだけ受注・報告可）
-Config.RequiredJob = 'police'
-```
-
-**client `ox_target` の `canInteract` 例（概念）**
-
-- `GetPlayerData()` の `job.name` が `Config.RequiredJob` と一致するか判定
-
-**server `completePatrol`**
-
-- `GetPlayer` 取得後に `PlayerData.job.name` を `Config.RequiredJob` と照合。不一致の場合はセッション破棄・報酬なし（必要に応じてクライアントへ失敗を返却）
-
----
-
-## 受付 NPC の足元（MLO 室内）
-
-- `config.lua` の **`Config.JobPedZOffset`**（既定 **+0.1**）で、床に**沈まない**よう足元を上げる。**浮きすぎ**る場合は `0.05` ～ `0.0` に下げ、**沈む**場合は `0.1` ～ `0.2` に上げる。  
-- 旧版の「高さネイティブに合わせて下げるだけ」の挙動は、署内 MLO では**誤検出**で足が潜るため廃止済み。
-
-## 操作（クライアント表示）
-
-- **巡回先**: 到達候補に近づくと**大きい青系の円**＋**内側の黄緑円**（E が効く範囲の目安）が**地面付近**に出ます。画面**左下**の **`~INPUT_CONTEXT~`（E）** 系ヘルプで案内。`NUI` を開いている（フォーカス中）ときはヘルプ非表示。  
-- **受付 NPC（署前）**: 同様に**左下ヘルプ**＋**E** で受付／報告（`ox_target` も併用可）。
-
-## 受注制御（サーバー）
-
-- `lib.callback` `jp-koban:server:tryStartPatrol` でも、受注前に上記 `job.name` を再チェック
+- `fxmanifest.lua` の `version` 参照

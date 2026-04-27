@@ -24,12 +24,14 @@ const inputCancelButton = document.getElementById('input-cancel');
 const topMenuContainer = document.getElementById('top-menu-container');
 const topMenuTitle = document.getElementById('top-menu-title');
 const btnGacha = document.getElementById('btn-gacha');
+const btnStash = document.getElementById('btn-stash');
 const btnTopAdmin = document.getElementById('btn-top-admin');
 const passContainer = document.getElementById('pass-container');
 const passField = document.getElementById('pass-field');
 const passSubmit = document.getElementById('pass-submit');
 const passCancel = document.getElementById('pass-cancel');
 const passError = document.getElementById('pass-error');
+const passTitleEl = document.getElementById('pass-title');
 const adminPassCur = document.getElementById('admin-pass-cur');
 const adminPassNew = document.getElementById('admin-pass-new');
 const adminPassChange = document.getElementById('admin-pass-change');
@@ -60,6 +62,8 @@ let lastGachaRarities = [];
 let adminRarityKeyOrder = ['UR', 'SSR', 'SR', 'R'];
 let lastMaxPull = 10;
 let inPassFlow = false;
+let sessionUnlocked = false;
+let passflowPurpose = 'admin';
 
 let allTimers = [];
 let currentMultiData = null;
@@ -74,8 +78,27 @@ function getResourceName() {
     return 'jp-gacha';
 }
 
+/** 獲得アイテム画像（ox_inventory: web/images/<name>.png）。NUI では cfx-nui- が有効 */
+function getGachaItemImageUrl(r) {
+    if (!r) {
+        return '';
+    }
+    var s = (r.itemImage && String(r.itemImage).trim()) || '';
+    if (s) {
+        if (s.indexOf('nui://ox_inventory/') === 0) {
+            return 'https://cfx-nui-ox_inventory' + s.substring('nui://ox_inventory'.length);
+        }
+        return s;
+    }
+    var n = (r.itemSpawnName && String(r.itemSpawnName).trim()) || '';
+    if (n) {
+        return 'https://cfx-nui-ox_inventory/web/images/' + encodeURIComponent(n) + '.png';
+    }
+    return '';
+}
+
 function setScale(scale) {
-    const numeric = Number(scale) || 2;
+    const numeric = Number(scale) || 4;
     const appliedScale = numeric < 2 ? 2 : numeric;
     document.documentElement.style.setProperty('--scale', appliedScale);
     // FiveM の Chromium 環境で calc(10px * 2) が効かない場合は transform スケールへフォールバック
@@ -136,6 +159,14 @@ function resetAll() {
     cutinImg.src = '';
     resultLayer.classList.add('hidden');
     resultLayer.classList.remove('show');
+    var _riw = document.getElementById('result-item-icon-wrap');
+    if (_riw) {
+        _riw.classList.add('hidden');
+    }
+    var _ric = document.getElementById('result-item-icon');
+    if (_ric) {
+        _ric.removeAttribute('src');
+    }
     multiCapsuleArea.classList.add('hidden');
     multiCapsuleArea.innerHTML = '';
     multiResultArea.classList.add('hidden');
@@ -187,7 +218,8 @@ function hideTopAndPass() {
 }
 
 function showTopMenuView(data) {
-    setScale((data && data.scale) || 2);
+    setScale((data && data.scale) || 4);
+    sessionUnlocked = !!(data && data.sessionUnlocked);
     inPassFlow = false;
     if (passContainer) {
         passContainer.classList.add('hidden');
@@ -220,10 +252,17 @@ if (btnGacha) {
         postNui('topMenuSelect', { value: 'gacha' });
     });
 }
-if (btnTopAdmin) {
-    btnTopAdmin.addEventListener('click', function (e) {
+if (btnStash) {
+    btnStash.addEventListener('click', function (e) {
         if (e) {
             e.preventDefault();
+        }
+        if (sessionUnlocked) {
+            if (topMenuContainer) {
+                topMenuContainer.classList.add('hidden');
+            }
+            postNui('topMenuSelect', { value: 'stash' });
+            return;
         }
         if (topMenuContainer) {
             topMenuContainer.classList.add('hidden');
@@ -233,6 +272,44 @@ if (btnTopAdmin) {
         }
         if (passError) {
             passError.classList.add('hidden');
+        }
+        passflowPurpose = 'stash';
+        if (passTitleEl) {
+            passTitleEl.textContent = '管理パスワード（在庫管理）';
+        }
+        inPassFlow = true;
+        if (passContainer) {
+            passContainer.classList.remove('hidden');
+        }
+        if (passField) {
+            passField.focus();
+        }
+    });
+}
+if (btnTopAdmin) {
+    btnTopAdmin.addEventListener('click', function (e) {
+        if (e) {
+            e.preventDefault();
+        }
+        if (sessionUnlocked) {
+            if (topMenuContainer) {
+                topMenuContainer.classList.add('hidden');
+            }
+            postNui('topMenuSelect', { value: 'openAdmin' });
+            return;
+        }
+        if (topMenuContainer) {
+            topMenuContainer.classList.add('hidden');
+        }
+        if (passField) {
+            passField.value = '';
+        }
+        if (passError) {
+            passError.classList.add('hidden');
+        }
+        passflowPurpose = 'admin';
+        if (passTitleEl) {
+            passTitleEl.textContent = '管理画面のパスワード';
         }
         inPassFlow = true;
         if (passContainer) {
@@ -249,7 +326,7 @@ if (passSubmit) {
             e.preventDefault();
         }
         const pw = (passField && passField.value) || '';
-        postNui('topMenuSelect', { value: 'admin', password: pw });
+        postNui('topMenuSelect', { value: 'verify', password: pw, purpose: passflowPurpose || 'admin' });
     });
 }
 if (passCancel) {
@@ -258,6 +335,9 @@ if (passCancel) {
             e.preventDefault();
         }
         inPassFlow = false;
+        if (passTitleEl) {
+            passTitleEl.textContent = '管理パスワードを入力';
+        }
         if (passContainer) {
             passContainer.classList.add('hidden');
         }
@@ -288,7 +368,7 @@ if (adminPassChange) {
 }
 
 function showGachaMenuView(data) {
-    setScale(data.scale);
+    setScale((data && data.scale != null) ? data.scale : 4);
     lastGachaRarities = data.rarities || [];
     hideTopAndPass();
     gachaMenuContainer.classList.remove('hidden');
@@ -310,12 +390,12 @@ function showGachaMenuView(data) {
     if (list.length === 0) {
         const em = document.createElement('div');
         em.className = 'gacha-items-empty';
-        em.textContent = '排出有効の景品がありません（管理画面を確認、またはConfigへフォールバックします）';
+        em.textContent = '在庫管理（スタッシュ）に景品を補充し、管理画面で排出を有効にしてください。';
         gachaMenuItems.appendChild(em);
     }
     list.forEach(function (it) {
         const card = document.createElement('div');
-        card.className = 'gacha-item-card';
+        card.className = 'gacha-item-card' + (it.outOfStock ? ' out-of-stock' : '');
         const m = getRarityMeta(data.rarities, it.rarity);
         const badge = document.createElement('span');
         badge.className = 'gacha-rare-badge';
@@ -330,7 +410,7 @@ function showGachaMenuView(data) {
         nm.textContent = it.label || it.name;
         const st = document.createElement('div');
         st.className = 'gacha-item-stock';
-        st.textContent = (it.count === -1) ? '在庫: —' : '在庫: ' + it.count;
+        st.textContent = (it.count === -1) ? '在庫: —' : ((it.outOfStock) ? '在庫: 0（切れ）' : '在庫: ' + it.count);
         const pr = document.createElement('div');
         pr.className = 'gacha-item-prob';
         pr.textContent = '排出率: ' + (it.prob != null ? (Math.round(it.prob * 100) / 100) : 0) + '%';
@@ -384,6 +464,7 @@ function showGachaMenuView(data) {
 
 function showAdminView(data) {
     setScale(data.scale);
+    sessionUnlocked = true;
     hideTopAndPass();
     if (adminPassCur) {
         adminPassCur.value = '';
@@ -441,6 +522,12 @@ function showAdminView(data) {
     });
     rtotal();
     adminItemsList.innerHTML = '';
+    if (!(data.items && data.items.length)) {
+        const em = document.createElement('div');
+        em.id = 'admin-items-empty';
+        em.textContent = '在庫管理からアイテムを補充してください。';
+        adminItemsList.appendChild(em);
+    }
     (data.items || []).forEach(function (it) {
         const line = document.createElement('div');
         line.className = 'admin-item-line';
@@ -474,13 +561,14 @@ function showAdminView(data) {
 }
 
 function readAdminSavePayload() {
-    const rarityPct = { UR: 0, SSR: 0, SR: 0, R: 0 };
-    (adminRarityFields.querySelectorAll('input') || []).forEach(function (inp) {
+    const rarityPct = {};
+    (adminRarityKeyOrder || ['UR', 'SSR', 'SR', 'R']).forEach(function (id) {
+        rarityPct[id] = 0;
+    });
+    (adminRarityFields.querySelectorAll('input.admin-rare-input') || []).forEach(function (inp) {
         if (inp.id && inp.id.indexOf('admin-rare-') === 0) {
             const k = inp.id.replace('admin-rare-', '');
-            if (k in rarityPct) {
-                rarityPct[k] = parseFloat(inp.value) || 0;
-            }
+            rarityPct[k] = parseFloat(inp.value) || 0;
         }
     });
     const items = [];
@@ -584,6 +672,9 @@ inputCancelButton.addEventListener('click', function () {
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
         if (passContainer && !passContainer.classList.contains('hidden')) {
+            if (passTitleEl) {
+                passTitleEl.textContent = '管理パスワードを入力';
+            }
             if (passCancel) {
                 passCancel.click();
             } else {
@@ -642,6 +733,22 @@ function showSingleResult(data) {
     resultRarity.textContent = data.rarityId;
     resultRarity.style.color = data.rarityColor;
     resultItemName.textContent = data.itemName;
+    var u = getGachaItemImageUrl(data);
+    var riw = document.getElementById('result-item-icon-wrap');
+    var ric = document.getElementById('result-item-icon');
+    if (riw && ric) {
+        if (u) {
+            ric.onerror = function () {
+                riw.classList.add('hidden');
+                ric.removeAttribute('src');
+            };
+            ric.src = u;
+            riw.classList.remove('hidden');
+        } else {
+            riw.classList.add('hidden');
+            ric.removeAttribute('src');
+        }
+    }
     resultLayer.classList.remove('hidden');
     resultLayer.classList.add('show');
     playSound(data.cutin ? 'result_rare.mp3' : 'result_normal.mp3');
@@ -759,6 +866,19 @@ function showMultiResult(results) {
         card.style.borderColor = r.rarityColor;
         card.style.animationDelay = i * 0.1 + 's';
 
+        var iu = getGachaItemImageUrl(r);
+        if (iu) {
+            const pic = document.createElement('img');
+            pic.classList.add('card-item-icon');
+            pic.alt = '';
+            pic.referrerPolicy = 'no-referrer';
+            pic.onerror = function () {
+                pic.remove();
+            };
+            pic.src = iu;
+            card.appendChild(pic);
+        }
+
         const rarityDiv = document.createElement('div');
         rarityDiv.classList.add('card-rarity');
         rarityDiv.textContent = r.rarityId;
@@ -819,10 +939,15 @@ function startMultiGacha(data) {
         label.classList.add('multi-capsule-label');
         label.style.color = results[i].rarityColor;
 
+        const prizeIcon = document.createElement('img');
+        prizeIcon.classList.add('multi-capsule-prize-icon');
+        prizeIcon.alt = '';
+
         slot.appendChild(img);
+        slot.appendChild(prizeIcon);
         slot.appendChild(label);
         multiCapsuleArea.appendChild(slot);
-        slots.push({ img: img, label: label, result: results[i] });
+        slots.push({ img: img, label: label, prizeIcon: prizeIcon, result: results[i] });
     }
 
     let currentIndex = 0;
@@ -852,6 +977,18 @@ function startMultiGacha(data) {
 
             safeTimeout(function () {
                 slot.img.style.opacity = '0';
+                var piu = getGachaItemImageUrl(slot.result);
+                if (slot.prizeIcon) {
+                    if (piu) {
+                        slot.prizeIcon.onerror = function () {
+                            slot.prizeIcon.style.display = 'none';
+                        };
+                        slot.prizeIcon.src = piu;
+                        slot.prizeIcon.style.display = 'block';
+                    } else {
+                        slot.prizeIcon.style.display = 'none';
+                    }
+                }
                 slot.label.textContent = '[' + slot.result.rarityId + '] ' + slot.result.itemName;
                 slot.label.classList.add('visible');
 
@@ -903,6 +1040,19 @@ window.addEventListener('message', function (event) {
         case 'showTopMenu':
             showTopMenuView(data);
             break;
+        case 'stashUnlocked':
+            sessionUnlocked = true;
+            if (topMenuContainer) {
+                topMenuContainer.classList.add('hidden');
+            }
+            if (passContainer) {
+                passContainer.classList.add('hidden');
+            }
+            inPassFlow = false;
+            if (passError) {
+                passError.classList.add('hidden');
+            }
+            break;
         case 'showGachaMenu':
             showGachaMenuView(data);
             break;
@@ -910,6 +1060,7 @@ window.addEventListener('message', function (event) {
             showAdminView(data);
             break;
         case 'adminDenied':
+            sessionUnlocked = false;
             if (passError) {
                 passError.classList.remove('hidden');
             }

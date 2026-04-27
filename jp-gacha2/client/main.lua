@@ -1,6 +1,8 @@
 local isPlaying = false
 -- メニュー／数入力NUI表示中。isPlaying だけだと未抽選の間攻撃不可にならない
 local nuiMenuOrInputOpen = false
+-- 管理パス or /gachaadmin 通過後。在庫管理と管理画面で共有（サーバー AdminUnlocked と整合）
+local adminSessionUnlocked = false
 local lastGachaMenu = nil
 local gachaCountInput = false
 local lastDrawTime = 0
@@ -71,7 +73,8 @@ local function ShowTopMenu()
     SetNuiFocus(true, true)
     SendNUIMessage({
         type = 'showTopMenu',
-        scale = Config.UIScale
+        scale = Config.UIScale,
+        sessionUnlocked = adminSessionUnlocked
     })
 end
 
@@ -80,8 +83,16 @@ RegisterNUICallback('topMenuSelect', function(data, cb)
     local v = data and data.value
     if v == 'gacha' then
         TriggerServerEvent('jp-gacha:requestGachaMenuData')
-    elseif v == 'admin' and data.password then
-        TriggerServerEvent('jp-gacha:verifyAdminPassword', tostring(data.password))
+    elseif v == 'verify' and data.password and data.purpose then
+        TriggerServerEvent('jp-gacha:verifyAdminPassword', tostring(data.password), tostring(data.purpose))
+    elseif v == 'openAdmin' then
+        if adminSessionUnlocked then
+            TriggerServerEvent('jp-gacha:requestOpenAdmin')
+        end
+    elseif v == 'stash' then
+        if adminSessionUnlocked then
+            TriggerServerEvent('jp-gacha:requestStashOpen')
+        end
     end
 end)
 
@@ -159,7 +170,7 @@ end)
 
 RegisterNUICallback('adminClose', function(_, cb)
     SetNuiFocus(false, false)
-    TriggerServerEvent('jp-gacha:adminSessionEnd')
+    -- 在庫管理と管理画面でセッション共有のため、閉じてもサーバー側 AdminUnlocked は維持
     cb('ok')
 end)
 
@@ -187,6 +198,7 @@ RegisterNetEvent('jp-gacha:adminData', function(payload)
     if not payload or not payload.settings or not payload.items then
         return
     end
+    adminSessionUnlocked = true
     nuiMenuOrInputOpen = true
     SetNuiFocus(true, true)
     SendNUIMessage({
@@ -208,7 +220,23 @@ end)
 
 -- 管理パス失敗
 RegisterNetEvent('jp-gacha:adminDenied', function()
+    adminSessionUnlocked = false
     SendNUIMessage({ type = 'adminDenied' })
+end)
+
+-- パス認証成功後: NUI 閉じて ox スタッシュを開く
+RegisterNetEvent('jp-gacha:stashUnlocked', function()
+    adminSessionUnlocked = true
+    nuiMenuOrInputOpen = false
+    SetNuiFocus(false, false)
+    SendNUIMessage({ type = 'stashUnlocked' })
+    if GetResourceState('ox_inventory') == 'started' and Config.StashName then
+        pcall(function()
+            exports.ox_inventory:openInventory('stash', Config.StashName)
+        end)
+    else
+        Notify('ox_inventory が起動していないか、スタッシュ設定がありません')
+    end
 end)
 
 -- /gachaadmin: ACE なし

@@ -13,7 +13,7 @@ Config.InteractDistance = 2.0
 Config.MachineModel = 'prop_weighstation_02'
 
 -- ガチャ1回のコスト（ゲーム内通貨）
-Config.Cost = 500
+Config.Cost = 50
 
 -- クールダウン（秒）
 Config.Cooldown = 10

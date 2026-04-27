@@ -221,28 +221,31 @@ local function GetOxItemLabel(name)
 end
 
 ---@return string
+-- ガチャNUI(CEF) では nui:// 他リソースが効かない場合があるため cfx-nui- を採用
 local function GetOxItemImageNui(name)
     if not name or GetResourceState('ox_inventory') ~= 'started' then
         return ''
     end
-    return 'nui://ox_inventory/web/images/' .. tostring(name) .. '.png'
+    return 'https://cfx-nui-ox_inventory/web/images/' .. tostring(name) .. '.png'
 end
 
--- 景品候補カタログ: cfg:カテゴリ:行番号 / ox:itemname
+-- 景品候補カタログ: ox:item名（在庫0含む）。Config枠は CatalogStashOnly==false 時のみ
 local function BuildPrizeCatalog()
     local out = {}
-    for _, rKey in ipairs({ 'N', 'R', 'SR', 'SSR', 'UR' }) do
-        local arr = (Config.ItemsByRarity and Config.ItemsByRarity[rKey]) or {}
-        for i, it in ipairs(arr) do
-            out[#out + 1] = {
-                id = 'cfg:' .. rKey .. ':' .. i,
-                name = (it and it.name) or '?',
-                label = (it and it.name) or '?',
-                image = (it and it.image) or '',
-                isOx = false,
-                count = 99999,
-                cfgRarity = rKey
-            }
+    if not (Config.CatalogStashOnly == true) and Config.ItemsByRarity then
+        for _, rKey in ipairs({ 'N', 'R', 'SR', 'SSR', 'UR' }) do
+            local arr = (Config.ItemsByRarity and Config.ItemsByRarity[rKey]) or {}
+            for i, it in ipairs(arr) do
+                out[#out + 1] = {
+                    id = 'cfg:' .. rKey .. ':' .. i,
+                    name = (it and it.name) or '?',
+                    label = (it and it.name) or '?',
+                    image = (it and it.image) or '',
+                    isOx = false,
+                    count = 99999,
+                    cfgRarity = rKey
+                }
+            end
         end
     end
     if GetResourceState('ox_inventory') == 'started' and Config.StashName then
@@ -252,7 +255,7 @@ local function BuildPrizeCatalog()
         if ok and inv and inv.items then
             local oxByName = {}
             for _slot, v in pairs(inv.items) do
-                if v and v.name and (v.count or 0) > 0 then
+                if v and v.name then
                     local n = tostring(v.name)
                     if not oxByName[n] then
                         oxByName[n] = 0
@@ -261,17 +264,15 @@ local function BuildPrizeCatalog()
                 end
             end
             for n, cnt in pairs(oxByName) do
-                if cnt > 0 then
-                    out[#out + 1] = {
-                        id = 'ox:' .. n,
-                        name = n,
-                        label = GetOxItemLabel(n) or n,
-                        image = GetOxItemImageNui(n),
-                        isOx = true,
-                        count = cnt,
-                        cfgRarity = nil
-                    }
-                end
+                out[#out + 1] = {
+                    id = 'ox:' .. n,
+                    name = n,
+                    label = GetOxItemLabel(n) or n,
+                    image = GetOxItemImageNui(n),
+                    isOx = true,
+                    count = cnt,
+                    cfgRarity = nil
+                }
             end
         end
     end
@@ -493,8 +494,47 @@ local function GetEffectiveCost()
     return tonumber(Config.Cost) or 0
 end
 
+--- スタッシュから1個抜き、プレイヤーに付与（ox_inventory 必須）
+local function TransferOneFromStashToPlayer(playerSrc, itemName)
+    if not itemName or GetResourceState('ox_inventory') ~= 'started' or not Config.StashName then
+        return false
+    end
+    local sid = tostring(Config.StashName)
+    local pOk, r1, r2 = pcall(function()
+        return exports.ox_inventory:RemoveItem(sid, tostring(itemName), 1)
+    end)
+    if not pOk or not r1 then
+        if Config.Debug then
+            print(('[jp-gacha] スタッシュから取り出し失敗: %s (%s)'):format(
+                tostring(itemName), tostring(r2)
+            ))
+        end
+        return false
+    end
+    local aOk, a1, a2 = pcall(function()
+        return exports.ox_inventory:AddItem(playerSrc, tostring(itemName), 1)
+    end)
+    if not aOk or not a1 then
+        pcall(function()
+            exports.ox_inventory:AddItem(sid, tostring(itemName), 1)
+        end)
+        if Config.Debug then
+            print(('[jp-gacha] プレイヤー付与失敗: %s -> スタッシュへ戻し (%s)'):format(
+                tostring(itemName), tostring(a2)
+            ))
+        end
+        return false
+    end
+    return true
+end
+
 local function BuildDrawResult(pick, visualRarityId)
     local rrow = GetRarityRowById(visualRarityId) or GetRarityRowById('R') or Config.Rarities[1]
+    local sp = (pick and pick.name) and tostring(pick.name) or ''
+    local img = (pick and pick.image) and tostring(pick.image) or ''
+    if sp ~= '' and img == '' and pick and pick.isOx and GetResourceState('ox_inventory') == 'started' then
+        img = GetOxItemImageNui(sp)
+    end
     return {
         rarityId = rrow.id,
         rarityName = rrow.name,
@@ -503,7 +543,8 @@ local function BuildDrawResult(pick, visualRarityId)
         bg = rrow.bg,
         cutin = rrow.cutin,
         itemName = (pick and pick.label) or (pick and pick.name) or '不明',
-        itemImage = (pick and pick.image) or '',
+        itemImage = img,
+        itemSpawnName = sp,
     }
 end
 
@@ -554,6 +595,7 @@ local function LegacyMultiDrawRow(rarity, item)
         cutin = rarity.cutin,
         itemName = item.name,
         itemImage = item.image or '',
+        itemSpawnName = (item and item.name) and tostring(item.name) or '',
     }
 end
 
@@ -588,6 +630,12 @@ Citizen.CreateThread(function()
     RegisterStashIfNeeded()
     EnsureAdminPasswordKvp()
     LoadGachaKvs()
+end)
+
+AddEventHandler('onResourceStart', function(name)
+    if name == 'ox_inventory' or name == GetCurrentResourceName() then
+        RegisterStashIfNeeded()
+    end
 end)
 
 local PlayerCooldowns = {}
@@ -630,10 +678,17 @@ local function BuildMenuItemRows()
     local rows = {}
     for _, e in ipairs(catalog) do
         local s = GetItemSetting(e.id) or DefaultSettingForEntry(e)
-        if (not s.enabled) or (e.isOx and (e.count or 0) <= 0) then
-            -- ガチャ表は排出 ON かつ在庫ありのみ
+        if not s.enabled then
+            -- 非表示
         else
-            local prob = probs and probs[e.id] or 0
+            local c = e.isOx and (e.count or 0) or 999
+            local outOf = e.isOx and c <= 0
+            local prob = (outOf) and 0.0 or ((probs and probs[e.id]) or 0.0)
+            if not outOf and e.isOx then
+                -- ok
+            elseif not e.isOx then
+                outOf = false
+            end
             rows[#rows + 1] = {
                 id = e.id,
                 name = e.name,
@@ -642,6 +697,7 @@ local function BuildMenuItemRows()
                 image = e.image,
                 enabled = s.enabled,
                 rarity = s.rarity,
+                outOfStock = outOf and true or false,
                 prob = math.floor((prob * 100) + 0.5) / 100.0
             }
         end
@@ -695,19 +751,44 @@ RegisterNetEvent('jp-gacha:requestAdminData', function()
     SendAdminDataToClient(src)
 end)
 
--- マシン: KVS パスワードと照合
-RegisterNetEvent('jp-gacha:verifyAdminPassword', function(plain)
+-- マシン: KVS パスワードと照合。purpose: 'admin' 管理UI / 'stash' 在庫を開く
+RegisterNetEvent('jp-gacha:verifyAdminPassword', function(plain, purpose)
     local src = source
     if type(plain) ~= 'string' then
         TriggerClientEvent('jp-gacha:adminDenied', src)
         return
     end
+    local p = tostring(purpose or 'admin')
     if plain == GetStoredAdminPassword() then
         AdminUnlocked[src] = true
-        SendAdminDataToClient(src)
+        if p == 'stash' then
+            TriggerClientEvent('jp-gacha:stashUnlocked', src)
+        else
+            SendAdminDataToClient(src)
+        end
     else
         TriggerClientEvent('jp-gacha:adminDenied', src)
     end
+end)
+
+-- セッション中はパス再入力不要: 管理画面を開く
+RegisterNetEvent('jp-gacha:requestOpenAdmin', function()
+    local src = source
+    if not AdminUnlocked[src] then
+        TriggerClientEvent('jp-gacha:adminDenied', src)
+        return
+    end
+    SendAdminDataToClient(src)
+end)
+
+-- セッション中: NUI から在庫スタッシュを開く（再認証不要）
+RegisterNetEvent('jp-gacha:requestStashOpen', function()
+    local src = source
+    if not AdminUnlocked[src] then
+        TriggerClientEvent('jp-gacha:adminDenied', src)
+        return
+    end
+    TriggerClientEvent('jp-gacha:stashUnlocked', src)
 end)
 
 -- 管理パスワード変更（KVS）セッション中のみ
@@ -811,7 +892,6 @@ RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
     end
     PlayerCooldowns[source] = now
 
-    local catalog = BuildPrizeCatalog()
     local canKvs = HasAnyEnablePool()
     if not canKvs and not Config.FallbackToConfigIfStashEmpty then
         TriggerClientEvent('jp-gacha:drawDenied', source, 'invalid')
@@ -819,44 +899,71 @@ RegisterNetEvent('jp-gacha:requestMultiDraw', function(count)
     end
     local useKvs = canKvs
 
+    -- 必ず pushResultRow より上で初期化（Lua では上にある関数内の `results` は
+    -- 後方の `local` に束さないため、グローバル扱いになり nil 参照になる）
     local results = {}
+
+    local function pushResultRow(i, b)
+        results[i] = {
+            index = i,
+            rarityId = b.rarityId,
+            rarityName = b.rarityName,
+            rarityColor = b.rarityColor,
+            capsule = b.capsule,
+            bg = b.bg,
+            cutin = b.cutin,
+            itemName = b.itemName,
+            itemImage = b.itemImage,
+            itemSpawnName = b.itemSpawnName,
+        }
+    end
     for i = 1, count do
         if useKvs then
-            local roll = DrawFourTierRarity()
-            local pick, vid = DrawOnePrize(roll, catalog)
-            if not pick then
-                local rar = DrawRarity()
-                local it = DrawItemFromConfig(rar.id)
-                local vrow = MapFourTierToRowId(rar.id)
-                if rar.id == 'N' then
-                    vrow = 'R'
+            local got = false
+            for _t = 1, 32 do
+                local cat = BuildPrizeCatalog()
+                local roll = DrawFourTierRarity()
+                local pick, vid = DrawOnePrize(roll, cat)
+                if not pick then
+                    if Config.FallbackToConfigIfStashEmpty then
+                        local rar = DrawRarity()
+                        local it = DrawItemFromConfig(rar.id)
+                        local vrow = MapFourTierToRowId(rar.id)
+                        if rar.id == 'N' then
+                            vrow = 'R'
+                        end
+                        local b = BuildDrawResult({ name = it.name, label = it.name, image = it.image or '' }, vrow)
+                        pushResultRow(i, b)
+                    else
+                        local b = BuildDrawResult(
+                            { name = "在庫なし", label = "在庫なし", image = "" },
+                            'R'
+                        )
+                        pushResultRow(i, b)
+                    end
+                    got = true
+                    break
                 end
-                local row = {
-                    index = i,
-                }
-                local b = BuildDrawResult({ name = it.name, label = it.name, image = it.image or '' }, vrow)
-                row.rarityId = b.rarityId
-                row.rarityName = b.rarityName
-                row.rarityColor = b.rarityColor
-                row.capsule = b.capsule
-                row.bg = b.bg
-                row.cutin = b.cutin
-                row.itemName = b.itemName
-                row.itemImage = b.itemImage
-                results[i] = row
-            else
-                local b = BuildDrawResult(pick, vid)
-                results[i] = {
-                    index = i,
-                    rarityId = b.rarityId,
-                    rarityName = b.rarityName,
-                    rarityColor = b.rarityColor,
-                    capsule = b.capsule,
-                    bg = b.bg,
-                    cutin = b.cutin,
-                    itemName = b.itemName,
-                    itemImage = b.itemImage,
-                }
+                if pick.isOx then
+                    if TransferOneFromStashToPlayer(source, pick.name) then
+                        local b = BuildDrawResult(pick, vid)
+                        pushResultRow(i, b)
+                        got = true
+                        break
+                    end
+                else
+                    local b = BuildDrawResult(pick, vid)
+                    pushResultRow(i, b)
+                    got = true
+                    break
+                end
+            end
+            if not got then
+                local b = BuildDrawResult(
+                    { name = "在庫処理エラー", label = "在庫処理エラー", image = "" },
+                    'R'
+                )
+                pushResultRow(i, b)
             end
         else
             local rarity = DrawRarity()
