@@ -349,3 +349,44 @@ AddEventHandler('playerDropped', function()
         KarteSession[src] = nil
     end
 end)
+
+-- shared だけで出題が空になる環境向け: サーバ起動直後、files 同梱の出題3ファイルを再実行して Config を埋める
+local function ensureKarteDataFromFile()
+    local res = GetCurrentResourceName()
+    local paths = {
+        { f = 'data/kartes_easy.lua',   key = 'Kartes' },
+        { f = 'data/kartes_medium.lua', key = 'KartesMedium' },
+        { f = 'data/kartes_hard.lua',   key = 'KartesHard' },
+    }
+    for _, p in ipairs(paths) do
+        local t = Config[p.key]
+        if not t or type(t) ~= 'table' or #t < 1 then
+            local s = LoadResourceFile(res, p.f)
+            if s and s ~= '' then
+                local fn, err = load(s, res .. '/' .. p.f, 't', _G)
+                if fn then
+                    local ok, perr = pcall(fn)
+                    if not ok then
+                        print(('[jp-hospital] 出題 %s 実行エラー: %s'):format(p.f, tostring(perr)))
+                    end
+                else
+                    print(('[jp-hospital] 出題 %s 構文: %s'):format(p.f, tostring(err)))
+                end
+            else
+                print(('[jp-hospital] 出題 %s を読めません（リソース内に無い。デプロイ先に data/ ごと上げる）'):format(
+                    p.f))
+            end
+        end
+    end
+    for _, p in ipairs(paths) do
+        local n = (type(Config[p.key]) == 'table') and #Config[p.key] or 0
+        if n < 1 then
+            print(('[jp-hospital] ^1[ERROR] Config.%s 出題0件^0 → NUI「出題庫が空」^3 %s^0'):format(
+                p.key, p.f))
+        elseif Config.Debug then
+            dbg(('[出題] %s: %d 件'):format(p.key, n))
+        end
+    end
+end
+
+ensureKarteDataFromFile()
