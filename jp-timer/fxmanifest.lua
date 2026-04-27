@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'JP-Mods'
 description 'RP用カウントダウンタイマー（/min）'
-version '1.0.1'
+version '1.0.2'
 
 client_scripts {
     'client/main.lua',
