@@ -132,8 +132,7 @@ Config.Sprites = {
     adult_b = { idle  = '04_adult/04_adult_b-1.png', play  = '04_adult/04_adult_b-2.png', eat  = '04_adult/04_adult_b-3.png', sleep  = '04_adult/04_adult_b-4.png', happy  = '04_adult/04_adult_b-1.png', clean  = '04_adult/04_adult_b-1.png' },
     adult_c = { idle  = '04_adult/04_adult_c-1.png', play  = '04_adult/04_adult_c-2.png', eat  = '04_adult/04_adult_c-3.png', sleep  = '04_adult/04_adult_c-4.png', happy  = '04_adult/04_adult_c-1.png', clean  = '04_adult/04_adult_c-1.png' },
     adult_d = { idle  = '04_adult/04_adult_d-1.png', play  = '04_adult/04_adult_d-2.png', eat  = '04_adult/04_adult_d-3.png', sleep  = '04_adult/04_adult_d-4.png', happy  = '04_adult/04_adult_d-1.png', clean  = '04_adult/04_adult_d-1.png' },
-    -- 病気: 専用素材を置く場合は 09_sick/ 下（例: 09_sick/09_sick_idle.png）へ。未配置時は幼体スプライトを流用
-    sick  = { idle  = '02_baby/02_baby_a-1.png', eat  = '02_baby/02_baby_a-3.png', happy = '02_baby/02_baby_a-1.png', sleep = '02_baby/02_baby_a-4.png' },
+    -- 病気: 専用スプライトは使わない（直前形態のスプライト＋NUI ドクロマーク）
     -- 死亡：単一画（NUI は idle 基準。playAction 等で同画を出す）
     grave = { idle = '05_d/05_d.png', eat = '05_d/05_d.png', happy = '05_d/05_d.png', sleep = '05_d/05_d.png' },
 }

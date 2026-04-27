@@ -357,6 +357,16 @@ local function ensureStore(store)
                 store.pet.evolutionId = 'baby'
             elseif store.pet.evolutionId == 'child_a' or store.pet.evolutionId == 'child_b' then
                 store.pet.evolutionId = 'child'
+            elseif store.pet.evolutionId == 'sick' then
+                if store.pet.phaseBeforeSick == 'baby' then
+                    store.pet.evolutionId = 'baby'
+                elseif store.pet.phaseBeforeSick == 'child' then
+                    store.pet.evolutionId = 'child'
+                elseif store.pet.phaseBeforeSick == 'adult' then
+                    store.pet.evolutionId = 'adult_a'
+                else
+                    store.pet.evolutionId = 'baby'
+                end
             end
         end
         if hasPet(store.pet) and store.pet.phase == 'egg' then
@@ -466,9 +476,28 @@ local function getSpriteSetForPet(pet)
     if not pet or not pet.phase then
         return nil
     end
-    -- 常に { mode, set } 形式にして NUI setSprite 側と図鑑/タイトルと一貫させる
-    if pet.phase == 'sick' and Config.Sprites and Config.Sprites.sick then
-        return { mode = 'id', set = Config.Sprites.sick }
+    -- 病気: 直前形態のスプライト（ドクロは NUI の sick-skull 要素で重ねる）
+    if pet.phase == 'sick' then
+        local prevId = pet.evolutionId
+        if prevId == 'sick' or not prevId or prevId == 'grave' or prevId == 'egg' then
+            local pbs = pet.phaseBeforeSick
+            if pbs == 'baby' then
+                prevId = 'baby'
+            elseif pbs == 'child' then
+                prevId = 'child'
+            elseif pbs == 'adult' then
+                prevId = 'adult_a'
+            else
+                prevId = 'baby'
+            end
+        end
+        if Config.Sprites and Config.Sprites[prevId] then
+            return { mode = 'id', set = Config.Sprites[prevId] }
+        end
+        if Config.Sprites and Config.Sprites.baby then
+            return { mode = 'id', set = Config.Sprites.baby }
+        end
+        return nil
     end
     if pet.phase == 'dead' or pet.evolutionId == 'grave' then
         if Config.Sprites and Config.Sprites.grave then
@@ -804,7 +833,10 @@ local function buildZukanMap()
     local zukanFrames = {}
     if Config and Config.ZukanIds and Config.Sprites then
         for _, zid in ipairs(Config.ZukanIds) do
-            if Config.Sprites[zid] and Config.Sprites[zid].idle then
+            if zid == 'sick' then
+                zukanMap[zid] = '__SKULL__'
+                zukanFrames[zid] = 1
+            elseif Config.Sprites[zid] and Config.Sprites[zid].idle then
                 zukanMap[zid] = Config.Sprites[zid].idle
                 if zid == 'grave' then
                     zukanFrames[zid] = Config.GraveSpriteStripFrames or 1

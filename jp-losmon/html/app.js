@@ -49,7 +49,11 @@
   }
 
   function setSpriteDiv(div, def, act) {
-    if (!def) { return; }
+    if (!div) { return; }
+    if (!def) {
+      div.style.backgroundImage = 'none';
+      return;
+    }
     act = act || 'idle';
     if (def.mode === 'egg' && def.egg) {
       var sec = (state && (state.eggShowCrackSec|0)) || 30;
@@ -604,11 +608,17 @@
       var formNames = d.formNames || (state && state.formNames) || {};
       order.forEach(function (k) {
         if (!zMap[k]) { return; }
-        var cell = document.createElement('div');
-        var strip = (zFrames[k] | 0) > 1;
-        cell.className = 'zk-cell' + (have.indexOf(k) < 0 ? ' zk-sil' : '') + (strip ? ' zk-strip' : '');
-        cell.style.backgroundImage = 'url(' + nuiUrl(zMap[k]) + ')';
+        var isUnknown = have.indexOf(k) < 0;
         var displayName = formNames[k] || k;
+        var cell = document.createElement('div');
+        if (zMap[k] === '__SKULL__') {
+          cell.className = 'zk-cell zk-skull' + (isUnknown ? ' zk-sil' : '');
+          cell.textContent = '☠';
+        } else {
+          var isStrip = (zFrames[k] | 0) > 1;
+          cell.className = 'zk-cell' + (isUnknown ? ' zk-sil' : '') + (isStrip ? ' zk-strip' : '');
+          cell.style.backgroundImage = 'url(' + nuiUrl(zMap[k]) + ')';
+        }
         cell.setAttribute('aria-label', displayName);
         cell.title = displayName;
         zb.appendChild(cell);

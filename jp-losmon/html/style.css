@@ -75,6 +75,20 @@ html { font-size: 144px; }
   background-size: 400% 100%;
   background-position: 0% 50%;
 }
+/* 図鑑: 病気枠（画像なし・ドクロ絵文字） */
+.zk-cell.zk-skull {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  color: #e44;
+  background-image: none !important;
+  text-shadow: 0 0 0.04rem #000, 0 0.02rem 0.06rem #000;
+}
+.zk-cell.zk-skull.zk-sil {
+  color: #555;
+  text-shadow: none;
+}
 .debug-evolve-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
