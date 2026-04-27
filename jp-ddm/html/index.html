@@ -23,11 +23,7 @@
         <div id="import-modal-content">
             <h3>📥 プリセットをインポート</h3>
             <p>共有テキストを貼り付け、読み込む</p>
-            <textarea
-                id="import-textarea"
-                placeholder="マークダウンを貼り付け..."
-                rows="12"
-            ></textarea>
+            <textarea id="import-textarea" placeholder="マークダウンを貼り付け..."></textarea>
             <div id="import-buttons">
                 <button type="button" id="btn-import-execute">読み込む</button>
                 <button type="button" id="btn-import-cancel" class="btn-muted">キャンセル</button>
@@ -35,78 +31,84 @@
         </div>
     </div>
 
-    <div id="app-wrap" class="hidden">
+    <div id="ddm-container" class="hidden">
         <header class="app-header">
             <h1>🎬 jp-DDM モーションセット</h1>
             <button type="button" id="btn-close" class="icon-btn" title="閉じる" aria-label="閉じる">×</button>
         </header>
-        <div class="app-grid">
-            <aside class="col left">
-                <h2>検索・カタログ</h2>
-                <input type="search" id="catalog-search" placeholder="名前で検索..." />
-                <select id="catalog-cat">
-                    <option value="all">すべて</option>
-                    <option value="dance">ダンス</option>
-                    <option value="emote">エモート</option>
-                    <option value="pose">ポーズ</option>
-                    <option value="other">その他</option>
-                </select>
-                <ul id="catalog-list" class="scroll"></ul>
-                <div class="add-custom">
-                    <h3>カスタム追加</h3>
+        <div class="ddm-grid">
+            <aside class="ddm-col ddm-left" aria-label="カタログとセットリスト">
+                <section class="left-block">
+                    <h2>🔍 カタログ</h2>
+                    <input type="search" id="catalog-search" placeholder="名前で検索..." />
+                    <select id="catalog-cat">
+                        <option value="all">すべて</option>
+                        <option value="dance">ダンス</option>
+                        <option value="emote">エモート</option>
+                        <option value="pose">ポーズ</option>
+                        <option value="other">その他</option>
+                    </select>
+                    <ul id="catalog-list" class="list-catalog"></ul>
+                </section>
+                <div class="left-sep" role="separator"></div>
+                <section class="left-block setlist-block">
+                    <h2>セットリスト <span id="set-count">0</span> / <span id="set-max">64</span></h2>
+                    <ul id="setlist" class="list-setlist"></ul>
+                    <p class="total">合計: <strong id="total-dur">0'00</strong></p>
+                </section>
+                <div class="left-sep" role="separator"></div>
+                <section class="add-custom left-block">
+                    <h2>カスタム追加</h2>
                     <label>Dict <input type="text" id="c-dict" placeholder="anim@..." /></label>
                     <label>Clip <input type="text" id="c-clip" placeholder="clip" /></label>
                     <label>表示名 <input type="text" id="c-name" placeholder="（任意）" /></label>
                     <label>秒 <input type="number" id="c-dur" min="1" max="600" value="10" /></label>
-                    <button type="button" id="btn-c-add">追加</button>
-                </div>
+                    <button type="button" id="btn-c-add">＋ リストに追加</button>
+                </section>
             </aside>
-            <section class="col center">
-                <h2>セットリスト <span id="set-count">0</span> / <span id="set-max">64</span></h2>
-                <ul id="setlist" class="scroll"></ul>
-                <p class="total">合計: <strong id="total-dur">0'00</strong></p>
-                <div class="music-block">
-                    <h2>音楽 (YouTube)</h2>
+
+            <div class="ddm-col ddm-center" id="ddm-center-peek" aria-hidden="true">
+                <span class="preview-label">プレビュー</span>
+            </div>
+
+            <aside class="ddm-col ddm-right" aria-label="操作と音楽">
+                <section class="right-block">
+                    <h2>操作</h2>
+                    <button type="button" class="act" id="btn-start">▶ スタート</button>
+                    <button type="button" class="act warn" id="btn-pause">⏸ 一時停止</button>
+                    <button type="button" class="act" id="btn-next">⏭ 次へ</button>
+                    <button type="button" class="act danger" id="btn-stop-ui">⏹ 停止</button>
+                    <label class="row-line loop-line"><input type="checkbox" id="loop-toggle" /> 🔁 ループ</label>
+                </section>
+                <div class="right-sep"></div>
+                <section class="right-block music-block">
+                    <h2>🎵 YouTube</h2>
                     <label>URL
                         <input type="url" id="youtube-url" placeholder="https://www.youtube.com/..." />
                     </label>
                     <label>開始位置（秒）
                         <input type="number" id="youtube-start" min="0" value="0" />
                     </label>
-                </div>
-            </section>
-            <aside class="col controls">
-                <h2>操作</h2>
-                <label class="row-line"><input type="checkbox" id="loop-toggle" /> 🔁 ループ</label>
-                <input type="text" id="preset-name" placeholder="プリセット名" />
-                <button type="button" class="act" id="btn-start">▶ スタート</button>
-                <button type="button" class="act warn" id="btn-pause">⏸ 一時停止</button>
-                <button type="button" class="act" id="btn-next">⏭ 次へ</button>
-                <button type="button" class="act danger" id="btn-stop-ui">⏹ 停止</button>
-                <div class="sep"></div>
-                <button type="button" class="act" id="btn-save">💾 保存</button>
-                <div class="row-line">
-                    <select id="load-select"><option value="">-- 読込 --</option></select>
-                </div>
-                <button type="button" class="act" id="btn-load">📂 読込</button>
-                <button type="button" class="act" id="btn-delete">🗑 削除</button>
-                <div class="sep"></div>
-                <button type="button" class="act" id="btn-export">📋 エクスポート（コピー）</button>
-                <button type="button" class="act" id="btn-import">📥 インポート</button>
-            </aside>
-            <aside class="col preview-col">
-                <h2>プレビュー</h2>
-                <div id="preview-area">
-                    <p class="pv-hint">NUI 背面はゲーム映像（左カメラ）</p>
-                    <div id="now-playing-info">
-                        <div id="pv-dummy">キャラの正面（ズーム）</div>
+                    <button type="button" class="act audio-toggle" id="btn-youtube-audio" title="YouTube 音声">🔊 音声ON</button>
+                </section>
+                <div class="right-sep"></div>
+                <section class="right-block preset-block">
+                    <h2>プリセット</h2>
+                    <input type="text" id="preset-name" placeholder="プリセット名" />
+                    <div class="row-line load-row">
+                        <select id="load-select"><option value="">-- 読込 --</option></select>
+                        <button type="button" class="act small" id="btn-load">📂 読込</button>
                     </div>
-                </div>
+                    <button type="button" class="act" id="btn-save">💾 保存</button>
+                    <button type="button" class="act" id="btn-delete">🗑 削除</button>
+                    <button type="button" class="act" id="btn-export">📋 エクスポート</button>
+                    <button type="button" class="act" id="btn-import">📥 インポート</button>
+                </section>
             </aside>
         </div>
     </div>
 
-    <div id="yt-player-wrapper" style="position: fixed; left: -9999px; width: 1px; height: 1px; overflow: hidden">
+    <div id="yt-player-wrapper">
         <div id="yt-player"></div>
     </div>
 

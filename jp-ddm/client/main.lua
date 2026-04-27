@@ -1,4 +1,4 @@
--- jp-DDM: クライアント KVS 保存・NUI・プレビュー・再生
+-- jp-DDM: クライアント KVS 保存・NUI・再生（プレビューはゲーム透過表示のためスクリプトカメラなし）
 local function dbg(msg)
     if Config.Debug then
         print(('[jp-ddm] %s'):format(tostring(msg)))
@@ -6,7 +6,6 @@ local function dbg(msg)
 end
 
 local KVP_BLOB = 'ddm_v1'
-local previewCam = nil
 local playbackActive = false
 local playbackPaused = false
 local skipToNext = false
@@ -35,38 +34,6 @@ local function writeStore(store)
     elseif SetResourceKvp then
         SetResourceKvp(KVP_BLOB, enc)
     end
-end
-
-function StopPreviewCamera()
-    if previewCam and DoesCamExist(previewCam) then
-        SetCamActive(previewCam, false)
-        RenderScriptCams(false, true, 500, true, false)
-        DestroyCam(previewCam, false)
-    end
-    previewCam = nil
-end
-
-function StartPreviewCamera()
-    StopPreviewCamera()
-    local ped = PlayerPedId()
-    if not ped or ped == 0 then
-        return
-    end
-    local c = GetEntityCoords(ped)
-    local f = GetEntityForwardVector(ped)
-    local dist = 1.8
-    local camX = c.x + f.x * dist
-    local camY = c.y + f.y * dist
-    local camZ = c.z + 0.35
-    previewCam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-    if not previewCam or previewCam == 0 then
-        return
-    end
-    SetCamCoord(previewCam, camX, camY, camZ)
-    PointCamAtEntity(previewCam, ped, 0.0, 0.0, 0.3, true)
-    SetCamFov(previewCam, 50.0)
-    SetCamActive(previewCam, true)
-    RenderScriptCams(true, true, 500, true, false)
 end
 
 --- 再生ループ外から呼べる全停止
@@ -185,7 +152,6 @@ local function openDdmUi()
     if playbackActive then
         StopMotionPlayback()
     end
-    StartPreviewCamera()
     SetNuiFocus(true, true)
     SendNUIMessage({
         type = 'openDdm',
@@ -197,7 +163,6 @@ end
 
 local function closeDdmUi()
     SetNuiFocus(false, false)
-    StopPreviewCamera()
     SendNUIMessage({ type = 'uiClosed' })
 end
 
@@ -212,7 +177,6 @@ end, false)
 TriggerEvent('chat:addSuggestion', ('/%s'):format(Config.OpenCommand), 'jp-DDM: 管理画面', {})
 TriggerEvent('chat:addSuggestion', ('/%s'):format(Config.StopCommand), 'jp-DDM: 停止', {})
 
--- NUI 閉じる
 RegisterNUICallback('close', function(_, cb)
     closeDdmUi()
     cb({ ok = true })
@@ -222,7 +186,7 @@ RegisterNUICallback('preview', function(data, cb)
     local dict = data.dict
     local clip = data.clip
     if type(dict) ~= 'string' or type(clip) ~= 'string' or dict == '' or clip == '' then
-        cb('bad')
+        cb({ err = 'bad' })
         return
     end
     local ped = PlayerPedId()
@@ -232,14 +196,11 @@ RegisterNUICallback('preview', function(data, cb)
         Wait(10)
     end
     if not HasAnimDictLoaded(dict) then
-        cb('noload')
+        cb({ err = 'noload' })
         return
     end
     TaskPlayAnim(ped, dict, clip, 8.0, -8.0, 4000, 0, 0.0, false, false, false)
-    if previewCam and DoesCamExist(previewCam) then
-        PointCamAtEntity(previewCam, ped, 0.0, 0.0, 0.3, true)
-    end
-    cb('ok')
+    cb({ ok = true })
 end)
 
 RegisterNUICallback('savePreset', function(data, cb)
@@ -255,6 +216,7 @@ RegisterNUICallback('savePreset', function(data, cb)
         youtubeUrl = data.youtubeUrl,
         youtubeStart = tonumber(data.youtubeStart) or 0,
         loop = data.loop and true or false,
+        audioEnabled = (data.audioEnabled == false) and false or true,
     }
     local found = false
     for i, p in ipairs(st.presets) do
@@ -273,22 +235,27 @@ end)
 
 RegisterNUICallback('loadPreset', function(data, cb)
     if type(data) ~= 'table' or type(data.name) ~= 'string' then
-        cb({ setlist = {}, youtubeUrl = '', youtubeStart = 0, loop = false })
+        cb({ setlist = {}, youtubeUrl = '', youtubeStart = 0, loop = false, audioEnabled = true })
         return
     end
     local st = readStore()
     for _, p in ipairs(st.presets or {}) do
         if p.name == data.name then
+            local ae = p.audioEnabled
+            if ae == nil then
+                ae = true
+            end
             cb({
                 setlist = p.setlist or {},
                 youtubeUrl = p.youtubeUrl or '',
                 youtubeStart = p.youtubeStart or 0,
                 loop = p.loop and true or false,
+                audioEnabled = ae and true or false,
             })
             return
         end
     end
-    cb({ setlist = {}, youtubeUrl = '', youtubeStart = 0, loop = false })
+    cb({ setlist = {}, youtubeUrl = '', youtubeStart = 0, loop = false, audioEnabled = true })
 end)
 
 RegisterNUICallback('listPresets', function(_, cb)
@@ -327,7 +294,6 @@ RegisterNUICallback('startPlayback', function(data, cb)
     end
     StopMotionPlayback()
     Wait(100)
-    StopPreviewCamera()
     setlist = data.setlist
     totalSteps = #setlist
     loopEnabled = data.loop and true or false
@@ -335,12 +301,14 @@ RegisterNUICallback('startPlayback', function(data, cb)
     playbackActive = true
     playbackPaused = false
     skipToNext = false
+    local audioOn = (data.audioEnabled == false) and false or true
     local yt = data.youtubeUrl
     if type(yt) == 'string' and yt ~= '' then
         SendNUIMessage({
             type = 'playYoutube',
             url = yt,
             startSeconds = tonumber(data.youtubeStart) or 0,
+            audioEnabled = audioOn,
         })
     end
     SetNuiFocus(false, false)
@@ -354,13 +322,11 @@ RegisterNUICallback('startPlayback', function(data, cb)
     cb('ok')
 end)
 
--- NUI から 停止（管理画面内）
 RegisterNUICallback('stopPlayback', function(_, cb)
     StopMotionPlayback()
     cb('ok')
 end)
 
--- 一時停止 / 再開
 RegisterNUICallback('togglePause', function(data, cb)
     if data and data.pause ~= nil then
         playbackPaused = data.pause and true or false
@@ -375,7 +341,6 @@ RegisterNUICallback('nextStep', function(_, cb)
     cb('ok')
 end)
 
--- ミニ表示からの制御
 RegisterNUICallback('miniStop', function(_, cb)
     StopMotionPlayback()
     cb('ok')

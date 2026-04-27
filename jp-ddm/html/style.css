@@ -1,6 +1,6 @@
-/* 可読性のため UI を約2倍。rem は 32px 基準（従来 16px 相当の2倍） */
+/* jp-DDM: 3カラム。中央透過＝ゲーム内キャラがそのまま見える（pointer-events: none） */
 html {
-    font-size: 32px;
+    font-size: 28px;
 }
 
 * {
@@ -21,73 +21,255 @@ body {
     display: none !important;
 }
 
-#app-wrap {
+#ddm-container {
     position: fixed;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 90vw;
-    max-width: 2400px;
-    height: 90vh;
-    max-height: 1600px;
+    width: 95vw;
+    height: 80vh;
+    max-height: 96vh;
     display: flex;
     flex-direction: column;
-    background: rgba(8, 8, 20, 0.94);
-    border: 4px solid #9944ff;
-    border-radius: 32px;
     z-index: 100;
-    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+    background: rgba(5, 5, 12, 0.25);
+    border: 3px solid #7744cc;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.45);
 }
 
 .app-header {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 32px;
+    padding: 10px 20px;
+    background: rgba(10, 10, 30, 0.95);
     border-bottom: 2px solid #4422aa;
 }
 
 .app-header h1 {
-    font-size: 2.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
 }
 
 .icon-btn {
-    width: 72px;
-    height: 72px;
-    font-size: 2.8rem;
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
     line-height: 1;
     border: none;
     background: #332266;
     color: #fff;
-    border-radius: 16px;
+    border-radius: 10px;
     cursor: pointer;
 }
 
-.app-grid {
-    display: grid;
-    grid-template-columns: 25% 30% 1fr 24%;
-    gap: 16px;
-    padding: 20px;
+/* 3 カラム: 30% / 40% / 30% */
+.ddm-grid {
     flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 30% 40% 30%;
+    grid-template-rows: 1fr;
+    gap: 0;
+}
+
+.ddm-col {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    overflow: hidden;
+}
+
+/* 左右のみ背景（中央は完全透過） */
+.ddm-left,
+.ddm-right {
+    background: rgba(10, 10, 30, 0.88);
+    border: 1px solid rgba(80, 50, 140, 0.4);
+    pointer-events: auto;
+}
+
+/* 中央: 透過 + 操作をゲームへ通す。ラベルだけ見える */
+.ddm-center {
+    position: relative;
+    background: transparent;
+    border-left: 1px solid rgba(150, 100, 255, 0.3);
+    border-right: 1px solid rgba(150, 100, 255, 0.3);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.preview-label {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #fff;
+    opacity: 0.4;
+    user-select: none;
+    text-shadow: 0 0 8px #000;
+    pointer-events: none;
+}
+
+.left-block,
+.right-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     min-height: 0;
 }
 
-.col {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    background: rgba(20, 20, 40, 0.5);
-    border-radius: 24px;
-    border: 2px solid #3a2a5c;
+.left-block h2,
+.right-block h2 {
+    font-size: 0.75rem;
+    color: #c4b0ff;
+    flex-shrink: 0;
+    margin-bottom: 2px;
 }
 
-.col h2,
-.col h3 {
-    font-size: 1.6rem;
-    margin-bottom: 12px;
-    color: #c4b0ff;
+.left-sep,
+.right-sep {
+    height: 2px;
+    background: rgba(150, 100, 255, 0.25);
+    margin: 6px 0;
+    flex-shrink: 0;
+}
+
+/* 検索結果: 枠内スクロール */
+#catalog-list.list-catalog {
+    list-style: none;
+    max-height: 35vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 0.6rem;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #0a0a18;
+    padding: 4px;
+}
+
+#catalog-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 4px 6px;
+    margin-bottom: 3px;
+    background: #15152a;
+    border-radius: 6px;
+    border: 1px solid #333;
+}
+
+#catalog-list li .cat-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#catalog-list .btn-add-cat {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    font-size: 0.5rem;
+    background: #5533aa;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#catalog-list .btn-add-cat:hover {
+    filter: brightness(1.1);
+}
+
+/* セットリスト */
+#setlist.list-setlist {
+    list-style: none;
+    max-height: 30vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 0.58rem;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #0a0a18;
+    padding: 4px;
+}
+
+#setlist li {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 4px;
+    margin-bottom: 2px;
+    background: #15152a;
+    border-radius: 4px;
+    border: 1px solid #3a3a4a;
+}
+
+.set-num {
+    flex-shrink: 0;
+    color: #9944ff;
+    font-weight: 700;
+    min-width: 1.4em;
+}
+
+.set-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.set-dur-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.set-dur-ctrl .step {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-size: 0.5rem;
+    line-height: 1;
+    cursor: pointer;
+    background: #333;
+    color: #ddd;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+.set-sec {
+    width: 44px;
+    text-align: center;
+    padding: 1px 2px;
+    font-size: 0.55rem;
+    background: #0d0d1a;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+.set-remove {
+    width: 26px;
+    height: 24px;
+    font-size: 0.5rem;
+    padding: 0;
+    cursor: pointer;
+    background: #3a1a1a;
+    color: #faa;
+    border: 1px solid #622;
+    border-radius: 4px;
+    flex-shrink: 0;
 }
 
 #catalog-search,
@@ -97,269 +279,175 @@ input[type='url'],
 input[type='search'],
 input[type='number'] {
     width: 100%;
-    margin-bottom: 12px;
-    padding: 12px 16px;
+    padding: 4px 6px;
     background: #0d0d1a;
-    border: 2px solid #555;
-    border-radius: 16px;
+    border: 1px solid #555;
+    border-radius: 6px;
     color: #e0e0e0;
-    font-size: 1.6rem;
+    font-size: 0.58rem;
 }
 
-#catalog-cat {
-    margin-bottom: 16px;
-}
-
-ul.scroll {
-    list-style: none;
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    font-size: 1.5rem;
-}
-
-#catalog-list li,
-#setlist li {
-    padding: 12px 16px;
-    margin-bottom: 8px;
-    background: #15152a;
-    border-radius: 12px;
-    border: 2px solid #333;
-    cursor: pointer;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-}
-
-#catalog-list li:hover {
-    border-color: #9944ff;
-}
-
-#setlist li {
-    cursor: default;
-}
-
-.set-item-label {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 1.5rem;
-}
-
-.set-item-sec {
-    width: 96px;
-    padding: 4px 8px;
-    font-size: 1.5rem;
-}
-
-.set-item-btns button {
-    padding: 4px 12px;
-    font-size: 1.3rem;
-    margin-left: 4px;
-    cursor: pointer;
-    background: #333;
-    color: #ccc;
-    border: 2px solid #555;
-    border-radius: 8px;
-}
-
-.set-item-btns button.danger {
-    color: #f88;
-}
-
-.add-custom {
-    margin-top: 16px;
-    font-size: 1.4rem;
-}
-
-.add-custom h3 {
-    font-size: 1.4rem;
-}
-
-.add-custom input {
+#preset-name {
     width: 100%;
-    margin-bottom: 8px;
-    font-size: 1.4rem;
-    padding: 8px 12px;
+}
+
+.add-custom label {
+    display: block;
+    font-size: 0.5rem;
+    margin-bottom: 2px;
 }
 
 #btn-c-add {
     width: 100%;
-    margin-top: 8px;
-    padding: 12px;
+    margin-top: 4px;
+    padding: 6px;
     background: #5533aa;
     color: #fff;
     border: none;
-    border-radius: 16px;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.55rem;
     font-weight: bold;
-    font-size: 1.4rem;
 }
 
 .total {
-    margin: 12px 0;
-    font-size: 1.8rem;
+    margin-top: 4px;
+    font-size: 0.65rem;
+    flex-shrink: 0;
 }
 
-.music-block {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 2px solid #3a2a5c;
-}
-
-.music-block h2 {
-    font-size: 1.6rem;
-}
-
-.music-block label {
-    font-size: 1.5rem;
-    display: block;
-    margin-top: 8px;
-}
-
-.controls .act {
+/* 右カラム ボタン */
+.right-block .act {
     display: block;
     width: 100%;
-    margin: 8px 0;
-    padding: 16px 20px;
-    font-size: 1.6rem;
+    margin: 2px 0;
+    padding: 5px 8px;
+    font-size: 0.58rem;
     font-weight: bold;
     border: none;
-    border-radius: 16px;
+    border-radius: 6px;
     cursor: pointer;
     background: linear-gradient(135deg, #7744cc, #5522aa);
     color: #fff;
 }
 
-.controls .act:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.controls .act.warn {
+.right-block .act.warn {
     background: #664400;
 }
 
-.controls .act.danger {
+.right-block .act.danger {
     background: #772233;
+}
+
+.right-block .act.small {
+    width: auto;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 4px 8px;
+    font-size: 0.5rem;
+}
+
+.right-block .act.audio-toggle {
+    background: linear-gradient(135deg, #2a4a3a, #1a3a2a);
+}
+
+.right-block .act.audio-toggle.muted {
+    background: #333;
+    color: #999;
 }
 
 .row-line {
     display: flex;
     align-items: center;
-    gap: 16px;
-    font-size: 1.6rem;
-    margin: 8px 0;
+    gap: 6px;
+    font-size: 0.58rem;
+    margin: 2px 0;
+}
+
+.loop-line {
+    margin-top: 4px;
+}
+
+.load-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
 }
 
 #load-select {
-    width: 100%;
-    padding: 8px 12px;
+    flex: 1;
+    min-width: 0;
+    padding: 4px;
     background: #0d0d1a;
     color: #e0e0e0;
-    border-radius: 12px;
-    border: 2px solid #555;
-    font-size: 1.5rem;
+    border-radius: 4px;
+    border: 1px solid #555;
+    font-size: 0.5rem;
 }
 
-#preset-name {
-    font-size: 1.6rem !important;
-    padding: 12px 16px !important;
-}
-
-.sep {
-    height: 2px;
-    background: #3a2a5c;
-    margin: 16px 0;
-}
-
-#preview-area {
-    flex: 1;
-    min-height: 0;
-    background: rgba(0, 0, 0, 0.3);
-    border: 4px solid #9944ff;
-    border-radius: 24px;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-}
-
-#now-playing-info {
-    margin-top: auto;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 16px;
-    padding: 16px;
-    text-align: center;
-    font-size: 1.4rem;
-}
-
-#pv-dummy,
-.pv-hint {
-    font-size: 1.4rem;
-    color: #aaa;
-    margin: 8px 0;
+.music-block label {
+    font-size: 0.55rem;
+    display: block;
+    margin: 2px 0;
 }
 
 #mini-hud {
     position: fixed;
-    left: 24px;
-    top: 24px;
+    left: 12px;
+    top: 12px;
     z-index: 2000;
     pointer-events: auto;
 }
 
 #mini-inner {
     background: rgba(0, 0, 0, 0.78);
-    border: 2px solid #6622cc;
-    border-radius: 20px;
-    padding: 16px 24px;
-    font-size: 1.6rem;
-    min-width: 400px;
+    border: 1px solid #6622cc;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.6rem;
+    min-width: 200px;
 }
 
 #mini-line1,
 #mini-line2 {
-    margin: 4px 0;
-    font-size: 1.6rem;
+    margin: 2px 0;
 }
 
 .mini-btns {
     display: flex;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 4px;
+    margin-top: 4px;
 }
 
 .mini-btns button {
     flex: 1;
-    padding: 8px 12px;
-    font-size: 1.5rem;
+    padding: 3px 4px;
+    font-size: 0.55rem;
     cursor: pointer;
     background: #332255;
     color: #fff;
-    border: 2px solid #555;
-    border-radius: 12px;
+    border: 1px solid #555;
+    border-radius: 4px;
 }
 
 #btn-mini-stop {
-    flex: 1.2;
+    flex: 1.1;
     background: #552233;
-    font-size: 1.5rem;
 }
 
 #toast {
     position: fixed;
-    bottom: 20%;
+    bottom: 16%;
     left: 50%;
     transform: translateX(-50%);
     z-index: 20000;
     background: rgba(0, 0, 0, 0.9);
-    border: 2px solid #9944ff;
+    border: 1px solid #9944ff;
     color: #fff;
-    padding: 20px 40px;
-    border-radius: 16px;
-    font-size: 1.8rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.6rem;
 }
 
 #toast.error {
@@ -377,6 +465,7 @@ ul.scroll {
     align-items: center;
     justify-content: center;
     z-index: 10000;
+    pointer-events: auto;
 }
 
 #import-modal.hidden {
@@ -385,51 +474,46 @@ ul.scroll {
 
 #import-modal-content {
     background: #1a1a2e;
-    border: 4px solid #9944ff;
-    border-radius: 32px;
-    padding: 48px;
-    width: min(1200px, 90vw);
+    border: 2px solid #9944ff;
+    border-radius: 12px;
+    padding: 20px;
+    width: min(90vw, 800px);
     color: #fff;
+    max-height: 85vh;
+    overflow: auto;
 }
 
 #import-modal-content h3 {
-    font-size: 2rem;
-    margin-bottom: 16px;
-}
-
-#import-modal-content p {
-    font-size: 1.5rem;
-    margin: 8px 0 16px;
+    font-size: 0.8rem;
 }
 
 #import-textarea {
     width: 100%;
+    min-height: 10rem;
     background: #0d0d1a;
     color: #e0e0e0;
-    border: 2px solid #444;
-    border-radius: 16px;
-    padding: 24px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 8px;
     font-family: 'Consolas', 'Meiryo UI', monospace;
-    font-size: 24px;
-    line-height: 1.4;
+    font-size: 12px;
     resize: vertical;
-    margin: 20px 0;
-    min-height: 18rem;
+    margin: 8px 0;
 }
 
 #import-buttons {
     display: flex;
-    gap: 20px;
+    gap: 8px;
     justify-content: flex-end;
 }
 
 #import-buttons button {
     border: none;
-    padding: 16px 36px;
-    border-radius: 16px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.55rem;
     font-weight: bold;
-    font-size: 1.6rem;
 }
 
 #btn-import-execute {
@@ -441,12 +525,16 @@ ul.scroll {
 .btn-muted {
     background: #333;
     color: #ccc;
-    border: 2px solid #555 !important;
+    border: 1px solid #555 !important;
 }
 
-/* プレビュー列 見出し */
-.preview-col h2 {
-    font-size: 1.6rem;
+#yt-player-wrapper {
+    position: fixed;
+    left: -2000px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
 }
-
-``` 

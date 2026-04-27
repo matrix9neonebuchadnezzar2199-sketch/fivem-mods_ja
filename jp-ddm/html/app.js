@@ -12,8 +12,32 @@
     let ytReady = false;
     let miniPaused = false;
     let pendingYoutube = null;
+    let audioEnabled = true;
 
     const $ = (id) => document.getElementById(id);
+
+    function updateAudioButton() {
+        const b = $('btn-youtube-audio');
+        if (!b) return;
+        b.textContent = audioEnabled ? '🔊 音声ON' : '🔇 音声OFF';
+        b.classList.toggle('muted', !audioEnabled);
+    }
+
+    function toggleMuteUser() {
+        audioEnabled = !audioEnabled;
+        if (ytReady && ytPlayer) {
+            try {
+                if (audioEnabled) {
+                    ytPlayer.unMute();
+                } else {
+                    ytPlayer.mute();
+                }
+            } catch (e) {
+                /* cef */
+            }
+        }
+        updateAudioButton();
+    }
 
     async function nuiPost(name, data) {
         try {
@@ -42,11 +66,19 @@
         return `${m}'${s.toString().padStart(2, '0')}`;
     }
 
+    function refreshSetlistRowNumbers() {
+        const items = document.querySelectorAll('#setlist li');
+        items.forEach((li, i) => {
+            const n = li.querySelector('.set-num');
+            if (n) n.textContent = `#${i + 1}`;
+        });
+    }
+
     function getSetlistItems() {
         const ul = $('setlist');
         const out = [];
         ul.querySelectorAll('li[data-dict]').forEach((li) => {
-            const sec = parseInt(li.querySelector('.set-item-sec')?.value, 10) || 10;
+            const sec = parseInt(li.querySelector('.set-sec')?.value, 10) || 1;
             out.push({
                 name: li.getAttribute('data-name') || li.getAttribute('data-clip'),
                 dict: li.getAttribute('data-dict'),
@@ -65,6 +97,7 @@
         });
         $('total-dur').textContent = formatTotal(total);
         $('set-count').textContent = String(items.length);
+        refreshSetlistRowNumbers();
     }
 
     function addSetlistItem(item) {
@@ -77,26 +110,32 @@
         li.setAttribute('data-dict', item.dict);
         li.setAttribute('data-clip', item.clip);
         li.setAttribute('data-name', item.name || item.clip);
-        li.innerHTML = `<span class="set-item-label">${item.name || item.clip}</span>
-            <input class="set-item-sec" type="number" min="1" max="600" value="${item.duration || defaultDuration}" />
-            <span class="set-item-btns">
-                <button type="button" class="up">↑</button>
-                <button type="button" class="down">↓</button>
-                <button type="button" class="prev">▶</button>
-                <button type="button" class="remove danger">×</button>
-            </span>`;
+        const dur0 = item.duration || defaultDuration;
+        li.innerHTML = `<span class="set-num">#</span><span class="sep">|</span>
+            <span class="set-name"></span>
+            <span class="sep">|</span>
+            <div class="set-dur-ctrl">
+                <button type="button" class="step" data-step="-1">-</button>
+                <input class="set-sec" type="number" min="1" max="600" value="${dur0}" />
+                <button type="button" class="step" data-step="1">+</button>
+            </div>
+            <span class="sep">|</span>
+            <button type="button" class="set-remove" title="削除">🗑</button>`;
         ul.appendChild(li);
-        li.querySelector('.set-item-sec').addEventListener('input', renumberSetlist);
-        li.querySelector('.up').addEventListener('click', () => {
-            if (li.previousElementSibling) ul.insertBefore(li, li.previousElementSibling);
+        li.querySelector('.set-name').textContent = item.name || item.clip;
+
+        const input = li.querySelector('.set-sec');
+        li.querySelectorAll('.step').forEach((b) => {
+            b.addEventListener('click', () => {
+                const d = parseInt(b.getAttribute('data-step'), 10) || 0;
+                let v = parseInt(input.value, 10) || 1;
+                v = Math.min(600, Math.max(1, v + d));
+                input.value = String(v);
+                renumberSetlist();
+            });
         });
-        li.querySelector('.down').addEventListener('click', () => {
-            if (li.nextElementSibling) ul.insertBefore(li.nextElementSibling, li);
-        });
-        li.querySelector('.prev').addEventListener('click', () => {
-            nuiPost('preview', { dict: item.dict, clip: item.clip });
-        });
-        li.querySelector('.remove').addEventListener('click', () => {
+        input.addEventListener('input', renumberSetlist);
+        li.querySelector('.set-remove').addEventListener('click', () => {
             li.remove();
             renumberSetlist();
         });
@@ -117,8 +156,15 @@
             if (cat !== 'all' && c.category !== cat) return;
             if (q && !c.name.toLowerCase().includes(q) && !c.dict.toLowerCase().includes(q)) return;
             const li = document.createElement('li');
-            li.textContent = `${c.name} (${c.defaultDuration}秒)`;
-            li.addEventListener('click', () => {
+            const sp = document.createElement('span');
+            sp.className = 'cat-name';
+            sp.textContent = `${c.name}（${c.defaultDuration}秒）`;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-add-cat';
+            btn.textContent = '＋追加';
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 addSetlistItem({
                     name: c.name,
                     dict: c.dict,
@@ -126,8 +172,56 @@
                     duration: c.defaultDuration || defaultDuration,
                 });
             });
+            li.appendChild(sp);
+            li.appendChild(btn);
             list.appendChild(li);
         });
+    }
+
+    function extractVideoId(url) {
+        if (!url || typeof url !== 'string') return null;
+        const patterns = [
+            /(?:youtube\.com\/watch\?v=)([^&\s]+)/,
+            /(?:youtu\.be\/)([^?\s]+)/,
+            /(?:youtube\.com\/embed\/)([^?\s]+)/,
+        ];
+        for (let i = 0; i < patterns.length; i++) {
+            const m = url.match(patterns[i]);
+            if (m) return m[1];
+        }
+        return null;
+    }
+
+    function applyYouTube(p) {
+        if (!p || !p.url) return;
+        if (!ytReady || !ytPlayer) {
+            pendingYoutube = p;
+            return;
+        }
+        const id = extractVideoId(p.url);
+        if (!id) {
+            return;
+        }
+        ytPlayer.loadVideoById({ videoId: id, startSeconds: p.startSeconds || 0 });
+        try {
+            ytPlayer.playVideo();
+        } catch (e) { /* cef */ }
+        try {
+            if (p.audioEnabled === false) {
+                ytPlayer.mute();
+            } else {
+                ytPlayer.unMute();
+            }
+        } catch (e) { /* cef */ }
+        updateAudioButton();
+    }
+
+    function stopYouTube() {
+        if (ytReady && ytPlayer) {
+            try {
+                ytPlayer.stopVideo();
+            } catch (e) { /* cef */ }
+        }
     }
 
     window.addEventListener('message', (e) => {
@@ -139,11 +233,11 @@
             defaultDuration = d.defaultDuration || 10;
             $('set-max').textContent = String(maxSlots);
             $('c-dur').value = String(defaultDuration);
-            $('app-wrap').classList.remove('hidden');
+            $('ddm-container').classList.remove('hidden');
             renderCatalog();
             loadPresetList();
         } else if (d.type === 'hideManager') {
-            $('app-wrap').classList.add('hidden');
+            $('ddm-container').classList.add('hidden');
         } else if (d.type === 'showMini') {
             $('mini-hud').classList.remove('hidden');
             miniPaused = false;
@@ -158,28 +252,15 @@
             $('mini-remain').textContent = String(d.remain != null ? d.remain : 0);
             $('mini-loop').textContent = d.loop ? 'ループ: ON' : 'ループ: OFF';
         } else if (d.type === 'playYoutube') {
-            pendingYoutube = { url: d.url, startSeconds: d.startSeconds || 0 };
-            if (ytReady) {
-                startYouTube(pendingYoutube.url, pendingYoutube.startSeconds);
-                pendingYoutube = null;
-            }
+            const audio = d.audioEnabled !== false;
+            audioEnabled = audio;
+            updateAudioButton();
+            applyYouTube({ url: d.url, startSeconds: d.startSeconds || 0, audioEnabled: audio });
         } else if (d.type === 'stopYoutube') {
             stopYouTube();
-        } else if (d.type === 'playbackEnded' || d.type === 'uiClosed') {
-            /* no-op */
         }
     });
 
-    // listPresets — use fetch and read body? NUI callback returns in lua cb() - we need to use NUI callback from fetch
-    // FiveM: RegisterNUICallback 'listPresets' with cb - the fetch doesn't return JSON in browser - actually it does! 
-    // https://docs.fivem.net/docs/scripting-manual/nui-development/nui-callbacks/ - the response is in res.json()
-    // Actually the fetch to NUI returns empty - need to use $.post with promise - in CEF fetch returns 200 and body is json from cb({ })
-
-    /**
-     * @param {string} name
-     * @param {object} [payload]
-     * @returns {Promise<any>}
-     */
     async function nuiFetch(name, payload) {
         const r = await fetch(`https://${resName()}/${name}`, {
             method: 'POST',
@@ -214,7 +295,33 @@
         }
     }
 
+    window.onYouTubeIframeAPIReady = function () {
+        ytPlayer = new YT.Player('yt-player', {
+            width: 1,
+            height: 1,
+            playerVars: {
+                autoplay: 0,
+                controls: 0,
+                disablekb: 1,
+                playsinline: 1,
+                enablejsapi: 1,
+            },
+            events: {
+                onReady: function () {
+                    ytReady = true;
+                    if (pendingYoutube) {
+                        applyYouTube(pendingYoutube);
+                        pendingYoutube = null;
+                    }
+                },
+            },
+        });
+    };
+
     $('btn-close').addEventListener('click', () => nuiPost('close', {}));
+    if ($('btn-youtube-audio')) {
+        $('btn-youtube-audio').addEventListener('click', () => toggleMuteUser());
+    }
     $('catalog-search').addEventListener('input', renderCatalog);
     $('catalog-cat').addEventListener('change', renderCatalog);
 
@@ -239,7 +346,7 @@
         const youtubeUrl = ($('youtube-url').value || '').trim();
         const youtubeStart = parseInt($('youtube-start').value, 10) || 0;
         const loop = $('loop-toggle').checked;
-        await nuiFetch('startPlayback', { setlist, youtubeUrl, youtubeStart, loop });
+        await nuiFetch('startPlayback', { setlist, youtubeUrl, youtubeStart, loop, audioEnabled: audioEnabled });
     });
 
     $('btn-stop-ui').addEventListener('click', () => nuiPost('stopPlayback', {}));
@@ -258,6 +365,7 @@
             youtubeUrl: ($('youtube-url').value || '').trim(),
             youtubeStart: parseInt($('youtube-start').value, 10) || 0,
             loop: $('loop-toggle').checked,
+            audioEnabled: audioEnabled,
         });
         if (r && r.ok) {
             showToast('💾 保存しました');
@@ -277,6 +385,15 @@
         $('youtube-url').value = r.youtubeUrl || '';
         $('youtube-start').value = r.youtubeStart != null ? String(r.youtubeStart) : '0';
         $('loop-toggle').checked = !!r.loop;
+        if (r.audioEnabled === false) {
+            audioEnabled = false;
+        } else {
+            audioEnabled = true;
+        }
+        if (r.audioEnabled === undefined && r.youtube && r.youtube.audio === false) {
+            audioEnabled = false;
+        }
+        updateAudioButton();
         $('preset-name').value = name;
         showToast('📂 読込: ' + name);
     });
@@ -294,66 +411,6 @@
         }
     });
 
-    function extractVideoId(url) {
-        if (!url || typeof url !== 'string') return null;
-        const patterns = [
-            /(?:youtube\.com\/watch\?v=)([^&\s]+)/,
-            /(?:youtu\.be\/)([^?\s]+)/,
-            /(?:youtube\.com\/embed\/)([^?\s]+)/,
-        ];
-        for (let i = 0; i < patterns.length; i++) {
-            const m = url.match(patterns[i]);
-            if (m) return m[1];
-        }
-        return null;
-    }
-
-    function startYouTube(url, startSeconds) {
-        if (!ytReady || !ytPlayer) {
-            return;
-        }
-        const id = extractVideoId(url);
-        if (!id) {
-            return;
-        }
-        ytPlayer.loadVideoById({ videoId: id, startSeconds: startSeconds || 0 });
-        try {
-            ytPlayer.playVideo();
-        } catch (e) { /* cef */ }
-    }
-
-    function stopYouTube() {
-        if (ytReady && ytPlayer) {
-            try {
-                ytPlayer.stopVideo();
-            } catch (e) { /* cef */ }
-        }
-    }
-
-    window.onYouTubeIframeAPIReady = function () {
-        ytPlayer = new YT.Player('yt-player', {
-            width: 1,
-            height: 1,
-            playerVars: {
-                autoplay: 0,
-                controls: 0,
-                disablekb: 1,
-                playsinline: 1,
-                enablejsapi: 1,
-            },
-            events: {
-                onReady: function () {
-                    ytReady = true;
-                    if (pendingYoutube) {
-                        startYouTube(pendingYoutube.url, pendingYoutube.startSeconds);
-                        pendingYoutube = null;
-                    }
-                },
-            },
-        });
-    };
-
-    // --- エクスポート / インポート
     function utf8ToB64(s) {
         return btoa(unescape(encodeURIComponent(s)));
     }
@@ -373,9 +430,10 @@
 
         const jsonData = {
             name: presetName,
-            youtube: { url: youtubeUrl, start: youtubeStart },
+            youtube: { url: youtubeUrl, start: youtubeStart, audio: audioEnabled },
             loop: loop,
             setlist: items,
+            audioEnabled: audioEnabled,
         };
         const base64 = utf8ToB64(JSON.stringify(jsonData));
 
@@ -383,7 +441,8 @@
         md += `## プリセット名: ${presetName}\n\n`;
         md += '### 🎵 音楽\n';
         md += `- URL: ${youtubeUrl || 'なし'}\n`;
-        md += `- 開始位置: ${youtubeStart}秒\n\n`;
+        md += `- 開始位置: ${youtubeStart}秒\n`;
+        md += `- 音声: ${audioEnabled ? 'ON' : 'OFF（ミュート）'}\n\n`;
         md += `### 📋 セットリスト (全${items.length}モーション / 合計 ${totalMin}分${String(totalSec).padStart(2, '0')}秒)\n`;
         md += '| # | モーション | 秒数 | Dict | Clip |\n';
         md += '|---|-----------|------|------|------|\n';
@@ -396,10 +455,12 @@
         md += `<!-- jp-ddm-data:${base64} -->\n`;
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(md).then(
-                () => showToast('📋 クリップボードにコピー'),
-                () => showToast('コピー失敗。手で選択してください', true)
-            );
+            navigator.clipboard
+                .writeText(md)
+                .then(
+                    () => showToast('📋 クリップボードにコピー'),
+                    () => showToast('コピー失敗。手で選択してください', true)
+                );
         } else {
             showToast('Clipboard 未対応', true);
         }
@@ -436,7 +497,16 @@
                 })
             );
             $('youtube-url').value = json.youtube?.url || '';
-            $('youtube-start').value = String(json.youtube?.start || 0);
+            $('youtube-start').value = String(json.youtube?.start ?? 0);
+            if (json.audioEnabled === false) {
+                audioEnabled = false;
+            } else {
+                audioEnabled = true;
+            }
+            if (json.youtube && json.youtube.audio === false) {
+                audioEnabled = false;
+            }
+            updateAudioButton();
             $('loop-toggle').checked = !!json.loop;
             $('preset-name').value = json.name || '';
             closeImportModal();
@@ -451,7 +521,6 @@
     $('btn-import-execute').addEventListener('click', executeImport);
     $('btn-import-cancel').addEventListener('click', closeImportModal);
 
-    // mini
     function updateMiniPauseLabel() {
         const b = $('btn-mini-pause');
         if (b) b.textContent = miniPaused ? '▶' : '⏸';
@@ -463,4 +532,6 @@
     });
     $('btn-mini-next').addEventListener('click', () => nuiPost('nextStep', {}));
     $('btn-mini-stop').addEventListener('click', () => nuiPost('miniStop', {}));
+
+    updateAudioButton();
 })();
