@@ -268,18 +268,12 @@
     if (!modal || !list) { return; }
     list.innerHTML = '';
     var targets = state.debugTargets || [];
-    var formNames = {
-      baby: '幼年期', child: '成長期',
-      adult_a: '成熟期A', adult_b: '成熟期B', adult_c: '成熟期C', adult_d: '成熟期D（レア）',
-      sick: '病気', grave: '旅立ち'
-    };
-    var fn2 = (state && state.formNames) || formNames;
     var ph = state.pet && state.pet.phase;
     targets.forEach(function (t) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'btn-sec debug-evolve-btn';
-      b.textContent = (fn2 && fn2[t]) || formNames[t] || t;
+      b.textContent = t;
       b.setAttribute('data-target', t);
       if (t === 'sick' && (ph === 'egg' || ph === 'dead' || ph === 'sick')) {
         b.disabled = true;
@@ -301,7 +295,7 @@
     if (!stat || !cancel) { return; }
     if (state && state.debugForceEvolve) {
       var dfe = state.debugForceEvolve;
-      stat.textContent = '⏱ ' + (dfe.evName || dfe.target) + ' に進化まで ' + (dfe.remainSec | 0) + ' 秒';
+      stat.textContent = '⏱ ' + dfe.target + ' に進化まで ' + (dfe.remainSec | 0) + ' 秒';
       stat.hidden = false;
       cancel.hidden = false;
     } else {
@@ -546,7 +540,7 @@
     } else if (d.type === 'debugEvolveScheduled') {
       showFlash();
       if (state) {
-        var dmsg = '🛠 ' + (d.evName || d.target) + ' に ' + (d.delaySec | 0) + ' 秒後に進化…';
+        var dmsg = '🛠 ' + d.target + ' に ' + (d.delaySec | 0) + ' 秒後に進化…';
         tickerList = [dmsg, TIP];
         tickerIdx = 0;
         applyTickerSlide();

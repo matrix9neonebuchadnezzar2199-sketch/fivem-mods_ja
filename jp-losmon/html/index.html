@@ -22,7 +22,8 @@
     </div>
     <div id="debug-evolve-modal" class="zukan-overlay hidden">
       <div class="zukan-panel">
-        <h2>🛠 強制進化（デバッグ）<button type="button" class="xbtn" id="debug-evolve-close">✕</button></h2>
+        <h2>🛠 デバッグ — 進化先選択<button type="button" class="xbtn" id="debug-evolve-close">✕</button></h2>
+        <p class="debug-evolve-help">選択すると 10 秒後に該当モンスターへ進化します</p>
         <div id="debug-evolve-list" class="debug-evolve-list"></div>
         <p id="debug-evolve-status" class="meta" hidden></p>
         <button type="button" id="debug-evolve-cancel" class="btn-sec" hidden>カウントダウンをキャンセル</button>
@@ -78,11 +79,11 @@
           <p class="meta" id="meta-dhead" hidden>死まで: —</p>
           </div>
           <p class="btns-lower">
+            <button type="button" id="btn-debug-evolve" class="btn-sec" hidden>🛠 デバッグ</button>
             <button type="button" id="btn-reset-mini" class="btn-sec">ミニ版を初期位置へ</button>
             <button type="button" id="btn-zukan" class="btn-sec">📖 図鑑</button>
             <button type="button" id="btn-travel" class="btn-sec" hidden>🛫 旅立たせる</button>
             <button type="button" id="btn-new" class="btn-sec" hidden>新しい卵</button>
-            <button type="button" id="btn-debug-evolve" class="btn-sec" hidden>🛠 強制進化</button>
           </p>
         </div>
       </div>

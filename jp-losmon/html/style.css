@@ -89,6 +89,12 @@ html { font-size: 144px; }
   color: #555;
   text-shadow: none;
 }
+.debug-evolve-help {
+  font-size: 0.16rem;
+  color: #aab;
+  margin: 0.04rem 0 0.08rem 0;
+  text-align: center;
+}
 .debug-evolve-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -98,6 +104,8 @@ html { font-size: 144px; }
 .debug-evolve-btn {
   text-align: center;
   padding: 0.06rem;
+  font-family: "Consolas", "Menlo", monospace;
+  font-size: 0.18rem;
 }
 /* 未開放: 真っ黒にならないよう、シルエット感を保つ */
 .zk-sil {
