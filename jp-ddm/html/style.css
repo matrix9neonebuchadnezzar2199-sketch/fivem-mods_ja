@@ -1,4 +1,4 @@
-/* jp-DDM: 20% / 40% / 40%（左=カタログ+カスタム、中央=透過プレビュー、右=セット+操作2列） */
+/* jp-DDM: 20% / 80%（左=カタログ+カスタム、右=セット+操作2列） */
 /* 文字サイズ2倍: rem 基準（従来 28px 相当の2倍） */
 html {
     font-size: 56px;
@@ -67,12 +67,12 @@ body {
     cursor: pointer;
 }
 
-/* 3 カラム: 20% / 40% / 40% */
+/* 2 カラム: 20% / 80% */
 .ddm-grid {
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: 20% 40% 40%;
+    grid-template-columns: 20% 80%;
     grid-template-rows: 1fr;
     gap: 0;
 }
@@ -86,7 +86,7 @@ body {
     overflow: hidden;
 }
 
-/* 左右のみ背景（中央は完全透過） */
+/* 左右パネル */
 .ddm-left,
 .ddm-right-wrap {
     background: rgba(10, 10, 30, 0.88);
@@ -170,31 +170,6 @@ body {
     overflow-y: auto;
 }
 
-/* 中央: 透過 + 操作をゲームへ通す。ラベルだけ見える */
-.ddm-center {
-    position: relative;
-    background: transparent;
-    border-left: 1px solid rgba(150, 100, 255, 0.3);
-    border-right: 1px solid rgba(150, 100, 255, 0.3);
-    pointer-events: none;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 8px 4px 0;
-}
-
-.preview-label {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #fff;
-    opacity: 0.4;
-    user-select: none;
-    text-shadow: 0 0 8px #000;
-    pointer-events: none;
-    margin: 0;
-    padding-top: 0.04rem;
-}
-
 .left-block,
 .right-block {
     display: flex;
@@ -220,7 +195,7 @@ body {
     flex-shrink: 0;
 }
 
-/* 右 40%: 内側 2 列（セットリスト | 操作） */
+/* 右 80%: 内側 2 列（セットリスト | 操作） */
 .ddm-right-wrap {
     padding: 0;
     min-width: 0;
