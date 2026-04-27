@@ -379,8 +379,15 @@
         posMini();
         setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
         applySpriteWithMode(document.getElementById('mini-sprite'), getSpriteSet(), true);
-        var h = m.stats ? (m.stats.hunger || 0) : 0;
-        document.getElementById('mini-bh').style.width = h + '%';
+        var mef = document.getElementById('mini-exp-fill');
+        if (mef) {
+          var lmaxM = (state.levelMax | 0) || 999;
+          var lcurM = (state.level | 0) || 1;
+          var epcM = Number(state.expLevelPct);
+          if (isNaN(epcM)) { epcM = 0; }
+          if (lcurM >= lmaxM) { epcM = 100; }
+          mef.style.width = Math.max(0, Math.min(100, epcM)) + '%';
+        }
       }
       mpetE.classList.toggle('mini--drag', Boolean(ex && m && m.phase !== 'dead'));
       mpetE.style.zIndex = (ex && m) ? '10020' : '10040';
