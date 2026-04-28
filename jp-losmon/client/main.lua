@@ -1067,6 +1067,7 @@ local function nuiStatePayload(st, expanded)
     local skinRow = resolveSkin(skinId)
     return {
         type = 'state',
+        nowSec = n,
         expanded = expanded or false,
         showEgg = false,
         eggList = nil,
@@ -1107,6 +1108,10 @@ local function nuiStatePayload(st, expanded)
             tickerNearPhase = Config.TickerNearPhaseMaxSec or 600,
             spriteStripFrames = spriteStripFramesForPet(pet),
             lifeModeEnabled = (Config and Config.LifeModeEnabled) and true or false,
+            feedCooldown = Config.FeedCooldown or 30,
+            playCooldown = Config.PlayCooldown or 60,
+            sleepCooldown = Config.SleepCooldown or 120,
+            cleanCooldown = Config.CleanCooldown or 60,
         },
         sprite = getSpriteSetForPet(pet),
         nextPhaseInSec = nPhaseLeft,

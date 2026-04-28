@@ -5,6 +5,7 @@
   var res = 'jp-losmon';
   var state = null;
   var tick = null;
+  var cdTick = null;
   var currentAction = 'idle';
   var actionTimer = null;
   var miniDrag = { active: false, sx: 0, sy: 0, sl: 0, st: 0, acc: 0 };
@@ -35,6 +36,62 @@
     var m = Math.floor(s / 60);
     var r = s % 60;
     return (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r;
+  }
+
+  function getSyncedGameTime() {
+    if (!state) { return Math.floor(Date.now() / 1000); }
+    if (state._clientSyncAt == null || state._serverNow == null) {
+      return Math.floor(Date.now() / 1000);
+    }
+    return state._serverNow + (Date.now() / 1000 - state._clientSyncAt);
+  }
+
+  function getLiveCooldowns() {
+    if (!state) { return { feed: 0, play: 0, sleep: 0, clean: 0 }; }
+    var m = state.pet;
+    if (!m || !m.lastAction) {
+      return (state.cooldowns) ? state.cooldowns : { feed: 0, play: 0, sleep: 0, clean: 0 };
+    }
+    var t = getSyncedGameTime();
+    var al = m.phase && m.phase !== 'egg' && m.phase !== 'dead';
+    var notSick = m.phase !== 'sick';
+    var cfg = state.config || {};
+    var fc = (cfg.feedCooldown | 0) || 30, plc = (cfg.playCooldown | 0) || 60, sc = (cfg.sleepCooldown | 0) || 120, cln = (cfg.cleanCooldown | 0) || 60;
+    function cl(action, period) {
+      var last = (m.lastAction[action] | 0) || 0;
+      return Math.max(0, Math.floor((last + period) - t));
+    }
+    var o = { feed: 0, play: 0, sleep: 0, clean: 0 };
+    if (al) { o.feed = cl('feed', fc); o.clean = cl('clean', cln); }
+    if (al && notSick) { o.play = cl('play', plc); o.sleep = cl('sleep', sc); }
+    return o;
+  }
+
+  function updateCooldownUI() {
+    if (!state || !state.pet) { return; }
+    if (!state.expanded) { return; }
+    var c = getLiveCooldowns();
+    var m = state.pet;
+    ['feed', 'play', 'sleep', 'clean'].forEach(function (a) {
+      var b = document.querySelector('.cd[data-cd="' + a + '"]');
+      if (b) {
+        var t = c[a] | 0;
+        b.textContent = t > 0 ? ('(' + t + 's)') : '';
+      }
+      t = c[a] | 0;
+      b = document.querySelector('.care-tile[data-a="' + a + '"]');
+      if (b) {
+        var sck = m && m.phase === 'sick' && (a === 'play' || a === 'sleep');
+        var eggB = m && m.phase === 'egg';
+        b.disabled = t > 0 || sck || eggB;
+        b.classList.toggle('disabled', t > 0 || sck || eggB);
+      }
+    });
+  }
+
+  function startCooldownTimer() {
+    if (cdTick) { clearInterval(cdTick); cdTick = null; }
+    cdTick = setInterval(function () { updateCooldownUI(); }, 1000);
   }
 
   function elapseText(sec) {
@@ -574,7 +631,7 @@
     }
     var btnDbg = document.getElementById('btn-debug-evolve');
     if (btnDbg) { btnDbg.hidden = !(state && state.debugEnabled); }
-    var c = state.cooldowns || {};
+    var c = getLiveCooldowns();
     ['feed', 'play', 'sleep', 'clean'].forEach(function (a) {
       var b = document.querySelector('.cd[data-cd=\"' + a + '\"]');
       if (!b) { return; }
@@ -641,6 +698,9 @@
     if (!d || !d.type) { return; }
     if (d.type === 'state') {
       state = d; state._uiS = UI_S;
+      state._clientSyncAt = Date.now() / 1000;
+      state._serverNow = (d.nowSec != null) ? Number(d.nowSec) : state._clientSyncAt;
+      startCooldownTimer();
       if (d.pet && d.pet.phase === 'egg' && d.hatchLeftSec != null) {
         state._hatchSyncAt = Date.now();
         state._hatchBaseSec = d.hatchLeftSec | 0;
@@ -702,6 +762,10 @@
       else if (d.name === 'clean') { currentAction = 'clean'; }
       if (d.sprite) { state.sprite = d.sprite; }
       if (d.pet) { state.pet = d.pet; }
+      if (state.pet && state.pet.lastAction && d.name && state.pet.lastAction[d.name] != null) {
+        state._serverNow = state.pet.lastAction[d.name];
+        state._clientSyncAt = Date.now() / 1000;
+      }
       updateSickSkulls();
       setSprite(document.getElementById('sprite-el'), getSpriteSet(), currentAction);
       setSprite(document.getElementById('mini-sprite'), getSpriteSet(), currentAction);
