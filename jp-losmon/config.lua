@@ -60,6 +60,16 @@ Config.DebugForceEvolveEnabled = false
 Config.DebugForceEvolveDelaySec = 10
 Config.DebugEvolveTargets = { 'baby', 'child', 'adult_a', 'adult_b', 'adult_c', 'adult_d', 'sick', 'grave' }
 
+-- うんこ（LCD 演出。幼体以降に間欠出現。最古の放置で病気、そうじで一掃＋清潔上昇と病因解除）
+Config.PoopEnabled = true
+Config.PoopIntervalMinSec = 1800
+Config.PoopIntervalMaxSec = 3600
+Config.PoopMaxCount = 3
+Config.PoopSickAfterSec = 3600
+Config.PoopCleanlinessPenalty = 8
+-- NUI は html/img/ 下のファイル名（app.js nuiUrl と対応）
+Config.PoopSpritePath = 'un.png'
+
 -- ===== デバッグモード =====
 Config.Debug = true
 if Config.Debug then
@@ -72,6 +82,9 @@ if Config.Debug then
     Config.StatDecayRate = 1.0
     Config.DeathTime = 180
     Config.DebugForceEvolveEnabled = true
+    Config.PoopIntervalMinSec = 30
+    Config.PoopIntervalMaxSec = 60
+    Config.PoopSickAfterSec = 120
 end
 
 -- レベル（EXP）: 合計 EXP から L = min(LevelMax, floor((1+sqrt(1+8*E/ExpBasePer100))/2))。LV1 の領域は 0 〜 未満 ExpBasePer100

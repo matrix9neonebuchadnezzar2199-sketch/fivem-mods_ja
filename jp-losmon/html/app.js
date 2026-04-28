@@ -362,6 +362,37 @@
     }
   }
 
+  function renderPoops() {
+    var layer = document.getElementById('poop-layer');
+    if (!layer || !state) { return; }
+    layer.innerHTML = '';
+    var poops = (state.pet && state.pet.poops) || [];
+    if (!poops.length) { return; }
+    var path = (state.poopSpritePath != null && String(state.poopSpritePath) !== '') ? String(state.poopSpritePath) : 'un.png';
+    var posList = [
+      { left: '20%', bottom: '8%' },
+      { left: '50%', bottom: '5%' },
+      { left: '78%', bottom: '10%' }
+    ];
+    var now = Date.now() / 1000;
+    var sickAfter = (state.poopSickAfterSec != null) ? (state.poopSickAfterSec | 0) : 3600;
+    for (var i = 0; i < poops.length; i++) {
+      var p = poops[i];
+      var pos = posList[i] || posList[posList.length - 1];
+      var div = document.createElement('div');
+      div.className = 'poop';
+      div.setAttribute('aria-hidden', 'true');
+      div.style.left = pos.left;
+      div.style.bottom = pos.bottom;
+      div.style.backgroundImage = 'url(' + nuiUrl(path) + ')';
+      var elap = now - (Number(p && p.bornAt) || now);
+      if (elap > sickAfter * 0.5) {
+        div.classList.add('poop-old');
+      }
+      layer.appendChild(div);
+    }
+  }
+
   function render() {
     if (!state) { return; }
     if (state.pet && state.pet.phase === 'egg' && state._hatchSyncAt != null) {
@@ -500,6 +531,7 @@
       }
     }
     updateSickSkulls();
+    renderPoops();
     requestAnimationFrame(function () { requestAnimationFrame(syncSpriteLayout); });
   }
 

@@ -150,11 +150,22 @@ local function tickOnline(store, n)
         return 0
     end
     if pet.phase ~= 'dead' and pet.phase ~= 'egg' and pet.stats then
-        local d = (Config.StatDecayRate or 0) * (delta / 60.0)
+        local minutes = delta / 60.0
+        local d = (Config.StatDecayRate or 0) * minutes
+        local poopExtra = 0.0
+        if
+            Config
+            and Config.PoopEnabled
+            and (Config.PoopCleanlinessPenalty or 0) > 0
+            and pet.poops
+            and #pet.poops > 0
+        then
+            poopExtra = (Config.PoopCleanlinessPenalty * #pet.poops * minutes) / 100.0
+        end
         pet.stats.hunger = clamp((pet.stats.hunger or 0) - d, 0, 100)
         pet.stats.mood = clamp((pet.stats.mood or 0) - d, 0, 100)
         pet.stats.stamina = clamp((pet.stats.stamina or 0) - d, 0, 100)
-        pet.stats.clean = clamp((pet.stats.clean or 0) - d, 0, 100)
+        pet.stats.clean = clamp((pet.stats.clean or 0) - d - poopExtra, 0, 100)
     end
     if pet.phase == 'egg' or pet.phase == 'baby' or pet.phase == 'child' then
         pet.phaseElapsedSec = (pet.phaseElapsedSec or 0) + delta
@@ -181,6 +192,10 @@ local function createNewEggPet()
         phaseElapsedSec = 0,
         lastOnlineAt = t,
         lastLotteryAt = 0,
+        poops = {},
+        poopSeq = 0,
+        nextPoopAt = nil,
+        poopSickStartAt = nil,
     }
 end
 
@@ -225,9 +240,11 @@ local function tryRecoverFromSick(pet)
     local c = pet.stats and (pet.stats.clean or 0) or 0
     local hT = Config.SickThreshold or 10
     local cT = Config.SickCleanThreshold or 50
-    if h > hT and c >= cT then
+    local poopOk = (pet.sickCause ~= 'poop') or (not pet.poops or #pet.poops == 0)
+    if h > hT and c >= cT and poopOk then
         pet.phase = pet.phaseBeforeSick
         pet.sickAt = nil
+        pet.sickCause = nil
         pet.phaseBeforeSick = nil
         return true
     end
@@ -374,8 +391,120 @@ local function ensureStore(store)
         if hasPet(store.pet) and store.pet.phase == 'egg' then
             zukanAdd(store.zukan, 'egg')
         end
+        if type(store.pet.poops) ~= 'table' then
+            store.pet.poops = {}
+        end
+        if type(store.pet.poopSeq) ~= 'number' then
+            store.pet.poopSeq = 0
+        end
+        if store.pet.sickCause ~= nil and type(store.pet.sickCause) ~= 'string' then
+            store.pet.sickCause = nil
+        end
+        do
+            local pph = store.pet.phase
+            if
+                pph
+                and (pph == 'baby' or pph == 'child' or pph == 'adult')
+                and type(store.pet.nextPoopAt) ~= 'number'
+            then
+                local lo0 = (Config and Config.PoopIntervalMinSec) or 1800
+                local hi0 = (Config and Config.PoopIntervalMaxSec) or 3600
+                if lo0 > hi0 then
+                    lo0, hi0 = hi0, lo0
+                end
+                store.pet.nextPoopAt = nowSec() + math.random(lo0, hi0)
+            end
+        end
     end
     return store
+end
+
+---@param pet table|nil
+---@return number
+local function clearAllPoops(pet)
+    if not pet then
+        return 0
+    end
+    local n = #(pet.poops or {})
+    pet.poops = {}
+    return n
+end
+
+---@param store table
+---@return boolean
+local function tryGeneratePoop(store)
+    if not Config or not Config.PoopEnabled then
+        return false
+    end
+    local pet = store and store.pet
+    if not pet or not isAlive(pet) or pet.phase == 'sick' then
+        return false
+    end
+    local ph = pet.phase
+    if ph == 'egg' or ph == 'dead' or not (ph == 'baby' or ph == 'child' or ph == 'adult') then
+        return false
+    end
+    if not pet.poops then
+        pet.poops = {}
+    end
+    local now = nowSec()
+    if now < (tonumber(pet.nextPoopAt) or 0) then
+        return false
+    end
+    local maxC = (Config and Config.PoopMaxCount) or 3
+    if #pet.poops >= maxC then
+        local lo = (Config and Config.PoopIntervalMinSec) or 1800
+        local hi = (Config and Config.PoopIntervalMaxSec) or 3600
+        if lo > hi then
+            lo, hi = hi, lo
+        end
+        pet.nextPoopAt = now + math.random(lo, hi)
+        return false
+    end
+    pet.poopSeq = (tonumber(pet.poopSeq) or 0) + 1
+    table.insert(pet.poops, { id = pet.poopSeq, bornAt = now })
+    do
+        local lo = (Config and Config.PoopIntervalMinSec) or 1800
+        local hi = (Config and Config.PoopIntervalMaxSec) or 3600
+        if lo > hi then
+            lo, hi = hi, lo
+        end
+        pet.nextPoopAt = now + math.random(lo, hi)
+    end
+    return true
+end
+
+---@param store table
+---@return boolean
+local function checkPoopSickness(store)
+    if not Config or not Config.PoopEnabled then
+        return false
+    end
+    local pet = store and store.pet
+    if not pet or not isAlive(pet) then
+        return false
+    end
+    if pet.phase == 'sick' or pet.phase == 'dead' or pet.phase == 'egg' then
+        return false
+    end
+    if not pet.poops or #pet.poops == 0 then
+        return false
+    end
+    local oldest = pet.poops[1]
+    if not oldest or not oldest.bornAt then
+        return false
+    end
+    local need = (Config and Config.PoopSickAfterSec) or 3600
+    local elapsed = nowSec() - (tonumber(oldest.bornAt) or nowSec())
+    if elapsed < need then
+        return false
+    end
+    pet.phaseBeforeSick = pet.phase
+    pet.phase = 'sick'
+    pet.sickAt = nowSec()
+    pet.sickCause = 'poop'
+    zukanAdd(store.zukan, 'sick')
+    return true
 end
 
 ---@param store table
@@ -399,6 +528,11 @@ local function syncWorldTime(store)
         if lotteryResult then
             evolved = lotteryResult
         end
+    end
+
+    if not forceEvolved and store.pet and hasPet(store.pet) and isAlive(store.pet) and store.pet.phase ~= 'sick' and store.pet.phase ~= 'egg' then
+        tryGeneratePoop(store)
+        checkPoopSickness(store)
     end
 
     if not forceEvolved then
@@ -952,6 +1086,8 @@ local function nuiStatePayload(st, expanded)
             clean = al and cooldownLeft(pet, 'clean') or 0,
         },
         resName = (GetCurrentResourceName and GetCurrentResourceName() or 'jp-losmon'),
+        poopSickAfterSec = (Config and Config.PoopSickAfterSec) or 3600,
+        poopSpritePath = (Config and Config.PoopSpritePath) or 'un.png',
     }
 end
 
@@ -1149,7 +1285,8 @@ RegisterNUICallback('action', function(data, cb)
         pet.careCount = (pet.careCount or 0) + 1
         pet.lastAction.sleep = n
     elseif a == 'clean' then
-        pet.stats.clean = clamp((pet.stats.clean or 0) + 20, 0, 100)
+        pet.stats.clean = clamp((pet.stats.clean or 0) + 30, 0, 100)
+        clearAllPoops(pet)
         if pet.phase ~= 'sick' then
             pet.careCount = (pet.careCount or 0) + 1
         end
