@@ -395,24 +395,21 @@
   }
 
   function renderSkin() {
-    var sk = state && state.skin;
-    var en = !sk || sk.enabled !== false;
-    var p = (sk && sk.path) ? String(sk.path) : 'img/main.png';
-    var oy = (sk && sk.offsetY != null && String(sk.offsetY) !== '') ? String(sk.offsetY) : '50%';
+    var skinInfo = state && state.skin;
+    var p = (skinInfo && skinInfo.path) ? String(skinInfo.path) : 'img/main.png';
     document.documentElement.style.setProperty('--device-skin', "url('" + p.replace(/'/g, '%27') + "')");
-    document.documentElement.style.setProperty('--device-skin-y', oy);
     var panel = document.getElementById('skin-panel');
     if (!panel) { return; }
-    if (!en) {
+    if (!skinInfo || skinInfo.enabled === false) {
       panel.style.display = 'none';
       return;
     }
     panel.style.display = '';
-    var cur = (sk && sk.current) ? String(sk.current) : 'gray';
+    var current = (skinInfo.current) ? String(skinInfo.current) : 'gray';
     var radios = panel.querySelectorAll('.skin-radio');
     for (var i = 0; i < radios.length; i++) {
       var r = radios[i];
-      r.checked = (r.value === cur);
+      r.checked = (r.value === current);
       var opt = r.closest && r.closest('.skin-option');
       if (opt) { opt.classList.toggle('is-active', r.checked); }
     }

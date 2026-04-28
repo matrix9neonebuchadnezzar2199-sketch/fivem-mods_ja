@@ -19,10 +19,9 @@ Config.LifeModeNoEvolveDefault = false
 -- 本体スキン（グローバル。KVS 直下 `skin`）。false にすると NUI のスキン切替を無効化
 Config.SkinEnabled = true
 Config.SkinDefault = 'gray'
--- offsetY: 画像ごとにアンテナ上余白が違うため、背景の垂直位置（%）を吸収
 Config.SkinList = {
-    { id = 'gray', label = 'グレー', path = 'img/main.png', offsetY = '50%' },
-    { id = 'pink', label = 'ピンク', path = 'img/main_pink.png', offsetY = '58%' },
+    { id = 'gray', label = 'グレー', path = 'img/main.png' },
+    { id = 'pink', label = 'ピンク', path = 'img/main_pink.png' },
 }
 -- 卵→幼体以降、各成長段階の長さ（秒）
 Config.GrowthInterval = 14400

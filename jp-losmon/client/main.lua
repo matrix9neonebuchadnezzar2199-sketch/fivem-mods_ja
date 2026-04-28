@@ -462,7 +462,7 @@ local function resolveSkin(skinId)
     if list[1] then
         return list[1]
     end
-    return { id = 'gray', path = 'img/main.png', offsetY = '50%' }
+    return { id = 'gray', path = 'img/main.png' }
 end
 
 ---@param pet table|nil
@@ -1145,7 +1145,6 @@ local function nuiStatePayload(st, expanded)
             current = skinRow.id or skinId,
             list = Config.SkinList or {},
             path = (type(skinRow.path) == 'string' and skinRow.path ~= '') and skinRow.path or 'img/main.png',
-            offsetY = (type(skinRow.offsetY) == 'string' and skinRow.offsetY ~= '') and skinRow.offsetY or '50%',
             enabled = (Config and Config.SkinEnabled) and true or false,
         },
     }

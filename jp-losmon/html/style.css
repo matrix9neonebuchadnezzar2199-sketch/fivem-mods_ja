@@ -22,7 +22,6 @@ html { font-size: 144px; }
 :root {
   /* client が setProperty で上書き。初期はグレー */
   --device-skin: url("img/main.png");
-  --device-skin-y: 50%;
 }
 .hidden { display: none !important; }
 .main-expanded, .zukan-overlay, .travel-dialog { pointer-events: auto; }
@@ -315,7 +314,7 @@ html { font-size: 144px; }
   background-image: var(--device-skin);
   background-size: contain;
   background-repeat: no-repeat;
-  background-position: center var(--device-skin-y);
+  background-position: center;
   aspect-ratio: 1024 / 559;
   align-self: center;
   box-sizing: border-box;
@@ -682,7 +681,7 @@ html { font-size: 144px; }
   background-image: var(--device-skin);
   background-size: contain;
   background-repeat: no-repeat;
-  background-position: center var(--device-skin-y);
+  background-position: center;
   flex: 0 0 auto;
 }
 .mini-lcd {
@@ -769,7 +768,7 @@ html { font-size: 144px; }
   background: rgba(168, 200, 255, 0.1);
   color: #e2ecff;
 }
-/* 左: 本体スキン（グローバル。--device-skin / --device-skin-y は app.js で更新） */
+/* 左: 本体スキン（グローバル。--device-skin は app.js で更新） */
 .skin-panel {
   flex: 0 0 auto;
   margin-top: auto;
