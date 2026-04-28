@@ -112,7 +112,8 @@ local function openPlayUi(machine, extra)
         spinDuration = extra.spinDuration or Config.SpinDurationDefault,
         paytable = pt,
         characters = Config.Characters,
-        marquee = Config.Marquee,
+        marquee = extra.marquee or { hype = {}, info = {} },
+        symbolIds = extra.symbolIds,
         locales = localeTable,
         localeCode = Config.Locale or 'ja',
         assetsRoot = 'nui://' .. GetCurrentResourceName() .. '/html/assets/',
@@ -137,6 +138,8 @@ RegisterNetEvent('jp-slot:seatGranted', function(data)
         balance = data.balance,
         spinDuration = data.spinDuration,
         uiSize = data.uiSize,
+        marquee = data.marquee,
+        symbolIds = data.symbolIds,
     })
 end)
 

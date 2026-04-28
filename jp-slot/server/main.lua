@@ -7,6 +7,58 @@ local pendingSpin = {} -- [source] = true
 local bonusState = {}
 
 local KVP_JACKPOT = 'jp-slot:jackpot:pool'
+local KVP_BONUS = 'jp-slot:bonus:'
+
+---@param src number
+---@return string
+local function identifierOf(src)
+    if Framework and Framework.getPrimaryIdentifier then
+        local id = Framework.getPrimaryIdentifier(src)
+        if id and id ~= '' then
+            return id
+        end
+    end
+    local ids = GetPlayerIdentifiers(src)
+    if ids then
+        for i = 1, #ids do
+            local id = ids[i]
+            if id and string.sub(id, 1, 8) == 'license:' then
+                return id
+            end
+        end
+    end
+    return tostring(src)
+end
+
+---@param src number
+local function saveBonus(src)
+    local b = bonusState[src]
+    local id = identifierOf(src)
+    if not id then
+        return
+    end
+    if not b or (b.remaining or 0) <= 0 then
+        SetResourceKvp(KVP_BONUS .. id, '')
+        return
+    end
+    SetResourceKvp(KVP_BONUS .. id, json.encode(b))
+end
+
+---@param src number
+local function loadBonus(src)
+    local id = identifierOf(src)
+    if not id then
+        return
+    end
+    local raw = GetResourceKvpString(KVP_BONUS .. id)
+    if not raw or raw == '' then
+        return
+    end
+    local ok, decoded = pcall(json.decode, raw)
+    if ok and type(decoded) == 'table' and (decoded.remaining or 0) > 0 then
+        bonusState[src] = decoded
+    end
+end
 
 --- ジャックポット累積額を取得
 ---@return number
@@ -105,22 +157,30 @@ local function pickCutinPayload(payoutTier)
     }
 end
 
---- JSONL 追記（失敗時は無視）
+---@return string|nil
+local function transactionLogPath()
+    local base = GetResourcePath(GetCurrentResourceName())
+    if not base then
+        return nil
+    end
+    local d = os.date('%Y%m%d')
+    return base .. '/server/logs/transactions-' .. d .. '.jsonl'
+end
+
+--- JSONL 追記（失敗時は無視・日次ファイル）
 ---@param obj table
 local function appendTransactionLog(obj)
     if not Config.TransactionLog then
         return
     end
-    local base = GetResourcePath(GetCurrentResourceName())
-    if not base then
+    local path = transactionLogPath()
+    if not path then
         return
     end
-    local path = base .. '/server/logs/transactions.jsonl'
-    local line = json.encode(obj)
     pcall(function()
         local f = io.open(path, 'a')
         if f then
-            f:write(line .. '\n')
+            f:write(json.encode(obj) .. '\n')
             f:close()
         end
     end)
@@ -128,6 +188,7 @@ end
 
 ---@param source number
 local function clearSeat(source)
+    saveBonus(source)
     local mid = playerMachine[source]
     if mid then
         occupied[mid] = nil
@@ -175,6 +236,13 @@ AddEventHandler('onResourceStop', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then
         return
     end
+    local plist = GetPlayers()
+    for i = 1, #plist do
+        local sid = tonumber(plist[i])
+        if sid then
+            saveBonus(sid)
+        end
+    end
     if DynamicMachines and DynamicMachines.save then
         DynamicMachines.save()
     end
@@ -196,8 +264,13 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
     clearSeat(src)
     occupied[machineId] = src
     playerMachine[src] = machineId
+    loadBonus(src)
     local theme = Theme.getActive()
     local jackpot = Config.Jackpot.enabled and getJackpotAmount() or 0
+    local paytableId = m.paytableId or 'normal'
+    local pt = Config.Paytables and Config.Paytables[paytableId] or {}
+    local hypeKey = (Config.Marquee and Config.Marquee.HypeKey) or 'marquee.hype'
+    local infoKey = (Config.Marquee and Config.Marquee.InfoKey) or 'marquee.info'
     TriggerClientEvent('jp-slot:seatGranted', src, {
         machine = m,
         theme = theme,
@@ -205,6 +278,12 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
         balance = Framework.getMoney(src, Config.MoneyAccount),
         spinDuration = (Config.Debug and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault,
         uiSize = JpSlotGetUISize(),
+        marquee = {
+            hype = Locales.getList(hypeKey) or {},
+            info = Locales.getList(infoKey) or {},
+        },
+        symbolIds = pt.symbols
+            or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' },
     })
 end)
 
@@ -222,11 +301,13 @@ RegisterNetEvent('jp-slot:spin', function(payload)
     local bet = math.floor(tonumber(payload.bet) or 0)
     local mid = playerMachine[src]
     if not mid or mid ~= machineId then
+        pendingSpin[src] = nil
         TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'seat' })
         return
     end
     local m = findMachine(machineId)
     if not m then
+        pendingSpin[src] = nil
         TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'machine' })
         return
     end
@@ -237,15 +318,18 @@ RegisterNetEvent('jp-slot:spin', function(payload)
 
     if not inBonus then
         if bet < (m.minBet or 1) or bet > (m.maxBet or bet) then
+            pendingSpin[src] = nil
             TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'bet_range' })
             return
         end
         if Framework.getMoney(src, Config.MoneyAccount) < bet then
+            pendingSpin[src] = nil
             TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'money' })
             return
         end
     else
         if bet < (m.minBet or 1) or bet > (m.maxBet or bet) then
+            pendingSpin[src] = nil
             TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'bet_range' })
             return
         end
@@ -379,6 +463,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         bonus = bonusPayload,
     })
 
+    saveBonus(src)
     pendingSpin[src] = nil
 
     TriggerClientEvent('jp-slot:spinResult', src, {

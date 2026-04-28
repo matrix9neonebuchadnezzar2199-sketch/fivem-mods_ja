@@ -14,13 +14,13 @@
     <div id="root" data-theme="luxury">
         <header class="slot-header">
             <div class="hdr-left">
-                <span class="machine-name" data-i18n-key="machine_01_name"></span>
+                <span class="machine-name" data-i18n-key="machine_01_name">スロットマシン</span>
             </div>
             <div class="hdr-center">
                 <span class="character-name"></span>
             </div>
             <div class="hdr-right">
-                <span class="jackpot-label" data-i18n-key="ui.jackpot"></span>
+                <span class="jackpot-label" data-i18n-key="ui.jackpot">ジャックポット</span>
                 <span class="jackpot-amount">¥0</span>
             </div>
         </header>
@@ -101,26 +101,26 @@
         <footer class="slot-footer">
             <div class="footer-group footer-left">
                 <div class="stat-box footer-stat-balance">
-                    <span class="stat-label" data-i18n-key="ui.balance"></span>
+                    <span class="stat-label" data-i18n-key="ui.balance">所持金</span>
                     <span class="balance-value stat-value">¥0</span>
                 </div>
                 <button type="button" id="bet-down" class="bet-down btn btn-bet" aria-label="bet-down">－</button>
                 <div class="bet-display">
-                    <span class="bet-label" data-i18n-key="ui.bet"></span>
+                    <span class="bet-label" data-i18n-key="ui.bet">ベット</span>
                     <span class="bet-value">100</span>
                 </div>
                 <button type="button" id="bet-up" class="bet-up btn btn-bet" aria-label="bet-up">＋</button>
             </div>
             <div class="footer-group footer-center">
-                <button type="button" id="btn-bet-max" class="btn-bet-max btn btn-max" data-i18n-key="ui.bet_max"></button>
-                <button type="button" id="btn-spin" class="btn-spin btn-spin-main btn" data-i18n-key="ui.spin"></button>
+                <button type="button" id="btn-bet-max" class="btn-bet-max btn btn-max" data-i18n-key="ui.bet_max">MAX BET</button>
+                <button type="button" id="btn-spin" class="btn-spin btn-spin-main btn" data-i18n-key="ui.spin">SPIN</button>
             </div>
             <div class="footer-group footer-right">
                 <div class="gain-display stat-box">
-                    <span class="gain-label" data-i18n-key="ui.win"></span>
+                    <span class="gain-label" data-i18n-key="ui.win">獲得</span>
                     <span class="win-value gain-value">¥0</span>
                 </div>
-                <button type="button" id="btn-exit" class="btn-exit btn btn-exit-main" data-i18n-key="ui.exit"></button>
+                <button type="button" id="btn-exit" class="btn-exit btn btn-exit-main" data-i18n-key="ui.exit">終了</button>
             </div>
         </footer>
         <div class="cutin-overlay">
@@ -179,8 +179,10 @@
     </div>
 
     <script src="js/theme-loader.js"></script>
-    <script src="js/reels.js"></script>
     <script src="js/effects.js"></script>
+    <script src="js/char_fx.js"></script>
+    <script src="js/marquee.js"></script>
+    <script src="js/reels.js"></script>
     <script src="js/app.js"></script>
     <script src="js/admin.js"></script>
 </body>

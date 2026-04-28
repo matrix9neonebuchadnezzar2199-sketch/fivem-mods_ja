@@ -131,27 +131,10 @@ Config.UISize = {
     maxWidthPx = 0,
 }
 
--- NUI リール上下マーキー文言（クライアント init で NUI に渡す）
-Config.Marquee = {
-    Hype = {
-        '🎰 本日も大当たりラッシュ進行中！',
-        '💎 ジャックポット累積中、引き当てるのは君だ！',
-        '🍒 チェリー2つでも小役、3つで大当たり！',
-        '✨ キャラクター×3でフリースピン突入！',
-        '🔥 SPACE / Enter キーでもスピンOK！',
-        '🌙 ルナ・セラフィナがあなたの幸運を見守っています',
-        '🥂 高ベットほど夢が広がる、MAX BET も試してみて',
-        '🎉 ようこそ、ロスサントス公式カジノへ',
-    },
-    Info = {
-        '本日の人気台：チェリー・マシーン #1',
-        '現在のジャックポット：自動表示中',
-        '配当倍率：キャラ×3 = 500倍',
-        'フリースピン中の倍率は ×2、リトリガーで +5回',
-        'Esc キーで台から離れられます',
-        'ベット範囲は config_shared.lua から変更可能',
-    },
-}
+-- マーキー文言は locales/<locale>.json のキー（サーバーが seatGranted で配列を渡す）
+Config.Marquee = Config.Marquee or {}
+Config.Marquee.HypeKey = 'marquee.hype'
+Config.Marquee.InfoKey = 'marquee.info'
 
 -- ボーナスフリースピン（サーバーで残数・配当倍率を適用。確率は変更しない）
 Config.Bonus = {

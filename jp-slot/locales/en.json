@@ -33,6 +33,23 @@
     "Jackpot growing!",
     "MAX BET for bigger wins!"
   ],
+  "marquee.hype": [
+    "🎰 Big win streak today!",
+    "💎 Jackpot climbing — it could be you!",
+    "🍒 Two cherries pay small; three pay big!",
+    "✨ Three characters trigger free spins!",
+    "🔥 Press SPACE / Enter to spin!",
+    "🌙 Luna Serafina watches over your luck",
+    "🥂 Higher bets, bigger dreams — try MAX BET",
+    "🎉 Welcome to the Los Santos casino floor"
+  ],
+  "marquee.info": [
+    "Popular today: Cherry Machine #1",
+    "Payouts: Character ×3 = 500×",
+    "Free spins: ×2 payout; retrigger +5 spins",
+    "Press Esc to leave the machine",
+    "Bet limits are editable in config_shared.lua"
+  ],
   "admin": {
     "title": "JP-Slot Admin",
     "tab_design": "Design",

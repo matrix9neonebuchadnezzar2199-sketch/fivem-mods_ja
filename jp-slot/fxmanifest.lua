@@ -12,6 +12,7 @@ shared_script 'config_shared.lua'
 server_scripts {
     'config_server.lua',
     'server/framework.lua',
+    'server/locales.lua',
     'server/rng.lua',
     'server/theme.lua',
     'server/ui_size.lua',

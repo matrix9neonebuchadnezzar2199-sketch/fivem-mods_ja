@@ -246,31 +246,57 @@
 .char-video {
     z-index: 2;
     opacity: 0;
-    transition: opacity 0.28s ease;
+    transition: opacity 0.35s ease;
     pointer-events: none;
     background: transparent;
+    object-fit: cover;
+    object-position: center bottom;
+    transform-origin: center bottom;
 }
 
 .char-video.is-playing {
     opacity: 1;
-    object-fit: cover;
-    min-width: 100%;
-    min-height: 100%;
-    width: 100%;
-    height: 100%;
+    transform: scale(1.55);
+}
+
+.char-portrait.is-fading-out,
+.char-img.char-portrait.is-fading-out {
+    animation: char-portrait-fadeout 0.35s ease forwards;
+}
+
+@keyframes char-portrait-fadeout {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.char-portrait.is-returning,
+.char-img.char-portrait.is-returning {
+    animation: char-portrait-fadein 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
 
 @keyframes char-portrait-fadein {
-    from {
-        opacity: 0.2;
+    0% {
+        opacity: 0;
+        transform: scale(0.985);
+        filter: blur(3px);
     }
-    to {
+    100% {
         opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
     }
 }
 
-.char-portrait.is-returning {
-    animation: char-portrait-fadein 0.55s ease forwards;
+/* プレースホルダー時はフェード抑制 */
+.char-portrait[data-placeholder='true'].is-returning,
+.char-portrait[data-placeholder='true'].is-fading-out {
+    animation: none !important;
+    opacity: 0.55 !important;
+    filter: grayscale(35%) !important;
 }
 
 .char-portrait[data-placeholder='true'] {
@@ -522,44 +548,69 @@
     box-shadow: 0 0 0.12rem var(--glow-color);
 }
 
-/* 中段ガイド横線は非表示（縦につながって見せる） */
+/* 中段ガイド（3 行境界の視覚ガイド） */
 .reel-frame.reels-container::before,
 .reel-frame.reels-container::after {
-    display: none !important;
-    content: none !important;
+    content: '';
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    height: 0;
+    border-top: 1px solid rgba(212, 175, 55, 0.42);
+    pointer-events: none;
+    z-index: 4;
 }
 
-.reel-frame.reels-container.is-win {
-    animation: reel-frame-win-glow 0.85s ease-in-out 2;
-    box-shadow:
-        0 0 0.14rem rgba(255, 215, 0, 0.75),
-        0 0 0.28rem rgba(255, 215, 0, 0.35);
+.reel-frame.reels-container::before {
+    top: 33.333%;
+    transform: translateY(-50%);
 }
 
-.reel-frame.reels-container.is-bigwin {
-    animation: reel-frame-bigwin-glow 0.55s ease-in-out 4;
-    box-shadow:
-        0 0 0.2rem rgba(255, 215, 0, 0.95),
-        0 0 0.45rem rgba(255, 140, 0, 0.55);
+.reel-frame.reels-container::after {
+    top: 66.666%;
+    transform: translateY(-50%);
 }
 
-@keyframes reel-frame-win-glow {
+/* 回転中: strip の blur のみ。枠線は変化させない */
+.reel.is-spinning .reel-strip {
+    filter: blur(1.2px);
+}
+
+.reel.is-spinning {
+    animation: none !important;
+    box-shadow: none !important;
+}
+
+/* 当選時: リール枠を脈動 */
+.reel-frame.reels-container.is-win .reel,
+.reel.is-win {
+    animation: reel-win-pulse 0.85s ease-in-out 2;
+}
+
+.reel-frame.reels-container.is-bigwin .reel {
+    animation: reel-bigwin-pulse 0.55s ease-in-out 4;
+    border-color: #fff2a8 !important;
+}
+
+@keyframes reel-win-pulse {
     0%,
     100% {
-        border-color: var(--accent-1, #d4af37);
+        box-shadow: 0 0 0 rgba(212, 175, 55, 0);
     }
     50% {
-        border-color: rgba(255, 230, 140, 0.95);
+        box-shadow: 0 0 0.18rem rgba(255, 215, 0, 0.85);
     }
 }
 
-@keyframes reel-frame-bigwin-glow {
+@keyframes reel-bigwin-pulse {
     0%,
     100% {
-        border-color: var(--accent-1, #d4af37);
+        box-shadow: 0 0 0 rgba(212, 175, 55, 0);
     }
     50% {
-        border-color: #fff0a0;
+        box-shadow:
+            0 0 0.32rem rgba(255, 235, 140, 1),
+            0 0 0.6rem rgba(255, 140, 0, 0.6);
     }
 }
 
@@ -598,10 +649,6 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-}
-
-.reel.is-spinning .reel-strip {
-    filter: blur(0.85px);
 }
 
 .sym {
@@ -898,4 +945,29 @@
     100% {
         opacity: 0;
     }
+}
+
+/* セル境界・余白を完全除去して縦連続 */
+.reel-symbol-cell {
+    border: 0 !important;
+    outline: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.reel-symbol-cell::before,
+.reel-symbol-cell::after {
+    content: none !important;
+}
+
+.reel-inner {
+    border: 0 !important;
+    outline: 0 !important;
+}
+
+.reel-strip {
+    border: 0 !important;
+    outline: 0 !important;
+    gap: 0 !important;
 }

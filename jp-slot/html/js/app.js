@@ -84,6 +84,8 @@
         debug: null,
         /** サーバー FS 残り（>0 でベット不要スピン可） */
         bonusRemaining: 0,
+        marquee: { hype: [], info: [] },
+        symbolIds: null,
     };
 
     window.__jpSlotSpinning = false;
@@ -117,92 +119,12 @@
         }, IDLE_VIDEO_INTERVAL_MS);
     }
 
-    function shuffleArr(arr) {
-        var a = arr.slice();
-        var i;
-        var j;
-        var t;
-        for (i = a.length - 1; i > 0; i--) {
-            j = Math.floor(Math.random() * (i + 1));
-            t = a[i];
-            a[i] = a[j];
-            a[j] = t;
-        }
-        return a;
-    }
-
-    function getMarqueeLists() {
-        var m = state.marquee || {};
-        var hype = m.Hype || m.hype;
-        var info = m.Info || m.info;
-        if (!hype || !hype.length) {
-            hype = [
-                '🎰 本日も大当たりラッシュ進行中！',
-                '💎 ジャックポット累積中、引き当てるのは君だ！',
-                '🍒 チェリー2つでも小役、3つで大当たり！',
-                '✨ キャラクター×3でフリースピン突入！',
-                '🔥 SPACE / Enter キーでもスピンOK！',
-                '🌙 ルナ・セラフィナがあなたの幸運を見守っています',
-                '🥂 高ベットほど夢が広がる、MAX BET も試してみて',
-                '🎉 ようこそ、ロスサントス公式カジノへ',
-            ];
-        }
-        if (!info || !info.length) {
-            info = [
-                '本日の人気台：チェリー・マシーン #1',
-                '現在のジャックポット：自動表示中',
-                '配当倍率：キャラ×3 = 500倍',
-                'フリースピン中の倍率は ×2、リトリガーで +5回',
-                'Esc キーで台から離れられます',
-                'ベット範囲は config_shared.lua から変更可能',
-            ];
-        }
-        return { hype: hype, info: info };
-    }
-
-    function buildMarqueeContent(messages, withJackpot) {
-        var items = shuffleArr(messages);
-        var html = '';
-        var i;
-        var jp = state.jackpot != null ? state.jackpot : 0;
-        var jpStr = Math.floor(Number(jp) || 0).toLocaleString('ja-JP');
-        if (withJackpot) {
-            html +=
-                '<span class="mq-item">💰 現在のジャックポット ¥' +
-                jpStr +
-                '</span><span class="mq-sep">◆</span>';
-        }
-        for (i = 0; i < items.length; i++) {
-            html +=
-                '<span class="mq-item">' +
-                items[i] +
-                '</span><span class="mq-sep">◆</span>';
-        }
-        return html + html;
-    }
-
-    function refreshMarquees() {
-        var top = document.getElementById('marquee-top');
-        var bot = document.getElementById('marquee-bottom');
-        var lists = getMarqueeLists();
-        if (top) {
-            top.innerHTML = buildMarqueeContent(lists.hype, true);
-        }
-        if (bot) {
-            bot.innerHTML = buildMarqueeContent(lists.info, false);
-        }
-    }
-
-    function startMarquees() {
-        if (window.__jpSlotMarqueeStarted) {
+    function clearWinFx() {
+        var r = document.querySelector('.reel-frame.reels-container');
+        if (!r) {
             return;
         }
-        if (!document.getElementById('marquee-top')) {
-            return;
-        }
-        window.__jpSlotMarqueeStarted = true;
-        refreshMarquees();
-        window.setInterval(refreshMarquees, 30000);
+        r.classList.remove('is-win', 'is-bigwin');
     }
 
     function ensureBonusBadge() {
@@ -282,14 +204,12 @@
      * @param {string} assetsRoot
      */
     function applyWinFx(p, assetsRoot) {
-        var tier = p.tier;
-        var winAmt = p.winAmount != null ? p.winAmount : 0;
-        var reels =
-            document.querySelector('.reel-frame.reels-container') ||
-            document.querySelector('.reels-container');
+        var reels = document.querySelector('.reel-frame.reels-container');
         if (!reels) {
             return;
         }
+        var tier = p.tier;
+        var winAmt = p.winAmount != null ? p.winAmount : 0;
         reels.classList.remove('is-win', 'is-bigwin');
         if (!tier || winAmt <= 0) {
             return;
@@ -306,7 +226,9 @@
             window.CharFx.play(src, { force: true });
         }
         window.setTimeout(function () {
-            reels.classList.remove('is-win', 'is-bigwin');
+            if (reels) {
+                reels.classList.remove('is-win', 'is-bigwin');
+            }
         }, 1800);
     }
 
@@ -448,6 +370,7 @@
     }
 
     function handleSpinClick() {
+        clearWinFx();
         var spinBtn = getSpinButton();
         if (!spinBtn) {
             nuiLog('warn', '[handleSpinClick] .btn-spin missing');
@@ -581,9 +504,16 @@
         state.locales = payload.locales || {};
         state.assetsRoot = payload.assetsRoot || '';
         window.ConfigCharacters = payload.characters || {};
-        state.marquee = payload.marquee || null;
+        state.marquee = payload.marquee || { hype: [], info: [] };
+        state.symbolIds = payload.symbolIds || null;
         state.debug = payload.debug || null;
         window.__jpSlotState = state;
+        if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
+            window.JpSlotMarquee.refresh();
+        }
+        if (window.JpSlotReels && state.symbolIds && window.JpSlotReels.setSymbolIds) {
+            window.JpSlotReels.setSymbolIds(state.symbolIds);
+        }
 
         if (payload.theme && window.JpSlotTheme) {
             window.JpSlotTheme.applyTheme(payload.theme);
@@ -627,7 +557,6 @@
         }
         removeBonusBadge();
         startIdleCharLoop();
-        startMarquees();
         nuiLog('log', '[initPlay] done');
     }
 
@@ -671,16 +600,15 @@
                     pl.classList.remove('hit');
                 }, 500);
             }
-            if (winPreview > 0) {
-                window.JpSlotEffects.flash(document.querySelector('.flash-overlay'));
-            }
             window.JpSlotEffects.playCutin(p.cutin || { kind: 'none' }, state.assetsRoot).then(
                 function () {
                     applyWinFx(p, ar);
                     state.balance = p.balance != null ? p.balance : state.balance;
                     state.jackpot = p.jackpot != null ? p.jackpot : state.jackpot;
                     window.__jpSlotState = state;
-                    refreshMarquees();
+                    if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
+                        window.JpSlotMarquee.refresh();
+                    }
                     var winAmt = p.winAmount != null ? p.winAmount : 0;
                     var winEl = document.querySelector('.win-value');
                     if (winEl) {

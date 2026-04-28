@@ -1,7 +1,7 @@
 /* global window */
 (function () {
     /**
-     * フラッシュオーバーレイを再生
+     * フラッシュオーバーレイを再生（当選演出などから任意で呼ぶ）
      * @param {HTMLElement|null} el
      */
     function flash(el) {
@@ -98,103 +98,4 @@
         flash: flash,
         playCutin: playCutin,
     };
-
-    /** 左キャラ枠のループ動画（当選・アイドル演出） */
-    var CharFx = (function () {
-        var videoEl = null;
-        var cooldownUntil = 0;
-        var playing = false;
-
-        function init() {
-            videoEl = document.querySelector('.char-video');
-            if (!videoEl) {
-                return;
-            }
-            videoEl.addEventListener('ended', stop);
-            videoEl.addEventListener('error', stop);
-        }
-
-        function stop() {
-            if (!videoEl) {
-                return;
-            }
-            try {
-                videoEl.pause();
-            } catch (_) {}
-            videoEl.removeAttribute('src');
-            try {
-                videoEl.load();
-            } catch (_) {}
-            videoEl.classList.remove('is-playing');
-            playing = false;
-            cooldownUntil = Date.now() + 4000;
-            var imgEl =
-                document.querySelector('.char-img.char-portrait') ||
-                document.querySelector('.char-portrait');
-            if (imgEl) {
-                imgEl.classList.remove('is-returning');
-                void imgEl.offsetWidth;
-                imgEl.classList.add('is-returning');
-                window.setTimeout(function () {
-                    imgEl.classList.remove('is-returning');
-                }, 600);
-            }
-        }
-
-        /**
-         * @param {string} srcAbs assetsRoot 付きの絶対パス（nui://…/assets/…）
-         * @param {{ force?: boolean }} opt
-         * @returns {boolean}
-         */
-        function play(srcAbs, opt) {
-            opt = opt || {};
-            if (!videoEl || !srcAbs) {
-                return false;
-            }
-            var now = Date.now();
-            if (!opt.force && (playing || now < cooldownUntil)) {
-                return false;
-            }
-            var portraitEl =
-                document.querySelector('.char-img.char-portrait') ||
-                document.querySelector('.char-portrait');
-            if (portraitEl) {
-                portraitEl.classList.remove('is-returning');
-            }
-            try {
-                videoEl.loop = false;
-                videoEl.src = srcAbs;
-                videoEl.currentTime = 0;
-                var p = videoEl.play();
-                if (p && p.catch) {
-                    p.catch(function () {
-                        stop();
-                    });
-                }
-                videoEl.classList.add('is-playing');
-                playing = true;
-                return true;
-            } catch (e) {
-                stop();
-                return false;
-            }
-        }
-
-        function isPlaying() {
-            return playing;
-        }
-
-        return { init: init, play: play, stop: stop, isPlaying: isPlaying };
-    })();
-
-    window.CharFx = CharFx;
-
-    function charFxDomReady() {
-        CharFx.init();
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', charFxDomReady);
-    } else {
-        charFxDomReady();
-    }
 })();

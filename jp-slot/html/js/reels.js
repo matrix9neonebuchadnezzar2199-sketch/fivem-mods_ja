@@ -10,8 +10,14 @@
         character: '✨',
     };
 
-    /** ペイテーブルと一致させるシンボル ID（ストリップのランダム列に使用） */
+    /** ペイテーブルと一致させるシンボル ID（サーバー seatGranted で上書き可能） */
     var SYMBOL_IDS = ['cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character'];
+
+    function setSymbolIds(arr) {
+        if (Array.isArray(arr) && arr.length > 0) {
+            SYMBOL_IDS = arr.slice();
+        }
+    }
 
     /** 縦に並べるマス数（多いほど長く流れる） */
     var STRIP_LENGTH = 28;
@@ -269,6 +275,7 @@
     window.JpSlotReels = {
         symLabel: symLabel,
         setReelSymbols: setReelSymbols,
+        setSymbolIds: setSymbolIds,
         initIdle: initIdle,
         runSpin: runSpin,
     };
