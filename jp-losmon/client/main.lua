@@ -196,6 +196,8 @@ local function createNewEggPet()
         poopSeq = 0,
         nextPoopAt = nil,
         poopSickStartAt = nil,
+        immortal = (Config and Config.LifeModeImmortalDefault) and true or false,
+        noEvolve = (Config and Config.LifeModeNoEvolveDefault) and true or false,
     }
 end
 
@@ -220,6 +222,9 @@ end
 ---@return boolean|nil
 local function tryDeath(pet, n)
     if not pet or pet.phase ~= 'sick' or not pet.sickAt then
+        return false
+    end
+    if pet.immortal then
         return false
     end
     if (n - pet.sickAt) >= (Config.DeathTime or 14400) then
@@ -257,6 +262,9 @@ end
 local function advancePhases(store, n)
     local pet = store.pet
     if not hasPet(pet) or not isAlive(pet) or pet.phase == 'sick' then
+        return nil
+    end
+    if pet.noEvolve then
         return nil
     end
     local evolved = nil
@@ -390,6 +398,12 @@ local function ensureStore(store)
         end
         if hasPet(store.pet) and store.pet.phase == 'egg' then
             zukanAdd(store.zukan, 'egg')
+        end
+        if store.pet.immortal == nil then
+            store.pet.immortal = false
+        end
+        if store.pet.noEvolve == nil then
+            store.pet.noEvolve = false
         end
         if type(store.pet.poops) ~= 'table' then
             store.pet.poops = {}
@@ -777,6 +791,9 @@ advanceAdultLottery = function(store)
     if not hasPet(pet) or pet.phase ~= 'child' then
         return nil
     end
+    if pet.noEvolve then
+        return nil
+    end
     if not isLotteryEligible(pet) then
         return nil
     end
@@ -805,6 +822,7 @@ advanceAdultLottery = function(store)
 end
 
 applyDebugForceEvolve = function(store, n)
+    -- デバッグ強制進化は noEvolve フラグを無視する（開発用のため）
     if not Config.DebugForceEvolveEnabled then
         return nil
     end
@@ -1054,6 +1072,7 @@ local function nuiStatePayload(st, expanded)
             tickerNearHatch = Config.TickerNearHatchMaxSec or 90,
             tickerNearPhase = Config.TickerNearPhaseMaxSec or 600,
             spriteStripFrames = spriteStripFramesForPet(pet),
+            lifeModeEnabled = (Config and Config.LifeModeEnabled) and true or false,
         },
         sprite = getSpriteSetForPet(pet),
         nextPhaseInSec = nPhaseLeft,
@@ -1205,6 +1224,35 @@ RegisterNUICallback('setPetName', function(data, cb)
     pushNui(stateCache, nuiShowExpanded)
     if cb then
         cb('ok')
+    end
+end)
+
+-- NUI: 永遠のいのち / 進化キャンセル（ペット単位で KVS 保存）
+RegisterNUICallback('setLifeMode', function(data, cb)
+    stateCache = ensureStore(stateCache or readStore())
+    if not hasPet(stateCache.pet) then
+        if cb then
+            cb({ ok = false, reason = 'no_pet' })
+        end
+        return
+    end
+    if not (Config and Config.LifeModeEnabled) then
+        if cb then
+            cb({ ok = false, reason = 'disabled' })
+        end
+        return
+    end
+    local pet = stateCache.pet
+    if data and data.immortal ~= nil then
+        pet.immortal = data.immortal and true or false
+    end
+    if data and data.noEvolve ~= nil then
+        pet.noEvolve = data.noEvolve and true or false
+    end
+    writeStore(stateCache)
+    pushNui(stateCache, nuiShowExpanded)
+    if cb then
+        cb({ ok = true, immortal = pet.immortal, noEvolve = pet.noEvolve })
     end
 end)
 

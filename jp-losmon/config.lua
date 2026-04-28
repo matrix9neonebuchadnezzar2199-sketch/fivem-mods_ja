@@ -11,6 +11,11 @@ Config.HatchTime = 1800
 Config.EggShowCrackSec = 30
 -- 新規: 拡大画面で表示するペットの通称
 Config.DefaultPetName = 'ぼく'
+-- ライフモード（永遠のいのち / 進化キャンセル）。false にすると NUI チェックとコールバックを無効化（サーバー運用で禁止する場合向け）
+Config.LifeModeEnabled = true
+-- 新規ペット作成時のデフォルト（通常は OFF）
+Config.LifeModeImmortalDefault = false
+Config.LifeModeNoEvolveDefault = false
 -- 卵→幼体以降、各成長段階の長さ（秒）
 Config.GrowthInterval = 14400
 -- 1 分あたり各ステータスが減少する量（%ポイント。オンライン中のみ tickOnline で適用）

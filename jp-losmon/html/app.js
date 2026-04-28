@@ -306,15 +306,24 @@
 
   var TIP = '💡 ミニペットの位置はドラッグで移動できます';
 
+  function appendLifeModeToTicker(base, st) {
+    var out = base.slice();
+    if (st && st.pet) {
+      if (st.pet.immortal) { out.push('💖 永遠のいのちモード有効中'); }
+      if (st.pet.noEvolve) { out.push('🔒 進化キャンセルモード有効中'); }
+    }
+    return out;
+  }
+
   function buildTickerMessages(st) {
-    if (!st) { return [TIP]; }
+    if (!st) { return appendLifeModeToTicker([TIP], null); }
     var p = st.pet;
-    if (!p) { return [TIP]; }
-    if (p.phase === 'dead') { return [TIP, 'また新しい出会いを /losmon から']; }
-    if (p.phase === 'sick') { return ['🚨 病気です！ごはんと掃除で治療してください', TIP]; }
+    if (!p) { return appendLifeModeToTicker([TIP], st); }
+    if (p.phase === 'dead') { return appendLifeModeToTicker([TIP, 'また新しい出会いを /losmon から'], st); }
+    if (p.phase === 'sick') { return appendLifeModeToTicker(['🚨 病気です！ごはんと掃除で治療してください', TIP], st); }
     var h = (p.stats && p.stats.hunger) | 0;
-    if (h < 35) { return ['⚠ お腹が空いています！ごはんをあげましょう', TIP]; }
-    if (h >= 88) { return ['😊 お腹いっぱいで満足そうです', TIP]; }
+    if (h < 35) { return appendLifeModeToTicker(['⚠ お腹が空いています！ごはんをあげましょう', TIP], st); }
+    if (h >= 88) { return appendLifeModeToTicker(['😊 お腹いっぱいで満足そうです', TIP], st); }
     var g = (st.config && st.config.growth) | 0; if (!g) { g = 14400; }
     var tP = (st.config && st.config.tickerNearPhase) | 0; if (!tP) { tP = 600; }
     var maxNear = Math.min(tP, (g * 0.2) | 0);
@@ -322,9 +331,9 @@
     var np = (st.nextPhaseInSec | 0);
     var tH = (st.config && st.config.tickerNearHatch) | 0; if (!tH) { tH = 90; }
     if ((hl > 0 && hl <= tH) || (np > 0 && np <= maxNear)) {
-      return ['✨ もうすぐ進化しそうです…', TIP];
+      return appendLifeModeToTicker(['✨ もうすぐ進化しそうです…', TIP], st);
     }
-    return [TIP];
+    return appendLifeModeToTicker([TIP], st);
   }
 
   function restartTickerAnim() {
@@ -359,6 +368,43 @@
     applyTickerSlide();
     if (tickerList.length > 1) {
       tickerTimer = setInterval(function () { tickerIdx += 1; applyTickerSlide(); }, 7000);
+    }
+  }
+
+  function renderLifeMode() {
+    var panel = document.getElementById('life-mode-panel');
+    if (!panel) { return; }
+    var en = state.config && state.config.lifeModeEnabled;
+    if (!en || !state.pet || state.pet.phase === 'dead') {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = '';
+    var chkImmortal = document.getElementById('chk-immortal');
+    var chkNoEvolve = document.getElementById('chk-no-evolve');
+    var rows = panel.querySelectorAll('.life-mode-row');
+    if (chkImmortal) {
+      chkImmortal.checked = !!(state.pet && state.pet.immortal);
+      if (rows[0]) { rows[0].classList.toggle('is-active', chkImmortal.checked); }
+    }
+    if (chkNoEvolve) {
+      chkNoEvolve.checked = !!(state.pet && state.pet.noEvolve);
+      if (rows[1]) { rows[1].classList.toggle('is-active', chkNoEvolve.checked); }
+    }
+  }
+
+  function bindLifeModeHandlers() {
+    var chkImmortal = document.getElementById('chk-immortal');
+    var chkNoEvolve = document.getElementById('chk-no-evolve');
+    if (chkImmortal) {
+      chkImmortal.addEventListener('change', function (e) {
+        post('setLifeMode', { immortal: e.target.checked });
+      });
+    }
+    if (chkNoEvolve) {
+      chkNoEvolve.addEventListener('change', function (e) {
+        post('setLifeMode', { noEvolve: e.target.checked });
+      });
     }
   }
 
@@ -510,6 +556,7 @@
       b.disabled = t > 0 || sck || eggB;
       b.classList.toggle('disabled', t > 0 || sck || eggB);
     });
+    renderLifeMode();
     applyTickerIfNeeded();
     var lottElem = document.getElementById('meta-lottery');
     if (lottElem) {
@@ -677,6 +724,7 @@
   document.getElementById('close-ex').addEventListener('click', function () {
     post('closeExpanded', {});
   });
+  bindLifeModeHandlers();
   var btnR = document.getElementById('btn-reset-mini');
   if (btnR) { btnR.addEventListener('click', function () { post('resetMiniPos', {}); }); }
   document.getElementById('btn-zukan').addEventListener('click', function () {
