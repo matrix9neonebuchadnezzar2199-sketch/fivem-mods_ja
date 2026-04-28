@@ -394,6 +394,40 @@
     }
   }
 
+  function renderSkin() {
+    var sk = state && state.skin;
+    var en = !sk || sk.enabled !== false;
+    var p = (sk && sk.path) ? String(sk.path) : 'img/main.png';
+    document.documentElement.style.setProperty('--device-skin', "url('" + p.replace(/'/g, '%27') + "')");
+    var panel = document.getElementById('skin-panel');
+    if (!panel) { return; }
+    if (!en) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = '';
+    var cur = (sk && sk.current) ? String(sk.current) : 'gray';
+    var radios = panel.querySelectorAll('.skin-radio');
+    for (var i = 0; i < radios.length; i++) {
+      var r = radios[i];
+      r.checked = (r.value === cur);
+      var opt = r.closest && r.closest('.skin-option');
+      if (opt) { opt.classList.toggle('is-active', r.checked); }
+    }
+  }
+
+  function bindSkinHandlers() {
+    var panel = document.getElementById('skin-panel');
+    if (!panel) { return; }
+    panel.querySelectorAll('.skin-radio').forEach(function (r) {
+      r.addEventListener('change', function (e) {
+        if (e.target && e.target.checked) {
+          post('setSkin', { id: e.target.value });
+        }
+      });
+    });
+  }
+
   function bindLifeModeHandlers() {
     var chkImmortal = document.getElementById('chk-immortal');
     var chkNoEvolve = document.getElementById('chk-no-evolve');
@@ -558,6 +592,7 @@
       b.classList.toggle('disabled', t > 0 || sck || eggB);
     });
     renderLifeMode();
+    renderSkin();
     applyTickerIfNeeded();
     var lottElem = document.getElementById('meta-lottery');
     if (lottElem) {
@@ -726,6 +761,7 @@
     post('closeExpanded', {});
   });
   bindLifeModeHandlers();
+  bindSkinHandlers();
   var btnR = document.getElementById('btn-reset-mini');
   if (btnR) { btnR.addEventListener('click', function () { post('resetMiniPos', {}); }); }
   document.getElementById('btn-zukan').addEventListener('click', function () {

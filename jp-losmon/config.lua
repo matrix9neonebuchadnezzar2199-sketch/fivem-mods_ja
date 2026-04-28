@@ -16,6 +16,13 @@ Config.LifeModeEnabled = true
 -- 新規ペット作成時のデフォルト（通常は OFF）
 Config.LifeModeImmortalDefault = false
 Config.LifeModeNoEvolveDefault = false
+-- 本体スキン（グローバル。KVS 直下 `skin`）。false にすると NUI のスキン切替を無効化
+Config.SkinEnabled = true
+Config.SkinDefault = 'gray'
+Config.SkinList = {
+    { id = 'gray', label = 'グレー', path = 'img/main.png' },
+    { id = 'pink', label = 'ピンク', path = 'img/main_pink.png' },
+}
 -- 卵→幼体以降、各成長段階の長さ（秒）
 Config.GrowthInterval = 14400
 -- 1 分あたり各ステータスが減少する量（%ポイント。オンライン中のみ tickOnline で適用）

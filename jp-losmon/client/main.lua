@@ -36,7 +36,7 @@ local function readStore()
         end
     end
     local dx, dy = getMiniDefault()
-    return { version = 1, lastUpdateAt = nowSec(), pet = nil, zukan = {}, miniPos = { x = dx, y = dy }, noPetMenuDismissed = false }
+    return { version = 1, lastUpdateAt = nowSec(), pet = nil, zukan = {}, miniPos = { x = dx, y = dy }, noPetMenuDismissed = false, skin = nil }
 end
 
 ---@param store table
@@ -348,6 +348,23 @@ local function ensureStore(store)
     if store.noPetMenuDismissed == nil then
         store.noPetMenuDismissed = false
     end
+    do
+        local defS = (Config and Config.SkinDefault) or 'gray'
+        if store.skin == nil then
+            store.skin = defS
+        else
+            local okSkin = false
+            for _, s in ipairs(Config.SkinList or {}) do
+                if s and s.id == store.skin then
+                    okSkin = true
+                    break
+                end
+            end
+            if not okSkin then
+                store.skin = defS
+            end
+        end
+    end
     if store.pet and type(store.pet.lastAction) ~= 'table' then
         store.pet.lastAction = { feed = 0, play = 0, sleep = 0, clean = 0 }
     end
@@ -431,6 +448,21 @@ local function ensureStore(store)
         end
     end
     return store
+end
+
+---@param skinId string|nil
+---@return string
+local function resolveSkinPath(skinId)
+    local list = Config.SkinList or {}
+    for _, s in ipairs(list) do
+        if s and s.id == skinId and type(s.path) == 'string' and s.path ~= '' then
+            return s.path
+        end
+    end
+    if list[1] and type(list[1].path) == 'string' and list[1].path ~= '' then
+        return list[1].path
+    end
+    return 'img/main.png'
 end
 
 ---@param pet table|nil
@@ -1031,6 +1063,7 @@ local function nuiStatePayload(st, expanded)
         nameMax = 12
     end
     local notSick = pet and pet.phase ~= 'sick'
+    local skinId = s.skin or (Config and Config.SkinDefault) or 'gray'
     return {
         type = 'state',
         expanded = expanded or false,
@@ -1107,6 +1140,12 @@ local function nuiStatePayload(st, expanded)
         resName = (GetCurrentResourceName and GetCurrentResourceName() or 'jp-losmon'),
         poopSickAfterSec = (Config and Config.PoopSickAfterSec) or 3600,
         poopSpritePath = (Config and Config.PoopSpritePath) or 'un.png',
+        skin = {
+            current = skinId,
+            list = Config.SkinList or {},
+            path = resolveSkinPath(skinId),
+            enabled = (Config and Config.SkinEnabled) and true or false,
+        },
     }
 end
 
@@ -1253,6 +1292,37 @@ RegisterNUICallback('setLifeMode', function(data, cb)
     pushNui(stateCache, nuiShowExpanded)
     if cb then
         cb({ ok = true, immortal = pet.immortal, noEvolve = pet.noEvolve })
+    end
+end)
+
+-- NUI: 本体スキン（ストア直下 `skin`、グローバル）
+RegisterNUICallback('setSkin', function(data, cb)
+    if not (Config and Config.SkinEnabled) then
+        if cb then
+            cb({ ok = false, reason = 'disabled' })
+        end
+        return
+    end
+    stateCache = ensureStore(stateCache or readStore())
+    local id = data and data.id
+    local valid = false
+    for _, s in ipairs(Config.SkinList or {}) do
+        if s and s.id == id then
+            valid = true
+            break
+        end
+    end
+    if not valid or not id then
+        if cb then
+            cb({ ok = false, reason = 'invalid' })
+        end
+        return
+    end
+    stateCache.skin = id
+    writeStore(stateCache)
+    pushNui(stateCache, nuiShowExpanded)
+    if cb then
+        cb({ ok = true, skin = id })
     end
 end)
 

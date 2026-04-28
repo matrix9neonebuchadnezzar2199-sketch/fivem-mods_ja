@@ -19,6 +19,10 @@ body,
 }
 /* 1rem: 従来 48px から 3 倍＝144px（UI 文字の可読性） */
 html { font-size: 144px; }
+:root {
+  /* client が setProperty で上書き。初期はグレー */
+  --device-skin: url("img/main.png");
+}
 .hidden { display: none !important; }
 .main-expanded, .zukan-overlay, .travel-dialog { pointer-events: auto; }
 /* #mini-pet: 下のブロック＋.is-ready で表示制御 */
@@ -280,7 +284,7 @@ html { font-size: 144px; }
 }
 /* 本体: main.png（1024x559）— LCD は 2D 色解析 412,156–744,391 相当。微調整は下の 4 変数のみ */
 #sprite-arena, .mini-device {
-  --bezel-img: url("img/main.png");
+  --bezel-img: var(--device-skin);
   --dev-a: 1024; --dev-b: 559;
   /* main.png 上の表示域（%）: left+width / top+height */
   --lcd-l: 40.234%;
@@ -751,6 +755,90 @@ html { font-size: 144px; }
 .life-mode-row:nth-child(2).is-active {
   background: rgba(168, 200, 255, 0.1);
   color: #e2ecff;
+}
+/* 左: 本体スキン（グローバル。--device-skin は app.js で更新） */
+.skin-panel {
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding: 0.1rem 0.12rem;
+  background: rgba(20, 24, 40, 0.55);
+  border: 1px solid rgba(120, 140, 200, 0.25);
+  border-radius: 0.06rem;
+}
+.skin-panel-title {
+  font-size: 0.18rem;
+  color: #a8b0c8;
+  margin-bottom: 0.06rem;
+  letter-spacing: 0.02rem;
+}
+.skin-options {
+  display: flex;
+  gap: 0.1rem;
+}
+.skin-option {
+  display: flex;
+  align-items: center;
+  gap: 0.06rem;
+  cursor: pointer;
+  padding: 0.06rem 0.08rem;
+  border-radius: 0.04rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  flex: 1 1 auto;
+  user-select: none;
+}
+.skin-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.skin-option:has(.skin-radio:checked) {
+  border-color: #ffd24a;
+  background: rgba(255, 210, 74, 0.1);
+}
+.skin-option.is-active {
+  border-color: #ffd24a;
+  background: rgba(255, 210, 74, 0.1);
+}
+.skin-radio {
+  appearance: none;
+  width: 0.16rem;
+  height: 0.16rem;
+  border: 2px solid #6b7290;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  flex: 0 0 auto;
+}
+.skin-radio:checked {
+  border-color: #ffd24a;
+}
+.skin-radio:checked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.08rem;
+  height: 0.08rem;
+  background: #ffd24a;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.skin-swatch {
+  width: 0.24rem;
+  height: 0.24rem;
+  border-radius: 0.04rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex: 0 0 auto;
+}
+.skin-swatch-gray {
+  background: linear-gradient(135deg, #b8bcc8 0%, #7a8090 100%);
+}
+.skin-swatch-pink {
+  background: linear-gradient(135deg, #f9c5d1 0%, #e69aab 100%);
+}
+.skin-label {
+  font-size: 0.2rem;
+  color: #d8dcea;
 }
 /* 極小ウィンドウ: 1 列にスタック */
 @media (max-width: 800px) {
