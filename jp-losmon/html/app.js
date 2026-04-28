@@ -374,7 +374,8 @@
   function renderLifeMode() {
     var panel = document.getElementById('life-mode-panel');
     if (!panel) { return; }
-    var en = state.config && state.config.lifeModeEnabled;
+    /* 未指定は ON（config 未同梱の古い state 対策）。明示 false のときだけ隠す */
+    var en = !state.config || state.config.lifeModeEnabled !== false;
     if (!en || !state.pet || state.pet.phase === 'dead') {
       panel.style.display = 'none';
       return;

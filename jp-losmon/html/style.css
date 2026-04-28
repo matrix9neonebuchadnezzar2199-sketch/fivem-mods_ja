@@ -199,15 +199,24 @@ html { font-size: 144px; }
 .ex-grid .col.center { grid-column: 2; grid-row: 1; }
 .ex-grid .col.right { grid-column: 3; grid-row: 1; }
 .ex-grid .footer-toolbar { grid-column: 1 / -1; grid-row: 2; }
-.ex-grid .col.left { display: block; }
+/* 上: ケアタイル、下: ライフモード。height:100% だけだと下のパネルが overflow で消える */
+.ex-grid .col.left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-height: 0;
+  align-items: stretch;
+}
 .care-tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.08rem;
   width: 100%;
-  height: 100%;
-  align-content: start;
+  flex: 1 1 0;
   min-height: 0;
+  height: auto;
+  align-content: start;
+  align-items: start;
 }
 .care-tile {
   position: relative;
@@ -691,7 +700,8 @@ html { font-size: 144px; }
 }
 /* 拡大UI左: 永遠のいのち / 進化キャンセル */
 .life-mode-panel {
-  margin-top: 0.1rem;
+  flex: 0 0 auto;
+  margin-top: 0;
   padding: 0.1rem 0.12rem;
   background: rgba(20, 24, 40, 0.55);
   border: 1px solid rgba(120, 140, 200, 0.25);
