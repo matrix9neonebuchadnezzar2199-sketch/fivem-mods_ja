@@ -9,6 +9,10 @@ desktop.ini
 .vscode/
 .idea/
 
+# GitHub 公開リポには含めない（ローカル開発用のみ）
+.cursor/
+docs/
+
 # 一時・ログ
 *.log
 nul
