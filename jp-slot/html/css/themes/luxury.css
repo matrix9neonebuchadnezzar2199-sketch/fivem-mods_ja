@@ -1,0 +1,16 @@
+[data-theme="luxury"] {
+    --bg-primary: #0a0608;
+    --bg-secondary: #1a0e12;
+    --accent-1: #d4af37;
+    --accent-2: #f5e6a8;
+    --accent-3: #8b1538;
+    --text-primary: #f5e6c8;
+    --text-muted: #a89070;
+    --border-frame: #d4af37;
+    --glow-color: #ffd700;
+    --reel-bg: #000000;
+    --button-spin-bg: linear-gradient(180deg, #c9302c, #8b1538);
+    --font-title: "Cinzel", serif;
+    --font-body: "Noto Serif JP", serif;
+    --effect-intensity: 0.6;
+}

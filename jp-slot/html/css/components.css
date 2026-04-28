@@ -1,0 +1,901 @@
+/* メイン・ヘッダ・ティッカはオーバーレイより手前。フッタのみ z-index:100 は維持 */
+.slot-main,
+.ticker-bar {
+    position: relative;
+    z-index: 20;
+}
+
+.slot-header {
+    position: relative;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    padding: 0.08rem 0.14rem;
+    background: linear-gradient(180deg, rgba(20, 14, 14, 0.65), rgba(20, 14, 14, 0.45));
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    border-bottom: 1px solid var(--border-frame);
+    font-size: 0.22rem;
+}
+
+.slot-header .machine-name {
+    text-align: left;
+    color: var(--accent-1);
+    font-family: var(--font-title), serif;
+    font-size: 0.24rem;
+}
+
+.slot-header .character-name {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 0.2rem;
+}
+
+.slot-header .jackpot-label,
+.slot-header .jackpot-amount {
+    text-align: right;
+    color: var(--accent-1);
+    font-weight: bold;
+    font-size: 0.22rem;
+}
+
+.slot-footer {
+    position: relative;
+    /* .cutin-overlay (60) より手前 — 変更しない */
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.12rem;
+    align-items: center;
+    padding: 0.12rem 0.2rem;
+    background: linear-gradient(180deg, rgba(20, 14, 14, 0.65), rgba(20, 14, 14, 0.45));
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    border-top: 0.02rem solid var(--accent-1);
+    font-size: 0.22rem;
+    box-sizing: border-box;
+}
+
+.footer-group {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.footer-left {
+    justify-content: flex-start;
+}
+
+.footer-center {
+    justify-content: center;
+    gap: 0.15rem;
+}
+
+.footer-right {
+    justify-content: flex-end;
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0.75rem;
+    padding: 0.05rem 0.12rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 0.015rem solid var(--accent-1);
+    border-radius: 0.04rem;
+}
+
+.footer-stat-balance {
+    margin-right: 0.06rem;
+}
+
+.stat-label,
+.gain-label {
+    font-size: 0.12rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02rem;
+}
+
+.stat-value,
+.gain-value {
+    font-size: 0.22rem;
+    color: var(--accent-1);
+    font-weight: bold;
+    text-shadow: 0 0 0.04rem rgba(212, 175, 55, 0.55);
+}
+
+.bet-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0.85rem;
+    padding: 0.05rem 0.14rem;
+    background: rgba(0, 0, 0, 0.5);
+    border: 0.015rem solid var(--accent-1);
+    border-radius: 0.04rem;
+}
+
+.bet-label {
+    font-size: 0.12rem;
+    color: var(--text-muted);
+}
+
+.bet-value {
+    font-size: 0.24rem;
+    color: var(--accent-1);
+    font-weight: bold;
+    text-shadow: 0 0 0.04rem rgba(212, 175, 55, 0.55);
+}
+
+.gain-display .win-value {
+    font-size: 0.22rem;
+}
+
+.hdr-left,
+.hdr-center,
+.hdr-right {
+    min-width: 0;
+}
+
+.hdr-center {
+    text-align: center;
+}
+
+.hdr-right {
+    text-align: right;
+}
+
+.ticker-bar {
+    overflow: hidden;
+    background: rgba(18, 8, 16, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    border-bottom: 1px solid var(--accent-3);
+    font-size: 0.16rem;
+    color: var(--text-muted);
+}
+
+.ticker-marq {
+    white-space: nowrap;
+    animation: ticker-move 18s linear infinite;
+}
+
+@keyframes ticker-move {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.col-left {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 2px solid var(--accent-1, #d4af37);
+    border-radius: 0.08rem;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 9 / 16;
+    min-height: 0;
+}
+
+.col-left > h3,
+.col-left > .col-title,
+.col-left .char-top-row {
+    display: none !important;
+}
+
+.col-left .char-stage {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.char-info-card,
+.char-mood-card {
+    font-size: 0.14rem;
+    color: var(--text-muted);
+    padding: 0.04rem;
+}
+
+/* ステージ: 立ち絵と動画を完全に重ねる土台（背面は透過） */
+.char-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    border: 1px solid var(--border-frame);
+    border-radius: 0.08rem;
+}
+
+/* 立ち絵と動画を同位置・同サイズで配置 */
+.char-portrait,
+.char-video,
+.char-img.char-portrait {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+    object-position: center bottom;
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+.char-portrait,
+.char-img.char-portrait {
+    z-index: 1;
+    transition: opacity 0.5s ease;
+}
+
+.char-video {
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    pointer-events: none;
+    background: transparent;
+}
+
+.char-video.is-playing {
+    opacity: 1;
+    object-fit: cover;
+    min-width: 100%;
+    min-height: 100%;
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes char-portrait-fadein {
+    from {
+        opacity: 0.2;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.char-portrait.is-returning {
+    animation: char-portrait-fadein 0.55s ease forwards;
+}
+
+.char-portrait[data-placeholder='true'] {
+    opacity: 0.55;
+    filter: grayscale(35%);
+    object-fit: contain;
+}
+
+.col-center.reels-section {
+    position: relative;
+    background: transparent;
+    display: grid;
+    grid-template-rows: 10% minmax(0, 1fr) 10%;
+    height: 100%;
+    gap: 0;
+    padding: 0.06rem;
+    box-sizing: border-box;
+    min-height: 0;
+}
+
+.reel-stack {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 0;
+    width: 100%;
+}
+
+.marquee {
+    overflow: hidden;
+    position: relative;
+    background: linear-gradient(180deg, rgba(20, 14, 14, 0.55), rgba(20, 14, 14, 0.3));
+    border-top: 1px solid rgba(212, 175, 55, 0.4);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.4);
+    display: flex;
+    align-items: center;
+}
+
+.marquee-top {
+    border-top: none;
+}
+
+.marquee-bottom {
+    border-bottom: none;
+}
+
+.marquee-track {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+    padding-left: 100%;
+    font-size: 0.18rem;
+    color: #ffe9a8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.04em;
+    animation: marquee-scroll 28s linear infinite;
+}
+
+.marquee-bottom .marquee-track {
+    animation-duration: 36s;
+}
+
+.marquee-track .mq-item {
+    padding: 0 1.6em;
+}
+
+.marquee-track .mq-sep {
+    color: var(--accent-1, #d4af37);
+    padding: 0 0.4em;
+}
+
+@keyframes marquee-scroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-100%);
+    }
+}
+
+.marquee:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+.win-popup {
+    position: absolute;
+    left: 50%;
+    top: 35%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    pointer-events: none;
+    /* html { font-size: 144px } ベースの rem。4rem は巨大になるため 0.52rem 程度で強調 */
+    font-size: 0.52rem;
+    font-weight: bold;
+    color: var(--accent-1);
+    text-shadow:
+        0 0 0.14rem rgba(212, 175, 55, 0.85),
+        0 0 0.28rem rgba(212, 175, 55, 0.45),
+        0 0.04rem 0.1rem rgba(0, 0, 0, 0.85);
+    opacity: 0;
+    transition: opacity 0.25s;
+    white-space: nowrap;
+}
+
+.win-popup.is-active {
+    opacity: 1;
+    animation: win-pop 1.2s ease-out forwards;
+}
+
+@keyframes win-pop {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.15);
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.05);
+        opacity: 0;
+    }
+}
+
+.col-right.slot-info {
+    background: rgba(20, 14, 14, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    border: 1px solid var(--border-frame);
+    border-radius: 0.08rem;
+    padding: 0.18rem 0.22rem;
+    overflow-y: auto;
+    min-height: 0;
+    line-height: 1.55;
+    color: #f4ead0;
+    font-size: 0.16rem;
+    font-family: 'Noto Sans JP', 'Yu Gothic UI', Meiryo, sans-serif;
+}
+
+.col-right.slot-info * {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.info-block + .info-block {
+    margin-top: 0.14rem;
+}
+
+.info-title {
+    font-size: 0.2rem;
+    color: var(--accent-1, #d4af37);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.5);
+    padding-bottom: 0.04rem;
+    margin: 0 0 0.08rem;
+    letter-spacing: 0.04em;
+}
+
+.info-lead,
+.info-text {
+    margin: 0;
+}
+
+.paytable {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.paytable li {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.08rem;
+    padding: 0.04rem 0;
+    border-bottom: 1px dashed rgba(212, 175, 55, 0.25);
+}
+
+.pt-sym {
+    color: #fff;
+}
+
+.pt-mul {
+    color: #ffd96a;
+    font-weight: bold;
+}
+
+.pt-tag {
+    font-size: 0.12rem;
+    padding: 0.02rem 0.06rem;
+    border-radius: 0.04rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid currentColor;
+}
+
+.tag-jp {
+    color: #ff7ab6;
+}
+
+.tag-big {
+    color: #ffd96a;
+}
+
+.tag-win {
+    color: #7ad07a;
+}
+
+.tag-small {
+    color: #9ec5ff;
+}
+
+.howto {
+    margin: 0;
+    padding-left: 0.18rem;
+}
+
+.howto li {
+    margin-bottom: 0.04rem;
+}
+
+.col-right.slot-info code {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 0 0.04rem;
+    border-radius: 0.02rem;
+    color: #ffd96a;
+}
+
+.reel-frame.reels-container,
+.reels-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.08rem;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    max-height: 100%;
+    position: relative;
+    padding: 0.12rem;
+    margin: 0 auto;
+    box-sizing: border-box;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 3px solid var(--border-frame);
+    border-radius: 0.08rem;
+    box-shadow: 0 0 0.12rem var(--glow-color);
+}
+
+/* 中段ガイド横線は非表示（縦につながって見せる） */
+.reel-frame.reels-container::before,
+.reel-frame.reels-container::after {
+    display: none !important;
+    content: none !important;
+}
+
+.reel-frame.reels-container.is-win {
+    animation: reel-frame-win-glow 0.85s ease-in-out 2;
+    box-shadow:
+        0 0 0.14rem rgba(255, 215, 0, 0.75),
+        0 0 0.28rem rgba(255, 215, 0, 0.35);
+}
+
+.reel-frame.reels-container.is-bigwin {
+    animation: reel-frame-bigwin-glow 0.55s ease-in-out 4;
+    box-shadow:
+        0 0 0.2rem rgba(255, 215, 0, 0.95),
+        0 0 0.45rem rgba(255, 140, 0, 0.55);
+}
+
+@keyframes reel-frame-win-glow {
+    0%,
+    100% {
+        border-color: var(--accent-1, #d4af37);
+    }
+    50% {
+        border-color: rgba(255, 230, 140, 0.95);
+    }
+}
+
+@keyframes reel-frame-bigwin-glow {
+    0%,
+    100% {
+        border-color: var(--accent-1, #d4af37);
+    }
+    50% {
+        border-color: #fff0a0;
+    }
+}
+
+.reel {
+    position: relative;
+    min-width: 0;
+    aspect-ratio: 1 / 3;
+    max-height: 100%;
+    background: transparent !important;
+    border: 2px solid var(--accent-1, #d4af37);
+    border-radius: 0.05rem;
+    overflow: hidden;
+}
+
+.reel-inner {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.reel-strip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+}
+
+.reel-symbol-cell {
+    flex-shrink: 0;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.reel.is-spinning .reel-strip {
+    filter: blur(0.85px);
+}
+
+.sym {
+    font-size: 0.48rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reel .sym-img,
+.reel img.sym-img,
+.reel-symbol-cell img {
+    width: 78%;
+    height: 78%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: auto;
+    display: block;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
+}
+
+.payline {
+    height: 0.04rem;
+    margin-top: 0.04rem;
+    background: linear-gradient(90deg, transparent, var(--accent-1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.payline.hit {
+    opacity: 1;
+}
+
+.bonus-badge {
+    position: fixed;
+    top: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #7a3 0%, #fc6 50%, #7a3 100%);
+    color: #1a1410;
+    padding: 0.2rem 0.5rem;
+    font-weight: bold;
+    border-radius: 0.1rem;
+    box-shadow: 0 0 12px rgba(255, 200, 80, 0.7);
+    z-index: 60;
+    pointer-events: none;
+    letter-spacing: 0.05em;
+}
+
+.toast-flash {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.75);
+    color: #ffd96a;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.5rem;
+    font-weight: bold;
+    border: 2px solid #d4af37;
+    border-radius: 0.08rem;
+    z-index: 65;
+    pointer-events: none;
+    animation: toast-pop 2.2s ease-out forwards;
+}
+
+@keyframes toast-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -60%) scale(0.8);
+    }
+    15% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    25% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    85% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+#root.is-bonus .reel {
+    border-color: #7ad07a;
+    box-shadow: 0 0 8px rgba(120, 220, 120, 0.4);
+}
+
+.info-card {
+    margin-bottom: 0.06rem;
+    padding: 0.06rem;
+    border: 1px solid var(--border-frame);
+    border-radius: 0.06rem;
+    font-size: 0.14rem;
+}
+
+.info-card h3 {
+    margin: 0 0 0.04rem;
+    font-size: 0.18rem;
+    color: var(--accent-1);
+}
+
+.paytable-list {
+    margin: 0;
+    padding-left: 0.2rem;
+}
+
+/* フッター操作ボタン（実機スロット風・大型） */
+.slot-footer .btn {
+    pointer-events: auto !important;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+    margin: 0;
+    border-style: solid;
+    transition:
+        transform 0.08s ease-out,
+        box-shadow 0.08s ease-out,
+        filter 0.1s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.slot-footer .btn:hover:not(:disabled) {
+    transform: translateY(-0.015rem);
+    filter: brightness(1.08);
+}
+
+.slot-footer .btn:active:not(:disabled) {
+    transform: translateY(0.005rem) scale(0.98);
+    filter: brightness(0.96);
+}
+
+.btn-bet {
+    width: 0.55rem;
+    height: 0.55rem;
+    padding: 0;
+    font-size: 0.32rem;
+    line-height: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #6a4a2a 0%, #3a2818 100%);
+    color: var(--accent-1);
+    border-width: 0.02rem;
+    border-color: var(--accent-1);
+    box-shadow:
+        inset 0 0.02rem 0.04rem rgba(255, 220, 150, 0.3),
+        0 0.03rem 0.05rem rgba(0, 0, 0, 0.6);
+}
+
+.btn-max {
+    width: 1.1rem;
+    height: 0.6rem;
+    padding: 0 0.06rem;
+    font-size: 0.2rem;
+    border-radius: 0.06rem;
+    background: linear-gradient(180deg, #4a3a1a 0%, #2a1a08 100%);
+    color: var(--accent-1);
+    border-width: 0.02rem;
+    border-color: var(--accent-1);
+    text-shadow: 0 0 0.03rem rgba(212, 175, 55, 0.5);
+    letter-spacing: 0.03rem;
+    box-shadow:
+        inset 0 0.02rem 0.04rem rgba(255, 220, 150, 0.25),
+        0 0.04rem 0.06rem rgba(0, 0, 0, 0.6);
+}
+
+.btn-spin-main {
+    width: 1.4rem;
+    height: 0.85rem;
+    padding: 0;
+    font-size: 0.32rem;
+    border-radius: 0.4rem;
+    background: radial-gradient(circle at 35% 30%, #ffe070 0%, #d4af37 50%, #8a6a1e 100%);
+    color: #2a1a08;
+    border-width: 0.03rem;
+    border-color: #fff5c0;
+    letter-spacing: 0.05rem;
+    text-shadow: 0 0.02rem 0.02rem rgba(255, 255, 255, 0.35);
+    box-shadow:
+        inset 0 0.04rem 0.06rem rgba(255, 255, 255, 0.55),
+        inset 0 -0.03rem 0.05rem rgba(0, 0, 0, 0.45),
+        0 0.05rem 0.1rem rgba(212, 175, 55, 0.55),
+        0 0.08rem 0.12rem rgba(0, 0, 0, 0.65);
+    animation: spin-pulse 2.4s ease-in-out infinite;
+}
+
+.btn-spin-main:hover:not(:disabled) {
+    box-shadow:
+        inset 0 0.04rem 0.06rem rgba(255, 255, 255, 0.65),
+        inset 0 -0.03rem 0.05rem rgba(0, 0, 0, 0.45),
+        0 0.05rem 0.15rem rgba(255, 220, 100, 0.85),
+        0 0.08rem 0.14rem rgba(0, 0, 0, 0.65);
+}
+
+#btn-spin.btn-spin-main:disabled,
+.btn-spin-main:disabled {
+    animation: none;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #555 0%, #333 100%);
+    color: #888;
+    border-color: #666;
+    box-shadow: 0 0.02rem 0.05rem rgba(0, 0, 0, 0.45);
+    filter: none;
+}
+
+.btn-exit-main {
+    width: 0.75rem;
+    height: 0.58rem;
+    padding: 0 0.04rem;
+    font-size: 0.17rem;
+    border-radius: 0.05rem;
+    background: linear-gradient(180deg, #6a2828 0%, #3a1010 100%);
+    color: #ffd0d0;
+    border-width: 0.02rem;
+    border-color: #a04040;
+    box-shadow:
+        inset 0 0.02rem 0.04rem rgba(255, 150, 150, 0.2),
+        0 0.03rem 0.05rem rgba(0, 0, 0, 0.55);
+}
+
+@keyframes spin-pulse {
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0.04rem 0.06rem rgba(255, 255, 255, 0.55),
+            inset 0 -0.03rem 0.05rem rgba(0, 0, 0, 0.45),
+            0 0.05rem 0.1rem rgba(212, 175, 55, 0.55),
+            0 0.08rem 0.12rem rgba(0, 0, 0, 0.65);
+    }
+    50% {
+        box-shadow:
+            inset 0 0.04rem 0.06rem rgba(255, 255, 255, 0.65),
+            inset 0 -0.03rem 0.05rem rgba(0, 0, 0, 0.45),
+            0 0.05rem 0.16rem rgba(255, 220, 100, 0.85),
+            0 0.08rem 0.14rem rgba(0, 0, 0, 0.65);
+    }
+}
+
+/* 非表示時は display:none（[hidden] だけでは display:flex に負けることがある） */
+.cutin-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    pointer-events: none !important;
+}
+
+.cutin-overlay.is-active,
+.cutin-overlay.is-playing {
+    display: flex;
+}
+
+.cutin-overlay > *,
+.cutin-overlay img,
+.cutin-overlay video {
+    pointer-events: none !important;
+}
+
+.cutin-overlay img,
+.cutin-overlay video {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+}
+
+.flash-overlay {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    /* ヘッダー／フッターより下にし、操作不能になるのを防ぐ（CEF で pointer-events が効かない事例への保険） */
+    z-index: 5;
+}
+
+.flash-overlay.flash {
+    animation: flash-once 0.55s ease-out forwards;
+}
+
+@keyframes flash-once {
+    0% {
+        opacity: 0.85;
+    }
+    100% {
+        opacity: 0;
+    }
+}

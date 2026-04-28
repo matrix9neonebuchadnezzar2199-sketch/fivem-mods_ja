@@ -1,0 +1,52 @@
+{
+  "ui": {
+    "balance": "Balance",
+    "bet": "Bet",
+    "win": "Win",
+    "spin": "SPIN",
+    "auto_spin": "AUTO",
+    "bet_max": "MAX BET",
+    "paytable": "Paytable",
+    "exit": "Exit",
+    "jackpot": "Jackpot",
+    "credits": "Credits",
+    "balance_format": "${value}",
+    "press_e_to_play": "[E] to play",
+    "machine_in_use": "In use",
+    "insufficient_funds": "Insufficient funds",
+    "big_win": "BIG WIN!",
+    "jackpot_win": "🎉 JACKPOT 🎉",
+    "bonus_start": "Bonus time!",
+    "free_spins_left": "{n} free spins left",
+    "machine_info": "Machine info",
+    "bonus_badge": "FREE SPIN  {n} left  ×{m}",
+    "bonus_toast_start": "BONUS START!",
+    "bonus_toast_end": "BONUS END  Total {amount}",
+    "bonus_toast_retrigger": "+{n} FREE SPIN!"
+  },
+  "machine_01_name": "Cherry Machine",
+  "machine_01_desc": "Casino test machine. Edit bets in config_shared.lua; odds in config_server.lua (server only).",
+  "character_luna_name": "Luna Serafina",
+  "character_sakura_name": "Sakura Chan",
+  "ticker": [
+    "Today's top win: ${topwin}",
+    "Jackpot growing!",
+    "MAX BET for bigger wins!"
+  ],
+  "admin": {
+    "title": "JP-Slot Admin",
+    "tab_design": "Design",
+    "tab_display": "Display",
+    "tab_text": "Text",
+    "saved": "Saved",
+    "close": "Close",
+    "save_theme": "Save theme",
+    "ui_size_title": "UI size",
+    "ui_size_hint": "Adjust sliders for a local preview. \"Save & apply to all\" persists to the server and updates every player. Closing without saving discards the preview.",
+    "ui_width": "Width",
+    "ui_height": "Height",
+    "ui_maxwidth": "Max width (px, 0 = unlimited)",
+    "ui_size_save": "Save & apply to all",
+    "ui_size_reset": "Reset to defaults"
+  }
+}

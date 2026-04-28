@@ -1,0 +1,52 @@
+{
+  "ui": {
+    "balance": "所持金",
+    "bet": "ベット",
+    "win": "獲得",
+    "spin": "SPIN",
+    "auto_spin": "AUTO",
+    "bet_max": "MAX BET",
+    "paytable": "配当表",
+    "exit": "終了",
+    "jackpot": "ジャックポット",
+    "credits": "クレジット",
+    "balance_format": "¥{value}",
+    "press_e_to_play": "[E] キーでプレイ",
+    "machine_in_use": "使用中",
+    "insufficient_funds": "残高不足",
+    "big_win": "BIG WIN!",
+    "jackpot_win": "🎉 JACKPOT 🎉",
+    "bonus_start": "ボーナスタイム!",
+    "free_spins_left": "残り {n} 回",
+    "machine_info": "台情報",
+    "bonus_badge": "FREE SPIN  残り {n}  ×{m}",
+    "bonus_toast_start": "BONUS START!",
+    "bonus_toast_end": "BONUS END  合計 {amount}",
+    "bonus_toast_retrigger": "+{n} FREE SPIN!"
+  },
+  "machine_01_name": "チェリー・マシーン",
+  "machine_01_desc": "ロスサントス公式カジノのテスト台です。ベット幅は config_shared.lua、内部確率は config_server.lua で変更できます。",
+  "character_luna_name": "ルナ・セラフィナ",
+  "character_sakura_name": "サクラちゃん",
+  "ticker": [
+    "本日の最高配当: ¥{topwin}",
+    "ジャックポット累積中!",
+    "MAX BETでチャンスアップ!"
+  ],
+  "admin": {
+    "title": "JP-Slot 管理",
+    "tab_design": "デザイン",
+    "tab_display": "表示",
+    "tab_text": "テキスト",
+    "saved": "保存しました",
+    "close": "閉じる",
+    "save_theme": "テーマを保存",
+    "ui_size_title": "UI サイズ",
+    "ui_size_hint": "スライダーでローカルプレビュー。「保存して全員に適用」でサーバーに保存し全プレイヤーへ即時反映されます。閉じると未保存のプレビューは破棄されます。",
+    "ui_width": "横幅",
+    "ui_height": "縦幅",
+    "ui_maxwidth": "最大幅（px・0=無制限）",
+    "ui_size_save": "保存して全員に適用",
+    "ui_size_reset": "デフォルトに戻す"
+  }
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP-Slot</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/themes/luxury.css">
+    <link rel="stylesheet" href="css/themes/custom.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div id="root" data-theme="luxury">
+        <header class="slot-header">
+            <div class="hdr-left">
+                <span class="machine-name" data-i18n-key="machine_01_name"></span>
+            </div>
+            <div class="hdr-center">
+                <span class="character-name"></span>
+            </div>
+            <div class="hdr-right">
+                <span class="jackpot-label" data-i18n-key="ui.jackpot"></span>
+                <span class="jackpot-amount">¥0</span>
+            </div>
+        </header>
+        <div class="ticker-bar">
+            <div class="ticker-marq"></div>
+        </div>
+        <main class="slot-main">
+            <section class="col-left">
+                <div class="char-stage">
+                    <img class="char-img char-portrait" alt="" hidden
+                        onerror="this.hidden=true;this.removeAttribute('src');">
+                    <video class="char-video" preload="auto" muted playsinline></video>
+                </div>
+                <div class="char-bottom-row">
+                    <div class="char-mood-card"></div>
+                </div>
+            </section>
+            <section class="col-center reels-section">
+                <div class="marquee marquee-top" aria-hidden="true">
+                    <div class="marquee-track" id="marquee-top"></div>
+                </div>
+                <div class="reel-stack">
+                    <div class="reel-frame reels-container">
+                        <div class="reel" data-reel="0"><div class="reel-inner"><div class="reel-strip"></div></div></div>
+                        <div class="reel" data-reel="1"><div class="reel-inner"><div class="reel-strip"></div></div></div>
+                        <div class="reel" data-reel="2"><div class="reel-inner"><div class="reel-strip"></div></div></div>
+                    </div>
+                    <div class="payline"></div>
+                    <div class="win-popup" aria-live="polite"></div>
+                </div>
+                <div class="marquee marquee-bottom" aria-hidden="true">
+                    <div class="marquee-track" id="marquee-bottom"></div>
+                </div>
+            </section>
+            <aside class="col-right slot-info">
+                <section class="info-block">
+                    <h3 class="info-title">台情報</h3>
+                    <p class="info-lead">
+                        ロスサントス公式カジノ「<b>チェリー・マシーン</b>」へようこそ。<br>
+                        ベット額は <code>config_shared.lua</code>、配当・確率は <code>config_server.lua</code> から調整できます。
+                    </p>
+                </section>
+
+                <section class="info-block">
+                    <h3 class="info-title">配当表（中段3つ揃い）</h3>
+                    <ul class="paytable">
+                        <li><span class="pt-sym">キャラ × 3</span><span class="pt-mul">×500</span><span class="pt-tag tag-jp">ジャックポット</span></li>
+                        <li><span class="pt-sym">7 × 3</span><span class="pt-mul">×100</span><span class="pt-tag tag-big">大当たり</span></li>
+                        <li><span class="pt-sym">WILD × 3</span><span class="pt-mul">×50</span><span class="pt-tag tag-big">大当たり</span></li>
+                        <li><span class="pt-sym">BAR × 3</span><span class="pt-mul">×20</span><span class="pt-tag tag-win">当たり</span></li>
+                        <li><span class="pt-sym">ベル × 3</span><span class="pt-mul">×10</span><span class="pt-tag tag-win">当たり</span></li>
+                        <li><span class="pt-sym">スイカ × 3</span><span class="pt-mul">×8</span><span class="pt-tag tag-win">当たり</span></li>
+                        <li><span class="pt-sym">チェリー × 3</span><span class="pt-mul">×5</span><span class="pt-tag tag-win">当たり</span></li>
+                        <li><span class="pt-sym">チェリー × 2</span><span class="pt-mul">×2</span><span class="pt-tag tag-small">小役</span></li>
+                    </ul>
+                </section>
+
+                <section class="info-block">
+                    <h3 class="info-title">フリースピン</h3>
+                    <p class="info-text">
+                        中段に <b>キャラ × 3</b> でフリースピン突入。<br>
+                        残り回数の間ベット消費なし、配当は <b>×2</b> 倍。<br>
+                        フリースピン中にもう一度キャラ × 3 を引くと <b>+5回</b> 追加。
+                    </p>
+                </section>
+
+                <section class="info-block">
+                    <h3 class="info-title">遊び方</h3>
+                    <ol class="howto">
+                        <li><b>ベット額</b>を ＋ / − で調整、<b>MAX BET</b> で上限。</li>
+                        <li><b>SPIN</b> またはスペース／Enter キーでスピン開始。</li>
+                        <li>中段の3シンボルが揃うと配当獲得。当選時にリール枠が光って演出が入ります。</li>
+                        <li><b>終了</b>または Esc キーで台から離れます。</li>
+                    </ol>
+                </section>
+            </aside>
+        </main>
+        <footer class="slot-footer">
+            <div class="footer-group footer-left">
+                <div class="stat-box footer-stat-balance">
+                    <span class="stat-label" data-i18n-key="ui.balance"></span>
+                    <span class="balance-value stat-value">¥0</span>
+                </div>
+                <button type="button" id="bet-down" class="bet-down btn btn-bet" aria-label="bet-down">－</button>
+                <div class="bet-display">
+                    <span class="bet-label" data-i18n-key="ui.bet"></span>
+                    <span class="bet-value">100</span>
+                </div>
+                <button type="button" id="bet-up" class="bet-up btn btn-bet" aria-label="bet-up">＋</button>
+            </div>
+            <div class="footer-group footer-center">
+                <button type="button" id="btn-bet-max" class="btn-bet-max btn btn-max" data-i18n-key="ui.bet_max"></button>
+                <button type="button" id="btn-spin" class="btn-spin btn-spin-main btn" data-i18n-key="ui.spin"></button>
+            </div>
+            <div class="footer-group footer-right">
+                <div class="gain-display stat-box">
+                    <span class="gain-label" data-i18n-key="ui.win"></span>
+                    <span class="win-value gain-value">¥0</span>
+                </div>
+                <button type="button" id="btn-exit" class="btn-exit btn btn-exit-main" data-i18n-key="ui.exit"></button>
+            </div>
+        </footer>
+        <div class="cutin-overlay">
+            <img class="cutin-img" alt="" hidden>
+            <video class="cutin-video" muted playsinline hidden></video>
+        </div>
+        <div class="flash-overlay"></div>
+    </div>
+
+    <div id="panel-admin" style="display:none;">
+        <div class="admin-wrap">
+            <h2 class="admin-title" data-i18n-key="admin.title"></h2>
+            <ul class="admin-tabs">
+                <li>
+                    <button type="button" class="admin-tab active" data-tab="design" data-i18n-key="admin.tab_design"></button>
+                </li>
+                <li>
+                    <button type="button" class="admin-tab" data-tab="display" data-i18n-key="admin.tab_display"></button>
+                </li>
+            </ul>
+
+            <div class="admin-pane admin-pane-design" data-pane="design">
+                <label class="admin-row">bgPrimary <input type="color" id="adm-bgPrimary"></label>
+                <label class="admin-row">accent1 <input type="color" id="adm-accent1"></label>
+                <label class="admin-row">textPrimary <input type="color" id="adm-textPrimary"></label>
+                <label class="admin-row">theme name <input type="text" id="adm-themeName"></label>
+                <div class="admin-actions">
+                    <button type="button" id="adm-save" data-i18n-key="admin.save_theme"></button>
+                    <button type="button" id="adm-close" data-i18n-key="admin.close"></button>
+                </div>
+            </div>
+
+            <div class="admin-pane admin-pane-display" data-pane="display" style="display: none">
+                <h3 class="admin-subtitle" data-i18n-key="admin.ui_size_title"></h3>
+                <p class="admin-hint" data-i18n-key="admin.ui_size_hint"></p>
+                <div class="form-row">
+                    <label for="ui-width" data-i18n-key="admin.ui_width"></label>
+                    <input type="range" id="ui-width" min="30" max="100" value="90" step="5" />
+                    <span id="ui-width-val">90</span>%
+                </div>
+                <div class="form-row">
+                    <label for="ui-height" data-i18n-key="admin.ui_height"></label>
+                    <input type="range" id="ui-height" min="30" max="100" value="90" step="5" />
+                    <span id="ui-height-val">90</span>%
+                </div>
+                <div class="form-row">
+                    <label for="ui-maxwidth" data-i18n-key="admin.ui_maxwidth"></label>
+                    <input type="number" id="ui-maxwidth" min="0" max="7680" step="10" value="0" />
+                </div>
+                <div class="admin-actions">
+                    <button type="button" id="ui-size-save" class="btn-primary" data-i18n-key="admin.ui_size_save"></button>
+                    <button type="button" id="ui-size-reset" class="btn-secondary" data-i18n-key="admin.ui_size_reset"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/theme-loader.js"></script>
+    <script src="js/reels.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
