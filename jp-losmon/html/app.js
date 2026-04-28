@@ -398,7 +398,9 @@
     var sk = state && state.skin;
     var en = !sk || sk.enabled !== false;
     var p = (sk && sk.path) ? String(sk.path) : 'img/main.png';
+    var oy = (sk && sk.offsetY != null && String(sk.offsetY) !== '') ? String(sk.offsetY) : '50%';
     document.documentElement.style.setProperty('--device-skin', "url('" + p.replace(/'/g, '%27') + "')");
+    document.documentElement.style.setProperty('--device-skin-y', oy);
     var panel = document.getElementById('skin-panel');
     if (!panel) { return; }
     if (!en) {

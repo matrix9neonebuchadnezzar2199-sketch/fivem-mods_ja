@@ -451,18 +451,18 @@ local function ensureStore(store)
 end
 
 ---@param skinId string|nil
----@return string
-local function resolveSkinPath(skinId)
+---@return table
+local function resolveSkin(skinId)
     local list = Config.SkinList or {}
     for _, s in ipairs(list) do
-        if s and s.id == skinId and type(s.path) == 'string' and s.path ~= '' then
-            return s.path
+        if s and s.id == skinId then
+            return s
         end
     end
-    if list[1] and type(list[1].path) == 'string' and list[1].path ~= '' then
-        return list[1].path
+    if list[1] then
+        return list[1]
     end
-    return 'img/main.png'
+    return { id = 'gray', path = 'img/main.png', offsetY = '50%' }
 end
 
 ---@param pet table|nil
@@ -1064,6 +1064,7 @@ local function nuiStatePayload(st, expanded)
     end
     local notSick = pet and pet.phase ~= 'sick'
     local skinId = s.skin or (Config and Config.SkinDefault) or 'gray'
+    local skinRow = resolveSkin(skinId)
     return {
         type = 'state',
         expanded = expanded or false,
@@ -1141,9 +1142,10 @@ local function nuiStatePayload(st, expanded)
         poopSickAfterSec = (Config and Config.PoopSickAfterSec) or 3600,
         poopSpritePath = (Config and Config.PoopSpritePath) or 'un.png',
         skin = {
-            current = skinId,
+            current = skinRow.id or skinId,
             list = Config.SkinList or {},
-            path = resolveSkinPath(skinId),
+            path = (type(skinRow.path) == 'string' and skinRow.path ~= '') and skinRow.path or 'img/main.png',
+            offsetY = (type(skinRow.offsetY) == 'string' and skinRow.offsetY ~= '') and skinRow.offsetY or '50%',
             enabled = (Config and Config.SkinEnabled) and true or false,
         },
     }

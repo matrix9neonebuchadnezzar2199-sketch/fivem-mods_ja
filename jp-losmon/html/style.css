@@ -22,6 +22,7 @@ html { font-size: 144px; }
 :root {
   /* client が setProperty で上書き。初期はグレー */
   --device-skin: url("img/main.png");
+  --device-skin-y: 50%;
 }
 .hidden { display: none !important; }
 .main-expanded, .zukan-overlay, .travel-dialog { pointer-events: auto; }
@@ -123,8 +124,8 @@ html { font-size: 144px; }
 .main-expanded {
   position: fixed; left: 50%; top: 50%;
   width: min(1900px, 80vw);
-  height: min(1000px, 70vh);
-  max-height: 76vh;
+  height: min(1000px, 75vh);
+  max-height: 80vh;
   transform: translate(-50%, -50%);
   background:
     radial-gradient(ellipse at top, rgba(80, 100, 180, 0.15) 0%, transparent 60%),
@@ -203,20 +204,21 @@ html { font-size: 144px; }
 .ex-grid .col.center { grid-column: 2; grid-row: 1; }
 .ex-grid .col.right { grid-column: 3; grid-row: 1; }
 .ex-grid .footer-toolbar { grid-column: 1 / -1; grid-row: 2; }
-/* 上: ケアタイル、下: ライフモード。height:100% だけだと下のパネルが overflow で消える */
+/* 上: ケアタイル、下: ライフ＋スキン。タイルは固定、下段は自然高 */
 .ex-grid .col.left {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   min-height: 0;
   align-items: stretch;
+  overflow: hidden;
 }
 .care-tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.08rem;
   width: 100%;
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-height: 0;
   height: auto;
   align-content: start;
@@ -284,7 +286,6 @@ html { font-size: 144px; }
 }
 /* 本体: main.png（1024x559）— LCD は 2D 色解析 412,156–744,391 相当。微調整は下の 4 変数のみ */
 #sprite-arena, .mini-device {
-  --bezel-img: var(--device-skin);
   --dev-a: 1024; --dev-b: 559;
   /* main.png 上の表示域（%）: left+width / top+height */
   --lcd-l: 40.234%;
@@ -310,7 +311,11 @@ html { font-size: 144px; }
   max-width: 100%;
   max-height: 100%;
   height: 100%;
-  background: var(--bezel-img) center / contain no-repeat;
+  background-color: transparent;
+  background-image: var(--device-skin);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center var(--device-skin-y);
   aspect-ratio: 1024 / 559;
   align-self: center;
   box-sizing: border-box;
@@ -673,7 +678,11 @@ html { font-size: 144px; }
   position: relative;
   width: 320px; max-width: 88vw;
   aspect-ratio: 1024 / 559;
-  background: var(--bezel-img) center / contain no-repeat;
+  background-color: transparent;
+  background-image: var(--device-skin);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center var(--device-skin-y);
   flex: 0 0 auto;
 }
 .mini-lcd {
@@ -719,12 +728,13 @@ html { font-size: 144px; }
   align-items: center;
   gap: 0.08rem;
   cursor: pointer;
-  font-size: 0.2rem;
+  font-size: 0.18rem;
   color: #d8dcea;
   user-select: none;
   padding: 0.04rem 0.02rem;
   border-radius: 0.04rem;
   transition: background 0.15s;
+  white-space: nowrap;
 }
 .life-mode-row:hover {
   background: rgba(255, 255, 255, 0.05);
@@ -744,6 +754,9 @@ html { font-size: 144px; }
   align-items: center;
   gap: 0.06rem;
   flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .life-mode-ico {
   font-size: 0.24rem;
@@ -756,10 +769,10 @@ html { font-size: 144px; }
   background: rgba(168, 200, 255, 0.1);
   color: #e2ecff;
 }
-/* 左: 本体スキン（グローバル。--device-skin は app.js で更新） */
+/* 左: 本体スキン（グローバル。--device-skin / --device-skin-y は app.js で更新） */
 .skin-panel {
   flex: 0 0 auto;
-  margin-top: 0;
+  margin-top: auto;
   padding: 0.1rem 0.12rem;
   background: rgba(20, 24, 40, 0.55);
   border: 1px solid rgba(120, 140, 200, 0.25);
@@ -843,8 +856,8 @@ html { font-size: 144px; }
 /* 極小ウィンドウ: 1 列にスタック */
 @media (max-width: 800px) {
   .main-expanded {
-    height: min(1100px, 80vh);
-    max-height: 86vh;
+    height: min(1100px, 86vh);
+    max-height: 92vh;
   }
   .ex-grid {
     grid-template-columns: 1fr;
