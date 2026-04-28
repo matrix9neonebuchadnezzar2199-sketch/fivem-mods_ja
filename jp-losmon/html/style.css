@@ -119,8 +119,8 @@ html { font-size: 144px; }
 .main-expanded {
   position: fixed; left: 50%; top: 50%;
   width: min(1900px, 80vw);
-  height: min(1000px, 68vh);
-  max-height: 72vh;
+  height: min(1000px, 70vh);
+  max-height: 76vh;
   transform: translate(-50%, -50%);
   background:
     radial-gradient(ellipse at top, rgba(80, 100, 180, 0.15) 0%, transparent 60%),
@@ -402,22 +402,27 @@ html { font-size: 144px; }
 .ex-grid .col.right {
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: 0.1rem;
   min-height: 0;
+  height: 100%;
   padding: 0 0.04rem 0 0;
   overflow: hidden;
   justify-content: flex-start;
 }
-.ex-grid .col.right .info-card { flex: 0 0 auto; }
-/* 余白はステータスカードに吸収 */
+.ex-grid .col.right .info-card.card-pet { flex: 0 0 auto; }
+.ex-grid .col.right .info-card.card-meta { flex: 0 0 auto; }
+/* 4 行メーターを最優先に縦余白を割り当て */
 .ex-grid .col.right .info-card.card-stats {
   flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 0.14rem 0.16rem;
+  min-height: 1.6rem;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 0.06rem;
+  padding: 0.12rem 0.14rem;
+  overflow: visible;
+  box-sizing: border-box;
 }
+.ex-grid .col.right .info-card { flex: 0 0 auto; }
 .info-card {
   background: linear-gradient(160deg, #1e2138 0%, #15172a 100%);
   border: 0.015rem solid #2d3252;
@@ -455,7 +460,7 @@ html { font-size: 144px; }
   border-radius: 0.06rem;
   box-shadow: 0 0.02rem 0.04rem rgba(0, 0, 0, 0.4), inset 0 0.01rem 0 rgba(255, 255, 255, 0.4);
 }
-.card-pet .exp-bar { height: 0.08rem; margin: 0.04rem 0; width: 100%; flex: 0 0 auto; }
+.card-pet .exp-bar { height: 0.1rem; margin: 0.04rem 0; width: 100%; flex: 0 0 auto; }
 .card-pet .exp-bar.barb { min-width: 0; }
 .card-pet .meta-sub { font-size: 0.16rem; color: #8a9; }
 .card-pet .card-row { display: flex; align-items: center; gap: 0.06rem; margin: 0.02rem 0; }
@@ -476,9 +481,26 @@ html { font-size: 144px; }
 .barb { flex: 1; min-width: 0.3rem; height: 0.1rem; background: #1a1a1a; border: 0.01rem solid #2a2a2a; border-radius: 0.02rem; }
 .barb b { display: block; max-width: 100%; }
 .barb.expb b { background: linear-gradient(90deg, #ea0, #fc3); }
-/* ステータス行（拡大UI右カラム: 1画面で4本＋メタを収める） */
-.ex-grid .col.right .card-stats .stat-row { min-height: 0.42rem; }
-.card-stats { display: flex; flex-direction: column; gap: 0.06rem; }
+/* ステータス行（拡大UI右カラム: 4 行を Grid で等分、card-meta との重なり防止） */
+.ex-grid .col.right .card-stats .stat-row {
+  display: grid;
+  grid-template-columns: 0.36rem 1fr 0.6rem;
+  align-items: center;
+  gap: 0.08rem;
+  min-width: 0;
+  min-height: 0;
+}
+.ex-grid .col.right .card-stats .stat-ico { font-size: 0.28rem; text-align: center; }
+.ex-grid .col.right .card-stats .stat-bar { height: 0.16rem; }
+.ex-grid .col.right .card-stats .stat-val {
+  font-size: 0.22rem;
+  font-weight: 700;
+  text-align: right;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  white-space: nowrap;
+}
 .stat-row {
   display: grid;
   grid-template-columns: 0.4rem 1fr 0.6rem;
@@ -487,9 +509,6 @@ html { font-size: 144px; }
   min-width: 0;
 }
 .stat-ico { font-size: 0.32rem; text-align: center; }
-.ex-grid .col.right .card-stats .stat-bar {
-  height: 0.18rem;
-}
 .stat-bar {
   min-width: 0;
   height: 0.12rem;
@@ -524,7 +543,12 @@ html { font-size: 144px; }
   font-size: 0.26rem; font-weight: 700; text-align: right; color: #fff; font-variant-numeric: tabular-nums; min-width: 0;
 }
 /* メタ */
-.card-meta .meta-line { font-size: 0.18rem; color: #ccd; margin: 0.03rem 0; line-height: 1.3; word-break: break-word; }
+.info-card.card-meta {
+  padding: 0.12rem 0.14rem;
+  font-size: 0.2rem;
+  line-height: 1.4;
+}
+.card-meta .meta-line { font-size: 0.2rem; color: #ccd; margin: 0 0 0.04rem 0; line-height: 1.4; word-break: normal; }
 .card-meta .warn { color: #f88; font-weight: 600; }
 /* フッターツールバー */
 .footer-toolbar {
@@ -668,8 +692,8 @@ html { font-size: 144px; }
 /* 極小ウィンドウ: 1 列にスタック */
 @media (max-width: 800px) {
   .main-expanded {
-    height: min(1100px, 78vh);
-    max-height: 84vh;
+    height: min(1100px, 80vh);
+    max-height: 86vh;
   }
   .ex-grid {
     grid-template-columns: 1fr;
