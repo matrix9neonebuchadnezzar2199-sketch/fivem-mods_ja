@@ -397,8 +397,20 @@ RegisterNetEvent('jp-slot:spin', function(payload)
     payload = type(payload) == 'table' and payload or {}
     local machineId = payload.machineId
     local bet = math.floor(tonumber(payload.bet) or 0)
+    local embedPreview = payload.embedPreview == true
     local mid = playerMachine[src]
-    if not mid or mid ~= machineId then
+
+    --- NUI 埋め込みプレビュー：席なしでもプレビューモード中は仮席として指定台でスピン可
+    if embedPreview and isPreviewMode(src) then
+        machineId = machineId or (Config.Machines[1] and Config.Machines[1].id)
+        if not machineId then
+            pendingSpin[src] = nil
+            TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'machine' })
+            return
+        end
+        playerMachine[src] = machineId
+        mid = machineId
+    elseif not mid or mid ~= machineId then
         pendingSpin[src] = nil
         TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'seat' })
         return

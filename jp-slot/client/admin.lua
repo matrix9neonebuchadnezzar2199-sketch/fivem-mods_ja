@@ -114,6 +114,11 @@ RegisterNUICallback('admin/previewEnd', function(data, cb)
     TriggerServerEvent('jp-slot:sv:adminPreviewEnd', type(data) == 'table' and data or {})
 end)
 
+RegisterNUICallback('admin/embedSlotInit', function(data, cb)
+    cb({ ok = true })
+    TriggerServerEvent('jp-slot:sv:adminEmbedSlotInit', type(data) == 'table' and data or {})
+end)
+
 RegisterNetEvent('jp-slot:cl:adminPresetListResult', function(res)
     res = type(res) == 'table' and res or {}
     if pendingPresetListCb then

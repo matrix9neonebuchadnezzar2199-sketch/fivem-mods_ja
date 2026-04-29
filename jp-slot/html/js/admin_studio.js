@@ -48,21 +48,133 @@
         };
     }
 
-    function createDefaultWorkspace() {
+    /** 全体確率（マスター）。サーバー Config.Master とキー対応 */
+    function defaultMaster() {
+        return {
+            normal: { win: 25, bonus: 5, miss_tease: 70 },
+            bonus_promote: { streak: 30, big: 5, max_streak: 3, big_multiplier: 10 },
+            cooldown: { spins: 5 },
+        };
+    }
+
+    /**
+     * 新規・default 用の参考データ（ルナ想定テキスト・html/assets 配下の実ファイル例）。
+     * 保存時は buildPresetPayload → サーバー KVP にそのまま入る。
+     */
+    function studioReferenceEffects() {
+        var effects = {};
+        for (var i = 0; i < EFFECT_KEYS.length; i++) {
+            effects[EFFECT_KEYS[i]] = defaultEffectSection();
+        }
+
+        var idle = effects.idle;
+        idle.pre_text.text = 'おかえりなさい、マスター♪';
+        idle.post_text.text = '今日もよろしくね♪';
+        idle.char_video.file = 'characters/luna/idle.png';
+
+        var win = effects.win;
+        win.pre_text.text = '当たり！';
+        win.post_text.text = 'おめでとうございます！';
+        win.cutin_block = { kind: 'image', file: 'cutins/img_02.png', duration_ms: 1400 };
+        win.char_video.file = 'characters/luna/win.webm';
+
+        var bonus = effects.bonus;
+        bonus.pre_text.text = 'BONUS TIME!';
+        bonus.post_text.text = 'フリースピンスタート！';
+        bonus.cutin_block = { kind: 'image', file: 'cutins/img_01.png', duration_ms: 1800 };
+        bonus.char_video.file = 'characters/luna/bigwin.webm';
+
+        var bst = effects.bonus_streak;
+        bst.pre_text.text = '連チャン！';
+        bst.post_text.text = 'まだまだいくよ！';
+        bst.cutin_block = { kind: 'image', file: 'cutins/img_02.png', duration_ms: 1400 };
+
+        var bbig = effects.bonus_big;
+        bbig.pre_text.text = 'MEGA BONUS!';
+        bbig.post_text.text = '超高倍率チャンス！';
+        bbig.cutin_block = { kind: 'image', file: 'cutins/img_03.png', duration_ms: 2000 };
+
+        var miss = effects.miss_tease;
+        miss.pre_text.text = 'ハズレ…';
+        miss.post_text.text = '次こそ！';
+        miss.payout.enabled = false;
+
+        return effects;
+    }
+
+    /** プリセット読込用の空テンプレ（参考文は入れない）。欠落キーの補完に使う */
+    function emptyEffectsShape() {
         var effects = {};
         for (var i = 0; i < EFFECT_KEYS.length; i++) {
             effects[EFFECT_KEYS[i]] = defaultEffectSection();
         }
         effects.miss_tease.payout.enabled = false;
+        return effects;
+    }
+
+    function createDefaultWorkspace() {
         return {
-            master: {
-                normal: { win: 25, bonus: 5, miss_tease: 70 },
-                bonus_promote: { streak: 30, big: 5, max_streak: 3, big_multiplier: 10 },
-                cooldown: { spins: 5 },
-            },
-            effects: effects,
+            master: defaultMaster(),
+            effects: studioReferenceEffects(),
             dirty: false,
         };
+    }
+
+    function cloneJson(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
+
+    function mergeMasterData(incoming) {
+        var def = defaultMaster();
+        if (!incoming || typeof incoming !== 'object') {
+            return def;
+        }
+        return {
+            normal: Object.assign({}, def.normal, incoming.normal || {}),
+            bonus_promote: Object.assign({}, def.bonus_promote, incoming.bonus_promote || {}),
+            cooldown: Object.assign({}, def.cooldown, incoming.cooldown || {}),
+        };
+    }
+
+    function mergeEffectSection(defSec, incoming) {
+        if (!incoming || typeof incoming !== 'object') {
+            return cloneJson(defSec);
+        }
+        var o = cloneJson(defSec);
+        var subKeys = [
+            'pre_text',
+            'post_text',
+            'cutin_block',
+            'char_video',
+            'sound',
+            'reel_fx',
+            'payout',
+            'reaction',
+            'streak_intensity',
+        ];
+        for (var s = 0; s < subKeys.length; s++) {
+            var k = subKeys[s];
+            if (incoming[k] != null && typeof incoming[k] === 'object' && !Array.isArray(incoming[k])) {
+                o[k] = Object.assign({}, o[k] || {}, incoming[k]);
+            } else if (incoming[k] !== undefined) {
+                o[k] = incoming[k];
+            }
+        }
+        return o;
+    }
+
+    /** 古いプリセットでも欠落キーを埋める。参考テキストは createDefaultWorkspace のみ（読込時は空形ベース） */
+    function mergeEffectsData(incoming) {
+        var baseShape = emptyEffectsShape();
+        if (!incoming || typeof incoming !== 'object') {
+            return baseShape;
+        }
+        var out = {};
+        for (var i = 0; i < EFFECT_KEYS.length; i++) {
+            var key = EFFECT_KEYS[i];
+            out[key] = mergeEffectSection(baseShape[key], incoming[key]);
+        }
+        return out;
     }
 
     var workspace = createDefaultWorkspace();
@@ -165,12 +277,8 @@
         if (!data) {
             return;
         }
-        if (data.master) {
-            workspace.master = data.master;
-        }
-        if (data.effects) {
-            workspace.effects = data.effects;
-        }
+        workspace.master = mergeMasterData(data.master);
+        workspace.effects = mergeEffectsData(data.effects);
     }
 
     /** ホーム › 演出 › （読み込み中のプリセット名）。applyI18n で上書きされないよう data-i18n-key は付けない */
