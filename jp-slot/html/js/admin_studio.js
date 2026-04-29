@@ -986,6 +986,62 @@
         });
     }
 
+    /** FiveM NUI では window.prompt がフリーズしやすいためモーダルを使う */
+    function openPresetNameModal(defaultName, onDone) {
+        var modal = $('admin-preset-name-modal');
+        var inp = $('admin-preset-name-input');
+        var okBtn = $('admin-preset-name-ok');
+        var cancelBtn = $('admin-preset-name-cancel');
+        if (!modal || !inp || !okBtn || !cancelBtn) {
+            if (onDone) {
+                onDone(null);
+            }
+            return;
+        }
+        inp.value = defaultName || 'my_preset';
+        modal.hidden = false;
+        function cleanup() {
+            modal.hidden = true;
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+            inp.onkeydown = null;
+            document.removeEventListener('keydown', onKey);
+        }
+        function finish(val) {
+            cleanup();
+            if (onDone) {
+                onDone(val);
+            }
+        }
+        function onKey(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                finish(null);
+            }
+        }
+        cancelBtn.onclick = function () {
+            finish(null);
+        };
+        okBtn.onclick = function () {
+            var v = (inp.value || '').trim();
+            finish(v ? v : null);
+        };
+        inp.onkeydown = function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                okBtn.click();
+            }
+        };
+        document.addEventListener('keydown', onKey);
+        window.setTimeout(function () {
+            inp.focus();
+            inp.select();
+        }, 0);
+        if (window.jpSlotApplyI18n) {
+            window.jpSlotApplyI18n();
+        }
+    }
+
     function renderPreviewTab() {
         return (
             '<div class="studio-editor-sheet studio-preview-page">' +
@@ -1024,28 +1080,29 @@
         var sn = $('preview-save-as-new');
         if (sn) {
             sn.onclick = function () {
-                var raw = window.prompt('プリセット名', 'my_preset');
-                if (raw == null || String(raw).trim() === '') {
-                    return;
-                }
-                var name = String(raw).trim();
-                var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
-                fetchNui('admin/preset/save', {
-                    preset: buildPresetPayload(id, name),
-                }).then(function (r) {
-                    if (r && r.ok) {
-                        activePresetId = id;
-                        workspace.dirty = false;
-                        refreshAllPresetSelects();
-                        fetchNui('admin/embedSlotInit', {}).then(function () {
-                            window.requestAnimationFrame(function () {
-                                var host = $('admin-slot-embed');
-                                if (window.jpSlotMoveRootToEmbed && host) {
-                                    window.jpSlotMoveRootToEmbed(host);
-                                }
-                            });
-                        });
+                openPresetNameModal('my_preset', function (name) {
+                    if (!name || String(name).trim() === '') {
+                        return;
                     }
+                    name = String(name).trim();
+                    var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
+                    fetchNui('admin/preset/save', {
+                        preset: buildPresetPayload(id, name),
+                    }).then(function (r) {
+                        if (r && r.ok) {
+                            activePresetId = id;
+                            workspace.dirty = false;
+                            refreshAllPresetSelects();
+                            fetchNui('admin/embedSlotInit', {}).then(function () {
+                                window.requestAnimationFrame(function () {
+                                    var host = $('admin-slot-embed');
+                                    if (window.jpSlotMoveRootToEmbed && host) {
+                                        window.jpSlotMoveRootToEmbed(host);
+                                    }
+                                });
+                            });
+                        }
+                    });
                 });
             };
         }
@@ -1306,6 +1363,7 @@
         html +=
             '<p class="studio-note studio-effect-intro" data-i18n-key="admin.effect.intro">7ブロック構成。カードごとに編集し、プリセット保存で反映されます。</p>';
 
+        html += '<div class="studio-effect-grid">';
         html += renderTextBlockCard('①', 'admin.effect.block_pre_text', 'pre_text', sec.pre_text, true, false);
         html += renderCutinCard(sec.cutin_block);
         html += renderTextBlockCard('③', 'admin.effect.block_post_text', 'post_text', sec.post_text, false, true);
@@ -1322,7 +1380,11 @@
             html += renderBonusBigNote();
         }
 
+        html += '</div>';
+
+        html += '<div class="studio-effect-timeline-wrap">';
         html += renderTimelineCard(sec, key);
+        html += '</div>';
 
         html += '</div></div>';
         return html;

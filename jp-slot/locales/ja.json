@@ -111,6 +111,8 @@
     "preset.select_label": "プリセット選択",
     "preset.save_as_new_btn": "名前を付けて保存",
     "preset.overwrite_btn": "選択したプリセットに上書き",
+    "preset.name_modal_title": "プリセット名",
+    "preset.name_modal_ok": "保存",
     "preview.embed_hint": "実機に近い画面です。所持金は表示のみで、SPIN は確率・演出確認用です（編集は自動でサーバーへ反映されます）。",
     "master.title": "全体確率設定",
     "master.normal_section": "通常中の抽選（合計100%）",

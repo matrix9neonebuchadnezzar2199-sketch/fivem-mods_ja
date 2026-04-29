@@ -111,6 +111,8 @@
     "preset.select_label": "Preset",
     "preset.save_as_new_btn": "Save as new…",
     "preset.overwrite_btn": "Overwrite selected preset",
+    "preset.name_modal_title": "Preset name",
+    "preset.name_modal_ok": "Save",
     "preview.embed_hint": "Near-production UI. Balance is display-only; SPIN is for odds/effects (edits auto-save to the server).",
     "master.title": "Master odds",
     "master.normal_section": "Normal spins (100% total)",

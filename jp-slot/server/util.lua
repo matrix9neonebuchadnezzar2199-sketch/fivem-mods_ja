@@ -6,9 +6,16 @@ function JpSlotListDir(dir)
     if not dir or dir == '' then
         return {}
     end
-    local sep = package.config:sub(1, 1)
+    -- FiveM のサーバー Lua では global package が無い環境がある
+    local use_windows_shell = false
+    if type(package) == 'table' and type(package.config) == 'string' then
+        use_windows_shell = (package.config:sub(1, 1) == '\\')
+    else
+        local osenv = os.getenv('OS') or ''
+        use_windows_shell = osenv:find('Windows') ~= nil or dir:match('^%a:[/\\]') ~= nil
+    end
     local cmd
-    if sep == '\\' then
+    if use_windows_shell then
         cmd = 'cmd /c dir /b "' .. dir:gsub('/', '\\') .. '" 2>nul'
     else
         cmd = 'ls "' .. dir .. '" 2>/dev/null'
