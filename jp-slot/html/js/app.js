@@ -49,6 +49,8 @@
         }).catch(function () {});
     }
 
+    window.jpSlotNuiLog = nuiLog;
+
     /**
      * スロットパネル寸法（--ui-width / --ui-height / --ui-max-width）
      * @param {object} size widthPercent heightPercent maxWidthPx
@@ -938,6 +940,15 @@
         }
         if (type === 'init') {
             try {
+                if (payload.embedPreview) {
+                    nuiLog(
+                        'log',
+                        '[admin] init received (embed): machine=' +
+                            String((payload.machine && payload.machine.id) || '?') +
+                            ' character=' +
+                            String(payload.characterId || '?')
+                    );
+                }
                 initPlay(payload);
             } catch (err) {
                 console.error('[jp-slot] initPlay failed:', err);

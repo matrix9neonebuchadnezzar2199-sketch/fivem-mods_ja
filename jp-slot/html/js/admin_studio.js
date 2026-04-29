@@ -1969,28 +1969,67 @@
         );
     }
 
-    function wirePreviewTab() {
+    /**
+     * プレビュータブ: サーバーでプレビューモードを有効化 → #root を埋め込みホストへ移してから embedSlotInit
+     * （init が先に届きスケルトン状態のまま固まるレースを避ける）
+     */
+    function activatePreviewTab() {
+        var host = $('admin-slot-embed');
+        if (!host) {
+            if (typeof console !== 'undefined' && console.warn) {
+                console.warn('[admin] admin-slot-embed host missing');
+            }
+            return;
+        }
+        function dbg(level, msg) {
+            if (typeof window.jpSlotNuiLog === 'function') {
+                window.jpSlotNuiLog(level, msg);
+            } else if (typeof console !== 'undefined' && console.log) {
+                console.log(msg);
+            }
+        }
+        dbg('log', '[admin] preview tab activated, previewStart then embed after DOM mount');
         fetchNui('admin/previewStart', {})
             .then(function (r0) {
                 if (r0 && r0.ok === false) {
                     throw new Error('previewStart');
                 }
-                return fetchNui('admin/embedSlotInit', embedSlotInitOpts());
-            })
-            .then(function (r1) {
-                if (r1 && r1.ok === false) {
-                    throw new Error('embedInit');
-                }
                 window.requestAnimationFrame(function () {
-                    var host = $('admin-slot-embed');
-                    if (window.jpSlotMoveRootToEmbed && host) {
-                        window.jpSlotMoveRootToEmbed(host);
+                    var h = $('admin-slot-embed');
+                    if (!h) {
+                        dbg('warn', '[admin] admin-slot-embed missing after rAF');
+                        return;
                     }
+                    if (typeof window.jpSlotMoveRootToEmbed === 'function') {
+                        window.jpSlotMoveRootToEmbed(h);
+                    }
+                    fetchNui('admin/embedSlotInit', embedSlotInitOpts())
+                        .then(function (r1) {
+                            dbg('log', '[admin] embedSlotInit fetch result: ' + JSON.stringify(r1 || {}));
+                            if (r1 && r1.ok === false) {
+                                throw new Error('embedInit');
+                            }
+                            if (typeof window.fitAdminEmbedScale === 'function') {
+                                window.fitAdminEmbedScale();
+                            }
+                            window.setTimeout(function () {
+                                if (typeof window.fitAdminEmbedScale === 'function') {
+                                    window.fitAdminEmbedScale();
+                                }
+                            }, 50);
+                        })
+                        .catch(function () {
+                            showAdminToast('プレビューの開始に失敗しました（認証・通信を確認）', true);
+                        });
                 });
             })
             .catch(function () {
                 showAdminToast('プレビューの開始に失敗しました（認証・通信を確認）', true);
             });
+    }
+
+    function wirePreviewTab() {
+        activatePreviewTab();
     }
 
     function simWinPayout(bet) {

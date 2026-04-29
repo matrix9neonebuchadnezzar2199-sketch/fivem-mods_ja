@@ -643,6 +643,7 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         cid = m.characterId or (Config.Characters and Config.Characters.DefaultId) or 'luna'
     end
     local chMan = JpSlotLoadCharacterManifest(cid)
+    print(('[jp-slot][embed] init sent: machine=%s character=%s'):format(tostring(m and m.id or '?'), tostring(cid or '?')))
     TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
         machine = m,
         theme = theme,
