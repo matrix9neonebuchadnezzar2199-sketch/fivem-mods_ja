@@ -71,22 +71,6 @@
 
     window.applyUISize = applyUISize;
 
-    /**
-     * 実機と同じ UI サイズ（vw/vh% と maxWidth）の論理ピクセル寸法（埋め込みプレビュー用）
-     */
-    function embedNaturalPx() {
-        var uis = state.serverUiSize || { widthPercent: 90, heightPercent: 90, maxWidthPx: 0 };
-        var wp = Math.max(30, Math.min(100, Number(uis.widthPercent) || 90));
-        var hp = Math.max(30, Math.min(100, Number(uis.heightPercent) || 90));
-        var mx = Math.max(0, Number(uis.maxWidthPx) || 0);
-        var aw = window.innerWidth * (wp / 100);
-        if (mx > 0) {
-            aw = Math.min(aw, mx);
-        }
-        var ah = window.innerHeight * (hp / 100);
-        return { w: aw, h: ah };
-    }
-
     function disconnectEmbedPreviewResize() {
         if (window.__jpSlotEmbedRo) {
             try {
@@ -120,35 +104,37 @@
     }
 
     /**
-     * 管理プレビュー: 実機と同じ縦横比の矩形に収め、枠内へ均等スケール（横だけ潰さない）
+     * 管理プレビュー: #root のレイアウトを 1280×720 の論理ピクセルで固定し、枠に収まるよう scale（transform は描画のみなので先に「実寸」を確保する）
      */
     window.applyEmbedPreviewFit = function () {
-        var host = document.getElementById('admin-slot-embed');
-        var fit = document.getElementById('jp-slot-embed-fit');
+        var frame = document.getElementById('admin-slot-embed');
+        var inner = document.getElementById('jp-slot-embed-fit');
         var rootEl = document.getElementById('root');
-        if (!host || !fit || !rootEl || !fit.contains(rootEl)) {
+        if (!frame || !inner || !rootEl || !inner.contains(rootEl)) {
             return;
         }
-        var cs = window.getComputedStyle(host);
-        var pl = parseFloat(cs.paddingLeft) || 0;
-        var pr = parseFloat(cs.paddingRight) || 0;
-        var pt = parseFloat(cs.paddingTop) || 0;
-        var pb = parseFloat(cs.paddingBottom) || 0;
-        var bw = host.clientWidth - pl - pr;
-        var bh = host.clientHeight - pt - pb;
-        if (bw <= 4 || bh <= 4) {
+        var baseW = 1280;
+        var baseH = 720;
+        var fw = frame.clientWidth;
+        var fh = frame.clientHeight;
+        if (fw <= 4 || fh <= 4) {
             return;
         }
-        var nat = embedNaturalPx();
-        var nw = nat.w;
-        var nh = nat.h;
-        if (nw <= 0 || nh <= 0) {
-            return;
-        }
-        var s = Math.min(bw / nw, bh / nh);
-        fit.style.width = nw * s + 'px';
-        fit.style.height = nh * s + 'px';
+        var scale = Math.min(fw / baseW, fh / baseH);
+        var offsetX = (fw - baseW * scale) / 2;
+        var offsetY = 0;
+        inner.style.position = 'absolute';
+        inner.style.left = offsetX + 'px';
+        inner.style.top = offsetY + 'px';
+        inner.style.width = baseW + 'px';
+        inner.style.height = baseH + 'px';
+        inner.style.transform = 'scale(' + scale + ')';
+        inner.style.transformOrigin = 'top left';
+        inner.style.pointerEvents = 'none';
     };
+
+    window.jpSlotFitAdminEmbedScale = window.applyEmbedPreviewFit;
+    window.fitAdminEmbedScale = window.applyEmbedPreviewFit;
 
     window.jpSlotBindEmbedPreviewResize = bindEmbedPreviewResize;
     window.jpSlotDisconnectEmbedPreviewResize = disconnectEmbedPreviewResize;
@@ -1086,6 +1072,11 @@
         if (typeof window.jpSlotBindEmbedPreviewResize === 'function') {
             window.jpSlotBindEmbedPreviewResize();
         }
+        window.setTimeout(function () {
+            if (typeof window.applyEmbedPreviewFit === 'function') {
+                window.applyEmbedPreviewFit();
+            }
+        }, 50);
     };
 
     window.jpSlotMoveRootToBody = function () {
