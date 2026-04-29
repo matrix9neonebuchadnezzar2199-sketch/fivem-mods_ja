@@ -574,6 +574,17 @@
 .admin-statusbar .adm-status-center {
     flex: 2;
     text-align: center;
+    min-height: 1.25em;
+}
+
+.admin-statusbar .adm-status-center.adm-toast-ok {
+    color: #b8e6b8;
+    font-weight: 600;
+}
+
+.admin-statusbar .adm-status-center.adm-toast-err {
+    color: #ffb8b8;
+    font-weight: 600;
 }
 
 .admin-statusbar-right {

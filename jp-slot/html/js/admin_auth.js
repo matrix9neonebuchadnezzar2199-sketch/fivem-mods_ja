@@ -246,18 +246,28 @@
             token: state.token,
             oldPassword: oldP,
             newPassword: n1,
-        }).then(function (res) {
-            if (res.ok) {
-                closePwChange();
-                $('adm-pw-old').value = '';
-                $('adm-pw-new').value = '';
-                $('adm-pw-new2').value = '';
-                window.alert('パスワードを変更しました。次回から新しいパスワードを使用します。');
-            } else {
-                err.textContent = '変更失敗: ' + (res.reason || 'unknown');
+        })
+            .then(function (res) {
+                if (res.ok) {
+                    closePwChange();
+                    $('adm-pw-old').value = '';
+                    $('adm-pw-new').value = '';
+                    $('adm-pw-new2').value = '';
+                    if (window.jpSlotShowAdminToast) {
+                        window.jpSlotShowAdminToast(
+                            'パスワードを変更しました。次回から新しいパスワードを使用します。',
+                            false
+                        );
+                    }
+                } else {
+                    err.textContent = '変更失敗: ' + (res.reason || 'unknown');
+                    err.removeAttribute('hidden');
+                }
+            })
+            .catch(function () {
+                err.textContent = '変更に失敗しました（通信エラー）';
                 err.removeAttribute('hidden');
-            }
-        });
+            });
     }
 
     function bind() {

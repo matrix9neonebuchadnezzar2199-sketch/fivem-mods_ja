@@ -77,6 +77,31 @@
         return document.getElementById(id);
     }
 
+    /** FiveM CEF では window.alert がフリーズの原因になりやすい（同期モーダル） */
+    var adminToastTimer = null;
+    function showAdminToast(message, isError) {
+        var el = $('adm-status-center');
+        if (!el) {
+            return;
+        }
+        el.textContent = message || '';
+        el.classList.remove('adm-toast-ok', 'adm-toast-err');
+        if (isError) {
+            el.classList.add('adm-toast-err');
+        } else if (message) {
+            el.classList.add('adm-toast-ok');
+        }
+        if (adminToastTimer) {
+            clearTimeout(adminToastTimer);
+        }
+        adminToastTimer = setTimeout(function () {
+            adminToastTimer = null;
+            el.textContent = '';
+            el.classList.remove('adm-toast-ok', 'adm-toast-err');
+        }, 4500);
+    }
+    window.jpSlotShowAdminToast = showAdminToast;
+
     function fetchNui(path, body) {
         var tok = window.JpSlotAdminAuth && window.JpSlotAdminAuth.token;
         body = body || {};
@@ -118,14 +143,20 @@
         if (suppressAutosave || !activePresetId) {
             return;
         }
-        fetchNui('admin/preset/save', { preset: buildPresetPayload() }).then(function (r) {
-            if (r && r.ok) {
-                workspace.dirty = false;
-                if (viewMode === 'preview') {
-                    fetchNui('admin/embedSlotInit', {});
+        fetchNui('admin/preset/save', { preset: buildPresetPayload() })
+            .then(function (r) {
+                if (r && r.ok) {
+                    workspace.dirty = false;
+                    if (viewMode === 'preview') {
+                        return fetchNui('admin/embedSlotInit', {});
+                    }
+                    return;
                 }
-            }
-        });
+                showAdminToast('自動保存に失敗しました', true);
+            })
+            .catch(function () {
+                showAdminToast('自動保存に失敗しました（通信エラー）', true);
+            });
     }
 
     function mergePresetWorkspace(data) {
@@ -180,31 +211,42 @@
             return;
         }
         suppressAutosave = true;
-        fetchNui('admin/preset/get', { id: id }).then(function (r) {
-            if (!r || !r.ok || !r.data) {
-                suppressAutosave = false;
-                refreshAllPresetSelects();
-                return;
-            }
-            mergePresetWorkspace(r.data);
-            activePresetId = id;
-            fetchNui('admin/preset/setActive', { id: id }).then(function () {
-                suppressAutosave = false;
-                workspace.dirty = false;
-                if (opts.skipRender) {
+        fetchNui('admin/preset/get', { id: id })
+            .then(function (r) {
+                if (!r || !r.ok || !r.data) {
+                    suppressAutosave = false;
                     refreshAllPresetSelects();
-                    if (opts.refreshEmbed) {
-                        fetchNui('admin/embedSlotInit', {});
-                    }
-                } else {
-                    renderCenter();
-                    refreshAllPresetSelects();
+                    showAdminToast('プリセットを読み込めませんでした', true);
+                    return;
                 }
-                if (window.jpSlotApplyI18n) {
-                    window.jpSlotApplyI18n();
-                }
+                mergePresetWorkspace(r.data);
+                activePresetId = id;
+                return fetchNui('admin/preset/setActive', { id: id })
+                    .then(function () {
+                        suppressAutosave = false;
+                        workspace.dirty = false;
+                        if (opts.skipRender) {
+                            refreshAllPresetSelects();
+                            if (opts.refreshEmbed) {
+                                return fetchNui('admin/embedSlotInit', {});
+                            }
+                        } else {
+                            renderCenter();
+                            refreshAllPresetSelects();
+                        }
+                        if (window.jpSlotApplyI18n) {
+                            window.jpSlotApplyI18n();
+                        }
+                    })
+                    .catch(function () {
+                        suppressAutosave = false;
+                        showAdminToast('プリセットの適用に失敗しました', true);
+                    });
+            })
+            .catch(function () {
+                suppressAutosave = false;
+                showAdminToast('プリセットの読み込みに失敗しました（通信エラー）', true);
             });
-        });
     }
 
     function wirePresetBar() {
@@ -945,13 +987,22 @@
             nb.addEventListener('click', function () {
                 fetchNui('admin/preset/save', {
                     preset: buildPresetPayload(),
-                }).then(function (r) {
-                    if (r.ok) {
-                        workspace.dirty = false;
-                        alert('保存しました');
-                        refreshAllPresetSelects();
-                    }
-                });
+                })
+                    .then(function (r) {
+                        if (r && r.ok) {
+                            workspace.dirty = false;
+                            showAdminToast('保存しました', false);
+                            refreshAllPresetSelects();
+                        } else {
+                            showAdminToast(
+                                '保存に失敗しました' + (r && r.reason ? ': ' + r.reason : ''),
+                                true
+                            );
+                        }
+                    })
+                    .catch(function () {
+                        showAdminToast('保存に失敗しました（通信エラー）', true);
+                    });
             });
         }
         var ng = $('master-norm-go');
@@ -1060,16 +1111,21 @@
     }
 
     function wirePreviewTab() {
-        fetchNui('admin/previewStart', {}).then(function () {
-            fetchNui('admin/embedSlotInit', {}).then(function () {
+        fetchNui('admin/previewStart', {})
+            .then(function () {
+                return fetchNui('admin/embedSlotInit', {});
+            })
+            .then(function () {
                 window.requestAnimationFrame(function () {
                     var host = $('admin-slot-embed');
                     if (window.jpSlotMoveRootToEmbed && host) {
                         window.jpSlotMoveRootToEmbed(host);
                     }
                 });
+            })
+            .catch(function () {
+                showAdminToast('プレビューの開始に失敗しました', true);
             });
-        });
         refreshAllPresetSelects();
         var ps = $('preview-preset-select');
         if (ps) {
@@ -1088,33 +1144,51 @@
                     var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
                     fetchNui('admin/preset/save', {
                         preset: buildPresetPayload(id, name),
-                    }).then(function (r) {
-                        if (r && r.ok) {
-                            activePresetId = id;
-                            workspace.dirty = false;
-                            refreshAllPresetSelects();
-                            fetchNui('admin/embedSlotInit', {}).then(function () {
-                                window.requestAnimationFrame(function () {
-                                    var host = $('admin-slot-embed');
-                                    if (window.jpSlotMoveRootToEmbed && host) {
-                                        window.jpSlotMoveRootToEmbed(host);
-                                    }
+                    })
+                        .then(function (r) {
+                            if (r && r.ok) {
+                                activePresetId = id;
+                                workspace.dirty = false;
+                                showAdminToast('保存しました', false);
+                                refreshAllPresetSelects();
+                                return fetchNui('admin/embedSlotInit', {}).then(function () {
+                                    window.requestAnimationFrame(function () {
+                                        var host = $('admin-slot-embed');
+                                        if (window.jpSlotMoveRootToEmbed && host) {
+                                            window.jpSlotMoveRootToEmbed(host);
+                                        }
+                                    });
                                 });
-                            });
-                        }
-                    });
+                            }
+                            showAdminToast(
+                                '保存に失敗しました' + (r && r.reason ? ': ' + r.reason : ''),
+                                true
+                            );
+                        })
+                        .catch(function () {
+                            showAdminToast('保存に失敗しました（通信エラー）', true);
+                        });
                 });
             };
         }
         var ow = $('preview-save-overwrite');
         if (ow) {
             ow.onclick = function () {
-                fetchNui('admin/preset/save', { preset: buildPresetPayload() }).then(function (r) {
-                    if (r && r.ok) {
-                        workspace.dirty = false;
-                        fetchNui('admin/embedSlotInit', {});
-                    }
-                });
+                fetchNui('admin/preset/save', { preset: buildPresetPayload() })
+                    .then(function (r) {
+                        if (r && r.ok) {
+                            workspace.dirty = false;
+                            showAdminToast('保存しました', false);
+                            return fetchNui('admin/embedSlotInit', {});
+                        }
+                        showAdminToast(
+                            '保存に失敗しました' + (r && r.reason ? ': ' + r.reason : ''),
+                            true
+                        );
+                    })
+                    .catch(function () {
+                        showAdminToast('保存に失敗しました（通信エラー）', true);
+                    });
             };
         }
     }
