@@ -385,7 +385,8 @@
 
 .admin-slot-embed {
     position: relative;
-    min-height: min(72vh, 820px);
+    /* 台本体は #root で 80% 縮小するため、領域も概ね 80% に合わせる */
+    min-height: min(58vh, 656px);
     border-radius: 12px;
     overflow: auto;
     border: 1px solid rgba(212, 175, 55, 0.35);
@@ -396,12 +397,13 @@
     position: relative;
     left: auto;
     top: auto;
-    transform: none;
     width: 100%;
     max-width: 100%;
     height: auto;
-    min-height: 520px;
+    min-height: 416px;
     z-index: 2;
+    /* プレビューは画面に収めやすくする（Chromium CEF でレイアウトも縮む） */
+    zoom: 0.8;
 }
 
 #panel-admin .admin-slot-embed #btn-exit {
