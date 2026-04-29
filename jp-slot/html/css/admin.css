@@ -55,14 +55,47 @@
     padding: 14px 16px;
 }
 
+#panel-admin .studio-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#panel-admin .studio-nav-list > li {
+    margin: 0 0 12px;
+}
+
 #panel-admin .studio-nav-item {
-    font-size: 52px;
+    font-size: 40px;
     line-height: 1.35;
-    min-height: 96px;
+    min-height: 72px;
     padding: 14px 18px;
     color: #f4ead0;
-    border-color: rgba(212, 175, 55, 0.28);
+    border: 1px solid rgba(212, 175, 55, 0.28);
+    border-radius: 10px;
     background: rgba(36, 26, 22, 0.88);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+#panel-admin .studio-nav-item.is-active {
+    border-color: rgba(212, 175, 55, 0.65);
+    background: rgba(212, 175, 55, 0.12);
+    box-shadow: inset 4px 0 0 #d4af37;
+}
+
+#panel-admin .studio-nav-ico {
+    flex-shrink: 0;
+    opacity: 0.95;
+}
+
+#panel-admin .studio-nav-txt {
+    flex: 1;
+    min-width: 0;
 }
 
 #panel-admin .studio-sub {
@@ -265,9 +298,17 @@
 }
 
 #panel-admin .admin-center {
-    max-width: 920px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 24px 28px;
+    box-sizing: border-box;
+}
+
+#panel-admin .studio-editor-sheet {
+    width: 100%;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 32px 40px;
     box-sizing: border-box;
 }
 
@@ -490,7 +531,7 @@
     text-align: left;
     padding: 8px 10px;
     margin: 4px 0;
-    border-radius: 999px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(40, 28, 32, 0.6);
     color: #e8dcc8;
@@ -1287,6 +1328,63 @@
 #panel-admin .admin-left {
     padding: 16px 14px;
     background: rgba(20, 14, 10, 0.55);
+}
+
+/* 演出タブ：ブロック番号・入力幅 */
+#panel-admin .studio-effect-wrap .studio-page-title {
+    margin-bottom: 12px;
+}
+
+#panel-admin .studio-effect-intro {
+    margin-bottom: 20px;
+}
+
+#panel-admin .studio-effect-block-num {
+    display: inline-block;
+    min-width: 1.2em;
+    color: #ffd96a;
+    font-weight: 800;
+}
+
+#panel-admin .studio-input-wide {
+    flex: 1;
+    min-width: 120px;
+    max-width: 100%;
+}
+
+#panel-admin .studio-inline-check {
+    font-size: 26px;
+    color: #f4ead0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#panel-admin .studio-row-control--stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+#panel-admin .studio-timeline-body {
+    font-size: 26px;
+    color: #f4ead0;
+    margin: 0;
+    line-height: 1.65;
+}
+
+#panel-admin .studio-timeline-sub {
+    font-size: 22px;
+    color: #9b8e7a;
+}
+
+#panel-admin .studio-card--timeline {
+    border-style: dashed;
+}
+
+#panel-admin .studio-card--extra .studio-note {
+    margin-bottom: 0;
 }
 
 @media (max-width: 900px) {

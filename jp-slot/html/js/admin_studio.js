@@ -145,6 +145,75 @@
         );
     }
 
+    function setDeep(root, pathStr, value) {
+        var parts = pathStr.split('.');
+        var cur = root;
+        for (var i = 0; i < parts.length - 1; i++) {
+            var pk = parts[i];
+            if (!cur[pk] || typeof cur[pk] !== 'object') {
+                cur[pk] = {};
+            }
+            cur = cur[pk];
+        }
+        cur[parts[parts.length - 1]] = value;
+    }
+
+    function escAttr(s) {
+        return escapeHtml(String(s == null ? '' : s));
+    }
+
+    function selAttr(cur, val) {
+        return cur === val ? ' selected' : '';
+    }
+
+    function chkAttr(on) {
+        return on ? ' checked' : '';
+    }
+
+    function studioRowField(i18nKey, fallbackLabel, controlHtml) {
+        return (
+            '<div class="studio-row">' +
+            '<div class="studio-row-label"><span data-i18n-key="' +
+            i18nKey +
+            '">' +
+            escapeHtml(fallbackLabel) +
+            '</span></div>' +
+            '<div class="studio-row-control">' +
+            controlHtml +
+            '</div></div>'
+        );
+    }
+
+    function sceneTitleI18n(key) {
+        var map = {
+            idle: 'admin.scene.idle',
+            win: 'admin.scene.win',
+            bonus: 'admin.nav.bonus',
+            bonus_streak: 'admin.nav.bonus_streak',
+            bonus_big: 'admin.nav.bonus_big',
+            miss_tease: 'admin.nav.miss_tease',
+        };
+        return map[key] || '';
+    }
+
+    function estimateTimelineSec(sec, sceneKey) {
+        var ms = 0;
+        if (sec.pre_text && sec.pre_text.enabled !== false && (sec.pre_text.text || '').trim()) {
+            ms += Number(sec.pre_text.duration_ms) || 600;
+        }
+        var cb = sec.cutin_block || {};
+        if (cb.kind && cb.kind !== 'none' && (cb.file || '').trim()) {
+            ms += Number(cb.duration_ms) || 1200;
+        }
+        if (sec.post_text && sec.post_text.enabled !== false && (sec.post_text.text || '').trim()) {
+            ms += Number(sec.post_text.duration_ms) || 800;
+        }
+        if (sceneKey !== 'miss_tease' && sec.payout && sec.payout.enabled !== false) {
+            ms += Number(sec.payout.duration_ms) || 2000;
+        }
+        return (ms / 1000).toFixed(1);
+    }
+
     function normalizeMaster() {
         var w = workspace.master.normal.win;
         var b = workspace.master.normal.bonus;
@@ -160,6 +229,404 @@
         renderCenter();
     }
 
+    function renderTextBlockCard(num, blockKey, basePath, d, showFade, showEffect) {
+        d = d || defaultBlockText();
+        var titleHtml =
+            '<span class="studio-effect-block-num">' +
+            escapeHtml(num) +
+            '</span> <span data-i18n-key="' +
+            blockKey +
+            '"></span>';
+        var body = '';
+        body +=
+            '<div class="studio-row studio-row--check">' +
+            '<div class="studio-row-label"></div><div class="studio-row-control">' +
+            '<label class="studio-inline-check"><input type="checkbox" data-path="' +
+            basePath +
+            '.enabled"' +
+            chkAttr(d.enabled !== false) +
+            '> <span data-i18n-key="admin.effect.field_use_block">このブロックを使用</span></label>' +
+            '</div></div>';
+        body +=
+            studioRowField(
+                'admin.effect.field_text',
+                'テキスト',
+                '<input type="text" class="studio-input-wide" data-path="' +
+                    basePath +
+                    '.text" value="' +
+                    escAttr(d.text) +
+                    '" placeholder="テキスト" autocomplete="off">'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.field_color',
+                'フォント色',
+                '<input type="color" data-path="' +
+                    basePath +
+                    '.color" value="' +
+                    escAttr(d.color || '#f4ead0') +
+                    '">'
+            );
+        var sz = d.size_percent != null ? d.size_percent : 80;
+        body +=
+            studioRowField(
+                'admin.effect.field_size',
+                'サイズ (%)',
+                '<input type="range" min="50" max="200" step="5" class="studio-slider" data-path="' +
+                    basePath +
+                    '.size_percent" value="' +
+                    escAttr(sz) +
+                    '"><span class="studio-slider-value ef-range-val">' +
+                    Math.round(Number(sz)) +
+                    '%</span>'
+            );
+        var dm = d.duration_ms != null ? d.duration_ms : 600;
+        body +=
+            studioRowField(
+                'admin.effect.field_duration',
+                '表示時間 (ms)',
+                '<input type="range" min="100" max="4000" step="50" class="studio-slider" data-path="' +
+                    basePath +
+                    '.duration_ms" value="' +
+                    escAttr(dm) +
+                    '"><span class="studio-slider-value ef-range-val">' +
+                    Math.round(Number(dm)) +
+                    ' ms</span>'
+            );
+        if (showFade) {
+            body +=
+                studioRowField(
+                    'admin.effect.field_fade',
+                    'フェード',
+                    '<label class="studio-inline-check"><input type="checkbox" data-path="' +
+                        basePath +
+                        '.fade"' +
+                        chkAttr(d.fade !== false) +
+                        '> <span data-i18n-key="admin.effect.field_fade_on">あり</span></label>'
+                );
+        }
+        if (showEffect) {
+            var eff = d.effect || 'none';
+            body +=
+                studioRowField(
+                    'admin.effect.field_effect',
+                    'エフェクト',
+                    '<select data-path="' +
+                        basePath +
+                        '.effect" class="studio-input-wide">' +
+                        '<option value="none"' +
+                        selAttr(eff, 'none') +
+                        '>none</option>' +
+                        '<option value="pulse"' +
+                        selAttr(eff, 'pulse') +
+                        '>pulse</option>' +
+                        '<option value="zoom"' +
+                        selAttr(eff, 'zoom') +
+                        '>zoom</option></select>'
+                );
+        }
+        return (
+            '<div class="studio-card studio-effect-block">' +
+            '<div class="studio-card-title">' +
+            titleHtml +
+            '</div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderCutinCard(cb) {
+        cb = cb || { kind: 'none', file: '', duration_ms: 1200 };
+        var kind = cb.kind || 'none';
+        var dm = cb.duration_ms != null ? cb.duration_ms : 1200;
+        var body = '';
+        body +=
+            studioRowField(
+                'admin.effect.cutin_kind',
+                '種別',
+                '<select data-path="cutin_block.kind" class="studio-input-wide">' +
+                    '<option value="none"' +
+                    selAttr(kind, 'none') +
+                    '>none</option>' +
+                    '<option value="image"' +
+                    selAttr(kind, 'image') +
+                    '>image</option>' +
+                    '<option value="video"' +
+                    selAttr(kind, 'video') +
+                    '>video</option></select>'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.cutin_file',
+                'ファイル',
+                '<input type="text" class="studio-input-wide" data-path="cutin_block.file" value="' +
+                    escAttr(cb.file) +
+                    '" placeholder="cutins/xxx.png / xxx.webm" autocomplete="off">'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.cutin_duration',
+                '表示時間 (ms)',
+                '<input type="range" min="200" max="8000" step="100" class="studio-slider" data-path="cutin_block.duration_ms" value="' +
+                    escAttr(dm) +
+                    '"><span class="studio-slider-value ef-range-val">' +
+                    Math.round(Number(dm)) +
+                    ' ms</span>'
+            );
+        body +=
+            '<p class="studio-note studio-cutin-hint" data-i18n-key="admin.effect.cutin_hint">html/assets/cutins/ からのファイル名。実機プレビューで確認できます。</p>';
+        var titleHtml =
+            '<span class="studio-effect-block-num">②</span> <span data-i18n-key="admin.effect.block_cutin"></span>';
+        return (
+            '<div class="studio-card studio-effect-block">' +
+            '<div class="studio-card-title">' +
+            titleHtml +
+            '</div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderCharVideoCard(cv) {
+        cv = cv || { enabled: true, file: '', fade_back: true };
+        var body = '';
+        body +=
+            '<div class="studio-row studio-row--check"><div class="studio-row-label"></div><div class="studio-row-control">' +
+            '<label class="studio-inline-check"><input type="checkbox" data-path="char_video.enabled"' +
+            chkAttr(cv.enabled !== false) +
+            '> <span data-i18n-key="admin.effect.field_use_block">このブロックを使用</span></label>' +
+            '</div></div>';
+        body +=
+            studioRowField(
+                'admin.effect.char_file',
+                'ファイル',
+                '<input type="text" class="studio-input-wide" data-path="char_video.file" value="' +
+                    escAttr(cv.file) +
+                    '" placeholder="characters/luna.webm" autocomplete="off">'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.char_fade_back',
+                '静止画フェード復帰',
+                '<label class="studio-inline-check"><input type="checkbox" data-path="char_video.fade_back"' +
+                chkAttr(cv.fade_back !== false) +
+                '> ON</label>'
+            );
+        var titleHtml =
+            '<span class="studio-effect-block-num">④</span> <span data-i18n-key="admin.effect.block_char_video"></span>';
+        return (
+            '<div class="studio-card studio-effect-block">' +
+            '<div class="studio-card-title">' +
+            titleHtml +
+            '</div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderSoundCard(snd) {
+        snd = snd || { se: '', voice: '', bgm_change: false, bgm_file: '' };
+        var body = '';
+        body +=
+            studioRowField(
+                'admin.effect.sound_se',
+                'SE',
+                '<input type="text" class="studio-input-wide" data-path="sound.se" value="' +
+                    escAttr(snd.se) +
+                    '" placeholder="sound/se/xxx.wav" autocomplete="off">'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.sound_voice',
+                'ボイス',
+                '<input type="text" class="studio-input-wide" data-path="sound.voice" value="' +
+                    escAttr(snd.voice) +
+                    '" placeholder="sound/voice/xxx.wav" autocomplete="off">'
+            );
+        body +=
+            '<div class="studio-row"><div class="studio-row-label"><span data-i18n-key="admin.effect.sound_bgm">BGM変更</span></div><div class="studio-row-control studio-row-control--stack">' +
+            '<label class="studio-inline-check"><input type="checkbox" data-path="sound.bgm_change"' +
+            chkAttr(snd.bgm_change === true) +
+            '> <span data-i18n-key="admin.effect.sound_bgm_use">別BGMに切替</span></label>' +
+            '<input type="text" class="studio-input-wide" data-path="sound.bgm_file" value="' +
+            escAttr(snd.bgm_file) +
+            '" placeholder="sound/bgm/xxx.mp3" autocomplete="off"></div></div>';
+        var titleHtml =
+            '<span class="studio-effect-block-num">⑤</span> <span data-i18n-key="admin.effect.block_sound"></span>';
+        return (
+            '<div class="studio-card studio-effect-block">' +
+            '<div class="studio-card-title">' +
+            titleHtml +
+            '</div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderReelFxCard(rfx) {
+        rfx = rfx || { mode: 'none', custom_color: '#d4af37' };
+        var mode = rfx.mode || 'none';
+        var body = '';
+        body +=
+            studioRowField(
+                'admin.effect.reel_mode',
+                'モード',
+                '<select data-path="reel_fx.mode" class="studio-input-wide">' +
+                    '<option value="none"' +
+                    selAttr(mode, 'none') +
+                    '>なし</option>' +
+                    '<option value="gold_pulse"' +
+                    selAttr(mode, 'gold_pulse') +
+                    '>ゴールド脈動</option>' +
+                    '<option value="custom"' +
+                    selAttr(mode, 'custom') +
+                    '>カスタム色</option></select>'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.reel_custom_color',
+                'カスタム色',
+                '<input type="color" data-path="reel_fx.custom_color" value="' +
+                    escAttr(rfx.custom_color || '#d4af37') +
+                    '">'
+            );
+        var titleHtml =
+            '<span class="studio-effect-block-num">⑥</span> <span data-i18n-key="admin.effect.block_reel_fx"></span>';
+        return (
+            '<div class="studio-card studio-effect-block">' +
+            '<div class="studio-card-title">' +
+            titleHtml +
+            '</div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderPayoutCard(po, sceneKey) {
+        po = po || { enabled: true, duration_ms: 2000, animation: 'countup' };
+        var anim = po.animation || 'countup';
+        var dm = po.duration_ms != null ? po.duration_ms : 2000;
+        var disabledNote = '';
+        if (sceneKey === 'miss_tease') {
+            disabledNote =
+                '<p class="studio-note studio-payout-miss" data-i18n-key="admin.effect.payout_miss_note">はずれ演出では配当表示は使いません。</p>';
+        }
+        var body = '';
+        body +=
+            '<div class="studio-row studio-row--check"><div class="studio-row-label"></div><div class="studio-row-control">' +
+            '<label class="studio-inline-check"><input type="checkbox" data-path="payout.enabled"' +
+            chkAttr(po.enabled !== false) +
+            (sceneKey === 'miss_tease' ? ' disabled' : '') +
+            '> <span data-i18n-key="admin.effect.field_use_block">このブロックを使用</span></label>' +
+            '</div></div>';
+        body += disabledNote;
+        body +=
+            studioRowField(
+                'admin.effect.payout_duration',
+                '表示時間 (ms)',
+                '<input type="range" min="200" max="8000" step="100" class="studio-slider" data-path="payout.duration_ms" value="' +
+                    escAttr(dm) +
+                    '"><span class="studio-slider-value ef-range-val">' +
+                    Math.round(Number(dm)) +
+                    ' ms</span>'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.payout_anim',
+                'アニメーション',
+                '<select data-path="payout.animation" class="studio-input-wide">' +
+                    '<option value="countup"' +
+                    selAttr(anim, 'countup') +
+                    '>カウントアップ</option>' +
+                    '<option value="instant"' +
+                    selAttr(anim, 'instant') +
+                    '>即時</option></select>'
+            );
+        var titleHtml =
+            '<span class="studio-effect-block-num">⑦</span> <span data-i18n-key="admin.effect.block_payout"></span>';
+        return (
+            '<div class="studio-card studio-effect-block">' +
+            '<div class="studio-card-title">' +
+            titleHtml +
+            '</div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderMissTeaseExtra(react) {
+        react = react || { reaction: 'confused', tease_strength: 'medium' };
+        var r = react.reaction || 'confused';
+        var ts = react.tease_strength || 'medium';
+        var body = '';
+        body +=
+            studioRowField(
+                'admin.effect.miss_reaction',
+                'リアクション',
+                '<select data-path="reaction.reaction" class="studio-input-wide">' +
+                    '<option value="are"' +
+                    selAttr(r, 'are') +
+                    '>are</option>' +
+                    '<option value="confused"' +
+                    selAttr(r, 'confused') +
+                    '>confused</option>' +
+                    '<option value="disappointed"' +
+                    selAttr(r, 'disappointed') +
+                    '>disappointed</option></select>'
+            );
+        body +=
+            studioRowField(
+                'admin.effect.miss_strength',
+                '煽り強度',
+                '<select data-path="reaction.tease_strength" class="studio-input-wide">' +
+                    '<option value="low"' +
+                    selAttr(ts, 'low') +
+                    '>low</option>' +
+                    '<option value="medium"' +
+                    selAttr(ts, 'medium') +
+                    '>medium</option>' +
+                    '<option value="high"' +
+                    selAttr(ts, 'high') +
+                    '>high</option></select>'
+            );
+        return (
+            '<div class="studio-card studio-effect-block studio-card--extra">' +
+            '<div class="studio-card-title"><span data-i18n-key="admin.effect.miss_extra_title">はずれ演出の追加設定</span></div>' +
+            body +
+            '</div>'
+        );
+    }
+
+    function renderBonusStreakNote() {
+        return (
+            '<div class="studio-card studio-effect-block studio-card--extra">' +
+            '<div class="studio-card-title"><span data-i18n-key="admin.effect.streak_extra_title">連続ボーナス</span></div>' +
+            '<p class="studio-note" data-i18n-key="admin.effect.streak_note">段階別の強度（streak_intensity）は今後の拡張用です。</p>' +
+            '</div>'
+        );
+    }
+
+    function renderBonusBigNote() {
+        return (
+            '<div class="studio-card studio-effect-block studio-card--extra">' +
+            '<div class="studio-card-title"><span data-i18n-key="admin.effect.big_extra_title">ビッグボーナス</span></div>' +
+            '<p class="studio-note" data-i18n-key="admin.effect.big_note">倍率・連続は「全体確率設定」のマスター値を参照します。</p>' +
+            '</div>'
+        );
+    }
+
+    function renderTimelineCard(sec, sceneKey) {
+        var est = estimateTimelineSec(sec, sceneKey);
+        return (
+            '<div class="studio-card studio-card--timeline">' +
+            '<div class="studio-card-title"><span data-i18n-key="admin.effect.timeline">タイムライン</span></div>' +
+            '<p class="studio-timeline-body"><span data-i18n-key="admin.effect.timeline_estimate_label">概算合計</span>　<strong id="effect-timeline-val">' +
+            est +
+            '</strong> <span data-i18n-key="admin.effect.timeline_sec">秒</span> <span class="studio-timeline-sub" data-i18n-key="admin.effect.timeline_sub">（①〜③・⑦の表示時間ベース）</span></p>' +
+            '</div>'
+        );
+    }
+
     function renderMasterTab() {
         var m = workspace.master;
         var ok = masterSumOk(m);
@@ -169,7 +636,7 @@
         var sumText = '合計 ' + sumNum + '%' + (ok ? ' ✓' : '');
         var titleStatusClass = 'studio-card-title-status' + (ok ? '' : ' is-error');
 
-        var html = '<div class="studio-section studio-master-wrap">';
+        var html = '<div class="studio-editor-sheet"><div class="studio-section studio-master-wrap">';
         html +=
             '<h3 class="studio-page-title" data-i18n-key="admin.master.title">' +
             escapeHtml('全体確率設定') +
@@ -276,6 +743,7 @@
         html += '<canvas id="chart-hist" height="120" hidden></canvas>';
         html += '</div>';
 
+        html += '</div>';
         html += '</div>';
         return html;
     }
@@ -616,57 +1084,97 @@
     function renderEffectTab(key) {
         var sec = workspace.effects[key] || defaultEffectSection();
         workspace.effects[key] = sec;
-        var html = '<div class="studio-section"><h3>' + escapeHtml(key) + '</h3>';
-        html += '<p class="studio-note">7ブロック構成（簡易UI）。チェックでON/OFF。</p>';
-        html += blockUi('① カットイン前テキスト', 'pre_text', sec.pre_text);
-        html += '<h4>② カットイン本体</h4>';
+
+        var html = '<div class="studio-editor-sheet"><div class="studio-section studio-effect-wrap">';
+        var titleKey = sceneTitleI18n(key);
         html +=
-            '<select class="studio-select" data-ef="' +
-            key +
-            '" data-path="cutin_block.kind"><option value="none">none</option><option value="image">image</option><option value="video">video</option></select>';
-        html += blockUi('③ カットイン後テキスト', 'post_text', sec.post_text);
+            '<h3 class="studio-page-title"' +
+            (titleKey ? ' data-i18n-key="' + titleKey + '"' : '') +
+            '>' +
+            escapeHtml(key) +
+            '</h3>';
+        html +=
+            '<p class="studio-note studio-effect-intro" data-i18n-key="admin.effect.intro">7ブロック構成。カードごとに編集し、プリセット保存で反映されます。</p>';
+
+        html += renderTextBlockCard('①', 'admin.effect.block_pre_text', 'pre_text', sec.pre_text, true, false);
+        html += renderCutinCard(sec.cutin_block);
+        html += renderTextBlockCard('③', 'admin.effect.block_post_text', 'post_text', sec.post_text, false, true);
+        html += renderCharVideoCard(sec.char_video);
+        html += renderSoundCard(sec.sound);
+        html += renderReelFxCard(sec.reel_fx);
+        html += renderPayoutCard(sec.payout, key);
+
         if (key === 'miss_tease') {
-            html += '<p>⑦配当ブロック（miss_tease は無効）</p>';
-            html +=
-                '<label>reaction <select data-ef="' +
-                key +
-                '" data-path="reaction.reaction"><option>are</option><option>confused</option><option>disappointed</option></select></label>';
+            html += renderMissTeaseExtra(sec.reaction);
         } else if (key === 'bonus_streak') {
-            html += '<p>段階別演出強度（プレースホルダ）</p>';
+            html += renderBonusStreakNote();
         } else if (key === 'bonus_big') {
-            html +=
-                '<p class="studio-note">ビッグ倍率は全体確率の big_multiplier を参照（読み取り専用）</p>';
+            html += renderBonusBigNote();
         }
-        html += '</div>';
+
+        html += renderTimelineCard(sec, key);
+
+        html += '</div></div>';
         return html;
     }
 
-    function blockUi(title, path, data) {
-        var en = data.enabled !== false;
-        return (
-            '<div class="studio-layer"><h4>' +
-            title +
-            '</h4><label><input type="checkbox" class="blk-en" data-path="' +
-            path +
-            '"' +
-            (en ? ' checked' : '') +
-            '> 使用</label><input type="text" placeholder="テキスト" class="blk-txt" data-path="' +
-            path +
-            '.text" value="' +
-            escapeHtml(data.text || '') +
-            '"></div>'
-        );
-    }
-
     function wireEffectTab(key) {
-        document.querySelectorAll('.blk-txt').forEach(function (inp) {
-            inp.addEventListener('input', function () {
-                var path = inp.getAttribute('data-path').split('.');
-                var obj = workspace.effects[key];
-                obj[path[0]][path[1]] = inp.value;
-                markDirty();
+        var root = $('admin-center');
+        if (!root) {
+            return;
+        }
+
+        function refreshTimeline() {
+            var tl = $('effect-timeline-val');
+            if (tl && workspace.effects[key]) {
+                tl.textContent = estimateTimelineSec(workspace.effects[key], key);
+            }
+        }
+
+        function onChange(el) {
+            var path = el.getAttribute('data-path');
+            if (!path || el.disabled) {
+                return;
+            }
+            var val;
+            if (el.type === 'checkbox') {
+                val = el.checked;
+            } else if (el.type === 'range' || el.type === 'number') {
+                val = Number(el.value);
+            } else {
+                val = el.value;
+            }
+            setDeep(workspace.effects[key], path, val);
+            markDirty();
+            refreshTimeline();
+            var ctrl = el.closest('.studio-row-control');
+            if (ctrl && el.type === 'range') {
+                var disp = ctrl.querySelector('.ef-range-val');
+                if (disp) {
+                    if (path.indexOf('size_percent') !== -1) {
+                        disp.textContent = Math.round(Number(el.value)) + '%';
+                    } else {
+                        disp.textContent = Math.round(Number(el.value)) + ' ms';
+                    }
+                }
+            }
+        }
+
+        root.querySelectorAll('[data-path]').forEach(function (el) {
+            var ev =
+                el.tagName === 'SELECT' ||
+                (el.type && (el.type === 'checkbox' || el.type === 'number'))
+                    ? 'change'
+                    : 'input';
+            if (el.type === 'range') {
+                ev = 'input';
+            }
+            el.addEventListener(ev, function () {
+                onChange(el);
             });
         });
+
+        refreshTimeline();
     }
 
     function legacyHtml() {
@@ -704,20 +1212,21 @@
         if (!left) {
             return;
         }
-        var h = '';
+        var h = '<ul class="studio-nav-list">';
         for (var i = 0; i < STUDIO_NAV.length; i++) {
             var it = STUDIO_NAV[i];
             h +=
-                '<button type="button" class="studio-nav-item' +
+                '<li><button type="button" class="studio-nav-item' +
                 (selectedKey === it.key ? ' is-active' : '') +
                 '" data-nav="' +
                 it.key +
-                '">' +
+                '"><span class="studio-nav-ico" aria-hidden="true">' +
                 it.icon +
-                ' <span data-i18n-key="' +
+                '</span><span class="studio-nav-txt" data-i18n-key="' +
                 it.i18n +
-                '"></span></button>';
+                '"></span></button></li>';
         }
+        h += '</ul>';
         left.innerHTML = h;
         var btns = left.querySelectorAll('[data-nav]');
         for (var j = 0; j < btns.length; j++) {
