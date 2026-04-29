@@ -646,18 +646,20 @@
                         presetName: val,
                         data: buildPresetDataObject(),
                     }).then(function (r) {
+                        if (window.jpSlotNuiLog) {
+                            window.jpSlotNuiLog('log', '[admin] saveNew result: ' + JSON.stringify(r));
+                        }
                         if (r && r.ok) {
                             selectedPresetName = val;
                             loadedPresetName = val;
+                            loadedCharacterId = selectedCharacterId;
                             workspace.dirty = false;
-                            fetchNui('admin/preset/listByCharacter', {
-                                characterId: selectedCharacterId,
-                            }).then(function (lr) {
-                                var plist = lr && lr.ok && lr.list ? lr.list : [];
-                                applyPresetListToSelect($('preset-name-select'), plist, val);
-                                updateBreadcrumbPreset();
-                                updatePresetActionButtonsDisabled();
-                            });
+                            hydratePresetHeaderUi();
+                            updateBreadcrumbPreset();
+                            updatePresetActionButtonsDisabled();
+                            if (viewMode === 'preview') {
+                                fetchNui('admin/embedSlotInit', embedSlotInitOpts());
+                            }
                             showAdminToast('保存しました', false);
                             return;
                         }

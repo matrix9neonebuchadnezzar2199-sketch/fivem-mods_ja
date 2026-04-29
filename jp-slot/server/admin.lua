@@ -382,6 +382,7 @@ RegisterNetEvent('jp-slot:sv:adminPresetSaveNew', function(payload)
     end
     SetResourceKvp(key, json.encode(data))
     presetIndexAdd(cid, pname)
+    print(('[jp-slot][preset] saveNew: char=%s name=%s ok=%s'):format(tostring(cid), tostring(pname), tostring(true)))
     TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = true })
 end)
 

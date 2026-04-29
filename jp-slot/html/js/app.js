@@ -115,6 +115,12 @@
         if (!frame || !inner || !rootEl || !inner.contains(rootEl)) {
             return;
         }
+        inner.style.width = '1280px';
+        inner.style.height = '720px';
+        inner.style.position = 'absolute';
+        inner.style.top = '0';
+        inner.style.transformOrigin = 'top left';
+        inner.style.pointerEvents = 'none';
         var baseW = 1280;
         var baseH = 720;
         var fw = frame.clientWidth;
@@ -124,15 +130,21 @@
         }
         var scale = Math.min(fw / baseW, fh / baseH);
         var offsetX = (fw - baseW * scale) / 2;
-        var offsetY = 0;
-        inner.style.position = 'absolute';
         inner.style.left = offsetX + 'px';
-        inner.style.top = offsetY + 'px';
-        inner.style.width = baseW + 'px';
-        inner.style.height = baseH + 'px';
         inner.style.transform = 'scale(' + scale + ')';
-        inner.style.transformOrigin = 'top left';
-        inner.style.pointerEvents = 'none';
+        if (window.jpSlotNuiLog) {
+            window.jpSlotNuiLog(
+                'log',
+                '[embed] fit applied: frame=' +
+                    fw +
+                    'x' +
+                    fh +
+                    ' scale=' +
+                    scale.toFixed(3) +
+                    ' offsetX=' +
+                    offsetX.toFixed(0)
+            );
+        }
     };
 
     window.jpSlotFitAdminEmbedScale = window.applyEmbedPreviewFit;
