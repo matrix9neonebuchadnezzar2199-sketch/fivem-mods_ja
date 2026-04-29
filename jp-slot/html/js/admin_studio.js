@@ -445,6 +445,16 @@
         }
     }
 
+    /** キャラ一覧が空のときのフォールバック（サーバー util のフォールバックと二重化してもよい） */
+    function ensureAdminCharacterListFallback() {
+        if (window.__jpSlotAdminCharacters && window.__jpSlotAdminCharacters.length) {
+            return;
+        }
+        var id =
+            (workspace && workspace.characterId && String(workspace.characterId).trim()) || 'luna';
+        window.__jpSlotAdminCharacters = [{ id: id, displayName: id }];
+    }
+
     function fillCharacterDropdown(selectEl, list, selectedId) {
         if (!selectEl || !list) {
             return;
@@ -534,9 +544,8 @@
         if (!chars || !chars.length) {
             fetchNui('admin/characters/list').then(function (cr) {
                 window.__jpSlotAdminCharacters = cr && cr.ok && cr.list ? cr.list : [];
-                if (window.__jpSlotAdminCharacters.length) {
-                    hydratePresetHeaderUi();
-                }
+                ensureAdminCharacterListFallback();
+                hydratePresetHeaderUi();
             });
             return;
         }
@@ -2649,6 +2658,7 @@
             })
             .then(function (cr) {
                 window.__jpSlotAdminCharacters = cr && cr.ok && cr.list ? cr.list : [];
+                ensureAdminCharacterListFallback();
                 var chars = window.__jpSlotAdminCharacters;
                 var ac = cr && cr.activeCharacterId;
                 var ap = cr && cr.activePresetName;

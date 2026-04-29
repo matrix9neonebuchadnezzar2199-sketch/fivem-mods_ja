@@ -713,6 +713,11 @@
     align-items: center;
 }
 
+/* キャラ／プリセット dropdown が空に見えないよう最小幅 */
+#panel-admin .preset-header-row .studio-preset-select {
+    min-width: 10rem;
+}
+
 #panel-admin .studio-btn-danger {
     background: linear-gradient(180deg, #b03030 0%, #7a1f1f 100%);
     border: 1px solid rgba(255, 120, 120, 0.45);

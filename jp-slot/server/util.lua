@@ -1,5 +1,33 @@
 -- OS 非依存のディレクトリ一覧（素材スキャン用）
 
+--- Windows で dir が空になる場合の代替（PowerShell / UTF-8 パス）
+---@param winPath string バックスラッシュ正規化済み・末尾 \ 可
+---@return string[]
+local function jpSlotListDirWindowsAlt(winPath)
+    winPath = winPath:gsub('/', '\\')
+    if winPath:sub(-1) == '\\' then
+        winPath = winPath:sub(1, -2)
+    end
+    local lit = winPath:gsub("'", "''")
+    local cmd =
+        'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Get-ChildItem -LiteralPath '''
+        .. lit
+        .. ''' -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }"'
+    local p = io.popen(cmd)
+    if not p then
+        return {}
+    end
+    local out = {}
+    for line in p:lines() do
+        line = line and line:gsub('\r', ''):gsub('^%s+', ''):gsub('%s+$', '') or ''
+        if line ~= '' and not line:match('^%.') then
+            out[#out + 1] = line
+        end
+    end
+    p:close()
+    return out
+end
+
 ---@param dir string 末尾スラッシュまたはバックスラッシュ可
 ---@return string[]
 function JpSlotListDir(dir)
@@ -14,24 +42,32 @@ function JpSlotListDir(dir)
         local osenv = os.getenv('OS') or ''
         use_windows_shell = osenv:find('Windows') ~= nil or dir:match('^%a:[/\\]') ~= nil
     end
+    local winPath = dir:gsub('/', '\\')
     local cmd
     if use_windows_shell then
-        cmd = 'cmd /c dir /b "' .. dir:gsub('/', '\\') .. '" 2>nul'
+        -- /ad = ディレクトリのみ（ファイル除外）
+        cmd = 'cmd /c dir /b /ad "' .. winPath .. '" 2>nul'
     else
-        cmd = 'ls "' .. dir .. '" 2>/dev/null'
+        cmd = 'ls -1 "' .. dir .. '" 2>/dev/null'
     end
     local p = io.popen(cmd)
     if not p then
+        if use_windows_shell then
+            return jpSlotListDirWindowsAlt(winPath)
+        end
         return {}
     end
     local out = {}
     for line in p:lines() do
-        line = line and line:gsub('^%s+', ''):gsub('%s+$', '') or ''
+        line = line and line:gsub('\r', ''):gsub('^%s+', ''):gsub('%s+$', '') or ''
         if line ~= '' and not line:match('^%.') then
             out[#out + 1] = line
         end
     end
     p:close()
+    if use_windows_shell and #out == 0 then
+        return jpSlotListDirWindowsAlt(winPath)
+    end
     return out
 end
 
@@ -119,13 +155,39 @@ function JpSlotLoadCharacterManifest(characterId)
     return nil
 end
 
+--- io.popen / dir が失敗しても manifest が読めるキャラは列挙（管理 UI 用）
+---@return table[]
+local function jpSlotScanCharactersFromManifestFallback()
+    local out = {}
+    local seenOutId = {}
+    local def = (Config.Characters and Config.Characters.DefaultId) or 'luna'
+    local tryOrder = { def, 'luna' }
+    local tried = {}
+    for i = 1, #tryOrder do
+        local tid = tryOrder[i]
+        if type(tid) == 'string' and tid ~= '' and not tried[tid] then
+            tried[tid] = true
+            local man = JpSlotLoadCharacterManifest(tid)
+            if man then
+                local id = type(man.id) == 'string' and man.id ~= '' and man.id or tid
+                local dn = type(man.displayName) == 'string' and man.displayName ~= '' and man.displayName or id
+                if not seenOutId[id] then
+                    seenOutId[id] = true
+                    out[#out + 1] = { id = id, displayName = dn }
+                end
+            end
+        end
+    end
+    return out
+end
+
 --- html/assets/characters/ をスキャンし manifest.json が読めるキャラのみ返す
 ---@return table[]
 function JpSlotScanCharacters()
     local resName = GetCurrentResourceName()
     local base = GetResourcePath(resName)
     if not base or base == '' then
-        return {}
+        return jpSlotScanCharactersFromManifestFallback()
     end
     local sep = base:find('\\') and '\\' or '/'
     if base:sub(-1) ~= '/' and base:sub(-1) ~= '\\' then
@@ -134,15 +196,22 @@ function JpSlotScanCharacters()
     base = base .. 'html' .. sep .. 'assets' .. sep .. 'characters' .. sep
     local dirs = JpSlotListDir(base)
     local out = {}
+    local seenId = {}
     for _, dir in ipairs(dirs) do
         if type(dir) == 'string' and dir ~= '' then
             local man = JpSlotLoadCharacterManifest(dir)
             if man then
                 local id = type(man.id) == 'string' and man.id ~= '' and man.id or dir
                 local dn = type(man.displayName) == 'string' and man.displayName ~= '' and man.displayName or id
-                out[#out + 1] = { id = id, displayName = dn }
+                if not seenId[id] then
+                    seenId[id] = true
+                    out[#out + 1] = { id = id, displayName = dn }
+                end
             end
         end
+    end
+    if #out == 0 then
+        out = jpSlotScanCharactersFromManifestFallback()
     end
     table.sort(out, function(a, b)
         return (a.id or '') < (b.id or '')

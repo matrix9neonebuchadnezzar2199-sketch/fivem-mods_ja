@@ -560,6 +560,9 @@ RegisterNetEvent('jp-slot:sv:adminCharactersList', function(payload)
         return
     end
     local scanned = JpSlotScanCharacters()
+    if #scanned == 0 then
+        print('[jp-slot][WARN] adminCharactersList: character scan returned empty (check html/assets/characters/*/manifest.json)')
+    end
     local list = {}
     for i = 1, #scanned do
         local e = scanned[i]
