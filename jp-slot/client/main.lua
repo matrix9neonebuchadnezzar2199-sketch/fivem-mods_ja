@@ -264,7 +264,6 @@ RegisterNUICallback('spin', function(body, cb)
 end)
 
 RegisterNUICallback('exit', function(_, cb)
-    cb({ ok = true })
     print('[jp-slot] exit NUI callback received')
     SendNUIMessage({ type = 'hide' })
     TriggerServerEvent('jp-slot:leaveSeat')
@@ -272,6 +271,7 @@ RegisterNUICallback('exit', function(_, cb)
     nuiOpen = false
     adminOpen = false
     setSlotNuiFocus(false)
+    cb({ ok = true })
 end)
 
 --- NUI 内 console / window.error をクライアントログへ（F8 で確認）

@@ -721,7 +721,9 @@
     opacity: 1;
 }
 
-.bonus-badge {
+/* フリースピン残数バナー（JS で body に生成）。プレイ画面外では必ず非表示にする */
+#bonus-badge.bonus-badge {
+    display: none;
     position: fixed;
     top: 0.6rem;
     left: 50%;
@@ -735,6 +737,22 @@
     z-index: 60;
     pointer-events: none;
     letter-spacing: 0.05em;
+}
+
+#root.is-visible.is-bonus ~ #bonus-badge.bonus-badge {
+    display: block;
+}
+
+#root:not(.is-visible) ~ #bonus-badge.bonus-badge {
+    display: none !important;
+}
+
+#root:not(.is-visible) .reel-center-text {
+    display: none !important;
+}
+
+#root:not(.is-visible) .reel-center-text.is-show {
+    display: none !important;
 }
 
 .toast-flash {

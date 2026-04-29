@@ -296,6 +296,30 @@
         }
     }
 
+    /**
+     * フリースピン残数バナー（#bonus-badge）とボーナス UI 状態を強制クリア。
+     * 退席・hide メッセージ・ボーナス終了時に呼ぶ（body 直下のため #root の非表示だけでは残る）。
+     */
+    function hideFreeSpinBanner() {
+        removeBonusBadge();
+        var root = document.getElementById('root');
+        if (root) {
+            root.classList.remove('is-bonus');
+        }
+        state.bonusRemaining = 0;
+        window.__jpSlotPrevBonusActive = false;
+        var rct = document.getElementById('reel-center-text');
+        if (rct) {
+            rct.classList.remove('is-show', 'fx-pulse', 'fx-zoom');
+            var content = rct.querySelector('.reel-center-text-content');
+            if (content) {
+                content.textContent = '';
+            }
+            rct.hidden = true;
+        }
+        nuiLog('log', '[hideFreeSpinBanner] cleared');
+    }
+
     function flashToast(text) {
         if (!text) {
             return;
@@ -317,8 +341,7 @@
             return;
         }
         if (!bonus || !bonus.active) {
-            root.classList.remove('is-bonus');
-            removeBonusBadge();
+            hideFreeSpinBanner();
             return;
         }
         if (bonus.ended) {
@@ -328,8 +351,7 @@
                 fmtMoney(bonus.totalWin || 0)
             );
             flashToast(endTxt);
-            root.classList.remove('is-bonus');
-            removeBonusBadge();
+            hideFreeSpinBanner();
             return;
         }
         root.classList.add('is-bonus');
@@ -396,6 +418,7 @@
 
     function hidePlay() {
         showPlay(false);
+        hideFreeSpinBanner();
         nuiLog('log', '[hidePlay] is-visible removed');
     }
 
@@ -764,12 +787,7 @@
             bindFooter();
             window._jpSlotFooterBound = true;
         }
-        state.bonusRemaining = 0;
-        var rootInit = document.getElementById('root');
-        if (rootInit) {
-            rootInit.classList.remove('is-bonus');
-        }
-        removeBonusBadge();
+        hideFreeSpinBanner();
         startIdleCharLoop();
         nuiLog('log', '[initPlay] done');
     }
@@ -862,6 +880,7 @@
                         }
                     }
                     applyBonusUi(p.bonus);
+                    window.__jpSlotPrevBonusActive = !!(p.bonus && p.bonus.active && !p.bonus.ended);
                     state.spinning = false;
                     window.__jpSlotSpinning = false;
                     var sb1 = getSpinButton();
@@ -993,12 +1012,7 @@
             }
             state.spinning = false;
             window.__jpSlotSpinning = false;
-            state.bonusRemaining = 0;
-            removeBonusBadge();
-            var root2 = document.getElementById('root');
-            if (root2) {
-                root2.classList.remove('is-bonus');
-            }
+            hideFreeSpinBanner();
             var spinBtn = getSpinButton();
             if (spinBtn) {
                 spinBtn.disabled = false;
