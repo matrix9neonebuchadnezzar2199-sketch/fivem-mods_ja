@@ -223,13 +223,35 @@
             </div>
         </div>
 
-        <div id="admin-preset-name-modal" class="admin-modal" hidden>
+        <div id="preset-new-name-modal" class="admin-modal" hidden>
             <div class="admin-modal-card">
-                <h3 data-i18n-key="admin.preset.name_modal_title">プリセット名</h3>
-                <input type="text" id="admin-preset-name-input" class="studio-input-wide" autocomplete="off" maxlength="64">
+                <h3 data-i18n-key="admin.preset.modal_new_name_title">新規プリセット名</h3>
+                <input type="text" id="preset-new-name-input" class="studio-input-wide" autocomplete="off" maxlength="32">
                 <div class="modal-actions">
-                    <button type="button" class="btn-cancel" id="admin-preset-name-cancel" data-i18n-key="admin.confirm.cancel">キャンセル</button>
-                    <button type="button" class="btn-primary" id="admin-preset-name-ok" data-i18n-key="admin.preset.name_modal_ok">保存</button>
+                    <button type="button" class="btn-cancel" id="preset-new-name-cancel" data-i18n-key="admin.confirm.cancel">キャンセル</button>
+                    <button type="button" class="btn-primary" id="preset-new-name-ok" data-i18n-key="admin.preset.name_modal_ok">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="preset-confirm-modal" class="admin-modal" hidden>
+            <div class="admin-modal-card">
+                <h3 id="preset-confirm-modal-title"></h3>
+                <p id="preset-confirm-modal-body" class="studio-note"></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="preset-confirm-cancel" data-i18n-key="admin.confirm.cancel">キャンセル</button>
+                    <button type="button" class="btn-primary" id="preset-confirm-ok" data-i18n-key="admin.confirm.ok">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="preset-dirty-modal" class="admin-modal" hidden>
+            <div class="admin-modal-card">
+                <h3 data-i18n-key="admin.preset.discard_nav_title">未保存の変更があります</h3>
+                <p data-i18n-key="admin.preset.discard_nav_body">別のプリセットを読み込むと、編集中の内容は破棄されます。</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="preset-dirty-cancel" data-i18n-key="admin.confirm.cancel">キャンセル</button>
+                    <button type="button" class="btn-danger" id="preset-dirty-ok" data-i18n-key="admin.preset.discard_nav_ok">破棄して続行</button>
                 </div>
             </div>
         </div>
@@ -247,7 +269,6 @@
         </div>
     </div>
 
-    <script src="js/vendor/chart.min.js"></script>
     <script src="js/theme-loader.js"></script>
     <script src="js/effects.js"></script>
     <script src="js/char_fx.js"></script>

@@ -687,7 +687,43 @@
     margin-bottom: 0;
 }
 
-#panel-admin #admin-preset-name-modal .studio-input-wide {
+#panel-admin .preset-header-studio {
+    margin-bottom: 16px;
+}
+
+#panel-admin .preset-header-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 0;
+}
+
+#panel-admin .preset-header-label {
+    margin: 0;
+    font-weight: 600;
+    color: rgba(244, 234, 208, 0.92);
+}
+
+#panel-admin .preset-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 0 4px;
+    align-items: center;
+}
+
+#panel-admin .studio-btn-danger {
+    background: linear-gradient(180deg, #b03030 0%, #7a1f1f 100%);
+    border: 1px solid rgba(255, 120, 120, 0.45);
+    color: #fff;
+}
+
+#panel-admin .studio-btn-danger:hover {
+    filter: brightness(1.08);
+}
+
+#panel-admin #preset-new-name-modal .studio-input-wide {
     width: 100%;
     margin-top: 14px;
     box-sizing: border-box;

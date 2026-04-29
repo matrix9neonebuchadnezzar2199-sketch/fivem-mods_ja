@@ -156,7 +156,7 @@ function DynamicMachines.add(data, createdBy)
     if not pk or not Config.PropModels[pk] then
         return false, 'invalid_prop', nil
     end
-    if not ck or not Config.Characters[ck] then
+    if not ck or not JpSlotCharacterIdValid(ck) then
         return false, 'invalid_char', nil
     end
     if not ptid or not Config.Paytables[ptid] then
@@ -232,7 +232,7 @@ function DynamicMachines.update(id, field, value)
         m.prop = Config.PropModels[value]
     elseif field == 'charId' or field == 'characterId' then
         local cid = tostring(value)
-        if not Config.Characters[cid] then
+        if not JpSlotCharacterIdValid(cid) then
             return false, 'invalid_char'
         end
         m.characterId = cid

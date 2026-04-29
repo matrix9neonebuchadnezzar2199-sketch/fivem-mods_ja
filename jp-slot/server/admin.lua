@@ -29,6 +29,145 @@ local function sessionOk(src, token)
     return ok
 end
 
+--- プリセット表示名（1〜32文字・許容文字のみ）
+local function jpSlotPresetNameValid(name)
+    if type(name) ~= 'string' then
+        return false
+    end
+    local len = utf8.len(name)
+    if not len or len < 1 or len > 32 then
+        return false
+    end
+    for _, code in utf8.codes(name) do
+        local okch = (code >= 0x30 and code <= 0x39)
+            or (code >= 0x41 and code <= 0x5A)
+            or (code >= 0x61 and code <= 0x7A)
+            or code == 0x20
+            or code == 0x2D
+            or code == 0x5F
+            or (code >= 0x3041 and code <= 0x3096)
+            or (code >= 0x30A1 and code <= 0x30FA)
+            or code == 0x30FC
+            or (code >= 0x4E00 and code <= 0x9FFF)
+            or (code >= 0x3400 and code <= 0x4DBF)
+        if not okch then
+            return false
+        end
+    end
+    return true
+end
+
+local function presetIndexGet(characterId)
+    local raw = GetResourceKvpString('jp-slot:adm:preset:index:' .. characterId)
+    if not raw or raw == '' then
+        return {}
+    end
+    local ok, t = pcall(json.decode, raw)
+    if ok and type(t) == 'table' then
+        return t
+    end
+    return {}
+end
+
+local function presetIndexSet(characterId, names)
+    SetResourceKvp('jp-slot:adm:preset:index:' .. characterId, json.encode(names))
+end
+
+local function presetIndexAdd(characterId, presetName)
+    local arr = presetIndexGet(characterId)
+    for i = 1, #arr do
+        if arr[i] == presetName then
+            return
+        end
+    end
+    arr[#arr + 1] = presetName
+    table.sort(arr)
+    presetIndexSet(characterId, arr)
+end
+
+local function presetIndexRemove(characterId, presetName)
+    local arr = presetIndexGet(characterId)
+    local out = {}
+    for i = 1, #arr do
+        if arr[i] ~= presetName then
+            out[#out + 1] = arr[i]
+        end
+    end
+    presetIndexSet(characterId, out)
+end
+
+--- 旧 KVP（jp-slot:adm:preset:<id>・list）を luna 名前空間へ移行（1回のみ）
+function JpSlotMigratePresetsV2()
+    if GetResourceKvpString('jp-slot:adm:preset:migrated_v2') == '1' then
+        return 0
+    end
+    local n = 0
+    local idsOrder = {}
+    local seen = {}
+    local function addId(id)
+        if type(id) ~= 'string' or id == '' then
+            return
+        end
+        if id == 'list' or id == 'active' or id == 'migrated_v2' or id:sub(1, 6) == 'index:' then
+            return
+        end
+        if not seen[id] then
+            seen[id] = true
+            idsOrder[#idsOrder + 1] = id
+        end
+    end
+    local rawList = GetResourceKvpString('jp-slot:adm:preset:list')
+    if rawList and rawList ~= '' then
+        local okl, decoded = pcall(json.decode, rawList)
+        if okl and type(decoded) == 'table' then
+            for _, e in ipairs(decoded) do
+                if type(e) == 'table' and type(e.id) == 'string' then
+                    addId(e.id)
+                end
+            end
+        end
+    end
+    local activeOld = GetResourceKvpString('jp-slot:adm:preset:active')
+    if activeOld and activeOld ~= '' and activeOld:sub(1, 1) ~= '{' then
+        addId(activeOld)
+    end
+    addId('default')
+
+    local namesForIndex = {}
+    for _, id in ipairs(idsOrder) do
+        local oldKey = 'jp-slot:adm:preset:' .. id
+        local body = GetResourceKvpString(oldKey)
+        if body and body ~= '' then
+            local newKey = JpSlotPresetBodyKvpKey('luna', id)
+            SetResourceKvp(newKey, body)
+            DeleteResourceKvp(oldKey)
+            namesForIndex[#namesForIndex + 1] = id
+            n = n + 1
+        end
+    end
+    table.sort(namesForIndex)
+    presetIndexSet('luna', namesForIndex)
+    if rawList and rawList ~= '' then
+        DeleteResourceKvp('jp-slot:adm:preset:list')
+    end
+
+    if activeOld and activeOld ~= '' then
+        local okj, j = pcall(json.decode, activeOld)
+        if okj and type(j) == 'table' and type(j.characterId) == 'string' and type(j.presetName) == 'string' then
+            SetResourceKvp('jp-slot:adm:preset:active', activeOld)
+        else
+            SetResourceKvp(
+                'jp-slot:adm:preset:active',
+                json.encode({ characterId = 'luna', presetName = activeOld })
+            )
+        end
+    end
+
+    SetResourceKvp('jp-slot:adm:preset:migrated_v2', '1')
+    print(('[jp-slot] preset migration v2 completed (%d entries)'):format(n))
+    return n
+end
+
 RegisterCommand(Config.AdminCommand or 'jpslotadmin', function(source, _args, _raw)
     if source == 0 then
         print('[jp-slot] コンソールからは管理NUIを開けません（ゲーム内プレイヤーで実行）。')
@@ -146,17 +285,32 @@ RegisterNetEvent('jp-slot:sv:adminSaveTheme', function(payload)
     end
 end)
 
-RegisterNetEvent('jp-slot:sv:adminPresetList', function(payload)
+RegisterNetEvent('jp-slot:sv:adminPresetListByCharacter', function(payload)
     local src = source
     payload = type(payload) == 'table' and payload or {}
     if not sessionOk(src, payload.token) then
-        TriggerClientEvent('jp-slot:cl:adminPresetListResult', src, { ok = false, reason = 'unauthorized' })
+        TriggerClientEvent('jp-slot:cl:adminPresetListByCharacterResult', src, { ok = false, reason = 'unauthorized' })
         return
     end
-    local raw = GetResourceKvpString('jp-slot:adm:preset:list')
-    local list = (raw and raw ~= '') and json.decode(raw) or {}
-    local activeId = GetResourceKvpString('jp-slot:adm:preset:active') or 'default'
-    TriggerClientEvent('jp-slot:cl:adminPresetListResult', src, { ok = true, list = list, activeId = activeId })
+    local cid = payload.characterId
+    if type(cid) ~= 'string' or cid == '' or not JpSlotCharacterIdValid(cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetListByCharacterResult', src, { ok = false, reason = 'bad_character' })
+        return
+    end
+    local idx = presetIndexGet(cid)
+    local out = {}
+    for _, name in ipairs(idx) do
+        local raw = GetResourceKvpString(JpSlotPresetBodyKvpKey(cid, name))
+        local updatedAt = os.time()
+        if raw and raw ~= '' then
+            local okp, pr = pcall(json.decode, raw)
+            if okp and type(pr) == 'table' and type(pr.updatedAt) == 'number' then
+                updatedAt = pr.updatedAt
+            end
+        end
+        out[#out + 1] = { name = name, updatedAt = updatedAt }
+    end
+    TriggerClientEvent('jp-slot:cl:adminPresetListByCharacterResult', src, { ok = true, list = out })
 end)
 
 RegisterNetEvent('jp-slot:sv:adminPresetGet', function(payload)
@@ -166,47 +320,113 @@ RegisterNetEvent('jp-slot:sv:adminPresetGet', function(payload)
         TriggerClientEvent('jp-slot:cl:adminPresetGetResult', src, { ok = false, reason = 'unauthorized' })
         return
     end
-    local id = payload.id or ''
-    local raw = GetResourceKvpString('jp-slot:adm:preset:' .. id)
+    local cid = payload.characterId
+    local pname = payload.presetName
+    if type(cid) ~= 'string' or cid == '' or not JpSlotCharacterIdValid(cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetGetResult', src, { ok = false, reason = 'bad_character' })
+        return
+    end
+    if type(pname) ~= 'string' or pname == '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetGetResult', src, { ok = false, reason = 'invalid' })
+        return
+    end
+    local raw = GetResourceKvpString(JpSlotPresetBodyKvpKey(cid, pname))
     TriggerClientEvent('jp-slot:cl:adminPresetGetResult', src, {
         ok = raw ~= nil and raw ~= '',
         data = (raw and raw ~= '') and json.decode(raw) or nil,
     })
 end)
 
-RegisterNetEvent('jp-slot:sv:adminPresetSave', function(payload)
+RegisterNetEvent('jp-slot:sv:adminPresetSaveNew', function(payload)
     local src = source
     payload = type(payload) == 'table' and payload or {}
     if not sessionOk(src, payload.token) then
-        TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = false, reason = 'unauthorized' })
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'unauthorized' })
         return
     end
-    local p = payload.preset
-    if not p or not p.id or not p.name then
-        TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = false, reason = 'invalid' })
+    if not isAdmin(src) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'forbidden' })
         return
     end
-    p.updatedAt = os.time()
-    SetResourceKvp('jp-slot:adm:preset:' .. p.id, json.encode(p))
-    SetResourceKvp('jp-slot:adm:preset:active', p.id)
-    local raw = GetResourceKvpString('jp-slot:adm:preset:list')
-    local list = (raw and raw ~= '') and json.decode(raw) or {}
-    local found = false
-    for i, e in ipairs(list) do
-        if e.id == p.id then
-            list[i] = { id = p.id, name = p.name, updatedAt = p.updatedAt }
-            found = true
-            break
+    local cid = payload.characterId
+    local pname = payload.presetName
+    local data = payload.data
+    if type(cid) ~= 'string' or cid == '' or not JpSlotCharacterIdValid(cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'bad_character' })
+        return
+    end
+    if type(pname) ~= 'string' or not jpSlotPresetNameValid(pname) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'invalid_name' })
+        return
+    end
+    if type(data) ~= 'table' then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'invalid_data' })
+        return
+    end
+    local key = JpSlotPresetBodyKvpKey(cid, pname)
+    local existing = GetResourceKvpString(key)
+    if existing and existing ~= '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'duplicate' })
+        return
+    end
+    local idx = presetIndexGet(cid)
+    for i = 1, #idx do
+        if idx[i] == pname then
+            TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'duplicate' })
+            return
         end
     end
-    if not found then
-        list[#list + 1] = { id = p.id, name = p.name, updatedAt = p.updatedAt }
+    data.updatedAt = os.time()
+    if type(data.name) ~= 'string' or data.name == '' then
+        data.name = pname
     end
-    SetResourceKvp('jp-slot:adm:preset:list', json.encode(list))
-    if ApplyJpSlotMasterFromPreset then
-        ApplyJpSlotMasterFromPreset()
+    SetResourceKvp(key, json.encode(data))
+    presetIndexAdd(cid, pname)
+    TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = true })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPresetSaveOverwrite', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'unauthorized' })
+        return
     end
-    TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = true })
+    if not isAdmin(src) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'forbidden' })
+        return
+    end
+    local cid = payload.characterId
+    local pname = payload.presetName
+    local data = payload.data
+    if type(cid) ~= 'string' or cid == '' or not JpSlotCharacterIdValid(cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'bad_character' })
+        return
+    end
+    if type(pname) ~= 'string' or pname == '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'invalid' })
+        return
+    end
+    if type(data) ~= 'table' then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'invalid_data' })
+        return
+    end
+    local key = JpSlotPresetBodyKvpKey(cid, pname)
+    local existing = GetResourceKvpString(key)
+    if not existing or existing == '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'not_found' })
+        return
+    end
+    data.updatedAt = os.time()
+    SetResourceKvp(key, json.encode(data))
+    presetIndexAdd(cid, pname)
+    local ac, ap = JpSlotParseActivePresetRef()
+    if ac == cid and ap == pname then
+        if ApplyJpSlotMasterFromPreset then
+            ApplyJpSlotMasterFromPreset()
+        end
+    end
+    TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = true })
 end)
 
 RegisterNetEvent('jp-slot:sv:adminPresetDelete', function(payload)
@@ -216,17 +436,38 @@ RegisterNetEvent('jp-slot:sv:adminPresetDelete', function(payload)
         TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = false, reason = 'unauthorized' })
         return
     end
-    local id = payload.id or ''
-    SetResourceKvp('jp-slot:adm:preset:' .. id, '')
-    local raw = GetResourceKvpString('jp-slot:adm:preset:list')
-    local list = (raw and raw ~= '') and json.decode(raw) or {}
-    local out = {}
-    for _, e in ipairs(list) do
-        if e.id ~= id then
-            out[#out + 1] = e
+    if not isAdmin(src) then
+        TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = false, reason = 'forbidden' })
+        return
+    end
+    local cid = payload.characterId
+    local pname = payload.presetName
+    if type(cid) ~= 'string' or cid == '' or not JpSlotCharacterIdValid(cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = false, reason = 'bad_character' })
+        return
+    end
+    if type(pname) ~= 'string' or pname == '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = false, reason = 'invalid' })
+        return
+    end
+    local key = JpSlotPresetBodyKvpKey(cid, pname)
+    DeleteResourceKvp(key)
+    presetIndexRemove(cid, pname)
+    local ac, ap = JpSlotParseActivePresetRef()
+    if ac == cid and ap == pname then
+        local rest = presetIndexGet(cid)
+        if #rest > 0 then
+            SetResourceKvp(
+                'jp-slot:adm:preset:active',
+                json.encode({ characterId = cid, presetName = rest[1] })
+            )
+        else
+            DeleteResourceKvp('jp-slot:adm:preset:active')
+        end
+        if ApplyJpSlotMasterFromPreset then
+            ApplyJpSlotMasterFromPreset()
         end
     end
-    SetResourceKvp('jp-slot:adm:preset:list', json.encode(out))
     TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = true })
 end)
 
@@ -237,7 +478,30 @@ RegisterNetEvent('jp-slot:sv:adminPresetSetActive', function(payload)
         TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = false, reason = 'unauthorized' })
         return
     end
-    SetResourceKvp('jp-slot:adm:preset:active', payload.id or '')
+    if not isAdmin(src) then
+        TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = false, reason = 'forbidden' })
+        return
+    end
+    local cid = payload.characterId
+    local pname = payload.presetName
+    if type(cid) ~= 'string' or cid == '' or not JpSlotCharacterIdValid(cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = false, reason = 'bad_character' })
+        return
+    end
+    if type(pname) ~= 'string' or pname == '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = false, reason = 'invalid' })
+        return
+    end
+    local key = JpSlotPresetBodyKvpKey(cid, pname)
+    local raw = GetResourceKvpString(key)
+    if not raw or raw == '' then
+        TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = false, reason = 'not_found' })
+        return
+    end
+    SetResourceKvp(
+        'jp-slot:adm:preset:active',
+        json.encode({ characterId = cid, presetName = pname })
+    )
     if ApplyJpSlotMasterFromPreset then
         ApplyJpSlotMasterFromPreset()
     end
@@ -251,22 +515,69 @@ RegisterNetEvent('jp-slot:sv:adminAssetsScan', function(payload)
         TriggerClientEvent('jp-slot:cl:adminAssetsScanResult', src, { ok = false, reason = 'unauthorized' })
         return
     end
-    local base = GetResourcePath(GetCurrentResourceName()) .. '/html/assets/'
-    local cats = {
-        typography = base .. 'ui/typography/',
-        characters = base .. 'characters/',
-        cutins = base .. 'cutins/',
-        bg = base .. 'bg/',
-        vfx = base .. 'vfx/',
-        bgm = base .. 'sound/bgm/',
-        se = base .. 'sound/se/',
-        voice = base .. 'sound/voice/',
-    }
-    local out = {}
-    for k, dir in pairs(cats) do
-        out[k] = JpSlotListDir(dir)
+    local defId = (Config.Characters and Config.Characters.DefaultId) or 'luna'
+    local characterId = payload.characterId
+    if type(characterId) == 'string' and characterId ~= '' then
+        if not JpSlotCharacterIdValid(characterId) then
+            characterId = defId
+        end
+    else
+        characterId = defId
     end
-    TriggerClientEvent('jp-slot:cl:adminAssetsScanResult', src, { ok = true, assets = out })
+    local kind = payload.kind or 'all'
+    local manifest = JpSlotLoadCharacterManifest(characterId)
+    if not manifest then
+        TriggerClientEvent('jp-slot:cl:adminAssetsScanResult', src, {
+            ok = false,
+            error = 'manifest_not_found',
+            characterId = characterId,
+        })
+        return
+    end
+    local base = GetResourcePath(GetCurrentResourceName()) .. '/html/assets/'
+    local lib = JpSlotAssetLibraryFromManifest(manifest)
+    lib.typography = JpSlotListAssetRel(base, 'ui/typography/')
+    lib.symbols = JpSlotListAssetRel(base, 'symbols/')
+    lib.frames = JpSlotListAssetRel(base, 'frames/')
+    lib.bg = JpSlotListAssetRel(base, 'bg/')
+    lib.vfx = JpSlotListAssetRel(base, 'vfx/')
+    local out = JpSlotFilterAssetLibByKind(lib, kind)
+    -- characterBasePath: html/assets/ からのキャラサブパス（NUI は assetsRoot + これ + manifest 相対）
+    TriggerClientEvent('jp-slot:cl:adminAssetsScanResult', src, {
+        ok = true,
+        characterId = characterId,
+        displayName = manifest.displayName,
+        characterBasePath = ('characters/%s/'):format(characterId),
+        assets = out,
+    })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminCharactersList', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminCharactersListResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    local scanned = JpSlotScanCharacters()
+    local list = {}
+    for i = 1, #scanned do
+        local e = scanned[i]
+        local man = JpSlotLoadCharacterManifest(e.id)
+        list[#list + 1] = {
+            id = e.id,
+            displayName = e.displayName,
+            version = man and man.version or '',
+            author = man and man.author or '',
+        }
+    end
+    local ac, ap = JpSlotParseActivePresetRef()
+    TriggerClientEvent('jp-slot:cl:adminCharactersListResult', src, {
+        ok = true,
+        list = list,
+        activeCharacterId = ac,
+        activePresetName = ap,
+    })
 end)
 
 RegisterNetEvent('jp-slot:sv:adminPreviewStart', function(payload)
@@ -324,6 +635,11 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     local ptDisp = Config.PaytableDisplay and Config.PaytableDisplay[payId]
     local hypeKey = (Config.Marquee and Config.Marquee.HypeKey) or 'marquee.hype'
     local infoKey = (Config.Marquee and Config.Marquee.InfoKey) or 'marquee.info'
+    local cid = payload.characterId
+    if not cid or cid == '' or not JpSlotCharacterIdValid(cid) then
+        cid = m.characterId or (Config.Characters and Config.Characters.DefaultId) or 'luna'
+    end
+    local chMan = JpSlotLoadCharacterManifest(cid)
     TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
         machine = m,
         theme = theme,
@@ -338,8 +654,11 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         symbolIds = ptFull.symbols
             or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' },
         uiSize = JpSlotGetUISize and JpSlotGetUISize() or nil,
-        -- default プリセット時は台 config の既定キャラ名・画像を出さない（演出プリセットと混同しないため）
         neutralPreviewCharacter = payload.neutralPreviewCharacter == true,
+        character = chMan,
+        characterBasePath = ('characters/%s/'):format(cid),
+        characterId = cid,
+        characters = JpSlotScanCharacters(),
     })
 end)
 

@@ -35,15 +35,22 @@ client_scripts {
 ui_page 'html/index.html'
 
 files {
-    'html/js/vendor/chart.min.js',
     'html/index.html',
     'html/admin.html',
     'html/css/**/*.css',
     'html/js/**/*.js',
-    'html/assets/**/*.png',
-    'html/assets/**/*.webm',
-    'html/assets/**/*.jpg',
-    'html/assets/**/*.jpeg',
-    -- 'html/assets/**/*.woff2',
+    'html/assets/characters/*/manifest.json',
+    'html/assets/characters/**/*.png',
+    'html/assets/characters/**/*.jpg',
+    'html/assets/characters/**/*.jpeg',
+    'html/assets/characters/**/*.webp',
+    'html/assets/characters/**/*.webm',
+    'html/assets/characters/**/*.mp4',
+    'html/assets/characters/**/*.mp3',
+    'html/assets/characters/**/*.wav',
+    'html/assets/characters/**/*.ogg',
+    'html/assets/symbols/*.png',
+    'html/assets/frames/*.png',
+    'html/assets/shared/**/*',
     'locales/*.json',
 }

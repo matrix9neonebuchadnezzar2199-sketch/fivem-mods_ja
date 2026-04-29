@@ -69,14 +69,11 @@ Config.PaytableDisplay = {
     },
 }
 
--- ===== カットイン・キャラの素材パス（表示用。重み付きリストはサーバー専用 Config.Cutins） =====
+-- ===== キャラクター素材ルート（各キャラは html/assets/characters/<id>/manifest.json） =====
 Config.Characters = {
-    luna = {
-        displayName = 'character_luna_name',
-        idle = { type = 'image', file = 'characters/luna/idle.png' },
-        win = { type = 'video', file = 'characters/luna/win.webm', loop = false },
-        bigwin = { type = 'video', file = 'characters/luna/bigwin.webm', loop = true },
-    },
+    DefaultId = 'luna',
+    BasePath = 'html/assets/characters/',
+    --- 利用可能なキャラ ID はサーバーが html/assets/characters/*/manifest.json をスキャンして決定（JpSlotScanCharacters）
 }
 
 Config.DefaultTheme = {

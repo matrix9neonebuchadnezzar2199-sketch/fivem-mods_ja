@@ -34,3 +34,299 @@ function JpSlotListDir(dir)
     p:close()
     return out
 end
+
+--- html/assets/ からの相対パス（例: cutins/img_01.png）でファイル名を列挙
+---@param assetRoot string html/assets/ までの絶対パス（末尾スラッシュ可）
+---@param relDir string 相対ディレクトリ（例: cutins/ または cutins）
+---@return string[]
+function JpSlotListAssetRel(assetRoot, relDir)
+    if not assetRoot or relDir == nil or relDir == '' then
+        return {}
+    end
+    relDir = tostring(relDir)
+    if relDir:sub(-1) ~= '/' and relDir:sub(-1) ~= '\\' then
+        relDir = relDir .. '/'
+    end
+    local ar = assetRoot
+    if ar:sub(-1) ~= '/' and ar:sub(-1) ~= '\\' then
+        ar = ar .. '/'
+    end
+    local names = JpSlotListDir(ar .. relDir)
+    local out = {}
+    for _, n in ipairs(names) do
+        out[#out + 1] = relDir .. n
+    end
+    return out
+end
+
+--- characters/ 直下のフォルダ内ファイルも含めて相対パス列挙（例: characters/luna/idle.png）
+---@param assetRoot string html/assets/ まで
+---@return string[]
+function JpSlotListCharactersRel(assetRoot)
+    if not assetRoot or assetRoot == '' then
+        return {}
+    end
+    local ar = assetRoot
+    if ar:sub(-1) ~= '/' and ar:sub(-1) ~= '\\' then
+        ar = ar .. '/'
+    end
+    local rel = 'characters/'
+    local full = ar .. rel
+    local top = JpSlotListDir(full)
+    local out = {}
+    for _, name in ipairs(top) do
+        local sub = JpSlotListDir(full .. name .. '/')
+        if #sub > 0 then
+            for _, f in ipairs(sub) do
+                out[#out + 1] = rel .. name .. '/' .. f
+            end
+        else
+            out[#out + 1] = rel .. name
+        end
+    end
+    return out
+end
+
+---@param id string|nil
+---@return boolean
+function JpSlotCharacterIdValid(id)
+    if not id or id == '' or type(id) ~= 'string' then
+        return false
+    end
+    local path = ('html/assets/characters/%s/manifest.json'):format(id)
+    local raw = LoadResourceFile(GetCurrentResourceName(), path)
+    return raw ~= nil and raw ~= ''
+end
+
+--- html/assets/characters/<id>/manifest.json を読む（失敗時 nil）
+---@param characterId string|nil
+---@return table|nil
+function JpSlotLoadCharacterManifest(characterId)
+    local def = (Config.Characters and Config.Characters.DefaultId) or 'luna'
+    local cid = characterId
+    if not cid or cid == '' then
+        cid = def
+    end
+    local path = ('html/assets/characters/%s/manifest.json'):format(cid)
+    local raw = LoadResourceFile(GetCurrentResourceName(), path)
+    if not raw or raw == '' then
+        return nil
+    end
+    local ok, data = pcall(json.decode, raw)
+    if ok and type(data) == 'table' then
+        return data
+    end
+    return nil
+end
+
+--- html/assets/characters/ をスキャンし manifest.json が読めるキャラのみ返す
+---@return table[]
+function JpSlotScanCharacters()
+    local resName = GetCurrentResourceName()
+    local base = GetResourcePath(resName)
+    if not base or base == '' then
+        return {}
+    end
+    local sep = base:find('\\') and '\\' or '/'
+    if base:sub(-1) ~= '/' and base:sub(-1) ~= '\\' then
+        base = base .. sep
+    end
+    base = base .. 'html' .. sep .. 'assets' .. sep .. 'characters' .. sep
+    local dirs = JpSlotListDir(base)
+    local out = {}
+    for _, dir in ipairs(dirs) do
+        if type(dir) == 'string' and dir ~= '' then
+            local man = JpSlotLoadCharacterManifest(dir)
+            if man then
+                local id = type(man.id) == 'string' and man.id ~= '' and man.id or dir
+                local dn = type(man.displayName) == 'string' and man.displayName ~= '' and man.displayName or id
+                out[#out + 1] = { id = id, displayName = dn }
+            end
+        end
+    end
+    table.sort(out, function(a, b)
+        return (a.id or '') < (b.id or '')
+    end)
+    return out
+end
+
+--- KVP キー: jp-slot:adm:preset:<characterId>:<presetName>
+---@param characterId string
+---@param presetName string
+---@return string
+function JpSlotPresetBodyKvpKey(characterId, presetName)
+    return ('jp-slot:adm:preset:%s:%s'):format(characterId, presetName)
+end
+
+--- アクティブプリセット（JSON）を解決。旧形式（単一プリセット id 文字列）は luna 配下として解釈。
+---@return string|nil, string|nil
+function JpSlotParseActivePresetRef()
+    local raw = GetResourceKvpString('jp-slot:adm:preset:active')
+    if not raw or raw == '' then
+        return nil, nil
+    end
+    local trimmed = raw:match('^%s*(.-)%s*$') or raw
+    if trimmed:sub(1, 1) == '{' then
+        local ok, j = pcall(json.decode, trimmed)
+        if ok and type(j) == 'table' then
+            local cid = type(j.characterId) == 'string' and j.characterId ~= '' and j.characterId or nil
+            local pname = type(j.presetName) == 'string' and j.presetName ~= '' and j.presetName or nil
+            return cid, pname
+        end
+        return nil, nil
+    end
+    return 'luna', trimmed
+end
+
+--- manifest.assets からキャラルート基準の相対パス一覧（管理 UI datalist 用）
+---@param manifest table
+---@return table
+function JpSlotAssetLibraryFromManifest(manifest)
+    local assets = type(manifest) == 'table' and manifest.assets or nil
+    local empty = {
+        cutins = {},
+        characters = {},
+        bgm = {},
+        se = {},
+        voice = {},
+        backgrounds = {},
+    }
+    if type(assets) ~= 'table' then
+        return empty
+    end
+    local cutins = {}
+    if type(assets.cutins) == 'table' then
+        for _, p in ipairs(assets.cutins) do
+            if type(p) == 'string' and p ~= '' then
+                cutins[#cutins + 1] = p
+            end
+        end
+    end
+    local chars = {}
+    local function add(p)
+        if type(p) == 'string' and p ~= '' then
+            chars[#chars + 1] = p
+        end
+    end
+    local idle = assets.idle
+    if type(idle) == 'table' then
+        add(idle.portrait)
+        if type(idle.videos) == 'table' then
+            for _, v in ipairs(idle.videos) do
+                add(v)
+            end
+        end
+    end
+    local win = assets.win
+    if type(win) == 'table' then
+        add(win.video)
+        add(win.bigwin_video)
+    end
+    local bonus = assets.bonus
+    if type(bonus) == 'table' then
+        add(bonus.in_video)
+        add(bonus.loop_video)
+        add(bonus.streak_video)
+        add(bonus.big_video)
+    end
+    local miss = assets.miss
+    if type(miss) == 'table' then
+        add(miss.video)
+    end
+    local bgm, se, voice = {}, {}, {}
+    local snd = assets.sounds
+    if type(snd) == 'table' then
+        if type(snd.bgm) == 'table' then
+            for _, p in pairs(snd.bgm) do
+                if type(p) == 'string' and p ~= '' then
+                    bgm[#bgm + 1] = p
+                end
+            end
+        end
+        if type(snd.se) == 'table' then
+            for _, p in pairs(snd.se) do
+                if type(p) == 'string' and p ~= '' then
+                    se[#se + 1] = p
+                end
+            end
+        end
+        if type(snd.voice) == 'table' then
+            for _, p in pairs(snd.voice) do
+                if type(p) == 'string' and p ~= '' then
+                    voice[#voice + 1] = p
+                end
+            end
+        end
+    end
+    local backgrounds = {}
+    local bgg = assets.backgrounds
+    if type(bgg) == 'table' then
+        if type(bgg.default) == 'string' and bgg.default ~= '' then
+            backgrounds[#backgrounds + 1] = bgg.default
+        end
+        if type(bgg.bonus) == 'string' and bgg.bonus ~= '' then
+            backgrounds[#backgrounds + 1] = bgg.bonus
+        end
+    end
+    empty.cutins = cutins
+    empty.characters = chars
+    empty.bgm = bgm
+    empty.se = se
+    empty.voice = voice
+    empty.backgrounds = backgrounds
+    return empty
+end
+
+--- kind に応じてスキャン結果を間引く（未対応・all はそのまま）
+---@param lib table
+---@param kind string|nil
+---@return table
+function JpSlotFilterAssetLibByKind(lib, kind)
+    kind = kind and string.lower(kind) or 'all'
+    if kind == 'all' or kind == '' then
+        return lib
+    end
+    local sym = lib.symbols
+    local frm = lib.frames
+    local typo = lib.typography
+    local z = function()
+        return {
+            cutins = {},
+            characters = {},
+            bgm = {},
+            se = {},
+            voice = {},
+            backgrounds = {},
+            symbols = sym,
+            frames = frm,
+            typography = typo,
+        }
+    end
+    if kind == 'cutin' then
+        local o = z()
+        o.cutins = lib.cutins or {}
+        return o
+    elseif kind == 'video' or kind == 'image' then
+        local o = z()
+        o.characters = lib.characters or {}
+        o.cutins = lib.cutins or {}
+        return o
+    elseif kind == 'bgm' then
+        local o = z()
+        o.bgm = lib.bgm or {}
+        return o
+    elseif kind == 'se' then
+        local o = z()
+        o.se = lib.se or {}
+        return o
+    elseif kind == 'voice' then
+        local o = z()
+        o.voice = lib.voice or {}
+        return o
+    elseif kind == 'background' then
+        local o = z()
+        o.backgrounds = lib.backgrounds or {}
+        return o
+    end
+    return lib
+end

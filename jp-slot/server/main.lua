@@ -21,17 +21,12 @@ local KVP_BONUS = 'jp-slot:bonus:'
 
 --- アクティブ演出プリセットから Config.Master を上書き（未設定時は config_shared 既定）
 function applyMasterFromActivePreset()
-    local def = {
-        Normal = { Win = 25.0, Bonus = 5.0, MissTease = 70.0 },
-        BonusPromote = { Streak = 30.0, Big = 5.0, MaxStreak = 3, BigMultiplier = 10 },
-        Cooldown = { Spins = 5 },
-    }
     Config.Master = Config.Master or {}
-    local id = GetResourceKvpString('jp-slot:adm:preset:active')
-    if not id or id == '' then
+    local cid, pname = JpSlotParseActivePresetRef()
+    if not cid or not pname then
         return
     end
-    local raw = GetResourceKvpString('jp-slot:adm:preset:' .. id)
+    local raw = GetResourceKvpString(JpSlotPresetBodyKvpKey(cid, pname))
     if not raw or raw == '' then
         return
     end
@@ -83,11 +78,11 @@ local function getEffectBlocksForScene(sceneKey)
     if not sceneKey or sceneKey == '' then
         return nil
     end
-    local id = GetResourceKvpString('jp-slot:adm:preset:active')
-    if not id or id == '' then
+    local cid, pname = JpSlotParseActivePresetRef()
+    if not cid or not pname then
         return nil
     end
-    local raw = GetResourceKvpString('jp-slot:adm:preset:' .. id)
+    local raw = GetResourceKvpString(JpSlotPresetBodyKvpKey(cid, pname))
     if not raw or raw == '' then
         return nil
     end
@@ -183,6 +178,44 @@ local function findMachine(machineId)
         end
     end
     return DynamicMachines.get(machineId)
+end
+
+--- アクティブ演出プリセットに characterId があれば素材解決に優先（台の characterId はフォールバック）
+---@param machine table|nil
+---@return string
+local function jpSlotEffectiveCharacterIdForSeat(machine)
+    local def = (Config.Characters and Config.Characters.DefaultId) or 'luna'
+    if not machine then
+        return def
+    end
+    local pcid, ppname = JpSlotParseActivePresetRef()
+    if pcid and ppname then
+        local praw = GetResourceKvpString(JpSlotPresetBodyKvpKey(pcid, ppname))
+        if praw and praw ~= '' then
+            local ok, preset = pcall(json.decode, praw)
+            if ok and type(preset) == 'table' and type(preset.characterId) == 'string' and preset.characterId ~= '' then
+                if JpSlotCharacterIdValid(preset.characterId) then
+                    return preset.characterId
+                end
+            end
+        end
+    end
+    return machine.characterId or def
+end
+
+local function checkLegacyAssetPaths()
+    local res = GetCurrentResourceName()
+    local legacy = {
+        'html/assets/cutins/img_01.png',
+        'html/assets/back.jpg',
+        'html/assets/characters/luna/idle.png',
+    }
+    for _, p in ipairs(legacy) do
+        if LoadResourceFile(res, p) then
+            print(('[jp-slot][WARN] legacy asset path detected: %s'):format(p))
+            print('[jp-slot][WARN] run tools/migrate_assets.ps1 or move assets under html/assets/characters/<id>/')
+        end
+    end
 end
 
 --- カットイン1種を選ぶ（サーバー権威）
@@ -369,6 +402,8 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
     local pt = Config.Paytables and Config.Paytables[paytableId] or {}
     local hypeKey = (Config.Marquee and Config.Marquee.HypeKey) or 'marquee.hype'
     local infoKey = (Config.Marquee and Config.Marquee.InfoKey) or 'marquee.info'
+    local cid = jpSlotEffectiveCharacterIdForSeat(m)
+    local manifest = JpSlotLoadCharacterManifest(cid)
     TriggerClientEvent('jp-slot:seatGranted', src, {
         machine = m,
         theme = theme,
@@ -382,6 +417,9 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
         },
         symbolIds = pt.symbols
             or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' },
+        character = manifest,
+        characterBasePath = ('characters/%s/'):format(cid),
+        characterId = cid,
     })
 end)
 
@@ -684,19 +722,20 @@ RegisterNetEvent('jp-slot:spin', function(payload)
 
     local spinDur = (Config.Debug and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault
 
-    appendTransactionLog({
-        t = os.time(),
-        src = src,
-        machineId = machineId,
-        bet = effectiveBet,
-        reels = reels,
-        multiplier = mult,
-        tier = tier,
-        paid = totalPay,
-        jackpotExtra = jackpotExtra,
-        bonus = bonusPayload,
-        preview = isPreview or nil,
-    })
+    if not isPreview then
+        appendTransactionLog({
+            t = os.time(),
+            src = src,
+            machineId = machineId,
+            bet = effectiveBet,
+            reels = reels,
+            multiplier = mult,
+            tier = tier,
+            paid = totalPay,
+            jackpotExtra = jackpotExtra,
+            bonus = bonusPayload,
+        })
+    end
 
     saveBonus(src)
     pendingSpin[src] = nil
@@ -710,11 +749,12 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         winAmount = totalPay,
         bet = bet,
         effectiveBet = effectiveBet,
+        -- balance は実所持金。埋め込みプレビュー NUI は previewMode 時にこれを使わず表示のみ演算する（html/js/app.js）
         balance = Framework.getMoney(src, Config.MoneyAccount),
         jackpot = Config.Jackpot.enabled and getJackpotAmount() or 0,
         cutin = cutin,
         spinDuration = spinDur,
-        characterId = m.characterId,
+        characterId = jpSlotEffectiveCharacterIdForSeat(m),
         bonus = bonusPayload,
         previewMode = isPreview or nil,
         effectScene = masterScene,
@@ -757,6 +797,8 @@ end
 --- 起動時ジャックポット初期化（未設定ならシード）＋配当表整合チェック
 CreateThread(function()
     Wait(500)
+    checkLegacyAssetPaths()
+    JpSlotMigratePresetsV2()
     applyMasterFromActivePreset()
     validatePaytableConsistency()
     local raw = GetResourceKvpString(KVP_JACKPOT)

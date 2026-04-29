@@ -35,6 +35,19 @@
         }
         var asset = cutin.asset || {};
         var path = asset.file || '';
+        function resolveMediaHref(rel) {
+            var r = String(rel || '')
+                .trim()
+                .replace(/^\/+/, '')
+                .replace(/\\/g, '/');
+            if (!r) {
+                return '';
+            }
+            if (typeof window.jpSlotResolveAssetUrl === 'function') {
+                return window.jpSlotResolveAssetUrl(r, assetsRoot);
+            }
+            return assetsRoot + r;
+        }
 
         return new Promise(function (resolve) {
             function hideCutin() {
@@ -63,7 +76,7 @@
                     window.setTimeout(done, 1200);
                 };
                 img.onerror = done;
-                img.src = assetsRoot + path;
+                img.src = resolveMediaHref(path);
                 img.hidden = false;
                 if (vid) {
                     vid.hidden = true;
@@ -75,7 +88,7 @@
                 overlay.classList.add('is-playing');
                 vid.onended = done;
                 vid.onerror = done;
-                vid.src = assetsRoot + path;
+                vid.src = resolveMediaHref(path);
                 vid.hidden = false;
                 if (img) {
                     img.hidden = true;
@@ -135,7 +148,7 @@
     }
 
     /**
-     * effectBlocks（サーバー）に沿って 前テキスト→カットイン→後テキスト の順に再生し、最後にサーバー cutin をフォールバック
+     * effectBlocks（サーバー）に沿って 前テキスト→カットイン の順に再生し、最後にサーバー cutin をフォールバック
      * @param {object} p spinResult
      * @param {string} assetsRoot
      * @returns {Promise<void>}
@@ -165,25 +178,18 @@
         var cb = eb.cutin_block || eb.cutinBlock || eb.cutin;
         if (cb && cb.kind && cb.kind !== 'none' && cb.file) {
             seq = seq.then(function () {
-                var kind = cb.kind === 'video' ? 'cutin_video' : 'cutin_image';
-                return playCutin({ kind: kind, asset: { file: cb.file, duration: (cb.duration_ms || 1200) / 1000 } }, assetsRoot);
+                var k = cb.kind === 'video' ? 'cutin_video' : 'cutin_image';
+                return playCutin(
+                    {
+                        kind: k,
+                        asset: { file: cb.file, duration: (cb.duration_ms || 1200) / 1000 },
+                    },
+                    assetsRoot
+                );
             });
         } else {
             seq = seq.then(function () {
                 return playCutin(serverCutin, assetsRoot);
-            });
-        }
-
-        var post = eb.post_text || eb.postText;
-        if (post && post.enabled !== false && post.text) {
-            seq = seq.then(function () {
-                return showCenterText({
-                    text: post.text,
-                    color: post.color || '#d4af37',
-                    sizePercent: post.size_percent != null ? post.size_percent : post.sizePercent || 140,
-                    duration: post.duration_ms != null ? post.duration_ms : post.durationMs || 800,
-                    effect: post.effect && post.effect !== 'none' ? post.effect : 'pulse',
-                });
             });
         }
 

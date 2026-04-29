@@ -64,9 +64,94 @@
         root.style.setProperty('--ui-width', w + 'vw');
         root.style.setProperty('--ui-height', h + 'vh');
         root.style.setProperty('--ui-max-width', mx > 0 ? mx + 'px' : 'none');
+        if (window.__jpSlotEmbedPreview && typeof window.applyEmbedPreviewFit === 'function') {
+            window.applyEmbedPreviewFit();
+        }
     }
 
     window.applyUISize = applyUISize;
+
+    /**
+     * 実機と同じ UI サイズ（vw/vh% と maxWidth）の論理ピクセル寸法（埋め込みプレビュー用）
+     */
+    function embedNaturalPx() {
+        var uis = state.serverUiSize || { widthPercent: 90, heightPercent: 90, maxWidthPx: 0 };
+        var wp = Math.max(30, Math.min(100, Number(uis.widthPercent) || 90));
+        var hp = Math.max(30, Math.min(100, Number(uis.heightPercent) || 90));
+        var mx = Math.max(0, Number(uis.maxWidthPx) || 0);
+        var aw = window.innerWidth * (wp / 100);
+        if (mx > 0) {
+            aw = Math.min(aw, mx);
+        }
+        var ah = window.innerHeight * (hp / 100);
+        return { w: aw, h: ah };
+    }
+
+    function disconnectEmbedPreviewResize() {
+        if (window.__jpSlotEmbedRo) {
+            try {
+                window.__jpSlotEmbedRo.disconnect();
+            } catch (_) {}
+            window.__jpSlotEmbedRo = null;
+        }
+        if (window.__jpSlotEmbedWinResize) {
+            window.removeEventListener('resize', window.__jpSlotEmbedWinResize);
+            window.__jpSlotEmbedWinResize = null;
+        }
+    }
+
+    function bindEmbedPreviewResize() {
+        disconnectEmbedPreviewResize();
+        var host = document.getElementById('admin-slot-embed');
+        if (!host) {
+            return;
+        }
+        function onResize() {
+            if (typeof window.applyEmbedPreviewFit === 'function') {
+                window.applyEmbedPreviewFit();
+            }
+        }
+        window.__jpSlotEmbedWinResize = onResize;
+        window.addEventListener('resize', onResize);
+        if (typeof ResizeObserver !== 'undefined') {
+            window.__jpSlotEmbedRo = new ResizeObserver(onResize);
+            window.__jpSlotEmbedRo.observe(host);
+        }
+    }
+
+    /**
+     * 管理プレビュー: 実機と同じ縦横比の矩形に収め、枠内へ均等スケール（横だけ潰さない）
+     */
+    window.applyEmbedPreviewFit = function () {
+        var host = document.getElementById('admin-slot-embed');
+        var fit = document.getElementById('jp-slot-embed-fit');
+        var rootEl = document.getElementById('root');
+        if (!host || !fit || !rootEl || !fit.contains(rootEl)) {
+            return;
+        }
+        var cs = window.getComputedStyle(host);
+        var pl = parseFloat(cs.paddingLeft) || 0;
+        var pr = parseFloat(cs.paddingRight) || 0;
+        var pt = parseFloat(cs.paddingTop) || 0;
+        var pb = parseFloat(cs.paddingBottom) || 0;
+        var bw = host.clientWidth - pl - pr;
+        var bh = host.clientHeight - pt - pb;
+        if (bw <= 4 || bh <= 4) {
+            return;
+        }
+        var nat = embedNaturalPx();
+        var nw = nat.w;
+        var nh = nat.h;
+        if (nw <= 0 || nh <= 0) {
+            return;
+        }
+        var s = Math.min(bw / nw, bh / nh);
+        fit.style.width = nw * s + 'px';
+        fit.style.height = nh * s + 'px';
+    };
+
+    window.jpSlotBindEmbedPreviewResize = bindEmbedPreviewResize;
+    window.jpSlotDisconnectEmbedPreviewResize = disconnectEmbedPreviewResize;
 
     var state = {
         machine: null,
@@ -86,9 +171,52 @@
         bonusRemaining: 0,
         marquee: { hype: [], info: [] },
         symbolIds: null,
+        /** サーバーから読んだ manifest.json 相当 */
+        character: null,
+        /** html/assets/ からのキャラサブパス（例: characters/luna/） */
+        characterBasePath: '',
+        /** プリセット優先後の実効キャラ ID（machine.characterId は変更しない） */
+        effectiveCharacterId: '',
     };
 
     window.__jpSlotSpinning = false;
+
+    /**
+     * プリセット・manifest の相対パスを nui URL にする（キャラルート基準。legacy の characters/... も可）
+     * @param {string} rel
+     * @param {string} [assetsRootOpt]
+     */
+    function jpSlotResolveAssetUrl(rel, assetsRootOpt) {
+        var root = assetsRootOpt || state.assetsRoot || window.__jpSlotAssetsRoot || '';
+        var r = String(rel || '')
+            .trim()
+            .replace(/^\/+/, '')
+            .replace(/\\/g, '/');
+        if (!r) {
+            return '';
+        }
+        if (/^(symbols\/|frames\/|shared\/)/.test(r)) {
+            return root + r;
+        }
+        if (/^characters\//.test(r)) {
+            return root + r;
+        }
+        var base = state.characterBasePath || '';
+        if (!base && state.effectiveCharacterId) {
+            base = 'characters/' + state.effectiveCharacterId + '/';
+        }
+        if (!base && state.machine && state.machine.characterId) {
+            base = 'characters/' + state.machine.characterId + '/';
+        }
+        if (!base) {
+            base = 'characters/luna/';
+        }
+        if (base.slice(-1) !== '/') {
+            base += '/';
+        }
+        return root + base + r;
+    }
+    window.jpSlotResolveAssetUrl = jpSlotResolveAssetUrl;
 
     var IDLE_VIDEO_INTERVAL_MS = 5000;
     var IDLE_VIDEO_CHANCE = 0.5;
@@ -115,9 +243,28 @@
             if (window.__jpSlotNeutralPreviewChar) {
                 return;
             }
-            var base = state.assetsRoot || window.__jpSlotAssetsRoot || '';
-            if (base && window.CharFx && window.CharFx.play) {
-                window.CharFx.play(base + 'characters/luna/win.webm');
+            if (!(window.CharFx && window.CharFx.play)) {
+                return;
+            }
+            var idleVs =
+                state.character &&
+                state.character.assets &&
+                state.character.assets.idle &&
+                state.character.assets.idle.videos;
+            var pick = '';
+            if (idleVs && idleVs.length) {
+                pick = idleVs[Math.floor(Math.random() * idleVs.length)];
+            } else {
+                var wv =
+                    state.character &&
+                    state.character.assets &&
+                    state.character.assets.win &&
+                    state.character.assets.win.video;
+                pick = wv || 'win/win.webm';
+            }
+            var url = jpSlotResolveAssetUrl(pick);
+            if (url) {
+                window.CharFx.play(url);
             }
         }, IDLE_VIDEO_INTERVAL_MS);
     }
@@ -222,10 +369,11 @@
             reels.classList.add('is-bigwin');
         }
         reels.classList.add('is-win');
-        var src = big
-            ? assetsRoot + 'characters/luna/bigwin.webm'
-            : assetsRoot + 'characters/luna/win.webm';
-        if (window.CharFx && window.CharFx.play) {
+        var winA = state.character && state.character.assets && state.character.assets.win;
+        var winRel = winA && winA.video ? winA.video : 'win/win.webm';
+        var bigRel = winA && winA.bigwin_video ? winA.bigwin_video : 'win/bigwin.webm';
+        var src = big ? jpSlotResolveAssetUrl(bigRel, assetsRoot) : jpSlotResolveAssetUrl(winRel, assetsRoot);
+        if (window.CharFx && window.CharFx.play && src) {
             window.CharFx.play(src, { force: true });
         }
         window.setTimeout(function () {
@@ -370,14 +518,12 @@
         if (!el || !state.machine) {
             return;
         }
-        var cid = state.machine.characterId;
-        if (!cid || !state.locales) {
+        if (state.character && state.character.displayName) {
+            el.textContent = state.character.displayName;
             return;
         }
-        var ch = window.ConfigCharacters || {};
-        var ref = ch[cid] && ch[cid].displayName;
-        var name = ref ? resolveLocale(ref) : cid;
-        el.textContent = name || cid;
+        var cid = state.machine.characterId || '';
+        el.textContent = cid || '';
     }
 
     function clampBet() {
@@ -511,10 +657,12 @@
         }
         var charImg = document.querySelector('.char-img');
         var machine = payload && payload.machine;
-        var cid = machine && machine.characterId;
-        var chMap = (payload && payload.characters) || {};
-        var ch = cid ? chMap[cid] : null;
-        var idle = ch && ch.idle;
+        var manifest = payload && payload.character;
+        var portrait =
+            manifest &&
+            manifest.assets &&
+            manifest.assets.idle &&
+            manifest.assets.idle.portrait;
         var skipCharVisual =
             payload && payload.embedPreview && payload.neutralPreviewCharacter === true;
         if (skipCharVisual) {
@@ -522,9 +670,9 @@
                 charImg.hidden = true;
                 charImg.removeAttribute('src');
             }
-        } else if (charImg && root && idle && idle.file && idle.type === 'image') {
+        } else if (charImg && root && portrait) {
             charImg.hidden = false;
-            charImg.src = root + idle.file;
+            charImg.src = jpSlotResolveAssetUrl(portrait, root);
         } else if (charImg) {
             charImg.hidden = true;
             charImg.removeAttribute('src');
@@ -541,10 +689,17 @@
         state.paytable = payload.paytable;
         state.locales = payload.locales || {};
         state.assetsRoot = payload.assetsRoot || '';
-        window.ConfigCharacters = payload.characters || {};
         state.marquee = payload.marquee || { hype: [], info: [] };
         state.symbolIds = payload.symbolIds || null;
         state.debug = payload.debug || null;
+        state.character = payload.character || null;
+        state.effectiveCharacterId =
+            (payload.characterId != null && String(payload.characterId)) ||
+            (payload.machine && payload.machine.characterId) ||
+            'luna';
+        state.characterBasePath =
+            (payload.characterBasePath != null && String(payload.characterBasePath)) ||
+            ('characters/' + state.effectiveCharacterId + '/');
         window.__jpSlotState = state;
         if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
             window.JpSlotMarquee.refresh();
@@ -666,7 +821,25 @@
                     : window.JpSlotEffects.playCutin(p.cutin || { kind: 'none' }, state.assetsRoot);
             fxChain.then(function () {
                     applyWinFx(p, ar);
-                    state.balance = p.balance != null ? p.balance : state.balance;
+                    var previewUi =
+                        p.previewMode === true || window.__jpSlotEmbedPreview === true;
+                    if (previewUi) {
+                        var betCost =
+                            typeof p.effectiveBet === 'number'
+                                ? p.effectiveBet
+                                : state.bonusRemaining > 0
+                                  ? 0
+                                  : Number(state.bet) || 0;
+                        var winAmtNum =
+                            typeof p.winAmount === 'number' ? p.winAmount : 0;
+                        state.balance = Math.max(
+                            0,
+                            Number(state.balance || 0) - betCost + winAmtNum
+                        );
+                    } else {
+                        state.balance =
+                            p.balance != null ? p.balance : state.balance;
+                    }
                     state.jackpot = p.jackpot != null ? p.jackpot : state.jackpot;
                     window.__jpSlotState = state;
                     if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
@@ -776,15 +949,16 @@
             state.serverUiSize = payload;
             applyUISize(payload);
         } else if (type === 'adminClosed') {
-            var hadEmbedPreview = window.__jpSlotEmbedPreview;
             if (typeof window.jpSlotMoveRootToBody === 'function') {
                 window.jpSlotMoveRootToBody();
             }
             window.__jpSlotEmbedPreview = false;
             window.__jpSlotNeutralPreviewChar = false;
-            if (hadEmbedPreview) {
-                postNui('admin/previewEnd', {});
+            if (typeof window.jpSlotRemovePreviewBadge === 'function') {
+                window.jpSlotRemovePreviewBadge();
             }
+            var admTok = window.JpSlotAdminAuth && window.JpSlotAdminAuth.token;
+            postNui('admin/previewEnd', admTok ? { token: admTok } : {});
             var adm = document.getElementById('panel-admin');
             if (adm) {
                 adm.style.display = 'none';
@@ -793,7 +967,7 @@
                 applyUISize(state.serverUiSize);
             }
         } else if (type === 'previewMode') {
-            var active = payload.active;
+            var active = payload.active === true;
             var b = document.getElementById('preview-badge');
             if (active) {
                 if (!b) {
@@ -879,26 +1053,54 @@
         if (!root || !host) {
             return;
         }
-        host.appendChild(root);
+        var fit = document.getElementById('jp-slot-embed-fit');
+        if (!fit) {
+            fit = document.createElement('div');
+            fit.id = 'jp-slot-embed-fit';
+            fit.className = 'jp-slot-embed-fit';
+        }
+        fit.appendChild(root);
+        host.appendChild(fit);
         root.classList.add('is-visible');
         window.__jpSlotEmbedPreview = true;
         if (panel) {
             panel.style.display = 'flex';
+        }
+        if (typeof window.applyEmbedPreviewFit === 'function') {
+            window.applyEmbedPreviewFit();
+        }
+        if (typeof window.jpSlotBindEmbedPreviewResize === 'function') {
+            window.jpSlotBindEmbedPreviewResize();
         }
     };
 
     window.jpSlotMoveRootToBody = function () {
         var root = document.getElementById('root');
         var panel = document.getElementById('panel-admin');
+        var fit = document.getElementById('jp-slot-embed-fit');
         if (!root || !panel || !panel.parentNode) {
             return;
         }
+        if (typeof window.jpSlotDisconnectEmbedPreviewResize === 'function') {
+            window.jpSlotDisconnectEmbedPreviewResize();
+        }
         panel.parentNode.insertBefore(root, panel);
+        if (fit && fit.parentNode) {
+            fit.parentNode.removeChild(fit);
+        }
         root.classList.remove('is-visible');
         window.__jpSlotEmbedPreview = false;
     };
 
     window.jpSlotApplyI18n = applyI18n;
+
+    /** プレビューモードバッジを除去（管理サイドナビ離脱・サーバー非依存のフォールバック用） */
+    window.jpSlotRemovePreviewBadge = function () {
+        var b = document.getElementById('preview-badge');
+        if (b) {
+            b.remove();
+        }
+    };
 })();
 
 /* CLICK_TARGET / F1 は常にリスナー 1 組のみ。ログ出力は init の payload.debug.nuiVerbose が true のときだけ（毎回更新） */

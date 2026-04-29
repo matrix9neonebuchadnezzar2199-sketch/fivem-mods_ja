@@ -1,0 +1,54 @@
+{
+    "id": "luna",
+    "displayName": "\u30eb\u30ca\u30fb\u30bb\u30e9\u30d5\u30a3\u30ca",
+    "version": "1.0.0",
+    "author": "Rosesanto Casino",
+    "assets": {
+        "idle": {
+            "portrait": "idle/portrait.png",
+            "videos": []
+        },
+        "win": {
+            "video": "win/win.webm",
+            "bigwin_video": "win/bigwin.webm"
+        },
+        "bonus": {
+            "in_video": "bonus/bonus_in.webm",
+            "loop_video": "bonus/bonus_loop.webm",
+            "streak_video": "bonus/streak.webm",
+            "big_video": "bonus/big.webm"
+        },
+        "miss": {
+            "video": "miss/are.webm"
+        },
+        "cutins": [
+            "cutins/cutin_win_01.png",
+            "cutins/cutin_bonus_01.png",
+            "cutins/cutin_big_01.png"
+        ],
+        "sounds": {
+            "bgm": {
+                "lobby": "sounds/bgm/lobby.mp3",
+                "bonus": "sounds/bgm/bonus.mp3",
+                "bigbonus": "sounds/bgm/bigbonus.mp3"
+            },
+            "se": {
+                "reel_loop": "sounds/se/reel_loop.wav",
+                "reel_stop": "sounds/se/reel_stop.wav",
+                "win_chime": "sounds/se/win_chime.wav",
+                "bonus_in": "sounds/se/bonus_in.wav",
+                "miss_pyon": "sounds/se/miss_pyon.wav"
+            },
+            "voice": {
+                "yatta": "sounds/voice/yatta.wav",
+                "kita": "sounds/voice/kita.wav",
+                "sugoi": "sounds/voice/sugoi.wav",
+                "are": "sounds/voice/are.wav"
+            }
+        },
+        "backgrounds": {
+            "default": "backgrounds/back.jpg",
+            "bonus": "backgrounds/back_bonus.jpg"
+        }
+    }
+}

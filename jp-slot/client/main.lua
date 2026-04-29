@@ -111,13 +111,15 @@ local function openPlayUi(machine, extra)
         balance = extra.balance,
         spinDuration = extra.spinDuration or Config.SpinDurationDefault,
         paytable = pt,
-        characters = Config.Characters,
         marquee = extra.marquee or { hype = {}, info = {} },
         symbolIds = extra.symbolIds,
         locales = localeTable,
         localeCode = Config.Locale or 'ja',
         assetsRoot = 'nui://' .. GetCurrentResourceName() .. '/html/assets/',
         uiSize = extra.uiSize,
+        character = extra.character,
+        characterBasePath = extra.characterBasePath,
+        characterId = extra.characterId,
         debug = {
             enabled = Config.Debug and Config.Debug.enabled or false,
             nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
@@ -140,6 +142,9 @@ RegisterNetEvent('jp-slot:seatGranted', function(data)
         uiSize = data.uiSize,
         marquee = data.marquee,
         symbolIds = data.symbolIds,
+        character = data.character,
+        characterBasePath = data.characterBasePath,
+        characterId = data.characterId,
     })
 end)
 
@@ -176,7 +181,6 @@ RegisterNetEvent('jp-slot:cl:adminEmbedSlotInit', function(data)
             balance = data.balance or 999999999,
             spinDuration = data.spinDuration or Config.SpinDurationDefault,
             paytable = data.paytable,
-            characters = Config.Characters,
             marquee = data.marquee or { hype = {}, info = {} },
             symbolIds = data.symbolIds,
             locales = localeTable,
@@ -185,6 +189,10 @@ RegisterNetEvent('jp-slot:cl:adminEmbedSlotInit', function(data)
             uiSize = data.uiSize,
             embedPreview = true,
             neutralPreviewCharacter = data.neutralPreviewCharacter == true,
+            character = data.character,
+            characterBasePath = data.characterBasePath,
+            characterId = data.characterId,
+            characters = data.characters,
             debug = {
                 enabled = Config.Debug and Config.Debug.enabled or false,
                 nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,

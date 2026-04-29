@@ -2,12 +2,14 @@
 
 local pendingLoginCb = nil
 local pendingChangePwCb = nil
-local pendingPresetListCb = nil
+local pendingPresetListByCharacterCb = nil
 local pendingPresetGetCb = nil
-local pendingPresetSaveCb = nil
+local pendingPresetSaveNewCb = nil
+local pendingPresetSaveOverwriteCb = nil
 local pendingPresetDeleteCb = nil
 local pendingPresetActiveCb = nil
 local pendingAssetsScanCb = nil
+local pendingCharactersListCb = nil
 
 local function resName()
     return GetCurrentResourceName()
@@ -74,9 +76,9 @@ RegisterNUICallback('admin/resetUISize', function(data, cb)
     TriggerServerEvent('jp-slot:sv:adminResetUISize', data)
 end)
 
-RegisterNUICallback('admin/preset/list', function(data, cb)
-    pendingPresetListCb = cb
-    TriggerServerEvent('jp-slot:sv:adminPresetList', type(data) == 'table' and data or {})
+RegisterNUICallback('admin/preset/listByCharacter', function(data, cb)
+    pendingPresetListByCharacterCb = cb
+    TriggerServerEvent('jp-slot:sv:adminPresetListByCharacter', type(data) == 'table' and data or {})
 end)
 
 RegisterNUICallback('admin/preset/get', function(data, cb)
@@ -84,9 +86,14 @@ RegisterNUICallback('admin/preset/get', function(data, cb)
     TriggerServerEvent('jp-slot:sv:adminPresetGet', type(data) == 'table' and data or {})
 end)
 
-RegisterNUICallback('admin/preset/save', function(data, cb)
-    pendingPresetSaveCb = cb
-    TriggerServerEvent('jp-slot:sv:adminPresetSave', type(data) == 'table' and data or {})
+RegisterNUICallback('admin/preset/saveNew', function(data, cb)
+    pendingPresetSaveNewCb = cb
+    TriggerServerEvent('jp-slot:sv:adminPresetSaveNew', type(data) == 'table' and data or {})
+end)
+
+RegisterNUICallback('admin/preset/saveOverwrite', function(data, cb)
+    pendingPresetSaveOverwriteCb = cb
+    TriggerServerEvent('jp-slot:sv:adminPresetSaveOverwrite', type(data) == 'table' and data or {})
 end)
 
 RegisterNUICallback('admin/preset/delete', function(data, cb)
@@ -104,6 +111,11 @@ RegisterNUICallback('admin/assets/scan', function(data, cb)
     TriggerServerEvent('jp-slot:sv:adminAssetsScan', type(data) == 'table' and data or {})
 end)
 
+RegisterNUICallback('admin/characters/list', function(data, cb)
+    pendingCharactersListCb = cb
+    TriggerServerEvent('jp-slot:sv:adminCharactersList', type(data) == 'table' and data or {})
+end)
+
 RegisterNUICallback('admin/previewStart', function(data, cb)
     cb({ ok = true })
     TriggerServerEvent('jp-slot:sv:adminPreviewStart', type(data) == 'table' and data or {})
@@ -119,13 +131,12 @@ RegisterNUICallback('admin/embedSlotInit', function(data, cb)
     TriggerServerEvent('jp-slot:sv:adminEmbedSlotInit', type(data) == 'table' and data or {})
 end)
 
-RegisterNetEvent('jp-slot:cl:adminPresetListResult', function(res)
+RegisterNetEvent('jp-slot:cl:adminPresetListByCharacterResult', function(res)
     res = type(res) == 'table' and res or {}
-    if pendingPresetListCb then
-        pendingPresetListCb(res)
-        pendingPresetListCb = nil
+    if pendingPresetListByCharacterCb then
+        pendingPresetListByCharacterCb(res)
+        pendingPresetListByCharacterCb = nil
     end
-    SendNUIMessage({ type = 'adminPresetListResult', payload = res })
 end)
 
 RegisterNetEvent('jp-slot:cl:adminPresetGetResult', function(res)
@@ -134,16 +145,22 @@ RegisterNetEvent('jp-slot:cl:adminPresetGetResult', function(res)
         pendingPresetGetCb(res)
         pendingPresetGetCb = nil
     end
-    SendNUIMessage({ type = 'adminPresetGetResult', payload = res })
 end)
 
-RegisterNetEvent('jp-slot:cl:adminPresetSaveResult', function(res)
+RegisterNetEvent('jp-slot:cl:adminPresetSaveNewResult', function(res)
     res = type(res) == 'table' and res or {}
-    if pendingPresetSaveCb then
-        pendingPresetSaveCb(res)
-        pendingPresetSaveCb = nil
+    if pendingPresetSaveNewCb then
+        pendingPresetSaveNewCb(res)
+        pendingPresetSaveNewCb = nil
     end
-    SendNUIMessage({ type = 'adminPresetSaveResult', payload = res })
+end)
+
+RegisterNetEvent('jp-slot:cl:adminPresetSaveOverwriteResult', function(res)
+    res = type(res) == 'table' and res or {}
+    if pendingPresetSaveOverwriteCb then
+        pendingPresetSaveOverwriteCb(res)
+        pendingPresetSaveOverwriteCb = nil
+    end
 end)
 
 RegisterNetEvent('jp-slot:cl:adminPresetDeleteResult', function(res)
@@ -152,7 +169,6 @@ RegisterNetEvent('jp-slot:cl:adminPresetDeleteResult', function(res)
         pendingPresetDeleteCb(res)
         pendingPresetDeleteCb = nil
     end
-    SendNUIMessage({ type = 'adminPresetDeleteResult', payload = res })
 end)
 
 RegisterNetEvent('jp-slot:cl:adminPresetActiveResult', function(res)
@@ -161,7 +177,6 @@ RegisterNetEvent('jp-slot:cl:adminPresetActiveResult', function(res)
         pendingPresetActiveCb(res)
         pendingPresetActiveCb = nil
     end
-    SendNUIMessage({ type = 'adminPresetActiveResult', payload = res })
 end)
 
 RegisterNetEvent('jp-slot:cl:adminAssetsScanResult', function(res)
@@ -171,6 +186,14 @@ RegisterNetEvent('jp-slot:cl:adminAssetsScanResult', function(res)
         pendingAssetsScanCb = nil
     end
     SendNUIMessage({ type = 'adminAssetsScanResult', payload = res })
+end)
+
+RegisterNetEvent('jp-slot:cl:adminCharactersListResult', function(res)
+    res = type(res) == 'table' and res or {}
+    if pendingCharactersListCb then
+        pendingCharactersListCb(res)
+        pendingCharactersListCb = nil
+    end
 end)
 
 RegisterNetEvent('jp-slot:adminDenied', function(payload)

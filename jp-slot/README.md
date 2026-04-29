@@ -13,6 +13,10 @@ FiveM カジノ向けスロットマシン MOD（MVP）。台に近づき **[E]*
 5. 管理者は **`config_server.lua`** の `Config.AdminAce`（既定 `jp-slot.admin`）を ACE で付与し、チャットで `/jpslotadmin`（`Config.AdminCommand`）で **演出設計ツール（管理パネル）** を開く。`Config.AdminAuth` が有効なときは **パスワード認証**が必要。**初回起動時**に管理者パスワードが未設定なら、**サーバーコンソールに初期パスワードが一度だけ表示**されるので控え、ログイン後は 🔑 から必ず変更すること。**デザイン**タブでテーマ色、**表示**タブで NUI の幅・高さ（画面に対する %）をスライダー調整し、保存すると全プレイヤーに反映される（既定・フォールバックは **`config_shared.lua` の `Config.UISize`**、永続は KVS **`jp-slot:ui_size`**）。
 6. 管理者パスワードやロックアウト状態をリセットしたいときは、サーバーコンソールまたは ACE 付きプレイヤーで **`/jpslotresetauth`** を実行する（KVP の管理者ハッシュをクリアし、`bootstrapIfMissing` が有効なら新しい初期パスワードがコンソールに出る）。
 
+### 演出プリセット KVP のマイグレーション（v2）
+
+**初回起動時のみ**、旧いプリセット保存形式（`jp-slot:adm:preset:<id>` など）がキャラ別名前空間（例: `jp-slot:adm:preset:luna:<presetName>`）へ自動移行されます。Live Console に **`[jp-slot] preset migration v2 completed (N entries)`** が出れば成功です（`N` は移行したプリセット件数）。**2 回目以降の起動では**マイグレーション済みフラグにより処理がスキップされ、このログは出ません。
+
 ### Config.Debug（NUI 冗長ログ）
 
 `config_shared.lua` の **`Config.Debug.nuiVerbose`** を変えたときは **`restart jp-slot` が必須**です（`refresh` のみではクライアントの shared と着席時の `init` が古いままになり、`CLICK_TARGET` / F1 スタックのオンオフがずれることがあります）。オフのときはクリック・F1 の詳細ログは出ません。
@@ -63,7 +67,7 @@ add_principal identifier.license:あなたのライセンス group.admin
 /jpslotplace cherry_theme luna normal
 ```
 
-第1引数は `Config.PropModels` にあるキー名、第2は `Config.Characters`、第3はサーバー側 `config_server.lua` の `Config.Paytables` にある ID です。
+第1引数は `Config.PropModels` にあるキー名、第2は **`html/assets/characters/<id>/manifest.json` が存在するキャラ ID**（サーバーがフォルダをスキャンして判定）、第3はサーバー側 `config_server.lua` の `Config.Paytables` にある ID です。
 
 ### 撤去
 
@@ -214,16 +218,26 @@ Config.PropModels = {
 
 プレースホルダーから本物素材に置き換える際の手順です。**同名ファイルで上書き**すればよく、`restart jp-slot` で反映されます（NUI がキャッシュしている場合はハードリロードを試す）。
 
-### キャラクター画像
+キャラ依存ファイルは **`html/assets/characters/<キャラID>/manifest.json`** でパスを宣言します（台・プリセットは `characterId` で参照）。共通リール絵柄は `html/assets/symbols/`、フレームは `html/assets/frames/`、共通エフェクトは `html/assets/shared/` です。
 
-- **配置先**: `html/assets/characters/<キャラID>/idle.png`（`config_shared.lua` の `Config.Characters` の `idle.file` と一致させる）
+### 旧レイアウトからの移行
+
+1. サーバー（またはローカル検証）を停止する。
+2. リポジトリの `jp-slot` で PowerShell を開き、`powershell -NoProfile -ExecutionPolicy Bypass -File tools/migrate_assets.ps1` を実行する。
+3. `html/assets/characters/luna/` 以下と `manifest.json` が期待どおりか確認する。
+4. `fxmanifest.lua` の `files` がキャラ glob を含む新版であることを確認する。
+5. `refresh; restart jp-slot` のあと `/jpslotadmin` でプリセットの素材パスが解決するか確認する。
+
+### キャラクター画像（ポートレート）
+
+- **配置先**: `html/assets/characters/<キャラID>/idle/portrait.png`（`manifest.json` の `assets.idle.portrait` と一致）
 - **推奨サイズ**: 512×1024（縦長ポートレート）
 - **形式**: PNG（透過対応）
 - 差し替え後、`html/index.html` の `<img class="char-img">` から **`data-placeholder="true"` を削除**すると、プレースホルダー用の薄い表示が無効になります。
 
 ### キャラクター動画
 
-- **配置先**: `html/assets/characters/<キャラID>/win.webm`, `bigwin.webm`
+- **配置先**: `manifest.json` の `assets.win.video` / `bigwin_video`（例: `win/win.webm`, `win/bigwin.webm`）
 - **推奨**: 1280×720 / VP9 / 3 秒以内 / 2MB 以下目安
 
 ### シンボル画像
@@ -235,8 +249,8 @@ Config.PropModels = {
 
 ### カットイン
 
-- **画像**: `html/assets/cutins/img_XX.png`（1024×720 目安）
-- **動画**: `html/assets/cutins/vid_XX.webm`（1280×720、VP9、3 秒以内）。**ファイル名を変える場合は `config_server.lua` の `Config.Cutins`（サーバー専用）も変更**してください。
+- **キャラ依存**: `html/assets/characters/<キャラID>/cutins/`（画像・動画）。**サーバー側のランダムカットインは `config_server.lua` の `Config.Cutins`**（`file` は `html/assets/` からの相対パス、例: `characters/luna/cutins/cutin_win_01.png`）。
+- **動画**: 1280×720、VP9、3 秒以内目安。ファイル名を変える場合は **`Config.Cutins` も合わせて変更**してください。
 
 ### フレーム・その他
 

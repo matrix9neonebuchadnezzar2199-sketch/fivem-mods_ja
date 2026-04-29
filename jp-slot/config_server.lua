@@ -84,16 +84,31 @@ Config.EffectProbabilities = {
 -- カットイン抽選に使う重み付きリスト（サーバー権威）。videos は将来用にパスだけ残す。
 Config.Cutins = {
     images = {
-        { id = 'img_01', file = 'cutins/img_01.png', tiers = { 'win', 'small', 'bonus', 'bonusCombo' }, weight = 60 },
-        { id = 'img_02', file = 'cutins/img_02.png', tiers = { 'win', 'bigwin', 'small' }, weight = 35 },
-        { id = 'img_03', file = 'cutins/img_03.png', tiers = { 'bigwin', 'jackpot' }, weight = 50 },
+        {
+            id = 'cutin_bonus_01',
+            file = 'characters/luna/cutins/cutin_bonus_01.png',
+            tiers = { 'win', 'small', 'bonus', 'bonusCombo' },
+            weight = 60,
+        },
+        {
+            id = 'cutin_win_01',
+            file = 'characters/luna/cutins/cutin_win_01.png',
+            tiers = { 'win', 'bigwin', 'small' },
+            weight = 35,
+        },
+        {
+            id = 'cutin_big_01',
+            file = 'characters/luna/cutins/cutin_big_01.png',
+            tiers = { 'bigwin', 'jackpot' },
+            weight = 50,
+        },
     },
     videos = {
-        { id = 'vid_01', file = 'cutins/vid_01.webm', tiers = { 'win', 'bigwin', 'small' }, weight = 10, duration = 2.0 },
-        { id = 'vid_02', file = 'cutins/vid_02.webm', tiers = { 'bigwin' }, weight = 8, duration = 2.5 },
-        { id = 'vid_03', file = 'cutins/vid_03.webm', tiers = { 'jackpot' }, weight = 10, duration = 4.0 },
-        { id = 'vid_04', file = 'cutins/vid_04.webm', tiers = { 'bonus' }, weight = 10, duration = 3.0 },
-        { id = 'vid_05', file = 'cutins/vid_05.webm', tiers = { 'bonusCombo' }, weight = 10, duration = 3.5 },
+        { id = 'vid_01', file = 'characters/luna/cutins/vid_01.webm', tiers = { 'win', 'bigwin', 'small' }, weight = 10, duration = 2.0 },
+        { id = 'vid_02', file = 'characters/luna/cutins/vid_02.webm', tiers = { 'bigwin' }, weight = 8, duration = 2.5 },
+        { id = 'vid_03', file = 'characters/luna/cutins/vid_03.webm', tiers = { 'jackpot' }, weight = 10, duration = 4.0 },
+        { id = 'vid_04', file = 'characters/luna/cutins/vid_04.webm', tiers = { 'bonus' }, weight = 10, duration = 3.0 },
+        { id = 'vid_05', file = 'characters/luna/cutins/vid_05.webm', tiers = { 'bonusCombo' }, weight = 10, duration = 3.5 },
     },
 }
 
