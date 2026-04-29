@@ -115,31 +115,33 @@
 
     function rowMaster(k, label, val) {
         return (
-            '<div class="studio-prob-row master-row" data-k="' +
+            '<div class="studio-row master-row" data-k="' +
             k +
-            '"><span>' +
-            label +
-            '</span><input type="range" min="0" max="100" step="0.1" class="master-sl" data-k="' +
+            '"><div class="studio-row-label">' +
+            escapeHtml(label) +
+            '</div><div class="studio-row-control"><input type="range" min="0" max="100" step="0.1" class="studio-slider master-sl" data-k="' +
             k +
             '" value="' +
             val +
-            '"><span class="master-sl-val">' +
+            '"><span class="studio-slider-value master-sl-val">' +
             Number(val).toFixed(1) +
-            '%</span></div>'
+            '%</span></div></div>'
         );
     }
 
     function rowPromote(k, label, val) {
         return (
-            '<div class="studio-prob-row"><span>' +
-            label +
-            '</span><input type="range" min="0" max="100" step="0.1" class="pr-sl" data-pk="' +
+            '<div class="studio-row">' +
+            '<div class="studio-row-label">' +
+            escapeHtml(label) +
+            '</div><div class="studio-row-control">' +
+            '<input type="range" min="0" max="100" step="0.1" class="studio-slider pr-sl" data-pk="' +
             k +
             '" value="' +
             val +
-            '"><span>' +
+            '"><span class="studio-slider-value pr-sl-val">' +
             Number(val).toFixed(1) +
-            '%</span></div>'
+            '%</span></div></div>'
         );
     }
 
@@ -163,54 +165,117 @@
         var ok = masterSumOk(m);
         var ps = masterPromoteSum(m);
         var single = Math.max(0, 100 - ps);
-        var sumClass = ok ? 'studio-sum ok' : 'studio-sum bad';
-        var html =
-            '<div class="studio-section"><h3 data-i18n-key="admin.master.title">' +
+        var sumNum = (Number(m.normal.win) + Number(m.normal.bonus) + Number(m.normal.miss_tease)).toFixed(1);
+        var sumText = '合計 ' + sumNum + '%' + (ok ? ' ✓' : '');
+        var titleStatusClass = 'studio-card-title-status' + (ok ? '' : ' is-error');
+
+        var html = '<div class="studio-section studio-master-wrap">';
+        html +=
+            '<h3 class="studio-page-title" data-i18n-key="admin.master.title">' +
             escapeHtml('全体確率設定') +
             '</h3>';
+
+        html += '<div class="studio-card">';
+        html += '<div class="studio-card-title">';
+        html += '<span data-i18n-key="admin.master.normal_section">通常中の抽選（合計100%）</span>';
         html +=
-            '<h4 data-i18n-key="admin.master.normal_section">通常中の抽選（合計100%）</h4>';
+            '<span id="master-sum-val" class="' +
+            titleStatusClass +
+            '">' +
+            escapeHtml(sumText) +
+            '</span>';
+        html += '</div>';
         html += rowMaster('win', 'WIN', m.normal.win);
         html += rowMaster('bonus', 'BONUS', m.normal.bonus);
         html += rowMaster('miss_tease', 'MISS', m.normal.miss_tease);
-        html += '<div class="' + sumClass + '" id="master-sum-val">合計 ' + (Number(m.normal.win) + Number(m.normal.bonus) + Number(m.normal.miss_tease)).toFixed(1) + '%</div>';
+        html += '<div class="studio-card-actions studio-card-actions--end">';
         html +=
-            '<button type="button" class="studio-save" id="master-norm-btn" ' +
-            (ok ? '' : 'disabled') +
-            '>保存（マスター）</button> ';
-        html += '<button type="button" class="studio-sim" id="master-norm-go">自動正規化</button>';
+            '<button type="button" class="studio-btn-secondary" id="master-norm-go" data-i18n-key="admin.master.auto_normalize">自動正規化</button>';
+        html += '</div></div>';
 
+        html += '<div class="studio-card">';
+        html += '<div class="studio-card-title">';
         html +=
-            '<h4 data-i18n-key="admin.master.bonus_promote_section">ボーナス昇格抽選（ボーナス当選時）</h4>';
+            '<span data-i18n-key="admin.master.bonus_promote_section">ボーナス昇格抽選（ボーナス当選時）</span>';
+        html += '</div>';
         html += rowPromote('streak', 'STREAK', m.bonus_promote.streak);
         html += rowPromote('big', 'BIG', m.bonus_promote.big);
-        html += '<p>単発（自動）: ' + single.toFixed(2) + '%</p>';
-        html += '<label>最大連続回数 <input type="number" min="1" max="9" id="mx-str" value="' + escapeHtml(String(m.bonus_promote.max_streak)) + '"></label> ';
+        html += '<div class="studio-row studio-row--readonly">';
         html +=
-            '<label>ビッグ倍率 <input type="number" min="2" max="20" id="big-mul" value="' +
+            '<div class="studio-row-label" data-i18n-key="admin.master.single_auto_label">単発（自動）</div>';
+        html +=
+            '<div class="studio-row-control"><span id="master-single-pct" class="studio-slider-value studio-single-readonly">' +
+            single.toFixed(2) +
+            '%</span></div>';
+        html += '</div>';
+        html += '<div class="studio-row">';
+        html +=
+            '<div class="studio-row-label" data-i18n-key="admin.master.max_streak_label">最大連続回数</div>';
+        html += '<div class="studio-row-control">';
+        html +=
+            '<input type="number" min="1" max="9" id="mx-str" value="' +
+            escapeHtml(String(m.bonus_promote.max_streak)) +
+            '">';
+        html += ' <span class="studio-row-hint">(1〜9)</span>';
+        html += '</div></div>';
+        html += '<div class="studio-row">';
+        html += '<div class="studio-row-label" data-i18n-key="admin.master.big_mul_label">ビッグ倍率</div>';
+        html += '<div class="studio-row-control">';
+        html +=
+            '<input type="number" min="2" max="20" id="big-mul" value="' +
             escapeHtml(String(m.bonus_promote.big_multiplier)) +
-            '"></label>';
+            '">';
+        html += ' <span class="studio-row-hint">(2〜20)</span>';
+        html += '</div></div>';
+        html += '</div>';
 
-        html += '<h4 data-i18n-key="admin.master.cooldown_section">クールタイム</h4>';
+        html += '<div class="studio-card">';
+        html += '<div class="studio-card-title">';
+        html += '<span data-i18n-key="admin.master.cooldown_section">クールタイム</span>';
+        html += '</div>';
         html +=
-            '<p class="studio-note">ボーナス終了後、通常スピンN回まで全抽選をハズレ演出に置き換え</p>';
+            '<p class="studio-note studio-card-note" data-i18n-key="admin.master.cooldown_note">ボーナス終了後、通常スピンN回まで全抽選をハズレ演出に置き換え</p>';
+        html += '<div class="studio-row">';
+        html += '<div class="studio-row-label" data-i18n-key="admin.master.spin_count_label">スピン数</div>';
+        html += '<div class="studio-row-control">';
         html +=
-            '<label>スピン数 <input type="number" min="0" max="50" id="cd-spins" value="' +
+            '<input type="number" min="0" max="50" id="cd-spins" value="' +
             m.cooldown.spins +
-            '" /></label>';
+            '" />';
+        html += ' <span class="studio-row-hint">(0〜50)</span>';
+        html += '</div></div>';
+        html += '</div>';
 
-        html += '<h4 data-i18n-key="admin.master.simulation_section">シミュレーション</h4>';
+        html += '<div class="studio-master-primary-wrap">';
         html +=
-            '<select id="sim-trials"><option>100</option><option>500</option><option selected>1000</option><option>5000</option><option>10000</option></select> ';
-        html += '<label>ベット <input type="number" id="sim-bet" value="100"></label> ';
+            '<button type="button" class="studio-btn-primary" id="master-norm-btn" ' +
+            (ok ? '' : 'disabled') +
+            ' data-i18n-key="admin.master.save_master">💾 マスター設定を保存</button>';
+        html += '</div>';
+
+        html += '<div class="studio-card studio-card--sim">';
+        html += '<div class="studio-card-title">';
+        html += '<span data-i18n-key="admin.master.simulation_section">シミュレーション</span>';
+        html += '</div>';
+        html += '<div class="sim-toolbar">';
         html +=
-            '<button type="button" class="studio-preview-main" id="sim-run" data-i18n-key="admin.master.simulation_run">実行</button>';
+            '<label class="sim-toolbar-field"><span data-i18n-key="admin.master.sim_trials">試行回数</span> ';
+        html +=
+            '<select id="sim-trials"><option>100</option><option>500</option><option selected>1000</option><option>5000</option><option>10000</option></select></label>';
+        html +=
+            '<label class="sim-toolbar-field"><span data-i18n-key="admin.master.bet_label">ベット</span> ';
+        html += '<input type="number" id="sim-bet" value="100"></label>';
+        html +=
+            '<button type="button" class="studio-btn-primary studio-btn-sim-run" id="sim-run" data-i18n-key="admin.master.simulation_run">実行</button>';
+        html += '</div>';
         html += '<div id="sim-warn-banner" class="sim-warn-banner" hidden></div>';
         html += '<pre id="sim-out" class="sim-out"></pre>';
         html +=
-            '<div class="sim-chart-tabs"><button type="button" data-sim-tab="cum">累積収支</button><button type="button" data-sim-tab="hist">払戻分布</button></div>';
+            '<div class="sim-chart-tabs"><button type="button" class="sim-tab-btn" data-sim-tab="cum">累積収支</button><button type="button" class="sim-tab-btn" data-sim-tab="hist">払戻分布</button></div>';
         html += '<canvas id="chart-cum" height="120"></canvas>';
         html += '<canvas id="chart-hist" height="120" hidden></canvas>';
+        html += '</div>';
+
         html += '</div>';
         return html;
     }
@@ -221,7 +286,8 @@
             rows[i].addEventListener('input', function () {
                 var k = this.getAttribute('data-k');
                 workspace.master.normal[k] = Number(this.value);
-                var lab = this.parentNode.querySelector('.master-sl-val');
+                var row = this.closest('.studio-row');
+                var lab = row ? row.querySelector('.master-sl-val') : null;
                 if (lab) {
                     lab.textContent = Number(this.value).toFixed(1) + '%';
                 }
@@ -230,22 +296,33 @@
                     workspace.master.normal.bonus +
                     workspace.master.normal.miss_tease;
                 var el = $('master-sum-val');
+                var okNow = masterSumOk(workspace.master);
                 if (el) {
-                    el.textContent = '合計 ' + sum.toFixed(1) + '%';
-                    el.className = masterSumOk(workspace.master) ? 'studio-sum ok' : 'studio-sum bad';
+                    el.textContent = '合計 ' + sum.toFixed(1) + '%' + (okNow ? ' ✓' : '');
+                    el.className = 'studio-card-title-status' + (okNow ? '' : ' is-error');
                 }
                 var btn = $('master-norm-btn');
                 if (btn) {
-                    btn.disabled = !masterSumOk(workspace.master);
+                    btn.disabled = !okNow;
                 }
                 markDirty();
             });
         }
-        var pr = document.querySelectorAll('[data-pk]');
+        var pr = document.querySelectorAll('.pr-sl');
         for (var j = 0; j < pr.length; j++) {
             pr[j].addEventListener('input', function () {
                 var k = this.getAttribute('data-pk');
                 workspace.master.bonus_promote[k] = Number(this.value);
+                var prow = this.closest('.studio-row');
+                var pv = prow ? prow.querySelector('.pr-sl-val') : null;
+                if (pv) {
+                    pv.textContent = Number(this.value).toFixed(1) + '%';
+                }
+                var sp = $('master-single-pct');
+                if (sp) {
+                    var psu = masterPromoteSum(workspace.master);
+                    sp.textContent = Math.max(0, 100 - psu).toFixed(2) + '%';
+                }
                 markDirty();
             });
         }

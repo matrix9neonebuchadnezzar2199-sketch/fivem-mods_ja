@@ -146,9 +146,8 @@
                     <span class="current" id="adm-current-state" data-i18n-key="admin.scene.win">当たり</span>
                 </nav>
                 <div class="admin-tools">
-                    <button type="button" id="adm-changepw-open" class="admin-icon-btn" title="パスワード変更">🔑</button>
-                    <button type="button" id="adm-logout" class="admin-icon-btn" title="ログアウト">⎋</button>
-                    <button type="button" id="adm-close-app" class="admin-icon-btn" title="閉じる">✕</button>
+                    <button type="button" id="adm-changepw-open" class="admin-tools-btn" title="パスワード変更" data-i18n-key="admin.tool_changepw">🔑 パスワード</button>
+                    <button type="button" id="adm-logout" class="admin-tools-btn" title="ログアウト" data-i18n-key="admin.tool_logout">ログアウト</button>
                 </div>
             </header>
             <main class="admin-main">
@@ -157,9 +156,12 @@
                 <aside class="admin-right" id="admin-right"></aside>
             </main>
             <footer class="admin-statusbar" id="admin-statusbar">
-                <span id="adm-status-left">未ログイン</span>
-                <span id="adm-status-center"></span>
-                <span id="adm-status-right">v1.2.0</span>
+                <span id="adm-status-left" class="adm-status-left">未ログイン</span>
+                <span id="adm-status-center" class="adm-status-center"></span>
+                <div class="admin-statusbar-right">
+                    <span id="adm-status-right" class="adm-version">v1.2.0</span>
+                    <button type="button" id="adm-close-app" class="admin-footer-close" data-i18n-key="admin.close">閉じる</button>
+                </div>
             </footer>
         </div>
 

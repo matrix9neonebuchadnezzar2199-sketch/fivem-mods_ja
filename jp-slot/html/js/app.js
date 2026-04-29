@@ -262,7 +262,21 @@
     }
 
     function resolveLocale(path) {
+        if (!path || !state.locales) {
+            return null;
+        }
         var parts = path.split('.');
+        /* locales/ja.json の admin は "master.title" のようなフラットキー */
+        if (parts[0] === 'admin' && parts.length >= 2) {
+            var adm = state.locales.admin;
+            if (adm && typeof adm === 'object') {
+                var adminFlatKey = parts.slice(1).join('.');
+                var flatStr = adm[adminFlatKey];
+                if (typeof flatStr === 'string') {
+                    return flatStr;
+                }
+            }
+        }
         var cur = state.locales;
         for (var i = 0; i < parts.length; i++) {
             if (!cur || typeof cur !== 'object') {
