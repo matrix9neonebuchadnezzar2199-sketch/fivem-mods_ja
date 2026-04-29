@@ -2565,6 +2565,17 @@
         }
         try {
             ensureAssetDatalists();
+            /* admin-center を innerHTML で潰す前に #root を埋め込みから外す（破棄・取り残し防止） */
+            var rootDetach = document.getElementById('root');
+            var fitEl = document.getElementById('jp-slot-embed-fit');
+            if (
+                rootDetach &&
+                fitEl &&
+                fitEl.contains(rootDetach) &&
+                typeof window.jpSlotMoveRootToBody === 'function'
+            ) {
+                window.jpSlotMoveRootToBody();
+            }
             var prev = window.__jpSlotPrevViewMode;
             var curr = viewMode;
             if (prev === 'preview' && curr !== 'preview') {
@@ -2583,7 +2594,9 @@
             window.__jpSlotPrevViewMode = curr;
 
             if (curr === 'preview') {
-                c.innerHTML = renderPreviewTab();
+                c.innerHTML = renderPresetBarHtml() + renderPreviewTab();
+                hydratePresetHeaderUi();
+                wirePresetBar();
                 wirePreviewTab();
             } else if (curr === 'master') {
                 c.innerHTML = renderPresetBarHtml() + renderMasterTab();
