@@ -131,48 +131,88 @@
     </div>
 
     <div id="panel-admin" style="display:none;">
-        <div class="admin-wrap">
-            <h2 class="admin-title" data-i18n-key="admin.title"></h2>
-            <ul class="admin-tabs">
-                <li>
-                    <button type="button" class="admin-tab active" data-tab="design" data-i18n-key="admin.tab_design"></button>
-                </li>
-                <li>
-                    <button type="button" class="admin-tab" data-tab="display" data-i18n-key="admin.tab_display"></button>
-                </li>
-            </ul>
-
-            <div class="admin-pane admin-pane-design" data-pane="design">
-                <label class="admin-row">bgPrimary <input type="color" id="adm-bgPrimary"></label>
-                <label class="admin-row">accent1 <input type="color" id="adm-accent1"></label>
-                <label class="admin-row">textPrimary <input type="color" id="adm-textPrimary"></label>
-                <label class="admin-row">theme name <input type="text" id="adm-themeName"></label>
-                <div class="admin-actions">
-                    <button type="button" id="adm-save" data-i18n-key="admin.save_theme"></button>
-                    <button type="button" id="adm-close" data-i18n-key="admin.close"></button>
+        <div class="admin-app" id="admin-app" data-locked="true">
+            <header class="admin-header">
+                <div class="admin-title" data-i18n-key="admin.title">JP-SLOT 演出設計ツール</div>
+                <nav class="admin-breadcrumb">
+                    <span data-i18n-key="admin.crumb_home">ホーム</span>
+                    <span class="sep">›</span>
+                    <span data-i18n-key="admin.crumb_studio">演出</span>
+                    <span class="sep">›</span>
+                    <span class="current" id="adm-current-state" data-i18n-key="admin.scene.win">当たり</span>
+                </nav>
+                <div class="admin-tools">
+                    <button type="button" id="adm-changepw-open" class="admin-icon-btn" title="パスワード変更">🔑</button>
+                    <button type="button" id="adm-logout" class="admin-icon-btn" title="ログアウト">⎋</button>
+                    <button type="button" id="adm-close-app" class="admin-icon-btn" title="閉じる">✕</button>
                 </div>
+            </header>
+            <main class="admin-main">
+                <aside class="admin-left" id="admin-left"></aside>
+                <section class="admin-center" id="admin-center"></section>
+                <aside class="admin-right" id="admin-right"></aside>
+            </main>
+            <footer class="admin-statusbar" id="admin-statusbar">
+                <span id="adm-status-left">未ログイン</span>
+                <span id="adm-status-center"></span>
+                <span id="adm-status-right">v1.2.0</span>
+            </footer>
+        </div>
+
+        <div class="admin-auth-overlay" id="admin-auth-overlay" style="display:none;">
+            <div class="admin-auth-modal" role="dialog" aria-labelledby="admin-auth-title">
+                <div class="admin-auth-head">
+                    <span class="admin-auth-lock">🔒</span>
+                    <h2 id="admin-auth-title" data-i18n-key="admin.auth_title">管理者認証</h2>
+                    <button type="button" class="admin-auth-x" id="admin-auth-close-btn" data-i18n-key="admin.auth_close">✕ 閉じる</button>
+                </div>
+                <div class="admin-auth-body">
+                    <div class="admin-auth-icon">🔒</div>
+                    <div class="admin-auth-subtitle" data-i18n-key="admin.auth_subtitle">JP-SLOT 演出設計ツール</div>
+                    <p class="admin-auth-desc" data-i18n-key="admin.auth_desc">管理者パスワードを入力してください。</p>
+                    <div class="admin-auth-input-wrap">
+                        <input type="password" id="admin-auth-pw" class="admin-auth-input" autocomplete="current-password" data-i18n-placeholder-key="admin.auth_placeholder" placeholder="パスワード" maxlength="128">
+                        <button type="button" class="admin-auth-eye" id="admin-auth-eye" aria-label="表示切替">👁</button>
+                    </div>
+                    <label class="admin-auth-keep">
+                        <input type="checkbox" id="admin-auth-keep">
+                        <span data-i18n-key="admin.auth_keep">ログイン状態を保持する (30分)</span>
+                    </label>
+                    <div class="admin-auth-error" id="admin-auth-error" hidden></div>
+                </div>
+                <div class="admin-auth-foot">
+                    <button type="button" class="admin-auth-cancel" id="admin-auth-cancel" data-i18n-key="admin.auth_close">✕ 閉じる</button>
+                    <button type="button" class="admin-auth-submit" id="admin-auth-submit" data-i18n-key="admin.auth_submit">🔓 認証してログイン</button>
+                </div>
+                <div class="admin-auth-fineprint">ACE 権限 (jp-slot.admin) も併せて確認されます<br>© Rosesanto Casino / JP-SLOT</div>
             </div>
+        </div>
 
-            <div class="admin-pane admin-pane-display" data-pane="display" style="display: none">
-                <h3 class="admin-subtitle" data-i18n-key="admin.ui_size_title"></h3>
-                <p class="admin-hint" data-i18n-key="admin.ui_size_hint"></p>
-                <div class="form-row">
-                    <label for="ui-width" data-i18n-key="admin.ui_width"></label>
-                    <input type="range" id="ui-width" min="30" max="100" value="90" step="5" />
-                    <span id="ui-width-val">90</span>%
+        <div class="admin-pw-overlay" id="admin-pw-overlay" hidden>
+            <div class="admin-auth-modal">
+                <div class="admin-auth-head">
+                    <span class="admin-auth-lock">🔑</span>
+                    <h2 data-i18n-key="admin.changepw_title">パスワード変更</h2>
+                    <button type="button" class="admin-auth-x" id="admin-pw-close">✕</button>
                 </div>
-                <div class="form-row">
-                    <label for="ui-height" data-i18n-key="admin.ui_height"></label>
-                    <input type="range" id="ui-height" min="30" max="100" value="90" step="5" />
-                    <span id="ui-height-val">90</span>%
+                <div class="admin-auth-body">
+                    <div class="form-row">
+                        <label data-i18n-key="admin.changepw_old">現在のパスワード</label>
+                        <input type="password" id="adm-pw-old" autocomplete="current-password">
+                    </div>
+                    <div class="form-row">
+                        <label data-i18n-key="admin.changepw_new">新しいパスワード（8文字以上）</label>
+                        <input type="password" id="adm-pw-new" autocomplete="new-password">
+                    </div>
+                    <div class="form-row">
+                        <label data-i18n-key="admin.changepw_new2">新しいパスワード（確認）</label>
+                        <input type="password" id="adm-pw-new2" autocomplete="new-password">
+                    </div>
+                    <div class="admin-auth-error" id="admin-pw-error" hidden></div>
                 </div>
-                <div class="form-row">
-                    <label for="ui-maxwidth" data-i18n-key="admin.ui_maxwidth"></label>
-                    <input type="number" id="ui-maxwidth" min="0" max="7680" step="10" value="0" />
-                </div>
-                <div class="admin-actions">
-                    <button type="button" id="ui-size-save" class="btn-primary" data-i18n-key="admin.ui_size_save"></button>
-                    <button type="button" id="ui-size-reset" class="btn-secondary" data-i18n-key="admin.ui_size_reset"></button>
+                <div class="admin-auth-foot">
+                    <button type="button" class="admin-auth-cancel" id="admin-pw-cancel">キャンセル</button>
+                    <button type="button" class="admin-auth-submit" id="admin-pw-submit" data-i18n-key="admin.changepw_submit">変更する</button>
                 </div>
             </div>
         </div>
@@ -184,6 +224,8 @@
     <script src="js/marquee.js"></script>
     <script src="js/reels.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/admin_auth.js"></script>
+    <script src="js/admin_studio.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

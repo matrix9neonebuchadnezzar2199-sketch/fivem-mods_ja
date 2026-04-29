@@ -283,6 +283,15 @@
                 el.textContent = txt;
             }
         }
+        var phNodes = document.querySelectorAll('[data-i18n-placeholder-key]');
+        for (var j = 0; j < phNodes.length; j++) {
+            var pel = phNodes[j];
+            var pk = pel.getAttribute('data-i18n-placeholder-key');
+            var ptxt = resolveLocale(pk);
+            if (ptxt) {
+                pel.setAttribute('placeholder', ptxt);
+            }
+        }
     }
 
     function fmtMoney(n) {
@@ -638,10 +647,11 @@
     }
 
     function openAdmin(payload) {
-        if (payload && payload.locales) {
+        payload = payload || {};
+        if (payload.locales) {
             state.locales = payload.locales;
         }
-        if (payload && payload.uiSize) {
+        if (payload.uiSize) {
             state.serverUiSize = payload.uiSize;
         }
         applyI18n();
@@ -650,50 +660,18 @@
         if (adm) {
             adm.style.display = 'flex';
         }
-        var theme = (payload && payload.theme) || {};
-        var colors = theme.colors || {};
-        var bg = document.getElementById('adm-bgPrimary');
-        var a1 = document.getElementById('adm-accent1');
-        var tp = document.getElementById('adm-textPrimary');
-        var tn = document.getElementById('adm-themeName');
-        if (bg) {
-            bg.value = colors.bgPrimary || '#0a0608';
-        }
-        if (a1) {
-            a1.value = colors.accent1 || '#d4af37';
-        }
-        if (tp) {
-            tp.value = colors.textPrimary || '#f5e6c8';
-        }
-        if (tn) {
-            tn.value = theme.name || '';
-        }
-
-        document.getElementById('adm-save').onclick = function () {
-            var t = {
-                name: tn ? tn.value : 'Custom',
-                preset: 'custom',
-                colors: {
-                    bgPrimary: bg ? bg.value : '#0a0608',
-                    accent1: a1 ? a1.value : '#d4af37',
-                    textPrimary: tp ? tp.value : '#f5e6c8',
-                    bgSecondary: colors.bgSecondary || '#1a0e12',
-                    accent2: colors.accent2 || '#f5e6a8',
-                    accent3: colors.accent3 || '#8b1538',
-                    textMuted: colors.textMuted || '#a89070',
-                    borderFrame: colors.borderFrame || '#d4af37',
-                    glowColor: colors.glowColor || '#ffd700',
-                    reelBg: colors.reelBg || '#000000',
-                    buttonSpin: colors.buttonSpin || '#c9302c',
-                },
-                fonts: theme.fonts || { title: 'Cinzel', body: 'Noto Serif JP' },
-                effectIntensity: theme.effectIntensity || 60,
-            };
-            postNui('adminSaveTheme', { theme: t });
-        };
-        document.getElementById('adm-close').onclick = function () {
-            postNui('closeAdmin', {});
-        };
+        window.__jpSlotLastAdminPayload = payload;
+        window.setTimeout(function () {
+            if (window.__jpSlotFillTheme && payload.theme && document.getElementById('adm-bgPrimary')) {
+                window.__jpSlotFillTheme(payload.theme);
+            }
+            if (window.__jpSlotSyncUiSliders && payload.uiSize) {
+                window.__jpSlotSyncUiSliders(payload.uiSize);
+            }
+            if (window.jpSlotWireLegacyAdmin) {
+                window.jpSlotWireLegacyAdmin(payload);
+            }
+        }, 80);
     }
 
     document.addEventListener(
@@ -751,6 +729,21 @@
             }
             if (state.serverUiSize) {
                 applyUISize(state.serverUiSize);
+            }
+        } else if (type === 'previewMode') {
+            var active = payload.active;
+            var b = document.getElementById('preview-badge');
+            if (active) {
+                if (!b) {
+                    b = document.createElement('div');
+                    b.id = 'preview-badge';
+                    b.className = 'preview-badge';
+                    b.textContent =
+                        '🎬 プレビューモード ・所持金∞ ・獲得金反映なし';
+                    document.body.appendChild(b);
+                }
+            } else if (b) {
+                b.remove();
             }
         } else if (type === 'clipboard') {
             var txt = payload.text || d.text;
@@ -816,6 +809,8 @@
         },
         true
     );
+
+    window.jpSlotApplyI18n = applyI18n;
 })();
 
 /* CLICK_TARGET / F1 は常にリスナー 1 組のみ。ログ出力は init の payload.debug.nuiVerbose が true のときだけ（毎回更新） */

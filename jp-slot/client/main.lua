@@ -173,6 +173,9 @@ RegisterNetEvent('jp-slot:openAdmin', function(data)
             debug = data.debug,
             showDebugTab = data.showDebugTab,
             uiSize = data.uiSize,
+            requirePassword = data.requirePassword,
+            sessionTtl = data.sessionTtl,
+            locales = localeTable,
         },
     })
     setSlotNuiFocus(true)
@@ -236,23 +239,6 @@ RegisterNUICallback('clientLog', function(data, cb)
     local level = tostring(data.level or '?')
     local msg = tostring(data.message or '')
     print(('[jp-slot/NUI:%s] %s'):format(level, msg))
-end)
-
-RegisterNUICallback('adminSaveTheme', function(body, cb)
-    cb({})
-    if type(body) == 'table' and body.theme then
-        TriggerServerEvent('jp-slot:adminSaveTheme', body.theme)
-    end
-end)
-
-RegisterNUICallback('admin/setUISize', function(data, cb)
-    cb({ ok = true })
-    TriggerServerEvent('jp-slot:admin:setUISize', type(data) == 'table' and data or {})
-end)
-
-RegisterNUICallback('admin/resetUISize', function(_, cb)
-    cb({ ok = true })
-    TriggerServerEvent('jp-slot:admin:resetUISize')
 end)
 
 CreateThread(function()

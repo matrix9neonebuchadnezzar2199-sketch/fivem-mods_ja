@@ -10,7 +10,8 @@ FiveM カジノ向けスロットマシン MOD（MVP）。台に近づき **[E]*
 2. `server.cfg` に `ensure jp-slot` を追加。
 3. **`config_shared.lua` の `Config.Machines` の座標・向きを自サーバー用に変更**する（デフォルトは仮座標）。
 4. `Config.Framework = 'auto'` で **ESX → QBCore → standalone** を自動検出。standalone は KVS **`jp-slot:wallet:{identifier}`** で仮想残高。
-5. 管理者は **`config_server.lua`** の `Config.AdminAce`（既定 `jp-slot.admin`）を ACE で付与し、チャットで `/jpslotadmin`（`Config.AdminCommand`）で管理パネルを開く。**デザイン**タブでテーマ色、**表示**タブで NUI の幅・高さ（画面に対する %）をスライダー調整し、保存すると全プレイヤーに反映される（既定・フォールバックは **`config_shared.lua` の `Config.UISize`**、永続は KVS **`jp-slot:ui_size`**）。
+5. 管理者は **`config_server.lua`** の `Config.AdminAce`（既定 `jp-slot.admin`）を ACE で付与し、チャットで `/jpslotadmin`（`Config.AdminCommand`）で **演出設計ツール（管理パネル）** を開く。`Config.AdminAuth` が有効なときは **パスワード認証**が必要。**初回起動時**に管理者パスワードが未設定なら、**サーバーコンソールに初期パスワードが一度だけ表示**されるので控え、ログイン後は 🔑 から必ず変更すること。**デザイン**タブでテーマ色、**表示**タブで NUI の幅・高さ（画面に対する %）をスライダー調整し、保存すると全プレイヤーに反映される（既定・フォールバックは **`config_shared.lua` の `Config.UISize`**、永続は KVS **`jp-slot:ui_size`**）。
+6. 管理者パスワードやロックアウト状態をリセットしたいときは、サーバーコンソールまたは ACE 付きプレイヤーで **`/jpslotresetauth`** を実行する（KVP の管理者ハッシュをクリアし、`bootstrapIfMissing` が有効なら新しい初期パスワードがコンソールに出る）。
 
 ### Config.Debug（NUI 冗長ログ）
 

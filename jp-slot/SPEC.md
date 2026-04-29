@@ -69,3 +69,16 @@ standalone モードは KVS に **`jp-slot:wallet:{identifier}`**（プライマ
 **追加（NUI JavaScript の構文エラー）**: **`html/js/*.js` に構文エラーが 1 つでもあると、そのファイルは実行されず NUI 全体が機能不全**になる（初期化・イベント・後続スクリプトまで止まる）。文字列連結のクォート誤り（例: `"url('" + path + 'file.png')"` でクォートが早期終了する）は典型的。**`node --check html/js/app.js`** をコミット前に必ず通す（`tools/check_syntax.sh`）。**`index.html` 先頭のインライン ESC**で `app.js` が壊れていても `exit` を POST して脱出できるようにしておく。
 
 **追加（NUI と body 背景）**: FiveM の NUI は **常にゲーム画面に重なる**。**`body` / `html` に `background` で色を付けると、スロットを開いていないときも全面がその色で隠れる**（ensure しただけで真っ黒に見える）。**`body` と `html` は `transparent` に固定**し、見せたいパネル（`#root` 等）にだけ背景色を付ける。**`SetNuiFocus` は着席・管理 UI 表示時のみ true** とし、起動時は `onClientResourceStart` で **明示的に false** を推奨。
+
+---
+
+## 管理画面アクセス（演出設計ツール）
+
+1. **`Config.AdminAce`**（既定 `jp-slot.admin`）を ACE で付与する。
+2. ゲーム内で **`/jpslotadmin`**（**`Config.AdminCommand`**）を実行すると管理 NUI が開く。
+3. **`Config.AdminAuth`** が有効なときは **パスワード** のほか、**`requireAce`** が true なら ACE も要求する。初回またはハッシュ未設定時は **`AdminAuth.bootstrap()`** がランダム初期パスワードを生成し、**サーバーコンソールに1回だけ表示**する（**`jp-slot:adm:passhash`** / **`jp-slot:adm:salt`** / **`jp-slot:adm:iter`**）。
+4. ログイン後は **セッショントークン**（メモリのみ、`sessionTtl` 秒）。全管理系 NUI はトークン検証が必要。
+5. パスワード変更は管理パネルの 🔑（旧パス + 新パス、最低 **`minLength`** 文字）。
+6. **`/jpslotresetauth`**（サーバーコンソール source=0、または ACE 付きプレイヤー）で管理者ハッシュをクリアし、**`bootstrapIfMissing`** が有効なら再ブートストラップ。
+7. **プレビューモード**: 管理ツールから開始するとサーバーが **`JpSlotPreviewMode[source]`** を立て、スピン時に **ベット・配当・ジャックポット累積をスキップ**（演出のみ）。クライアント NUI に **`previewMode`** メッセージでバッジ表示。
+8. **プリセット KVS（参考）**: **`jp-slot:adm:preset:list`**（一覧 JSON）、**`jp-slot:adm:preset:<id>`**（本文）、**`jp-slot:adm:preset:active`**（有効 ID）。素材一覧は **`admin/assets/scan`** が **`html/assets/`** 配下を列挙。

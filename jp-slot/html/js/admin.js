@@ -7,6 +7,22 @@
         return 'jp-slot';
     }
 
+    function authBody(extra) {
+        var o = {};
+        if (extra && typeof extra === 'object') {
+            for (var k in extra) {
+                if (Object.prototype.hasOwnProperty.call(extra, k)) {
+                    o[k] = extra[k];
+                }
+            }
+        }
+        var tok = window.JpSlotAdminAuth && window.JpSlotAdminAuth.token;
+        if (tok) {
+            o.token = tok;
+        }
+        return o;
+    }
+
     function syncSlidersFromSize(s) {
         if (!s) {
             return;
@@ -100,11 +116,11 @@
 
         if (saveBtn) {
             saveBtn.addEventListener('click', function () {
-                var body = {
+                var body = authBody({
                     widthPercent: Number(wEl.value),
                     heightPercent: Number(hEl.value),
                     maxWidthPx: Number(mEl.value),
-                };
+                });
                 fetch('https://' + resourceName() + '/admin/setUISize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=UTF-8' },
@@ -129,13 +145,89 @@
                 fetch('https://' + resourceName() + '/admin/resetUISize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-                    body: '{}',
+                    body: JSON.stringify(authBody({})),
                 }).catch(function (err) {
                     console.warn('[jp-slot] resetUISize failed', err);
                 });
             });
         }
     }
+
+    function __jpSlotFillTheme(theme) {
+        theme = theme || {};
+        var colors = theme.colors || {};
+        var bg = document.getElementById('adm-bgPrimary');
+        var a1 = document.getElementById('adm-accent1');
+        var tp = document.getElementById('adm-textPrimary');
+        var tn = document.getElementById('adm-themeName');
+        if (bg) {
+            bg.value = colors.bgPrimary || '#0a0608';
+        }
+        if (a1) {
+            a1.value = colors.accent1 || '#d4af37';
+        }
+        if (tp) {
+            tp.value = colors.textPrimary || '#f5e6c8';
+        }
+        if (tn) {
+            tn.value = theme.name || '';
+        }
+    }
+
+    function jpSlotWireLegacyAdmin(payload) {
+        payload = payload || {};
+        initTabs();
+        initUISizeControls();
+        if (payload.uiSize) {
+            syncSlidersFromSize(payload.uiSize);
+        }
+        __jpSlotFillTheme(payload.theme);
+        var themeRef = payload.theme || {};
+        var colors = themeRef.colors || {};
+        var bg = document.getElementById('adm-bgPrimary');
+        var a1 = document.getElementById('adm-accent1');
+        var tp = document.getElementById('adm-textPrimary');
+        var tn = document.getElementById('adm-themeName');
+        var saveBtn = document.getElementById('adm-save');
+        if (saveBtn) {
+            saveBtn.onclick = function () {
+                var t = {
+                    name: tn ? tn.value : 'Custom',
+                    preset: 'custom',
+                    colors: {
+                        bgPrimary: bg ? bg.value : '#0a0608',
+                        accent1: a1 ? a1.value : '#d4af37',
+                        textPrimary: tp ? tp.value : '#f5e6c8',
+                        bgSecondary: colors.bgSecondary || '#1a0e12',
+                        accent2: colors.accent2 || '#f5e6a8',
+                        accent3: colors.accent3 || '#8b1538',
+                        textMuted: colors.textMuted || '#a89070',
+                        borderFrame: colors.borderFrame || '#d4af37',
+                        glowColor: colors.glowColor || '#ffd700',
+                        reelBg: colors.reelBg || '#000000',
+                        buttonSpin: colors.buttonSpin || '#c9302c',
+                    },
+                    fonts: themeRef.fonts || { title: 'Cinzel', body: 'Noto Serif JP' },
+                    effectIntensity: themeRef.effectIntensity || 60,
+                };
+                fetch('https://' + resourceName() + '/adminSaveTheme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                    body: JSON.stringify(authBody({ theme: t })),
+                }).catch(function (err) {
+                    console.warn('[jp-slot] adminSaveTheme failed', err);
+                });
+            };
+        }
+    }
+
+    window.__jpSlotAdminLegacyBind = function () {
+        jpSlotWireLegacyAdmin(window.__jpSlotLastAdminPayload || {});
+    };
+
+    window.__jpSlotFillTheme = __jpSlotFillTheme;
+    window.__jpSlotSyncUiSliders = syncSlidersFromSize;
+    window.jpSlotWireLegacyAdmin = jpSlotWireLegacyAdmin;
 
     window.addEventListener('message', function (e) {
         var d = e.data || {};

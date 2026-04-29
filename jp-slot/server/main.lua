@@ -6,6 +6,14 @@ local pendingSpin = {} -- [source] = true
 --- フリースピン状態 [source] = { remaining, totalWin, lineBet }
 local bonusState = {}
 
+--- 管理プレビューモード（所持金変動なし・演出のみ）— `JpSlotPreviewMode` は server/admin.lua で定義
+---@param src number
+---@return boolean
+local function isPreviewMode(src)
+    local pm = rawget(_G, 'JpSlotPreviewMode')
+    return type(pm) == 'table' and pm[src] == true
+end
+
 local KVP_JACKPOT = 'jp-slot:jackpot:pool'
 local KVP_BONUS = 'jp-slot:bonus:'
 
@@ -229,7 +237,11 @@ function JpSlotForceLeaveOccupant(machineId, reason)
 end
 
 AddEventHandler('playerDropped', function()
-    clearSeat(source)
+    local src = source
+    if _G.JpSlotPreviewMode then
+        _G.JpSlotPreviewMode[src] = nil
+    end
+    clearSeat(src)
 end)
 
 AddEventHandler('onResourceStop', function(resourceName)
@@ -312,8 +324,10 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         return
     end
 
+    local isPreview = isPreviewMode(src)
+
     local bState = bonusState[src]
-    local inBonus = bState and bState.remaining and bState.remaining > 0
+    local inBonus = not isPreview and bState and bState.remaining and bState.remaining > 0
     local effectiveBet = inBonus and 0 or bet
 
     if not inBonus then
@@ -322,7 +336,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
             TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'bet_range' })
             return
         end
-        if Framework.getMoney(src, Config.MoneyAccount) < bet then
+        if not isPreview and Framework.getMoney(src, Config.MoneyAccount) < bet then
             pendingSpin[src] = nil
             TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'money' })
             return
@@ -338,7 +352,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
     pendingSpin[src] = true
 
     local poolAfterContrib = getJackpotAmount()
-    if effectiveBet > 0 then
+    if not isPreview and effectiveBet > 0 then
         if not Framework.removeMoney(src, Config.MoneyAccount, effectiveBet) then
             pendingSpin[src] = nil
             TriggerClientEvent('jp-slot:spinResult', src, { ok = false, reason = 'money' })
@@ -385,18 +399,18 @@ RegisterNetEvent('jp-slot:spin', function(payload)
     end
 
     local jackpotExtra = 0
-    if tier == Config.Jackpot.triggerTier and Config.Jackpot.enabled then
+    if not isPreview and tier == Config.Jackpot.triggerTier and Config.Jackpot.enabled then
         jackpotExtra = math.floor(poolAfterContrib + 0.5)
         setJackpotAmount(Config.Jackpot.seedAmount + 0.0)
     end
     local totalPay = winFlat + jackpotExtra
 
-    if totalPay > 0 then
+    if not isPreview and totalPay > 0 then
         Framework.addMoney(src, Config.MoneyAccount, totalPay)
     end
 
     local bonusPayload = nil
-    if inBonus and bState then
+    if not isPreview and inBonus and bState then
         bState.remaining = (bState.remaining or 0) - 1
         bState.totalWin = (bState.totalWin or 0) + totalPay
         local retrigger = false
@@ -426,7 +440,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
                 retriggerAdd = retrigger and retrAdd or nil,
             }
         end
-    elseif not inBonus and Config.Bonus and Config.Bonus.Enabled and isBonusTriggerReels(reels) then
+    elseif not isPreview and not inBonus and Config.Bonus and Config.Bonus.Enabled and isBonusTriggerReels(reels) then
         local fs = tonumber(Config.Bonus.FreeSpins) or 8
         local multBase = tonumber(Config.Bonus.MultiplierBase) or 1
         bonusState[src] = {
@@ -461,6 +475,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         paid = totalPay,
         jackpotExtra = jackpotExtra,
         bonus = bonusPayload,
+        preview = isPreview or nil,
     })
 
     saveBonus(src)
@@ -481,17 +496,8 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         spinDuration = spinDur,
         characterId = m.characterId,
         bonus = bonusPayload,
+        previewMode = isPreview or nil,
     })
-end)
-
-RegisterNetEvent('jp-slot:adminSaveTheme', function(themeData)
-    local src = source
-    if not IsPlayerAceAllowed(src, Config.AdminAce or 'jp-slot.admin') then
-        return
-    end
-    if Theme.save(themeData) then
-        TriggerClientEvent('jp-slot:notify', src, { kind = 'ok', msg = 'theme_saved' })
-    end
 end)
 
 --- Paytables と PaytableDisplay の倍率・コンボが一致しているか（運用ミス検知）

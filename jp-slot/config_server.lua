@@ -98,4 +98,18 @@ Config.Cutins = {
 }
 
 Config.AdminAce = 'jp-slot.admin'
+
+-- 管理パネル認証（詳細は SPEC.md）
+Config.AdminAuth = {
+    enabled = true,
+    requireAce = true,
+    sessionTtl = 30 * 60,
+    maxAttempts = 5,
+    lockoutSeconds = 5 * 60,
+    bootstrapIfMissing = true,
+    minLength = 8,
+}
+
+Config.AdminCommand = Config.AdminCommand or 'jpslotadmin'
+
 Config.TransactionLog = true

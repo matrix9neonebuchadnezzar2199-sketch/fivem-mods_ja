@@ -1,6 +1,8 @@
--- 管理者コマンド・権限チェック
+-- 管理者コマンド・NUI サーバー側ハンドラ・プリセット・プレビュー
 
---- ACE で管理者かどうか
+JpSlotPreviewMode = JpSlotPreviewMode or {}
+
+--- ACE で管理者か
 ---@param source number
 ---@return boolean
 local function isAdmin(source)
@@ -20,12 +22,21 @@ local function notifyError(source, msg)
     })
 end
 
+---@param token string|nil
+---@return boolean
+local function sessionOk(src, token)
+    local ok, _why = AdminAuth.verifySession(src, token)
+    return ok
+end
+
 RegisterCommand(Config.AdminCommand or 'jpslotadmin', function(source, _args, _raw)
     if source == 0 then
         print('[jp-slot] コンソールからは管理NUIを開けません（ゲーム内プレイヤーで実行）。')
         return
     end
-    if not isAdmin(source) then
+    local cfg = Config.AdminAuth or {}
+    if cfg.requireAce and not AdminAuth.hasAce(source) then
+        TriggerClientEvent('jp-slot:adminDenied', source, { reason = 'no_ace' })
         return
     end
     local theme = Theme.getActive()
@@ -34,16 +45,53 @@ RegisterCommand(Config.AdminCommand or 'jpslotadmin', function(source, _args, _r
         debug = Config.Debug,
         showDebugTab = Config.Debug and Config.DebugSettings and Config.DebugSettings.ShowDebugButtons,
         uiSize = JpSlotGetUISize(),
+        requirePassword = cfg.enabled ~= false,
+        sessionTtl = tonumber(cfg.sessionTtl) or 1800,
     })
 end, false)
 
-RegisterNetEvent('jp-slot:admin:setUISize', function(data)
+RegisterNetEvent('jp-slot:sv:adminLogin', function(payload)
     local src = source
-    if not isAdmin(src) then
-        notifyError(src, '権限がありません')
+    payload = type(payload) == 'table' and payload or {}
+    local token, err, lockRemain = AdminAuth.verifyPassword(src, payload.password or '')
+    if token then
+        TriggerClientEvent('jp-slot:cl:adminLoginResult', src, {
+            ok = true,
+            token = token,
+            ttl = (Config.AdminAuth and Config.AdminAuth.sessionTtl) or 1800,
+        })
+    else
+        TriggerClientEvent('jp-slot:cl:adminLoginResult', src, {
+            ok = false,
+            reason = err,
+            lockRemain = lockRemain,
+        })
+    end
+end)
+
+RegisterNetEvent('jp-slot:sv:adminLogout', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    AdminAuth.logout(payload.token)
+    TriggerClientEvent('jp-slot:cl:adminLogoutOk', src, {})
+end)
+
+RegisterNetEvent('jp-slot:sv:adminChangePw', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    local ok, reason = AdminAuth.changePassword(src, payload.oldPassword or '', payload.newPassword or '', payload.token)
+    TriggerClientEvent('jp-slot:cl:adminChangePwResult', src, { ok = ok, reason = reason })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminSetUISize', function(data)
+    local src = source
+    data = type(data) == 'table' and data or {}
+    if not sessionOk(src, data.token) then
+        notifyError(src, 'セッションが無効です')
         return
     end
-    if type(data) ~= 'table' then
+    if not isAdmin(src) then
+        notifyError(src, '権限がありません')
         return
     end
     local size = {
@@ -61,8 +109,13 @@ RegisterNetEvent('jp-slot:admin:setUISize', function(data)
     ))
 end)
 
-RegisterNetEvent('jp-slot:admin:resetUISize', function()
+RegisterNetEvent('jp-slot:sv:adminResetUISize', function(data)
     local src = source
+    data = type(data) == 'table' and data or {}
+    if not sessionOk(src, data.token) then
+        notifyError(src, 'セッションが無効です')
+        return
+    end
     if not isAdmin(src) then
         notifyError(src, '権限がありません')
         return
@@ -76,3 +129,165 @@ RegisterNetEvent('jp-slot:admin:resetUISize', function()
     TriggerClientEvent('jp-slot:applyUISize', -1, size)
     print(('[jp-slot] UISize reset to defaults by %s'):format(GetPlayerName(src) or tostring(src)))
 end)
+
+RegisterNetEvent('jp-slot:sv:adminSaveTheme', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        notifyError(src, 'セッションが無効です')
+        return
+    end
+    if not isAdmin(src) then
+        return
+    end
+    local themeData = payload.theme
+    if Theme.save(themeData) then
+        TriggerClientEvent('jp-slot:notify', src, { kind = 'ok', msg = 'theme_saved' })
+    end
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPresetList', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminPresetListResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    local raw = GetResourceKvpString('jp-slot:adm:preset:list')
+    local list = (raw and raw ~= '') and json.decode(raw) or {}
+    TriggerClientEvent('jp-slot:cl:adminPresetListResult', src, { ok = true, list = list })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPresetGet', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminPresetGetResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    local id = payload.id or ''
+    local raw = GetResourceKvpString('jp-slot:adm:preset:' .. id)
+    TriggerClientEvent('jp-slot:cl:adminPresetGetResult', src, {
+        ok = raw ~= nil and raw ~= '',
+        data = (raw and raw ~= '') and json.decode(raw) or nil,
+    })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPresetSave', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    local p = payload.preset
+    if not p or not p.id or not p.name then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = false, reason = 'invalid' })
+        return
+    end
+    p.updatedAt = os.time()
+    SetResourceKvp('jp-slot:adm:preset:' .. p.id, json.encode(p))
+    local raw = GetResourceKvpString('jp-slot:adm:preset:list')
+    local list = (raw and raw ~= '') and json.decode(raw) or {}
+    local found = false
+    for i, e in ipairs(list) do
+        if e.id == p.id then
+            list[i] = { id = p.id, name = p.name, updatedAt = p.updatedAt }
+            found = true
+            break
+        end
+    end
+    if not found then
+        list[#list + 1] = { id = p.id, name = p.name, updatedAt = p.updatedAt }
+    end
+    SetResourceKvp('jp-slot:adm:preset:list', json.encode(list))
+    TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = true })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPresetDelete', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    local id = payload.id or ''
+    SetResourceKvp('jp-slot:adm:preset:' .. id, '')
+    local raw = GetResourceKvpString('jp-slot:adm:preset:list')
+    local list = (raw and raw ~= '') and json.decode(raw) or {}
+    local out = {}
+    for _, e in ipairs(list) do
+        if e.id ~= id then
+            out[#out + 1] = e
+        end
+    end
+    SetResourceKvp('jp-slot:adm:preset:list', json.encode(out))
+    TriggerClientEvent('jp-slot:cl:adminPresetDeleteResult', src, { ok = true })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPresetSetActive', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    SetResourceKvp('jp-slot:adm:preset:active', payload.id or '')
+    TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = true })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminAssetsScan', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        TriggerClientEvent('jp-slot:cl:adminAssetsScanResult', src, { ok = false, reason = 'unauthorized' })
+        return
+    end
+    local base = GetResourcePath(GetCurrentResourceName()) .. '/html/assets/'
+    local cats = {
+        typography = base .. 'ui/typography/',
+        characters = base .. 'characters/',
+        cutins = base .. 'cutins/',
+        bg = base .. 'bg/',
+        vfx = base .. 'vfx/',
+        bgm = base .. 'sound/bgm/',
+        se = base .. 'sound/se/',
+        voice = base .. 'sound/voice/',
+    }
+    local out = {}
+    for k, dir in pairs(cats) do
+        out[k] = JpSlotListDir(dir)
+    end
+    TriggerClientEvent('jp-slot:cl:adminAssetsScanResult', src, { ok = true, assets = out })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPreviewStart', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        return
+    end
+    JpSlotPreviewMode[src] = true
+    TriggerClientEvent('jp-slot:previewMode', src, { active = true })
+end)
+
+RegisterNetEvent('jp-slot:sv:adminPreviewEnd', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        return
+    end
+    JpSlotPreviewMode[src] = nil
+    TriggerClientEvent('jp-slot:previewMode', src, { active = false })
+end)
+
+RegisterCommand('jpslotresetauth', function(source, _args, _raw)
+    if source ~= 0 and not AdminAuth.hasAce(source) then
+        return
+    end
+    SetResourceKvp('jp-slot:adm:passhash', '')
+    SetResourceKvp('jp-slot:adm:salt', '')
+    SetResourceKvp('jp-slot:adm:iter', '')
+    AdminAuth.bootstrap()
+    print('[jp-slot] admin password KVP cleared; new bootstrap if enabled.')
+end, true)
