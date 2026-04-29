@@ -403,7 +403,8 @@
             return;
         }
         var inFreeSpin = state.bonusRemaining > 0;
-        if (!inFreeSpin && state.balance < state.bet) {
+        var embedPv = window.__jpSlotEmbedPreview === true;
+        if (!inFreeSpin && !embedPv && state.balance < state.bet) {
             nuiLog('log', '[handleSpinClick] balance < bet');
             return;
         }
@@ -411,7 +412,11 @@
         window.__jpSlotSpinning = true;
         spinBtn.disabled = true;
         nuiLog('log', '[handleSpinClick] post spin');
-        postNui('spin', { bet: state.bet });
+        postNui('spin', {
+            bet: state.bet,
+            machineId: state.machine && state.machine.id,
+            embedPreview: embedPv,
+        });
     }
 
     function bindFooter() {
@@ -551,7 +556,19 @@
         renderMachineName();
         renderCharacterName();
         updateFooter();
-        showPlay(true);
+        window.__jpSlotEmbedPreview = !!payload.embedPreview;
+        if (payload.embedPreview) {
+            var rootPv = document.getElementById('root');
+            var admPv = document.getElementById('panel-admin');
+            if (rootPv) {
+                rootPv.classList.add('is-visible');
+            }
+            if (admPv) {
+                admPv.style.display = 'flex';
+            }
+        } else {
+            showPlay(true);
+        }
 
         if (window.JpSlotReels && typeof window.JpSlotReels.initIdle === 'function') {
             window.requestAnimationFrame(function () {
@@ -740,6 +757,14 @@
             state.serverUiSize = payload;
             applyUISize(payload);
         } else if (type === 'adminClosed') {
+            var hadEmbedPreview = window.__jpSlotEmbedPreview;
+            if (typeof window.jpSlotMoveRootToBody === 'function') {
+                window.jpSlotMoveRootToBody();
+            }
+            window.__jpSlotEmbedPreview = false;
+            if (hadEmbedPreview) {
+                postNui('admin/previewEnd', {});
+            }
             var adm = document.getElementById('panel-admin');
             if (adm) {
                 adm.style.display = 'none';
@@ -826,6 +851,32 @@
         },
         true
     );
+
+    /** 管理プレビュー：#root を埋め込みホストへ移動（innerHTML 破棄前に必ず jpSlotMoveRootToBody） */
+    window.jpSlotMoveRootToEmbed = function (host) {
+        var root = document.getElementById('root');
+        var panel = document.getElementById('panel-admin');
+        if (!root || !host) {
+            return;
+        }
+        host.appendChild(root);
+        root.classList.add('is-visible');
+        window.__jpSlotEmbedPreview = true;
+        if (panel) {
+            panel.style.display = 'flex';
+        }
+    };
+
+    window.jpSlotMoveRootToBody = function () {
+        var root = document.getElementById('root');
+        var panel = document.getElementById('panel-admin');
+        if (!root || !panel || !panel.parentNode) {
+            return;
+        }
+        panel.parentNode.insertBefore(root, panel);
+        root.classList.remove('is-visible');
+        window.__jpSlotEmbedPreview = false;
+    };
 
     window.jpSlotApplyI18n = applyI18n;
 })();

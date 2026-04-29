@@ -155,7 +155,8 @@ RegisterNetEvent('jp-slot:sv:adminPresetList', function(payload)
     end
     local raw = GetResourceKvpString('jp-slot:adm:preset:list')
     local list = (raw and raw ~= '') and json.decode(raw) or {}
-    TriggerClientEvent('jp-slot:cl:adminPresetListResult', src, { ok = true, list = list })
+    local activeId = GetResourceKvpString('jp-slot:adm:preset:active') or 'default'
+    TriggerClientEvent('jp-slot:cl:adminPresetListResult', src, { ok = true, list = list, activeId = activeId })
 end)
 
 RegisterNetEvent('jp-slot:sv:adminPresetGet', function(payload)
@@ -237,6 +238,9 @@ RegisterNetEvent('jp-slot:sv:adminPresetSetActive', function(payload)
         return
     end
     SetResourceKvp('jp-slot:adm:preset:active', payload.id or '')
+    if ApplyJpSlotMasterFromPreset then
+        ApplyJpSlotMasterFromPreset()
+    end
     TriggerClientEvent('jp-slot:cl:adminPresetActiveResult', src, { ok = true })
 end)
 
@@ -283,6 +287,58 @@ RegisterNetEvent('jp-slot:sv:adminPreviewEnd', function(payload)
     end
     JpSlotPreviewMode[src] = nil
     TriggerClientEvent('jp-slot:previewMode', src, { active = false })
+end)
+
+--- 管理画面「プレビュー」タブ：埋め込み用に台 UI の init データを送る（着席不要）
+RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
+    local src = source
+    payload = type(payload) == 'table' and payload or {}
+    if not sessionOk(src, payload.token) then
+        return
+    end
+    local wantId = payload.machineId
+    local list = Config.Machines or {}
+    local m = nil
+    if wantId then
+        for i = 1, #list do
+            if list[i].id == wantId then
+                m = list[i]
+                break
+            end
+        end
+    end
+    if not m then
+        m = list[1]
+    end
+    if not m then
+        return
+    end
+    local theme = Theme.getActive()
+    local jackpot = 0.0
+    if Config.Jackpot and Config.Jackpot.enabled then
+        local raw = GetResourceKvpString('jp-slot:jackpot:pool')
+        jackpot = tonumber(raw) or ((Config.Jackpot.seedAmount or 0) + 0.0)
+    end
+    local payId = m.paytableId or 'normal'
+    local ptFull = Config.Paytables and Config.Paytables[payId] or {}
+    local ptDisp = Config.PaytableDisplay and Config.PaytableDisplay[payId]
+    local hypeKey = (Config.Marquee and Config.Marquee.HypeKey) or 'marquee.hype'
+    local infoKey = (Config.Marquee and Config.Marquee.InfoKey) or 'marquee.info'
+    TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
+        machine = m,
+        theme = theme,
+        jackpot = jackpot,
+        balance = 999999999,
+        spinDuration = (Config.Debug and Config.DebugSettings and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault,
+        paytable = ptDisp,
+        marquee = {
+            hype = Locales.getList(hypeKey) or {},
+            info = Locales.getList(infoKey) or {},
+        },
+        symbolIds = ptFull.symbols
+            or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' },
+        uiSize = JpSlotGetUISize and JpSlotGetUISize() or nil,
+    })
 end)
 
 RegisterCommand('jpslotresetauth', function(source, _args, _raw)

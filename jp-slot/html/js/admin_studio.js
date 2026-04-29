@@ -11,6 +11,7 @@
         { key: 'bonus_big', icon: '💎', i18n: 'admin.nav.bonus_big' },
         { key: 'miss_tease', icon: '😅', i18n: 'admin.nav.miss_tease' },
         { key: 'theme', icon: '⚙️', i18n: 'admin.nav.theme' },
+        { key: 'preview', icon: '🎬', i18n: 'admin.nav.preview' },
     ];
 
     var EFFECT_KEYS = ['idle', 'win', 'bonus', 'bonus_streak', 'bonus_big', 'miss_tease'];
@@ -68,6 +69,9 @@
     var viewMode = 'master';
     var selectedKey = 'master';
     var simCharts = { cumulative: null, hist: null };
+    var activePresetId = 'default';
+    var suppressAutosave = false;
+    var workspacePushTimer = null;
 
     function $(id) {
         return document.getElementById(id);
@@ -94,6 +98,123 @@
 
     function markDirty() {
         workspace.dirty = true;
+        scheduleWorkspacePush();
+    }
+
+    function scheduleWorkspacePush() {
+        if (suppressAutosave) {
+            return;
+        }
+        if (workspacePushTimer) {
+            clearTimeout(workspacePushTimer);
+        }
+        workspacePushTimer = setTimeout(function () {
+            workspacePushTimer = null;
+            pushWorkspaceToServer();
+        }, 900);
+    }
+
+    function pushWorkspaceToServer() {
+        if (suppressAutosave || !activePresetId) {
+            return;
+        }
+        fetchNui('admin/preset/save', { preset: buildPresetPayload() }).then(function (r) {
+            if (r && r.ok) {
+                workspace.dirty = false;
+                if (viewMode === 'preview') {
+                    fetchNui('admin/embedSlotInit', {});
+                }
+            }
+        });
+    }
+
+    function mergePresetWorkspace(data) {
+        if (!data) {
+            return;
+        }
+        if (data.master) {
+            workspace.master = data.master;
+        }
+        if (data.effects) {
+            workspace.effects = data.effects;
+        }
+    }
+
+    function renderPresetBarHtml() {
+        return (
+            '<div class="admin-preset-bar">' +
+            '<label class="admin-preset-bar-label">' +
+            '<span data-i18n-key="admin.preset.select_label">プリセット選択</span> ' +
+            '<select id="studio-preset-select" class="studio-preset-select"></select>' +
+            '</label></div>'
+        );
+    }
+
+    function refreshAllPresetSelects() {
+        fetchNui('admin/preset/list').then(function (res) {
+            var list = res && res.ok && res.list ? res.list : [];
+            function fill(sel) {
+                if (!sel) {
+                    return;
+                }
+                sel.innerHTML = '';
+                for (var i = 0; i < list.length; i++) {
+                    var e = list[i];
+                    var opt = document.createElement('option');
+                    opt.value = e.id;
+                    opt.textContent = e.name || e.id;
+                    sel.appendChild(opt);
+                }
+                if (activePresetId) {
+                    sel.value = activePresetId;
+                }
+            }
+            fill($('studio-preset-select'));
+            fill($('preview-preset-select'));
+        });
+    }
+
+    function loadPreset(id, opts) {
+        opts = opts || {};
+        if (!id) {
+            return;
+        }
+        suppressAutosave = true;
+        fetchNui('admin/preset/get', { id: id }).then(function (r) {
+            if (!r || !r.ok || !r.data) {
+                suppressAutosave = false;
+                refreshAllPresetSelects();
+                return;
+            }
+            mergePresetWorkspace(r.data);
+            activePresetId = id;
+            fetchNui('admin/preset/setActive', { id: id }).then(function () {
+                suppressAutosave = false;
+                workspace.dirty = false;
+                if (opts.skipRender) {
+                    refreshAllPresetSelects();
+                    if (opts.refreshEmbed) {
+                        fetchNui('admin/embedSlotInit', {});
+                    }
+                } else {
+                    renderCenter();
+                    refreshAllPresetSelects();
+                }
+                if (window.jpSlotApplyI18n) {
+                    window.jpSlotApplyI18n();
+                }
+            });
+        });
+    }
+
+    function wirePresetBar() {
+        var sel = $('studio-preset-select');
+        if (!sel) {
+            return;
+        }
+        sel.onchange = function () {
+            loadPreset(sel.value, {});
+        };
     }
 
     function escapeHtml(s) {
@@ -636,12 +757,13 @@
         var sumText = '合計 ' + sumNum + '%' + (ok ? ' ✓' : '');
         var titleStatusClass = 'studio-card-title-status' + (ok ? '' : ' is-error');
 
-        var html = '<div class="studio-editor-sheet"><div class="studio-section studio-master-wrap">';
+        var html = '<div class="studio-editor-sheet studio-editor-sheet--master"><div class="studio-section studio-master-wrap">';
         html +=
             '<h3 class="studio-page-title" data-i18n-key="admin.master.title">' +
             escapeHtml('全体確率設定') +
             '</h3>';
 
+        html += '<div class="studio-master-grid">';
         html += '<div class="studio-card">';
         html += '<div class="studio-card-title">';
         html += '<span data-i18n-key="admin.master.normal_section">通常中の抽選（合計100%）</span>';
@@ -658,7 +780,8 @@
         html += '<div class="studio-card-actions studio-card-actions--end">';
         html +=
             '<button type="button" class="studio-btn-secondary" id="master-norm-go" data-i18n-key="admin.master.auto_normalize">自動正規化</button>';
-        html += '</div></div>';
+        html += '</div>';
+        html += '</div>';
 
         html += '<div class="studio-card">';
         html += '<div class="studio-card-title">';
@@ -711,6 +834,8 @@
             '" />';
         html += ' <span class="studio-row-hint">(0〜50)</span>';
         html += '</div></div>';
+        html += '</div>';
+
         html += '</div>';
 
         html += '<div class="studio-master-primary-wrap">';
@@ -824,6 +949,7 @@
                     if (r.ok) {
                         workspace.dirty = false;
                         alert('保存しました');
+                        refreshAllPresetSelects();
                     }
                 });
             });
@@ -860,9 +986,93 @@
         });
     }
 
-    function buildPresetPayload() {
-        var name = ($('studio-preset-name') && $('studio-preset-name').value) || 'default';
-        var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
+    function renderPreviewTab() {
+        return (
+            '<div class="studio-editor-sheet studio-preview-page">' +
+            '<div class="admin-preview-toolbar">' +
+            '<label class="admin-preview-toolbar-label">' +
+            '<span data-i18n-key="admin.preset.select_label">プリセット</span> ' +
+            '<select id="preview-preset-select" class="studio-preset-select"></select>' +
+            '</label>' +
+            '<button type="button" id="preview-save-as-new" class="studio-btn-secondary" data-i18n-key="admin.preset.save_as_new_btn"></button>' +
+            '<button type="button" id="preview-save-overwrite" class="studio-btn-primary" data-i18n-key="admin.preset.overwrite_btn"></button>' +
+            '</div>' +
+            '<div id="admin-slot-embed" class="admin-slot-embed"></div>' +
+            '<p class="studio-note studio-preview-hint" data-i18n-key="admin.preview.embed_hint"></p>' +
+            '</div>'
+        );
+    }
+
+    function wirePreviewTab() {
+        fetchNui('admin/previewStart', {}).then(function () {
+            fetchNui('admin/embedSlotInit', {}).then(function () {
+                window.requestAnimationFrame(function () {
+                    var host = $('admin-slot-embed');
+                    if (window.jpSlotMoveRootToEmbed && host) {
+                        window.jpSlotMoveRootToEmbed(host);
+                    }
+                });
+            });
+        });
+        refreshAllPresetSelects();
+        var ps = $('preview-preset-select');
+        if (ps) {
+            ps.onchange = function () {
+                loadPreset(ps.value, { skipRender: true, refreshEmbed: true });
+            };
+        }
+        var sn = $('preview-save-as-new');
+        if (sn) {
+            sn.onclick = function () {
+                var raw = window.prompt('プリセット名', 'my_preset');
+                if (raw == null || String(raw).trim() === '') {
+                    return;
+                }
+                var name = String(raw).trim();
+                var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
+                fetchNui('admin/preset/save', {
+                    preset: buildPresetPayload(id, name),
+                }).then(function (r) {
+                    if (r && r.ok) {
+                        activePresetId = id;
+                        workspace.dirty = false;
+                        refreshAllPresetSelects();
+                        fetchNui('admin/embedSlotInit', {}).then(function () {
+                            window.requestAnimationFrame(function () {
+                                var host = $('admin-slot-embed');
+                                if (window.jpSlotMoveRootToEmbed && host) {
+                                    window.jpSlotMoveRootToEmbed(host);
+                                }
+                            });
+                        });
+                    }
+                });
+            };
+        }
+        var ow = $('preview-save-overwrite');
+        if (ow) {
+            ow.onclick = function () {
+                fetchNui('admin/preset/save', { preset: buildPresetPayload() }).then(function (r) {
+                    if (r && r.ok) {
+                        workspace.dirty = false;
+                        fetchNui('admin/embedSlotInit', {});
+                    }
+                });
+            };
+        }
+    }
+
+    function buildPresetPayload(overrideId, overrideName) {
+        var id = overrideId || activePresetId || 'default';
+        var name = overrideName;
+        if (!name) {
+            var sel = $('studio-preset-select') || $('preview-preset-select');
+            if (sel && sel.options && sel.selectedIndex >= 0) {
+                name = sel.options[sel.selectedIndex].textContent || id;
+            } else {
+                name = id;
+            }
+        }
         return {
             id: id,
             name: name,
@@ -1236,6 +1446,8 @@
                     viewMode = 'legacy';
                 } else if (selectedKey === 'master') {
                     viewMode = 'master';
+                } else if (selectedKey === 'preview') {
+                    viewMode = 'preview';
                 } else {
                     viewMode = 'effect';
                 }
@@ -1254,10 +1466,25 @@
         if (!c) {
             return;
         }
-        if (viewMode === 'master') {
-            c.innerHTML = renderMasterTab();
+        var prev = window.__jpSlotPrevViewMode;
+        var curr = viewMode;
+        if (prev === 'preview' && curr !== 'preview') {
+            if (typeof window.jpSlotMoveRootToBody === 'function') {
+                window.jpSlotMoveRootToBody();
+            }
+            fetchNui('admin/previewEnd', {});
+        }
+        window.__jpSlotPrevViewMode = curr;
+
+        if (curr === 'preview') {
+            c.innerHTML = renderPreviewTab();
+            wirePreviewTab();
+        } else if (curr === 'master') {
+            c.innerHTML = renderPresetBarHtml() + renderMasterTab();
+            wirePresetBar();
             wireMaster();
-        } else if (viewMode === 'legacy') {
+            refreshAllPresetSelects();
+        } else if (curr === 'legacy') {
             c.innerHTML = legacyHtml();
             if (window.__jpSlotAdminLegacyBind) {
                 window.__jpSlotAdminLegacyBind();
@@ -1276,30 +1503,7 @@
         if (!r) {
             return;
         }
-        r.innerHTML =
-            '<div class="studio-right-inner">' +
-            '<button type="button" class="studio-preview-main" id="studio-preview-start">▶ プレビュー開始</button>' +
-            '<button type="button" class="studio-preview-end" id="studio-preview-end">✕ プレビュー終了</button>' +
-            '<p class="studio-mini">所持金∞</p>' +
-            '<div class="studio-preset"><label>プリセット <input type="text" id="studio-preset-name" value="default"></label>' +
-            '<button type="button" id="studio-preset-save">💾 上書き保存</button></div>' +
-            '</div>';
-        $('studio-preview-start').addEventListener('click', function () {
-            fetchNui('admin/previewStart', {});
-        });
-        $('studio-preview-end').addEventListener('click', function () {
-            tryConfirmExit(function () {
-                fetchNui('admin/previewEnd', {});
-            });
-        });
-        $('studio-preset-save').addEventListener('click', function () {
-            fetchNui('admin/preset/save', { preset: buildPresetPayload() }).then(function (x) {
-                if (x.ok) {
-                    workspace.dirty = false;
-                    alert('保存しました');
-                }
-            });
-        });
+        r.innerHTML = '';
     }
 
     function tryConfirmExit(done) {
@@ -1356,25 +1560,35 @@
         workspace = createDefaultWorkspace();
         selectedKey = 'master';
         viewMode = 'master';
+        window.__jpSlotPrevViewMode = undefined;
+        activePresetId = 'default';
+        suppressAutosave = true;
         buildLeftNav();
         buildRight();
-        renderCenter();
-        fetchNui('admin/preset/get', { id: ($('studio-preset-name') && $('studio-preset-name').value) || 'default' }).then(
-            function (r) {
-                if (r.ok && r.data) {
-                    if (r.data.master) {
-                        workspace.master = r.data.master;
-                    }
-                    if (r.data.effects) {
-                        workspace.effects = r.data.effects;
-                    }
-                    renderCenter();
+        fetchNui('admin/preset/list')
+            .then(function (res) {
+                var aid = res && res.activeId ? res.activeId : 'default';
+                activePresetId = aid;
+                return fetchNui('admin/preset/get', { id: aid });
+            })
+            .then(function (r) {
+                if (r && r.ok && r.data) {
+                    mergePresetWorkspace(r.data);
                 }
+                suppressAutosave = false;
+                workspace.dirty = false;
+                renderCenter();
                 if (window.jpSlotApplyI18n) {
                     window.jpSlotApplyI18n();
                 }
-            }
-        );
+            })
+            .catch(function () {
+                suppressAutosave = false;
+                renderCenter();
+                if (window.jpSlotApplyI18n) {
+                    window.jpSlotApplyI18n();
+                }
+            });
     }
 
     window.JpSlotAdminStudio = {
