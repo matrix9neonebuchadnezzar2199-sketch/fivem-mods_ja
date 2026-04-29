@@ -308,11 +308,27 @@
     box-sizing: border-box;
 }
 
+/* プレビュータブ: メイン列の残り高さをすべて台プレビューに割り当てる */
+#panel-admin .admin-center:has(.studio-preview-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
 #panel-admin .studio-editor-sheet {
     width: 100%;
     max-width: none;
     margin: 0;
     box-sizing: border-box;
+}
+
+#panel-admin .studio-preview-page {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 #panel-admin .studio-editor-sheet--master {
@@ -358,6 +374,102 @@
     margin-bottom: 0;
 }
 
+/* マスター確率ツリーは横幅いっぱい（3列グリッドでも1枚で折り返しやすく） */
+#panel-admin .studio-master-grid > .studio-card--master-tree {
+    grid-column: 1 / -1;
+}
+
+#panel-admin .studio-master-tree-intro {
+    margin: 0 0 14px;
+    line-height: 1.55;
+}
+
+#panel-admin .studio-master-tree-branch {
+    margin: 8px 0 4px 6px;
+    padding: 8px 8px 4px 16px;
+    border-left: 3px solid rgba(212, 175, 55, 0.38);
+    border-radius: 0 0 0 10px;
+}
+
+#panel-admin .studio-master-tree-branch-hint {
+    margin-bottom: 10px !important;
+}
+
+#panel-admin .studio-master-tree-params {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(212, 175, 55, 0.28);
+}
+
+#panel-admin .studio-master-tree-params-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #d4af37;
+    margin-bottom: 10px;
+}
+
+#panel-admin .studio-row.studio-master-tree-node {
+    grid-template-columns: minmax(240px, 1.1fr) minmax(320px, 1.5fr);
+}
+
+#panel-admin .studio-master-tree-label-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+#panel-admin .studio-master-tree-glyph {
+    flex: 0 0 auto;
+    min-width: 1.1em;
+    font-family: ui-monospace, 'Segoe UI Symbol', monospace;
+    font-size: 26px;
+    line-height: 1.35;
+    color: #c4b59a;
+    font-weight: 600;
+}
+
+#panel-admin .studio-master-tree-label-text {
+    flex: 1;
+    min-width: 0;
+}
+
+#panel-admin .studio-master-tree-plain-joint {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: baseline;
+}
+
+#panel-admin .studio-master-joint-label,
+#panel-admin .studio-master-inner-label {
+    font-size: 22px;
+    color: #9b8e7a;
+}
+
+#panel-admin .studio-master-joint-sep {
+    display: inline-block;
+    width: 1px;
+    height: 1.2em;
+    margin: 0 8px;
+    background: rgba(212, 175, 55, 0.22);
+    vertical-align: middle;
+}
+
+#panel-admin .studio-master-joint-pill {
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffd96a;
+    background: rgba(46, 34, 22, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    white-space: nowrap;
+}
+
+#panel-admin .studio-master-tree-node--bonus-child .studio-master-row-control {
+    flex-wrap: wrap;
+}
+
 #panel-admin .studio-card--sim {
     margin-top: 8px;
 }
@@ -383,38 +495,65 @@
     color: #f4ead0;
 }
 
-.admin-slot-embed {
+/* プレビュー埋め込み枠（.admin-preview-frame は別名として同値） */
+.admin-slot-embed,
+#panel-admin .admin-preview-frame {
     position: relative;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     box-sizing: border-box;
-    /* プレビュー全体を枠内に収める（子は約80%×72vh。スクロールは出さない） */
-    min-height: min(52vh, 480px);
-    height: min(76vh, 860px);
-    max-height: min(76vh, 860px);
-    border-radius: 12px;
+    flex: 1;
+    width: 100%;
+    height: 260px;
+    min-height: 260px;
+    max-height: 260px;
+    border-radius: 8px;
     overflow: hidden;
-    border: 1px solid rgba(212, 175, 55, 0.35);
-    background: rgba(0, 0, 0, 0.35);
+    padding: 0;
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    background: #0f0a08;
 }
 
-/* base.css の #root は fixed + translate(-50%,-50%)。埋め込み時は transform を必ず打ち消す */
-/* 通常UIは 90vw×90vh 相当 → プレビューは約80%に縮小（CEF で zoom が効かない環境向けに寸法で指定） */
-#panel-admin .admin-slot-embed #root.is-visible {
+/* リールが枠高さを超えないよう縮小（1920×1080 基準、要調整は 0.5〜0.65） */
+#panel-admin .admin-slot-embed .reel-frame.reels-container,
+#panel-admin .admin-slot-embed .reels-container,
+#panel-admin .admin-preview-frame .reel-frame.reels-container,
+#panel-admin .admin-preview-frame .reels-container {
+    transform: scale(0.55);
+    transform-origin: top center;
+    pointer-events: none;
+}
+
+/* プレビューではフッター操作を隠す（実機プレイの #root CSS は無変更） */
+#panel-admin .admin-slot-embed .slot-footer,
+#panel-admin .admin-slot-embed .play-footer,
+#panel-admin .admin-slot-embed .play-buttons,
+#panel-admin .admin-preview-frame .slot-footer {
+    display: none !important;
+}
+
+/* app.js が実機と同じ縦横比のピクセル寸法を設定（均等スケール、横潰れ防止） */
+#panel-admin .jp-slot-embed-fit {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+/* base.css の #root は fixed + translate(-50%,-50%)。埋め込みでは打ち消し、fit 内で 100% 充填 */
+#panel-admin .jp-slot-embed-fit #root.is-visible {
     position: relative;
     left: auto;
     top: auto;
     transform: none;
-    width: 80%;
-    max-width: min(80%, 960px);
-    height: min(72vh, 100%);
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
     min-height: 0;
-    margin: 0 auto;
+    margin: 0;
     z-index: 2;
-    flex: 0 1 auto;
-    align-self: center;
 }
 
 #panel-admin .admin-slot-embed #btn-exit {
@@ -437,15 +576,106 @@
     }
 }
 
-#panel-admin .studio-effect-grid {
+/* 演出設定：左キャラ・カットイン / テキスト〜リール / 音楽 の3列フロー */
+#panel-admin .studio-effect-flow {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-    align-items: stretch;
-    margin-bottom: 8px;
+    grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.15fr) minmax(240px, 1fr);
+    gap: 16px 18px;
+    align-items: start;
+    margin-bottom: 10px;
 }
 
-#panel-admin .studio-effect-grid > .studio-card {
+/* 「通常/Idle」ナビ：中央列（プレテキスト・配当・リール）を出さない2列 */
+#panel-admin .studio-effect-flow.studio-effect-flow--idle-only {
+    grid-template-columns: minmax(260px, 1fr) minmax(240px, 1fr);
+}
+
+#panel-admin .studio-effect-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+#panel-admin .studio-effect-full-width {
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+#panel-admin .studio-card-subtitle {
+    font-size: 26px;
+    font-weight: 700;
+    color: #c4b59a;
+    margin: 8px 0 4px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+}
+
+#panel-admin .studio-effect-asset-preview {
+    margin-top: 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.38);
+    background: rgba(0, 0, 0, 0.4);
+    min-height: 280px;
+    max-height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#panel-admin .studio-effect-preview-placeholder,
+#panel-admin .studio-effect-preview-err {
+    font-size: 22px;
+    color: #8a7a68;
+    padding: 16px;
+    text-align: center;
+}
+
+#panel-admin .studio-effect-preview-err {
+    color: #e89898;
+}
+
+/* キャラ用 WebM は透明アルファが多い。黒背景だけだと「真っ黒で再生されない」ように見えるためチェッカーを敷く */
+#panel-admin .studio-effect-preview-video-stage {
+    max-width: 100%;
+    border-radius: 8px;
+    padding: 6px;
+    box-sizing: border-box;
+    background:
+        repeating-conic-gradient(#5c5560 0% 25%, #8a8290 0% 50%) 50% / 18px 18px;
+}
+
+#panel-admin .studio-effect-preview-media {
+    max-width: 100%;
+    max-height: 480px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+#panel-admin .studio-sound-advanced {
+    margin-top: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#panel-admin .studio-sound-advanced-sum {
+    cursor: pointer;
+    font-size: 24px;
+    color: #d4af37;
+    user-select: none;
+}
+
+#panel-admin .studio-sound-advanced-body {
+    margin-top: 12px;
+}
+
+#panel-admin .studio-effect-col-main {
     margin-bottom: 0;
 }
 
@@ -463,15 +693,33 @@
     box-sizing: border-box;
 }
 
-@media (max-width: 1600px) {
-    #panel-admin .studio-effect-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1700px) {
+    #panel-admin .studio-effect-flow {
+        grid-template-columns: minmax(240px, 1fr) minmax(260px, 1fr);
+        grid-template-rows: auto auto;
+    }
+
+    #panel-admin .studio-effect-col-right {
+        grid-column: 1 / -1;
+    }
+
+    #panel-admin .studio-effect-flow.studio-effect-flow--idle-only {
+        grid-template-columns: minmax(240px, 1fr) minmax(260px, 1fr);
+        grid-template-rows: auto;
+    }
+
+    #panel-admin .studio-effect-flow.studio-effect-flow--idle-only .studio-effect-col-right {
+        grid-column: auto;
     }
 }
 
 @media (max-width: 1100px) {
-    #panel-admin .studio-effect-grid {
+    #panel-admin .studio-effect-flow {
         grid-template-columns: 1fr;
+    }
+
+    #panel-admin .studio-effect-col-right {
+        grid-column: auto;
     }
 }
 
@@ -1196,13 +1444,12 @@
     }
 }
 
-.sim-out {
-    font-size: 22px;
-    max-height: 220px;
-    overflow: auto;
-    background: rgba(0, 0, 0, 0.35);
-    padding: 10px;
-    border-radius: 6px;
+.sim-result-body {
+    font-size: 26px;
+    line-height: 1.55;
+    color: #e8dcc8;
+    padding: 12px 4px 8px;
+    min-height: 2em;
 }
 
 .admin-modal {
@@ -1337,6 +1584,53 @@
     gap: 14px;
     flex-wrap: wrap;
     min-width: 0;
+}
+
+/* マスター確率: スライダー両側の ±0.1% ボタン */
+#panel-admin .studio-master-row-control {
+    flex-wrap: nowrap;
+    gap: 10px;
+}
+
+#panel-admin .studio-master-row-control--miss-auto {
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+#panel-admin .studio-master-auto-hint {
+    font-size: 22px;
+    color: #8a7a68;
+    min-width: 3em;
+    text-align: right;
+}
+
+#panel-admin .studio-master-row-control .studio-slider {
+    flex: 1 1 auto;
+    min-width: 72px;
+}
+
+#panel-admin .studio-step-btn {
+    flex: 0 0 auto;
+    min-width: 52px;
+    min-height: 52px;
+    padding: 6px 12px;
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 700;
+    color: #f4ead0;
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 8px;
+    background: rgba(36, 26, 22, 0.95);
+    cursor: pointer;
+}
+
+#panel-admin .studio-step-btn:hover {
+    border-color: rgba(255, 217, 106, 0.65);
+    background: rgba(48, 38, 34, 0.98);
+}
+
+#panel-admin .studio-step-btn:active {
+    transform: scale(0.96);
 }
 
 #panel-admin .studio-row-hint {
@@ -1476,30 +1770,67 @@
     margin-left: auto;
 }
 
-#panel-admin .sim-chart-tabs {
+/* 「通常 / Idle」ナビ内：Idle と通常結果（旧 miss_tease）の切替 */
+#panel-admin .studio-idle-subbar {
     display: flex;
     gap: 12px;
-    margin: 16px 0 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
-#panel-admin .sim-tab-btn {
+#panel-admin .studio-idle-subbtn {
     font-family: inherit;
     cursor: pointer;
-    padding: 10px 20px;
-    font-size: 26px;
-    border-radius: 8px;
-    border: 1px solid rgba(212, 175, 55, 0.25);
-    background: rgba(0, 0, 0, 0.25);
+    padding: 12px 22px;
+    font-size: 28px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    background: rgba(0, 0, 0, 0.28);
     color: #d4af37;
 }
 
-#panel-admin .sim-tab-btn:hover {
-    border-color: rgba(212, 175, 55, 0.5);
+#panel-admin .studio-idle-subbtn:hover {
+    border-color: rgba(255, 217, 106, 0.55);
     color: #ffd96a;
 }
 
-#panel-admin .sim-out {
-    font-size: 26px;
+#panel-admin .studio-idle-subbtn.is-active {
+    border-color: rgba(212, 175, 55, 0.75);
+    background: rgba(212, 175, 55, 0.15);
+    color: #ffe9b8;
+    font-weight: 800;
+}
+
+#panel-admin .sim-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+
+#panel-admin .sim-result-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #c4b59a;
+    padding: 12px 16px 12px 0;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+#panel-admin .sim-result-table td {
+    padding: 12px 0;
+    color: #f4ead0;
+    font-weight: 600;
+}
+
+#panel-admin .sim-result-table tbody tr {
+    border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+#panel-admin .sim-result-note {
+    margin: 14px 0 0;
+    font-size: 22px;
+    color: #9b8e7a;
+    line-height: 1.45;
 }
 
 #panel-admin .admin-left {

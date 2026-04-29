@@ -190,6 +190,7 @@
     position: relative;
     aspect-ratio: 9 / 16;
     min-height: 0;
+    z-index: 5;
 }
 
 .col-left > h3,
@@ -198,10 +199,27 @@
     display: none !important;
 }
 
-.col-left .char-stage {
-    flex: 1;
-    min-height: 0;
+.col-left .char-bottom-row {
+    position: relative;
+    z-index: 6;
     width: 100%;
+    flex-shrink: 0;
+}
+
+.col-left .char-stage {
+    position: absolute;
+    left: 2vw;
+    bottom: 0;
+    top: auto;
+    right: auto;
+    width: auto;
+    max-width: 30vw;
+    max-height: 80vh;
+    height: auto;
+    flex: none;
+    transform: none;
+    z-index: 5;
+    pointer-events: none;
 }
 
 .char-info-card,
@@ -211,30 +229,36 @@
     padding: 0.04rem;
 }
 
-/* ステージ: 立ち絵と動画を完全に重ねる土台（背面は透過） */
+/* ステージ: 立ち絵と動画を重ねる土台（左列は絶対配置でリールと干渉しない） */
 .char-stage {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    overflow: visible;
     background: transparent;
     border: 1px solid var(--border-frame);
     border-radius: 0.08rem;
 }
 
-/* 立ち絵と動画を同位置・同サイズで配置 */
-.char-portrait,
-.char-video,
-.char-img.char-portrait {
+/* 左列キャラ: 左寄せ・100%スケール・リールより背面（.col-center は z-index:10） */
+.col-left .char-stage .char-portrait,
+.col-left .char-stage .char-video,
+.col-left .char-stage .char-img.char-portrait {
     position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    left: 0 !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 80vh;
     object-fit: contain;
-    object-position: center bottom;
+    object-position: left bottom;
     display: block;
     margin: 0;
     padding: 0;
+    transform: none;
 }
 
 .char-portrait,
@@ -243,20 +267,31 @@
     transition: opacity 0.5s ease;
 }
 
+.col-left .char-stage .char-portrait,
+.col-left .char-stage .char-img.char-portrait {
+    z-index: 1;
+}
+
 .char-video {
     z-index: 2;
     opacity: 0;
     transition: opacity 0.35s ease;
     pointer-events: none;
     background: transparent;
-    object-fit: cover;
-    object-position: center bottom;
-    transform-origin: center bottom;
+}
+
+.col-left .char-stage .char-video {
+    object-fit: contain;
+    object-position: left bottom;
+    transform-origin: left bottom;
 }
 
 .char-video.is-playing {
     opacity: 1;
-    transform: scale(1.55);
+}
+
+.col-left .char-stage .char-video.is-playing {
+    transform: none !important;
 }
 
 .char-portrait.is-fading-out,
@@ -307,6 +342,7 @@
 
 .col-center.reels-section {
     position: relative;
+    z-index: 10;
     background: transparent;
     display: grid;
     grid-template-rows: 10% minmax(0, 1fr) 10%;
