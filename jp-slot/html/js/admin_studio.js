@@ -70,6 +70,8 @@
     var selectedKey = 'master';
     var simCharts = { cumulative: null, hist: null };
     var activePresetId = 'default';
+    /** パンくず表示用（サーバー preset.name または一覧の表示名） */
+    var activePresetLabel = 'default';
     var suppressAutosave = false;
     var workspacePushTimer = null;
 
@@ -171,6 +173,17 @@
         }
     }
 
+    /** ホーム › 演出 › （読み込み中のプリセット名）。applyI18n で上書きされないよう data-i18n-key は付けない */
+    function updateBreadcrumbPreset() {
+        var el = $('adm-current-state');
+        if (!el) {
+            return;
+        }
+        el.removeAttribute('data-i18n-key');
+        var label = activePresetLabel || activePresetId || 'default';
+        el.textContent = label;
+    }
+
     function renderPresetBarHtml() {
         return (
             '<div class="admin-preset-bar">' +
@@ -189,19 +202,36 @@
                     return;
                 }
                 sel.innerHTML = '';
-                for (var i = 0; i < list.length; i++) {
-                    var e = list[i];
+                var seen = {};
+                var j;
+                for (j = 0; j < list.length; j++) {
+                    var e = list[j];
+                    if (!e || !e.id || seen[e.id]) {
+                        continue;
+                    }
+                    seen[e.id] = true;
                     var opt = document.createElement('option');
                     opt.value = e.id;
                     opt.textContent = e.name || e.id;
                     sel.appendChild(opt);
                 }
+                if (!seen.default) {
+                    var op = document.createElement('option');
+                    op.value = 'default';
+                    op.textContent = 'default';
+                    sel.insertBefore(op, sel.firstChild);
+                }
                 if (activePresetId) {
                     sel.value = activePresetId;
+                    var ix = sel.selectedIndex;
+                    if (ix >= 0 && sel.options[ix]) {
+                        activePresetLabel = sel.options[ix].textContent || activePresetId;
+                    }
                 }
             }
             fill($('studio-preset-select'));
             fill($('preview-preset-select'));
+            updateBreadcrumbPreset();
         });
     }
 
@@ -214,6 +244,33 @@
         fetchNui('admin/preset/get', { id: id })
             .then(function (r) {
                 if (!r || !r.ok || !r.data) {
+                    if (id === 'default') {
+                        workspace = createDefaultWorkspace();
+                        activePresetId = 'default';
+                        activePresetLabel = 'default';
+                        return fetchNui('admin/preset/setActive', { id: 'default' })
+                            .then(function () {
+                                suppressAutosave = false;
+                                workspace.dirty = false;
+                                if (opts.skipRender) {
+                                    refreshAllPresetSelects();
+                                    if (opts.refreshEmbed) {
+                                        return fetchNui('admin/embedSlotInit', {});
+                                    }
+                                } else {
+                                    renderCenter();
+                                    refreshAllPresetSelects();
+                                }
+                                updateBreadcrumbPreset();
+                                if (window.jpSlotApplyI18n) {
+                                    window.jpSlotApplyI18n();
+                                }
+                            })
+                            .catch(function () {
+                                suppressAutosave = false;
+                                showAdminToast('プリセットの適用に失敗しました', true);
+                            });
+                    }
                     suppressAutosave = false;
                     refreshAllPresetSelects();
                     showAdminToast('プリセットを読み込めませんでした', true);
@@ -221,6 +278,10 @@
                 }
                 mergePresetWorkspace(r.data);
                 activePresetId = id;
+                activePresetLabel =
+                    r.data.name != null && String(r.data.name).trim() !== ''
+                        ? String(r.data.name).trim()
+                        : id;
                 return fetchNui('admin/preset/setActive', { id: id })
                     .then(function () {
                         suppressAutosave = false;
@@ -234,6 +295,7 @@
                             renderCenter();
                             refreshAllPresetSelects();
                         }
+                        updateBreadcrumbPreset();
                         if (window.jpSlotApplyI18n) {
                             window.jpSlotApplyI18n();
                         }
@@ -1148,6 +1210,7 @@
                         .then(function (r) {
                             if (r && r.ok) {
                                 activePresetId = id;
+                                activePresetLabel = name;
                                 workspace.dirty = false;
                                 showAdminToast('保存しました', false);
                                 refreshAllPresetSelects();
@@ -1589,10 +1652,7 @@
                 }
                 buildLeftNav();
                 renderCenter();
-                var cur = $('adm-current-state');
-                if (cur) {
-                    cur.textContent = selectedKey;
-                }
+                updateBreadcrumbPreset();
             });
         }
     }
@@ -1632,6 +1692,7 @@
         if (window.jpSlotApplyI18n) {
             window.jpSlotApplyI18n();
         }
+        updateBreadcrumbPreset();
     }
 
     function buildRight() {
@@ -1710,6 +1771,12 @@
             .then(function (r) {
                 if (r && r.ok && r.data) {
                     mergePresetWorkspace(r.data);
+                    activePresetLabel =
+                        r.data.name != null && String(r.data.name).trim() !== ''
+                            ? String(r.data.name).trim()
+                            : activePresetId;
+                } else {
+                    activePresetLabel = activePresetId || 'default';
                 }
                 suppressAutosave = false;
                 workspace.dirty = false;
@@ -1717,13 +1784,16 @@
                 if (window.jpSlotApplyI18n) {
                     window.jpSlotApplyI18n();
                 }
+                updateBreadcrumbPreset();
             })
             .catch(function () {
                 suppressAutosave = false;
+                activePresetLabel = activePresetId || 'default';
                 renderCenter();
                 if (window.jpSlotApplyI18n) {
                     window.jpSlotApplyI18n();
                 }
+                updateBreadcrumbPreset();
             });
     }
 
