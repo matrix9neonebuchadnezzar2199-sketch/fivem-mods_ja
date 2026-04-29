@@ -112,6 +112,9 @@
             if (Math.random() > IDLE_VIDEO_CHANCE) {
                 return;
             }
+            if (window.__jpSlotNeutralPreviewChar) {
+                return;
+            }
             var base = state.assetsRoot || window.__jpSlotAssetsRoot || '';
             if (base && window.CharFx && window.CharFx.play) {
                 window.CharFx.play(base + 'characters/luna/win.webm');
@@ -512,7 +515,14 @@
         var chMap = (payload && payload.characters) || {};
         var ch = cid ? chMap[cid] : null;
         var idle = ch && ch.idle;
-        if (charImg && root && idle && idle.file && idle.type === 'image') {
+        var skipCharVisual =
+            payload && payload.embedPreview && payload.neutralPreviewCharacter === true;
+        if (skipCharVisual) {
+            if (charImg) {
+                charImg.hidden = true;
+                charImg.removeAttribute('src');
+            }
+        } else if (charImg && root && idle && idle.file && idle.type === 'image') {
             charImg.hidden = false;
             charImg.src = root + idle.file;
         } else if (charImg) {
@@ -554,9 +564,18 @@
         state.bet = (state.machine && state.machine.minBet) || 100;
         clampBet();
         renderMachineName();
-        renderCharacterName();
+        if (payload.embedPreview && payload.neutralPreviewCharacter) {
+            var cn = document.querySelector('.character-name');
+            if (cn) {
+                var tn = resolveLocale('admin.preview_char_neutral');
+                cn.textContent = tn != null && tn !== '' ? tn : '\u2014';
+            }
+        } else {
+            renderCharacterName();
+        }
         updateFooter();
         window.__jpSlotEmbedPreview = !!payload.embedPreview;
+        window.__jpSlotNeutralPreviewChar = !!(payload.embedPreview && payload.neutralPreviewCharacter);
         if (payload.embedPreview) {
             var rootPv = document.getElementById('root');
             var admPv = document.getElementById('panel-admin');
@@ -762,6 +781,7 @@
                 window.jpSlotMoveRootToBody();
             }
             window.__jpSlotEmbedPreview = false;
+            window.__jpSlotNeutralPreviewChar = false;
             if (hadEmbedPreview) {
                 postNui('admin/previewEnd', {});
             }

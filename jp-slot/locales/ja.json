@@ -114,6 +114,7 @@
     "preset.name_modal_title": "プリセット名",
     "preset.name_modal_ok": "保存",
     "preview.embed_hint": "実機に近い画面です。所持金は表示のみで、SPIN は確率・演出確認用です（編集は自動でサーバーへ反映されます）。",
+    "preview_char_neutral": "—",
     "master.title": "全体確率設定",
     "master.normal_section": "通常中の抽選（合計100%）",
     "master.bonus_promote_section": "ボーナス昇格抽選",

@@ -161,6 +161,38 @@ RegisterNetEvent('jp-slot:themeUpdated', function(theme)
     })
 end)
 
+RegisterNetEvent('jp-slot:cl:adminEmbedSlotInit', function(data)
+    data = type(data) == 'table' and data or {}
+    local m = data.machine
+    if not m then
+        return
+    end
+    SendNUIMessage({
+        type = 'init',
+        payload = {
+            machine = m,
+            theme = data.theme,
+            jackpot = data.jackpot,
+            balance = data.balance or 999999999,
+            spinDuration = data.spinDuration or Config.SpinDurationDefault,
+            paytable = data.paytable,
+            characters = Config.Characters,
+            marquee = data.marquee or { hype = {}, info = {} },
+            symbolIds = data.symbolIds,
+            locales = localeTable,
+            localeCode = Config.Locale or 'ja',
+            assetsRoot = 'nui://' .. GetCurrentResourceName() .. '/html/assets/',
+            uiSize = data.uiSize,
+            embedPreview = true,
+            neutralPreviewCharacter = data.neutralPreviewCharacter == true,
+            debug = {
+                enabled = Config.Debug and Config.Debug.enabled or false,
+                nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
+            },
+        },
+    })
+end)
+
 RegisterNetEvent('jp-slot:openAdmin', function(data)
     data = type(data) == 'table' and data or {}
     nuiOpen = true
@@ -215,9 +247,11 @@ RegisterNUICallback('spin', function(body, cb)
     cb({})
     body = type(body) == 'table' and body or {}
     local bet = tonumber(body.bet) or 0
+    local mid = body.machineId or currentMachineId
     TriggerServerEvent('jp-slot:spin', {
-        machineId = currentMachineId,
+        machineId = mid,
         bet = bet,
+        embedPreview = body.embedPreview == true,
     })
 end)
 

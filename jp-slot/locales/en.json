@@ -114,6 +114,7 @@
     "preset.name_modal_title": "Preset name",
     "preset.name_modal_ok": "Save",
     "preview.embed_hint": "Near-production UI. Balance is display-only; SPIN is for odds/effects (edits auto-save to the server).",
+    "preview_char_neutral": "\u2014",
     "master.title": "Master odds",
     "master.normal_section": "Normal spins (100% total)",
     "master.bonus_promote_section": "Bonus promotion draw",

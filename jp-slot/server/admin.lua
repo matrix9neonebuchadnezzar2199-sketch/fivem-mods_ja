@@ -338,6 +338,8 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         symbolIds = ptFull.symbols
             or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' },
         uiSize = JpSlotGetUISize and JpSlotGetUISize() or nil,
+        -- default プリセット時は台 config の既定キャラ名・画像を出さない（演出プリセットと混同しないため）
+        neutralPreviewCharacter = payload.neutralPreviewCharacter == true,
     })
 end)
 

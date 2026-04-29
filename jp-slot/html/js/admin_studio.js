@@ -150,7 +150,7 @@
                 if (r && r.ok) {
                     workspace.dirty = false;
                     if (viewMode === 'preview') {
-                        return fetchNui('admin/embedSlotInit', {});
+                        return fetchNui('admin/embedSlotInit', embedSlotInitOpts());
                     }
                     return;
                 }
@@ -182,6 +182,13 @@
         el.removeAttribute('data-i18n-key');
         var label = activePresetLabel || activePresetId || 'default';
         el.textContent = label;
+    }
+
+    /** default プリセット時はプレビューで Config 既定キャラ（ルナ等）の名前・画像を出さない */
+    function embedSlotInitOpts() {
+        return {
+            neutralPreviewCharacter: activePresetId === 'default',
+        };
     }
 
     function renderPresetBarHtml() {
@@ -255,7 +262,7 @@
                                 if (opts.skipRender) {
                                     refreshAllPresetSelects();
                                     if (opts.refreshEmbed) {
-                                        return fetchNui('admin/embedSlotInit', {});
+                                        return fetchNui('admin/embedSlotInit', embedSlotInitOpts());
                                     }
                                 } else {
                                     renderCenter();
@@ -289,7 +296,7 @@
                         if (opts.skipRender) {
                             refreshAllPresetSelects();
                             if (opts.refreshEmbed) {
-                                return fetchNui('admin/embedSlotInit', {});
+                                return fetchNui('admin/embedSlotInit', embedSlotInitOpts());
                             }
                         } else {
                             renderCenter();
@@ -1175,7 +1182,7 @@
     function wirePreviewTab() {
         fetchNui('admin/previewStart', {})
             .then(function () {
-                return fetchNui('admin/embedSlotInit', {});
+                return fetchNui('admin/embedSlotInit', embedSlotInitOpts());
             })
             .then(function () {
                 window.requestAnimationFrame(function () {
@@ -1214,7 +1221,7 @@
                                 workspace.dirty = false;
                                 showAdminToast('保存しました', false);
                                 refreshAllPresetSelects();
-                                return fetchNui('admin/embedSlotInit', {}).then(function () {
+                                return fetchNui('admin/embedSlotInit', embedSlotInitOpts()).then(function () {
                                     window.requestAnimationFrame(function () {
                                         var host = $('admin-slot-embed');
                                         if (window.jpSlotMoveRootToEmbed && host) {
@@ -1242,7 +1249,7 @@
                         if (r && r.ok) {
                             workspace.dirty = false;
                             showAdminToast('保存しました', false);
-                            return fetchNui('admin/embedSlotInit', {});
+                            return fetchNui('admin/embedSlotInit', embedSlotInitOpts());
                         }
                         showAdminToast(
                             '保存に失敗しました' + (r && r.reason ? ': ' + r.reason : ''),
