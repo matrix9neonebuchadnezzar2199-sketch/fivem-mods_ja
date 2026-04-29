@@ -609,8 +609,12 @@
                     pl.classList.remove('hit');
                 }, 500);
             }
-            window.JpSlotEffects.playCutin(p.cutin || { kind: 'none' }, state.assetsRoot).then(
-                function () {
+            var fxChain =
+                window.JpSlotEffects.runEffectChain &&
+                typeof window.JpSlotEffects.runEffectChain === 'function'
+                    ? window.JpSlotEffects.runEffectChain(p, state.assetsRoot || ar)
+                    : window.JpSlotEffects.playCutin(p.cutin || { kind: 'none' }, state.assetsRoot);
+            fxChain.then(function () {
                     applyWinFx(p, ar);
                     state.balance = p.balance != null ? p.balance : state.balance;
                     state.jackpot = p.jackpot != null ? p.jackpot : state.jackpot;
@@ -641,8 +645,7 @@
                     if (sb1) {
                         sb1.disabled = false;
                     }
-                }
-            );
+                });
         }, ar);
     }
 

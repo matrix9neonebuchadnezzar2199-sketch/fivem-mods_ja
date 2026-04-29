@@ -187,6 +187,7 @@ RegisterNetEvent('jp-slot:sv:adminPresetSave', function(payload)
     end
     p.updatedAt = os.time()
     SetResourceKvp('jp-slot:adm:preset:' .. p.id, json.encode(p))
+    SetResourceKvp('jp-slot:adm:preset:active', p.id)
     local raw = GetResourceKvpString('jp-slot:adm:preset:list')
     local list = (raw and raw ~= '') and json.decode(raw) or {}
     local found = false
@@ -201,6 +202,9 @@ RegisterNetEvent('jp-slot:sv:adminPresetSave', function(payload)
         list[#list + 1] = { id = p.id, name = p.name, updatedAt = p.updatedAt }
     end
     SetResourceKvp('jp-slot:adm:preset:list', json.encode(list))
+    if ApplyJpSlotMasterFromPreset then
+        ApplyJpSlotMasterFromPreset()
+    end
     TriggerClientEvent('jp-slot:cl:adminPresetSaveResult', src, { ok = true })
 end)
 

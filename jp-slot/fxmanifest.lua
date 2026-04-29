@@ -35,6 +35,7 @@ client_scripts {
 ui_page 'html/index.html'
 
 files {
+    'html/js/vendor/chart.min.js',
     'html/index.html',
     'html/admin.html',
     'html/css/**/*.css',

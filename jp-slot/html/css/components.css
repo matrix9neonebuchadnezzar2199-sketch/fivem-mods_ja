@@ -971,3 +971,80 @@
     outline: 0 !important;
     gap: 0 !important;
 }
+
+/* リール中央オーバーレイ（演出設計ツールブロック①③）— .cutin-overlay は触らない */
+.reel-center-text {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.reel-center-text-bg {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.reel-center-text.is-show .reel-center-text-bg {
+    opacity: 1;
+}
+
+.reel-center-text-content {
+    position: relative;
+    z-index: 1;
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 900;
+    text-align: center;
+    text-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.85),
+        0 0 24px currentColor;
+    transform: scale(0.8);
+    opacity: 0;
+    transition:
+        transform 0.25s ease,
+        opacity 0.25s ease;
+    letter-spacing: 0.05em;
+    font-size: calc(72px * var(--rct-size, 100%) / 100%);
+}
+
+.reel-center-text.is-show .reel-center-text-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.reel-center-text.fx-pulse .reel-center-text-content {
+    animation: rct-pulse 0.6s ease-in-out infinite;
+}
+
+.reel-center-text.fx-zoom .reel-center-text-content {
+    animation: rct-zoom 0.4s ease-out 1;
+}
+
+@keyframes rct-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+}
+
+@keyframes rct-zoom {
+    0% {
+        transform: scale(0.5);
+    }
+    70% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1);
+    }
+}

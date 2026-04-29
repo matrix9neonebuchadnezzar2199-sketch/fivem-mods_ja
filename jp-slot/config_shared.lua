@@ -136,6 +136,24 @@ Config.Marquee = Config.Marquee or {}
 Config.Marquee.HypeKey = 'marquee.hype'
 Config.Marquee.InfoKey = 'marquee.info'
 
+--- 上位マスター抽選（通常時）。詳細は SPEC。管理プリセットの master で上書き可能。
+Config.Master = {
+    Normal = {
+        Win = 25.0,
+        Bonus = 5.0,
+        MissTease = 70.0,
+    },
+    BonusPromote = {
+        Streak = 30.0,
+        Big = 5.0,
+        MaxStreak = 3,
+        BigMultiplier = 10,
+    },
+    Cooldown = {
+        Spins = 5,
+    },
+}
+
 -- ボーナスフリースピン（サーバーで残数・配当倍率を適用。確率は変更しない）
 Config.Bonus = {
     Enabled = true,

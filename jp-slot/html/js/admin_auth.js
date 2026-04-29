@@ -187,10 +187,17 @@
     }
 
     function closeApp() {
-        fetchNui('admin/close', { token: state.token });
-        var p = $('panel-admin');
-        if (p) {
-            p.style.display = 'none';
+        function doClose() {
+            fetchNui('admin/close', { token: state.token });
+            var p = $('panel-admin');
+            if (p) {
+                p.style.display = 'none';
+            }
+        }
+        if (window.JpSlotTryConfirmDirtyExit) {
+            window.JpSlotTryConfirmDirtyExit(doClose);
+        } else {
+            doClose();
         }
     }
 

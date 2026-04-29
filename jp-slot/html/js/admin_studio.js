@@ -1,76 +1,73 @@
-/* global window, document, fetch, GetParentResourceName */
+/* global window, document, fetch, GetParentResourceName, Chart */
 (function () {
     var RES = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'jp-slot';
 
-    var STATE_GROUPS = [
-        {
-            id: 'g_basic',
-            title: '1. 通常・基本',
-            states: [
-                { id: 'idle', name: '通常 / Idle', icon: '▶' },
-                { id: 'spin_start', name: '変動開始 / Spin Start', icon: '▶' },
-                { id: 'minor_win', name: '小役成立 / Minor Win', icon: '▶' },
-            ],
-        },
-        {
-            id: 'g_tease',
-            title: '2. 前兆・煽り',
-            states: [
-                { id: 'reach', name: 'リーチ / テンパイ', icon: '▶' },
-                { id: 'tease', name: '煽り / Tease', icon: '▶' },
-                { id: 'stepup', name: 'ステップアップ', icon: '▶' },
-                { id: 'cutin', name: 'カットイン', icon: '▶' },
-                { id: 'pseudo', name: '擬似連', icon: '▶' },
-            ],
-        },
-        {
-            id: 'g_result',
-            title: '3. 当落・結果',
-            states: [
-                { id: 'win', name: '当たり / Win', icon: '⭐' },
-                { id: 'big_win', name: '大当たり / Big Win', icon: '💎' },
-                { id: 'lose', name: 'ハズレ / Lose', icon: '💀', subtitle: '期待させて外す演出' },
-                { id: 'revival', name: '復活 / Revival', icon: '✨' },
-            ],
-        },
-        {
-            id: 'g_bonus',
-            title: '4. ボーナス',
-            states: [
-                { id: 'bonus_confirm', name: 'ボーナス確定', icon: '🎰' },
-                { id: 'bonus_play', name: 'ボーナス中', icon: '🎉' },
-                { id: 'addon', name: '上乗せ / Add-on', icon: '➕' },
-                { id: 'streak', name: '連チャン / Streak', icon: '🔥' },
-            ],
-        },
-        {
-            id: 'g_premium',
-            title: '5. プレミアム',
-            states: [
-                { id: 'super_hot', name: '激アツ', icon: '🌟' },
-                { id: 'freeze', name: 'フリーズ', icon: '❄' },
-            ],
-        },
+    var STUDIO_NAV = [
+        { key: 'master', icon: '🎲', i18n: 'admin.nav.master' },
+        { key: 'idle', icon: '🎰', i18n: 'admin.nav.idle' },
+        { key: 'win', icon: '🎯', i18n: 'admin.nav.win' },
+        { key: 'bonus', icon: '🎁', i18n: 'admin.nav.bonus' },
+        { key: 'bonus_streak', icon: '🔁', i18n: 'admin.nav.bonus_streak' },
+        { key: 'bonus_big', icon: '💎', i18n: 'admin.nav.bonus_big' },
+        { key: 'miss_tease', icon: '😅', i18n: 'admin.nav.miss_tease' },
+        { key: 'theme', icon: '⚙️', i18n: 'admin.nav.theme' },
     ];
 
-    var DEFAULT_PROBS = {
-        win: { enabled: true, p: 20.0 },
-        lose: { enabled: true, p: 60.0 },
-        reach_to_win: { enabled: true, p: 8.0 },
-        reach_to_lose: { enabled: true, p: 5.0 },
-        bonus_single: { enabled: true, p: 5.0 },
-        bonus_streak: { enabled: false, p: 1.5 },
-        freeze: { enabled: false, p: 0.5 },
-    };
+    var EFFECT_KEYS = ['idle', 'win', 'bonus', 'bonus_streak', 'bonus_big', 'miss_tease'];
 
-    var viewMode = 'probs';
-    var selectedStateId = 'win';
-    var workspace = {
-        probs: JSON.parse(JSON.stringify(DEFAULT_PROBS)),
-        preset: null,
-        dirty: false,
-    };
-    var assetLib = null;
+    function defaultBlockText() {
+        return {
+            enabled: true,
+            text: '',
+            color: '#f4ead0',
+            size_percent: 80,
+            duration_ms: 600,
+            fade: true,
+            effect: 'none',
+        };
+    }
+
+    function defaultEffectSection() {
+        return {
+            pre_text: defaultBlockText(),
+            cutin_block: { kind: 'none', file: '', duration_ms: 1200 },
+            post_text: (function () {
+                var b = defaultBlockText();
+                b.size_percent = 140;
+                b.color = '#d4af37';
+                b.effect = 'pulse';
+                return b;
+            })(),
+            char_video: { enabled: true, file: '', fade_back: true },
+            sound: { se: '', voice: '', bgm_change: false, bgm_file: '' },
+            reel_fx: { mode: 'none', custom_color: '#d4af37' },
+            payout: { enabled: true, duration_ms: 2000, animation: 'countup' },
+            reaction: { reaction: 'confused', tease_strength: 'medium' },
+            streak_intensity: {},
+        };
+    }
+
+    function createDefaultWorkspace() {
+        var effects = {};
+        for (var i = 0; i < EFFECT_KEYS.length; i++) {
+            effects[EFFECT_KEYS[i]] = defaultEffectSection();
+        }
+        effects.miss_tease.payout.enabled = false;
+        return {
+            master: {
+                normal: { win: 25, bonus: 5, miss_tease: 70 },
+                bonus_promote: { streak: 30, big: 5, max_streak: 3, big_multiplier: 10 },
+                cooldown: { spins: 5 },
+            },
+            effects: effects,
+            dirty: false,
+        };
+    }
+
+    var workspace = createDefaultWorkspace();
+    var viewMode = 'master';
+    var selectedKey = 'master';
+    var simCharts = { cumulative: null, hist: null };
 
     function $(id) {
         return document.getElementById(id);
@@ -95,6 +92,10 @@
             });
     }
 
+    function markDirty() {
+        workspace.dirty = true;
+    }
+
     function escapeHtml(s) {
         return String(s || '')
             .replace(/&/g, '&amp;')
@@ -103,104 +104,492 @@
             .replace(/"/g, '&quot;');
     }
 
-    function buildLeftNav() {
-        var left = $('admin-left');
-        if (!left) {
+    function masterSumOk(m) {
+        var a = Number(m.normal.win) + Number(m.normal.bonus) + Number(m.normal.miss_tease);
+        return Math.abs(a - 100) <= 0.1;
+    }
+
+    function masterPromoteSum(m) {
+        return Number(m.bonus_promote.streak) + Number(m.bonus_promote.big);
+    }
+
+    function rowMaster(k, label, val) {
+        return (
+            '<div class="studio-prob-row master-row" data-k="' +
+            k +
+            '"><span>' +
+            label +
+            '</span><input type="range" min="0" max="100" step="0.1" class="master-sl" data-k="' +
+            k +
+            '" value="' +
+            val +
+            '"><span class="master-sl-val">' +
+            Number(val).toFixed(1) +
+            '%</span></div>'
+        );
+    }
+
+    function rowPromote(k, label, val) {
+        return (
+            '<div class="studio-prob-row"><span>' +
+            label +
+            '</span><input type="range" min="0" max="100" step="0.1" class="pr-sl" data-pk="' +
+            k +
+            '" value="' +
+            val +
+            '"><span>' +
+            Number(val).toFixed(1) +
+            '%</span></div>'
+        );
+    }
+
+    function normalizeMaster() {
+        var w = workspace.master.normal.win;
+        var b = workspace.master.normal.bonus;
+        var t = workspace.master.normal.miss_tease;
+        var s = w + b + t;
+        if (s <= 0) {
             return;
         }
-        var h =
-            '<div class="studio-nav-head"><button type="button" class="studio-nav-all" id="studio-btn-probs">🎲 全体確率設定</button></div>';
-        for (var g = 0; g < STATE_GROUPS.length; g++) {
-            var grp = STATE_GROUPS[g];
-            h += '<details class="studio-acc" open><summary>' + escapeHtml(grp.title) + '</summary><div class="studio-acc-body">';
-            for (var i = 0; i < grp.states.length; i++) {
-                var st = grp.states[i];
-                var sub = st.subtitle ? '<span class="studio-sub">' + escapeHtml(st.subtitle) + '</span>' : '';
-                h +=
-                    '<button type="button" class="studio-nav-item" data-state="' +
-                    escapeHtml(st.id) +
-                    '">' +
-                    st.icon +
-                    ' ' +
-                    escapeHtml(st.name) +
-                    sub +
-                    '</button>';
-            }
-            h += '</div></details>';
+        workspace.master.normal.win = (w / s) * 100;
+        workspace.master.normal.bonus = (b / s) * 100;
+        workspace.master.normal.miss_tease = (t / s) * 100;
+        markDirty();
+        renderCenter();
+    }
+
+    function renderMasterTab() {
+        var m = workspace.master;
+        var ok = masterSumOk(m);
+        var ps = masterPromoteSum(m);
+        var single = Math.max(0, 100 - ps);
+        var sumClass = ok ? 'studio-sum ok' : 'studio-sum bad';
+        var html =
+            '<div class="studio-section"><h3 data-i18n-key="admin.master.title">' +
+            escapeHtml('全体確率設定') +
+            '</h3>';
+        html +=
+            '<h4 data-i18n-key="admin.master.normal_section">通常中の抽選（合計100%）</h4>';
+        html += rowMaster('win', 'WIN', m.normal.win);
+        html += rowMaster('bonus', 'BONUS', m.normal.bonus);
+        html += rowMaster('miss_tease', 'MISS', m.normal.miss_tease);
+        html += '<div class="' + sumClass + '" id="master-sum-val">合計 ' + (Number(m.normal.win) + Number(m.normal.bonus) + Number(m.normal.miss_tease)).toFixed(1) + '%</div>';
+        html +=
+            '<button type="button" class="studio-save" id="master-norm-btn" ' +
+            (ok ? '' : 'disabled') +
+            '>保存（マスター）</button> ';
+        html += '<button type="button" class="studio-sim" id="master-norm-go">自動正規化</button>';
+
+        html +=
+            '<h4 data-i18n-key="admin.master.bonus_promote_section">ボーナス昇格抽選（ボーナス当選時）</h4>';
+        html += rowPromote('streak', 'STREAK', m.bonus_promote.streak);
+        html += rowPromote('big', 'BIG', m.bonus_promote.big);
+        html += '<p>単発（自動）: ' + single.toFixed(2) + '%</p>';
+        html += '<label>最大連続回数 <input type="number" min="1" max="9" id="mx-str" value="' + escapeHtml(String(m.bonus_promote.max_streak)) + '"></label> ';
+        html +=
+            '<label>ビッグ倍率 <input type="number" min="2" max="20" id="big-mul" value="' +
+            escapeHtml(String(m.bonus_promote.big_multiplier)) +
+            '"></label>';
+
+        html += '<h4 data-i18n-key="admin.master.cooldown_section">クールタイム</h4>';
+        html +=
+            '<p class="studio-note">ボーナス終了後、通常スピンN回まで全抽選をハズレ演出に置き換え</p>';
+        html +=
+            '<label>スピン数 <input type="number" min="0" max="50" id="cd-spins" value="' +
+            m.cooldown.spins +
+            '" /></label>';
+
+        html += '<h4 data-i18n-key="admin.master.simulation_section">シミュレーション</h4>';
+        html +=
+            '<select id="sim-trials"><option>100</option><option>500</option><option selected>1000</option><option>5000</option><option>10000</option></select> ';
+        html += '<label>ベット <input type="number" id="sim-bet" value="100"></label> ';
+        html +=
+            '<button type="button" class="studio-preview-main" id="sim-run" data-i18n-key="admin.master.simulation_run">実行</button>';
+        html += '<div id="sim-warn-banner" class="sim-warn-banner" hidden></div>';
+        html += '<pre id="sim-out" class="sim-out"></pre>';
+        html +=
+            '<div class="sim-chart-tabs"><button type="button" data-sim-tab="cum">累積収支</button><button type="button" data-sim-tab="hist">払戻分布</button></div>';
+        html += '<canvas id="chart-cum" height="120"></canvas>';
+        html += '<canvas id="chart-hist" height="120" hidden></canvas>';
+        html += '</div>';
+        return html;
+    }
+
+    function wireMaster() {
+        var rows = document.querySelectorAll('.master-sl');
+        for (var i = 0; i < rows.length; i++) {
+            rows[i].addEventListener('input', function () {
+                var k = this.getAttribute('data-k');
+                workspace.master.normal[k] = Number(this.value);
+                var lab = this.parentNode.querySelector('.master-sl-val');
+                if (lab) {
+                    lab.textContent = Number(this.value).toFixed(1) + '%';
+                }
+                var sum =
+                    workspace.master.normal.win +
+                    workspace.master.normal.bonus +
+                    workspace.master.normal.miss_tease;
+                var el = $('master-sum-val');
+                if (el) {
+                    el.textContent = '合計 ' + sum.toFixed(1) + '%';
+                    el.className = masterSumOk(workspace.master) ? 'studio-sum ok' : 'studio-sum bad';
+                }
+                var btn = $('master-norm-btn');
+                if (btn) {
+                    btn.disabled = !masterSumOk(workspace.master);
+                }
+                markDirty();
+            });
         }
-        h +=
-            '<div class="studio-nav-head"><button type="button" class="studio-nav-all" id="studio-btn-legacy">⚙ テーマ・UIサイズ</button></div>';
-        left.innerHTML = h;
-        $('studio-btn-probs').addEventListener('click', function () {
-            viewMode = 'probs';
-            renderCenter();
-            $('adm-current-state').textContent = '全体確率';
+        var pr = document.querySelectorAll('[data-pk]');
+        for (var j = 0; j < pr.length; j++) {
+            pr[j].addEventListener('input', function () {
+                var k = this.getAttribute('data-pk');
+                workspace.master.bonus_promote[k] = Number(this.value);
+                markDirty();
+            });
+        }
+        var mx = $('mx-str');
+        if (mx) {
+            mx.addEventListener('change', function () {
+                workspace.master.bonus_promote.max_streak = Number(mx.value);
+                markDirty();
+            });
+        }
+        var bm = $('big-mul');
+        if (bm) {
+            bm.addEventListener('change', function () {
+                workspace.master.bonus_promote.big_multiplier = Number(bm.value);
+                markDirty();
+            });
+        }
+        var cds = $('cd-spins');
+        if (cds) {
+            cds.addEventListener('change', function () {
+                workspace.master.cooldown.spins = Number(cds.value);
+                markDirty();
+            });
+        }
+        var nb = $('master-norm-btn');
+        if (nb) {
+            nb.addEventListener('click', function () {
+                fetchNui('admin/preset/save', {
+                    preset: buildPresetPayload(),
+                }).then(function (r) {
+                    if (r.ok) {
+                        workspace.dirty = false;
+                        alert('保存しました');
+                    }
+                });
+            });
+        }
+        var ng = $('master-norm-go');
+        if (ng) {
+            ng.addEventListener('click', normalizeMaster);
+        }
+        var sr = $('sim-run');
+        if (sr) {
+            sr.addEventListener('click', runSimulationClick);
+        }
+        document.querySelectorAll('[data-sim-tab]').forEach(function (bt) {
+            bt.addEventListener('click', function () {
+                var t = bt.getAttribute('data-sim-tab');
+                var c1 = $('chart-cum');
+                var c2 = $('chart-hist');
+                if (t === 'cum') {
+                    if (c1) {
+                        c1.hidden = false;
+                    }
+                    if (c2) {
+                        c2.hidden = true;
+                    }
+                } else {
+                    if (c1) {
+                        c1.hidden = true;
+                    }
+                    if (c2) {
+                        c2.hidden = false;
+                    }
+                }
+            });
         });
-        $('studio-btn-legacy').addEventListener('click', function () {
-            viewMode = 'legacy';
-            renderCenter();
-            $('adm-current-state').textContent = 'テーマ・UI';
-        });
-        var btns = left.querySelectorAll('.studio-nav-item');
-        for (var j = 0; j < btns.length; j++) {
-            btns[j].addEventListener('click', function () {
-                selectedStateId = this.getAttribute('data-state');
-                viewMode = 'state';
-                $('adm-current-state').textContent = this.textContent.trim().split('\n')[0];
-                renderCenter();
+    }
+
+    function buildPresetPayload() {
+        var name = ($('studio-preset-name') && $('studio-preset-name').value) || 'default';
+        var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
+        return {
+            id: id,
+            name: name,
+            master: workspace.master,
+            effects: workspace.effects,
+            editor: 'studio-v2',
+        };
+    }
+
+    function simWinPayout(bet) {
+        return Math.floor(bet * 2.4);
+    }
+    function simBonusSpinPayout(bet, multB) {
+        return Math.floor(bet * 3.2 * (multB || 2));
+    }
+
+    function runSimulation(trials, bet, s) {
+        var inBonus = false;
+        var bonusRemaining = 0;
+        var pendingPromote = null;
+        var currentStreak = 0;
+        var cooldown = 0;
+        var r = {
+            win: 0,
+            bonus: 0,
+            bonus_single: 0,
+            bonus_streak: 0,
+            bonus_big: 0,
+            miss_tease: 0,
+            cooldown_blocked: 0,
+            total_bet: 0,
+            total_payout: 0,
+            max_streak: 0,
+            history: [],
+        };
+        var bonusMult = 2;
+        var fs = 8;
+        var maxStr = s.maxStreak || 3;
+        var bigM = s.bigMultiplier || 10;
+        for (var i = 0; i < trials; i++) {
+            if (inBonus) {
+                var win = simBonusSpinPayout(bet, bonusMult);
+                r.total_payout += win;
+                r.history.push({ type: 'bonus_spin', payout: win, bet: 0 });
+                bonusRemaining--;
+                if (bonusRemaining <= 0) {
+                    if (pendingPromote === 'streak' && currentStreak < maxStr) {
+                        currentStreak++;
+                        bonusRemaining = fs;
+                        r.bonus_streak++;
+                        r.max_streak = Math.max(r.max_streak, currentStreak);
+                    } else if (pendingPromote === 'big') {
+                        bonusRemaining = fs * bigM;
+                        pendingPromote = null;
+                        r.bonus_big++;
+                    } else {
+                        inBonus = false;
+                        pendingPromote = null;
+                        currentStreak = 0;
+                        cooldown = s.cooldownSpins || 5;
+                    }
+                }
+                continue;
+            }
+            r.total_bet += bet;
+            if (cooldown > 0) {
+                cooldown--;
+                r.cooldown_blocked++;
+                r.miss_tease++;
+                r.history.push({ type: 'miss_tease', payout: 0, bet: bet });
+                continue;
+            }
+            var roll = Math.random() * 100;
+            if (roll < s.normalWin) {
+                var w = simWinPayout(bet);
+                r.win++;
+                r.total_payout += w;
+                r.history.push({ type: 'win', payout: w, bet: bet });
+            } else if (roll < s.normalWin + s.normalBonus) {
+                r.bonus++;
+                inBonus = true;
+                bonusRemaining = fs;
+                var sub = Math.random() * 100;
+                if (sub < s.promoteStreak) {
+                    pendingPromote = 'streak';
+                    currentStreak = 1;
+                } else if (sub < s.promoteStreak + s.promoteBig) {
+                    pendingPromote = 'big';
+                } else {
+                    pendingPromote = null;
+                    r.bonus_single++;
+                }
+                r.history.push({ type: 'bonus', payout: 0, bet: bet });
+            } else {
+                r.miss_tease++;
+                r.history.push({ type: 'miss_tease', payout: 0, bet: bet });
+            }
+        }
+        return r;
+    }
+
+    function runSimulationClick() {
+        var trials = Number(($('sim-trials') && $('sim-trials').value) || 1000);
+        var bet = Number(($('sim-bet') && $('sim-bet').value) || 100);
+        var m = workspace.master;
+        var s = {
+            normalWin: Number(m.normal.win),
+            normalBonus: Number(m.normal.bonus),
+            promoteStreak: Number(m.bonus_promote.streak),
+            promoteBig: Number(m.bonus_promote.big),
+            maxStreak: Number(m.bonus_promote.max_streak),
+            bigMultiplier: Number(m.bonus_promote.big_multiplier),
+            cooldownSpins: Number(m.cooldown.spins),
+        };
+        var res = runSimulation(trials, bet, s);
+        var rtp = res.total_bet > 0 ? (res.total_payout / res.total_bet) * 100 : 0;
+        var out = $('sim-out');
+        if (out) {
+            out.textContent =
+                JSON.stringify(
+                    {
+                        rtp: rtp.toFixed(2) + '%',
+                        total_bet: res.total_bet,
+                        total_payout: res.total_payout,
+                        counts: {
+                            win: res.win,
+                            bonus: res.bonus,
+                            bonus_single: res.bonus_single,
+                            bonus_streak: res.bonus_streak,
+                            bonus_big: res.bonus_big,
+                            miss_tease: res.miss_tease,
+                            cooldown_blocked: res.cooldown_blocked,
+                        },
+                        max_streak: res.max_streak,
+                    },
+                    null,
+                    2
+                );
+        }
+        var warn = $('sim-warn-banner');
+        if (warn) {
+            if (res.total_payout > res.total_bet) {
+                warn.hidden = false;
+                warn.textContent =
+                    '⚠️ 警告：払い出しが入金を超えています！ RTP: ' + rtp.toFixed(1) + '%';
+            } else {
+                warn.hidden = true;
+            }
+        }
+        drawSimCharts(res, bet);
+    }
+
+    function drawSimCharts(res, bet) {
+        if (typeof Chart === 'undefined') {
+            return;
+        }
+        var cum = [];
+        var acc = 0;
+        for (var i = 0; i < res.history.length; i++) {
+            var h = res.history[i];
+            acc += (h.payout || 0) - (h.bet || 0);
+            cum.push({ x: i + 1, y: acc });
+        }
+        var ctx1 = $('chart-cum');
+        if (simCharts.cumulative) {
+            simCharts.cumulative.destroy();
+        }
+        if (ctx1) {
+            simCharts.cumulative = new Chart(ctx1.getContext('2d'), {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: '累積収支',
+                            data: cum.map(function (p) {
+                                return p.y;
+                            }),
+                        },
+                    ],
+                },
+                options: { animation: false },
+            });
+        }
+        var buckets = [0, 0, 0, 0, 0, 0, 0];
+        for (var j = 0; j < res.history.length; j++) {
+            var p = res.history[j].payout || 0;
+            var idx = 6;
+            if (p <= 0) {
+                idx = 0;
+            } else if (p <= bet) {
+                idx = 1;
+            } else if (p <= bet * 5) {
+                idx = 2;
+            } else if (p <= bet * 10) {
+                idx = 3;
+            } else if (p <= bet * 50) {
+                idx = 4;
+            } else if (p <= bet * 100) {
+                idx = 5;
+            }
+            buckets[idx]++;
+        }
+        var ctx2 = $('chart-hist');
+        if (simCharts.hist) {
+            simCharts.hist.destroy();
+        }
+        if (ctx2) {
+            simCharts.hist = new Chart(ctx2.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['0', '1x', '1-5x', '5-10x', '10-50x', '50-100x', '100x+'],
+                    datasets: [{ data: buckets }],
+                },
+                options: { animation: false },
             });
         }
     }
 
-    function renderProbEditor() {
-        var html = '<div class="studio-section"><h3>全体確率（参考・保存のみ）</h3><p class="studio-note">合計 100% を目安に調整できます（抽選本体は config_server.lua）。</p>';
-        var sum = 0;
-        for (var k in workspace.probs) {
-            if (workspace.probs.hasOwnProperty(k)) {
-                var row = workspace.probs[k];
-                sum += row.enabled ? row.p : 0;
-                html +=
-                    '<div class="studio-prob-row"><label><input type="checkbox" data-k="' +
-                    k +
-                    '" class="pr-en"' +
-                    (row.enabled ? ' checked' : '') +
-                    '> ' +
-                    k +
-                    '</label><input type="range" min="0" max="100" step="0.1" class="pr-sl" data-k="' +
-                    k +
-                    '" value="' +
-                    row.p +
-                    '"><span class="pr-val">' +
-                    row.p +
-                    '%</span></div>';
-            }
+    function renderEffectTab(key) {
+        var sec = workspace.effects[key] || defaultEffectSection();
+        workspace.effects[key] = sec;
+        var html = '<div class="studio-section"><h3>' + escapeHtml(key) + '</h3>';
+        html += '<p class="studio-note">7ブロック構成（簡易UI）。チェックでON/OFF。</p>';
+        html += blockUi('① カットイン前テキスト', 'pre_text', sec.pre_text);
+        html += '<h4>② カットイン本体</h4>';
+        html +=
+            '<select class="studio-select" data-ef="' +
+            key +
+            '" data-path="cutin_block.kind"><option value="none">none</option><option value="image">image</option><option value="video">video</option></select>';
+        html += blockUi('③ カットイン後テキスト', 'post_text', sec.post_text);
+        if (key === 'miss_tease') {
+            html += '<p>⑦配当ブロック（miss_tease は無効）</p>';
+            html +=
+                '<label>reaction <select data-ef="' +
+                key +
+                '" data-path="reaction.reaction"><option>are</option><option>confused</option><option>disappointed</option></select></label>';
+        } else if (key === 'bonus_streak') {
+            html += '<p>段階別演出強度（プレースホルダ）</p>';
+        } else if (key === 'bonus_big') {
+            html +=
+                '<p class="studio-note">ビッグ倍率は全体確率の big_multiplier を参照（読み取り専用）</p>';
         }
-        html +=
-            '<div class="studio-sum' +
-            (Math.abs(sum - 100) < 0.05 ? ' ok' : ' bad') +
-            '">合計 ' +
-            sum.toFixed(1) +
-            '%</div>';
-        html +=
-            '<button type="button" class="studio-save" id="studio-save-probs">保存 (KVS jp-slot:adm:probs)</button> ';
-        html +=
-            '<button type="button" class="studio-sim" disabled title="将来実装">▶ 10,000回シミュレーション</button></div>';
+        html += '</div>';
         return html;
     }
 
-    function renderStateEditor() {
-        var html =
-            '<div class="studio-section"><h3>演出レイヤー（' +
-            escapeHtml(selectedStateId) +
-            '）</h3>';
-        html += '<div class="studio-layer"><h4>🅰 UI / タイポグラフィ</h4><select id="lay-typo" class="studio-select"></select></div>';
-        html += '<div class="studio-layer"><h4>🧍 キャラ</h4><label><input type="radio" name="ck" value="image" checked>静止画</label> <label><input type="radio" name="ck" value="video">動画</label><select id="lay-char" class="studio-select"></select></div>';
-        html += '<div class="studio-layer"><h4>✨ カットイン</h4><select id="lay-cutin" class="studio-select"></select></div>';
-        html += '<div class="studio-layer"><h4>🖼 背景 / VFX</h4><select id="lay-bg" class="studio-select"></select> <select id="lay-vfx" class="studio-select"></select></div>';
-        html += '<div class="studio-layer"><h4>🔊 サウンド</h4><select id="lay-bgm" class="studio-select"></select> <select id="lay-se" class="studio-select"></select> <select id="lay-voice" class="studio-select"></select></div>';
-        html +=
-            '<p class="studio-note">タイムライン編集・プリセット連携は今後拡張予定。素材は html/assets をスキャンしています。</p></div>';
-        return html;
+    function blockUi(title, path, data) {
+        var en = data.enabled !== false;
+        return (
+            '<div class="studio-layer"><h4>' +
+            title +
+            '</h4><label><input type="checkbox" class="blk-en" data-path="' +
+            path +
+            '"' +
+            (en ? ' checked' : '') +
+            '> 使用</label><input type="text" placeholder="テキスト" class="blk-txt" data-path="' +
+            path +
+            '.text" value="' +
+            escapeHtml(data.text || '') +
+            '"></div>'
+        );
+    }
+
+    function wireEffectTab(key) {
+        document.querySelectorAll('.blk-txt').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+                var path = inp.getAttribute('data-path').split('.');
+                var obj = workspace.effects[key];
+                obj[path[0]][path[1]] = inp.value;
+                markDirty();
+            });
+        });
     }
 
     function legacyHtml() {
@@ -216,9 +605,7 @@
             '<label class="admin-row">accent1 <input type="color" id="adm-accent1"></label>' +
             '<label class="admin-row">textPrimary <input type="color" id="adm-textPrimary"></label>' +
             '<label class="admin-row">theme name <input type="text" id="adm-themeName"></label>' +
-            '<div class="admin-actions">' +
-            '<button type="button" id="adm-save" data-i18n-key="admin.save_theme"></button>' +
-            '</div></div>' +
+            '<div class="admin-actions"><button type="button" id="adm-save" data-i18n-key="admin.save_theme"></button></div></div>' +
             '<div class="admin-pane admin-pane-display" data-pane="display" style="display:none">' +
             '<h3 class="admin-subtitle" data-i18n-key="admin.ui_size_title"></h3>' +
             '<p class="admin-hint" data-i18n-key="admin.ui_size_hint"></p>' +
@@ -235,32 +622,45 @@
         );
     }
 
-    function fillSelect(sel, files, prefix) {
-        if (!sel) {
+    function buildLeftNav() {
+        var left = $('admin-left');
+        if (!left) {
             return;
         }
-        sel.innerHTML = '<option value="">（なし）</option>';
-        for (var i = 0; i < (files || []).length; i++) {
-            var f = files[i];
-            var o = document.createElement('option');
-            o.value = f;
-            o.textContent = f;
-            sel.appendChild(o);
+        var h = '';
+        for (var i = 0; i < STUDIO_NAV.length; i++) {
+            var it = STUDIO_NAV[i];
+            h +=
+                '<button type="button" class="studio-nav-item' +
+                (selectedKey === it.key ? ' is-active' : '') +
+                '" data-nav="' +
+                it.key +
+                '">' +
+                it.icon +
+                ' <span data-i18n-key="' +
+                it.i18n +
+                '"></span></button>';
         }
-    }
-
-    function bindAssetSelects() {
-        if (!assetLib) {
-            return;
+        left.innerHTML = h;
+        var btns = left.querySelectorAll('[data-nav]');
+        for (var j = 0; j < btns.length; j++) {
+            btns[j].addEventListener('click', function () {
+                selectedKey = this.getAttribute('data-nav');
+                if (selectedKey === 'theme') {
+                    viewMode = 'legacy';
+                } else if (selectedKey === 'master') {
+                    viewMode = 'master';
+                } else {
+                    viewMode = 'effect';
+                }
+                buildLeftNav();
+                renderCenter();
+                var cur = $('adm-current-state');
+                if (cur) {
+                    cur.textContent = selectedKey;
+                }
+            });
         }
-        fillSelect($('lay-typo'), assetLib.typography, '');
-        fillSelect($('lay-char'), assetLib.characters, '');
-        fillSelect($('lay-cutin'), assetLib.cutins, '');
-        fillSelect($('lay-bg'), assetLib.bg, '');
-        fillSelect($('lay-vfx'), assetLib.vfx, '');
-        fillSelect($('lay-bgm'), assetLib.bgm, '');
-        fillSelect($('lay-se'), assetLib.se, '');
-        fillSelect($('lay-voice'), assetLib.voice, '');
     }
 
     function renderCenter() {
@@ -268,53 +668,20 @@
         if (!c) {
             return;
         }
-        if (viewMode === 'probs') {
-            c.innerHTML = renderProbEditor();
-            wireProbEditor();
+        if (viewMode === 'master') {
+            c.innerHTML = renderMasterTab();
+            wireMaster();
         } else if (viewMode === 'legacy') {
             c.innerHTML = legacyHtml();
             if (window.__jpSlotAdminLegacyBind) {
                 window.__jpSlotAdminLegacyBind();
             }
         } else {
-            c.innerHTML = renderStateEditor();
-            bindAssetSelects();
+            c.innerHTML = renderEffectTab(selectedKey);
+            wireEffectTab(selectedKey);
         }
-    }
-
-    function wireProbEditor() {
-        var rows = document.querySelectorAll('.pr-sl');
-        for (var i = 0; i < rows.length; i++) {
-            rows[i].addEventListener('input', function () {
-                var k = this.getAttribute('data-k');
-                workspace.probs[k].p = Number(this.value);
-                var lab = this.parentNode.querySelector('.pr-val');
-                if (lab) {
-                    lab.textContent = this.value + '%';
-                }
-            });
-        }
-        var ens = document.querySelectorAll('.pr-en');
-        for (var j = 0; j < ens.length; j++) {
-            ens[j].addEventListener('change', function () {
-                var k = this.getAttribute('data-k');
-                workspace.probs[k].enabled = this.checked;
-            });
-        }
-        var sv = $('studio-save-probs');
-        if (sv) {
-            sv.addEventListener('click', function () {
-                fetchNui('admin/preset/save', {
-                    preset: {
-                        id: 'probs_only',
-                        name: '全体確率',
-                        probs: workspace.probs,
-                        states: {},
-                    },
-                }).then(function () {
-                    alert('保存しました（プリセット probs_only）');
-                });
-            });
+        if (window.jpSlotApplyI18n) {
+            window.jpSlotApplyI18n();
         }
     }
 
@@ -325,88 +692,112 @@
         }
         r.innerHTML =
             '<div class="studio-right-inner">' +
-            '<button type="button" class="studio-preview-main" id="studio-preview-start" data-i18n-key="admin.preview_start">▶ プレビュー開始</button>' +
-            '<button type="button" class="studio-preview-end" id="studio-preview-end" data-i18n-key="admin.preview_end">✕ プレビュー終了</button>' +
-            '<p class="studio-mini" data-i18n-key="admin.preview_subtitle">所持金∞ ・獲得金反映なし</p>' +
-            '<div class="studio-preset"><label>プリセット名 <input type="text" id="studio-preset-name" placeholder="default"></label>' +
-            '<button type="button" id="studio-preset-save">💾 上書き保存</button>' +
-            '<button type="button" id="studio-preset-saveas">📄 別名で保存</button></div>' +
+            '<button type="button" class="studio-preview-main" id="studio-preview-start">▶ プレビュー開始</button>' +
+            '<button type="button" class="studio-preview-end" id="studio-preview-end">✕ プレビュー終了</button>' +
+            '<p class="studio-mini">所持金∞</p>' +
+            '<div class="studio-preset"><label>プリセット <input type="text" id="studio-preset-name" value="default"></label>' +
+            '<button type="button" id="studio-preset-save">💾 上書き保存</button></div>' +
             '</div>';
         $('studio-preview-start').addEventListener('click', function () {
-            fetchNui('admin/previewStart', {}).then(function () {});
+            fetchNui('admin/previewStart', {});
         });
         $('studio-preview-end').addEventListener('click', function () {
-            fetchNui('admin/previewEnd', {}).then(function () {});
+            tryConfirmExit(function () {
+                fetchNui('admin/previewEnd', {});
+            });
         });
-        $('studio-preset-save').addEventListener('click', savePreset);
-        $('studio-preset-saveas').addEventListener('click', function () {
-            var n = prompt('プリセット名');
-            if (!n) {
-                return;
-            }
-            $('studio-preset-name').value = n;
-            savePreset();
-        });
-    }
-
-    function savePreset() {
-        var name = ($('studio-preset-name') && $('studio-preset-name').value) || 'default';
-        var id = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'preset';
-        fetchNui('admin/preset/save', {
-            preset: {
-                id: id,
-                name: name,
-                probs: workspace.probs,
-                states: {},
-                editor: 'studio-v1',
-            },
-        }).then(function (r) {
-            if (r.ok) {
-                alert('保存しました');
-            }
-        });
-    }
-
-    function scanAssets() {
-        fetchNui('admin/assets/scan', {}).then(function (r) {
-            if (r.ok && r.assets) {
-                assetLib = r.assets;
-                if (viewMode === 'state') {
-                    bindAssetSelects();
+        $('studio-preset-save').addEventListener('click', function () {
+            fetchNui('admin/preset/save', { preset: buildPresetPayload() }).then(function (x) {
+                if (x.ok) {
+                    workspace.dirty = false;
+                    alert('保存しました');
                 }
-            }
+            });
         });
+    }
+
+    function tryConfirmExit(done) {
+        if (!workspace.dirty) {
+            done();
+            return;
+        }
+        var modal = $('admin-confirm-exit');
+        if (!modal) {
+            done();
+            return;
+        }
+        var uns = modal && modal.querySelector('[data-unsaved]');
+        if (uns) {
+            uns.hidden = false;
+        }
+        if (modal) {
+            modal.hidden = false;
+        }
+        var ok = $('admin-confirm-exit-ok');
+        var cancel = $('admin-confirm-exit-cancel');
+        function cleanup() {
+            if (modal) {
+                modal.hidden = true;
+            }
+            if (ok) {
+                ok.onclick = null;
+            }
+            if (cancel) {
+                cancel.onclick = null;
+            }
+        }
+        if (ok) {
+            ok.onclick = function () {
+                cleanup();
+                workspace.dirty = false;
+                done();
+            };
+        }
+        if (cancel) {
+            cancel.onclick = cleanup;
+        }
     }
 
     function onLogin() {
-        scanAssets();
+        fetchNui('admin/assets/scan', {}).then(function (r) {
+            if (r.ok && r.assets) {
+                window.__jpSlotAssetLib = r.assets;
+            }
+        });
     }
 
-    function onOpenAdmin(payload) {
+    function onOpenAdmin(_payload) {
+        workspace = createDefaultWorkspace();
+        selectedKey = 'master';
+        viewMode = 'master';
         buildLeftNav();
         buildRight();
-        viewMode = 'probs';
         renderCenter();
-        if (window.jpSlotApplyI18n) {
-            window.jpSlotApplyI18n();
-        }
-        if (payload && payload.theme && window.__jpSlotFillTheme) {
-            window.__jpSlotFillTheme(payload.theme);
-        }
-        if (payload && payload.uiSize && window.__jpSlotSyncUiSliders) {
-            window.__jpSlotSyncUiSliders(payload.uiSize);
-        }
+        fetchNui('admin/preset/get', { id: ($('studio-preset-name') && $('studio-preset-name').value) || 'default' }).then(
+            function (r) {
+                if (r.ok && r.data) {
+                    if (r.data.master) {
+                        workspace.master = r.data.master;
+                    }
+                    if (r.data.effects) {
+                        workspace.effects = r.data.effects;
+                    }
+                    renderCenter();
+                }
+                if (window.jpSlotApplyI18n) {
+                    window.jpSlotApplyI18n();
+                }
+            }
+        );
     }
 
     window.JpSlotAdminStudio = {
         onLogin: onLogin,
         onOpenAdmin: onOpenAdmin,
+        markDirty: markDirty,
     };
 
-    window.addEventListener('message', function (e) {
-        var d = e.data || {};
-        if (d.type === 'openAdmin' && window.JpSlotAdminStudio.onOpenAdmin) {
-            window.JpSlotAdminStudio.onOpenAdmin(d.payload || {});
-        }
-    });
+    window.JpSlotTryConfirmDirtyExit = function (done) {
+        tryConfirmExit(done || function () {});
+    };
 })();

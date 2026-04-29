@@ -3,8 +3,10 @@
 local occupied = {} -- [machineId] = source
 local playerMachine = {} -- [source] = machineId
 local pendingSpin = {} -- [source] = true
---- フリースピン状態 [source] = { remaining, totalWin, lineBet }
+--- フリースピン状態 [source] = { remaining, totalWin, lineBet, promote, streakCount, bigConsumed, effectMode }
 local bonusState = {}
+--- ボーナス終了後のクールタイム（通常スピン回数）— 残り > 0 の間は miss_tease のみ
+local cooldownState = {}
 
 --- 管理プレビューモード（所持金変動なし・演出のみ）— `JpSlotPreviewMode` は server/admin.lua で定義
 ---@param src number
@@ -16,6 +18,89 @@ end
 
 local KVP_JACKPOT = 'jp-slot:jackpot:pool'
 local KVP_BONUS = 'jp-slot:bonus:'
+
+--- アクティブ演出プリセットから Config.Master を上書き（未設定時は config_shared 既定）
+function applyMasterFromActivePreset()
+    local def = {
+        Normal = { Win = 25.0, Bonus = 5.0, MissTease = 70.0 },
+        BonusPromote = { Streak = 30.0, Big = 5.0, MaxStreak = 3, BigMultiplier = 10 },
+        Cooldown = { Spins = 5 },
+    }
+    Config.Master = Config.Master or {}
+    local id = GetResourceKvpString('jp-slot:adm:preset:active')
+    if not id or id == '' then
+        return
+    end
+    local raw = GetResourceKvpString('jp-slot:adm:preset:' .. id)
+    if not raw or raw == '' then
+        return
+    end
+    local ok, preset = pcall(json.decode, raw)
+    if not ok or type(preset) ~= 'table' or type(preset.master) ~= 'table' then
+        return
+    end
+    local m = preset.master
+    Config.Master.Normal = Config.Master.Normal or {}
+    Config.Master.BonusPromote = Config.Master.BonusPromote or {}
+    Config.Master.Cooldown = Config.Master.Cooldown or {}
+    if m.normal then
+        if m.normal.win ~= nil then
+            Config.Master.Normal.Win = tonumber(m.normal.win) or Config.Master.Normal.Win
+        end
+        if m.normal.bonus ~= nil then
+            Config.Master.Normal.Bonus = tonumber(m.normal.bonus) or Config.Master.Normal.Bonus
+        end
+        if m.normal.miss_tease ~= nil then
+            Config.Master.Normal.MissTease = tonumber(m.normal.miss_tease) or Config.Master.Normal.MissTease
+        end
+    end
+    if m.bonus_promote then
+        local bp = m.bonus_promote
+        if bp.streak ~= nil then
+            Config.Master.BonusPromote.Streak = tonumber(bp.streak) or Config.Master.BonusPromote.Streak
+        end
+        if bp.big ~= nil then
+            Config.Master.BonusPromote.Big = tonumber(bp.big) or Config.Master.BonusPromote.Big
+        end
+        if bp.max_streak ~= nil then
+            Config.Master.BonusPromote.MaxStreak = tonumber(bp.max_streak) or Config.Master.BonusPromote.MaxStreak
+        end
+        if bp.big_multiplier ~= nil then
+            Config.Master.BonusPromote.BigMultiplier = tonumber(bp.big_multiplier) or Config.Master.BonusPromote.BigMultiplier
+        end
+    end
+    if m.cooldown and m.cooldown.spins ~= nil then
+        Config.Master.Cooldown.Spins = tonumber(m.cooldown.spins) or Config.Master.Cooldown.Spins
+    end
+end
+
+ApplyJpSlotMasterFromPreset = applyMasterFromActivePreset
+
+--- 演出プリセットから effectBlocks を取得（クライアント演出連鎖用）
+---@param sceneKey string
+---@return table|nil
+local function getEffectBlocksForScene(sceneKey)
+    if not sceneKey or sceneKey == '' then
+        return nil
+    end
+    local id = GetResourceKvpString('jp-slot:adm:preset:active')
+    if not id or id == '' then
+        return nil
+    end
+    local raw = GetResourceKvpString('jp-slot:adm:preset:' .. id)
+    if not raw or raw == '' then
+        return nil
+    end
+    local ok, preset = pcall(json.decode, raw)
+    if not ok or type(preset) ~= 'table' then
+        return nil
+    end
+    local eff = preset.effects and preset.effects[sceneKey]
+    if type(eff) ~= 'table' then
+        return nil
+    end
+    return eff
+end
 
 ---@param src number
 ---@return string
@@ -204,6 +289,7 @@ local function clearSeat(source)
     end
     pendingSpin[source] = nil
     bonusState[source] = nil
+    cooldownState[source] = nil
 end
 
 --- 中段3リールがボーナストリガーか（絵柄の一致数）
@@ -376,11 +462,96 @@ RegisterNetEvent('jp-slot:spin', function(payload)
 
     local paytableId = m.paytableId or 'normal'
     local pt = Config.Paytables and Config.Paytables[paytableId]
-    local spinResult = RNG.spin(paytableId, opts)
-    if Config.DebugSettings and Config.DebugSettings.ForceBonus and pt then
-        local sym = (Config.Bonus and Config.Bonus.TriggerSymbol) or 'character'
-        spinResult.reels = { sym, sym, sym }
-        spinResult.payout = RNG.evaluate(spinResult.reels, pt)
+    local spinResult
+    local masterScene ---@type string|nil
+
+    if not inBonus then
+        local cd = tonumber(cooldownState[src]) or 0
+        if not isPreview and cd > 0 then
+            cooldownState[src] = cd - 1
+            spinResult = RNG.spin(paytableId, { forceLoss = true })
+            masterScene = 'miss_tease'
+        else
+            local M = Config.Master or {}
+            local N = M.Normal or {}
+            local w = tonumber(N.Win) or 25.0
+            local b = tonumber(N.Bonus) or 5.0
+            local mt = tonumber(N.MissTease) or 70.0
+            local roll = math.random() * 100
+            if roll < w then
+                if not opts.forceJackpot then
+                    opts.forceWin = true
+                end
+                spinResult = RNG.spin(paytableId, opts)
+                masterScene = 'win'
+            elseif roll < w + b then
+                local BP = M.BonusPromote or {}
+                local ps = tonumber(BP.Streak) or 30.0
+                local pb = tonumber(BP.Big) or 5.0
+                local sub = math.random() * 100
+                local promote = nil
+                if sub < ps then
+                    promote = 'streak'
+                elseif sub < ps + pb then
+                    promote = 'big'
+                end
+                local sym = (Config.Bonus and Config.Bonus.TriggerSymbol) or 'character'
+                local reels = { sym, sym, sym }
+                spinResult = {
+                    reels = reels,
+                    payout = {
+                        multiplier = 0,
+                        tier = 'bonus',
+                        comboName = 'bonus_entry',
+                    },
+                    paytableId = paytableId,
+                }
+                local fs = tonumber(Config.Bonus.FreeSpins) or 8
+                bonusState[src] = {
+                    remaining = fs,
+                    totalWin = 0,
+                    lineBet = bet,
+                    promote = promote,
+                    streakCount = promote == 'streak' and 1 or 0,
+                    bigConsumed = false,
+                    effectMode = promote == 'big' and 'bonus_big' or (promote == 'streak' and 'bonus_streak' or 'bonus'),
+                }
+                masterScene = 'bonus'
+            else
+                spinResult = RNG.spin(paytableId, { forceLoss = true })
+                masterScene = 'miss_tease'
+            end
+        end
+        if Config.DebugSettings and Config.DebugSettings.ForceBonus and pt and bonusState[src] == nil then
+            local sym = (Config.Bonus and Config.Bonus.TriggerSymbol) or 'character'
+            spinResult.reels = { sym, sym, sym }
+            spinResult.payout = {
+                multiplier = 0,
+                tier = 'bonus',
+                comboName = 'bonus_entry',
+            }
+            local fs = tonumber(Config.Bonus.FreeSpins) or 8
+            bonusState[src] = {
+                remaining = fs,
+                totalWin = 0,
+                lineBet = bet,
+                promote = nil,
+                streakCount = 0,
+                bigConsumed = false,
+                effectMode = 'bonus',
+            }
+            masterScene = 'bonus'
+        end
+    else
+        spinResult = RNG.spin(paytableId, opts)
+        local em = bState and bState.effectMode
+        if em == 'bonus_streak' then
+            masterScene = 'bonus_streak'
+        elseif em == 'bonus_big' then
+            masterScene = 'bonus_big'
+        else
+            masterScene = 'bonus'
+        end
     end
 
     local reels = spinResult.reels or { 'cherry', 'cherry', 'cherry' }
@@ -421,15 +592,58 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         local multBase = tonumber(Config.Bonus.MultiplierBase) or 1
         local retrAdd = tonumber(Config.Bonus.RetriggerAdd) or 0
         if bState.remaining <= 0 then
-            bonusPayload = {
-                active = true,
-                ended = true,
-                totalWin = bState.totalWin,
-                multiplier = multBase,
-                bonusRetrigger = retrigger,
-                retriggerAdd = retrigger and retrAdd or nil,
-            }
-            bonusState[src] = nil
+            local BP = (Config.Master and Config.Master.BonusPromote) or {}
+            local maxStr = tonumber(BP.MaxStreak) or 3
+            local fs = tonumber(Config.Bonus.FreeSpins) or 8
+            local bigM = tonumber(BP.BigMultiplier) or 10
+            local promote = bState.promote
+
+            local function endBonusSession()
+                bonusPayload = {
+                    active = true,
+                    ended = true,
+                    totalWin = bState.totalWin,
+                    multiplier = multBase,
+                    bonusRetrigger = retrigger,
+                    retriggerAdd = retrigger and retrAdd or nil,
+                }
+                bonusState[src] = nil
+                if not isPreview then
+                    cooldownState[src] = tonumber(((Config.Master or {}).Cooldown or {}).Spins) or 5
+                end
+            end
+
+            if promote == 'streak' and (bState.streakCount or 1) < maxStr then
+                bState.streakCount = (bState.streakCount or 1) + 1
+                bState.remaining = fs
+                bState.promote = 'streak'
+                bState.effectMode = 'bonus_streak'
+                bonusPayload = {
+                    active = true,
+                    remaining = bState.remaining,
+                    totalWin = bState.totalWin,
+                    multiplier = multBase,
+                    bonusRetrigger = retrigger,
+                    retriggerAdd = retrigger and retrAdd or nil,
+                    streakContinue = true,
+                }
+            elseif promote == 'big' and not bState.bigConsumed then
+                bState.bigConsumed = true
+                bState.remaining = fs * bigM
+                bState.promote = nil
+                bState.effectMode = 'bonus_big'
+                bonusPayload = {
+                    active = true,
+                    remaining = bState.remaining,
+                    totalWin = bState.totalWin,
+                    multiplier = multBase,
+                    bonusRetrigger = retrigger,
+                    retriggerAdd = retrigger and retrAdd or nil,
+                    bigContinue = true,
+                }
+            else
+                endBonusSession()
+            end
         else
             bonusPayload = {
                 active = true,
@@ -440,18 +654,12 @@ RegisterNetEvent('jp-slot:spin', function(payload)
                 retriggerAdd = retrigger and retrAdd or nil,
             }
         end
-    elseif not isPreview and not inBonus and Config.Bonus and Config.Bonus.Enabled and isBonusTriggerReels(reels) then
-        local fs = tonumber(Config.Bonus.FreeSpins) or 8
+    elseif not isPreview and not inBonus and bonusState[src] and masterScene == 'bonus' then
         local multBase = tonumber(Config.Bonus.MultiplierBase) or 1
-        bonusState[src] = {
-            remaining = fs,
-            totalWin = 0,
-            lineBet = bet,
-        }
         bonusPayload = {
             active = true,
             started = true,
-            remaining = fs,
+            remaining = bonusState[src].remaining,
             totalWin = 0,
             multiplier = multBase,
         }
@@ -497,6 +705,8 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         characterId = m.characterId,
         bonus = bonusPayload,
         previewMode = isPreview or nil,
+        effectScene = masterScene,
+        effectBlocks = getEffectBlocksForScene(masterScene),
     })
 end)
 
@@ -535,6 +745,7 @@ end
 --- 起動時ジャックポット初期化（未設定ならシード）＋配当表整合チェック
 CreateThread(function()
     Wait(500)
+    applyMasterFromActivePreset()
     validatePaytableConsistency()
     local raw = GetResourceKvpString(KVP_JACKPOT)
     if not raw or raw == '' then

@@ -872,3 +872,84 @@
         max-height: 40vh;
     }
 }
+
+/* シミュレーション警告・終了確認モーダル */
+.sim-warn-banner {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: #7a1f1f;
+    color: #ffe7a3;
+    font-weight: bold;
+    border-radius: 8px;
+    animation: sim-warn-blink 2s ease-in-out infinite;
+}
+
+@keyframes sim-warn-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.65;
+    }
+}
+
+.sim-out {
+    font-size: 22px;
+    max-height: 220px;
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.admin-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.admin-modal[hidden] {
+    display: none !important;
+}
+
+.admin-modal-card {
+    background: #1a0e12;
+    border: 2px solid #d4af37;
+    border-radius: 12px;
+    padding: 24px 28px;
+    max-width: 480px;
+    color: #f5e6c8;
+}
+
+.admin-modal-card .warn {
+    color: #ffb8b8;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.modal-actions .btn-danger {
+    background: #8b1538;
+    color: #fff;
+    border: 1px solid #d4af37;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.modal-actions .btn-cancel {
+    background: #333;
+    color: #ccc;
+    border: 1px solid #666;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}

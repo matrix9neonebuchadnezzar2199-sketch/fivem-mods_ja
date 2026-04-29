@@ -150,6 +150,18 @@ function RNG.spin(paytableId, opts)
             reels = r
             payout = ev
         end
+    elseif opts.forceLoss then
+        local tries = 0
+        while tries < 400 and (payout.multiplier or 0) > 0 do
+            tries = tries + 1
+            local r = {}
+            for _ = 1, 3 do
+                r[#r + 1] = RNG.pickSymbolForReel(pt) or 'cherry'
+            end
+            local ev = RNG.evaluate(r, pt)
+            reels = r
+            payout = ev
+        end
     end
 
     return {

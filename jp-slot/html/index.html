@@ -47,6 +47,10 @@
                         <div class="reel" data-reel="0"><div class="reel-inner"><div class="reel-strip"></div></div></div>
                         <div class="reel" data-reel="1"><div class="reel-inner"><div class="reel-strip"></div></div></div>
                         <div class="reel" data-reel="2"><div class="reel-inner"><div class="reel-strip"></div></div></div>
+                        <div id="reel-center-text" class="reel-center-text" hidden>
+                            <div class="reel-center-text-bg"></div>
+                            <div class="reel-center-text-content"></div>
+                        </div>
                     </div>
                     <div class="payline"></div>
                     <div class="win-popup" aria-live="polite"></div>
@@ -216,8 +220,21 @@
                 </div>
             </div>
         </div>
+
+        <div id="admin-confirm-exit" class="admin-modal" hidden>
+            <div class="admin-modal-card">
+                <h3 data-i18n-key="admin.confirm.exit_title">⚠️ 演出を終了しますか？</h3>
+                <p data-i18n-key="admin.confirm.exit_body">現在の演出を終了します。終了後は元に戻すことはできません。</p>
+                <p class="warn" data-unsaved hidden data-i18n-key="admin.confirm.unsaved_warn">※ 未保存の変更があります</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="admin-confirm-exit-cancel" data-i18n-key="admin.confirm.cancel">× キャンセル</button>
+                    <button type="button" class="btn-danger" id="admin-confirm-exit-ok" data-i18n-key="admin.confirm.ok">✓ 終了する</button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="js/vendor/chart.min.js"></script>
     <script src="js/theme-loader.js"></script>
     <script src="js/effects.js"></script>
     <script src="js/char_fx.js"></script>
