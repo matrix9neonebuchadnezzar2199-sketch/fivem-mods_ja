@@ -807,6 +807,12 @@
             'log',
             '[probe] charSrc=' + charSrc + ' charDisplay=' + charDisplay + ' charRect=' + charRect
         );
+        if (payload.embedPreview) {
+            var colLeft = document.querySelector('.admin-slot-embed .col-left');
+            var probe2 =
+                colLeft && colLeft.outerHTML ? colLeft.outerHTML.slice(0, 150) : 'null';
+            nuiLog('log', '[probe2] colLeft=' + probe2);
+        }
         nuiLog('log', '[initPlay] done');
     }
 

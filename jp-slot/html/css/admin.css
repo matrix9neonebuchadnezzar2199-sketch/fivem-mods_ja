@@ -565,6 +565,40 @@
     display: none !important;
 }
 
+/* プレビュー埋め込み: プレイ画面用 vw/flex が効いて .char-stage が潰れるのを防ぐ（論理 1280×720 内） */
+#panel-admin .admin-slot-embed .col-left,
+.admin-slot-embed .col-left {
+    flex: 0 0 auto !important;
+    width: 360px !important;
+    min-width: 360px !important;
+    max-width: 360px !important;
+    height: 100% !important;
+    position: relative !important;
+}
+
+#panel-admin .admin-slot-embed .char-stage,
+.admin-slot-embed .char-stage {
+    position: absolute !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 360px !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    display: block !important;
+}
+
+#panel-admin .admin-slot-embed .char-portrait,
+#panel-admin .admin-slot-embed .char-stage img,
+.admin-slot-embed .char-portrait,
+.admin-slot-embed .char-stage img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: left bottom !important;
+    display: block !important;
+}
+
 #panel-admin .studio-preview-hint {
     margin-top: 14px;
 }
