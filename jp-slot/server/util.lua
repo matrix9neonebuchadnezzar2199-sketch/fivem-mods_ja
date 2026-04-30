@@ -444,13 +444,27 @@ function JpSlotMigratePresetsV3()
             voiceKeys = {},
         }
     end
-    local function leftFromCharVideo(sec, useCharVideo)
+    local function leftFromCharVideo(sec, useCharVideo, cid, pname, tabKey)
         if type(sec) ~= 'table' then
             return false
         end
         if type(sec.leftStage) == 'table' and type(sec.leftStage.slots) == 'table' and #sec.leftStage.slots >= 2 then
             return false
         end
+        local oldCv = sec.char_video
+        local oldFile = ''
+        if type(oldCv) == 'table' and type(oldCv.file) == 'string' then
+            oldFile = oldCv.file
+        elseif oldCv ~= nil then
+            oldFile = tostring(oldCv)
+        end
+        print(('[jp-slot][migrate-v3] char=%s name=%s tab=%s mapIdleFamily=%s old.char_video.file=%s (before)'):format(
+            tostring(cid),
+            tostring(pname),
+            tostring(tabKey),
+            tostring(useCharVideo),
+            oldFile
+        ))
         if useCharVideo then
             local cv = sec.char_video or {}
             local file = type(cv.file) == 'string' and cv.file or ''
@@ -474,6 +488,19 @@ function JpSlotMigratePresetsV3()
                 slots = { emptySlot(true), emptySlot(true) },
             }
         end
+        local s1 = sec.leftStage.slots[1]
+        local s2 = sec.leftStage.slots[2]
+        print(('[jp-slot][migrate-v3] char=%s name=%s tab=%s -> leftStage.slots[1] file=%s kind=%s en=%s [2] file=%s kind=%s en=%s'):format(
+            tostring(cid),
+            tostring(pname),
+            tostring(tabKey),
+            tostring(s1 and s1.file),
+            tostring(s1 and s1.kind),
+            tostring(s1 and s1.enabled),
+            tostring(s2 and s2.file),
+            tostring(s2 and s2.kind),
+            tostring(s2 and s2.enabled)
+        ))
         return true
     end
     local n = 0
@@ -493,14 +520,14 @@ function JpSlotMigratePresetsV3()
                         if ok and type(preset) == 'table' and type(preset.effects) == 'table' then
                             local changed = false
                             local eff = preset.effects
-                            if leftFromCharVideo(eff.idle, true) then
+                            if leftFromCharVideo(eff.idle, true, cid, pname, 'idle') then
                                 changed = true
                             end
-                            if leftFromCharVideo(eff.miss_tease, true) then
+                            if leftFromCharVideo(eff.miss_tease, true, cid, pname, 'miss_tease') then
                                 changed = true
                             end
                             for _, ek in ipairs({ 'win', 'bonus', 'bonus_streak', 'bonus_big' }) do
-                                if leftFromCharVideo(eff[ek], false) then
+                                if leftFromCharVideo(eff[ek], false, cid, pname, ek) then
                                     changed = true
                                 end
                             end

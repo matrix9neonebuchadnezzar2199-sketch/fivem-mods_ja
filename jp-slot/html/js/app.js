@@ -282,9 +282,53 @@
         if (isVideo) {
             charPortrait.hidden = true;
             charPortrait.removeAttribute('src');
-            if (window.CharFx && window.CharFx.play) {
-                window.CharFx.play(url, { force: true });
+            var v = charVideo;
+            v.muted = true;
+            v.playsInline = true;
+            try {
+                v.setAttribute('playsinline', '');
+            } catch (_) {}
+            v.autoplay = true;
+            v.loop = slot.loop !== false;
+            v.src = url;
+            v.classList.add('is-playing');
+            var playPromise = v.play();
+            if (playPromise && playPromise.catch) {
+                playPromise.catch(function (err) {
+                    nuiLog(
+                        'log',
+                        '[leftStage][err] video play failed tab=' +
+                            tabKey +
+                            ' slotIdx=' +
+                            idx +
+                            ' file=' +
+                            (slot.file || 'null') +
+                            ' err=' +
+                            (err && err.name ? err.name : String(err))
+                    );
+                });
             }
+            window.setTimeout(function () {
+                nuiLog(
+                    'log',
+                    '[probe-video] tab=' +
+                        tabKey +
+                        ' slotIdx=' +
+                        idx +
+                        ' src=' +
+                        (v.src || 'null').slice(-60) +
+                        ' paused=' +
+                        v.paused +
+                        ' rs=' +
+                        v.readyState +
+                        ' muted=' +
+                        v.muted +
+                        ' w=' +
+                        v.videoWidth +
+                        'x' +
+                        v.videoHeight
+                );
+            }, 200);
         } else {
             try {
                 charVideo.pause();
@@ -849,6 +893,28 @@
             ('characters/' + state.effectiveCharacterId + '/');
         state.effects = payload.effects || null;
         state.leftStageSlotIndex = 0;
+        try {
+            var idleLs = state.effects && state.effects.idle && state.effects.idle.leftStage;
+            var idleSlots = (idleLs && idleLs.slots) || [];
+            var winLs = state.effects && state.effects.win && state.effects.win.leftStage;
+            var winSlots = (winLs && winLs.slots) || [];
+            nuiLog(
+                'log',
+                '[probe3] idle.slots[0]=' +
+                    JSON.stringify(idleSlots[0] || null) +
+                    ' [1]=' +
+                    JSON.stringify(idleSlots[1] || null)
+            );
+            nuiLog(
+                'log',
+                '[probe3] win.slots[0]=' +
+                    JSON.stringify(winSlots[0] || null) +
+                    ' [1]=' +
+                    JSON.stringify(winSlots[1] || null)
+            );
+        } catch (e3) {
+            nuiLog('log', '[probe3][err] ' + (e3 && e3.message ? e3.message : String(e3)));
+        }
         window.__jpSlotState = state;
         if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
             window.JpSlotMarquee.refresh();
