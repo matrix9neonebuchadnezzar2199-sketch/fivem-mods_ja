@@ -205,10 +205,10 @@ end
 
 local function checkLegacyAssetPaths()
     local res = GetCurrentResourceName()
+    -- 旧ルートのみ（html/assets/characters/<id>/ 配下は新方式のため含めない）
     local legacy = {
         'html/assets/cutins/img_01.png',
         'html/assets/back.jpg',
-        'html/assets/characters/luna/idle.png',
     }
     for _, p in ipairs(legacy) do
         if LoadResourceFile(res, p) then
