@@ -167,4 +167,6 @@ Config.Debug = {
     enabled = false, -- 本番では false、開発時のみ true
     nuiVerbose = false, -- true のときのみ CLICK_TARGET / F1 スタック等を F8 に出す
     forceBonus = false, -- サーバー側は config_server の DebugSettings.ForceBonus を優先
+    --- 管理プレビュー埋め込みのローカル SPIN のみ clientLog へ出す（検証時 true）
+    previewSpinLog = false,
 }

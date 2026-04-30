@@ -124,6 +124,7 @@ local function openPlayUi(machine, extra)
         debug = {
             enabled = Config.Debug and Config.Debug.enabled or false,
             nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
+            previewSpinLog = Config.Debug and Config.Debug.previewSpinLog or false,
         },
     })
     setSlotNuiFocus(true)
@@ -199,6 +200,7 @@ RegisterNetEvent('jp-slot:cl:adminEmbedSlotInit', function(data)
             debug = {
                 enabled = Config.Debug and Config.Debug.enabled or false,
                 nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
+                previewSpinLog = Config.Debug and Config.Debug.previewSpinLog or false,
             },
         },
     })

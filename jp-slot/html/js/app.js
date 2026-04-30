@@ -104,9 +104,8 @@
         inner.style.width = '1280px';
         inner.style.height = '720px';
         inner.style.position = 'absolute';
-        inner.style.top = '0';
         inner.style.transformOrigin = 'top left';
-        inner.style.pointerEvents = 'none';
+        inner.style.pointerEvents = 'auto';
         var baseW = 1280;
         var baseH = 720;
         var fw = frame.clientWidth;
@@ -114,9 +113,12 @@
         if (fw <= 4 || fh <= 4) {
             return;
         }
-        var scale = Math.min(fw / baseW, fh / baseH, 1);
+        var SCALE_MAX = 2.0;
+        var scale = Math.min(fw / baseW, fh / baseH, SCALE_MAX);
         var offsetX = (fw - baseW * scale) / 2;
+        var offsetY = (fh - baseH * scale) / 2;
         inner.style.left = offsetX + 'px';
+        inner.style.top = offsetY + 'px';
         inner.style.transform = 'scale(' + scale + ')';
     };
 
@@ -657,10 +659,122 @@
         if (state.bet > hi) {
             state.bet = hi;
         }
+        if (window.__jpSlotEmbedPreview === true) {
+            var bal = Math.floor(Number(state.balance) || 0);
+            if (state.bet > bal) {
+                state.bet = Math.max(lo, Math.min(bal, hi));
+            }
+        }
     }
 
     function getSpinButton() {
         return document.querySelector('.btn-spin') || document.getElementById('btn-spin');
+    }
+
+    /**
+     * 管理プレビュー埋め込み: サーバへ送らずローカル抽選で演出のみ確認（残高 100 万固定の仮想ウォレット）
+     * TODO(task-3): JpSlotSimEngine が整ったら置き換え
+     */
+    function buildPreviewSpinPayload() {
+        var rng = Math.random;
+        var symIds = state.symbolIds;
+        if (!symIds || !symIds.length) {
+            symIds = ['cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character'];
+        }
+        var reels = [
+            symIds[Math.floor(rng() * symIds.length)],
+            symIds[Math.floor(rng() * symIds.length)],
+            symIds[Math.floor(rng() * symIds.length)],
+        ];
+        var pt = state.paytable;
+        var payouts = pt && pt.payouts ? pt.payouts : [];
+        var bet = Number(state.bet) || 100;
+        var matched = null;
+        for (var pi = 0; pi < payouts.length; pi++) {
+            var row = payouts[pi];
+            var combo = row && row.combo;
+            if (!combo) {
+                continue;
+            }
+            var parts = String(combo).split(',');
+            if (parts.length !== reels.length) {
+                continue;
+            }
+            var ok = true;
+            for (var j = 0; j < reels.length; j++) {
+                var want = parts[j].replace(/^\s+|\s+$/g, '');
+                if (want === '*' || want === '') {
+                    continue;
+                }
+                if (want !== reels[j]) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) {
+                matched = row;
+                break;
+            }
+        }
+        var mult = matched ? Number(matched.multiplier) || 0 : 0;
+        var tier = matched && matched.tier ? matched.tier : 'miss';
+        var winAmount = Math.floor(bet * mult);
+        var effectScene = 'idle';
+        if (winAmount > 0) {
+            effectScene = 'win';
+        } else {
+            effectScene = rng() < 0.35 ? 'miss_tease' : 'idle';
+        }
+        return {
+            ok: true,
+            reels: reels,
+            multiplier: mult,
+            tier: tier,
+            comboName: matched && matched.combo ? matched.combo : '',
+            winAmount: winAmount,
+            bet: bet,
+            effectiveBet: bet,
+            balance: state.balance,
+            jackpot: state.jackpot,
+            cutin: { kind: 'none' },
+            spinDuration: (state.spinDuration || 2500) / 1000,
+            bonus: null,
+            previewMode: true,
+            effectScene: effectScene,
+            effectBlocks: null,
+        };
+    }
+
+    function handleSpinClickPreview() {
+        clearWinFx();
+        var spinBtn = getSpinButton();
+        if (!spinBtn) {
+            return;
+        }
+        if (state.spinning) {
+            return;
+        }
+        if (state.balance < state.bet) {
+            return;
+        }
+        state.spinning = true;
+        window.__jpSlotSpinning = true;
+        spinBtn.disabled = true;
+        var p = buildPreviewSpinPayload();
+        if (state.debug && state.debug.previewSpinLog) {
+            nuiLog(
+                'log',
+                '[preview-spin] bet=' +
+                    p.bet +
+                    ' tier=' +
+                    (p.tier || '') +
+                    ' winAmount=' +
+                    p.winAmount +
+                    ' reels=' +
+                    JSON.stringify(p.reels || [])
+            );
+        }
+        onSpinResult(p);
     }
 
     function handleSpinClick() {
@@ -672,9 +786,13 @@
         if (state.spinning) {
             return;
         }
-        var inFreeSpin = state.bonusRemaining > 0;
         var embedPv = window.__jpSlotEmbedPreview === true;
-        if (!inFreeSpin && !embedPv && state.balance < state.bet) {
+        if (embedPv) {
+            handleSpinClickPreview();
+            return;
+        }
+        var inFreeSpin = state.bonusRemaining > 0;
+        if (!inFreeSpin && state.balance < state.bet) {
             return;
         }
         state.spinning = true;
@@ -683,7 +801,7 @@
         postNui('spin', {
             bet: state.bet,
             machineId: state.machine && state.machine.id,
-            embedPreview: embedPv,
+            embedPreview: false,
         });
     }
 
@@ -703,17 +821,30 @@
         }
 
         down.addEventListener('click', function () {
+            if (window.__jpSlotEmbedPreview === true && state.spinning) {
+                return;
+            }
             state.bet -= 100;
             clampBet();
             updateFooter();
         });
         up.addEventListener('click', function () {
+            if (window.__jpSlotEmbedPreview === true && state.spinning) {
+                return;
+            }
             state.bet += 100;
             clampBet();
             updateFooter();
         });
         maxBtn.addEventListener('click', function () {
+            if (window.__jpSlotEmbedPreview === true && state.spinning) {
+                return;
+            }
             var hi = (state.machine && state.machine.maxBet) || state.bet;
+            if (window.__jpSlotEmbedPreview === true) {
+                var balMax = Math.floor(Number(state.balance) || 0);
+                hi = Math.min(hi, balMax);
+            }
             state.bet = hi;
             clampBet();
             updateFooter();
@@ -784,9 +915,13 @@
 
     function initPlay(payload) {
         payload = payload || {};
+        window.__jpSlotEmbedPreview = !!payload.embedPreview;
+        window.__jpSlotNeutralPreviewChar = !!(
+            payload.embedPreview && payload.neutralPreviewCharacter
+        );
         state.machine = payload.machine;
         state.theme = payload.theme;
-        state.balance = payload.balance || 0;
+        state.balance = payload.embedPreview ? 1000000 : payload.balance || 0;
         state.jackpot = payload.jackpot || 0;
         state.spinDuration = (payload.spinDuration || 2.5) * 1000;
         state.paytable = payload.paytable;
@@ -837,8 +972,6 @@
             renderCharacterName();
         }
         updateFooter();
-        window.__jpSlotEmbedPreview = !!payload.embedPreview;
-        window.__jpSlotNeutralPreviewChar = !!(payload.embedPreview && payload.neutralPreviewCharacter);
         if (payload.embedPreview) {
             var rootPv = document.getElementById('root');
             var admPv = document.getElementById('panel-admin');
@@ -958,6 +1091,9 @@
                         showWinPopup(winAmt);
                     }
                     updateFooter();
+                    if (window.__jpSlotEmbedPreview === true) {
+                        clampBet();
+                    }
                     if (p.bonus && p.bonus.active) {
                         if (p.bonus.ended) {
                             state.bonusRemaining = 0;
@@ -1024,6 +1160,9 @@
             }
             var root = document.getElementById('root');
             if (root && root.classList.contains('is-visible')) {
+                if (window.__jpSlotEmbedPreview === true) {
+                    return;
+                }
                 handleExitClick();
                 e.preventDefault();
             }
@@ -1113,10 +1252,16 @@
         'keydown',
         function (e) {
             var adm = document.getElementById('panel-admin');
-            if (adm && adm.style.display === 'flex') {
-                return;
-            }
             var root = document.getElementById('root');
+            if (adm && adm.style.display === 'flex') {
+                if (
+                    !window.__jpSlotEmbedPreview ||
+                    !root ||
+                    !root.contains(e.target)
+                ) {
+                    return;
+                }
+            }
             if (!root || !root.classList.contains('is-visible')) {
                 return;
             }
