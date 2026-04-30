@@ -729,35 +729,6 @@ RegisterNetEvent('jp-slot:sv:adminPreviewEnd', function(payload)
     TriggerClientEvent('jp-slot:previewMode', src, { active = false })
 end)
 
---- embed init 送信用 effects の leftStage を Live Console にダンプ（診断用）
----@param label string
----@param eff table|nil
-local function dumpLeftStageFromEffects(label, eff)
-    if type(eff) ~= 'table' then
-        print(('[jp-slot][debug] %s effects=nil'):format(label))
-        return
-    end
-    local tabs = { 'idle', 'win', 'bonus', 'bonus_streak', 'bonus_big', 'miss_tease' }
-    for ti = 1, #tabs do
-        local tab = tabs[ti]
-        local sec = eff[tab]
-        local ls = type(sec) == 'table' and sec.leftStage or nil
-        local slots = type(ls) == 'table' and ls.slots or nil
-        if type(slots) == 'table' then
-            for i, s in ipairs(slots) do
-                print(('[jp-slot][debug] %s tab=%s slot[%d] enabled=%s kind=%s file=%s'):format(
-                    label,
-                    tab,
-                    i,
-                    tostring(s and s.enabled),
-                    tostring(s and s.kind),
-                    tostring(s and s.file)
-                ))
-            end
-        end
-    end
-end
-
 --- 管理画面「プレビュー」タブ：埋め込み用に台 UI の init データを送る（着席不要）
 RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     local src = source
@@ -808,12 +779,6 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     end
     local chMan = JpSlotLoadCharacterManifest(cid)
     local embedEffects = JpSlotReadPresetEffectsForCharacter(cid)
-    dumpLeftStageFromEffects('embedInit char=' .. tostring(cid), embedEffects)
-    print(('[jp-slot][embed] init sent: src=%s machine=%s character=%s'):format(
-        tostring(src),
-        tostring(m and m.id or 'nil'),
-        tostring(cid or 'nil')
-    ))
     TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
         machine = m,
         effects = embedEffects,

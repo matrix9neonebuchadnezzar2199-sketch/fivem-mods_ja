@@ -2162,14 +2162,6 @@
             }
             return;
         }
-        function dbg(level, msg) {
-            if (typeof window.jpSlotNuiLog === 'function') {
-                window.jpSlotNuiLog(level, msg);
-            } else if (typeof console !== 'undefined' && console.log) {
-                console.log(msg);
-            }
-        }
-        dbg('log', '[admin] preview tab activated, previewStart then embed after DOM mount');
         fetchNui('admin/previewStart', {})
             .then(function (r0) {
                 if (r0 && r0.ok === false) {
@@ -2178,7 +2170,9 @@
                 window.requestAnimationFrame(function () {
                     var h = $('admin-slot-embed');
                     if (!h) {
-                        dbg('warn', '[admin] admin-slot-embed missing after rAF');
+                        if (typeof console !== 'undefined' && console.warn) {
+                            console.warn('[admin] admin-slot-embed missing after rAF');
+                        }
                         return;
                     }
                     if (typeof window.jpSlotMoveRootToEmbed === 'function') {
@@ -2186,7 +2180,6 @@
                     }
                     fetchNui('admin/embedSlotInit', embedSlotInitOpts())
                         .then(function (r1) {
-                            dbg('log', '[admin] embedSlotInit fetch result: ' + JSON.stringify(r1 || {}));
                             if (r1 && r1.ok === false) {
                                 throw new Error('embedInit');
                             }

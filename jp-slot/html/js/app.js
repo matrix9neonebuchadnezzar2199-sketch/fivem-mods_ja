@@ -1,18 +1,4 @@
 /* global window, document, fetch, GetParentResourceName */
-(function jpSlotBootStamp() {
-    var rn = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'jp-slot';
-    try {
-        fetch('https://' + rn + '/clientLog', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-            body: JSON.stringify({
-                level: 'log',
-                message: '[BOOT] app.js evaluate start ' + new Date().toISOString(),
-            }),
-        }).catch(function () {});
-    } catch (_) {}
-})();
-
 (function () {
     window.addEventListener('error', function (e) {
         try {
@@ -125,7 +111,6 @@
         var baseH = 720;
         var fw = frame.clientWidth;
         var fh = frame.clientHeight;
-        nuiLog('log', '[embed] frame=' + (frame.id || frame.tagName) + ' size=' + fw + 'x' + fh);
         if (fw <= 4 || fh <= 4) {
             return;
         }
@@ -133,19 +118,6 @@
         var offsetX = (fw - baseW * scale) / 2;
         inner.style.left = offsetX + 'px';
         inner.style.transform = 'scale(' + scale + ')';
-        if (window.jpSlotNuiLog) {
-            window.jpSlotNuiLog(
-                'log',
-                '[embed] fit applied: frame=' +
-                    fw +
-                    'x' +
-                    fh +
-                    ' scale=' +
-                    scale.toFixed(3) +
-                    ' offsetX=' +
-                    offsetX.toFixed(0)
-            );
-        }
     };
 
     window.jpSlotFitAdminEmbedScale = window.applyEmbedPreviewFit;
@@ -238,7 +210,6 @@
         }
         if (enabledSlots.length === 0) {
             if (tabKey !== 'idle') {
-                nuiLog('log', '[leftStage] fallback from tab=' + tabKey + ' to idle (no enabled slots)');
                 return pickLeftStageForResult({ effectScene: 'idle' });
             }
             return { tabKey: tabKey, slots: [] };
@@ -252,17 +223,6 @@
         }
         var ar = assetsRoot || state.assetsRoot || '';
         var url = jpSlotResolveAssetUrl(slot.file, ar);
-        nuiLog(
-            'log',
-            '[leftStage] play tab=' +
-                tabKey +
-                ' slotIdx=' +
-                idx +
-                ' kind=' +
-                (slot.kind || '') +
-                ' file=' +
-                slot.file
-        );
         var charPortrait =
             document.querySelector('.char-img.char-portrait') ||
             document.querySelector('.char-portrait');
@@ -308,27 +268,6 @@
                     );
                 });
             }
-            window.setTimeout(function () {
-                nuiLog(
-                    'log',
-                    '[probe-video] tab=' +
-                        tabKey +
-                        ' slotIdx=' +
-                        idx +
-                        ' src=' +
-                        (v.src || 'null').slice(-60) +
-                        ' paused=' +
-                        v.paused +
-                        ' rs=' +
-                        v.readyState +
-                        ' muted=' +
-                        v.muted +
-                        ' w=' +
-                        v.videoWidth +
-                        'x' +
-                        v.videoHeight
-                );
-            }, 200);
         } else {
             try {
                 charVideo.pause();
@@ -473,7 +412,6 @@
             }
             rct.hidden = true;
         }
-        nuiLog('log', '[hideFreeSpinBanner] cleared');
     }
 
     function flashToast(text) {
@@ -587,18 +525,11 @@
     function hidePlay() {
         showPlay(false);
         hideFreeSpinBanner();
-        nuiLog('log', '[hidePlay] is-visible removed');
     }
 
     function handleExitClick() {
-        nuiLog('log', '[exit] handleExitClick start');
         hidePlay();
-        postNui('exit', {})
-            .then(function (r) {
-                var st = r && typeof r.status === 'number' ? r.status : '?';
-                nuiLog('log', '[exit] fetch ok status=' + st);
-            })
-            .catch(function (err) {
+        postNui('exit', {}).catch(function (err) {
                 nuiLog('warn', '[exit] fetch error: ' + (err && err.message ? err.message : String(err)));
             });
     }
@@ -736,7 +667,6 @@
         clearWinFx();
         var spinBtn = getSpinButton();
         if (!spinBtn) {
-            nuiLog('warn', '[handleSpinClick] .btn-spin missing');
             return;
         }
         if (state.spinning) {
@@ -745,13 +675,11 @@
         var inFreeSpin = state.bonusRemaining > 0;
         var embedPv = window.__jpSlotEmbedPreview === true;
         if (!inFreeSpin && !embedPv && state.balance < state.bet) {
-            nuiLog('log', '[handleSpinClick] balance < bet');
             return;
         }
         state.spinning = true;
         window.__jpSlotSpinning = true;
         spinBtn.disabled = true;
-        nuiLog('log', '[handleSpinClick] post spin');
         postNui('spin', {
             bet: state.bet,
             machineId: state.machine && state.machine.id,
@@ -760,7 +688,6 @@
     }
 
     function bindFooter() {
-        nuiLog('log', '[bindFooter] start');
         var down =
             document.querySelector('.bet-down') || document.getElementById('bet-down');
         var up = document.querySelector('.bet-up') || document.getElementById('bet-up');
@@ -771,48 +698,33 @@
         var exitBtn =
             document.querySelector('.btn-exit') || document.getElementById('btn-exit');
 
-        var found = {
-            down: !!down,
-            up: !!up,
-            maxBet: !!maxBtn,
-            spin: !!spinBtn,
-            exit: !!exitBtn,
-        };
-        nuiLog('log', '[bindFooter] found: ' + JSON.stringify(found));
-
         if (!down || !up || !maxBtn || !spinBtn || !exitBtn) {
-            nuiLog('warn', '[bindFooter] footer controls missing (partial bind skipped)');
             return;
         }
 
         down.addEventListener('click', function () {
-            nuiLog('log', '[bindFooter] bet-down clicked');
             state.bet -= 100;
             clampBet();
             updateFooter();
         });
         up.addEventListener('click', function () {
-            nuiLog('log', '[bindFooter] bet-up clicked');
             state.bet += 100;
             clampBet();
             updateFooter();
         });
         maxBtn.addEventListener('click', function () {
-            nuiLog('log', '[bindFooter] max clicked');
             var hi = (state.machine && state.machine.maxBet) || state.bet;
             state.bet = hi;
             clampBet();
             updateFooter();
         });
         spinBtn.addEventListener('click', function (e) {
-            nuiLog('log', '[bindFooter] SPIN clicked');
             if (e && e.stopPropagation) {
                 e.stopPropagation();
             }
             handleSpinClick();
         });
         exitBtn.addEventListener('click', function (e) {
-            nuiLog('log', '[bindFooter] EXIT clicked');
             if (e && e.stopPropagation) {
                 e.stopPropagation();
             }
@@ -893,28 +805,6 @@
             ('characters/' + state.effectiveCharacterId + '/');
         state.effects = payload.effects || null;
         state.leftStageSlotIndex = 0;
-        try {
-            var idleLs = state.effects && state.effects.idle && state.effects.idle.leftStage;
-            var idleSlots = (idleLs && idleLs.slots) || [];
-            var winLs = state.effects && state.effects.win && state.effects.win.leftStage;
-            var winSlots = (winLs && winLs.slots) || [];
-            nuiLog(
-                'log',
-                '[probe3] idle.slots[0]=' +
-                    JSON.stringify(idleSlots[0] || null) +
-                    ' [1]=' +
-                    JSON.stringify(idleSlots[1] || null)
-            );
-            nuiLog(
-                'log',
-                '[probe3] win.slots[0]=' +
-                    JSON.stringify(winSlots[0] || null) +
-                    ' [1]=' +
-                    JSON.stringify(winSlots[1] || null)
-            );
-        } catch (e3) {
-            nuiLog('log', '[probe3][err] ' + (e3 && e3.message ? e3.message : String(e3)));
-        }
         window.__jpSlotState = state;
         if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
             window.JpSlotMarquee.refresh();
@@ -984,65 +874,6 @@
         }
         hideFreeSpinBanner();
         startIdleCharLoop();
-        var charImg = document.querySelector('.char-stage img, .char-portrait');
-        var charStage = document.querySelector('.char-stage');
-        var charSrc = charImg && charImg.src ? charImg.src : 'null';
-        var charDisplay = charStage ? getComputedStyle(charStage).display : 'null';
-        var charRect = 'null';
-        if (charStage) {
-            var cr = charStage.getBoundingClientRect();
-            charRect = JSON.stringify({
-                l: Math.round(cr.left),
-                w: Math.round(cr.width),
-                h: Math.round(cr.height),
-            });
-        }
-        nuiLog(
-            'log',
-            '[probe] charSrc=' + charSrc + ' charDisplay=' + charDisplay + ' charRect=' + charRect
-        );
-        if (payload.embedPreview) {
-            var colLeft = document.querySelector('.admin-slot-embed .col-left');
-            var probe2 =
-                colLeft && colLeft.outerHTML ? colLeft.outerHTML.slice(0, 150) : 'null';
-            nuiLog('log', '[probe2] colLeft=' + probe2);
-        }
-        if (!payload.embedPreview) {
-            window.requestAnimationFrame(function () {
-                window.requestAnimationFrame(function () {
-                    var r = document.getElementById('root');
-                    var cl = r && r.querySelector('.col-left');
-                    var cs = r && r.querySelector('.char-stage');
-                    if (cl && cs) {
-                        var clStyle = window.getComputedStyle(cl);
-                        var csStyle = window.getComputedStyle(cs);
-                        nuiLog(
-                            'log',
-                            '[probe-play] col-left w=' +
-                                cl.clientWidth +
-                                ' h=' +
-                                cl.clientHeight +
-                                ' display=' +
-                                clStyle.display +
-                                ' position=' +
-                                clStyle.position
-                        );
-                        nuiLog(
-                            'log',
-                            '[probe-play] char-stage w=' +
-                                cs.clientWidth +
-                                ' h=' +
-                                cs.clientHeight +
-                                ' display=' +
-                                csStyle.display +
-                                ' position=' +
-                                csStyle.position
-                        );
-                    }
-                });
-            });
-        }
-        nuiLog('log', '[initPlay] done');
     }
 
     function showWinPopup(amount) {
@@ -1193,7 +1024,6 @@
             }
             var root = document.getElementById('root');
             if (root && root.classList.contains('is-visible')) {
-                nuiLog('log', '[keydown] Escape → handleExitClick');
                 handleExitClick();
                 e.preventDefault();
             }
@@ -1202,28 +1032,10 @@
     );
 
     window.addEventListener('message', function (e) {
-        try {
-            if (e && e.data && e.data.type === 'init') {
-                var p = e.data.payload || {};
-                var mid = (p.machine && p.machine.id) || 'nil';
-                var cid =
-                    (p.character && p.character.id) || p.characterId || 'nil';
-                nuiLog(
-                    'log',
-                    '[nui] init received: machine=' +
-                        mid +
-                        ' character=' +
-                        cid +
-                        ' embedPreview=' +
-                        !!p.embedPreview
-                );
-            }
-        } catch (errInitLog) {}
         var d = e.data || {};
         var type = d.type;
         var payload = d.payload || {};
         if (type === 'hide') {
-            nuiLog('log', '[message] hide received');
             hidePlay();
             return;
         }
@@ -1297,15 +1109,6 @@
         }
     });
 
-    function bootDomReady() {
-        nuiLog('log', '[BOOT] DOMContentLoaded fired');
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bootDomReady);
-    } else {
-        bootDomReady();
-    }
-
     document.addEventListener(
         'keydown',
         function (e) {
@@ -1331,7 +1134,6 @@
                 state.bet = hi;
                 clampBet();
                 updateFooter();
-                nuiLog('log', '[keyboard] max bet');
             }
         },
         true
@@ -1497,54 +1299,3 @@
         }
     });
 })();
-
-/* デバッグ: DOM 状態を起動約3秒後に clientLog 経由で Live Console（txAdmin）へ — F8 手動入力不要 */
-setTimeout(function () {
-    var f = document.getElementById('admin-slot-embed');
-    var fit = document.getElementById('jp-slot-embed-fit');
-    var r = document.getElementById('root');
-    var log = window.jpSlotNuiLog;
-    if (log) {
-        log(
-            'log',
-            '[debug] host=' +
-                !!f +
-                ' hostSize=' +
-                (f ? f.clientWidth + 'x' + f.clientHeight : 'null') +
-                ' fit=' +
-                !!fit +
-                ' fitSize=' +
-                (fit ? fit.clientWidth + 'x' + fit.clientHeight : 'null') +
-                ' rootParent=' +
-                (r && r.parentElement && r.parentElement.id ? r.parentElement.id : 'null') +
-                ' rootChildren=' +
-                (r && r.children ? r.children.length : -1)
-        );
-    }
-    var big = [];
-    var all = document.querySelectorAll('*');
-    var i;
-    for (i = 0; i < all.length; i++) {
-        if (all[i].clientWidth > 3000) {
-            big.push(all[i]);
-        }
-    }
-    for (i = 0; i < Math.min(3, big.length); i++) {
-        var e = big[i];
-        if (log) {
-            log(
-                'log',
-                '[debug] big=' +
-                    e.tagName +
-                    '#' +
-                    (e.id || '') +
-                    '.' +
-                    String(e.className || '') +
-                    ' ' +
-                    e.clientWidth +
-                    'x' +
-                    e.clientHeight
-            );
-        }
-    }
-}, 3000);
