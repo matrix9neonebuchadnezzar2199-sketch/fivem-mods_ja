@@ -82,3 +82,4 @@ standalone モードは KVS に **`jp-slot:wallet:{identifier}`**（プライマ
 6. **`/jpslotresetauth`**（サーバーコンソール source=0、または ACE 付きプレイヤー）で管理者ハッシュをクリアし、**`bootstrapIfMissing`** が有効なら再ブートストラップ。
 7. **プレビューモード**: 管理ツールから開始するとサーバーが **`JpSlotPreviewMode[source]`** を立て、スピン時に **ベット・配当・ジャックポット累積をスキップ**（演出のみ）。クライアント NUI に **`previewMode`** メッセージでバッジ表示。
 8. **プリセット KVS（参考）**: **`jp-slot:adm:preset:list`**（一覧 JSON）、**`jp-slot:adm:preset:<id>`**（本文）、**`jp-slot:adm:preset:active`**（有効 ID）。素材一覧は **`admin/assets/scan`** が **`html/assets/`** 配下を列挙。
+9. **緊急修復 `jpslot_fix_leftstage`**: 全プリセットの **`effects.*.leftStage.slots`** を既定状態へ一括リセットする。**txAdmin Live Console（`source == 0`）専用**（`server/admin.lua` の `RegisterCommand` で `if source ~= 0 then return end`）。手順・入出力の詳細は **`README.md`** の「jpslot_fix_leftstage（サーバコンソール専用）」を参照。

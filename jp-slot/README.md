@@ -13,6 +13,25 @@ FiveM カジノ向けスロットマシン MOD（MVP）。台に近づき **[E]*
 5. 管理者は **`config_server.lua`** の `Config.AdminAce`（既定 `jp-slot.admin`）を ACE で付与し、チャットで `/jpslotadmin`（`Config.AdminCommand`）で **演出設計ツール（管理パネル）** を開く。`Config.AdminAuth` が有効なときは **パスワード認証**が必要。**初回起動時**に管理者パスワードが未設定なら、**サーバーコンソールに初期パスワードが一度だけ表示**されるので控え、ログイン後は 🔑 から必ず変更すること。**デザイン**タブでテーマ色、**表示**タブで NUI の幅・高さ（画面に対する %）をスライダー調整し、保存すると全プレイヤーに反映される（既定・フォールバックは **`config_shared.lua` の `Config.UISize`**、永続は KVS **`jp-slot:ui_size`**）。
 6. 管理者パスワードやロックアウト状態をリセットしたいときは、サーバーコンソールまたは ACE 付きプレイヤーで **`/jpslotresetauth`** を実行する（KVP の管理者ハッシュをクリアし、`bootstrapIfMissing` が有効なら新しい初期パスワードがコンソールに出る）。
 
+### jpslot_fix_leftstage（サーバコンソール専用）
+
+汚染された **左ステージ（`effects.<tab>.leftStage.slots`）** プリセットデータを一括クリーンアップする緊急修復コマンドです。
+
+- **実行場所**: **サーバコンソール（txAdmin Live Console）専用**（ゲーム内チャットからは実行できません）。
+- **権限**: `RegisterCommand(..., true)` の restricted フラグに加え、ハンドラ先頭の **`if source ~= 0 then return end`** で **コンソール（source=0）以外は即 return** します。本番運用では **ACE 追加なし・コンソール限定のまま** で十分です。
+- **動作**: KVP キー `jp-slot:adm:preset:<キャラID>:<プリセット名>` を走査し、各プリセット本文の `effects` に対して `leftStage` を再初期化します。
+  - **`idle`**: 第1スロット（Lua の `slots[1]`）のみ **`idle/portrait.png`**（`kind=image`, `enabled=true`）、第2スロットは空・無効。
+  - **その他タブ**（`win` / `bonus` / `bonus_streak` / `bonus_big` / `miss_tease`）: 2 スロットとも **`enabled=false`**, **`file=""`**。
+- **メタ用 KVP**（`active` / `list` / `migrated_v2` / `migrated_v3` / `index:*` など）は対象外です。
+- **使用例**（Live Console にそのまま入力）:
+
+```
+jpslot_fix_leftstage
+```
+
+- **出力**: 書き換えた各キーを **`[jp-slot][fix] reset leftStage for key=...`** で報告し、最後に **`[jp-slot][fix] done, N presets reset`**（`N` は更新したプリセット件数）。`effects` が無い古いキーは **`[jp-slot][fix] skip ...`** でスキップします。
+- **使用ケース**: マイグレーションや過去データの不整合で、左キャラ枠が意図しない動画・画像を参照しているときの **緊急修復**。通常運用では **使わない**でください。実行後は管理パネルで各タブの leftStage を必要に応じて再設定してください。
+
 ### 演出プリセット KVP のマイグレーション（v2）
 
 **初回起動時のみ**、旧いプリセット保存形式（`jp-slot:adm:preset:<id>` など）がキャラ別名前空間（例: `jp-slot:adm:preset:luna:<presetName>`）へ自動移行されます。Live Console に **`[jp-slot] preset migration v2 completed (N entries)`** が出れば成功です（`N` は移行したプリセット件数）。**2 回目以降の起動では**マイグレーション済みフラグにより処理がスキップされ、このログは出ません。
