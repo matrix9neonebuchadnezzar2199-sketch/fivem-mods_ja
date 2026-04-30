@@ -125,10 +125,11 @@
         var baseH = 720;
         var fw = frame.clientWidth;
         var fh = frame.clientHeight;
+        nuiLog('log', '[embed] frame=' + (frame.id || frame.tagName) + ' size=' + fw + 'x' + fh);
         if (fw <= 4 || fh <= 4) {
             return;
         }
-        var scale = Math.min(fw / baseW, fh / baseH);
+        var scale = Math.min(fw / baseW, fh / baseH, 1);
         var offsetX = (fw - baseW * scale) / 2;
         inner.style.left = offsetX + 'px';
         inner.style.transform = 'scale(' + scale + ')';
@@ -789,6 +790,23 @@
         }
         hideFreeSpinBanner();
         startIdleCharLoop();
+        var charImg = document.querySelector('.char-stage img, .char-portrait');
+        var charStage = document.querySelector('.char-stage');
+        var charSrc = charImg && charImg.src ? charImg.src : 'null';
+        var charDisplay = charStage ? getComputedStyle(charStage).display : 'null';
+        var charRect = 'null';
+        if (charStage) {
+            var cr = charStage.getBoundingClientRect();
+            charRect = JSON.stringify({
+                l: Math.round(cr.left),
+                w: Math.round(cr.width),
+                h: Math.round(cr.height),
+            });
+        }
+        nuiLog(
+            'log',
+            '[probe] charSrc=' + charSrc + ' charDisplay=' + charDisplay + ' charRect=' + charRect
+        );
         nuiLog('log', '[initPlay] done');
     }
 
