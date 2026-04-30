@@ -8,11 +8,17 @@ local function jpSlotListDirWindowsAlt(winPath)
     if winPath:sub(-1) == '\\' then
         winPath = winPath:sub(1, -2)
     end
-    local lit = winPath:gsub("'", "''")
-    local cmd =
-        'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Get-ChildItem -LiteralPath '''
-        .. lit
-        .. ''' -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }"'
+    -- PowerShell のシングルクォートエスケープ: ' → ''（ソースに ''' 連続を書かない）
+    local SQ = "'"
+    local lit = winPath:gsub(SQ, SQ .. SQ)
+    local cmd = table.concat({
+        'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "',
+        'Get-ChildItem -LiteralPath ',
+        SQ,
+        lit,
+        SQ,
+        ' -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }"',
+    })
     local p = io.popen(cmd)
     if not p then
         return {}
