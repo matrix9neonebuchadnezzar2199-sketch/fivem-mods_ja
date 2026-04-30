@@ -408,7 +408,7 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
         theme = theme,
         jackpot = jackpot,
         balance = Framework.getMoney(src, Config.MoneyAccount),
-        spinDuration = (Config.Debug and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault,
+        spinDuration = (Config.DebugSettings and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault,
         uiSize = JpSlotGetUISize(),
         marquee = {
             hype = Locales.getList(hypeKey) or {},
@@ -502,7 +502,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
     end
 
     local opts = {}
-    if Config.Debug and Config.DebugSettings then
+    if Config.DebugSettings then
         if Config.DebugSettings.ForceJackpot then
             opts.forceJackpot = true
         elseif Config.DebugSettings.ForceWinNext then
@@ -720,7 +720,7 @@ RegisterNetEvent('jp-slot:spin', function(payload)
         cutin = pickCutinPayload(tier)
     end
 
-    local spinDur = (Config.Debug and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault
+    local spinDur = (Config.DebugSettings and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault
 
     if not isPreview then
         appendTransactionLog({

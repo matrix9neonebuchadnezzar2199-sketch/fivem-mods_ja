@@ -2,7 +2,10 @@
 -- config_shared.lua が先に読み込まれること。
 
 -- ===== デバッグ =====
-Config.Debug = true
+-- 注意: Config.Debug は config_shared.lua でテーブルとして初期化済み。
+-- ここでは boolean 上書きせず、サーバ専用の値だけ追加・更新する。
+Config.Debug = Config.Debug or {}
+Config.Debug.enabled = true -- 旧: Config.Debug = true（テーブルを潰すバグだった）
 Config.DebugSettings = {
     SpinDuration = 0.3,
     InitialBalance = 1000000,

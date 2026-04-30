@@ -29,6 +29,18 @@ local function sessionOk(src, token)
     return ok
 end
 
+local function debugIsTable()
+    return type(Config.Debug) == 'table'
+end
+
+local function isPreviewInitDumpEnabled()
+    return debugIsTable() and Config.Debug.previewInitDump == true
+end
+
+local function isPreviewSpinLogEnabled()
+    return debugIsTable() and Config.Debug.previewSpinLog == true
+end
+
 --- プリセット表示名（1〜32文字・許容文字のみ）
 local function jpSlotPresetNameValid(name)
     if type(name) ~= 'string' then
@@ -315,7 +327,7 @@ RegisterCommand(Config.AdminCommand or 'jpslotadmin', function(source, _args, _r
     TriggerClientEvent('jp-slot:openAdmin', source, {
         theme = theme,
         debug = Config.Debug,
-        showDebugTab = Config.Debug and Config.DebugSettings and Config.DebugSettings.ShowDebugButtons,
+        showDebugTab = Config.DebugSettings and Config.DebugSettings.ShowDebugButtons,
         uiSize = JpSlotGetUISize(),
         requirePassword = cfg.enabled ~= false,
         sessionTtl = tonumber(cfg.sessionTtl) or 1800,
@@ -796,7 +808,7 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     local chMan = JpSlotLoadCharacterManifest(cid)
     local embedEffects = JpSlotReadPresetEffectsForCharacter(cid)
     local spinDur =
-        (Config.Debug and Config.DebugSettings and Config.DebugSettings.SpinDuration)
+        (Config.DebugSettings and Config.DebugSettings.SpinDuration)
         or Config.SpinDurationDefault
     local symIds = ptFull.symbols
         or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' }
@@ -821,13 +833,13 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         characters = JpSlotScanCharacters(),
         embedPreview = true,
         debug = {
-            enabled = Config.Debug and Config.Debug.enabled or false,
-            nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
-            previewSpinLog = Config.Debug and Config.Debug.previewSpinLog or false,
-            previewInitDump = Config.Debug and Config.Debug.previewInitDump or false,
+            enabled = debugIsTable() and Config.Debug.enabled or false,
+            nuiVerbose = debugIsTable() and Config.Debug.nuiVerbose or false,
+            previewSpinLog = isPreviewSpinLogEnabled(),
+            previewInitDump = isPreviewInitDumpEnabled(),
         },
     }
-    if Config.Debug and Config.Debug.previewInitDump then
+    if isPreviewInitDumpEnabled() then
         local ac, ap = JpSlotParseActivePresetRef()
         print(
             ('[preview-dump][server] embedSlotInit src=%d cid=%s machine=%s payId=%s activePreset=%s/%s'):format(
