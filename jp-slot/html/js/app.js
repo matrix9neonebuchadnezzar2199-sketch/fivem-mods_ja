@@ -1056,6 +1056,74 @@
         );
     }
 
+    /** 実機プレイ画面: フォントサイズ・主要 DOM の実測（previewInitDump 時のみ） */
+    function dumpPlayStageDom() {
+        if (!previewInitDumpEnabled()) {
+            return;
+        }
+        var rootFs = window.getComputedStyle(document.documentElement).fontSize;
+        var bodyFs = window.getComputedStyle(document.body).fontSize;
+        nuiLog(
+            'log',
+            '[preview-dump][play-fontsize] htmlFontSize=' +
+                rootFs +
+                ' bodyFontSize=' +
+                bodyFs +
+                ' winW=' +
+                window.innerWidth +
+                ' winH=' +
+                window.innerHeight
+        );
+        var playTargets = [
+            '#root',
+            '.slot-main',
+            '.col-left',
+            '.char-stage',
+            '.char-stage .char-portrait',
+            '.char-stage video',
+            '.col-center',
+            '.reels',
+            '.col-right',
+            '.col-footer',
+            '.btn-spin',
+            '.bet-controls',
+            '.balance-display',
+        ];
+        for (var pi = 0; pi < playTargets.length; pi++) {
+            var psel = playTargets[pi];
+            var pel = document.querySelector(psel);
+            if (!pel) {
+                nuiLog('log', '[preview-dump][play-dom] ' + psel + '=null');
+                continue;
+            }
+            var pr = pel.getBoundingClientRect();
+            var pcs = window.getComputedStyle(pel);
+            nuiLog(
+                'log',
+                '[preview-dump][play-dom] ' +
+                    psel +
+                    ' w=' +
+                    Math.round(pr.width) +
+                    ' h=' +
+                    Math.round(pr.height) +
+                    ' top=' +
+                    Math.round(pr.top) +
+                    ' bottom=' +
+                    Math.round(pr.bottom) +
+                    ' minW=' +
+                    pcs.minWidth +
+                    ' minH=' +
+                    pcs.minHeight +
+                    ' display=' +
+                    pcs.display +
+                    ' position=' +
+                    pcs.position +
+                    ' overflow=' +
+                    pcs.overflow
+            );
+        }
+    }
+
     function initPlay(payload) {
         payload = payload || {};
         window.__jpSlotEmbedPreview = !!payload.embedPreview;
@@ -1261,6 +1329,11 @@
             window.setTimeout(function () {
                 dumpPreviewDomProject();
             }, 200);
+        }
+        if (previewInitDumpEnabled() && !payload.embedPreview) {
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(dumpPlayStageDom);
+            });
         }
     }
 
