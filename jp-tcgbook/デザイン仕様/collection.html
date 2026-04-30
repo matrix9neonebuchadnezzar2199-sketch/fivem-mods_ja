@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>BOOK - Trading Card Game</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+  body {
+    background: rgba(0,0,0,0.5);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #e8e1c4;
+  }
+
+  .book {
+    width: 1100px;
+    height: 700px;
+    background: linear-gradient(135deg, #3a2418 0%, #5c3a22 50%, #3a2418 100%);
+    border: 3px solid #8b6f3f;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .book::before {
+    content: '';
+    position: absolute;
+    inset: 12px;
+    border: 1px solid #8b6f3f;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
+  /* ヘッダー */
+  .header {
+    padding: 14px 30px 10px;
+    border-bottom: 1px solid #8b6f3f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+  }
+
+  .title {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 8px;
+    color: #d4af37;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+
+  .player-info { text-align: right; font-size: 12px; }
+  .player-info .name { color: #d4af37; font-size: 15px; font-weight: bold; }
+  .player-info .stats { color: #b0a378; margin-top: 2px; }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    padding: 0 30px;
+    gap: 4px;
+    background: rgba(0,0,0,0.15);
+    border-bottom: 1px solid #8b6f3f;
+  }
+
+  .tab {
+    padding: 10px 22px;
+    cursor: pointer;
+    color: #b0a378;
+    font-size: 13px;
+    letter-spacing: 2px;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { color: #d4af37; }
+  .tab.active {
+    color: #d4af37;
+    border-bottom-color: #d4af37;
+    background: rgba(212,175,55,0.08);
+  }
+
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* 左サイドバー */
+  .sidebar {
+    width: 200px;
+    padding: 16px;
+    border-right: 1px solid #8b6f3f;
+    background: rgba(0,0,0,0.2);
+    overflow-y: auto;
+  }
+
+  .sidebar h3 {
+    font-size: 11px;
+    color: #d4af37;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #6b5530;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 7px 10px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid #6b5530;
+    color: #e8e1c4;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+
+  .filter-group { margin-bottom: 14px; }
+
+  .filter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .filter-item:hover { background: rgba(212,175,55,0.1); }
+  .filter-item.active { background: rgba(212,175,55,0.18); color: #d4af37; }
+  .filter-item .count { color: #8b7d4a; font-size: 10px; }
+
+  .rank-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .rank-S { background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; }
+  .rank-A { background: #ff9933; }
+  .rank-B { background: #ffd633; }
+  .rank-C { background: #99ccff; }
+  .rank-D { background: #aaaaaa; }
+
+  /* 中央エリア */
+  .grid-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .toolbar {
+    padding: 12px 18px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1));
+    border-bottom: 1px solid #6b5530;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .completion {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .completion-label {
+    font-size: 11px;
+    color: #b0a378;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #6b5530;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: linear-gradient(90deg, #a88828, #d4af37, #f5d76e);
+    width: 39%;
+    box-shadow: 0 0 8px rgba(212,175,55,0.5);
+  }
+
+  .completion-count {
+    font-size: 13px;
+    color: #d4af37;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .sort-control { display: flex; align-items: center; gap: 6px; }
+
+  .sort-label {
+    font-size: 11px;
+    color: #b0a378;
+    letter-spacing: 1px;
+  }
+
+  .sort-buttons {
+    display: flex;
+    gap: 2px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid #6b5530;
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .sort-btn {
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #b0a378;
+    cursor: pointer;
+    border-radius: 3px;
+    background: transparent;
+    border: none;
+  }
+  .sort-btn:hover { color: #d4af37; }
+  .sort-btn.active {
+    background: linear-gradient(180deg, #8b6f3f, #6b5530);
+    color: #fff5d0;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
+  }
+
+  /* カードグリッド */
+  .card-grid-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .card {
+    aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #2a1f10, #4a3520);
+    border: 2px solid #8b6f3f;
+    border-radius: 6px;
+    padding: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: #d4af37;
+    box-shadow: 0 6px 16px rgba(212,175,55,0.4);
+  }
+
+  .card.selected {
+    border-color: #d4af37;
+    box-shadow: 0 0 12px rgba(212,175,55,0.6);
+  }
+
+  .card.empty {
+    background: rgba(0,0,0,0.3);
+    border: 2px dashed #5a4a2a;
+    cursor: default;
+  }
+  .card.empty:hover { transform: none; box-shadow: none; border-color: #5a4a2a; }
+
+  .card-rank {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #1a1208;
+    z-index: 3;
+  }
+
+  .card-type {
+    position: absolute;
+    top: 5px; left: 5px;
+    font-size: 8px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.7);
+    color: #d4af37;
+    letter-spacing: 1px;
+    z-index: 3;
+  }
+
+  .card-art {
+    flex: 1;
+    background: linear-gradient(135deg, #1a1208, #3a2818);
+    border-radius: 3px;
+    margin: 20px 4px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: #6b5530;
+    position: relative;
+  }
+
+  /* ★ カード一覧の四方向数値 */
+  .mini-stat {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 600;
+    color: #d4af37;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.8);
+    line-height: 1;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .mini-stat.max {
+    color: #ff4d4d;
+    font-weight: 900;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(255,77,77,0.6);
+  }
+  .mini-stat.s-top    { top: 2px; left: 50%; transform: translateX(-50%); }
+  .mini-stat.s-bottom { bottom: 2px; left: 50%; transform: translateX(-50%); }
+  .mini-stat.s-left   { left: 3px; top: 50%; transform: translateY(-50%); }
+  .mini-stat.s-right  { right: 3px; top: 50%; transform: translateY(-50%); }
+
+  .card-name {
+    font-size: 10px;
+    text-align: center;
+    color: #e8e1c4;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    line-height: 1.2;
+    margin-top: 3px;
+  }
+
+  /* 右：詳細パネル */
+  .detail {
+    width: 250px;
+    padding: 16px;
+    border-left: 1px solid #8b6f3f;
+    background: rgba(0,0,0,0.25);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-card-preview {
+    position: relative;
+    aspect-ratio: 3/4;
+    background: linear-gradient(160deg, #2a1f10, #4a3520);
+    border: 2px solid #d4af37;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(212,175,55,0.3);
+    overflow: hidden;
+  }
+
+  .preview-art {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b5530;
+    font-size: 90px;
+    background: radial-gradient(circle at center, #2a1f10 0%, #1a1208 100%);
+  }
+
+  .preview-rank {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #1a1208;
+    z-index: 3;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+
+  .preview-type {
+    position: absolute;
+    top: 10px; left: 10px;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: rgba(0,0,0,0.75);
+    color: #d4af37;
+    letter-spacing: 2px;
+    z-index: 3;
+  }
+
+  /* 詳細プレビューの四方向数値 */
+  .stat-num {
+    position: absolute;
+    width: 30px; height: 30px;
+    background: rgba(0,0,0,0.75);
+    border: 1px solid #d4af37;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #d4af37;
+    text-shadow: 0 0 4px rgba(212,175,55,0.6);
+    box-shadow: 0 0 8px rgba(0,0,0,0.6);
+    z-index: 4;
+  }
+  .stat-num.max {
+    color: #ff4d4d;
+    border-color: #ff4d4d;
+    text-shadow: 0 0 6px rgba(255,77,77,0.8);
+    box-shadow: 0 0 10px rgba(255,77,77,0.5);
+    font-weight: 900;
+  }
+  .stat-top    { top: 38px; left: 50%; transform: translateX(-50%); }
+  .stat-bottom { bottom: 8px; left: 50%; transform: translateX(-50%); }
+  .stat-left   { left: 8px; top: 50%; transform: translateY(-50%); }
+  .stat-right  { right: 8px; top: 50%; transform: translateY(-50%); }
+
+  .detail-name {
+    font-size: 16px;
+    color: #d4af37;
+    margin-bottom: 2px;
+  }
+
+  .detail-sub {
+    font-size: 11px;
+    color: #b0a378;
+    margin-bottom: 10px;
+  }
+
+  .detail-desc {
+    font-size: 11px;
+    line-height: 1.5;
+    color: #c8bfa0;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: rgba(0,0,0,0.3);
+    border-left: 2px solid #d4af37;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: auto;
+  }
+
+  .btn {
+    padding: 8px;
+    background: linear-gradient(180deg, #6b5530, #4a3520);
+    border: 1px solid #8b6f3f;
+    color: #e8e1c4;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .btn:hover {
+    background: linear-gradient(180deg, #8b6f3f, #6b5530);
+    color: #fff;
+  }
+  .btn.primary {
+    background: linear-gradient(180deg, #d4af37, #a88828);
+    color: #1a1208;
+    font-weight: bold;
+    border-color: #d4af37;
+  }
+  .btn.primary:hover {
+    background: linear-gradient(180deg, #f5d76e, #d4af37);
+  }
+
+  .footer {
+    padding: 8px 30px;
+    border-top: 1px solid #8b6f3f;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #8b7d4a;
+  }
+  .footer kbd {
+    background: rgba(212,175,55,0.15);
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: #d4af37;
+    margin: 0 3px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb { background: #6b5530; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="book">
+
+  <div class="header">
+    <div class="title">B O O K</div>
+    <div class="player-info">
+      <div class="name">Hunter_Gon</div>
+      <div class="stats">所持: 47 / 120 種 ・ レート 1842 ・ 勝率 64%</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">📖 コレクション</div>
+    <div class="tab">🎴 デッキ編成</div>
+    <div class="tab">⚔ 対戦</div>
+    <div class="tab">🤝 トレード</div>
+    <div class="tab">🏆 ランキング</div>
+  </div>
+
+  <div class="main">
+
+    <div class="sidebar">
+      <input class="search-box" placeholder="🔍 カード名で検索...">
+
+      <div class="filter-group">
+        <h3>種別</h3>
+        <div class="filter-item active"><span>すべて</span><span class="count">47</span></div>
+        <div class="filter-item"><span>フリーカード</span><span class="count">32</span></div>
+        <div class="filter-item"><span>指定カード</span><span class="count">15</span></div>
+      </div>
+
+      <div class="filter-group">
+        <h3>ランク</h3>
+        <div class="filter-item"><span><span class="rank-dot rank-S"></span>S</span><span class="count">2</span></div>
+        <div class="filter-item"><span><span class="rank-dot rank-A"></span>A</span><span class="count">8</span></div>
+        <div class="filter-item"><span><span class="rank-dot rank-B"></span>B</span><span class="count">14</span></div>
+        <div class="filter-item"><span><span class="rank-dot rank-C"></span>C</span><span class="count">15</span></div>
+        <div class="filter-item"><span><span class="rank-dot rank-D"></span>D</span><span class="count">8</span></div>
+      </div>
+    </div>
+
+    <div class="grid-area">
+
+      <div class="toolbar">
+        <div class="completion">
+          <span class="completion-label">コレクション完成度</span>
+          <div class="progress-bar"><div></div></div>
+          <span class="completion-count">47 / 120 (39%)</span>
+        </div>
+        <div class="sort-control">
+          <span class="sort-label">並び替え</span>
+          <div class="sort-buttons">
+            <button class="sort-btn active">ランク順</button>
+            <button class="sort-btn">入手日</button>
+            <button class="sort-btn">名前順</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid-wrapper">
+        <div class="card-grid">
+
+          <!-- 古龍の咆哮 上7 右9 下6 左5 → 最大は右9 -->
+          <div class="card selected">
+            <span class="card-type">指定</span>
+            <span class="card-rank rank-S">S</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">7</span>
+              <span class="mini-stat s-right max">9</span>
+              <span class="mini-stat s-bottom">6</span>
+              <span class="mini-stat s-left">5</span>
+              🐉
+            </div>
+            <div class="card-name">古龍の咆哮</div>
+          </div>
+
+          <!-- 聖剣エクス 上6 右7 下5 左4 → 最大は右7 -->
+          <div class="card">
+            <span class="card-type">指定</span>
+            <span class="card-rank rank-A">A</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">6</span>
+              <span class="mini-stat s-right max">7</span>
+              <span class="mini-stat s-bottom">5</span>
+              <span class="mini-stat s-left">4</span>
+              ⚔
+            </div>
+            <div class="card-name">聖剣エクス</div>
+          </div>
+
+          <!-- 炎の精霊 上5 右5 下4 左6 → 最大は左6 -->
+          <div class="card">
+            <span class="card-type">フリー</span>
+            <span class="card-rank rank-A">A</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">5</span>
+              <span class="mini-stat s-right">5</span>
+              <span class="mini-stat s-bottom">4</span>
+              <span class="mini-stat s-left max">6</span>
+              🔥
+            </div>
+            <div class="card-name">炎の精霊</div>
+          </div>
+
+          <!-- 守護の盾 上3 右6 下4 左5 → 最大は右6 -->
+          <div class="card">
+            <span class="card-type">フリー</span>
+            <span class="card-rank rank-B">B</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">3</span>
+              <span class="mini-stat s-right max">6</span>
+              <span class="mini-stat s-bottom">4</span>
+              <span class="mini-stat s-left">5</span>
+              🛡
+            </div>
+            <div class="card-name">守護の盾</div>
+          </div>
+
+          <!-- 疾風の弓 上4 右3 下5 左6 → 最大は左6 -->
+          <div class="card">
+            <span class="card-type">指定</span>
+            <span class="card-rank rank-B">B</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">4</span>
+              <span class="mini-stat s-right">3</span>
+              <span class="mini-stat s-bottom">5</span>
+              <span class="mini-stat s-left max">6</span>
+              🏹
+            </div>
+            <div class="card-name">疾風の弓</div>
+          </div>
+
+          <!-- 荒野の狼 上3 右3 下2 左4 → 最大は左4 -->
+          <div class="card">
+            <span class="card-type">フリー</span>
+            <span class="card-rank rank-C">C</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">3</span>
+              <span class="mini-stat s-right">3</span>
+              <span class="mini-stat s-bottom">2</span>
+              <span class="mini-stat s-left max">4</span>
+              🐺
+            </div>
+            <div class="card-name">荒野の狼</div>
+          </div>
+
+          <!-- 輝石の欠片 上2 右3 下3 左5 → 最大は左5 -->
+          <div class="card">
+            <span class="card-type">フリー</span>
+            <span class="card-rank rank-C">C</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">2</span>
+              <span class="mini-stat s-right">3</span>
+              <span class="mini-stat s-bottom">3</span>
+              <span class="mini-stat s-left max">5</span>
+              💎
+            </div>
+            <div class="card-name">輝石の欠片</div>
+          </div>
+
+          <!-- 薬草 上2 右2 下3 左3 → 最大は下3と左3 同数なので両方赤 -->
+          <div class="card">
+            <span class="card-type">フリー</span>
+            <span class="card-rank rank-D">D</span>
+            <div class="card-art">
+              <span class="mini-stat s-top">2</span>
+              <span class="mini-stat s-right">2</span>
+              <span class="mini-stat s-bottom max">3</span>
+              <span class="mini-stat s-left max">3</span>
+              🌿
+            </div>
+            <div class="card-name">薬草</div>
+          </div>
+
+          <div class="card empty">
+            <div class="card-art">?</div>
+            <div class="card-name" style="color:#5a4a2a">未入手</div>
+          </div>
+
+          <div class="card empty">
+            <div class="card-art">?</div>
+            <div class="card-name" style="color:#5a4a2a">未入手</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 右詳細：四方向数値も最大値を赤強調 -->
+    <div class="detail">
+      <div class="detail-card-preview">
+        <span class="preview-type">指定</span>
+        <span class="preview-rank rank-S">S</span>
+        <div class="preview-art">🐉</div>
+        <div class="stat-num stat-top">7</div>
+        <div class="stat-num stat-right max">9</div>
+        <div class="stat-num stat-bottom">6</div>
+        <div class="stat-num stat-left">5</div>
+      </div>
+
+      <div class="detail-name">古龍の咆哮</div>
+      <div class="detail-sub">指定カード ・ ランク S ・ No.001</div>
+
+      <div class="detail-desc">
+        遥か古の時代より生き続ける龍の魂が宿るカード。一度咆哮すれば天地を揺るがす。
+      </div>
+
+      <div class="actions">
+        <button class="btn primary">デッキに追加</button>
+        <button class="btn">トレードに出す</button>
+        <button class="btn">対戦で賭ける</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div><kbd>←→</kbd> ページ切替 ・ <kbd>F</kbd> フィルタ ・ <kbd>Enter</kbd> 選択</div>
+    <div><kbd>ESC</kbd> 閉じる</div>
+  </div>
+
+</div>
+
+</body>
+</html>

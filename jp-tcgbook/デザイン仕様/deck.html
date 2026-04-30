@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>BOOK - デッキ編成</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+  body { background: rgba(0,0,0,0.5); min-height: 100vh; display: flex; justify-content: center; align-items: center; color: #e8e1c4; }
+  .book { width: 1100px; height: 700px; background: linear-gradient(135deg, #3a2418 0%, #5c3a22 50%, #3a2418 100%); border: 3px solid #8b6f3f; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 80px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+  .book::before { content: ''; position: absolute; inset: 12px; border: 1px solid #8b6f3f; border-radius: 6px; pointer-events: none; }
+
+  .header { padding: 14px 30px 10px; border-bottom: 1px solid #8b6f3f; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); }
+  .title-area { display: flex; align-items: center; gap: 14px; }
+  .title { font-size: 24px; font-weight: bold; letter-spacing: 8px; color: #d4af37; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+  .help-btn { width: 28px; height: 28px; background: linear-gradient(180deg, #6b5530, #4a3520); border: 1px solid #8b6f3f; color: #d4af37; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .help-btn:hover { background: linear-gradient(180deg, #d4af37, #a88828); color: #1a1208; }
+
+  .player-info { text-align: right; font-size: 12px; }
+  .player-info .name { color: #d4af37; font-size: 15px; font-weight: bold; }
+  .player-info .stats { color: #b0a378; margin-top: 2px; }
+
+  .tabs { display: flex; padding: 0 30px; gap: 4px; background: rgba(0,0,0,0.15); border-bottom: 1px solid #8b6f3f; }
+  .tab { padding: 10px 22px; cursor: pointer; color: #b0a378; font-size: 13px; letter-spacing: 2px; border-bottom: 3px solid transparent; }
+  .tab:hover { color: #d4af37; }
+  .tab.active { color: #d4af37; border-bottom-color: #d4af37; background: rgba(212,175,55,0.08); }
+
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* ★ 左：デッキ一覧（保有数表示・編集機能追加） */
+  .deck-list-pane { width: 200px; border-right: 1px solid #8b6f3f; background: rgba(0,0,0,0.25); display: flex; flex-direction: column; }
+  .pane-header { padding: 10px 12px; border-bottom: 1px solid #6b5530; background: rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; }
+  .pane-title { font-size: 11px; color: #d4af37; letter-spacing: 3px; font-weight: bold; }
+
+  /* デッキ保有数カウンタ */
+  .deck-count-badge { font-size: 10px; color: #b0a378; background: rgba(0,0,0,0.4); border: 1px solid #6b5530; padding: 2px 6px; border-radius: 10px; }
+  .deck-count-badge.full { color: #ff9933; border-color: #8b6530; }
+  .deck-count-badge .num { color: #d4af37; font-weight: bold; }
+  .deck-count-badge.full .num { color: #ff9933; }
+
+  .icon-btn { width: 22px; height: 22px; background: linear-gradient(180deg, #6b5530, #4a3520); border: 1px solid #8b6f3f; color: #d4af37; border-radius: 4px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  .icon-btn:hover { background: linear-gradient(180deg, #8b6f3f, #6b5530); color: #fff; }
+  .icon-btn:disabled { background: #3a2818; color: #5a4a2a; border-color: #5a4a2a; cursor: not-allowed; }
+  .icon-btn:disabled:hover { background: #3a2818; color: #5a4a2a; }
+
+  .deck-list { flex: 1; overflow-y: auto; padding: 6px; }
+  .deck-item { padding: 8px 10px; margin-bottom: 5px; background: rgba(0,0,0,0.3); border: 1px solid #6b5530; border-radius: 5px; cursor: pointer; position: relative; transition: all 0.15s; }
+  .deck-item:hover { background: rgba(212,175,55,0.1); }
+  .deck-item.active { background: rgba(212,175,55,0.18); border-color: #d4af37; }
+  .deck-item.just-created { animation: highlight 1.2s ease-out; }
+  @keyframes highlight {
+    0% { background: rgba(212,175,55,0.5); box-shadow: 0 0 12px rgba(212,175,55,0.6); }
+    100% { background: rgba(212,175,55,0.18); box-shadow: none; }
+  }
+
+  /* デッキ名行：名前＋鉛筆 */
+  .deck-name-row { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; min-height: 18px; }
+  .deck-item-name { font-size: 12px; color: #e8e1c4; font-weight: bold; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .deck-item.active .deck-item-name { color: #d4af37; }
+
+  /* 鉛筆アイコン */
+  .deck-edit-pencil { width: 18px; height: 18px; background: rgba(0,0,0,0.4); border: 1px solid #6b5530; color: #b0a378; border-radius: 3px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.15s; flex-shrink: 0; }
+  .deck-item:hover .deck-edit-pencil { opacity: 1; }
+  .deck-edit-pencil:hover { background: rgba(212,175,55,0.2); border-color: #d4af37; color: #d4af37; }
+
+  /* インライン編集中の入力欄 */
+  .deck-name-input-inline { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid #d4af37; color: #d4af37; font-size: 12px; font-weight: bold; padding: 2px 6px; border-radius: 3px; outline: none; min-width: 0; }
+
+  .deck-item-info { font-size: 10px; color: #8b7d4a; display: flex; justify-content: space-between; }
+  .deck-item-power { color: #ff9933; font-weight: bold; }
+  .deck-active-mark { position: absolute; top: 6px; right: 6px; font-size: 9px; color: #d4af37; }
+  .deck-item.invalid::after { content: '⚠'; position: absolute; bottom: 6px; right: 6px; color: #ff9933; font-size: 12px; }
+
+  /* 中央 */
+  .deck-edit-pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: rgba(0,0,0,0.1); }
+  .deck-edit-header { padding: 10px 16px; border-bottom: 1px solid #6b5530; background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .deck-name-display { flex: 1; min-width: 140px; color: #d4af37; font-size: 16px; font-weight: bold; padding: 5px 10px; letter-spacing: 1px; }
+
+  .save-status { display: flex; align-items: center; gap: 5px; font-size: 11px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid #6b5530; }
+  .save-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .save-status.saved { color: #6fcf6f; border-color: #4a7a4a; }
+  .save-status.saved .save-dot { background: #6fcf6f; box-shadow: 0 0 6px #6fcf6f; }
+  .save-status.saving { color: #ffd633; border-color: #8b7530; }
+  .save-status.saving .save-dot { background: #ffd633; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .counters { display: flex; gap: 8px; }
+  .counter { background: rgba(0,0,0,0.4); border: 1px solid #6b5530; padding: 4px 10px; border-radius: 4px; font-size: 11px; color: #b0a378; }
+  .counter .num { color: #d4af37; font-weight: bold; font-size: 14px; }
+  .counter.full .num { color: #6fcf6f; }
+  .counter .max { color: #6b5530; }
+
+  /* 以下、これまでと同じスタイル（スロット、所持カード、ヘルプ等）省略せず記述 */
+  .deck-slots-area { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+  .deck-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+
+  .slot { aspect-ratio: 3/4; background: rgba(0,0,0,0.4); border: 2px dashed #5a4a2a; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #5a4a2a; font-size: 22px; position: relative; }
+  .slot.filled { background: linear-gradient(160deg, #2a1f10, #4a3520); border: 2px solid #8b6f3f; padding: 5px; flex-direction: column; cursor: pointer; }
+  .slot.filled:hover { border-color: #ff4d4d; }
+  .slot.filled:hover .slot-remove { opacity: 1; transform: scale(1); }
+
+  .slot-index { position: absolute; bottom: 2px; left: 4px; font-size: 8px; color: #8b7d4a; z-index: 1; }
+  .slot-remove { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; background: rgba(255,77,77,0.95); color: #fff; border: 1px solid #ff4d4d; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; opacity: 0; transform: scale(0.8); transition: all 0.15s; z-index: 5; cursor: pointer; }
+  .slot-rank { position: absolute; top: 4px; right: 4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; color: #1a1208; z-index: 3; }
+  .slot.filled:hover .slot-rank { display: none; }
+  .slot-type { position: absolute; top: 4px; left: 4px; font-size: 7px; padding: 1px 3px; border-radius: 3px; background: rgba(0,0,0,0.7); color: #d4af37; letter-spacing: 1px; z-index: 3; }
+  .slot-type.shitei { color: #ff4d4d; border: 1px solid #ff4d4d; background: rgba(0,0,0,0.85); }
+  .slot-art { flex: 1; background: linear-gradient(135deg, #1a1208, #3a2818); border-radius: 3px; margin: 16px 2px 2px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #6b5530; position: relative; width: calc(100% - 4px); }
+
+  .mini-stat { position: absolute; font-size: 9px; font-weight: 600; color: #d4af37; text-shadow: 0 1px 2px rgba(0,0,0,0.9); line-height: 1; z-index: 2; pointer-events: none; }
+  .mini-stat.max { color: #ff4d4d; font-weight: 900; font-size: 10px; text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(255,77,77,0.6); }
+  .mini-stat.s-top { top: 1px; left: 50%; transform: translateX(-50%); }
+  .mini-stat.s-bottom { bottom: 1px; left: 50%; transform: translateX(-50%); }
+  .mini-stat.s-left { left: 2px; top: 50%; transform: translateY(-50%); }
+  .mini-stat.s-right { right: 2px; top: 50%; transform: translateY(-50%); }
+
+  .slot-name { font-size: 8px; text-align: center; color: #e8e1c4; text-shadow: 0 1px 2px rgba(0,0,0,0.8); line-height: 1.2; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .deck-stats { background: rgba(0,0,0,0.3); border: 1px solid #6b5530; border-radius: 5px; padding: 8px 12px; display: flex; justify-content: space-around; align-items: center; }
+  .stat-block { text-align: center; flex: 1; border-right: 1px solid #4a3520; }
+  .stat-block:last-child { border-right: none; }
+  .stat-value { font-size: 16px; font-weight: bold; color: #d4af37; line-height: 1; }
+  .stat-label { font-size: 9px; color: #8b7d4a; margin-top: 3px; letter-spacing: 1px; }
+  .rank-mini-bar { display: flex; gap: 2px; justify-content: center; margin-top: 3px; flex-wrap: wrap; }
+  .rank-mini-bar span { font-size: 8px; padding: 1px 4px; border-radius: 2px; color: #1a1208; font-weight: bold; }
+
+  .deck-actions { padding: 8px 16px; border-top: 1px solid #6b5530; background: rgba(0,0,0,0.3); display: flex; gap: 6px; margin-top: auto; }
+  .btn { padding: 7px 14px; background: linear-gradient(180deg, #6b5530, #4a3520); border: 1px solid #8b6f3f; color: #e8e1c4; cursor: pointer; border-radius: 4px; font-size: 11px; letter-spacing: 1px; }
+  .btn:hover { background: linear-gradient(180deg, #8b6f3f, #6b5530); color: #fff; }
+  .btn:disabled { background: #3a2818; color: #5a4a2a; border-color: #5a4a2a; cursor: not-allowed; }
+  .btn:disabled:hover { background: #3a2818; color: #5a4a2a; }
+  .btn.primary { background: linear-gradient(180deg, #d4af37, #a88828); color: #1a1208; font-weight: bold; border-color: #d4af37; }
+  .btn.danger { background: linear-gradient(180deg, #6b3030, #4a2020); border-color: #8b4040; }
+
+  .collection-pane { width: 280px; border-left: 1px solid #8b6f3f; background: rgba(0,0,0,0.25); display: flex; flex-direction: column; }
+  .collection-filters { padding: 10px 12px; border-bottom: 1px solid #6b5530; background: rgba(0,0,0,0.2); }
+  .search-box { width: 100%; padding: 6px 10px; background: rgba(0,0,0,0.4); border: 1px solid #6b5530; color: #e8e1c4; border-radius: 4px; font-size: 11px; margin-bottom: 8px; }
+  .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { padding: 3px 8px; background: rgba(0,0,0,0.4); border: 1px solid #6b5530; color: #b0a378; border-radius: 10px; font-size: 10px; cursor: pointer; }
+  .chip.active { background: rgba(212,175,55,0.18); color: #d4af37; border-color: #d4af37; }
+
+  .collection-grid-wrapper { flex: 1; overflow-y: auto; padding: 8px; }
+  .collection-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mini-card { aspect-ratio: 3/4; background: linear-gradient(160deg, #2a1f10, #4a3520); border: 1.5px solid #8b6f3f; border-radius: 5px; padding: 4px; position: relative; display: flex; flex-direction: column; }
+  .mini-card:hover { border-color: #d4af37; box-shadow: 0 0 8px rgba(212,175,55,0.3); }
+  .mini-card:hover .add-btn { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .mini-card.exhausted { opacity: 0.45; }
+  .mini-card.exhausted .add-btn { display: none; }
+  .mini-card.disabled-shitei { opacity: 0.5; }
+  .mini-card.disabled-shitei .add-btn { display: none; }
+  .mini-card.deck-full .add-btn { display: none; }
+  .mini-card .slot-rank { width: auto; height: 14px; padding: 0 4px; font-size: 8px; }
+  .mini-card .slot-type { font-size: 6px; padding: 1px 3px; }
+  .mini-card .slot-art { margin: 14px 2px 2px; font-size: 18px; }
+  .mini-card .mini-stat { font-size: 8px; }
+  .mini-card .mini-stat.max { font-size: 9px; }
+  .mini-card .slot-name { font-size: 8px; margin-top: 2px; }
+
+  .remain-badge { position: absolute; bottom: 3px; right: 3px; font-size: 8px; padding: 2px 5px; border-radius: 8px; font-weight: bold; z-index: 4; line-height: 1; border: 1px solid; }
+  .remain-badge.shitei { background: rgba(255,77,77,0.2); color: #ff8080; border-color: #ff4d4d; }
+  .remain-badge.free { background: rgba(111,207,111,0.15); color: #6fcf6f; border-color: #4a7a4a; }
+  .remain-badge.zero { background: rgba(0,0,0,0.5); color: #6b5530; border-color: #6b5530; }
+
+  .add-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.6); width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #d4af37, #a88828); border: 2px solid #fff5d0; color: #1a1208; font-size: 22px; font-weight: bold; cursor: pointer; opacity: 0; transition: all 0.18s; z-index: 6; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 14px rgba(212,175,55,0.6); }
+
+  .footer { padding: 7px 30px; border-top: 1px solid #8b6f3f; background: rgba(0,0,0,0.3); display: flex; justify-content: space-between; font-size: 10px; color: #8b7d4a; }
+  .footer kbd { background: rgba(212,175,55,0.15); padding: 2px 5px; border-radius: 3px; color: #d4af37; margin: 0 3px; }
+
+  /* ツールチップ */
+  [data-tooltip] { position: relative; }
+  [data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.92); color: #d4af37; padding: 4px 10px; border-radius: 4px; font-size: 11px; white-space: nowrap; border: 1px solid #8b6f3f; z-index: 50; pointer-events: none; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb { background: #6b5530; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="book">
+
+  <div class="header">
+    <div class="title-area">
+      <div class="title">B O O K</div>
+      <button class="help-btn" title="ヘルプ">📖</button>
+    </div>
+    <div class="player-info">
+      <div class="name">Hunter_Gon</div>
+      <div class="stats">所持: 47 / 120 種 ・ レート 1842 ・ 勝率 64%</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab">📖 コレクション</div>
+    <div class="tab active">🎴 デッキ編成</div>
+    <div class="tab">⚔ 対戦</div>
+    <div class="tab">🤝 トレード</div>
+    <div class="tab">🏆 ランキング</div>
+  </div>
+
+  <div class="main">
+
+    <!-- 左サイドバー -->
+    <div class="deck-list-pane">
+      <div class="pane-header">
+        <div class="pane-title">DECKS</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="deck-count-badge"><span class="num">3</span> / 10</span>
+          <button class="icon-btn" title="新規デッキ">＋</button>
+        </div>
+      </div>
+
+      <div class="deck-list">
+
+        <!-- アクティブデッキ：通常表示 -->
+        <div class="deck-item active">
+          <span class="deck-active-mark">★</span>
+          <div class="deck-name-row">
+            <div class="deck-item-name">主力デッキ</div>
+            <button class="deck-edit-pencil" data-tooltip="名前を編集" title="名前を編集">✏</button>
+          </div>
+          <div class="deck-item-info"><span>10/10</span><span class="deck-item-power">PWR 52</span></div>
+        </div>
+
+        <!-- 通常 -->
+        <div class="deck-item">
+          <div class="deck-name-row">
+            <div class="deck-item-name">速攻型</div>
+            <button class="deck-edit-pencil" title="名前を編集">✏</button>
+          </div>
+          <div class="deck-item-info"><span>10/10</span><span class="deck-item-power">PWR 46</span></div>
+        </div>
+
+        <!-- インライン編集中の例（input表示） -->
+        <div class="deck-item invalid">
+          <div class="deck-name-row">
+            <input class="deck-name-input-inline" value="主力デッキ - Copy" autofocus>
+          </div>
+          <div class="deck-item-info"><span style="color:#ff9933">7/10</span><span class="deck-item-power">PWR 28</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 中央 -->
+    <div class="deck-edit-pane">
+      <div class="deck-edit-header">
+        <div class="deck-name-display">主力デッキ</div>
+        <div class="save-status saved">
+          <span class="save-dot"></span><span>保存済み</span>
+        </div>
+        <div class="counters">
+          <div class="counter full">
+            <span class="num">10</span><span class="max"> / 10</span> 枚
+          </div>
+          <div class="counter">
+            指定 <span class="num" style="color:#ff4d4d">2</span><span class="max"> / 2</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="deck-slots-area">
+
+        <div class="deck-slots">
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type shitei">指定</span>
+            <span class="slot-rank" style="background:linear-gradient(135deg,#ff00aa,#ff4d4d);color:#fff">UR</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">7</span><span class="mini-stat s-right max">9</span>
+              <span class="mini-stat s-bottom">6</span><span class="mini-stat s-left">5</span>🐉
+            </div>
+            <div class="slot-name">古龍の咆哮</div>
+            <span class="slot-index">1</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type shitei">指定</span>
+            <span class="slot-rank" style="background:linear-gradient(135deg,#ff4d4d,#ff9933);color:#fff">SS</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">6</span><span class="mini-stat s-right max">7</span>
+              <span class="mini-stat s-bottom">5</span><span class="mini-stat s-left">4</span>⚔
+            </div>
+            <div class="slot-name">聖剣エクス</div>
+            <span class="slot-index">2</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ff9933">S</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">5</span><span class="mini-stat s-right">5</span>
+              <span class="mini-stat s-bottom">4</span><span class="mini-stat s-left max">6</span>🔥
+            </div>
+            <div class="slot-name">炎の精霊</div>
+            <span class="slot-index">3</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ff9933">S</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top max">7</span><span class="mini-stat s-right">4</span>
+              <span class="mini-stat s-bottom">5</span><span class="mini-stat s-left">6</span>⚡
+            </div>
+            <div class="slot-name">雷神の槍</div>
+            <span class="slot-index">4</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ffd633">A</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">3</span><span class="mini-stat s-right max">6</span>
+              <span class="mini-stat s-bottom">4</span><span class="mini-stat s-left">5</span>🛡
+            </div>
+            <div class="slot-name">守護の盾</div>
+            <span class="slot-index">5</span>
+          </div>
+        </div>
+
+        <div class="deck-slots">
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ffd633">A</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">4</span><span class="mini-stat s-right">3</span>
+              <span class="mini-stat s-bottom">5</span><span class="mini-stat s-left max">6</span>🏹
+            </div>
+            <div class="slot-name">疾風の弓</div>
+            <span class="slot-index">6</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ffd633">A</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">5</span><span class="mini-stat s-right">4</span>
+              <span class="mini-stat s-bottom max">6</span><span class="mini-stat s-left">3</span>❄
+            </div>
+            <div class="slot-name">氷柱の刃</div>
+            <span class="slot-index">7</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#99ccff">B</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">3</span><span class="mini-stat s-right">3</span>
+              <span class="mini-stat s-bottom">2</span><span class="mini-stat s-left max">4</span>🐺
+            </div>
+            <div class="slot-name">荒野の狼</div>
+            <span class="slot-index">8</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#99ccff">B</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">2</span><span class="mini-stat s-right">3</span>
+              <span class="mini-stat s-bottom">3</span><span class="mini-stat s-left max">5</span>💎
+            </div>
+            <div class="slot-name">輝石の欠片</div>
+            <span class="slot-index">9</span>
+          </div>
+          <div class="slot filled">
+            <span class="slot-remove">×</span>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#aaaaaa">C</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">2</span><span class="mini-stat s-right">2</span>
+              <span class="mini-stat s-bottom max">3</span><span class="mini-stat s-left max">3</span>🌿
+            </div>
+            <div class="slot-name">薬草</div>
+            <span class="slot-index">10</span>
+          </div>
+        </div>
+
+        <div class="deck-stats">
+          <div class="stat-block"><div class="stat-value">52</div><div class="stat-label">総合PWR</div></div>
+          <div class="stat-block"><div class="stat-value">4.7</div><div class="stat-label">平均値</div></div>
+          <div class="stat-block"><div class="stat-value">9</div><div class="stat-label">最大値</div></div>
+          <div class="stat-block"><div class="stat-value" style="color:#ff4d4d">2/8</div><div class="stat-label">指定/フリー</div></div>
+          <div class="stat-block">
+            <div class="stat-label" style="margin-top:0">ランク内訳</div>
+            <div class="rank-mini-bar">
+              <span style="background:linear-gradient(135deg,#ff00aa,#ff4d4d);color:#fff">UR1</span>
+              <span style="background:linear-gradient(135deg,#ff4d4d,#ff9933);color:#fff">SS1</span>
+              <span style="background:#ff9933">S2</span>
+              <span style="background:#ffd633">A3</span>
+              <span style="background:#99ccff">B2</span>
+              <span style="background:#aaaaaa">C1</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="deck-actions">
+        <button class="btn primary">★ 使用デッキに設定</button>
+        <button class="btn" data-tooltip="現在のデッキをコピーして新しく追加">📋 コピーして新規追加</button>
+        <button class="btn">🔀 シャッフルテスト</button>
+        <button class="btn danger">🗑 削除</button>
+      </div>
+    </div>
+
+    <!-- 右：所持カード（前回から変更なし） -->
+    <div class="collection-pane">
+      <div class="pane-header">
+        <div class="pane-title">所持カード</div>
+        <span style="font-size:10px;color:#8b7d4a">47枚</span>
+      </div>
+      <div class="collection-filters">
+        <input class="search-box" placeholder="🔍 検索...">
+        <div class="filter-chips">
+          <span class="chip active">全て</span>
+          <span class="chip">指定</span>
+          <span class="chip">フリー</span>
+          <span class="chip">追加可</span>
+          <span class="chip">UR</span><span class="chip">SS</span>
+          <span class="chip">S</span><span class="chip">A</span>
+        </div>
+      </div>
+      <div class="collection-grid-wrapper">
+        <div class="collection-grid">
+          <div class="mini-card exhausted">
+            <span class="slot-type shitei">指定</span>
+            <span class="slot-rank" style="background:linear-gradient(135deg,#ff00aa,#ff4d4d);color:#fff">UR</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">7</span><span class="mini-stat s-right max">9</span>
+              <span class="mini-stat s-bottom">6</span><span class="mini-stat s-left">5</span>🐉
+            </div>
+            <div class="slot-name">古龍の咆哮</div>
+            <span class="remain-badge zero">残 0</span>
+          </div>
+          <div class="mini-card deck-full">
+            <button class="add-btn">＋</button>
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ff9933">S</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top max">6</span><span class="mini-stat s-right">5</span>
+              <span class="mini-stat s-bottom">4</span><span class="mini-stat s-left">5</span>🦅
+            </div>
+            <div class="slot-name">天空の鷲</div>
+            <span class="remain-badge free">残 2</span>
+          </div>
+          <div class="mini-card deck-full">
+            <span class="slot-type">フリー</span>
+            <span class="slot-rank" style="background:#ffd633">A</span>
+            <div class="slot-art">
+              <span class="mini-stat s-top">3</span><span class="mini-stat s-right max">6</span>
+              <span class="mini-stat s-bottom">4</span><span class="mini-stat s-left">5</span>🛡
+            </div>
+            <div class="slot-name">守護の盾</div>
+            <span class="remain-badge free">残 1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div><kbd>＋</kbd> 追加 ・ <kbd>×</kbd> 解除 ・ <kbd>✏</kbd> デッキ名編集 ・ 自動保存</div>
+    <div><kbd>ESC</kbd> 閉じる</div>
+  </div>
+
+</div>
+
+</body>
+</html>
