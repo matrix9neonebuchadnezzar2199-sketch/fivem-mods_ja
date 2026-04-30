@@ -205,11 +205,9 @@ end
 
 local function checkLegacyAssetPaths()
     local res = GetCurrentResourceName()
-    -- 旧ルートのみ（html/assets/characters/<id>/ 配下は新方式のため含めない）
-    local legacy = {
-        'html/assets/cutins/img_01.png',
-        'html/assets/back.jpg',
-    }
+    -- 旧ルート（html/assets/cutins/, html/assets/back.jpg）は移行完了済み。
+    -- 将来 legacy パスを追加する場合はこのリストに記載する。
+    local legacy = {}
     for _, p in ipairs(legacy) do
         if LoadResourceFile(res, p) then
             print(('[jp-slot][WARN] legacy asset path detected: %s'):format(p))
