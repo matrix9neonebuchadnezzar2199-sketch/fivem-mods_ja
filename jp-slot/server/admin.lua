@@ -173,6 +173,22 @@ local function presetIndexRemove(characterId, presetName)
     presetIndexSet(characterId, out)
 end
 
+--- Config.Debug.previewInitDump 用: JSON を Live Console に分割出力
+---@param label string
+---@param s string
+local function jpSlotPreviewDumpPrintChunks(label, s)
+    if type(s) ~= 'string' or s == '' then
+        print(('[preview-dump][server] %s (empty)'):format(label))
+        return
+    end
+    local max = 3800
+    local part = 1
+    for i = 1, #s, max do
+        print(('[preview-dump][server] %s [%d] %s'):format(label, part, s:sub(i, math.min(#s, i + max - 1))))
+        part = part + 1
+    end
+end
+
 --- キャラ ID に紐づくプリセットから effects を1件読む（埋め込み・着席 init 用）
 function JpSlotReadPresetEffectsForCharacter(characterId)
     if type(characterId) ~= 'string' or characterId == '' then
@@ -779,27 +795,83 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     end
     local chMan = JpSlotLoadCharacterManifest(cid)
     local embedEffects = JpSlotReadPresetEffectsForCharacter(cid)
-    TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
+    local spinDur =
+        (Config.Debug and Config.DebugSettings and Config.DebugSettings.SpinDuration)
+        or Config.SpinDurationDefault
+    local symIds = ptFull.symbols
+        or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' }
+    local initPayload = {
         machine = m,
         effects = embedEffects,
         theme = theme,
         jackpot = jackpot,
         balance = 999999999,
-        spinDuration = (Config.Debug and Config.DebugSettings and Config.DebugSettings.SpinDuration) or Config.SpinDurationDefault,
+        spinDuration = spinDur,
         paytable = ptDisp,
         marquee = {
             hype = Locales.getList(hypeKey) or {},
             info = Locales.getList(infoKey) or {},
         },
-        symbolIds = ptFull.symbols
-            or { 'cherry', 'bell', 'watermelon', 'bar', 'seven', 'wild', 'character' },
+        symbolIds = symIds,
         uiSize = JpSlotGetUISize and JpSlotGetUISize() or nil,
         neutralPreviewCharacter = payload.neutralPreviewCharacter == true,
         character = chMan,
         characterBasePath = ('characters/%s/'):format(cid),
         characterId = cid,
         characters = JpSlotScanCharacters(),
-    })
+        embedPreview = true,
+        debug = {
+            enabled = Config.Debug and Config.Debug.enabled or false,
+            nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
+            previewSpinLog = Config.Debug and Config.Debug.previewSpinLog or false,
+            previewInitDump = Config.Debug and Config.Debug.previewInitDump or false,
+        },
+    }
+    if Config.Debug and Config.Debug.previewInitDump then
+        local ac, ap = JpSlotParseActivePresetRef()
+        print(
+            ('[preview-dump][server] embedSlotInit src=%d cid=%s machine=%s payId=%s activePreset=%s/%s'):format(
+                src,
+                tostring(cid),
+                tostring(m and m.id or 'nil'),
+                tostring(payId),
+                tostring(ac or 'nil'),
+                tostring(ap or 'nil')
+            )
+        )
+        initPayload.previewInitMeta = {
+            Master = Config.Master,
+            Bonus = Config.Bonus,
+            UISize = Config.UISize,
+            Debug = Config.Debug,
+            Cutins = Config.Cutins,
+        }
+        local dumpBody = {
+            machineId = m and m.id or nil,
+            characterId = cid,
+            paytableId = payId,
+            activePresetChar = ac,
+            activePresetName = ap,
+            balance = 1000000,
+            embedPreview = true,
+            spinDuration = spinDur,
+            Master = Config.Master,
+            Bonus = Config.Bonus,
+            UISize = Config.UISize,
+            Debug = Config.Debug,
+            paytable = ptDisp,
+            effects = embedEffects,
+            Cutins = Config.Cutins,
+            symbolIds = symIds,
+        }
+        local okJe, encJe = pcall(json.encode, dumpBody)
+        if okJe and type(encJe) == 'string' then
+            jpSlotPreviewDumpPrintChunks('payload.json', encJe)
+        else
+            print(('[preview-dump][server] json.encode failed: %s'):format(tostring(encJe)))
+        end
+    end
+    TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, initPayload)
 end)
 
 --- 汚染された leftStage KVP を既定に戻す（txAdmin Live Console のみ: source=0）

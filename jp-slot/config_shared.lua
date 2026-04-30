@@ -169,4 +169,6 @@ Config.Debug = {
     forceBonus = false, -- サーバー側は config_server の DebugSettings.ForceBonus を優先
     --- 管理プレビュー埋め込みのローカル SPIN のみ clientLog へ出す（検証時 true）
     previewSpinLog = false,
+    --- プレビュー初期化のサーバ→NUI→DOM 一連ダンプ（Live Console / F8。検証後は false）
+    previewInitDump = false,
 }

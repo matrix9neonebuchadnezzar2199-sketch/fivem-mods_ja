@@ -37,6 +37,14 @@
 
     window.jpSlotNuiLog = nuiLog;
 
+    function previewInitDumpEnabled() {
+        return !!(
+            window.__jpSlotConfig &&
+            window.__jpSlotConfig.Debug &&
+            window.__jpSlotConfig.Debug.previewInitDump
+        );
+    }
+
     /**
      * スロットパネル寸法（--ui-width / --ui-height / --ui-max-width）
      * @param {object} size widthPercent heightPercent maxWidthPx
@@ -114,12 +122,72 @@
             return;
         }
         var SCALE_MAX = 2.0;
-        var scale = Math.min(fw / baseW, fh / baseH, SCALE_MAX);
+        var scaleByW = fw / baseW;
+        var scaleByH = fh / baseH;
+        var scale = Math.min(scaleByW, scaleByH, SCALE_MAX);
         var offsetX = (fw - baseW * scale) / 2;
         var offsetY = (fh - baseH * scale) / 2;
         inner.style.left = offsetX + 'px';
         inner.style.top = offsetY + 'px';
         inner.style.transform = 'scale(' + scale + ')';
+        if (previewInitDumpEnabled()) {
+            var host = frame;
+            var hostRect = host.getBoundingClientRect();
+            var frameRect = frame.getBoundingClientRect();
+            var cs = window.getComputedStyle(host);
+            nuiLog(
+                'log',
+                '[preview-dump][fit] winW=' +
+                    window.innerWidth +
+                    ' winH=' +
+                    window.innerHeight +
+                    ' devicePixelRatio=' +
+                    (window.devicePixelRatio != null ? String(window.devicePixelRatio) : 'n/a')
+            );
+            nuiLog(
+                'log',
+                '[preview-dump][fit] host clientW=' +
+                    host.clientWidth +
+                    ' clientH=' +
+                    host.clientHeight +
+                    ' rectTop=' +
+                    Math.round(hostRect.top) +
+                    ' rectBottom=' +
+                    Math.round(hostRect.bottom) +
+                    ' overflow=' +
+                    cs.overflow +
+                    ' display=' +
+                    cs.display +
+                    ' position=' +
+                    cs.position
+            );
+            nuiLog(
+                'log',
+                '[preview-dump][fit] scaleByW=' +
+                    scaleByW.toFixed(3) +
+                    ' scaleByH=' +
+                    scaleByH.toFixed(3) +
+                    ' SCALE_MAX=' +
+                    SCALE_MAX +
+                    ' applied=' +
+                    scale.toFixed(3) +
+                    ' offsetX=' +
+                    Math.round(offsetX) +
+                    ' offsetY=' +
+                    Math.round(offsetY)
+            );
+            nuiLog(
+                'log',
+                '[preview-dump][fit] frameRect w=' +
+                    Math.round(frameRect.width) +
+                    ' h=' +
+                    Math.round(frameRect.height) +
+                    ' top=' +
+                    Math.round(frameRect.top) +
+                    ' bottom=' +
+                    Math.round(frameRect.bottom)
+            );
+        }
     };
 
     window.jpSlotFitAdminEmbedScale = window.applyEmbedPreviewFit;
@@ -913,12 +981,162 @@
         }
     }
 
+    function dumpPreviewDomProject() {
+        if (!previewInitDumpEnabled() || !window.__jpSlotEmbedPreview) {
+            return;
+        }
+        var targets = [
+            '#root',
+            '.slot-main',
+            '.col-left',
+            '.char-stage',
+            '.col-center',
+            '.reel-frame',
+            '.col-right',
+            '.slot-footer',
+            '.footer-center',
+            '.btn-spin',
+            '.footer-stat-balance',
+        ];
+        for (var di = 0; di < targets.length; di++) {
+            var sel = targets[di];
+            var el = document.querySelector(sel);
+            if (!el) {
+                nuiLog('log', '[preview-dump][dom] ' + sel + '=null');
+                continue;
+            }
+            var r = el.getBoundingClientRect();
+            var cs2 = window.getComputedStyle(el);
+            nuiLog(
+                'log',
+                '[preview-dump][dom] ' +
+                    sel +
+                    ' w=' +
+                    Math.round(r.width) +
+                    ' h=' +
+                    Math.round(r.height) +
+                    ' top=' +
+                    Math.round(r.top) +
+                    ' bottom=' +
+                    Math.round(r.bottom) +
+                    ' display=' +
+                    cs2.display +
+                    ' visibility=' +
+                    cs2.visibility +
+                    ' opacity=' +
+                    cs2.opacity +
+                    ' zIndex=' +
+                    cs2.zIndex +
+                    ' overflow=' +
+                    cs2.overflow
+            );
+        }
+        var spin = document.querySelector('.btn-spin');
+        if (spin) {
+            nuiLog(
+                'log',
+                '[preview-dump][dom] btn-spin disabled=' +
+                    spin.disabled +
+                    ' offsetParent=' +
+                    (spin.offsetParent ? 'yes' : 'null')
+            );
+        }
+        nuiLog(
+            'log',
+            '[preview-dump][globals] __jpSlotEmbedPreview=' +
+                window.__jpSlotEmbedPreview +
+                ' state.spinning=' +
+                state.spinning +
+                ' state.cooldownUntil=' +
+                (state.cooldownUntil != null ? String(state.cooldownUntil) : 'n/a') +
+                ' hasOnSpinResult=' +
+                (typeof onSpinResult === 'function' ? 'yes' : 'no') +
+                ' hasJpSlotSimEngine=' +
+                (typeof window.JpSlotSimEngine === 'object' ? 'yes' : 'no')
+        );
+    }
+
     function initPlay(payload) {
         payload = payload || {};
         window.__jpSlotEmbedPreview = !!payload.embedPreview;
         window.__jpSlotNeutralPreviewChar = !!(
             payload.embedPreview && payload.neutralPreviewCharacter
         );
+        window.__jpSlotConfig = window.__jpSlotConfig || {};
+        window.__jpSlotConfig.Debug = (payload && payload.debug) || {};
+        if (previewInitDumpEnabled()) {
+            try {
+                nuiLog('log', '[preview-dump][nui-recv] keys=' + Object.keys(payload).join(','));
+            } catch (ek) {
+                nuiLog('log', '[preview-dump][nui-recv] keys=(err) ' + (ek && ek.message));
+            }
+            var cidRecv =
+                (payload.characterId != null && String(payload.characterId)) ||
+                (payload.character && payload.character.id) ||
+                'nil';
+            nuiLog(
+                'log',
+                '[preview-dump][nui-recv] embedPreview=' +
+                    payload.embedPreview +
+                    ' machine.id=' +
+                    (payload.machine && payload.machine.id) +
+                    ' characterId=' +
+                    cidRecv +
+                    ' balance(raw)=' +
+                    (payload.balance != null ? String(payload.balance) : 'nil')
+            );
+            var fx = payload.effects;
+            if (fx && typeof fx === 'object') {
+                var tabs = Object.keys(fx);
+                tabs.sort();
+                for (var ti = 0; ti < tabs.length; ti++) {
+                    var tab = tabs[ti];
+                    var sec = fx[tab];
+                    var slots =
+                        (sec && sec.leftStage && sec.leftStage.slots) || [];
+                    for (var si = 0; si < slots.length; si++) {
+                        var s = slots[si];
+                        nuiLog(
+                            'log',
+                            '[preview-dump][nui-recv] effects.' +
+                                tab +
+                                '.slot[' +
+                                si +
+                                '] enabled=' +
+                                (s && s.enabled) +
+                                ' kind=' +
+                                (s && s.kind) +
+                                ' file=' +
+                                (s && s.file)
+                        );
+                    }
+                }
+            }
+            try {
+                var ptStr = JSON.stringify(payload.paytable || {});
+                nuiLog(
+                    'log',
+                    '[preview-dump][nui-recv] paytable.len=' +
+                        ptStr.length +
+                        ' head=' +
+                        ptStr.substring(0, 200)
+                );
+            } catch (ept) {
+                nuiLog('log', '[preview-dump][nui-recv] paytable stringify err');
+            }
+            try {
+                var metaStr = JSON.stringify(payload.previewInitMeta || {});
+                nuiLog(
+                    'log',
+                    '[preview-dump][nui-recv] previewInitMeta.len=' +
+                        metaStr.length +
+                        ' head=' +
+                        metaStr.substring(0, 200)
+                );
+            } catch (em) {
+                nuiLog('log', '[preview-dump][nui-recv] previewInitMeta stringify err');
+            }
+        }
         state.machine = payload.machine;
         state.theme = payload.theme;
         state.balance = payload.embedPreview ? 1000000 : payload.balance || 0;
@@ -1007,6 +1225,43 @@
         }
         hideFreeSpinBanner();
         startIdleCharLoop();
+        if (previewInitDumpEnabled()) {
+            var metaSt = payload.previewInitMeta;
+            var mKeys = metaSt && metaSt.Master ? Object.keys(metaSt.Master).join(',') : 'n/a';
+            var cdSpins = 'n/a';
+            if (
+                metaSt &&
+                metaSt.Master &&
+                metaSt.Master.Cooldown &&
+                metaSt.Master.Cooldown.Spins != null
+            ) {
+                cdSpins = String(metaSt.Master.Cooldown.Spins);
+            }
+            nuiLog(
+                'log',
+                '[preview-dump][state] embedPv=' +
+                    window.__jpSlotEmbedPreview +
+                    ' balance=' +
+                    state.balance +
+                    ' bet=' +
+                    state.bet +
+                    ' machineId=' +
+                    (state.machine && state.machine.id) +
+                    ' minBet=' +
+                    (state.machine && state.machine.minBet) +
+                    ' maxBet=' +
+                    (state.machine && state.machine.maxBet) +
+                    ' masterKeys=' +
+                    mKeys +
+                    ' cooldownSpinsMeta=' +
+                    cdSpins
+            );
+        }
+        if (previewInitDumpEnabled() && payload.embedPreview) {
+            window.setTimeout(function () {
+                dumpPreviewDomProject();
+            }, 200);
+        }
     }
 
     function showWinPopup(amount) {
