@@ -609,6 +609,10 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     local src = source
     payload = type(payload) == 'table' and payload or {}
     if not sessionOk(src, payload.token) then
+        print(('[jp-slot][embed] sessionOk=false src=%s token=%s'):format(
+            tostring(src),
+            payload.token and 'present' or 'absent'
+        ))
         return
     end
     local wantId = payload.machineId
@@ -626,6 +630,11 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         m = list[1]
     end
     if not m then
+        print(('[jp-slot][embed] no machine resolved src=%s wantId=%s machines=%s'):format(
+            tostring(src),
+            tostring(wantId or 'nil'),
+            tostring((Config.Machines and #Config.Machines) or 0)
+        ))
         return
     end
     local theme = Theme.getActive()
@@ -644,7 +653,11 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         cid = m.characterId or (Config.Characters and Config.Characters.DefaultId) or 'luna'
     end
     local chMan = JpSlotLoadCharacterManifest(cid)
-    print(('[jp-slot][embed] init sent: machine=%s character=%s'):format(tostring(m and m.id or '?'), tostring(cid or '?')))
+    print(('[jp-slot][embed] init sent: src=%s machine=%s character=%s'):format(
+        tostring(src),
+        tostring(m and m.id or 'nil'),
+        tostring(cid or 'nil')
+    ))
     TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
         machine = m,
         theme = theme,

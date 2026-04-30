@@ -168,6 +168,10 @@ end)
 
 RegisterNetEvent('jp-slot:cl:adminEmbedSlotInit', function(data)
     data = type(data) == 'table' and data or {}
+    print(('[jp-slot][cl] adminEmbedSlotInit received machine=%s character=%s'):format(
+        tostring(data.machine and data.machine.id or 'nil'),
+        tostring((data.character and data.character.id) or data.characterId or 'nil')
+    ))
     local m = data.machine
     if not m then
         return

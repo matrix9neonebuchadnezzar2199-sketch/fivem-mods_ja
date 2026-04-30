@@ -942,6 +942,23 @@
     );
 
     window.addEventListener('message', function (e) {
+        try {
+            if (e && e.data && e.data.type === 'init') {
+                var p = e.data.payload || {};
+                var mid = (p.machine && p.machine.id) || 'nil';
+                var cid =
+                    (p.character && p.character.id) || p.characterId || 'nil';
+                nuiLog(
+                    'log',
+                    '[nui] init received: machine=' +
+                        mid +
+                        ' character=' +
+                        cid +
+                        ' embedPreview=' +
+                        !!p.embedPreview
+                );
+            }
+        } catch (errInitLog) {}
         var d = e.data || {};
         var type = d.type;
         var payload = d.payload || {};
@@ -952,15 +969,6 @@
         }
         if (type === 'init') {
             try {
-                if (payload.embedPreview) {
-                    nuiLog(
-                        'log',
-                        '[admin] init received (embed): machine=' +
-                            String((payload.machine && payload.machine.id) || '?') +
-                            ' character=' +
-                            String(payload.characterId || '?')
-                    );
-                }
                 initPlay(payload);
             } catch (err) {
                 console.error('[jp-slot] initPlay failed:', err);
@@ -1229,3 +1237,54 @@
         }
     });
 })();
+
+/* デバッグ: DOM 状態を起動約3秒後に clientLog 経由で Live Console（txAdmin）へ — F8 手動入力不要 */
+setTimeout(function () {
+    var f = document.getElementById('admin-slot-embed');
+    var fit = document.getElementById('jp-slot-embed-fit');
+    var r = document.getElementById('root');
+    var log = window.jpSlotNuiLog;
+    if (log) {
+        log(
+            'log',
+            '[debug] host=' +
+                !!f +
+                ' hostSize=' +
+                (f ? f.clientWidth + 'x' + f.clientHeight : 'null') +
+                ' fit=' +
+                !!fit +
+                ' fitSize=' +
+                (fit ? fit.clientWidth + 'x' + fit.clientHeight : 'null') +
+                ' rootParent=' +
+                (r && r.parentElement && r.parentElement.id ? r.parentElement.id : 'null') +
+                ' rootChildren=' +
+                (r && r.children ? r.children.length : -1)
+        );
+    }
+    var big = [];
+    var all = document.querySelectorAll('*');
+    var i;
+    for (i = 0; i < all.length; i++) {
+        if (all[i].clientWidth > 3000) {
+            big.push(all[i]);
+        }
+    }
+    for (i = 0; i < Math.min(3, big.length); i++) {
+        var e = big[i];
+        if (log) {
+            log(
+                'log',
+                '[debug] big=' +
+                    e.tagName +
+                    '#' +
+                    (e.id || '') +
+                    '.' +
+                    String(e.className || '') +
+                    ' ' +
+                    e.clientWidth +
+                    'x' +
+                    e.clientHeight
+            );
+        }
+    }
+}, 3000);
