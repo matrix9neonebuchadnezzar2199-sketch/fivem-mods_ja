@@ -369,6 +369,10 @@
                     }
                     return;
                 }
+                if (r && r.reason === 'invalid_left_stage') {
+                    showAdminToast('左側画面スロットの入力が不正です（パス・種別・時間）', true);
+                    return;
+                }
                 showAdminToast('自動保存に失敗しました', true);
             })
             .catch(function () {
