@@ -1523,7 +1523,7 @@
         } else if (type === 'applyUISize') {
             state.serverUiSize = payload;
             applyUISize(payload);
-        } else if (type === 'adminClosed') {
+        } else if (type === 'adminClosed' || type === 'closeAdmin') {
             if (typeof window.jpSlotMoveRootToBody === 'function') {
                 window.jpSlotMoveRootToBody();
             }

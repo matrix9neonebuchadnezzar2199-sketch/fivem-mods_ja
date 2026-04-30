@@ -50,9 +50,8 @@ end)
 
 RegisterNUICallback('admin/close', function(data, cb)
     cb({ ok = true })
-    SetNuiFocus(false, false)
-    SetNuiFocusKeepInput(false)
-    SendNUIMessage({ type = 'closeAdmin' })
+    -- client/main.lua の finalize と同一（nuiOpen リセット・adminClosed 送信）
+    TriggerEvent('__jp-slot:finalizeAdminClose')
 end)
 
 RegisterNUICallback('adminSaveTheme', function(body, cb)

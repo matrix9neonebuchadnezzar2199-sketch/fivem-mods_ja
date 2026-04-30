@@ -252,10 +252,24 @@ RegisterNetEvent('jp-slot:forceLeave', function(data)
     SendNUIMessage({ type = 'forceLeave', payload = data })
 end)
 
-RegisterNUICallback('closeAdmin', function(_, cb)
+--- 管理 NUI を閉じる共通処理（closeAdmin / admin/close の両経路から呼ぶ）
+local function finalizeAdminPanelClose()
     adminOpen = false
-    setSlotNuiFocus(false)
+    if currentMachineId ~= nil then
+        -- 着席中に管理だけ閉じた場合はプレイ NUI を継続（E キー抑止・フォーカス維持）
+        nuiOpen = true
+        setSlotNuiFocus(true)
+    else
+        nuiOpen = false
+        setSlotNuiFocus(false)
+    end
     SendNUIMessage({ type = 'adminClosed' })
+end
+
+AddEventHandler('__jp-slot:finalizeAdminClose', finalizeAdminPanelClose)
+
+RegisterNUICallback('closeAdmin', function(_, cb)
+    finalizeAdminPanelClose()
     cb({})
 end)
 
