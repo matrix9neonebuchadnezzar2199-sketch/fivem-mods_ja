@@ -304,6 +304,13 @@ RegisterNUICallback('clientLog', function(data, cb)
     print(('[jp-slot/NUI:%s] %s'):format(level, msg))
 end)
 
+-- DEBUG: NUI から fetch が届くかの確認用（clientLog とは別ルート）
+RegisterNUICallback('debugPing', function(data, cb)
+    cb({ ok = true, t = GetGameTimer() })
+    data = type(data) == 'table' and data or {}
+    print('[jp-slot][debug-ping] received from NUI: ' .. tostring(data.msg or 'no msg'))
+end)
+
 CreateThread(function()
     Wait(500)
     Machines.spawnAll()

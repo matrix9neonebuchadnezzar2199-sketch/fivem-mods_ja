@@ -37,6 +37,41 @@
 
     window.jpSlotNuiLog = nuiLog;
 
+    // DEBUG: ページロード直後に1回だけ debugPing を叩いて Live Console / F8 に届くか確認
+    (function debugPingOnce() {
+        try {
+            fetch('https://' + resourceName() + '/debugPing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                body: JSON.stringify({ msg: 'app.js loaded at ' + Date.now() }),
+            })
+                .then(function (r) {
+                    return r.text();
+                })
+                .then(function (t) {
+                    fetch('https://' + resourceName() + '/clientLog', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                        body: JSON.stringify({
+                            level: 'log',
+                            message:
+                                '[boot-probe] debugPing response=' + String(t).substring(0, 60),
+                        }),
+                    }).catch(function () {});
+                })
+                .catch(function (err) {
+                    try {
+                        var img = new Image();
+                        img.src =
+                            'https://' +
+                            resourceName() +
+                            '/clientLog?probe=fetch_failed&err=' +
+                            encodeURIComponent(String((err && err.message) || err));
+                    } catch (_) {}
+                });
+        } catch (e) {}
+    })();
+
     function previewInitDumpEnabled() {
         return !!(
             window.__jpSlotConfig &&
