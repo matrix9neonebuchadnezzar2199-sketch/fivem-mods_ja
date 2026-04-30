@@ -837,6 +837,114 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     })
 end)
 
+--- 汚染された leftStage KVP を既定に戻す（txAdmin Live Console のみ: source=0）
+--- effects.<tab>.leftStage.slots — idle のみ slot[1]=idle/portrait.png、他タブは 2 スロットとも disabled
+RegisterCommand('jpslot_fix_leftstage', function(source, _args, _raw)
+    if source ~= 0 then
+        return
+    end
+    local prefix = 'jp-slot:adm:preset:'
+    local reservedCid = {
+        active = true,
+        list = true,
+        migrated_v2 = true,
+        migrated_v3 = true,
+        index = true,
+    }
+    local function emptyTwoSlots()
+        return {
+            slots = {
+                {
+                    enabled = false,
+                    file = '',
+                    kind = 'image',
+                    durationMs = 0,
+                    fadeIn = true,
+                    bgm = nil,
+                    voiceKeys = {},
+                },
+                {
+                    enabled = false,
+                    file = '',
+                    kind = 'image',
+                    durationMs = 0,
+                    fadeIn = true,
+                    bgm = nil,
+                    voiceKeys = {},
+                },
+            },
+        }
+    end
+    local function idleDefaultLeftStage()
+        return {
+            slots = {
+                {
+                    enabled = true,
+                    kind = 'image',
+                    file = 'idle/portrait.png',
+                    durationMs = 0,
+                    fadeIn = true,
+                    bgm = nil,
+                    voiceKeys = {},
+                },
+                {
+                    enabled = false,
+                    file = '',
+                    kind = 'image',
+                    durationMs = 0,
+                    fadeIn = true,
+                    bgm = nil,
+                    voiceKeys = {},
+                },
+            },
+        }
+    end
+    local tabs = { 'idle', 'win', 'bonus', 'bonus_streak', 'bonus_big', 'miss_tease' }
+    local handle = StartFindKvp(prefix)
+    if not handle or handle == -1 then
+        print('[jp-slot][fix] StartFindKvp failed')
+        return
+    end
+    local count = 0
+    while true do
+        local key = FindKvp(handle)
+        if not key or key == '' then
+            break
+        end
+        if type(key) == 'string' and key:sub(1, #prefix) == prefix then
+            local rest = key:sub(#prefix + 1)
+            local cid, pname = rest:match('^([^:]+):(.+)$')
+            if cid and pname and pname ~= '' and not reservedCid[cid] then
+                local raw = GetResourceKvpString(key)
+                if raw and raw ~= '' then
+                    local ok, preset = pcall(json.decode, raw)
+                    if ok and type(preset) == 'table' and type(preset.effects) == 'table' then
+                        preset.effects = preset.effects or {}
+                        for ti = 1, #tabs do
+                            local tab = tabs[ti]
+                            if type(preset.effects[tab]) ~= 'table' then
+                                preset.effects[tab] = {}
+                            end
+                            if tab == 'idle' then
+                                preset.effects[tab].leftStage = idleDefaultLeftStage()
+                            else
+                                preset.effects[tab].leftStage = emptyTwoSlots()
+                            end
+                        end
+                        SetResourceKvp(key, json.encode(preset))
+                        count = count + 1
+                        print(('[jp-slot][fix] reset leftStage for key=%s'):format(key))
+                    else
+                        print(('[jp-slot][fix] skip (no effects or bad json): %s'):format(key))
+                    end
+                end
+            end
+        end
+    end
+    EndFindKvp(handle)
+    print(('[jp-slot][fix] done, %d presets reset'):format(count))
+end, true)
+
 RegisterCommand('jpslotresetauth', function(source, _args, _raw)
     if source ~= 0 and not AdminAuth.hasAce(source) then
         return

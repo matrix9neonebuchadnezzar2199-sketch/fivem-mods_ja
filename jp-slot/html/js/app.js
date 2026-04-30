@@ -1007,6 +1007,41 @@
                 colLeft && colLeft.outerHTML ? colLeft.outerHTML.slice(0, 150) : 'null';
             nuiLog('log', '[probe2] colLeft=' + probe2);
         }
+        if (!payload.embedPreview) {
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    var r = document.getElementById('root');
+                    var cl = r && r.querySelector('.col-left');
+                    var cs = r && r.querySelector('.char-stage');
+                    if (cl && cs) {
+                        var clStyle = window.getComputedStyle(cl);
+                        var csStyle = window.getComputedStyle(cs);
+                        nuiLog(
+                            'log',
+                            '[probe-play] col-left w=' +
+                                cl.clientWidth +
+                                ' h=' +
+                                cl.clientHeight +
+                                ' display=' +
+                                clStyle.display +
+                                ' position=' +
+                                clStyle.position
+                        );
+                        nuiLog(
+                            'log',
+                            '[probe-play] char-stage w=' +
+                                cs.clientWidth +
+                                ' h=' +
+                                cs.clientHeight +
+                                ' display=' +
+                                csStyle.display +
+                                ' position=' +
+                                csStyle.position
+                        );
+                    }
+                });
+            });
+        }
         nuiLog('log', '[initPlay] done');
     }
 

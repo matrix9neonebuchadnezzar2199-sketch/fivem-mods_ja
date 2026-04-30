@@ -193,6 +193,16 @@
     z-index: 5;
 }
 
+/* プレイ #root: 親レイアウトで幅が 0 に近づき char-stage が 2×2px になるのを防ぐ（~360×585 @ 144px root） */
+#root .slot-main > .col-left {
+    min-width: 2.5rem;
+}
+
+#root .slot-main > .col-left > .char-stage {
+    min-width: 2.5rem;
+    min-height: 4.0625rem;
+}
+
 .col-left > h3,
 .col-left > .col-title,
 .col-left .char-top-row {
