@@ -57,6 +57,83 @@ local function jpSlotPresetNameValid(name)
     return true
 end
 
+--- 左スロット file（空可・キャラ直下相対。`characters/<id>/` で始まる場合は ID 一致必須）
+local function jpSlotValidateLeftStageFile(characterId, file)
+    if file == nil or file == '' then
+        return true
+    end
+    if type(file) ~= 'string' then
+        return false
+    end
+    if file:find('%.%.', 1, true) or file:find(':', 1, true) then
+        return false
+    end
+    if file:match('^[\\/]') then
+        return false
+    end
+    local low = file:lower()
+    if low:match('^characters/') then
+        local pref = ('characters/%s/'):format(characterId):lower()
+        if low:sub(1, #pref) ~= pref then
+            return false
+        end
+    end
+    return true
+end
+
+local function jpSlotValidateLeftStageSlots(slots, characterId)
+    if slots == nil then
+        return true
+    end
+    if type(slots) ~= 'table' then
+        return false
+    end
+    if #slots > 2 then
+        return false
+    end
+    for i = 1, #slots do
+        local s = slots[i]
+        if type(s) ~= 'table' then
+            return false
+        end
+        if type(s.enabled) ~= 'boolean' then
+            return false
+        end
+        if not jpSlotValidateLeftStageFile(characterId, s.file) then
+            return false
+        end
+        local kind = s.kind
+        if kind ~= 'image' and kind ~= 'video' then
+            return false
+        end
+        local dm = tonumber(s.durationMs)
+        if dm == nil or dm ~= math.floor(dm) or dm < 0 or dm > 60000 then
+            return false
+        end
+    end
+    return true
+end
+
+local function jpSlotValidatePresetEffectsForSave(data, characterId)
+    if type(data) ~= 'table' or type(data.effects) ~= 'table' then
+        return true
+    end
+    local keys = { 'idle', 'win', 'bonus', 'bonus_streak', 'bonus_big', 'miss_tease' }
+    for i = 1, #keys do
+        local sec = data.effects[keys[i]]
+        if type(sec) == 'table' and type(sec.leftStage) == 'table' then
+            local ls = sec.leftStage.slots
+            if ls == nil then
+                return false
+            end
+            if not jpSlotValidateLeftStageSlots(ls, characterId) then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 local function presetIndexGet(characterId)
     local raw = GetResourceKvpString('jp-slot:adm:preset:index:' .. characterId)
     if not raw or raw == '' then
@@ -94,6 +171,46 @@ local function presetIndexRemove(characterId, presetName)
         end
     end
     presetIndexSet(characterId, out)
+end
+
+--- キャラ ID に紐づくプリセットから effects を1件読む（埋め込み・着席 init 用）
+function JpSlotReadPresetEffectsForCharacter(characterId)
+    if type(characterId) ~= 'string' or characterId == '' then
+        return nil
+    end
+    local pcid, pname = JpSlotParseActivePresetRef()
+    local tried = {}
+    local function tryOne(name)
+        if type(name) ~= 'string' or name == '' or tried[name] then
+            return nil
+        end
+        tried[name] = true
+        local raw = GetResourceKvpString(JpSlotPresetBodyKvpKey(characterId, name))
+        if raw and raw ~= '' then
+            local ok, preset = pcall(json.decode, raw)
+            if ok and type(preset) == 'table' and type(preset.effects) == 'table' then
+                return preset.effects
+            end
+        end
+        return nil
+    end
+    if pcid == characterId and pname then
+        local e = tryOne(pname)
+        if e then
+            return e
+        end
+    end
+    local e2 = tryOne('default')
+    if e2 then
+        return e2
+    end
+    for _, name in ipairs(presetIndexGet(characterId)) do
+        local e3 = tryOne(name)
+        if e3 then
+            return e3
+        end
+    end
+    return nil
 end
 
 --- 旧 KVP（jp-slot:adm:preset:<id>・list）を luna 名前空間へ移行（1回のみ）
@@ -376,6 +493,10 @@ RegisterNetEvent('jp-slot:sv:adminPresetSaveNew', function(payload)
             return
         end
     end
+    if not jpSlotValidatePresetEffectsForSave(data, cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveNewResult', src, { ok = false, reason = 'invalid_left_stage' })
+        return
+    end
     data.updatedAt = os.time()
     if type(data.name) ~= 'string' or data.name == '' then
         data.name = pname
@@ -416,6 +537,10 @@ RegisterNetEvent('jp-slot:sv:adminPresetSaveOverwrite', function(payload)
     local existing = GetResourceKvpString(key)
     if not existing or existing == '' then
         TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'not_found' })
+        return
+    end
+    if not jpSlotValidatePresetEffectsForSave(data, cid) then
+        TriggerClientEvent('jp-slot:cl:adminPresetSaveOverwriteResult', src, { ok = false, reason = 'invalid_left_stage' })
         return
     end
     data.updatedAt = os.time()
@@ -653,6 +778,7 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
         cid = m.characterId or (Config.Characters and Config.Characters.DefaultId) or 'luna'
     end
     local chMan = JpSlotLoadCharacterManifest(cid)
+    local embedEffects = JpSlotReadPresetEffectsForCharacter(cid)
     print(('[jp-slot][embed] init sent: src=%s machine=%s character=%s'):format(
         tostring(src),
         tostring(m and m.id or 'nil'),
@@ -660,6 +786,7 @@ RegisterNetEvent('jp-slot:sv:adminEmbedSlotInit', function(payload)
     ))
     TriggerClientEvent('jp-slot:cl:adminEmbedSlotInit', src, {
         machine = m,
+        effects = embedEffects,
         theme = theme,
         jackpot = jackpot,
         balance = 999999999,

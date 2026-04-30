@@ -220,6 +220,12 @@
     "confirm.exit_body": "You cannot undo this.",
     "confirm.unsaved_warn": "You have unsaved changes.",
     "confirm.cancel": "Cancel",
-    "confirm.ok": "End"
+    "confirm.ok": "End",
+    "leftStage.slot1": "Slot 1",
+    "leftStage.slot2": "Slot 2",
+    "leftStage.fallbackHint": "Falls back to Idle left stage when unset",
+    "leftStage.enabled": "Use this block",
+    "leftStage.title": "Left stage (portrait)",
+    "leftStage.duration": "Duration (ms, 0 = natural length)"
   }
 }

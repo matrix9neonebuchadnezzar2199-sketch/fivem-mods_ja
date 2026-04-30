@@ -405,3 +405,115 @@ function JpSlotFilterAssetLibByKind(lib, kind)
     end
     return lib
 end
+
+--- プリセット body の leftStage 2スロット化（1回のみ・KVP `jp-slot:adm:preset:migrated_v3`）
+---@return integer 書き換えたプリセット本体の件数
+function JpSlotMigratePresetsV3()
+    if GetResourceKvpString('jp-slot:adm:preset:migrated_v3') == '1' then
+        return 0
+    end
+    local function indexNames(characterId)
+        local raw = GetResourceKvpString('jp-slot:adm:preset:index:' .. characterId)
+        if not raw or raw == '' then
+            return {}
+        end
+        local ok, t = pcall(json.decode, raw)
+        if ok and type(t) == 'table' then
+            return t
+        end
+        return {}
+    end
+    local function detectKind(file)
+        if type(file) ~= 'string' or file == '' then
+            return 'image'
+        end
+        local f = file:lower()
+        if f:match('%.mp4$') or f:match('%.webm$') or f:match('%.mov$') or f:match('%.m4v$') then
+            return 'video'
+        end
+        return 'image'
+    end
+    local function emptySlot(disabled)
+        return {
+            enabled = not disabled,
+            file = '',
+            kind = 'image',
+            durationMs = 0,
+            fadeIn = true,
+            bgm = nil,
+            voiceKeys = {},
+        }
+    end
+    local function leftFromCharVideo(sec, useCharVideo)
+        if type(sec) ~= 'table' then
+            return false
+        end
+        if type(sec.leftStage) == 'table' and type(sec.leftStage.slots) == 'table' and #sec.leftStage.slots >= 2 then
+            return false
+        end
+        if useCharVideo then
+            local cv = sec.char_video or {}
+            local file = type(cv.file) == 'string' and cv.file or ''
+            local enabled = cv.enabled ~= false and file ~= ''
+            sec.leftStage = {
+                slots = {
+                    {
+                        enabled = enabled,
+                        file = file,
+                        kind = detectKind(file),
+                        durationMs = 0,
+                        fadeIn = cv.fade_back ~= false,
+                        bgm = nil,
+                        voiceKeys = {},
+                    },
+                    emptySlot(true),
+                },
+            }
+        else
+            sec.leftStage = {
+                slots = { emptySlot(true), emptySlot(true) },
+            }
+        end
+        return true
+    end
+    local n = 0
+    local chars = JpSlotScanCharacters()
+    for ci = 1, #chars do
+        local row = chars[ci]
+        local cid = type(row) == 'table' and row.id or nil
+        if type(cid) == 'string' and cid ~= '' then
+            local names = indexNames(cid)
+            for ni = 1, #names do
+                local pname = names[ni]
+                if type(pname) == 'string' and pname ~= '' then
+                    local key = JpSlotPresetBodyKvpKey(cid, pname)
+                    local body = GetResourceKvpString(key)
+                    if body and body ~= '' then
+                        local ok, preset = pcall(json.decode, body)
+                        if ok and type(preset) == 'table' and type(preset.effects) == 'table' then
+                            local changed = false
+                            local eff = preset.effects
+                            if leftFromCharVideo(eff.idle, true) then
+                                changed = true
+                            end
+                            if leftFromCharVideo(eff.miss_tease, true) then
+                                changed = true
+                            end
+                            for _, ek in ipairs({ 'win', 'bonus', 'bonus_streak', 'bonus_big' }) do
+                                if leftFromCharVideo(eff[ek], false) then
+                                    changed = true
+                                end
+                            end
+                            if changed then
+                                SetResourceKvp(key, json.encode(preset))
+                                n = n + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    SetResourceKvp('jp-slot:adm:preset:migrated_v3', '1')
+    return n
+end

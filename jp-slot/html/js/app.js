@@ -178,6 +178,10 @@
         characterBasePath: '',
         /** プリセット優先後の実効キャラ ID（machine.characterId は変更しない） */
         effectiveCharacterId: '',
+        /** サーバーから渡る演出プリセット effects（leftStage 等） */
+        effects: null,
+        /** 左側2スロット交互表示用インデックス（スピン毎に %2 で進む） */
+        leftStageSlotIndex: 0,
     };
 
     window.__jpSlotSpinning = false;
@@ -219,6 +223,110 @@
     }
     window.jpSlotResolveAssetUrl = jpSlotResolveAssetUrl;
 
+    function pickLeftStageForResult(p) {
+        p = p || {};
+        var tabKey = p.effectScene || 'idle';
+        var eff = state.effects && state.effects[tabKey];
+        var tabConfig = eff && eff.leftStage;
+        var slots = (tabConfig && tabConfig.slots) || [];
+        var enabledSlots = [];
+        for (var i = 0; i < slots.length; i++) {
+            var s = slots[i];
+            if (s && s.enabled && String(s.file || '').trim() !== '') {
+                enabledSlots.push(s);
+            }
+        }
+        if (enabledSlots.length === 0) {
+            if (tabKey !== 'idle') {
+                nuiLog('log', '[leftStage] fallback from tab=' + tabKey + ' to idle (no enabled slots)');
+                return pickLeftStageForResult({ effectScene: 'idle' });
+            }
+            return { tabKey: tabKey, slots: [] };
+        }
+        return { tabKey: tabKey, slots: enabledSlots };
+    }
+
+    function playLeftStageSlot(slot, tabKey, idx, assetsRoot) {
+        if (!slot || !String(slot.file || '').trim()) {
+            return;
+        }
+        var ar = assetsRoot || state.assetsRoot || '';
+        var url = jpSlotResolveAssetUrl(slot.file, ar);
+        nuiLog(
+            'log',
+            '[leftStage] play tab=' +
+                tabKey +
+                ' slotIdx=' +
+                idx +
+                ' kind=' +
+                (slot.kind || '') +
+                ' file=' +
+                slot.file
+        );
+        var charPortrait =
+            document.querySelector('.char-img.char-portrait') ||
+            document.querySelector('.char-portrait');
+        var charVideo = document.querySelector('.char-video');
+        if (!charPortrait || !charVideo) {
+            return;
+        }
+        var isVideo =
+            slot.kind === 'video' || /\.(mp4|webm|mov|m4v)$/i.test(String(slot.file || ''));
+        if (slot.fadeIn !== false) {
+            charPortrait.classList.remove('is-fading-out');
+            charPortrait.classList.add('is-returning');
+            window.setTimeout(function () {
+                charPortrait.classList.remove('is-returning');
+            }, 50);
+        }
+        if (isVideo) {
+            charPortrait.hidden = true;
+            charPortrait.removeAttribute('src');
+            if (window.CharFx && window.CharFx.play) {
+                window.CharFx.play(url, { force: true });
+            }
+        } else {
+            try {
+                charVideo.pause();
+            } catch (_) {}
+            charVideo.removeAttribute('src');
+            charVideo.classList.remove('is-playing');
+            charPortrait.hidden = false;
+            charPortrait.src = url;
+        }
+    }
+
+    function applyLeftStageForSpinResult(p, assetsRoot) {
+        var r = pickLeftStageForResult(p);
+        if (!r.slots.length) {
+            return;
+        }
+        var idx = state.leftStageSlotIndex % r.slots.length;
+        playLeftStageSlot(r.slots[idx], r.tabKey || (p.effectScene || 'idle'), idx, assetsRoot);
+    }
+
+    function playIdleLeftStageFromPreset() {
+        var r = pickLeftStageForResult({ effectScene: 'idle' });
+        var ar = state.assetsRoot || '';
+        if (!r.slots.length) {
+            return;
+        }
+        var idx = state.leftStageSlotIndex % r.slots.length;
+        playLeftStageSlot(r.slots[idx], 'idle', idx, ar);
+    }
+
+    function shouldSkipWinCharFxForLeftStage(p) {
+        if (!state.effects || !p) {
+            return false;
+        }
+        var sc = p.effectScene;
+        if (!sc || sc === 'idle' || sc === 'miss_tease') {
+            return false;
+        }
+        var x = pickLeftStageForResult(p);
+        return x.slots.length > 0;
+    }
+
     var IDLE_VIDEO_INTERVAL_MS = 5000;
     var IDLE_VIDEO_CHANCE = 0.5;
 
@@ -242,6 +350,9 @@
                 return;
             }
             if (window.__jpSlotNeutralPreviewChar) {
+                return;
+            }
+            if (state.effects && state.effects.idle && state.effects.idle.leftStage) {
                 return;
             }
             if (!(window.CharFx && window.CharFx.play)) {
@@ -385,6 +496,18 @@
         var winAmt = p.winAmount != null ? p.winAmount : 0;
         reels.classList.remove('is-win', 'is-bigwin');
         if (!tier || winAmt <= 0) {
+            return;
+        }
+        if (shouldSkipWinCharFxForLeftStage(p)) {
+            reels.classList.add('is-win');
+            if (tier === 'bigwin' || tier === 'jackpot') {
+                reels.classList.add('is-bigwin');
+            }
+            window.setTimeout(function () {
+                if (reels) {
+                    reels.classList.remove('is-win', 'is-bigwin');
+                }
+            }, 1800);
             return;
         }
         var big = tier === 'bigwin' || tier === 'jackpot';
@@ -724,6 +847,8 @@
         state.characterBasePath =
             (payload.characterBasePath != null && String(payload.characterBasePath)) ||
             ('characters/' + state.effectiveCharacterId + '/');
+        state.effects = payload.effects || null;
+        state.leftStageSlotIndex = 0;
         window.__jpSlotState = state;
         if (window.JpSlotMarquee && window.JpSlotMarquee.refresh) {
             window.JpSlotMarquee.refresh();
@@ -739,6 +864,9 @@
         state.serverUiSize = uis;
         applyUISize(uis);
         applyVisualAssets(payload);
+        if (state.effects) {
+            playIdleLeftStageFromPreset();
+        }
         applyI18n();
         state.bet = (state.machine && state.machine.minBet) || 100;
         clampBet();
@@ -862,6 +990,8 @@
                     ? window.JpSlotEffects.runEffectChain(p, state.assetsRoot || ar)
                     : window.JpSlotEffects.playCutin(p.cutin || { kind: 'none' }, state.assetsRoot);
             fxChain.then(function () {
+                    applyLeftStageForSpinResult(p, ar);
+                    state.leftStageSlotIndex = (state.leftStageSlotIndex + 1) % 2;
                     applyWinFx(p, ar);
                     var previewUi =
                         p.previewMode === true || window.__jpSlotEmbedPreview === true;
@@ -911,6 +1041,11 @@
                     if (sb1) {
                         sb1.disabled = false;
                     }
+                    var restoreDelay =
+                        p.effectScene === 'idle' || p.effectScene === 'miss_tease' ? 0 : 2800;
+                    window.setTimeout(function () {
+                        playIdleLeftStageFromPreset();
+                    }, restoreDelay);
                 });
         }, ar);
     }

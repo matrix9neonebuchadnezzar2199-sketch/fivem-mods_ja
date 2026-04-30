@@ -220,6 +220,12 @@
     "confirm.exit_body": "現在の演出を終了します。終了後は元に戻すことはできません。",
     "confirm.unsaved_warn": "※ 未保存の変更があります",
     "confirm.cancel": "キャンセル",
-    "confirm.ok": "終了する"
+    "confirm.ok": "終了する",
+    "leftStage.slot1": "通常1",
+    "leftStage.slot2": "通常2",
+    "leftStage.fallbackHint": "未設定時は通常 Idle の左側画面を使用します",
+    "leftStage.enabled": "このブロックを使用",
+    "leftStage.title": "左側画面（縦長キャラ）",
+    "leftStage.duration": "再生時間 (ms、0=自然長)"
   }
 }

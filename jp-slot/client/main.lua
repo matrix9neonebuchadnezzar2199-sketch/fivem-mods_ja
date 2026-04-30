@@ -120,6 +120,7 @@ local function openPlayUi(machine, extra)
         character = extra.character,
         characterBasePath = extra.characterBasePath,
         characterId = extra.characterId,
+        effects = extra.effects,
         debug = {
             enabled = Config.Debug and Config.Debug.enabled or false,
             nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,
@@ -145,6 +146,7 @@ RegisterNetEvent('jp-slot:seatGranted', function(data)
         character = data.character,
         characterBasePath = data.characterBasePath,
         characterId = data.characterId,
+        effects = data.effects,
     })
 end)
 
@@ -197,6 +199,7 @@ RegisterNetEvent('jp-slot:cl:adminEmbedSlotInit', function(data)
             characterBasePath = data.characterBasePath,
             characterId = data.characterId,
             characters = data.characters,
+            effects = data.effects,
             debug = {
                 enabled = Config.Debug and Config.Debug.enabled or false,
                 nuiVerbose = Config.Debug and Config.Debug.nuiVerbose or false,

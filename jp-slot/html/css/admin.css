@@ -603,6 +603,40 @@
     margin-top: 14px;
 }
 
+#panel-admin .left-stage-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 12px;
+}
+
+#panel-admin .left-stage-tabs .slot-tab {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    background: rgba(0, 0, 0, 0.35);
+    color: #f4ead0;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+#panel-admin .left-stage-tabs .slot-tab.is-active {
+    border-color: #d4af37;
+    background: rgba(212, 175, 55, 0.15);
+}
+
+#panel-admin .left-stage-slot[hidden] {
+    display: none !important;
+}
+
+#panel-admin small.hint {
+    display: block;
+    color: #c8b89a;
+    font-size: 12px;
+    margin-bottom: 8px;
+    line-height: 1.45;
+}
+
 @media (max-width: 1600px) {
     #panel-admin .studio-master-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

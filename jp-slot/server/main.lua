@@ -404,6 +404,7 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
     local infoKey = (Config.Marquee and Config.Marquee.InfoKey) or 'marquee.info'
     local cid = jpSlotEffectiveCharacterIdForSeat(m)
     local manifest = JpSlotLoadCharacterManifest(cid)
+    local seatEffects = JpSlotReadPresetEffectsForCharacter and JpSlotReadPresetEffectsForCharacter(cid) or nil
     TriggerClientEvent('jp-slot:seatGranted', src, {
         machine = m,
         theme = theme,
@@ -420,6 +421,7 @@ RegisterNetEvent('jp-slot:requestSeat', function(machineId)
         character = manifest,
         characterBasePath = ('characters/%s/'):format(cid),
         characterId = cid,
+        effects = seatEffects,
     })
 end)
 
@@ -799,6 +801,12 @@ CreateThread(function()
     Wait(500)
     checkLegacyAssetPaths()
     JpSlotMigratePresetsV2()
+    if JpSlotMigratePresetsV3 then
+        local n3 = JpSlotMigratePresetsV3()
+        if n3 > 0 then
+            print(('[jp-slot] preset migration v3 completed (%d entries)'):format(n3))
+        end
+    end
     applyMasterFromActivePreset()
     validatePaytableConsistency()
     local raw = GetResourceKvpString(KVP_JACKPOT)

@@ -39,6 +39,28 @@
                 return b;
             })(),
             char_video: { enabled: true, file: '', fade_back: true },
+            leftStage: {
+                slots: [
+                    {
+                        enabled: true,
+                        file: '',
+                        kind: 'image',
+                        durationMs: 0,
+                        fadeIn: true,
+                        bgm: null,
+                        voiceKeys: [],
+                    },
+                    {
+                        enabled: false,
+                        file: '',
+                        kind: 'image',
+                        durationMs: 0,
+                        fadeIn: true,
+                        bgm: null,
+                        voiceKeys: [],
+                    },
+                ],
+            },
             sound: {
                 se: '',
                 voice: '',
@@ -74,6 +96,11 @@
         var idle = effects.idle;
         idle.pre_text.text = 'おかえりなさい、マスター♪';
         idle.char_video.file = 'idle/portrait.png';
+        if (idle.leftStage && idle.leftStage.slots && idle.leftStage.slots[0]) {
+            idle.leftStage.slots[0].file = 'idle/portrait.png';
+            idle.leftStage.slots[0].enabled = true;
+            idle.leftStage.slots[0].kind = 'image';
+        }
 
         var win = effects.win;
         win.pre_text.text = '当たり！';
@@ -98,6 +125,11 @@
         var miss = effects.miss_tease;
         miss.pre_text.text = 'おかえりなさい、マスター♪';
         miss.char_video.file = 'idle/portrait.png';
+        if (miss.leftStage && miss.leftStage.slots && miss.leftStage.slots[0]) {
+            miss.leftStage.slots[0].file = 'idle/portrait.png';
+            miss.leftStage.slots[0].enabled = true;
+            miss.leftStage.slots[0].kind = 'image';
+        }
         miss.payout.enabled = false;
 
         return effects;
@@ -167,6 +199,22 @@
             'payout',
             'streak_intensity',
         ];
+        if (incoming.leftStage != null && typeof incoming.leftStage === 'object') {
+            o.leftStage = o.leftStage || { slots: [{}, {}] };
+            o.leftStage.slots = o.leftStage.slots || [{}, {}];
+            var incSlots = incoming.leftStage.slots;
+            if (Array.isArray(incSlots)) {
+                for (var si = 0; si < 2; si++) {
+                    if (incSlots[si] && typeof incSlots[si] === 'object') {
+                        o.leftStage.slots[si] = Object.assign(
+                            {},
+                            o.leftStage.slots[si] || {},
+                            incSlots[si]
+                        );
+                    }
+                }
+            }
+        }
         for (var s = 0; s < subKeys.length; s++) {
             var k = subKeys[s];
             if (incoming[k] != null && typeof incoming[k] === 'object' && !Array.isArray(incoming[k])) {
@@ -361,7 +409,51 @@
         };
     }
 
+    function normalizeEffectsLeftStageKinds(effects) {
+        if (!effects || typeof effects !== 'object') {
+            return;
+        }
+        for (var i = 0; i < EFFECT_KEYS.length; i++) {
+            var sec = effects[EFFECT_KEYS[i]];
+            if (!sec || !sec.leftStage || !sec.leftStage.slots) {
+                continue;
+            }
+            for (var j = 0; j < sec.leftStage.slots.length; j++) {
+                var sl = sec.leftStage.slots[j];
+                if (!sl) {
+                    continue;
+                }
+                var f = String(sl.file || '').trim();
+                sl.kind = /\.(mp4|webm|mov|m4v)$/i.test(f) ? 'video' : 'image';
+            }
+        }
+    }
+
+    function syncCharVideoFromLeftSlot0(effects) {
+        if (!effects || typeof effects !== 'object') {
+            return;
+        }
+        for (var i = 0; i < EFFECT_KEYS.length; i++) {
+            var sec = effects[EFFECT_KEYS[i]];
+            if (!sec || !sec.leftStage || !sec.leftStage.slots || !sec.leftStage.slots[0]) {
+                continue;
+            }
+            var s0 = sec.leftStage.slots[0];
+            sec.char_video = sec.char_video || {};
+            if (s0.enabled && String(s0.file || '').trim() !== '') {
+                sec.char_video.enabled = true;
+                sec.char_video.file = String(s0.file).trim();
+                sec.char_video.fade_back = s0.fadeIn !== false;
+            } else {
+                sec.char_video.enabled = false;
+                sec.char_video.file = '';
+            }
+        }
+    }
+
     function buildPresetDataObject() {
+        normalizeEffectsLeftStageKinds(workspace.effects);
+        syncCharVideoFromLeftSlot0(workspace.effects);
         return {
             master: workspace.master,
             effects: workspace.effects,
@@ -1389,31 +1481,93 @@
         );
     }
 
-    /** Idle／通常結果：台左の縦長エリア（左キャラ）のみ */
-    function renderLeftVerticalStripColumn(sec) {
-        var cv = sec.char_video || { enabled: true, file: '', fade_back: true };
-        var lib = getAssetLib();
+    function ensureLeftStageSlotsOnSection(sec) {
+        if (!sec || typeof sec !== 'object') {
+            return;
+        }
+        if (!sec.leftStage || typeof sec.leftStage !== 'object') {
+            sec.leftStage = { slots: [] };
+        }
+        if (!sec.leftStage.slots || sec.leftStage.slots.length < 2) {
+            sec.leftStage.slots = [
+                {
+                    enabled: true,
+                    file: '',
+                    kind: 'image',
+                    durationMs: 0,
+                    fadeIn: true,
+                    bgm: null,
+                    voiceKeys: [],
+                },
+                {
+                    enabled: false,
+                    file: '',
+                    kind: 'image',
+                    durationMs: 0,
+                    fadeIn: true,
+                    bgm: null,
+                    voiceKeys: [],
+                },
+            ];
+        }
+    }
+
+    function renderLeftStageSlotFields(sec, idx) {
+        ensureLeftStageSlotsOnSection(sec);
+        var slot = sec.leftStage.slots[idx] || {};
+        var base = 'leftStage.slots.' + idx;
+        var dm = slot.durationMs != null ? Number(slot.durationMs) : 0;
         var body = '';
         body +=
             '<div class="studio-row studio-row--check"><div class="studio-row-label"></div><div class="studio-row-control">' +
-            '<label class="studio-inline-check"><input type="checkbox" data-path="char_video.enabled"' +
-            chkAttr(cv.enabled !== false) +
-            '> <span data-i18n-key="admin.effect.field_use_block">左キャラを使用</span></label>' +
+            '<label class="studio-inline-check"><input type="checkbox" data-path="' +
+            base +
+            '.enabled"' +
+            chkAttr(slot.enabled === true) +
+            '> <span data-i18n-key="admin.leftStage.enabled">このブロックを使用</span></label>' +
             '</div></div>';
         body +=
             studioRowField(
                 'admin.effect.char_file',
-                '左キャラ画像または動画',
-                buildAssetPathSelect('char_video.file', cv.file, lib.characters)
+                'ファイル',
+                buildAssetPathSelect(base + '.file', slot.file || '', getAssetLib().characters)
             );
         body +=
             studioRowField(
-                'admin.effect.char_fade_back',
-                '静止画フェード復帰',
-                '<label class="studio-inline-check"><input type="checkbox" data-path="char_video.fade_back"' +
-                chkAttr(cv.fade_back !== false) +
-                '> ON</label>'
+                'admin.leftStage.duration',
+                '再生時間 (ms、0=自然長)',
+                '<input type="number" min="0" max="60000" step="100" class="studio-input-wide" data-path="' +
+                    base +
+                    '.durationMs" value="' +
+                    escAttr(dm) +
+                    '">'
             );
+        body +=
+            '<div class="studio-row studio-row--check"><div class="studio-row-label"></div><div class="studio-row-control">' +
+            '<label class="studio-inline-check"><input type="checkbox" data-path="' +
+            base +
+            '.fadeIn"' +
+            chkAttr(slot.fadeIn !== false) +
+            '> <span data-i18n-key="admin.effect.char_fade_back">静止画フェード復帰</span></label>' +
+            '</div></div>';
+        return body;
+    }
+
+    /** Idle／通常結果：台左の縦長エリア（左キャラ）2スロット */
+    function renderLeftVerticalStripColumn(sec) {
+        ensureLeftStageSlotsOnSection(sec);
+        var body =
+            '<small class="hint" data-i18n-key="admin.leftStage.fallbackHint"></small>' +
+            '<div class="left-stage-tabs">' +
+            '<button type="button" class="slot-tab is-active" data-slot="0" data-i18n-key="admin.leftStage.slot1">通常1</button>' +
+            '<button type="button" class="slot-tab" data-slot="1" data-i18n-key="admin.leftStage.slot2">通常2</button>' +
+            '</div>' +
+            '<div class="left-stage-slot" data-slot="0">' +
+            renderLeftStageSlotFields(sec, 0) +
+            '</div>' +
+            '<div class="left-stage-slot" data-slot="1" hidden>' +
+            renderLeftStageSlotFields(sec, 1) +
+            '</div>';
         body +=
             '<p class="studio-note studio-cutin-hint" data-i18n-key="admin.effect.left_vertical_hint"></p>';
         body +=
@@ -1424,6 +1578,27 @@
             '<div class="studio-card studio-effect-block studio-effect-col-main">' +
             '<div class="studio-card-title"><span data-i18n-key="admin.effect.block_left_vertical"></span></div>' +
             body +
+            '</div>'
+        );
+    }
+
+    /** 当たり・ボーナス系：左側画面2スロット（カットインの上に表示） */
+    function renderLeftStageSectionForWinlike(sec) {
+        ensureLeftStageSlotsOnSection(sec);
+        return (
+            '<div class="studio-card studio-effect-block studio-effect-col-main">' +
+            '<div class="studio-card-title"><span data-i18n-key="admin.leftStage.title">左側画面（縦長キャラ）</span></div>' +
+            '<small class="hint" data-i18n-key="admin.leftStage.fallbackHint"></small>' +
+            '<div class="left-stage-tabs">' +
+            '<button type="button" class="slot-tab is-active" data-slot="0" data-i18n-key="admin.leftStage.slot1">通常1</button>' +
+            '<button type="button" class="slot-tab" data-slot="1" data-i18n-key="admin.leftStage.slot2">通常2</button>' +
+            '</div>' +
+            '<div class="left-stage-slot" data-slot="0">' +
+            renderLeftStageSlotFields(sec, 0) +
+            '</div>' +
+            '<div class="left-stage-slot" data-slot="1" hidden>' +
+            renderLeftStageSlotFields(sec, 1) +
+            '</div>' +
             '</div>'
         );
     }
@@ -1484,7 +1659,7 @@
         if (sceneKey === 'idle' || sceneKey === 'miss_tease') {
             return renderLeftVerticalStripColumn(sec);
         }
-        return renderLeftCutinOnlyColumn(sec);
+        return renderLeftStageSectionForWinlike(sec) + renderLeftCutinOnlyColumn(sec);
     }
 
     /** 右列：BGM＋再生時間を主に表示、SE/ボイスは折りたたみ */
@@ -2304,15 +2479,24 @@
         }
         var cv = sec.char_video || {};
         var cb = sec.cutin_block || {};
+        ensureLeftStageSlotsOnSection(sec);
+        var ls0 = sec.leftStage.slots[0];
+        var ls1 = sec.leftStage.slots[1];
+        var leftPath = '';
+        if (ls0 && ls0.enabled && ls0.file && String(ls0.file).trim()) {
+            leftPath = String(ls0.file).trim();
+        } else if (ls1 && ls1.enabled && ls1.file && String(ls1.file).trim()) {
+            leftPath = String(ls1.file).trim();
+        }
         var charPath = (cv.enabled !== false && cv.file && String(cv.file).trim()) ? String(cv.file).trim() : '';
         var cutPath = (cb.file && String(cb.file).trim()) ? String(cb.file).trim() : '';
         var path = '';
         if (isVerticalStripScene(sceneKey)) {
-            path = charPath;
+            path = leftPath || charPath;
         } else if (cutPath) {
             path = cutPath;
         } else {
-            path = charPath;
+            path = leftPath || charPath;
         }
         function studioCharacterBasePrefix() {
             var cid = (workspace && workspace.characterId) || 'luna';
@@ -2420,7 +2604,8 @@
                 path === 'char_video.file' ||
                 path === 'cutin_block.file' ||
                 path === 'cutin_block.kind' ||
-                path === 'char_video.enabled'
+                path === 'char_video.enabled' ||
+                (path && path.indexOf('leftStage.slots') === 0 && path.indexOf('.file') !== -1)
             ) {
                 refreshEffectAssetPreview(key);
             }
@@ -2439,6 +2624,22 @@
                 onChange(el);
             });
         });
+
+        var tabBtns = root.querySelectorAll('.left-stage-tabs .slot-tab');
+        if (tabBtns.length) {
+            var panels = root.querySelectorAll('.left-stage-slot');
+            tabBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var si = btn.getAttribute('data-slot');
+                    tabBtns.forEach(function (b) {
+                        b.classList.toggle('is-active', b.getAttribute('data-slot') === si);
+                    });
+                    panels.forEach(function (panel) {
+                        panel.hidden = panel.getAttribute('data-slot') !== si;
+                    });
+                });
+            });
+        }
 
         refreshTimeline();
         refreshEffectAssetPreview(key);
