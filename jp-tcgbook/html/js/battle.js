@@ -130,10 +130,15 @@
       const hint = bv.soloWireTest
         ? '実プレイヤーはいません。通信経路と UI のみの確認です。盤面・報酬は未実装です。'
         : 'マッチ成立後は全画面アリーナで対戦します（サーバー権威・PHASE A）。敗北時のカードコピー付与は別 PHASE。';
+      const prep =
+        bv.matchPrepLabel && String(bv.matchPrepLabel).trim()
+          ? `<p class="battle-hint battle-match-prep">${escapeHtml(String(bv.matchPrepLabel))}</p>`
+          : '';
       return (
         '<section class="battle-section battle-lobby">' +
         '<h3 class="battle-section-title">仮想対戦</h3>' +
         `<div class="battle-virtual-on"><p class="battle-lead">${escapeHtml(role)}：${peerLine}</p>` +
+        prep +
         `<p class="battle-hint">${hint}</p>` +
         '<button type="button" class="btn danger battle-leave">切断する</button></div>' +
         '</section>'
@@ -236,6 +241,9 @@
   /** @param {'cpu'|'pvp'} mode */
   function buildDbgStatusLineHtml(st, mode) {
     const opp = mode === 'pvp' ? '相手' : 'CPU';
+    if (mode === 'pvp' && st.pvp_status_plain) {
+      return escapeHtml(st.pvp_status_plain);
+    }
     const turnLabel = st.turn === 'human' ? 'あなた' : opp;
     const fp = st.first_player === 'human' ? 'あなた' : opp;
     return `先攻: ${escapeHtml(fp)} ・ いまのターン: <strong>${escapeHtml(
@@ -255,12 +263,17 @@
           ? `${opp} の勝ち`
           : '引き分け';
     const scoreLine = `スコア（盤の色＋手札）: あなた ${st.scores.human} vs ${opp} ${st.scores.cpu}`;
+    const foot =
+      mode === 'pvp'
+        ? `<p class="battle-arena-result-foot">「対戦タブに戻る」でロビーへ戻ります</p>` +
+          `<button type="button" class="btn primary battle-pvp-result-dismiss">対戦タブに戻る</button>`
+        : `<p class="battle-arena-result-foot">上部の「対戦終了」でロビーに戻れます</p>`;
     return (
       `<div class="battle-arena-result-overlay" role="alertdialog" aria-modal="true" aria-labelledby="battleArenaResultTitle">` +
       `<div class="battle-arena-result-panel">` +
       `<h2 id="battleArenaResultTitle" class="battle-arena-result-title">${escapeHtml(w)}</h2>` +
       `<p class="battle-arena-result-score">${escapeHtml(scoreLine)}</p>` +
-      `<p class="battle-arena-result-foot">上部の「対戦終了」でロビーに戻れます</p>` +
+      foot +
       `</div>` +
       `</div>`
     );
@@ -296,19 +309,21 @@
     return grid;
   }
 
-  function buildDbgHandHtml(st, handRowClass) {
+  function buildDbgHandHtml(st, handRowClass, handInteractive) {
     const handArr = Array.isArray(st.human_hand) ? st.human_hand : [];
     if (dbgSelectedHand != null && (dbgSelectedHand < 0 || dbgSelectedHand >= handArr.length)) {
       dbgSelectedHand = null;
     }
     const rowCls = handRowClass ? `battle-dbg-hand ${handRowClass}` : 'battle-dbg-hand';
+    const hi = handInteractive !== false;
     let handHtml = `<div class="${rowCls}">`;
     handArr.forEach((c, i) => {
       const sel = dbgSelectedHand === i ? ' selected' : '';
       const c2 = c || {};
       const tit = escAttr(c2.name || c2.card_id || '');
+      const dis = !hi ? ' disabled' : '';
       handHtml +=
-        `<button type="button" class="battle-dbg-hand-card${sel}" data-dbg-hand="${i}" title="${tit}">` +
+        `<button type="button" class="battle-dbg-hand-card${sel}${dis}" data-dbg-hand="${i}" title="${tit}" ${!hi ? 'disabled' : ''}>` +
         `${dbgSlotArtHtml(c2, 'battle-dbg-hand-slot')}` +
         `<span class="hn">${escapeHtml(c2.name || c2.card_id || '')}</span>` +
         `</button>`;
@@ -330,6 +345,51 @@
 
   /** 全画面対戦レイヤー用 HTML（ロビーとは別） */
   /** @param {'cpu'|'pvp'} mode */
+  /** @param {object} b AppState.battle（mode==='pvp'） */
+  function pvpToArenaSt(b) {
+    if (!b || b.mode !== 'pvp') return null;
+    const ended = !!b.ended;
+    const playing = !ended;
+    const boardObj = {};
+    const arr = Array.isArray(b.board) ? b.board : [];
+    for (let i = 1; i <= 9; i++) {
+      const cell = arr[i - 1];
+      if (cell && cell.card) {
+        boardObj[String(i)] = {
+          owner: cell.is_mine ? 'human' : 'cpu',
+          card: cell.card,
+        };
+      }
+    }
+    let scores;
+    let winner;
+    let pvpPlain;
+    if (ended && b.result) {
+      scores = {
+        human: b.result.my_score,
+        cpu: b.result.opponent_score,
+      };
+      if (b.result.outcome === 'win') winner = 'human';
+      else if (b.result.outcome === 'lose') winner = 'cpu';
+      else winner = 'draw';
+      pvpPlain = `終了: あなた ${b.result.my_score} vs 相手 ${b.result.opponent_score}`;
+    } else {
+      pvpPlain = `いまのターン: ${b.is_my_turn ? 'あなた' : '相手'} ・ 相手手札残: ${Number(b.opponent_hand_count) || 0}`;
+    }
+    return {
+      phase: ended ? 'ended' : 'playing',
+      turn: playing && b.is_my_turn ? 'human' : 'cpu',
+      first_player: 'human',
+      board: boardObj,
+      human_hand: Array.isArray(b.my_hand) ? b.my_hand : [],
+      cpu_hand_count: b.opponent_hand_count || 0,
+      scores,
+      winner,
+      log: [],
+      pvp_status_plain: pvpPlain,
+    };
+  }
+
   function renderArenaDocument(st, mode) {
     const playing = st.phase === 'playing';
     const humanTurn = playing && st.turn === 'human';
@@ -338,7 +398,8 @@
     const badge = mode === 'pvp' ? 'PVP' : 'DEBUG';
     const sub = mode === 'pvp' ? 'vs 相手 · PHASE A' : 'vs CPU · PHASE A';
     const grid = buildDbgGridHtml(st, humanTurn, 'battle-arena-grid');
-    const handRow = buildDbgHandHtml(st, 'battle-arena-hand-row');
+    const handRow = buildDbgHandHtml(st, 'battle-arena-hand-row', humanTurn);
+    const quitLabel = mode === 'pvp' ? '投了' : '対戦終了';
     const logHtml = buildDbgLogHtml(st, 'battle-arena-log-inner');
 
     return (
@@ -352,7 +413,7 @@
       `<span class="battle-arena-title">DUEL</span>` +
       `<span class="battle-arena-sub">${escapeHtml(sub)}</span>` +
       `</div>` +
-      `<button type="button" class="btn danger battle-arena-quit">対戦終了</button>` +
+      `<button type="button" class="btn danger battle-arena-quit">${escapeHtml(quitLabel)}</button>` +
       `</header>` +
       `<div class="battle-arena-main-wrap">` +
       `<div class="battle-arena-body">` +
@@ -383,10 +444,15 @@
   function bindArenaGameplay(root, mode) {
     root.querySelectorAll('[data-dbg-hand]').forEach((btn) => {
       btn.addEventListener('click', () => {
+        const raw = global.AppState.battle;
         const st =
           mode === 'pvp'
-            ? global.AppState.battlePvp && global.AppState.battlePvp.state
-            : global.AppState.battleCpu && global.AppState.battleCpu.state;
+            ? raw && raw.mode === 'pvp'
+              ? pvpToArenaSt(raw)
+              : null
+            : raw && raw.mode === 'cpu'
+              ? raw
+              : null;
         if (!st || st.phase !== 'playing' || st.turn !== 'human') return;
         const i = parseInt(btn.getAttribute('data-dbg-hand') || '-1', 10);
         dbgSelectedHand = Number.isFinite(i) ? i : null;
@@ -395,10 +461,15 @@
     });
     root.querySelectorAll('[data-dbg-cell]').forEach((btn) => {
       btn.addEventListener('click', () => {
+        const raw = global.AppState.battle;
         const st =
           mode === 'pvp'
-            ? global.AppState.battlePvp && global.AppState.battlePvp.state
-            : global.AppState.battleCpu && global.AppState.battleCpu.state;
+            ? raw && raw.mode === 'pvp'
+              ? pvpToArenaSt(raw)
+              : null
+            : raw && raw.mode === 'cpu'
+              ? raw
+              : null;
         if (!st || st.phase !== 'playing' || st.turn !== 'human') return;
         if (dbgSelectedHand == null) {
           if (typeof global.jpTcgbookShowError === 'function') {
@@ -409,15 +480,20 @@
         const cell = parseInt(btn.getAttribute('data-dbg-cell') || '0', 10);
         if (!Number.isFinite(cell) || cell < 1 || cell > 9) return;
         if (mode === 'pvp') {
-          const sid = st.pvp_session_id;
-          const seq = st.turn_seq;
-          if (sid == null || seq == null) {
+          const b = global.AppState.battle;
+          if (!b || b.mode !== 'pvp' || b.ended) return;
+          if (b.session_id == null || b.turn_no == null) {
             if (typeof global.jpTcgbookShowError === 'function') {
               global.jpTcgbookShowError('対戦状態が不正です（再読込してください）');
             }
             return;
           }
-          api.battlePvpPlace(cell, dbgSelectedHand, seq, sid);
+          api.battlePvpPlace({
+            session_id: b.session_id,
+            turn_no: b.turn_no,
+            cell_index: cell,
+            hand_index: dbgSelectedHand,
+          });
         } else {
           api.battleDebugPlace(cell, dbgSelectedHand);
         }
@@ -429,7 +505,7 @@
         const fn = global.jpTcgbookConfirmIfVirtualBattleAsync;
         const msg =
           mode === 'pvp'
-            ? '対戦を終了しますか？\n\n相手側のセッションも終了します。'
+            ? '投了するとこの対局を負けとして終了し、相手のセッションも終了します。よろしいですか？'
             : 'デバッグ対戦を終了しますか？';
         if (typeof fn === 'function' && !(await fn(msg))) return;
         if (mode === 'pvp') {
@@ -439,15 +515,23 @@
         }
       })();
     });
+    root.querySelector('.battle-pvp-result-dismiss')?.addEventListener('click', () => {
+      global.AppState.battle = null;
+      const bv = global.AppState.battleVirtual || {};
+      bv.connectedPeerId = null;
+      bv.isCaller = null;
+      bv.matchPrepLabel = '';
+      Battle.render();
+    });
     applyDbgSlotMaxHighlights(root);
   }
 
   /** @returns {{ st: object, mode: 'cpu'|'pvp' } | null} */
   function getArenaView() {
-    const bp = global.AppState.battlePvp || {};
-    if (bp.active && bp.state) return { st: bp.state, mode: 'pvp' };
-    const bc = global.AppState.battleCpu || {};
-    if (bc.active && bc.state) return { st: bc.state, mode: 'cpu' };
+    const b = global.AppState.battle;
+    if (!b) return null;
+    if (b.mode === 'cpu') return { st: b, mode: 'cpu' };
+    if (b.mode === 'pvp') return { st: pvpToArenaSt(b), mode: 'pvp' };
     return null;
   }
 
@@ -495,8 +579,8 @@
 
     root.querySelector('#battleDbgLobbyToggle')?.addEventListener('change', (e) => {
       const t = e.target;
-      if (!global.AppState.battleCpu) global.AppState.battleCpu = {};
-      global.AppState.battleCpu.debugLobbyOpen = !!(t && t.checked);
+      global.AppState.battleCpuLobby = global.AppState.battleCpuLobby || {};
+      global.AppState.battleCpuLobby.debugLobbyOpen = !!(t && t.checked);
       Battle.render();
     });
     root.querySelector('.battle-dbg-lookup-btn')?.addEventListener('click', () => {
@@ -595,7 +679,7 @@
       let html = '';
       html += renderReadinessSection(activeId, detail, false);
       if (allowDebugBattleUi() && bv.connectedPeerId == null && !bv.soloWireTest) {
-        html += renderDebugLobbySection(bc);
+        html += renderDebugLobbySection(global.AppState.battleCpuLobby || {});
       }
       html += renderLobbySection(bv);
       html +=

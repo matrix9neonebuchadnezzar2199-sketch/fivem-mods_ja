@@ -59,19 +59,21 @@
     battleDebugLeave() {
       N.send('battleDebugLeave', {});
     },
-    battlePvpPlace(cellIndex, handIndex, turnSeq, pvpSessionId) {
+    battlePvpPlace(payload) {
+      const p = payload && typeof payload === 'object' ? payload : {};
       N.send('battlePvpPlace', {
-        cell_index: cellIndex,
-        hand_index: handIndex,
-        turn_seq: turnSeq,
-        pvp_session_id: pvpSessionId,
+        session_id: p.session_id,
+        turn_no: p.turn_no,
+        cell_index: p.cell_index,
+        hand_index: p.hand_index,
       });
     },
     battlePvpLeave() {
       N.send('battlePvpLeave', {});
     },
-    battlePvpRequestState() {
-      N.send('battlePvpRequestState', {});
+    battlePvpRequestState(payload) {
+      const p = payload && typeof payload === 'object' ? payload : {};
+      N.send('battlePvpRequestState', { session_id: p.session_id });
     },
   };
 })(window);

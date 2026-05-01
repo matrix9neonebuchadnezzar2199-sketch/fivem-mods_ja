@@ -27,18 +27,15 @@
       /** サーバ battleSoloVirtualWireTest: 2人目クライアントなしの接続デモ */
       soloWireTest: false,
       soloPeerLabel: '',
+      /** PvP 開始直後〜battlePvpStarted までの短い移行表示（任意） */
+      matchPrepLabel: '',
     },
-    /** デバッグ CPU 対戦（Config.DebugCommands・サーバー battle_debug.lua） */
-    battleCpu: {
-      active: false,
-      state: null,
+    /** アリーナ表示用。mode:'cpu' は battle_debug、mode:'pvp' は battle_pvp */
+    battle: null,
+    /** CPU 戦ロビー UI のみ（対局中は battle に状態がある） */
+    battleCpuLobby: {
       debugLobbyOpen: false,
       lookupLabel: '',
-    },
-    /** 本番 2 人対戦（battle_pvp.lua・仮想ロビー成立後） */
-    battlePvp: {
-      active: false,
-      state: null,
     },
   };
 
@@ -50,13 +47,13 @@
   let tcgConfirmAbort = null;
 
   function isCpuDuelActive() {
-    const bc = global.AppState.battleCpu;
-    return !!(bc && bc.active && bc.state);
+    const b = global.AppState.battle;
+    return !!(b && b.mode === 'cpu');
   }
 
   function isPvpDuelActive() {
-    const bp = global.AppState.battlePvp;
-    return !!(bp && bp.active && bp.state);
+    const b = global.AppState.battle;
+    return !!(b && b.mode === 'pvp');
   }
 
   /** CPU / PvP いずれかのアリーナ表示中（タブ移動・ESC の判定） */
@@ -337,9 +334,8 @@
   });
 
   NUI.on('virtualBattleMatched', (p) => {
+    global.AppState.battleVirtual.matchPrepLabel = '';
     if (p && p.is_cpu === true) {
-      global.AppState.battleCpu = global.AppState.battleCpu || {};
-      global.AppState.battleCpu.active = true;
       global.AppState.battleVirtual.connectedPeerId = null;
       global.AppState.battleVirtual.isCaller = null;
       global.AppState.battleVirtual.waiting = false;
@@ -361,6 +357,9 @@
       global.AppState.battleVirtual.isCaller = null;
     }
     global.AppState.battleVirtual.waiting = false;
+    if (p && p.is_pvp === true && global.AppState.battleVirtual.connectedPeerId != null) {
+      global.AppState.battleVirtual.matchPrepLabel = '対戦準備中…';
+    }
     renderCurrentTab();
   });
 
@@ -370,6 +369,7 @@
     global.AppState.battleVirtual.waiting = false;
     global.AppState.battleVirtual.soloWireTest = false;
     global.AppState.battleVirtual.soloPeerLabel = '';
+    global.AppState.battleVirtual.matchPrepLabel = '';
     renderCurrentTab();
   });
 
@@ -379,44 +379,119 @@
   });
 
   NUI.on('battleDebugState', (p) => {
-    global.AppState.battleCpu = global.AppState.battleCpu || {};
-    global.AppState.battleCpu.active = true;
-    global.AppState.battleCpu.state = p || null;
+    global.AppState.battle = { mode: 'cpu', ...(p || {}) };
     renderCurrentTab();
   });
 
   NUI.on('battleDebugLookupAck', (p) => {
-    global.AppState.battleCpu = global.AppState.battleCpu || {};
+    global.AppState.battleCpuLobby = global.AppState.battleCpuLobby || {};
     if (p && p.ok === true) {
-      global.AppState.battleCpu.lookupLabel = p.display_name || '応答OK';
+      global.AppState.battleCpuLobby.lookupLabel = p.display_name || '応答OK';
     } else {
-      global.AppState.battleCpu.lookupLabel = '';
+      global.AppState.battleCpuLobby.lookupLabel = '';
       showError(p && p.error ? p.error : '検索に失敗しました');
     }
     renderCurrentTab();
   });
 
   NUI.on('battleDebugEnded', () => {
-    global.AppState.battleCpu = global.AppState.battleCpu || {};
-    global.AppState.battleCpu.active = false;
-    global.AppState.battleCpu.state = null;
+    const b = global.AppState.battle;
+    if (b && b.mode === 'cpu') {
+      global.AppState.battle = null;
+    }
+    renderCurrentTab();
+  });
+
+  const PVP_ERROR_REASON_JA = {
+    session_not_found: '対戦セッションが見つかりません',
+    not_in_session: 'この対戦の参加者ではありません',
+    not_your_turn: '自分のターンではありません',
+    turn_no_mismatch: '手番情報が古いです（画面を更新してください）',
+    invalid_cell: 'マス指定が不正です',
+    cell_occupied: 'そのマスは既に埋まっています',
+    invalid_hand_index: '手札の指定が不正です',
+    hand_card_missing: 'その手札はありません',
+  };
+
+  NUI.on('battlePvpStarted', (p) => {
+    global.AppState.battleVirtual.matchPrepLabel = '';
+    const x = p || {};
+    global.AppState.battle = {
+      mode: 'pvp',
+      session_id: x.session_id,
+      turn_no: x.turn_no,
+      turn_server_id: x.turn_server_id,
+      is_my_turn: !!x.is_my_turn,
+      board: Array.isArray(x.board) ? x.board : [],
+      my_hand: Array.isArray(x.my_hand) ? x.my_hand : [],
+      opponent_hand_count: x.opponent_hand_count != null ? Number(x.opponent_hand_count) : 0,
+      opponent_server_id: x.opponent_server_id,
+      last_action: null,
+      ended: false,
+      result: null,
+    };
     renderCurrentTab();
   });
 
   NUI.on('battlePvpState', (p) => {
-    global.AppState.battlePvp = global.AppState.battlePvp || {};
-    global.AppState.battlePvp.active = true;
-    global.AppState.battlePvp.state = p || null;
+    global.AppState.battleVirtual.matchPrepLabel = '';
+    const x = p || {};
+    const cur = global.AppState.battle;
+    if (!cur || cur.mode !== 'pvp') {
+      global.AppState.battle = {
+        mode: 'pvp',
+        session_id: x.session_id,
+        turn_no: x.turn_no,
+        turn_server_id: x.turn_server_id,
+        is_my_turn: !!x.is_my_turn,
+        board: Array.isArray(x.board) ? x.board : [],
+        my_hand: Array.isArray(x.my_hand) ? x.my_hand : [],
+        opponent_hand_count: x.opponent_hand_count != null ? Number(x.opponent_hand_count) : 0,
+        opponent_server_id: x.opponent_server_id,
+        last_action: x.last_action || null,
+        ended: false,
+        result: null,
+      };
+    } else {
+      Object.assign(cur, {
+        session_id: x.session_id,
+        turn_no: x.turn_no,
+        turn_server_id: x.turn_server_id,
+        is_my_turn: !!x.is_my_turn,
+        board: Array.isArray(x.board) ? x.board : cur.board,
+        my_hand: Array.isArray(x.my_hand) ? x.my_hand : cur.my_hand,
+        opponent_hand_count: x.opponent_hand_count != null ? Number(x.opponent_hand_count) : cur.opponent_hand_count,
+        opponent_server_id: x.opponent_server_id != null ? x.opponent_server_id : cur.opponent_server_id,
+        last_action: x.last_action != null ? x.last_action : cur.last_action,
+      });
+    }
     renderCurrentTab();
   });
 
-  NUI.on('battlePvpEnded', () => {
-    global.AppState.battlePvp = global.AppState.battlePvp || {};
-    global.AppState.battlePvp.active = false;
-    global.AppState.battlePvp.state = null;
+  NUI.on('battlePvpEnded', (p) => {
+    const cur = global.AppState.battle;
+    const payload = p || {};
+    if (cur && cur.mode === 'pvp') {
+      cur.ended = true;
+      cur.result = payload;
+      if (Array.isArray(payload.final_board)) {
+        cur.board = payload.final_board;
+      }
+      cur.is_my_turn = false;
+      renderCurrentTab();
+      return;
+    }
+    global.AppState.battle = null;
     global.AppState.battleVirtual.connectedPeerId = null;
     global.AppState.battleVirtual.isCaller = null;
     global.AppState.battleVirtual.waiting = false;
+    global.AppState.battleVirtual.matchPrepLabel = '';
+    renderCurrentTab();
+  });
+
+  NUI.on('battlePvpError', (p) => {
+    const r = p && p.reason;
+    showError(PVP_ERROR_REASON_JA[r] || `対戦エラー（${r || 'unknown'}）`);
     renderCurrentTab();
   });
 
@@ -443,25 +518,16 @@
     };
     global.__tcgWireLog = !!(d.ui && d.ui.wire_log);
 
-    const prevDbg = global.AppState.battleCpu || {};
-    global.AppState.battleCpu = {
-      active: false,
-      state: null,
-      debugLobbyOpen: !!prevDbg.debugLobbyOpen,
-      lookupLabel: typeof prevDbg.lookupLabel === 'string' ? prevDbg.lookupLabel : '',
+    const prevLobby = global.AppState.battleCpuLobby || {};
+    global.AppState.battleCpuLobby = {
+      debugLobbyOpen: !!prevLobby.debugLobbyOpen,
+      lookupLabel: typeof prevLobby.lookupLabel === 'string' ? prevLobby.lookupLabel : '',
     };
+    global.AppState.battle = null;
     if (d.battleCpuSession && typeof d.battleCpuSession === 'object') {
-      global.AppState.battleCpu.active = true;
-      global.AppState.battleCpu.state = d.battleCpuSession;
-    }
-
-    global.AppState.battlePvp = {
-      active: false,
-      state: null,
-    };
-    if (d.battlePvpSession && typeof d.battlePvpSession === 'object') {
-      global.AppState.battlePvp.active = true;
-      global.AppState.battlePvp.state = d.battlePvpSession;
+      global.AppState.battle = { mode: 'cpu', ...d.battleCpuSession };
+    } else if (d.battlePvpSession && typeof d.battlePvpSession === 'object') {
+      global.AppState.battle = { mode: 'pvp', ended: false, result: null, ...d.battlePvpSession };
     }
 
     global.AppState.battleVirtual = {
@@ -471,6 +537,7 @@
       lastError: null,
       soloWireTest: false,
       soloPeerLabel: '',
+      matchPrepLabel: '',
     };
     if (d.battleSession && d.battleSession.peer_server_id != null) {
       global.AppState.battleVirtual.connectedPeerId = Number(d.battleSession.peer_server_id);

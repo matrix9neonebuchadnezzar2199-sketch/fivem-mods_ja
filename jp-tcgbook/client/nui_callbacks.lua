@@ -127,10 +127,11 @@ end)
 RegisterNUICallback('battlePvpPlace', function(data, cb)
     if TcgBattleWireLogEnabled() then
         local d = data or {}
-        print(('[jp-tcgbook][wire] NUI->server battlePvpPlace cell=%s hand=%s seq=%s'):format(
+        print(('[jp-tcgbook][wire] NUI->server battlePvpPlace session=%s turn_no=%s cell=%s hand=%s'):format(
+            tostring(d.session_id),
+            tostring(d.turn_no),
             tostring(d.cell_index),
-            tostring(d.hand_index),
-            tostring(d.turn_seq)))
+            tostring(d.hand_index)))
     end
     TriggerServerEvent('jp-tcgbook:server:battlePvpPlace', data or {})
     cb({ ok = true })
@@ -144,11 +145,12 @@ RegisterNUICallback('battlePvpLeave', function(_, cb)
     cb({ ok = true })
 end)
 
-RegisterNUICallback('battlePvpRequestState', function(_, cb)
+RegisterNUICallback('battlePvpRequestState', function(data, cb)
     if TcgBattleWireLogEnabled() then
-        print('[jp-tcgbook][wire] NUI->server battlePvpRequestState')
+        local d = data or {}
+        print(('[jp-tcgbook][wire] NUI->server battlePvpRequestState session=%s'):format(tostring(d.session_id)))
     end
-    TriggerServerEvent('jp-tcgbook:server:battlePvpRequestState')
+    TriggerServerEvent('jp-tcgbook:server:battlePvpRequestState', data or {})
     cb({ ok = true })
 end)
 

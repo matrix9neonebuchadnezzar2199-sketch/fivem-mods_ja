@@ -46,8 +46,10 @@
         a === 'battleDebugState' ||
         a === 'battleDebugLookupAck' ||
         a === 'battleDebugEnded' ||
+        a === 'battlePvpStarted' ||
         a === 'battlePvpState' ||
-        a === 'battlePvpEnded'
+        a === 'battlePvpEnded' ||
+        a === 'battlePvpError'
       ) {
         console.log('[jp-tcgbook][wire] NUI message <- ' + a + ' ' + tcgWireJson(payload));
       }

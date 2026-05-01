@@ -19,6 +19,8 @@ local function sendBattleNui(action, msg)
                     tostring(msg.peer_server_id),
                     tostring(msg.is_cpu),
                     tostring(msg.solo_wire_test))
+            elseif msg.session_id ~= nil and msg.turn_no ~= nil then
+                hint = (' session=%s turn_no=%s'):format(tostring(msg.session_id), tostring(msg.turn_no))
             elseif msg.mode ~= nil or msg.pvp_session_id ~= nil then
                 hint = (' mode=%s seq=%s'):format(tostring(msg.mode), tostring(msg.turn_seq))
             elseif msg.reason ~= nil then
@@ -102,6 +104,14 @@ end)
 
 RegisterNetEvent('jp-tcgbook:client:battleDebugEnded', function(msg)
     sendBattleNui('battleDebugEnded', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battlePvpStarted', function(msg)
+    sendBattleNui('battlePvpStarted', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battlePvpError', function(msg)
+    sendBattleNui('battlePvpError', msg)
 end)
 
 RegisterNetEvent('jp-tcgbook:client:battlePvpState', function(msg)

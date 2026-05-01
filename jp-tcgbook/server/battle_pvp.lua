@@ -1,11 +1,10 @@
---- PHASE 2b 本番 2 人対戦（雛形）
---- セッション生成・5 枚抽選・先攻・初期通知まで。着手検証・終了処理は後続コミット。
+--- PHASE 2b 本番 2 人対戦（サーバー権威・PHASE A）
 
 BattlePvp = BattlePvp or {}
 
 --- @type table<string, table>
 local PvpBattles = {}
---- @type table<number, string>  player src -> session_id
+--- @type table<number, string>
 local srcToSessionId = {}
 
 --- @param src number
@@ -16,6 +15,33 @@ local function pushLobbyErr(src, payload)
             src, tostring(payload and payload.error)))
     end
     TriggerClientEvent('jp-tcgbook:client:battleLobbyError', src, payload)
+end
+
+--- @param src number
+--- @param reason string
+local function pushPvpError(src, reason)
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] server->client battlePvpError src=%d reason=%s'):format(src, tostring(reason)))
+    end
+    TriggerClientEvent('jp-tcgbook:client:battlePvpError', src, { reason = reason })
+end
+
+--- @param card table
+--- @return table
+local function copyCardForClient(card)
+    if not card then
+        return {}
+    end
+    return {
+        card_id = card.card_id,
+        name = card.name,
+        rank = card.rank,
+        type = card.type,
+        stat_top = tonumber(card.stat_top) or 0,
+        stat_right = tonumber(card.stat_right) or 0,
+        stat_bottom = tonumber(card.stat_bottom) or 0,
+        stat_left = tonumber(card.stat_left) or 0,
+    }
 end
 
 --- @param card_id string
@@ -53,8 +79,8 @@ local function shuffleInPlace(t)
 end
 
 --- @param uid string
---- @return table|nil deckPayload
---- @return string|nil err
+--- @return table|nil
+--- @return string|nil
 local function loadActiveDeckFor(uid)
     local decks = Deck.GetAllDecks(uid)
     if not decks.success then
@@ -78,8 +104,8 @@ local function loadActiveDeckFor(uid)
 end
 
 --- @param deckPayload table
---- @return table[]|nil hand
---- @return string|nil err
+--- @return table[]|nil
+--- @return string|nil
 local function buildHandFiveFromDeck(deckPayload)
     if not deckPayload or not deckPayload.slots then
         return nil, 'デッキがありません'
@@ -107,18 +133,113 @@ end
 
 --- @param session table
 --- @param viewer_src number
+--- @return table[]  インデックス 1..9（JSON 配列化しやすいよう連続テーブル）
+local function buildBoardArrayForViewer(session, viewer_src)
+    local arr = {}
+    for i = 1, 9 do
+        local cell = session.board[i]
+        if not cell then
+            arr[i] = nil
+        else
+            arr[i] = {
+                card = copyCardForClient(cell.card),
+                owner_server_id = cell.owner,
+                is_mine = cell.owner == viewer_src,
+            }
+        end
+    end
+    return arr
+end
+
+--- @param session table
+--- @param viewer_src number
+--- @param extra table|nil
 --- @return table
-local function buildStartedPayload(session, viewer_src)
+local function buildStatePayload(session, viewer_src, extra)
     local opp = viewer_src == session.p1_src and session.p2_src or session.p1_src
+    local payload = {
+        session_id = session.session_id,
+        turn_no = session.turn_no,
+        turn_server_id = session.turn,
+        is_my_turn = session.turn == viewer_src,
+        board = buildBoardArrayForViewer(session, viewer_src),
+        my_hand = {},
+        opponent_hand_count = #(session.hands[opp] or {}),
+        opponent_server_id = opp,
+    }
+    for _, c in ipairs(session.hands[viewer_src] or {}) do
+        payload.my_hand[#payload.my_hand + 1] = copyCardForClient(c)
+    end
+    if extra and extra.last_action then
+        local la = extra.last_action
+        payload.last_action = {
+            src = la.src,
+            cell_index = la.cell_index,
+            card = copyCardForClient(la.card),
+            flipped_cells = la.flipped_cells or {},
+            is_mine = la.src == viewer_src,
+        }
+    end
+    return payload
+end
+
+--- @param session table
+--- @param viewer_src number
+--- @param reason string
+--- @return table
+local function buildNormalEndedPayload(session, viewer_src, reason)
+    local p1, p2 = session.p1_src, session.p2_src
+    local s1 = TcgBattleRule.CalcFinalScore(session.board, p1, #(session.hands[p1] or {}))
+    local s2 = TcgBattleRule.CalcFinalScore(session.board, p2, #(session.hands[p2] or {}))
+    local my_s = viewer_src == p1 and s1 or s2
+    local op_s = viewer_src == p1 and s2 or s1
+    local outcome
+    if my_s > op_s then
+        outcome = 'win'
+    elseif op_s > my_s then
+        outcome = 'lose'
+    else
+        outcome = 'draw'
+    end
     return {
         session_id = session.session_id,
-        my_hand = session.hands[viewer_src] or {},
-        opponent_hand_count = 5,
-        opponent_server_id = opp,
-        board = TcgBattleRule.CreateEmptyBoard(),
-        turn_server_id = session.turn,
-        turn_no = session.turn_no,
-        is_my_turn = viewer_src == session.first_src,
+        reason = reason,
+        my_score = my_s,
+        opponent_score = op_s,
+        outcome = outcome,
+        final_board = buildBoardArrayForViewer(session, viewer_src),
+        my_hand_remaining = #(session.hands[viewer_src] or {}),
+    }
+end
+
+--- @param session table
+--- @param viewer_src number
+--- @param resigned_src number 離脱したプレイヤー
+--- @param reason string
+--- @return table
+local function buildAbortEndedPayload(session, viewer_src, resigned_src, reason)
+    local p1, p2 = session.p1_src, session.p2_src
+    local peer = resigned_src == p1 and p2 or p1
+    local s1 = TcgBattleRule.CalcFinalScore(session.board, p1, #(session.hands[p1] or {}))
+    local s2 = TcgBattleRule.CalcFinalScore(session.board, p2, #(session.hands[p2] or {}))
+    local my_s = viewer_src == p1 and s1 or s2
+    local op_s = viewer_src == p1 and s2 or s1
+    local outcome
+    if viewer_src == resigned_src then
+        outcome = 'lose'
+    elseif viewer_src == peer then
+        outcome = 'win'
+    else
+        outcome = 'draw'
+    end
+    return {
+        session_id = session.session_id,
+        reason = reason,
+        my_score = my_s,
+        opponent_score = op_s,
+        outcome = outcome,
+        final_board = buildBoardArrayForViewer(session, viewer_src),
+        my_hand_remaining = #(session.hands[viewer_src] or {}),
     }
 end
 
@@ -133,9 +254,58 @@ local function destroySession(session_id)
     srcToSessionId[s.p2_src] = nil
 end
 
---- @param p1_src number ロビーから渡す第1引数（例: 待受側 tid）
---- @param p2_src number 第2引数（例: 呼び出し側 src）
---- @return boolean ok
+--- @param session_id string
+--- @param extra table|nil
+--- @param only_src number|nil
+function BattlePvp.BroadcastState(session_id, extra, only_src)
+    local session = PvpBattles[session_id]
+    if not session then
+        return
+    end
+    local targets = { session.p1_src, session.p2_src }
+    if only_src then
+        targets = { only_src }
+    end
+    for _, viewer in ipairs(targets) do
+        if GetPlayerName(viewer) ~= nil then
+            local payload = buildStatePayload(session, viewer, extra)
+            if TcgBattleWireLogEnabled() then
+                print(('[jp-tcgbook][wire] server->client battlePvpState src=%d session=%s turn_no=%s'):format(
+                    viewer, session_id, tostring(session.turn_no)))
+            end
+            TriggerClientEvent('jp-tcgbook:client:battlePvpState', viewer, payload)
+        end
+    end
+end
+
+--- @param session_id string
+--- @param reason string
+function BattlePvp.Finish(session_id, reason)
+    local session = PvpBattles[session_id]
+    if not session then
+        return
+    end
+    local p1, p2 = session.p1_src, session.p2_src
+    local pay1 = buildNormalEndedPayload(session, p1, reason)
+    local pay2 = buildNormalEndedPayload(session, p2, reason)
+    destroySession(session_id)
+    if BattleLobbyClearPeerPairSilent then
+        BattleLobbyClearPeerPairSilent(p1, p2)
+    end
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] BattlePvp.Finish session=%s reason=%s'):format(session_id, reason))
+    end
+    if GetPlayerName(p1) ~= nil then
+        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
+    end
+    if GetPlayerName(p2) ~= nil then
+        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
+    end
+end
+
+--- @param p1_src number
+--- @param p2_src number
+--- @return boolean
 function BattlePvp.Start(p1_src, p2_src)
     if p1_src == p2_src then
         local msg = '同一プレイヤーです'
@@ -189,12 +359,18 @@ function BattlePvp.Start(p1_src, p2_src)
         return false
     end
 
+    local oldSid1 = srcToSessionId[p1_src]
+    local oldSid2 = srcToSessionId[p2_src]
+    if oldSid1 then
+        destroySession(oldSid1)
+    end
+    if oldSid2 and oldSid2 ~= oldSid1 then
+        destroySession(oldSid2)
+    end
+
     math.randomseed(GetGameTimer() + p1_src * 31 + p2_src * 997)
     local first_src = math.random(2) == 1 and p1_src or p2_src
     local session_id = ('pvp_%d_%d_%d'):format(os.time(), p1_src, p2_src)
-
-    --- 同一 ID の残留があれば破棄（通常は無い）
-    destroySession(session_id)
 
     local session = {
         session_id = session_id,
@@ -215,24 +391,38 @@ function BattlePvp.Start(p1_src, p2_src)
     srcToSessionId[p1_src] = session_id
     srcToSessionId[p2_src] = session_id
 
-    local pay1 = buildStartedPayload(session, p1_src)
-    local pay2 = buildStartedPayload(session, p2_src)
+    local function startedPay(v)
+        local opp = v == session.p1_src and session.p2_src or session.p1_src
+        local pay = {
+            session_id = session.session_id,
+            my_hand = {},
+            opponent_hand_count = #(session.hands[opp] or {}),
+            opponent_server_id = opp,
+            board = buildBoardArrayForViewer(session, v),
+            turn_server_id = session.turn,
+            turn_no = session.turn_no,
+            is_my_turn = v == session.first_src,
+        }
+        for _, c in ipairs(session.hands[v] or {}) do
+            pay.my_hand[#pay.my_hand + 1] = copyCardForClient(c)
+        end
+        return pay
+    end
 
     if TcgBattleWireLogEnabled() then
         print(('[jp-tcgbook][wire] BattlePvp.Start session=%s first_src=%d'):format(session_id, first_src))
-        print(('[jp-tcgbook][wire] server->client battlePvpStarted src=%d session=%s'):format(
-            p1_src, session_id))
-        print(('[jp-tcgbook][wire] server->client battlePvpStarted src=%d session=%s'):format(
-            p2_src, session_id))
+        print(('[jp-tcgbook][wire] server->client battlePvpStarted src=%d session=%s'):format(p1_src, session_id))
+        print(('[jp-tcgbook][wire] server->client battlePvpStarted src=%d session=%s'):format(p2_src, session_id))
     end
-    TriggerClientEvent('jp-tcgbook:client:battlePvpStarted', p1_src, pay1)
-    TriggerClientEvent('jp-tcgbook:client:battlePvpStarted', p2_src, pay2)
+    TriggerClientEvent('jp-tcgbook:client:battlePvpStarted', p1_src, startedPay(p1_src))
+    TriggerClientEvent('jp-tcgbook:client:battlePvpStarted', p2_src, startedPay(p2_src))
 
+    BattlePvp.BroadcastState(session_id, nil, nil)
     return true
 end
 
 --- @param src number
---- @param ended_reason string|nil  相手へ渡す battlePvpEnded.reason（既定 peer_left）
+--- @param ended_reason string|nil
 function BattlePvp.OnPlayerLeave(src, ended_reason)
     local sid = srcToSessionId[src]
     if not sid then
@@ -244,9 +434,11 @@ function BattlePvp.OnPlayerLeave(src, ended_reason)
         return
     end
     local p1, p2 = session.p1_src, session.p2_src
-    local peer = src == p1 and p2 or p1
     local session_id = session.session_id
     local reason = ended_reason or 'peer_left'
+
+    local pay1 = buildAbortEndedPayload(session, p1, src, reason)
+    local pay2 = buildAbortEndedPayload(session, p2, src, reason)
 
     destroySession(session_id)
 
@@ -254,15 +446,14 @@ function BattlePvp.OnPlayerLeave(src, ended_reason)
         BattleLobbyClearPeerPairSilent(p1, p2)
     end
 
-    if GetPlayerName(peer) ~= nil then
-        if TcgBattleWireLogEnabled() then
-            print(('[jp-tcgbook][wire] server->client battlePvpEnded src=%d session=%s reason=%s'):format(
-                peer, session_id, reason))
-        end
-        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', peer, {
-            session_id = session_id,
-            reason = reason,
-        })
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] BattlePvp.OnPlayerLeave session=%s reason=%s'):format(session_id, reason))
+    end
+    if GetPlayerName(p1) ~= nil then
+        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
+    end
+    if GetPlayerName(p2) ~= nil then
+        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
     end
 end
 
@@ -276,16 +467,130 @@ function BattlePvp.GetSessionBySrc(src)
     return PvpBattles[sid]
 end
 
---- battle_debug / battle_lobby 互換
---- @param src number
---- @return boolean
 function BattlePvpInGame(src)
     return BattlePvp.GetSessionBySrc(src) ~= nil
 end
 
---- openBook 復元は着手検証コミットまで未対応
---- @param _src number
---- @return nil
 function BattlePvpGetClientState(_src)
     return nil
 end
+
+RegisterNetEvent('jp-tcgbook:server:battlePvpPlace', function(payload)
+    local src = source
+    payload = payload or {}
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] server recv battlePvpPlace src=%d'):format(src))
+    end
+    if not getUidOrReject(src) then
+        return
+    end
+
+    local session_id = payload.session_id
+    if type(session_id) ~= 'string' or session_id == '' then
+        pushPvpError(src, 'session_not_found')
+        return
+    end
+
+    local session = PvpBattles[session_id]
+    if not session then
+        pushPvpError(src, 'session_not_found')
+        return
+    end
+
+    if session.p1_src ~= src and session.p2_src ~= src then
+        pushPvpError(src, 'not_in_session')
+        return
+    end
+
+    if session.turn ~= src then
+        pushPvpError(src, 'not_your_turn')
+        return
+    end
+
+    local turn_no = tonumber(payload.turn_no)
+    if not turn_no or turn_no ~= session.turn_no then
+        pushPvpError(src, 'turn_no_mismatch')
+        return
+    end
+
+    local cell_index = tonumber(payload.cell_index)
+    if type(cell_index) ~= 'number' or cell_index < 1 or cell_index > 9 or math.floor(cell_index) ~= cell_index then
+        pushPvpError(src, 'invalid_cell')
+        return
+    end
+
+    if session.board[cell_index] ~= nil then
+        pushPvpError(src, 'cell_occupied')
+        return
+    end
+
+    local hand_index = tonumber(payload.hand_index)
+    if type(hand_index) ~= 'number' or hand_index < 0 or hand_index > 4 or math.floor(hand_index) ~= hand_index then
+        pushPvpError(src, 'invalid_hand_index')
+        return
+    end
+
+    local myHand = session.hands[src]
+    local cardSlot = myHand and myHand[hand_index + 1]
+    if cardSlot == nil then
+        pushPvpError(src, 'hand_card_missing')
+        return
+    end
+
+    local card = table.remove(myHand, hand_index + 1)
+    local result = TcgBattleRule.PlaceAndResolve(session.board, cell_index, card, src)
+
+    session.turn_no = session.turn_no + 1
+    session.turn = src == session.p1_src and session.p2_src or session.p1_src
+
+    if TcgBattleRule.IsBoardFull(session.board) then
+        BattlePvp.Finish(session_id, 'normal')
+        return
+    end
+
+    BattlePvp.BroadcastState(session_id, {
+        last_action = {
+            src = src,
+            cell_index = cell_index,
+            card = card,
+            flipped_cells = result.flipped_cells or {},
+        },
+    })
+end)
+
+RegisterNetEvent('jp-tcgbook:server:battlePvpLeave', function()
+    local src = source
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] server recv battlePvpLeave src=%d'):format(src))
+    end
+    if not getUidOrReject(src) then
+        return
+    end
+    BattlePvp.OnPlayerLeave(src, 'voluntary_leave')
+end)
+
+RegisterNetEvent('jp-tcgbook:server:battlePvpRequestState', function(payload)
+    local src = source
+    payload = payload or {}
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] server recv battlePvpRequestState src=%d'):format(src))
+    end
+    if not getUidOrReject(src) then
+        return
+    end
+    local session_id = payload.session_id
+    if type(session_id) ~= 'string' or session_id == '' then
+        pushPvpError(src, 'session_not_found')
+        return
+    end
+    local session = PvpBattles[session_id]
+    if not session then
+        pushPvpError(src, 'session_not_found')
+        return
+    end
+    if session.p1_src ~= src and session.p2_src ~= src then
+        pushPvpError(src, 'not_in_session')
+        return
+    end
+    BattlePvp.BroadcastState(session_id, nil, src)
+end)

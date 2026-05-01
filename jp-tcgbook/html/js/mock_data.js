@@ -374,6 +374,187 @@
     global.postMessage({ action: 'battleDebugState', payload: mockDbgBuildClientPayload(mockDbgCpuState) }, '*');
   }
 
+  /** ブラウザ単体: 擬似 PvP（相手は簡易 AI・101 が自分固定） */
+  let mockPvpSession = null;
+
+  function mockPvpApplyCaptures(board, idx, owner, card) {
+    const [r, c] = mockDbgIdxToRc(idx);
+    const checks = [
+      { nr: r - 1, nc: c, my: Number(card.stat_top), oppKey: 'stat_bottom' },
+      { nr: r + 1, nc: c, my: Number(card.stat_bottom), oppKey: 'stat_top' },
+      { nr: r, nc: c - 1, my: Number(card.stat_left), oppKey: 'stat_right' },
+      { nr: r, nc: c + 1, my: Number(card.stat_right), oppKey: 'stat_left' },
+    ];
+    for (const ch of checks) {
+      if (ch.nr < 0 || ch.nr > 2 || ch.nc < 0 || ch.nc > 2) continue;
+      const ni = mockDbgRcToIdx(ch.nr, ch.nc);
+      const cell = board[ni];
+      if (cell && cell.owner !== owner) {
+        const ostat = Number(cell.card[ch.oppKey]) || 0;
+        if (ch.my > ostat) cell.owner = owner;
+      }
+    }
+  }
+
+  function mockPvpBoardFull(s) {
+    for (let i = 1; i <= 9; i++) {
+      if (!s.board[i]) return false;
+    }
+    return true;
+  }
+
+  function mockPvpScoreTotal(s, pid) {
+    let n = 0;
+    for (let i = 1; i <= 9; i++) {
+      const c = s.board[i];
+      if (c && c.owner === pid) n++;
+    }
+    return n + (s.hands[pid] || []).length;
+  }
+
+  function mockPvpBuildViewerPayload(viewer) {
+    const s = mockPvpSession;
+    const opp = viewer === s.me ? s.opp : s.me;
+    const boardArr = [];
+    for (let i = 1; i <= 9; i++) {
+      const cell = s.board[i];
+      if (!cell) boardArr.push(null);
+      else {
+        boardArr.push({
+          card: { ...cell.card },
+          owner_server_id: cell.owner,
+          is_mine: cell.owner === viewer,
+        });
+      }
+    }
+    return {
+      session_id: s.session_id,
+      turn_no: s.turn_no,
+      turn_server_id: s.turn,
+      is_my_turn: s.turn === viewer,
+      board: boardArr,
+      my_hand: (s.hands[viewer] || []).map((c) => ({ ...c })),
+      opponent_hand_count: (s.hands[opp] || []).length,
+      opponent_server_id: opp,
+    };
+  }
+
+  function mockPvpPushStarted() {
+    if (!mockPvpSession) return;
+    global.postMessage(
+      { action: 'battlePvpStarted', payload: mockPvpBuildViewerPayload(mockPvpSession.me) },
+      '*',
+    );
+  }
+
+  function mockPvpPushState() {
+    if (!mockPvpSession) return;
+    global.postMessage(
+      { action: 'battlePvpState', payload: mockPvpBuildViewerPayload(mockPvpSession.me) },
+      '*',
+    );
+  }
+
+  function mockPvpPushEnded(reason) {
+    if (!mockPvpSession) return;
+    const s = mockPvpSession;
+    const me = s.me;
+    const opp = s.opp;
+    const myS = mockPvpScoreTotal(s, me);
+    const opS = mockPvpScoreTotal(s, opp);
+    let outcome;
+    if (reason === 'normal') {
+      if (myS > opS) outcome = 'win';
+      else if (opS > myS) outcome = 'lose';
+      else outcome = 'draw';
+    } else {
+      outcome = 'lose';
+    }
+    global.postMessage(
+      {
+        action: 'battlePvpEnded',
+        payload: {
+          session_id: s.session_id,
+          reason,
+          my_score: myS,
+          opponent_score: opS,
+          outcome,
+          final_board: mockPvpBuildViewerPayload(me).board,
+          my_hand_remaining: (s.hands[me] || []).length,
+        },
+      },
+      '*',
+    );
+    mockPvpSession = null;
+  }
+
+  function mockPvpScheduleAi() {
+    setTimeout(() => {
+      if (!mockPvpSession) return;
+      const s = mockPvpSession;
+      if (s.turn === s.me) return;
+      const pid = s.turn;
+      const empties = [];
+      for (let i = 1; i <= 9; i++) {
+        if (!s.board[i]) empties.push(i);
+      }
+      const hh = s.hands[pid];
+      if (!empties.length || !hh || !hh.length) return;
+      const idx = empties[Math.floor(Math.random() * empties.length)];
+      const hi = Math.floor(Math.random() * hh.length);
+      const card = hh.splice(hi, 1)[0];
+      s.board[idx] = { owner: pid, card };
+      mockPvpApplyCaptures(s.board, idx, pid, card);
+      s.turn_no += 1;
+      s.turn = pid === s.me ? s.opp : s.me;
+      if (mockPvpBoardFull(s)) {
+        mockPvpPushEnded('normal');
+        return;
+      }
+      mockPvpPushState();
+      if (mockPvpSession && mockPvpSession.turn === mockPvpSession.opp) {
+        mockPvpScheduleAi();
+      }
+    }, 500);
+  }
+
+  function mockPvpBootstrap(opponentId) {
+    const me = 101;
+    const opp = opponentId;
+    const active = MOCK_DATA.decks.find((d) => d.is_active === true || d.is_active === 1);
+    if (!active) return;
+    const det = MOCK_DATA.deckDetails[active.id];
+    if (!det || !det.slots) return;
+    const deckCards = [];
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      const sl = getSlotRow(det.slots, i);
+      if (sl && sl.card && sl.card.card_id) deckCards.push({ ...sl.card });
+    }
+    if (deckCards.length < DECK_SIZE) return;
+    mockDbgShuffleInPlace(deckCards);
+    const myHand = deckCards.slice(0, MOCK_HAND_SIZE);
+    const cpuPool = MOCK_CARDS_MASTER.map((m) => cardPayload(m));
+    mockDbgShuffleInPlace(cpuPool);
+    const oppHand = cpuPool.slice(0, MOCK_HAND_SIZE);
+    const first = Math.random() < 0.5 ? me : opp;
+    mockPvpSession = {
+      session_id: `pvp_mock_${Date.now()}`,
+      me,
+      opp,
+      board: {},
+      hands: { [me]: myHand, [opp]: oppHand },
+      turn: first,
+      turn_no: 1,
+    };
+    setTimeout(() => {
+      mockPvpPushStarted();
+      mockPvpPushState();
+      if (mockPvpSession && mockPvpSession.turn === mockPvpSession.opp) {
+        mockPvpScheduleAi();
+      }
+    }, 80);
+  }
+
   global.mockData = MOCK_DATA;
 
   const MOCK_ACTION_MAP = {
@@ -756,8 +937,9 @@
       setTimeout(() => {
         global.postMessage({
           action: 'virtualBattleMatched',
-          payload: { peer_server_id: tid, is_caller: true },
+          payload: { peer_server_id: tid, is_caller: true, is_pvp: true },
         }, '*');
+        mockPvpBootstrap(tid);
       }, 35);
       return { success: true };
     },
@@ -765,6 +947,9 @@
     battleVirtualLeave() {
       mockSoloWireTest = false;
       mockBattleWaiting = false;
+      if (mockPvpSession) {
+        mockPvpPushEnded('peer_left');
+      }
       if (mockDbgCpuState) {
         mockDbgCpuState = null;
         setTimeout(() => {
@@ -839,6 +1024,7 @@
         );
         return;
       }
+      mockPvpSession = null;
       const active = MOCK_DATA.decks.find((d) => d.is_active === true || d.is_active === 1);
       if (!active) {
         global.postMessage({ action: 'battleLobbyError', payload: { error: '使用デッキがありません' } }, '*');
@@ -958,6 +1144,84 @@
       mockDbgCpuState = null;
       global.postMessage({ action: 'battleDebugEnded', payload: {} }, '*');
     },
+
+    battlePvpPlace(data) {
+      const pushErr = (reason) => {
+        global.postMessage({ action: 'battlePvpError', payload: { reason } }, '*');
+      };
+      if (!mockPvpSession) {
+        pushErr('session_not_found');
+        return;
+      }
+      const d = data || {};
+      const s = mockPvpSession;
+      if (d.session_id !== s.session_id) {
+        pushErr('session_not_found');
+        return;
+      }
+      if (s.turn !== s.me) {
+        pushErr('not_your_turn');
+        return;
+      }
+      if (Number(d.turn_no) !== s.turn_no) {
+        pushErr('turn_no_mismatch');
+        return;
+      }
+      const cellIdx = Number(d.cell_index);
+      if (!Number.isFinite(cellIdx) || cellIdx < 1 || cellIdx > 9 || Math.floor(cellIdx) !== cellIdx) {
+        pushErr('invalid_cell');
+        return;
+      }
+      if (s.board[cellIdx] != null) {
+        pushErr('cell_occupied');
+        return;
+      }
+      let handIdx = Number(d.hand_index);
+      handIdx = Number.isFinite(handIdx) ? Math.floor(handIdx) : -1;
+      if (handIdx < 0 || handIdx > 4) {
+        pushErr('invalid_hand_index');
+        return;
+      }
+      const hh = s.hands[s.me];
+      if (!hh || handIdx >= hh.length) {
+        pushErr('hand_card_missing');
+        return;
+      }
+      const card = hh.splice(handIdx, 1)[0];
+      s.board[cellIdx] = { owner: s.me, card };
+      mockPvpApplyCaptures(s.board, cellIdx, s.me, card);
+      s.turn_no += 1;
+      s.turn = s.opp;
+      if (mockPvpBoardFull(s)) {
+        mockPvpPushEnded('normal');
+        return;
+      }
+      mockPvpPushState();
+      if (mockPvpSession && mockPvpSession.turn === mockPvpSession.opp) {
+        mockPvpScheduleAi();
+      }
+    },
+
+    battlePvpLeave() {
+      if (!mockPvpSession) return;
+      mockPvpPushEnded('voluntary_leave');
+    },
+
+    battlePvpRequestState(data) {
+      const pushErr = (reason) => {
+        global.postMessage({ action: 'battlePvpError', payload: { reason } }, '*');
+      };
+      if (!mockPvpSession) {
+        pushErr('session_not_found');
+        return;
+      }
+      const sid = data && data.session_id;
+      if (sid !== mockPvpSession.session_id) {
+        pushErr('session_not_found');
+        return;
+      }
+      mockPvpPushState();
+    },
   };
 
   global.mockDispatchServerEvent = function (eventName, data) {
@@ -966,6 +1230,9 @@
       battleDebugStartCpu: true,
       battleDebugPlace: true,
       battleDebugLeave: true,
+      battlePvpPlace: true,
+      battlePvpLeave: true,
+      battlePvpRequestState: true,
     };
     if (dbgEvents[eventName]) {
       setTimeout(() => {
