@@ -14,7 +14,8 @@
     activeDeck: null,
     currentTab: 'collection',
     currentDeckId: null,
-    selectedDeckDetail: null,
+    /** GetDeck / selectDeck / deckUpdated の詳細 */
+    currentDeckDetail: null,
   };
 
   const TAB_ORDER = ['collection', 'deck', 'battle', 'trade', 'ranking'];
@@ -66,12 +67,34 @@
     }
   }
 
+  function renderDeckIfNeeded() {
+    if (global.AppState.currentTab !== 'deck') return;
+    if (typeof global.Deck !== 'undefined' && global.Deck.render) {
+      global.Deck.render();
+    }
+  }
+
+  /** デッキタブ表示時: 現在IDが無効なら active または先頭を読み込み */
+  function ensureDeckSelection() {
+    const decks = global.AppState.decks || [];
+    if (!decks.length) return;
+    const cur = global.AppState.currentDeckId;
+    if (cur && decks.some((d) => d.id === cur)) {
+      if (!global.AppState.currentDeckDetail) {
+        api.selectDeck(cur);
+      }
+      return;
+    }
+    const pick = global.AppState.activeDeckId || decks[0].id;
+    api.selectDeck(pick);
+  }
+
   function renderCurrentTab() {
     const tab = global.AppState.currentTab;
     if (tab === 'collection') {
       renderCollectionIfNeeded();
     } else if (tab === 'deck') {
-      console.log('[jp-tcgbook] tab=deck selectedDeck=', global.AppState.selectedDeckDetail);
+      renderDeckIfNeeded();
     } else {
       console.log('[jp-tcgbook] tab=', tab);
     }
@@ -89,6 +112,10 @@
     document.querySelectorAll('.tab-content').forEach((sec) => {
       sec.classList.toggle('active', sec.dataset.tabPanel === tabName);
     });
+
+    if (tabName === 'deck') {
+      ensureDeckSelection();
+    }
 
     renderCurrentTab();
   }
@@ -141,6 +168,12 @@
 
       if (e.key !== 'Escape') return;
 
+      if (global.Deck && typeof global.Deck.anyDeckModalOpen === 'function' && global.Deck.anyDeckModalOpen()) {
+        e.preventDefault();
+        global.Deck.closeDeckModals();
+        return;
+      }
+
       if (helpOpen) {
         e.preventDefault();
         closeHelp();
@@ -174,9 +207,14 @@
     const active = global.AppState.decks.find((x) => x.is_active === true || x.is_active === 1);
     global.AppState.activeDeckId = active ? active.id : null;
     global.AppState.activeDeck = null;
+    global.AppState.currentDeckDetail = null;
+    global.AppState.currentDeckId = null;
 
     renderHeader();
     renderCurrentTab();
+    if (global.AppState.currentTab === 'deck') {
+      ensureDeckSelection();
+    }
   });
 
   NUI.on('deckSelected', (payload) => {
@@ -184,7 +222,7 @@
       showError(payload && payload.error ? payload.error : 'デッキ取得に失敗しました');
       return;
     }
-    global.AppState.selectedDeckDetail = payload.data || null;
+    global.AppState.currentDeckDetail = payload.data || null;
     global.AppState.currentDeckId = payload.data ? payload.data.id : null;
     renderCurrentTab();
   });
@@ -194,7 +232,7 @@
       showError(payload && payload.error ? payload.error : 'デッキ更新に失敗しました');
       return;
     }
-    global.AppState.selectedDeckDetail = payload.data || null;
+    global.AppState.currentDeckDetail = payload.data || null;
     renderCurrentTab();
   });
 
@@ -211,6 +249,16 @@
 
     const active = global.AppState.decks.find((x) => x.is_active === true || x.is_active === 1);
     global.AppState.activeDeckId = active ? active.id : null;
+
+    const curId = global.AppState.currentDeckId;
+    if (curId && !global.AppState.decks.some((x) => x.id === curId)) {
+      global.AppState.currentDeckId = null;
+      global.AppState.currentDeckDetail = null;
+      ensureDeckSelection();
+    } else if (global.AppState.currentDeckDetail && curId) {
+      const row = global.AppState.decks.find((x) => x.id === curId);
+      if (row) global.AppState.currentDeckDetail.name = row.name;
+    }
 
     renderHeader();
     renderCurrentTab();

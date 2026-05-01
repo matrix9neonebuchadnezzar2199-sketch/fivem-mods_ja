@@ -6,6 +6,7 @@
   <title>BOOK</title>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/collection.css">
+  <link rel="stylesheet" href="css/deck.css">
 </head>
 <body>
 
@@ -109,9 +110,67 @@
           </div>
         </div>
       </section>
-      <section id="tab-deck" class="tab-content" data-tab-panel="deck" role="tabpanel">
-        <div class="tab-inner placeholder-panel">
-          <p>デッキ編成タブは次サブタスクで実装予定</p>
+      <section id="tab-deck" class="tab-content deck-tab" data-tab-panel="deck" role="tabpanel">
+        <div class="tab-inner deck-tab-inner">
+          <div class="deck-root">
+            <aside class="deck-sidebar" aria-label="デッキ一覧">
+              <div class="pane-header">
+                <div class="pane-title">DECKS</div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span id="deckCountBadge" class="deck-count-badge"><span class="num">0</span> / 10</span>
+                  <button type="button" id="deckNewBtn" class="icon-btn" title="新規デッキ">＋</button>
+                </div>
+              </div>
+              <div id="deckSidebarList" class="deck-list"></div>
+            </aside>
+            <div class="deck-editor">
+              <div class="deck-edit-header">
+                <div id="deckNameDisplay" class="deck-name-display">—</div>
+                <button type="button" id="deckHelpOpenBtn" class="deck-help-btn" title="デッキ編成ヘルプ" aria-label="デッキ編成ヘルプ">📖</button>
+                <div id="deckSaveStatus" class="save-status saved"><span class="save-dot"></span><span>保存済み</span></div>
+                <div class="counters">
+                  <div id="deckCounterFilled" class="counter"><span class="num">0</span><span class="max"> / 10</span> 枚</div>
+                  <div id="deckCounterShitei" class="counter">指定 <span class="num" style="color:#ff4d4d">0</span><span class="max"> / 2</span></div>
+                </div>
+              </div>
+              <div class="deck-slots-area">
+                <div id="deckSlotGrid" class="deck-slots-grid"></div>
+                <div id="deckStatsBar" class="deck-stats"></div>
+              </div>
+              <div class="deck-actions">
+                <button type="button" id="btnDeckActive" class="btn primary">★ 使用デッキに設定</button>
+                <button type="button" id="btnDeckCopy" class="btn" data-deck-tooltip="現在のデッキをコピーして新しく追加">📋 コピーして新規追加</button>
+                <button type="button" id="btnDeckShuffle" class="btn" data-deck-tooltip="ローカル試算のみ。本番対戦時はサーバー側でシャッフルされます">🔀 シャッフルテスト</button>
+                <button type="button" id="btnDeckDelete" class="btn danger">🗑 削除</button>
+              </div>
+            </div>
+            <aside class="deck-collection" aria-label="所持カードから追加">
+              <div class="pane-header">
+                <div class="pane-title">所持カード</div>
+                <span id="deckCollOwnedCount" class="pane-header-sub">—</span>
+              </div>
+              <div class="collection-filters">
+                <input type="search" id="deckCollSearch" class="search-box" placeholder="検索…" autocomplete="off">
+                <div class="filter-chips" aria-label="タイプ">
+                  <button type="button" class="chip active" data-deck-chip-type="all">すべて</button>
+                  <button type="button" class="chip" data-deck-chip-type="free">フリー</button>
+                  <button type="button" class="chip" data-deck-chip-type="shitei">指定</button>
+                </div>
+                <div class="filter-chips" style="margin-top:6px" aria-label="ランク">
+                  <button type="button" class="chip active" data-deck-chip-rank="all">全ランク</button>
+                  <button type="button" class="chip" data-deck-chip-rank="UR">UR</button>
+                  <button type="button" class="chip" data-deck-chip-rank="SS">SS</button>
+                  <button type="button" class="chip" data-deck-chip-rank="S">S</button>
+                  <button type="button" class="chip" data-deck-chip-rank="A">A</button>
+                  <button type="button" class="chip" data-deck-chip-rank="B">B</button>
+                  <button type="button" class="chip" data-deck-chip-rank="C">C</button>
+                </div>
+              </div>
+              <div class="collection-grid-wrapper">
+                <div id="deckCollGrid" class="collection-grid"></div>
+              </div>
+            </aside>
+          </div>
         </div>
       </section>
       <section id="tab-battle" class="tab-content" data-tab-panel="battle" role="tabpanel">
@@ -173,11 +232,69 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite" hidden></div>
+
+  <div id="deckHelpModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deckHelpModalTitle">
+      <div class="modal-header">
+        <h2 id="deckHelpModalTitle">デッキ編成ヘルプ</h2>
+        <button type="button" class="modal-close" id="deckHelpCloseBtn" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <section class="help-section">
+          <h3>ランク階層</h3>
+          <p>強さの目安は <strong>UR ＞ SS ＞ S ＞ A ＞ B ＞ C</strong> です。</p>
+        </section>
+        <section class="help-section">
+          <h3>編成ルール</h3>
+          <ul>
+            <li>1デッキ <strong>10枚</strong>。指定カードは <strong>合計2枚まで</strong>（残り8枠はフリー）。</li>
+            <li>指定（UR/SS）は同名 <strong>1枚まで</strong>。フリーは同名 <strong>2枚まで</strong>。</li>
+            <li><strong>使用デッキ</strong>に設定できるのは <strong>10枚完成</strong> のデッキのみです。</li>
+          </ul>
+        </section>
+        <section class="help-section">
+          <h3>自動保存・デッキ切替</h3>
+          <p>カードの<strong>＋追加</strong>やスロットの<strong>×解除</strong>はサーバーへ送信され、ヘッダーのインジケータが保存状態を示します。左リストでデッキを選ぶとエディタが切り替わります。</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="deckShuffleModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deckShuffleModalTitle">
+      <div class="modal-header">
+        <h2 id="deckShuffleModalTitle">シャッフルテスト（先頭5枚）</h2>
+        <button type="button" class="modal-close" id="deckShuffleCloseBtn" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>ローカルで10枚をシャッフルした結果の<strong>先頭5枚</strong>です。対戦開始時の実際の順序はサーバー側のシャッフルになります。</p>
+        <div id="deckShufflePreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="deckDeleteModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deckDeleteModalTitle">
+      <div class="modal-header">
+        <h2 id="deckDeleteModalTitle">デッキ削除の確認</h2>
+        <button type="button" class="modal-close" id="deckDeleteCloseBtn" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>このデッキを削除しますか？この操作は取り消せません（最後の1デッキは削除できません）。</p>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button type="button" id="deckDeleteCancelBtn" style="padding:8px 14px;border:1px solid #8b6f3f;border-radius:6px;background:rgba(0,0,0,0.35);color:#e8e1c4;cursor:pointer;font-family:inherit;">キャンセル</button>
+          <button type="button" id="deckDeleteConfirmBtn" style="padding:8px 14px;border:1px solid #8b4040;border-radius:6px;background:linear-gradient(180deg,#6b3030,#4a2020);color:#fff;cursor:pointer;font-family:inherit;">削除する</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="js/nui.js"></script>
 <script src="js/api.js"></script>
+<script src="js/card_util.js"></script>
 <script src="js/collection.js"></script>
+<script src="js/deck.js"></script>
 <script src="js/app.js"></script>
 <script src="js/mock_data.js"></script>
 </body>

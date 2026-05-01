@@ -5,7 +5,7 @@
 (function (global) {
   const RANK_ORDER = { UR: 6, SS: 5, S: 4, A: 3, B: 2, C: 1 };
 
-  const EMOJI_POOL = ['🐉', '🦅', '🛡', '⚔', '🔥', '❄', '⚡', '🌙', '⭐', '🎯', '🎴', '🌀'];
+  const CU = global.CardUtil;
 
   /** @type {{ filters: { search: string, type: string, rank: string }, sort: string, selectedCardId: string|null }} */
   const state = {
@@ -15,57 +15,6 @@
   };
 
   let bound = false;
-
-  /**
-   * グリッドカードの四方向 .mini-stat に最大値ハイライト（複数最大はすべて .max）
-   * @param {HTMLElement} cardEl
-   * @param {{ stat_top: number, stat_right: number, stat_bottom: number, stat_left: number }} stats
-   */
-  function applyMaxHighlight(cardEl, stats) {
-    const vals = [
-      Number(stats.stat_top),
-      Number(stats.stat_right),
-      Number(stats.stat_bottom),
-      Number(stats.stat_left),
-    ];
-    const mx = Math.max(vals[0], vals[1], vals[2], vals[3]);
-    const cls = ['s-top', 's-right', 's-bottom', 's-left'];
-    cls.forEach((c, i) => {
-      const el = cardEl.querySelector('.mini-stat.' + c);
-      if (!el) return;
-      if (vals[i] === mx) el.classList.add('max');
-      else el.classList.remove('max');
-    });
-  }
-
-  /**
-   * 詳細プレビューの .detail-stat-num
-   * @param {HTMLElement} root
-   * @param {{ stat_top: number, stat_right: number, stat_bottom: number, stat_left: number }} stats
-   */
-  function applyMaxHighlightDetail(root, stats) {
-    const vals = [
-      Number(stats.stat_top),
-      Number(stats.stat_right),
-      Number(stats.stat_bottom),
-      Number(stats.stat_left),
-    ];
-    const mx = Math.max(vals[0], vals[1], vals[2], vals[3]);
-    const cls = ['stat-top', 'stat-right', 'stat-bottom', 'stat-left'];
-    cls.forEach((c, i) => {
-      const el = root.querySelector('.detail-stat-num.' + c);
-      if (!el) return;
-      if (vals[i] === mx) el.classList.add('max');
-      else el.classList.remove('max');
-    });
-  }
-
-  function emojiFromId(cardId) {
-    let h = 0;
-    const s = String(cardId || '');
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    return EMOJI_POOL[h % EMOJI_POOL.length];
-  }
 
   function parseObtainedAt(s) {
     const t = Date.parse(String(s || '').replace(' ', 'T'));
@@ -88,31 +37,6 @@
       }
     });
     return map;
-  }
-
-  function normalizeMasterList() {
-    const cm = global.AppState.cardsMaster;
-    if (Array.isArray(cm) && cm.length > 0) return cm;
-
-    const inst = global.AppState.cards || [];
-    const byId = new Map();
-    inst.forEach((row) => {
-      if (!row.card_id || byId.has(row.card_id)) return;
-      byId.set(row.card_id, {
-        card_id: row.card_id,
-        name: row.name,
-        rank: row.rank,
-        type: row.type,
-        stat_top: row.stat_top,
-        stat_right: row.stat_right,
-        stat_bottom: row.stat_bottom,
-        stat_left: row.stat_left,
-        image_path: row.image_path || '',
-        description: row.description || '',
-        no: row.no,
-      });
-    });
-    return Array.from(byId.values());
   }
 
   function passesSearch(m, q) {
@@ -266,9 +190,9 @@
         `<span class="mini-stat s-right">${m.stat_right}</span>` +
         `<span class="mini-stat s-bottom">${m.stat_bottom}</span>` +
         `<span class="mini-stat s-left">${m.stat_left}</span>` +
-        `<span>${emojiFromId(m.card_id)}</span>`;
+        `<span>${CU.emojiFromId(m.card_id)}</span>`;
 
-      applyMaxHighlight(card, m);
+      CU.applyMaxHighlight(card, m);
 
       const nm = document.createElement('div');
       nm.className = 'card-name';
@@ -332,9 +256,9 @@
       `<span class="detail-stat-num stat-right">${m.stat_right}</span>` +
       `<span class="detail-stat-num stat-bottom">${m.stat_bottom}</span>` +
       `<span class="detail-stat-num stat-left">${m.stat_left}</span>` +
-      `<span>${emojiFromId(m.card_id)}</span>`;
+        `<span>${CU.emojiFromId(m.card_id)}</span>`;
 
-    applyMaxHighlightDetail(pa, m);
+    CU.applyMaxHighlightDetail(pa, m);
 
     preview.appendChild(pt);
     preview.appendChild(pr);
@@ -423,7 +347,7 @@
   }
 
   const Collection = {
-    applyMaxHighlight,
+    applyMaxHighlight: CU.applyMaxHighlight,
     /**
      * @param {{ filters?: Partial<typeof state.filters>, sort?: string, selectedCardId?: string|null }} [partial]
      */
@@ -436,7 +360,7 @@
         if ('selectedCardId' in partial) state.selectedCardId = partial.selectedCardId;
       }
       bindDom();
-      const masterList = normalizeMasterList();
+      const masterList = CU.normalizeMasterList(global.AppState);
       const ownershipMap = buildOwnership(global.AppState.cards || []);
       const rowsAll = buildRows(masterList, ownershipMap);
 

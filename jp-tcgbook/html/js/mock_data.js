@@ -4,6 +4,12 @@
  * FiveM では IS_FIVEM=true のためこのファイルはモック送信のみ初期化。
  */
 (function (global) {
+  const MAX_DECKS = 10;
+  const DECK_SIZE = 10;
+  const MAX_SHITEI = 2;
+  const LIMIT_SHITEI_SAME = 1;
+  const LIMIT_FREE_SAME = 2;
+
   /** 所持モックのベース47枚（デッキインデックスと整合） */
   const RANK_ORDER_FIRST = [
     ...Array(2).fill('UR'),
@@ -82,6 +88,7 @@
   });
 
   const MOCK_CARDS_MASTER = masterBuild;
+  const masterById = new Map(MOCK_CARDS_MASTER.map((m) => [m.card_id, m]));
 
   const citizenid = 'license:xxxxxxxxxxxxxxxx';
 
@@ -130,6 +137,59 @@
     return MOCK_CARDS_MASTER.map((m) => ({ ...m }));
   }
 
+  function getSlotRow(slots, idx1) {
+    if (!Array.isArray(slots)) return null;
+    const hit = slots.find((s) => Number(s.slot_index) === idx1);
+    return hit || slots[idx1 - 1] || null;
+  }
+
+  function countFilledSlots(slots) {
+    let n = 0;
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      const sl = getSlotRow(slots, i);
+      if (sl && sl.card) n++;
+    }
+    return n;
+  }
+
+  function deckPowerFromSlots(slots) {
+    let p = 0;
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      const sl = getSlotRow(slots, i);
+      if (!sl || !sl.card) continue;
+      const c = sl.card;
+      p += Math.max(
+        Number(c.stat_top),
+        Number(c.stat_right),
+        Number(c.stat_bottom),
+        Number(c.stat_left),
+      );
+    }
+    return p;
+  }
+
+  function countShiteiSlots(slots) {
+    let n = 0;
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      const sl = getSlotRow(slots, i);
+      if (sl && sl.card && sl.card.type === 'shitei') n++;
+    }
+    return n;
+  }
+
+  function countInDeckSlots(slots, cardId) {
+    let n = 0;
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      const sl = getSlotRow(slots, i);
+      if (sl && sl.card && sl.card.card_id === cardId) n++;
+    }
+    return n;
+  }
+
+  function ownedCountCard(cardId) {
+    return MOCK_DATA.cards.filter((c) => c.card_id === cardId).length;
+  }
+
   /**
    * @param {number} deckId
    * @param {number[]} cardIndices MOCK_CARDS_MASTER のインデックス（0-based）最大10個
@@ -137,7 +197,7 @@
   function buildDeckDetail(deckId, cardIndices) {
     const summary = deckSummaries.find((d) => d.id === deckId);
     const slots = [];
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= DECK_SIZE; i++) {
       const mi = cardIndices[i - 1];
       const m = mi !== undefined ? MOCK_CARDS_MASTER[mi] : null;
       slots.push({
@@ -183,6 +243,17 @@
     },
   };
 
+  function syncDeckSummaryMeta() {
+    MOCK_DATA.decks.forEach((d) => {
+      const det = MOCK_DATA.deckDetails[d.id];
+      if (!det || !det.slots) return;
+      d.card_count = countFilledSlots(det.slots);
+      d.power = deckPowerFromSlots(det.slots);
+    });
+  }
+
+  syncDeckSummaryMeta();
+
   global.mockData = MOCK_DATA;
 
   const MOCK_ACTION_MAP = {
@@ -210,17 +281,104 @@
     return o;
   }
 
-  function okDeckList() {
+  function okDeckList(extra) {
     const active = MOCK_DATA.decks.find((d) => d.is_active === true || d.is_active === 1);
     const activeDeck = active ? cloneDeckDetail(active.id) : null;
+    const data = {
+      decks: MOCK_DATA.decks.map((d) => ({ ...d })),
+      activeDeck,
+      cards: MOCK_DATA.cards.map((c) => ({ ...c })),
+      cardsMaster: cloneCardsMaster(),
+    };
+    if (extra && typeof extra === 'object') {
+      Object.assign(data, extra);
+    }
     return {
       success: true,
-      data: {
-        decks: MOCK_DATA.decks.map((d) => ({ ...d })),
-        activeDeck,
-        cards: MOCK_DATA.cards.map((c) => ({ ...c })),
-        cardsMaster: cloneCardsMaster(),
-      },
+      data,
+    };
+  }
+
+  function parseDeckId(raw) {
+    const n = Number(raw);
+    return Number.isInteger(n) && n >= 1 ? n : null;
+  }
+
+  function parseCardId(raw) {
+    if (raw == null) return null;
+    const s = String(raw).trim();
+    return s === '' ? null : s;
+  }
+
+  function parseDeckName(raw) {
+    if (raw == null || typeof raw !== 'string') return null;
+    const s = raw.trim();
+    if (s.length < 1 || s.length > 64) return null;
+    return s;
+  }
+
+  function findFirstEmptySlotIndex(slots) {
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      const sl = getSlotRow(slots, i);
+      if (sl && !sl.card) return i;
+    }
+    return null;
+  }
+
+  function canAddToDeck(deckId, cardId) {
+    const master = masterById.get(cardId);
+    if (!master) return { ok: false, error: '存在しないカードです' };
+
+    const det = MOCK_DATA.deckDetails[deckId];
+    if (!det) return { ok: false, error: 'デッキが見つかりません' };
+
+    const slots = det.slots;
+    const filled = countFilledSlots(slots);
+    if (filled >= DECK_SIZE) return { ok: false, error: 'デッキが満杯です' };
+
+    const owned = ownedCountCard(cardId);
+    const inDeck = countInDeckSlots(slots, cardId);
+    if (owned <= inDeck) return { ok: false, error: '所持枚数が不足しています' };
+
+    const limitSame = master.type === 'shitei' ? LIMIT_SHITEI_SAME : LIMIT_FREE_SAME;
+    if (inDeck >= limitSame) {
+      return { ok: false, error: 'このカードは既に上限まで編成されています' };
+    }
+
+    const shiteiN = countShiteiSlots(slots);
+    if (master.type === 'shitei' && shiteiN >= MAX_SHITEI) {
+      return { ok: false, error: '指定カード上限です' };
+    }
+
+    return { ok: true };
+  }
+
+  function generateCopyName(baseName) {
+    const nameSet = new Set(MOCK_DATA.decks.map((d) => d.name));
+    let candidate = baseName + ' - Copy';
+    if (!nameSet.has(candidate)) return candidate;
+    let i = 1;
+    while (nameSet.has(baseName + ' - Copy ' + i)) i++;
+    return baseName + ' - Copy ' + i;
+  }
+
+  function nextDeckId() {
+    return Math.max(0, ...MOCK_DATA.decks.map((d) => d.id)) + 1;
+  }
+
+  function emptyDeckDetail(id, name, isActive) {
+    const slots = [];
+    for (let i = 1; i <= DECK_SIZE; i++) {
+      slots.push({ slot_index: i, card: null });
+    }
+    return {
+      id,
+      citizenid,
+      name,
+      is_active: !!isActive,
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      slots,
     };
   }
 
@@ -238,49 +396,185 @@
     },
 
     selectDeck(data) {
-      const id = Number(data && data.deck_id);
-      if (!Number.isInteger(id) || id < 1) return fail('不正なデッキIDです');
+      const id = parseDeckId(data && data.deck_id);
+      if (!id) return fail('不正なデッキIDです');
       const detail = cloneDeckDetail(id);
       if (!detail) return fail('デッキが見つかりません');
       return { success: true, data: detail };
     },
 
     addCardToDeck(data) {
-      const id = Number(data && data.deck_id);
-      return fail(`モック: addCardToDeck deck=${id}（フェーズ1-6-3で検証）`);
+      const deckId = parseDeckId(data && data.deck_id);
+      const cardId = parseCardId(data && data.card_id);
+      if (!deckId) return fail('不正なデッキIDです');
+      if (!cardId) return fail('不正なカードIDです');
+
+      const check = canAddToDeck(deckId, cardId);
+      if (!check.ok) return fail(check.error);
+
+      const det = MOCK_DATA.deckDetails[deckId];
+      const idx = findFirstEmptySlotIndex(det.slots);
+      if (!idx) return fail('デッキが満杯です');
+
+      const sl = getSlotRow(det.slots, idx);
+      const m = masterById.get(cardId);
+      if (!sl || !m) return fail('カードを追加できません');
+      sl.card = cardPayload(m);
+      syncDeckSummaryMeta();
+      return { success: true, data: cloneDeckDetail(deckId) };
     },
 
     removeDeckCard(data) {
-      const id = Number(data && data.deck_id);
-      return fail(`モック: removeDeckCard deck=${id}（フェーズ1-6-3で検証）`);
+      const deckId = parseDeckId(data && data.deck_id);
+      const slot = Number(data && data.slot);
+      if (!deckId) return fail('不正なデッキIDです');
+      if (!Number.isInteger(slot) || slot < 1 || slot > DECK_SIZE) {
+        return fail('不正なスロットです（1〜10）');
+      }
+
+      const det = MOCK_DATA.deckDetails[deckId];
+      if (!det) return fail('デッキが見つかりません');
+
+      const sl = getSlotRow(det.slots, slot);
+      if (!sl || !sl.card) return fail('空のスロットです');
+
+      sl.card = null;
+      syncDeckSummaryMeta();
+      return { success: true, data: cloneDeckDetail(deckId) };
     },
 
-    createDeck() {
-      return fail('モック: createDeck（フェーズ1-6-3で検証）');
+    createDeck(data) {
+      const name = parseDeckName(data && data.name);
+      if (!name) return fail('デッキ名は1〜64文字で入力してください');
+      if (MOCK_DATA.decks.length >= MAX_DECKS) {
+        return fail('デッキ保有数が上限に達しています');
+      }
+
+      const newId = nextDeckId();
+      MOCK_DATA.decks.push({
+        id: newId,
+        citizenid,
+        name,
+        is_active: false,
+        card_count: 0,
+        power: 0,
+      });
+      MOCK_DATA.deckDetails[newId] = emptyDeckDetail(newId, name, false);
+      syncDeckSummaryMeta();
+      return okDeckList({ createdDeckId: newId });
     },
 
-    duplicateDeck() {
-      return fail('モック: duplicateDeck（フェーズ1-6-3で検証）');
+    duplicateDeck(data) {
+      const srcId = parseDeckId(data && data.deck_id);
+      if (!srcId) return fail('不正なデッキIDです');
+      if (MOCK_DATA.decks.length >= MAX_DECKS) {
+        return fail('デッキ保有数が上限に達しています');
+      }
+
+      const src = MOCK_DATA.deckDetails[srcId];
+      if (!src) return fail('デッキが見つかりません');
+
+      const need = {};
+      for (let i = 1; i <= DECK_SIZE; i++) {
+        const sl = getSlotRow(src.slots, i);
+        if (sl && sl.card) {
+          const cid = sl.card.card_id;
+          need[cid] = (need[cid] || 0) + 1;
+        }
+      }
+      for (const cid of Object.keys(need)) {
+        if (ownedCountCard(cid) < need[cid]) {
+          return fail('所持枚数が不足しているためコピーできません');
+        }
+      }
+
+      const newId = nextDeckId();
+      const newName = generateCopyName(src.name);
+      MOCK_DATA.decks.push({
+        id: newId,
+        citizenid,
+        name: newName,
+        is_active: false,
+        card_count: 0,
+        power: 0,
+      });
+
+      const copy = JSON.parse(JSON.stringify(src));
+      copy.id = newId;
+      copy.name = newName;
+      copy.is_active = false;
+      MOCK_DATA.deckDetails[newId] = copy;
+      syncDeckSummaryMeta();
+      return okDeckList({ createdDeckId: newId });
     },
 
-    deleteDeck() {
-      return fail('モック: deleteDeck（フェーズ1-6-3で検証）');
+    deleteDeck(data) {
+      const id = parseDeckId(data && data.deck_id);
+      if (!id) return fail('不正なデッキIDです');
+      if (MOCK_DATA.decks.length <= 1) return fail('最後のデッキは削除できません');
+
+      const idx = MOCK_DATA.decks.findIndex((d) => d.id === id);
+      if (idx < 0) return fail('デッキが見つかりません');
+
+      const wasActive = MOCK_DATA.decks[idx].is_active === true || MOCK_DATA.decks[idx].is_active === 1;
+      MOCK_DATA.decks.splice(idx, 1);
+      delete MOCK_DATA.deckDetails[id];
+
+      if (wasActive && MOCK_DATA.decks.length) {
+        const nextFull = MOCK_DATA.decks.find((d) => {
+          const det = MOCK_DATA.deckDetails[d.id];
+          return det && countFilledSlots(det.slots) === DECK_SIZE;
+        });
+        MOCK_DATA.decks.forEach((d) => {
+          d.is_active = nextFull ? d.id === nextFull.id : false;
+        });
+        Object.keys(MOCK_DATA.deckDetails).forEach((k) => {
+          const nid = Number(k);
+          MOCK_DATA.deckDetails[nid].is_active = nextFull ? nid === nextFull.id : false;
+        });
+      }
+
+      syncDeckSummaryMeta();
+      return okDeckList();
     },
 
-    renameDeck() {
-      return fail('モック: renameDeck（フェーズ1-6-3で検証）');
+    renameDeck(data) {
+      const deckId = parseDeckId(data && data.deck_id);
+      const newName = parseDeckName(data && data.new_name);
+      if (!deckId) return fail('不正なデッキIDです');
+      if (!newName) return fail('デッキ名は1〜64文字で入力してください');
+
+      const row = MOCK_DATA.decks.find((d) => d.id === deckId);
+      if (!row) return fail('デッキが見つかりません');
+
+      const dup = MOCK_DATA.decks.find((d) => d.id !== deckId && d.name === newName);
+      if (dup) return fail('同じデッキ名が既に存在します');
+
+      row.name = newName;
+      const det = MOCK_DATA.deckDetails[deckId];
+      if (det) det.name = newName;
+      syncDeckSummaryMeta();
+      return okDeckList();
     },
 
     setActiveDeck(data) {
-      const id = Number(data && data.deck_id);
-      if (!Number.isInteger(id) || id < 1) return fail('不正なデッキIDです');
+      const id = parseDeckId(data && data.deck_id);
+      if (!id) return fail('不正なデッキIDです');
+
+      const det = MOCK_DATA.deckDetails[id];
+      if (!det) return fail('デッキが見つかりません');
+      if (countFilledSlots(det.slots) < DECK_SIZE) {
+        return fail('10枚揃ったデッキのみ使用設定できます');
+      }
+
       MOCK_DATA.decks.forEach((d) => {
         d.is_active = d.id === id;
       });
       Object.keys(MOCK_DATA.deckDetails).forEach((k) => {
-        const numId = Number(k);
-        MOCK_DATA.deckDetails[numId].is_active = numId === id;
+        const nid = Number(k);
+        MOCK_DATA.deckDetails[nid].is_active = nid === id;
       });
+      syncDeckSummaryMeta();
       return okDeckList();
     },
   };
