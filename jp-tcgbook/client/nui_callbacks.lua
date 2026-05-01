@@ -49,3 +49,50 @@ RegisterNUICallback('setActiveDeck', function(data, cb)
     TriggerServerEvent('jp-tcgbook:server:setActiveDeck', data or {})
     cb({ ok = true })
 end)
+
+--- /bookadmin（別 HTML）
+
+RegisterNUICallback('adminBootstrap', function(_, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminBootstrap')
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('adminClose', function(_, cb)
+    SetNuiFocus(false, false)
+    cb({ ok = true })
+    SendNUIMessage({
+        action = 'jp-tcgbook:navigate',
+        target = 'book',
+        resource = GetCurrentResourceName(),
+    })
+end)
+
+RegisterNUICallback('adminCheckCardId', function(data, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminCheckCardId', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('adminImpact', function(data, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminImpact', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('adminSaveCard', function(data, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminSaveCard', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('adminDeleteCard', function(data, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminDeleteCard', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('adminListAudit', function(data, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminListAudit', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('adminSuggestNo', function(_, cb)
+    TriggerServerEvent('jp-tcgbook:server:adminSuggestNo')
+    cb({ ok = true })
+end)

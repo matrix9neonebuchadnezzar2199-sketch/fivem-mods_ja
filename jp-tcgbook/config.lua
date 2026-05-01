@@ -20,6 +20,9 @@ Config.InitialCardRanks = { 'B', 'B', 'B', 'C', 'C', 'C', 'A', 'A', 'B', 'C' } -
 Config.InitialRating = 1500
 Config.EloKFactor = 32
 
+-- 管理者 UI（/bookadmin）。server.cfg 例: add_ace group.admin command.tcg_book_admin allow
+Config.BookAdminAce = 'command.tcg_book_admin'
+
 -- デバッグ（本番では false 推奨）
 Config.Debug = true -- 詳細ログなど
 Config.DebugCommands = true -- /tcg_* コマンドの前提フラグ（ACEと併用）

@@ -57,6 +57,17 @@ CREATE TABLE IF NOT EXISTS tcg_deck_cards (
     FOREIGN KEY (card_id) REFERENCES tcg_cards_master(card_id)
 );
 
+CREATE TABLE IF NOT EXISTS tcg_admin_audit (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    actor_uid VARCHAR(128) NOT NULL,
+    action VARCHAR(32) NOT NULL,
+    card_id VARCHAR(32),
+    detail_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_created (created_at),
+    INDEX idx_card (card_id)
+);
+
 -- =============================================================================
 -- ACE（jp-tcgbook デバッグコマンド /tcg_*）
 -- すべてのデバッグコマンドは permission command.tcg_debug で制御する。
@@ -67,4 +78,7 @@ CREATE TABLE IF NOT EXISTS tcg_deck_cards (
 --   add_principal identifier.license:xxxxxxxxxxxxxxxx group.admin
 --
 -- または txAdmin / 運営方針に合わせてグループへ付与する。
+--
+-- ACE（/bookadmin 管理者 UI）
+--   add_ace group.admin command.tcg_book_admin allow
 -- =============================================================================

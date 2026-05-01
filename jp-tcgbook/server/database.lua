@@ -443,3 +443,175 @@ function Database.ListAllPlayers()
     end
     return { success = true, data = result or {} }
 end
+
+--- 管理者 UI: マスタ全件（フォルダ分類は image_path から算出）
+function Database.AdminListMaster()
+    local ok, result = pcall(function()
+        return MySQL.query.await(
+            [[SELECT card_id, name, rank, type,
+                     stat_top, stat_right, stat_bottom, stat_left,
+                     image_path, description, no
+              FROM tcg_cards_master ORDER BY no ASC, card_id ASC]],
+            {}
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(result) }
+    end
+    return { success = true, data = result or {} }
+end
+
+--- @param card_id string
+function Database.AdminGetMaster(card_id)
+    local ok, result = pcall(function()
+        return MySQL.query.await(
+            [[SELECT card_id, name, rank, type,
+                     stat_top, stat_right, stat_bottom, stat_left,
+                     image_path, description, no
+              FROM tcg_cards_master WHERE card_id = ? LIMIT 1]],
+            { card_id }
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(result) }
+    end
+    return { success = true, data = result[1] }
+end
+
+--- @param card_id string
+function Database.AdminExistsMaster(card_id)
+    local ok, rows = pcall(function()
+        return MySQL.query.await(
+            'SELECT 1 AS x FROM tcg_cards_master WHERE card_id = ? LIMIT 1',
+            { card_id }
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(rows) }
+    end
+    return { success = true, data = rows and rows[1] ~= nil }
+end
+
+--- @return integer|nil
+function Database.AdminNextMasterNo()
+    local ok, rows = pcall(function()
+        return MySQL.query.await('SELECT COALESCE(MAX(no), 0) + 1 AS n FROM tcg_cards_master', {})
+    end)
+    if not ok or not rows or not rows[1] then
+        return nil
+    end
+    return tonumber(rows[1].n)
+end
+
+--- マスタ UPSERT（管理者）
+function Database.AdminUpsertMaster(row)
+    local sql = [[
+INSERT INTO tcg_cards_master
+    (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, no)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE
+    name = VALUES(name),
+    rank = VALUES(rank),
+    type = VALUES(type),
+    stat_top = VALUES(stat_top),
+    stat_right = VALUES(stat_right),
+    stat_bottom = VALUES(stat_bottom),
+    stat_left = VALUES(stat_left),
+    image_path = VALUES(image_path),
+    description = VALUES(description),
+    no = VALUES(no)
+]]
+    local ok, err = pcall(function()
+        MySQL.query.await(sql, {
+            row.card_id,
+            row.name,
+            row.rank,
+            row.type,
+            row.stat_top,
+            row.stat_right,
+            row.stat_bottom,
+            row.stat_left,
+            row.image_path,
+            row.description,
+            row.no,
+        })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- 削除前影響件数
+function Database.AdminImpact(card_id)
+    local ok1, r1 = pcall(function()
+        return MySQL.query.await(
+            'SELECT COUNT(*) AS c FROM tcg_player_cards WHERE card_id = ?',
+            { card_id }
+        )
+    end)
+    if not ok1 then
+        return { success = false, error = tostring(r1) }
+    end
+    local ok2, r2 = pcall(function()
+        return MySQL.query.await(
+            'SELECT COUNT(*) AS c FROM tcg_deck_cards WHERE card_id = ?',
+            { card_id }
+        )
+    end)
+    if not ok2 then
+        return { success = false, error = tostring(r2) }
+    end
+    local owned = tonumber(r1 and r1[1] and r1[1].c) or 0
+    local deckSlots = tonumber(r2 and r2[1] and r2[1].c) or 0
+    return { success = true, data = { owned = owned, deck_slots = deckSlots } }
+end
+
+--- マスタ削除（参照行を先に削除）
+function Database.AdminDeleteMaster(card_id)
+    local ok, err = pcall(function()
+        MySQL.query.await('DELETE FROM tcg_deck_cards WHERE card_id = ?', { card_id })
+        MySQL.query.await('DELETE FROM tcg_player_cards WHERE card_id = ?', { card_id })
+        MySQL.query.await('DELETE FROM tcg_cards_master WHERE card_id = ?', { card_id })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- 監査ログ追記
+function Database.AdminAppendAudit(actor_uid, action, card_id, detail_json)
+    local ok, err = pcall(function()
+        MySQL.insert.await(
+            'INSERT INTO tcg_admin_audit (actor_uid, action, card_id, detail_json) VALUES (?, ?, ?, ?)',
+            { actor_uid, action, card_id or nil, detail_json or nil }
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- 監査ログ参照（新しい順）
+function Database.AdminListAudit(limit)
+    local lim = tonumber(limit) or 50
+    if lim < 1 then
+        lim = 1
+    end
+    if lim > 200 then
+        lim = 200
+    end
+    local ok, rows = pcall(function()
+        return MySQL.query.await(
+            [[SELECT id, actor_uid, action, card_id, detail_json, created_at
+              FROM tcg_admin_audit ORDER BY id DESC LIMIT ?]],
+            { lim }
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(rows) }
+    end
+    return { success = true, data = rows or {} }
+end

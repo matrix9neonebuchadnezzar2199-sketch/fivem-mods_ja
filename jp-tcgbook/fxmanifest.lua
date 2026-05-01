@@ -20,6 +20,7 @@ server_scripts {
     'server/collection.lua',
     'server/deck.lua',
     'server/debug.lua',
+    'server/admin.lua',
     'server/main.lua',
 }
 
@@ -34,5 +35,9 @@ files {
     'html/index.html',
     'html/css/*.css',
     'html/js/*.js',
+    'html/admin/index.html',
+    'html/admin/css/*.css',
+    'html/admin/js/*.js',
     'html/assets/cards/**/*.png',
+    'html/assets/cards/asset_manifest.json',
 }

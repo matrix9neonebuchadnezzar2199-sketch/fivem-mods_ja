@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOOK 管理者</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div id="admRoot" class="adm-root">
+  <header class="adm-header">
+    <h1>BOOK ADMIN</h1>
+    <div class="adm-header-actions">
+      <span id="admDirtyBadge" style="font-size:11px;color:#ff8080;display:none;">未保存</span>
+      <span id="admLastSaved" style="font-size:11px;color:#8b7d4a;"></span>
+      <button type="button" class="btn" id="admBtnClose">閉じる（BOOKへ）</button>
+    </div>
+  </header>
+  <div class="adm-body">
+    <aside class="adm-left" aria-label="カードツリー">
+      <div style="padding:8px;">
+        <input type="search" id="admTreeSearch" class="adm-search" placeholder="カード名・ID で検索" autocomplete="off">
+        <div class="adm-filters">
+          <select id="admFilterRank" aria-label="ランク">
+            <option value="">全ランク</option>
+            <option value="UR">UR</option>
+            <option value="SS">SS</option>
+            <option value="S">S</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+          <select id="admFilterType" aria-label="タイプ">
+            <option value="">指定／フリーすべて</option>
+            <option value="shitei">指定</option>
+            <option value="free">フリー</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary" id="admBtnNew" style="width:100%;">＋ 新規追加</button>
+      </div>
+      <div class="adm-tree-wrap" id="admTreeWrap"></div>
+      <div class="adm-audit" id="admAuditPanel">
+        <h3>監査ログ（直近）</h3>
+        <div id="admAuditLog"></div>
+      </div>
+    </aside>
+
+    <main class="adm-main" id="admMain">
+      <div id="admMainEmpty" class="adm-main-empty">
+        左のツリーからカードを選ぶか、「新規追加」で編集を開始してください。
+      </div>
+      <div id="admFormWrap" hidden>
+        <div id="admValList" class="adm-val-list" hidden></div>
+        <div id="admWarnList" class="adm-warn-list" hidden></div>
+
+        <div class="adm-form-grid" style="margin-bottom:12px;">
+          <label for="admCardId">card_id</label>
+          <div>
+            <input id="admCardId" autocomplete="off" maxlength="32">
+            <div id="admCardIdHint" class="adm-id-status">英数字と _ のみ、1〜32 文字</div>
+          </div>
+          <label for="admName">名前</label>
+          <input id="admName" maxlength="64">
+          <label for="admNo">no（並び）</label>
+          <input id="admNo" type="number" min="1" step="1">
+          <label for="admImagePath">画像パス</label>
+          <select id="admImagePath"></select>
+          <label for="admRank">ランク</label>
+          <select id="admRank">
+            <option value="UR">UR</option>
+            <option value="SS">SS</option>
+            <option value="S">S</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+          <label for="admType">指定／フリー</label>
+          <select id="admType">
+            <option value="shitei">指定（shitei）</option>
+            <option value="free">フリー（free）</option>
+          </select>
+          <label for="admDesc">説明文</label>
+          <textarea id="admDesc"></textarea>
+        </div>
+
+        <div class="adm-image-preview-wrap">
+          <img id="admImgPreview" class="adm-image-preview" alt="" src="" hidden>
+          <div id="admImgFallback" style="font-size:48px;color:#4a3520;">🎴</div>
+          <div class="adm-stats-cross">
+            <span></span>
+            <input id="admStatTop" class="adm-stat-input" type="number" min="1" max="10" title="上">
+            <span></span>
+            <input id="admStatLeft" class="adm-stat-input" type="number" min="1" max="10" title="左">
+            <span style="font-size:11px;color:#8b7d4a;">画像</span>
+            <input id="admStatRight" class="adm-stat-input" type="number" min="1" max="10" title="右">
+            <span></span>
+            <input id="admStatBottom" class="adm-stat-input" type="number" min="1" max="10" title="下">
+            <span></span>
+          </div>
+        </div>
+
+        <div class="adm-meta-bar">
+          <button type="button" class="btn btn-primary" id="admBtnSave">保存</button>
+          <button type="button" class="btn btn-danger" id="admBtnDelete">削除…</button>
+        </div>
+      </div>
+    </main>
+
+    <aside class="adm-right" aria-label="比較・ピン">
+      <div class="adm-right-head">
+        <input type="search" id="admCmpSearch" class="adm-search" placeholder="比較一覧を検索" autocomplete="off">
+        <div class="adm-filters" style="flex-direction:row;flex-wrap:wrap;">
+          <select id="admCmpRank" style="flex:1;min-width:80px;">
+            <option value="">全ランク</option>
+            <option value="UR">UR</option>
+            <option value="SS">SS</option>
+            <option value="S">S</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+          <select id="admCmpType" style="flex:1;min-width:80px;">
+            <option value="">全タイプ</option>
+            <option value="shitei">指定</option>
+            <option value="free">フリー</option>
+          </select>
+        </div>
+        <div class="adm-pins" id="admPins">
+          <div class="adm-pin-slot" data-slot="0" title="クリックで解除">ピン1</div>
+          <div class="adm-pin-slot" data-slot="1">ピン2</div>
+          <div class="adm-pin-slot" data-slot="2">ピン3</div>
+        </div>
+      </div>
+      <div class="adm-cmp-list" id="admCmpList"></div>
+    </aside>
+  </div>
+</div>
+
+<div id="admModalDelete" class="modal-overlay" hidden>
+  <div class="modal-box">
+    <h2>カード削除の確認</h2>
+    <p id="admDelText">この操作は取り消せません。</p>
+    <div id="admDelImpact" style="font-size:12px;color:#ffb0b0;line-height:1.5;"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="admDelCancel">キャンセル</button>
+      <button type="button" class="btn btn-danger" id="admDelConfirm">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/nui_nav.js"></script>
+<script src="../js/nui.js"></script>
+<script src="js/admin_app.js"></script>
+</body>
+</html>
