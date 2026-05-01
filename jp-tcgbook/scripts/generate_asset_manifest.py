@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""html/assets/cards 以下の PNG を列挙して asset_manifest.json を生成する（管理者 UI 用）。"""
+"""html/assets/cards 以下の PNG を列挙して asset_manifest.json を生成する（管理者 UI 用）。
+
+自動化の目安（ゲーム内ではフォルダ列挙できないため、外部で実行する）:
+  - Windows: scripts/update_asset_manifest.bat を PNG 追加後に実行
+  - CI / deploy パイプラインの jp-tcgbook コピー前に本スクリプトを実行してもよい
+"""
 from __future__ import annotations
 
 import json
