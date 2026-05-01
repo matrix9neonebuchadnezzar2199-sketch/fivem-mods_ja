@@ -321,9 +321,8 @@ function BattlePvpNotifyGameComplete(st)
 end
 
 --- @param uid string
---- @param src number
 --- @return table|nil deck payload, string|nil err
-local function loadActiveDeckFor(uid, src)
+local function loadActiveDeckFor(uid)
     local decks = Deck.GetAllDecks(uid)
     if not decks.success then
         return nil, decks.error or 'デッキ取得失敗'
@@ -388,11 +387,11 @@ function BattlePvpStart(p1_src, p2_src)
         return false, '識別子を取得できません'
     end
 
-    local deck1, err1 = loadActiveDeckFor(uid1, p1_src)
+    local deck1, err1 = loadActiveDeckFor(uid1)
     if err1 then
         return false, ('プレイヤー%d: %s'):format(p1_src, err1)
     end
-    local deck2, err2 = loadActiveDeckFor(uid2, p2_src)
+    local deck2, err2 = loadActiveDeckFor(uid2)
     if err2 then
         return false, ('プレイヤー%d: %s'):format(p2_src, err2)
     end
