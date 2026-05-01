@@ -59,7 +59,17 @@ function Database.InitializeTables()
         return { success = false, error = 'スキーマ作成失敗: ' .. tostring(err) }
     end
 
-    local upsertSql = [[
+    local cntRows = MySQL.query.await('SELECT COUNT(*) AS c FROM tcg_cards_master', {})
+    local existing = tonumber(cntRows and cntRows[1] and cntRows[1].c) or 0
+    local seedFlag = Config.SeedCardsFromLua
+    if seedFlag == nil then
+        seedFlag = true
+    end
+    local runLuaSeed = existing == 0 or seedFlag == true
+
+    local count = 0
+    if runLuaSeed then
+        local upsertSql = [[
 INSERT INTO tcg_cards_master
     (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, no)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -76,31 +86,31 @@ ON DUPLICATE KEY UPDATE
     no = VALUES(no)
 ]]
 
-    local count = 0
-    ok, err = pcall(function()
-        for _, c in ipairs(TcgCardsMaster) do
-            MySQL.query.await(upsertSql, {
-                c.card_id,
-                c.name,
-                c.rank,
-                c.type,
-                c.stat_top,
-                c.stat_right,
-                c.stat_bottom,
-                c.stat_left,
-                c.image_path,
-                c.description,
-                c.no,
-            })
-            count = count + 1
-        end
-    end)
+        ok, err = pcall(function()
+            for _, c in ipairs(TcgCardsMaster) do
+                MySQL.query.await(upsertSql, {
+                    c.card_id,
+                    c.name,
+                    c.rank,
+                    c.type,
+                    c.stat_top,
+                    c.stat_right,
+                    c.stat_bottom,
+                    c.stat_left,
+                    c.image_path,
+                    c.description,
+                    c.no,
+                })
+                count = count + 1
+            end
+        end)
 
-    if not ok then
-        return { success = false, error = 'カードマスタUPSERT失敗: ' .. tostring(err) }
+        if not ok then
+            return { success = false, error = 'カードマスタUPSERT失敗: ' .. tostring(err) }
+        end
     end
 
-    return { success = true, data = { cardMasterCount = count } }
+    return { success = true, data = { cardMasterCount = count, luaSeedSkipped = not runLuaSeed } }
 end
 
 function Database.GetPlayer(citizenid)
