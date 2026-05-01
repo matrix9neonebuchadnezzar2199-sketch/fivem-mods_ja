@@ -30,9 +30,9 @@ client_scripts {
 
 ui_page 'html/index.html'
 
--- カードPNGは assets 追加後に 'html/assets/cards/*.png' を files に追記
 files {
     'html/index.html',
     'html/css/*.css',
     'html/js/*.js',
+    'html/assets/cards/**/*.png',
 }
