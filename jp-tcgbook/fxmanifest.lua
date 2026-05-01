@@ -3,13 +3,14 @@ game 'gta5'
 lua54 'yes'
 
 author 'JP-Mods'
-description 'トレーディングカードゲーム（BOOK・コレクション・デッキ編成・対戦予定）'
+description 'TCG BOOK（コレクション・デッキ・対戦／パック入手想定）'
 version '0.1.0'
 
 dependency 'oxmysql'
 
 shared_scripts {
     'config.lua',
+    'shared/battle_wire_log.lua',
     'shared/identity.lua',
     'shared/cards.lua',
 }
@@ -21,6 +22,9 @@ server_scripts {
     'server/deck.lua',
     'server/debug.lua',
     'server/admin.lua',
+    'server/battle_debug.lua',
+    'server/battle_pvp.lua',
+    'server/battle_lobby.lua',
     'server/main.lua',
 }
 

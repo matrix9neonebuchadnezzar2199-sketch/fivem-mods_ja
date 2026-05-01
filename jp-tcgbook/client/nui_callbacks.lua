@@ -6,6 +6,10 @@ RegisterNUICallback('openBook', function(_, cb)
 end)
 
 RegisterNUICallback('closeBook', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server closeBook (server:battleVirtualLeave)')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleVirtualLeave')
     SetNuiFocus(false, false)
     cb({ ok = true })
 end)
@@ -47,6 +51,104 @@ end)
 
 RegisterNUICallback('setActiveDeck', function(data, cb)
     TriggerServerEvent('jp-tcgbook:server:setActiveDeck', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleSetWaiting', function(data, cb)
+    if TcgBattleWireLogEnabled() then
+        local w = (data or {}).waiting
+        print(('[jp-tcgbook][wire] NUI->server battleSetWaiting waiting=%s'):format(tostring(w)))
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleSetWaiting', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleCallById', function(data, cb)
+    if TcgBattleWireLogEnabled() then
+        local tid = tonumber((data or {}).target_server_id)
+        print(('[jp-tcgbook][wire] NUI->server battleCallById target_server_id=%s'):format(tostring(tid)))
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleCallById', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleVirtualLeave', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battleVirtualLeave')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleVirtualLeave')
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleSoloVirtualWireTest', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battleSoloVirtualWireTest')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleSoloVirtualWireTest')
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleDebugLookupId', function(data, cb)
+    if TcgBattleWireLogEnabled() then
+        local tid = tonumber((data or {}).target_server_id)
+        print(('[jp-tcgbook][wire] NUI->server battleDebugLookupId target_server_id=%s'):format(tostring(tid)))
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleDebugLookupId', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleDebugStartCpu', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battleDebugStartCpu')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleDebugStartCpu')
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleDebugPlace', function(data, cb)
+    if TcgBattleWireLogEnabled() then
+        local d = data or {}
+        print(('[jp-tcgbook][wire] NUI->server battleDebugPlace cell=%s hand=%s'):format(
+            tostring(d.cell_index),
+            tostring(d.hand_index)))
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleDebugPlace', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battleDebugLeave', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battleDebugLeave')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battleDebugLeave')
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battlePvpPlace', function(data, cb)
+    if TcgBattleWireLogEnabled() then
+        local d = data or {}
+        print(('[jp-tcgbook][wire] NUI->server battlePvpPlace cell=%s hand=%s seq=%s'):format(
+            tostring(d.cell_index),
+            tostring(d.hand_index),
+            tostring(d.turn_seq)))
+    end
+    TriggerServerEvent('jp-tcgbook:server:battlePvpPlace', data or {})
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battlePvpLeave', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battlePvpLeave')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battlePvpLeave')
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('battlePvpRequestState', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battlePvpRequestState')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battlePvpRequestState')
     cb({ ok = true })
 end)
 

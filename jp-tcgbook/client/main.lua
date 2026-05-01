@@ -1,5 +1,35 @@
 --- jp-tcgbook クライアントエントリ
 
+--- @param action string
+--- @param msg unknown
+local function sendBattleNui(action, msg)
+    if TcgBattleWireLogEnabled() then
+        local hint = ''
+        if type(msg) == 'table' then
+            if msg.waiting ~= nil then
+                hint = (' waiting=%s'):format(tostring(msg.waiting))
+            elseif msg.error ~= nil then
+                hint = (' err=%s'):format(tostring(msg.error))
+            elseif msg.phase ~= nil then
+                hint = (' phase=%s turn=%s'):format(tostring(msg.phase), tostring(msg.turn))
+            elseif msg.ok ~= nil then
+                hint = (' ok=%s'):format(tostring(msg.ok))
+            elseif msg.peer_server_id ~= nil or msg.is_cpu ~= nil or msg.solo_wire_test ~= nil then
+                hint = (' peer=%s is_cpu=%s solo=%s'):format(
+                    tostring(msg.peer_server_id),
+                    tostring(msg.is_cpu),
+                    tostring(msg.solo_wire_test))
+            elseif msg.mode ~= nil or msg.pvp_session_id ~= nil then
+                hint = (' mode=%s seq=%s'):format(tostring(msg.mode), tostring(msg.turn_seq))
+            elseif msg.reason ~= nil then
+                hint = (' reason=%s'):format(tostring(msg.reason))
+            end
+        end
+        print(('[jp-tcgbook][wire] client->NUI %s%s'):format(action, hint))
+    end
+    SendNUIMessage({ action = action, payload = msg })
+end
+
 local function hasBookAdminAce()
     local ace = Config.BookAdminAce or 'command.tcg_book_admin'
     return IsPlayerAceAllowed(PlayerId(), ace)
@@ -44,6 +74,42 @@ end)
 
 RegisterNetEvent('jp-tcgbook:client:deckListUpdated', function(result)
     SendNUIMessage({ action = 'deckListUpdated', payload = result })
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battleWaitingAck', function(msg)
+    sendBattleNui('battleWaitingAck', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battleLobbyError', function(msg)
+    sendBattleNui('battleLobbyError', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:virtualBattleMatched', function(msg)
+    sendBattleNui('virtualBattleMatched', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:virtualBattleEnded', function(msg)
+    sendBattleNui('virtualBattleEnded', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battleDebugState', function(msg)
+    sendBattleNui('battleDebugState', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battleDebugLookupAck', function(msg)
+    sendBattleNui('battleDebugLookupAck', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battleDebugEnded', function(msg)
+    sendBattleNui('battleDebugEnded', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battlePvpState', function(msg)
+    sendBattleNui('battlePvpState', msg)
+end)
+
+RegisterNetEvent('jp-tcgbook:client:battlePvpEnded', function(msg)
+    sendBattleNui('battlePvpEnded', msg)
 end)
 
 --- デバッグ: DBリセット等で BOOK を強制クローズ

@@ -254,6 +254,126 @@
 
   syncDeckSummaryMeta();
 
+  /** 対戦ロビー（ブラウザ単体：待受→番号入力で接続デモ） */
+  let mockBattleWaiting = false;
+  /** battleSoloVirtualWireTest 中（1人往復デモ） */
+  let mockSoloWireTest = false;
+
+  /** デバッグ CPU 対戦（ブラウザ単体・サーバー battle_debug と同形の簡易状態） */
+  const MOCK_HAND_SIZE = 5;
+
+  /** @type {null | { board: Record<number, { owner: string, card: object }|undefined>, human_hand: object[], cpu_hand: object[], turn: string, phase: string, first_player: string, scores?: object, winner?: string, log: string[] }} */
+  let mockDbgCpuState = null;
+
+  function mockDbgShuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  function mockDbgIdxToRc(idx) {
+    const z = idx - 1;
+    return [Math.floor(z / 3), z % 3];
+  }
+
+  function mockDbgRcToIdx(r, c) {
+    return r * 3 + c + 1;
+  }
+
+  function mockDbgApplyCaptures(st, idx, owner, card) {
+    const [r, c] = mockDbgIdxToRc(idx);
+    const opp = owner === 'human' ? 'cpu' : 'human';
+    const checks = [
+      { nr: r - 1, nc: c, my: Number(card.stat_top), oppKey: 'stat_bottom' },
+      { nr: r + 1, nc: c, my: Number(card.stat_bottom), oppKey: 'stat_top' },
+      { nr: r, nc: c - 1, my: Number(card.stat_left), oppKey: 'stat_right' },
+      { nr: r, nc: c + 1, my: Number(card.stat_right), oppKey: 'stat_left' },
+    ];
+    for (const ch of checks) {
+      if (ch.nr < 0 || ch.nr > 2 || ch.nc < 0 || ch.nc > 2) continue;
+      const ni = mockDbgRcToIdx(ch.nr, ch.nc);
+      const cell = st.board[ni];
+      if (cell && cell.owner === opp) {
+        const ostat = Number(cell.card[ch.oppKey]) || 0;
+        if (ch.my > ostat) cell.owner = owner;
+      }
+    }
+  }
+
+  function mockDbgBoardFull(st) {
+    for (let i = 1; i <= 9; i++) {
+      if (st.board[i] == null) return false;
+    }
+    return true;
+  }
+
+  function mockDbgScoreGame(st) {
+    let humBoard = 0;
+    let cpuBoard = 0;
+    for (let i = 1; i <= 9; i++) {
+      const cell = st.board[i];
+      if (cell) {
+        if (cell.owner === 'human') humBoard++;
+        else cpuBoard++;
+      }
+    }
+    const humHand = (st.human_hand || []).length;
+    const cpuHand = (st.cpu_hand || []).length;
+    return [humBoard + humHand, cpuBoard + cpuHand];
+  }
+
+  function mockDbgFinalizeIfEnded(st) {
+    if (!mockDbgBoardFull(st)) return false;
+    st.phase = 'ended';
+    const [hs, cs] = mockDbgScoreGame(st);
+    st.scores = { human: hs, cpu: cs };
+    if (hs > cs) st.winner = 'human';
+    else if (cs > hs) st.winner = 'cpu';
+    else st.winner = 'draw';
+    return true;
+  }
+
+  function mockDbgCpuRandomPlace(st) {
+    const empties = [];
+    for (let i = 1; i <= 9; i++) {
+      if (st.board[i] == null) empties.push(i);
+    }
+    if (empties.length === 0 || !(st.cpu_hand || []).length) return false;
+    const idx = empties[Math.floor(Math.random() * empties.length)];
+    const hi = Math.floor(Math.random() * st.cpu_hand.length);
+    const card = st.cpu_hand.splice(hi, 1)[0];
+    st.board[idx] = { owner: 'cpu', card };
+    mockDbgApplyCaptures(st, idx, 'cpu', card);
+    st.turn = 'human';
+    mockDbgFinalizeIfEnded(st);
+    return true;
+  }
+
+  function mockDbgBuildClientPayload(st) {
+    const board = {};
+    for (let i = 1; i <= 9; i++) {
+      const cell = st.board[i];
+      if (cell) board[String(i)] = { owner: cell.owner, card: cell.card };
+    }
+    return {
+      phase: st.phase,
+      turn: st.turn,
+      board,
+      human_hand: st.human_hand,
+      cpu_hand_count: (st.cpu_hand || []).length,
+      scores: st.scores,
+      winner: st.winner,
+      first_player: st.first_player,
+      log: st.log || [],
+    };
+  }
+
+  function mockDbgPushState() {
+    if (!mockDbgCpuState) return;
+    global.postMessage({ action: 'battleDebugState', payload: mockDbgBuildClientPayload(mockDbgCpuState) }, '*');
+  }
+
   global.mockData = MOCK_DATA;
 
   const MOCK_ACTION_MAP = {
@@ -384,6 +504,7 @@
 
   const MOCK_HANDLERS = {
     openBook() {
+      const ad = cloneDeckDetail(1);
       return {
         success: true,
         data: {
@@ -391,7 +512,16 @@
           cards: MOCK_DATA.cards.map((c) => ({ ...c })),
           decks: MOCK_DATA.decks.map((d) => ({ ...d })),
           cardsMaster: cloneCardsMaster(),
-          ui: { autoSaveDebounceMs: 500 },
+          activeDeck: ad,
+          battleSession: null,
+          battleCpuSession: mockDbgCpuState ? mockDbgBuildClientPayload(mockDbgCpuState) : null,
+          battlePvpSession: null,
+          ui: {
+            autoSaveDebounceMs: 500,
+            playerServerId: 101,
+            allow_debug_battle: true,
+            wire_log: true,
+          },
         },
       };
     },
@@ -578,16 +708,282 @@
       syncDeckSummaryMeta();
       return okDeckList();
     },
+
+    battleSetWaiting(data) {
+      if (mockSoloWireTest) {
+        setTimeout(() => {
+          global.postMessage(
+            {
+              action: 'battleLobbyError',
+              payload: { error: 'ソロ検証接続中は待受を切り替えられません（先に「切断する」）' },
+            },
+            '*',
+          );
+        }, 15);
+        return { success: true };
+      }
+      mockBattleWaiting = !!(data && data.waiting);
+      setTimeout(() => {
+        global.postMessage({ action: 'battleWaitingAck', payload: { waiting: mockBattleWaiting } }, '*');
+      }, 25);
+      return { success: true };
+    },
+
+    battleCallById(data) {
+      if (mockSoloWireTest) {
+        const r = fail('ソロ検証接続中は呼び出せません（先に「切断する」）');
+        setTimeout(() => {
+          global.postMessage({ action: 'battleLobbyError', payload: { error: r.error } }, '*');
+        }, 15);
+        return r;
+      }
+      const tid = Number(data && data.target_server_id);
+      if (!Number.isFinite(tid) || tid < 1) {
+        const r = fail('相手の番号（整数）を入力してください');
+        setTimeout(() => {
+          global.postMessage({ action: 'battleLobbyError', payload: { error: r.error } }, '*');
+        }, 15);
+        return r;
+      }
+      if (!mockBattleWaiting) {
+        const r = fail('先に「招待待機を開始」してください（モックは1タブ内デモ）');
+        setTimeout(() => {
+          global.postMessage({ action: 'battleLobbyError', payload: { error: r.error } }, '*');
+        }, 15);
+        return r;
+      }
+      mockBattleWaiting = false;
+      setTimeout(() => {
+        global.postMessage({
+          action: 'virtualBattleMatched',
+          payload: { peer_server_id: tid, is_caller: true },
+        }, '*');
+      }, 35);
+      return { success: true };
+    },
+
+    battleVirtualLeave() {
+      mockSoloWireTest = false;
+      mockBattleWaiting = false;
+      if (mockDbgCpuState) {
+        mockDbgCpuState = null;
+        setTimeout(() => {
+          global.postMessage({ action: 'battleDebugEnded', payload: {} }, '*');
+        }, 12);
+      }
+      setTimeout(() => {
+        global.postMessage({ action: 'virtualBattleEnded', payload: {} }, '*');
+      }, 20);
+      return { success: true };
+    },
+
+    battleSoloVirtualWireTest() {
+      if (mockDbgCpuState) {
+        setTimeout(() => {
+          global.postMessage(
+            { action: 'battleLobbyError', payload: { error: 'デバッグ対戦中は使えません（先に終了）' } },
+            '*',
+          );
+        }, 15);
+        return { success: true };
+      }
+      mockBattleWaiting = false;
+      mockSoloWireTest = true;
+      setTimeout(() => {
+        global.postMessage(
+          {
+            action: 'virtualBattleMatched',
+            payload: {
+              peer_server_id: null,
+              is_caller: true,
+              solo_wire_test: true,
+              peer_label: 'ソロ検証（2人目のクライアントなし・モック）',
+            },
+          },
+          '*',
+        );
+      }, 30);
+      return { success: true };
+    },
+
+    battleDebugLookupId(data) {
+      const tid = Number(data && data.target_server_id);
+      if (!Number.isFinite(tid) || tid < 1 || Math.floor(tid) !== tid) {
+        global.postMessage({
+          action: 'battleDebugLookupAck',
+          payload: { ok: false, error: '検索するサーバーID（正の整数）を入力してください' },
+        }, '*');
+        return;
+      }
+      global.postMessage(
+        {
+          action: 'battleDebugLookupAck',
+          payload: {
+            ok: true,
+            target_server_id: tid,
+            display_name: `検証用: サーバーID ${tid}（応答のみ・実プレイヤーではありません）`,
+          },
+        },
+        '*',
+      );
+    },
+
+    battleDebugStartCpu() {
+      if (mockSoloWireTest) {
+        global.postMessage(
+          {
+            action: 'battleLobbyError',
+            payload: { error: 'ソロ検証接続中です。先に仮想対戦を切断してください。' },
+          },
+          '*',
+        );
+        return;
+      }
+      const active = MOCK_DATA.decks.find((d) => d.is_active === true || d.is_active === 1);
+      if (!active) {
+        global.postMessage({ action: 'battleLobbyError', payload: { error: '使用デッキがありません' } }, '*');
+        return;
+      }
+      const det = MOCK_DATA.deckDetails[active.id];
+      if (!det || !det.slots) {
+        global.postMessage({ action: 'battleLobbyError', payload: { error: 'デッキ取得失敗' } }, '*');
+        return;
+      }
+      const deckCards = [];
+      for (let i = 1; i <= DECK_SIZE; i++) {
+        const sl = getSlotRow(det.slots, i);
+        if (sl && sl.card && sl.card.card_id) {
+          deckCards.push({ ...sl.card });
+        }
+      }
+      if (deckCards.length < DECK_SIZE) {
+        global.postMessage(
+          {
+            action: 'battleLobbyError',
+            payload: { error: `デッキが ${DECK_SIZE} 枚未満です（要 ${DECK_SIZE} 枚）` },
+          },
+          '*',
+        );
+        return;
+      }
+      mockDbgShuffleInPlace(deckCards);
+      const human_hand = deckCards.slice(0, MOCK_HAND_SIZE);
+
+      const cpuPool = MOCK_CARDS_MASTER.map((m) => cardPayload(m));
+      mockDbgShuffleInPlace(cpuPool);
+      const cpu_hand = cpuPool.slice(0, MOCK_HAND_SIZE);
+
+      const first = Math.random() < 0.5 ? 'human' : 'cpu';
+      mockDbgCpuState = {
+        board: {},
+        human_hand,
+        cpu_hand,
+        turn: first,
+        phase: 'playing',
+        first_player: first,
+        scores: null,
+        winner: null,
+        log: [first === 'human' ? '先攻: あなた' : '先攻: CPU'],
+      };
+
+      if (first === 'cpu') {
+        mockDbgCpuRandomPlace(mockDbgCpuState);
+        mockDbgCpuState.log.push('CPU がランダムに配置しました');
+      }
+
+      mockDbgPushState();
+      global.postMessage(
+        {
+          action: 'virtualBattleMatched',
+          payload: { peer_server_id: null, is_cpu: true, is_caller: true },
+        },
+        '*',
+      );
+    },
+
+    battleDebugPlace(data) {
+      if (!mockDbgCpuState || mockDbgCpuState.phase !== 'playing') {
+        global.postMessage({ action: 'battleLobbyError', payload: { error: '対局中ではありません' } }, '*');
+        return;
+      }
+      if (mockDbgCpuState.turn !== 'human') {
+        global.postMessage({ action: 'battleLobbyError', payload: { error: '相手のターンです' } }, '*');
+        return;
+      }
+      const cellIdx = Number(data && data.cell_index);
+      let handIdx = Number(data && data.hand_index);
+      if (!Number.isFinite(cellIdx) || cellIdx < 1 || cellIdx > 9 || Math.floor(cellIdx) !== cellIdx) {
+        global.postMessage({ action: 'battleLobbyError', payload: { error: 'マスが不正です（1〜9）' } }, '*');
+        return;
+      }
+      handIdx = Number.isFinite(handIdx) ? Math.floor(handIdx) : -1;
+      if (handIdx < 0 || handIdx >= mockDbgCpuState.human_hand.length) {
+        global.postMessage({
+          action: 'battleLobbyError',
+          payload: { error: '手札インデックスが不正です（0 から）' },
+        }, '*');
+        return;
+      }
+      if (mockDbgCpuState.board[cellIdx] != null) {
+        global.postMessage({ action: 'battleLobbyError', payload: { error: 'そのマスは埋まっています' } }, '*');
+        return;
+      }
+
+      const card = mockDbgCpuState.human_hand.splice(handIdx, 1)[0];
+      mockDbgCpuState.board[cellIdx] = { owner: 'human', card };
+      mockDbgApplyCaptures(mockDbgCpuState, cellIdx, 'human', card);
+      mockDbgCpuState.log.push(`あなた: マス ${cellIdx} に配置`);
+
+      if (mockDbgFinalizeIfEnded(mockDbgCpuState)) {
+        mockDbgCpuState.log.push(
+          `終了: あなた ${mockDbgCpuState.scores.human} vs CPU ${mockDbgCpuState.scores.cpu}`,
+        );
+        mockDbgPushState();
+        return;
+      }
+
+      mockDbgCpuState.turn = 'cpu';
+      mockDbgCpuRandomPlace(mockDbgCpuState);
+      if (mockDbgCpuState.phase === 'playing') {
+        mockDbgCpuState.log.push('CPU がランダムに配置しました');
+      } else {
+        mockDbgCpuState.log.push(
+          `終了: あなた ${mockDbgCpuState.scores.human} vs CPU ${mockDbgCpuState.scores.cpu}`,
+        );
+      }
+      mockDbgPushState();
+    },
+
+    battleDebugLeave() {
+      mockDbgCpuState = null;
+      global.postMessage({ action: 'battleDebugEnded', payload: {} }, '*');
+    },
   };
 
   global.mockDispatchServerEvent = function (eventName, data) {
+    const dbgEvents = {
+      battleDebugLookupId: true,
+      battleDebugStartCpu: true,
+      battleDebugPlace: true,
+      battleDebugLeave: true,
+    };
+    if (dbgEvents[eventName]) {
+      setTimeout(() => {
+        const fn = MOCK_HANDLERS[eventName];
+        if (fn) fn(data || {});
+      }, 40);
+      return;
+    }
+
     const handler = MOCK_HANDLERS[eventName];
-    const action = MOCK_ACTION_MAP[eventName];
-    if (!handler || !action) return;
+    if (!handler) return;
 
     setTimeout(() => {
       const result = handler(data || {});
-      global.postMessage({ action, payload: result }, '*');
+      const action = MOCK_ACTION_MAP[eventName];
+      if (action) {
+        global.postMessage({ action, payload: result }, '*');
+      }
     }, 50);
   };
 

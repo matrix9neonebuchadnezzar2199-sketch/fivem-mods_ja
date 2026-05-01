@@ -156,6 +156,24 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
         return
     end
 
+    local activeDeckId = nil
+    for _, d in ipairs(decks.data or {}) do
+        if d.is_active == true or d.is_active == 1 then
+            activeDeckId = d.id
+            break
+        end
+    end
+
+    local activeDeckPayload = nil
+    if activeDeckId then
+        local g = Deck.GetDeck(uid, activeDeckId)
+        if g.success then
+            activeDeckPayload = g.data
+        end
+    end
+
+    local battlePeer = BattleLobbyGetPeer(src)
+
     replyBookData(src, {
         success = true,
         data = {
@@ -163,10 +181,22 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
             cards = cards.data or {},
             decks = decks.data or {},
             cardsMaster = TcgCardsMaster,
+            activeDeck = activeDeckPayload,
+            battleSession = battlePeer and { peer_server_id = battlePeer } or nil,
             -- NUI: デッキ自動保存デバウンス（ms）。0 でキューをほぼ即 flush
             ui = {
                 autoSaveDebounceMs = math.max(0, math.floor(tonumber(Config.AutoSaveDebounceMs) or 500)),
+                --- 仮想対戦の呼び出し番号（FiveM のサーバーID）
+                playerServerId = src,
+                --- Config.DebugCommands のとき NUI にデバッグ対戦ロビーを出す
+                allow_debug_battle = Config.DebugCommands == true,
+                --- NUI コンソールに fetch / message の往復ログ（TcgBattleWireLogEnabled）
+                wire_log = TcgBattleWireLogEnabled(),
             },
+            --- BOOK 再オープン時にデバッグ対戦状態を復元表示
+            battleCpuSession = BattleDebugGetClientState and BattleDebugGetClientState(src) or nil,
+            --- 本番 2 人対戦の復元（再オープン時）
+            battlePvpSession = BattlePvpGetClientState and BattlePvpGetClientState(src) or nil,
         },
     })
 end)

@@ -17,19 +17,98 @@
     /** GetDeck / selectDeck / deckUpdated の詳細 */
     currentDeckDetail: null,
     /** openBook の ui ブロック（デバウンス・サーバーID 等） */
-    ui: { autoSaveDebounceMs: 500, playerServerId: null },
+    ui: { autoSaveDebounceMs: 500, playerServerId: null, allow_debug_battle: false },
     /** 仮想対戦ロビー（サーバー同期） */
     battleVirtual: {
       waiting: false,
       connectedPeerId: null,
       isCaller: null,
       lastError: null,
+      /** サーバ battleSoloVirtualWireTest: 2人目クライアントなしの接続デモ */
+      soloWireTest: false,
+      soloPeerLabel: '',
+    },
+    /** デバッグ CPU 対戦（Config.DebugCommands・サーバー battle_debug.lua） */
+    battleCpu: {
+      active: false,
+      state: null,
+      debugLobbyOpen: false,
+      lookupLabel: '',
+    },
+    /** 本番 2 人対戦（battle_pvp.lua・仮想ロビー成立後） */
+    battlePvp: {
+      active: false,
+      state: null,
     },
   };
 
   const TAB_ORDER = ['collection', 'deck', 'battle', 'ranking'];
 
   let helpOpen = false;
+
+  /** @type {null | (() => void)} */
+  let tcgConfirmAbort = null;
+
+  function isCpuDuelActive() {
+    const bc = global.AppState.battleCpu;
+    return !!(bc && bc.active && bc.state);
+  }
+
+  function isPvpDuelActive() {
+    const bp = global.AppState.battlePvp;
+    return !!(bp && bp.active && bp.state);
+  }
+
+  /** CPU / PvP いずれかのアリーナ表示中（タブ移動・ESC の判定） */
+  function isBattleArenaActive() {
+    return isCpuDuelActive() || isPvpDuelActive();
+  }
+
+  /**
+   * FiveM NUI では window.confirm が表示されずメインスレッドだけブロックすることがあるため、BOOK 内モーダルのみ使用する。
+   * @param {string} message
+   * @returns {Promise<boolean>}
+   */
+  function openTcgConfirm(message) {
+    return new Promise((resolve) => {
+      const modal = $('#tcgConfirmModal');
+      const msgEl = $('#tcgConfirmMessage');
+      const okBtn = $('#tcgConfirmOk');
+      const cancelBtn = $('#tcgConfirmCancel');
+      if (!modal || !msgEl || !okBtn || !cancelBtn) {
+        resolve(true);
+        return;
+      }
+
+      function finish(val) {
+        tcgConfirmAbort = null;
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onBackdrop);
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        resolve(val);
+      }
+
+      function onOk() {
+        finish(true);
+      }
+      function onCancel() {
+        finish(false);
+      }
+      function onBackdrop(ev) {
+        if (ev.target === modal) onCancel();
+      }
+
+      tcgConfirmAbort = onCancel;
+      msgEl.textContent = message;
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      modal.addEventListener('click', onBackdrop);
+    });
+  }
 
   function $(sel) {
     return document.querySelector(sel);
@@ -105,15 +184,21 @@
     } else if (tab === 'deck') {
       renderDeckIfNeeded();
     } else if (tab === 'battle') {
-      if (typeof global.Battle !== 'undefined' && global.Battle.render) {
-        global.Battle.render();
-      }
+      /* Battle.render は下で常に呼ぶ（CPU 対戦中は他タブ表示でもアリーナ更新のため） */
     } else {
       console.log('[jp-tcgbook] tab=', tab);
+    }
+    if (typeof global.Battle !== 'undefined' && global.Battle.render) {
+      global.Battle.render();
     }
   }
 
   function switchTab(tabName) {
+    if (tabName !== global.AppState.currentTab && isBattleArenaActive()) {
+      showError('対戦中は他のタブに切り替えられません。全画面の「対戦終了」で抜けてください。');
+      return;
+    }
+
     global.AppState.currentTab = tabName;
 
     document.querySelectorAll('.tabs .tab').forEach((btn) => {
@@ -171,7 +256,20 @@
       const appEl = $('#app');
       if (!appEl || appEl.hidden) return;
 
+      const confirmModal = $('#tcgConfirmModal');
+      if (confirmModal && confirmModal.classList.contains('is-open')) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (typeof tcgConfirmAbort === 'function') tcgConfirmAbort();
+        }
+        return;
+      }
+
       if (e.key === 'Tab' && !helpOpen) {
+        if (isBattleArenaActive()) {
+          e.preventDefault();
+          return;
+        }
         e.preventDefault();
         const i = TAB_ORDER.indexOf(global.AppState.currentTab);
         const next = TAB_ORDER[(i + 1 + TAB_ORDER.length) % TAB_ORDER.length];
@@ -193,12 +291,24 @@
         return;
       }
 
-      if (
-        typeof global.jpTcgbookConfirmIfVirtualBattle === 'function' &&
-        !global.jpTcgbookConfirmIfVirtualBattle(
-          'BOOK を閉じますか？\n\n仮想対戦が接続中です。続行すると対戦が終了し、相手側も切断されます。',
-        )
-      ) {
+      const bvEsc = global.AppState.battleVirtual;
+      const peer = bvEsc && bvEsc.connectedPeerId;
+      const needBattleConfirm =
+        peer != null || !!(bvEsc && bvEsc.soloWireTest) || isBattleArenaActive();
+      if (needBattleConfirm) {
+        e.preventDefault();
+        void (async () => {
+          const soloOnly =
+            !!(bvEsc && bvEsc.soloWireTest) && peer == null && !isBattleArenaActive();
+          const ok = await openTcgConfirm(
+            soloOnly
+              ? 'BOOK を閉じますか？\n\nソロ検証の仮想接続を終了します。'
+              : 'BOOK を閉じますか？\n\n仮想対戦の接続中、または対戦アリーナ進行中です。続行すると終了し、接続中なら相手側も切断されます。',
+          );
+          if (!ok) return;
+          api.closeBook();
+          appEl.hidden = true;
+        })();
         return;
       }
 
@@ -216,6 +326,7 @@
   });
 
   NUI.on('forceClose', () => {
+    global.__tcgWireLog = false;
     const appEl = $('#app');
     if (appEl) appEl.hidden = true;
   });
@@ -226,6 +337,20 @@
   });
 
   NUI.on('virtualBattleMatched', (p) => {
+    if (p && p.is_cpu === true) {
+      global.AppState.battleCpu = global.AppState.battleCpu || {};
+      global.AppState.battleCpu.active = true;
+      global.AppState.battleVirtual.connectedPeerId = null;
+      global.AppState.battleVirtual.isCaller = null;
+      global.AppState.battleVirtual.waiting = false;
+      global.AppState.battleVirtual.soloWireTest = false;
+      global.AppState.battleVirtual.soloPeerLabel = '';
+      renderCurrentTab();
+      return;
+    }
+    global.AppState.battleVirtual.soloWireTest = !!(p && p.solo_wire_test);
+    global.AppState.battleVirtual.soloPeerLabel =
+      p && typeof p.peer_label === 'string' ? p.peer_label : '';
     global.AppState.battleVirtual.connectedPeerId =
       p && p.peer_server_id != null ? Number(p.peer_server_id) : null;
     if (p && p.is_caller === true) {
@@ -243,11 +368,55 @@
     global.AppState.battleVirtual.connectedPeerId = null;
     global.AppState.battleVirtual.isCaller = null;
     global.AppState.battleVirtual.waiting = false;
+    global.AppState.battleVirtual.soloWireTest = false;
+    global.AppState.battleVirtual.soloPeerLabel = '';
     renderCurrentTab();
   });
 
   NUI.on('battleLobbyError', (p) => {
     showError(p && p.error ? p.error : 'エラー');
+    renderCurrentTab();
+  });
+
+  NUI.on('battleDebugState', (p) => {
+    global.AppState.battleCpu = global.AppState.battleCpu || {};
+    global.AppState.battleCpu.active = true;
+    global.AppState.battleCpu.state = p || null;
+    renderCurrentTab();
+  });
+
+  NUI.on('battleDebugLookupAck', (p) => {
+    global.AppState.battleCpu = global.AppState.battleCpu || {};
+    if (p && p.ok === true) {
+      global.AppState.battleCpu.lookupLabel = p.display_name || '応答OK';
+    } else {
+      global.AppState.battleCpu.lookupLabel = '';
+      showError(p && p.error ? p.error : '検索に失敗しました');
+    }
+    renderCurrentTab();
+  });
+
+  NUI.on('battleDebugEnded', () => {
+    global.AppState.battleCpu = global.AppState.battleCpu || {};
+    global.AppState.battleCpu.active = false;
+    global.AppState.battleCpu.state = null;
+    renderCurrentTab();
+  });
+
+  NUI.on('battlePvpState', (p) => {
+    global.AppState.battlePvp = global.AppState.battlePvp || {};
+    global.AppState.battlePvp.active = true;
+    global.AppState.battlePvp.state = p || null;
+    renderCurrentTab();
+  });
+
+  NUI.on('battlePvpEnded', () => {
+    global.AppState.battlePvp = global.AppState.battlePvp || {};
+    global.AppState.battlePvp.active = false;
+    global.AppState.battlePvp.state = null;
+    global.AppState.battleVirtual.connectedPeerId = null;
+    global.AppState.battleVirtual.isCaller = null;
+    global.AppState.battleVirtual.waiting = false;
     renderCurrentTab();
   });
 
@@ -269,13 +438,39 @@
     global.AppState.ui = {
       autoSaveDebounceMs: Number.isFinite(debounce) && debounce >= 0 ? debounce : 500,
       playerServerId: Number.isFinite(psid) && psid >= 1 ? psid : null,
+      allow_debug_battle: !!(d.ui && d.ui.allow_debug_battle),
+      wire_log: !!(d.ui && d.ui.wire_log),
     };
+    global.__tcgWireLog = !!(d.ui && d.ui.wire_log);
+
+    const prevDbg = global.AppState.battleCpu || {};
+    global.AppState.battleCpu = {
+      active: false,
+      state: null,
+      debugLobbyOpen: !!prevDbg.debugLobbyOpen,
+      lookupLabel: typeof prevDbg.lookupLabel === 'string' ? prevDbg.lookupLabel : '',
+    };
+    if (d.battleCpuSession && typeof d.battleCpuSession === 'object') {
+      global.AppState.battleCpu.active = true;
+      global.AppState.battleCpu.state = d.battleCpuSession;
+    }
+
+    global.AppState.battlePvp = {
+      active: false,
+      state: null,
+    };
+    if (d.battlePvpSession && typeof d.battlePvpSession === 'object') {
+      global.AppState.battlePvp.active = true;
+      global.AppState.battlePvp.state = d.battlePvpSession;
+    }
 
     global.AppState.battleVirtual = {
       waiting: false,
       connectedPeerId: null,
       isCaller: null,
       lastError: null,
+      soloWireTest: false,
+      soloPeerLabel: '',
     };
     if (d.battleSession && d.battleSession.peer_server_id != null) {
       global.AppState.battleVirtual.connectedPeerId = Number(d.battleSession.peer_server_id);
@@ -378,10 +573,18 @@
   global.jpTcgbookSwitchTab = switchTab;
   global.jpTcgbookShowError = showError;
 
-  /** 仮想対戦中のみ `window.confirm`。未接続なら常に true */
-  global.jpTcgbookConfirmIfVirtualBattle = function (message) {
-    const peer = global.AppState.battleVirtual && global.AppState.battleVirtual.connectedPeerId;
-    if (peer == null) return true;
-    return window.confirm(message);
+  /** 仮想対戦／CPU 対戦中のみ確認。FiveM では window.confirm を使わない。 */
+  global.jpTcgbookConfirmIfVirtualBattleAsync = async function (message) {
+    const bv0 = global.AppState.battleVirtual;
+    const peer = bv0 && bv0.connectedPeerId;
+    if (
+      peer == null &&
+      !(bv0 && bv0.soloWireTest) &&
+      !isCpuDuelActive() &&
+      !isPvpDuelActive()
+    ) {
+      return true;
+    }
+    return openTcgConfirm(message);
   };
 })(window);

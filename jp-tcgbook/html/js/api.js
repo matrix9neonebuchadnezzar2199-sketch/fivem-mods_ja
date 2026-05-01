@@ -35,5 +35,43 @@
     setActiveDeck(deckId) {
       N.send('setActiveDeck', { deck_id: deckId });
     },
+    battleSetWaiting(waiting) {
+      N.send('battleSetWaiting', { waiting: !!waiting });
+    },
+    battleCallById(targetServerId) {
+      N.send('battleCallById', { target_server_id: targetServerId });
+    },
+    battleVirtualLeave() {
+      N.send('battleVirtualLeave', {});
+    },
+    battleSoloVirtualWireTest() {
+      N.send('battleSoloVirtualWireTest', {});
+    },
+    battleDebugLookupId(targetServerId) {
+      N.send('battleDebugLookupId', { target_server_id: targetServerId });
+    },
+    battleDebugStartCpu() {
+      N.send('battleDebugStartCpu', {});
+    },
+    battleDebugPlace(cellIndex, handIndex) {
+      N.send('battleDebugPlace', { cell_index: cellIndex, hand_index: handIndex });
+    },
+    battleDebugLeave() {
+      N.send('battleDebugLeave', {});
+    },
+    battlePvpPlace(cellIndex, handIndex, turnSeq, pvpSessionId) {
+      N.send('battlePvpPlace', {
+        cell_index: cellIndex,
+        hand_index: handIndex,
+        turn_seq: turnSeq,
+        pvp_session_id: pvpSessionId,
+      });
+    },
+    battlePvpLeave() {
+      N.send('battlePvpLeave', {});
+    },
+    battlePvpRequestState() {
+      N.send('battlePvpRequestState', {});
+    },
   };
 })(window);
