@@ -10,6 +10,7 @@ dependency 'oxmysql'
 
 shared_scripts {
     'config.lua',
+    'shared/battle_rule.lua',
     'shared/battle_wire_log.lua',
     'shared/identity.lua',
     'shared/cards.lua',

@@ -5,20 +5,6 @@
 --- @type table<number, table>  src -> game state
 local games = {}
 
---- @param idx integer 1..9
---- @return integer r, integer c  0..2
-local function idxToRc(idx)
-    local z = idx - 1
-    return z // 3, z % 3
-end
-
---- @param r integer
---- @param c integer
---- @return integer
-local function rcToIdx(r, c)
-    return r * 3 + c + 1
-end
-
 --- @param card_id string
 --- @return table|nil
 local function masterRow(card_id)
@@ -56,70 +42,13 @@ local function shuffleInPlace(t)
 end
 
 --- @param st table
---- @param idx integer 1..9
---- @param owner string human|cpu
---- @param card table
-local function applyCaptures(st, idx, owner, card)
-    local r, c = idxToRc(idx)
-    local opp = owner == 'human' and 'cpu' or 'human'
-    --- 上・下・左・右: 置いたカードの辺 vs 隣の相手カードの反対側の辺
-    local checks = {
-        { nr = r - 1, nc = c, my = card.stat_top, oppKey = 'stat_bottom' },
-        { nr = r + 1, nc = c, my = card.stat_bottom, oppKey = 'stat_top' },
-        { nr = r, nc = c - 1, my = card.stat_left, oppKey = 'stat_right' },
-        { nr = r, nc = c + 1, my = card.stat_right, oppKey = 'stat_left' },
-    }
-    for _, ch in ipairs(checks) do
-        if ch.nr >= 0 and ch.nr <= 2 and ch.nc >= 0 and ch.nc <= 2 then
-            local ni = rcToIdx(ch.nr, ch.nc)
-            local cell = st.board[ni]
-            if cell and cell.owner == opp then
-                local ostat = tonumber(cell.card[ch.oppKey]) or 0
-                if ch.my > ostat then
-                    cell.owner = owner
-                end
-            end
-        end
-    end
-end
-
---- @param st table
---- @return boolean
-local function boardFull(st)
-    for i = 1, 9 do
-        if st.board[i] == nil then
-            return false
-        end
-    end
-    return true
-end
-
---- @param st table
---- @return integer, integer
-local function scoreGame(st)
-    local humBoard, cpuBoard = 0, 0
-    for i = 1, 9 do
-        local cell = st.board[i]
-        if cell then
-            if cell.owner == 'human' then
-                humBoard = humBoard + 1
-            else
-                cpuBoard = cpuBoard + 1
-            end
-        end
-    end
-    local humHand = #(st.human_hand or {})
-    local cpuHand = #(st.cpu_hand or {})
-    return humBoard + humHand, cpuBoard + cpuHand
-end
-
---- @param st table
 local function finalizeIfEnded(st)
-    if not boardFull(st) then
+    if not TcgBattleRule.IsBoardFull(st.board) then
         return false
     end
     st.phase = 'ended'
-    local hs, cs = scoreGame(st)
+    local hs = TcgBattleRule.CalcFinalScore(st.board, 'human', #(st.human_hand or {}))
+    local cs = TcgBattleRule.CalcFinalScore(st.board, 'cpu', #(st.cpu_hand or {}))
     st.scores = { human = hs, cpu = cs }
     if hs > cs then
         st.winner = 'human'
@@ -147,8 +76,7 @@ local function cpuRandomPlace(st)
     local idx = empties[math.random(#empties)]
     local hi = math.random(#st.cpu_hand)
     local card = table.remove(st.cpu_hand, hi)
-    st.board[idx] = { owner = 'cpu', card = card }
-    applyCaptures(st, idx, 'cpu', card)
+    TcgBattleRule.PlaceAndResolve(st.board, idx, card, 'cpu')
     st.turn = 'human'
     finalizeIfEnded(st)
     return true
@@ -265,7 +193,7 @@ local function startGame(src, citizenid, activeDeck)
     local first = math.random(2) == 1 and 'human' or 'cpu'
 
     local st = {
-        board = {},
+        board = TcgBattleRule.CreateEmptyBoard(),
         human_hand = human_hand,
         cpu_hand = cpu_hand,
         turn = first,
@@ -453,8 +381,7 @@ RegisterNetEvent('jp-tcgbook:server:battleDebugPlace', function(data)
     end
 
     local card = table.remove(st.human_hand, handIdx + 1)
-    st.board[cellIdx] = { owner = 'human', card = card }
-    applyCaptures(st, cellIdx, 'human', card)
+    TcgBattleRule.PlaceAndResolve(st.board, cellIdx, card, 'human')
     st.log[#st.log + 1] = ('あなた: マス %d に配置'):format(cellIdx)
 
     if finalizeIfEnded(st) then
