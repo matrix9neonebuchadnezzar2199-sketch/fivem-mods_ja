@@ -105,6 +105,14 @@ RegisterNUICallback('battleDebugStartCpu', function(_, cb)
     cb({ ok = true })
 end)
 
+RegisterNUICallback('battlePvpStartSolo', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battlePvpStartSolo')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battlePvpStartSolo')
+    cb({ ok = true })
+end)
+
 RegisterNUICallback('battleDebugPlace', function(data, cb)
     if TcgBattleWireLogEnabled() then
         local d = data or {}

@@ -180,7 +180,7 @@
     if (open) {
       panel =
         '<div class="battle-dbg-lobby-panel">' +
-        '<p class="battle-hint">検索はオンライン確認をしません（応答のみの検証用）。「CPU対戦を開始」でサーバーが CPU を相手にした対戦を開始します。</p>' +
+        '<p class="battle-hint">検索はオンライン確認をしません（応答のみの検証用）。「CPU対戦を開始」は <code>battle_debug</code> 経由。「疑似 PvP 対戦を開始」は <code>battle_pvp.lua</code> 本番経路（仮想相手・サーバー AI）です。</p>' +
         '<div class="battle-call-row battle-dbg-lookup-row">' +
         '<label class="battle-call-label"><span>検索するサーバーID</span>' +
         '<input type="number" min="1" step="1" class="battle-call-input" id="battleDbgLookupInput" placeholder="例: 99" aria-label="検索するサーバーID"></label>' +
@@ -189,8 +189,9 @@
         (lookupLabel
           ? `<p class="battle-dbg-lookup-result"><strong>検索結果:</strong> ${lookupLabel}</p>`
           : '') +
-        '<div class="battle-wait-row">' +
+        '<div class="battle-call-row battle-wait-row">' +
         '<button type="button" class="btn primary battle-dbg-start-cpu">CPU対戦を開始</button>' +
+        '<button type="button" class="btn primary battle-pvp-start-solo">疑似 PvP 対戦を開始</button>' +
         '</div>' +
         '</div>';
     }
@@ -597,6 +598,9 @@
     });
     root.querySelector('.battle-dbg-start-cpu')?.addEventListener('click', () => {
       api.battleDebugStartCpu();
+    });
+    root.querySelector('.battle-pvp-start-solo')?.addEventListener('click', () => {
+      api.battlePvpStartSolo();
     });
   }
 

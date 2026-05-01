@@ -7,6 +7,15 @@ local PvpBattles = {}
 --- @type table<number, string>
 local srcToSessionId = {}
 
+--- 疑似 PvP（ソロ実機検証）の仮想プレイヤー。実プレイヤーの src は正の整数。
+local VIRTUAL_SRC = -1
+
+--- @param src number
+--- @return boolean
+local function isVirtualSrc(src)
+    return type(src) == 'number' and src < 0
+end
+
 --- @param src number
 --- @param payload { error: string }
 local function pushLobbyErr(src, payload)
@@ -131,6 +140,42 @@ local function buildHandFiveFromDeck(deckPayload)
     return hand, nil
 end
 
+--- CPU 戦と同様、マスタからランダムに HandSize 枚（疑似 PvP の相手手札）
+--- @return table[]|nil
+--- @return string|nil
+local function buildVirtualHandFromMaster()
+    local cpuPool = {}
+    for _, m in ipairs(TcgCardsMaster or {}) do
+        cpuPool[#cpuPool + 1] = normalizeCardFromMaster(m)
+    end
+    local need = Config.HandSize or 5
+    if #cpuPool < need then
+        return nil, 'マスタ枚数が不足しています'
+    end
+    shuffleInPlace(cpuPool)
+    local hand = {}
+    for i = 1, need do
+        hand[i] = cpuPool[i]
+    end
+    return hand, nil
+end
+
+--- 検証済みの着手のみ（サーバー権威）
+--- @param session table
+--- @param src number
+--- @param cell_index integer
+--- @param hand_index integer 0..4
+--- @return table PlaceAndResolve の戻り
+--- @return table 配置したカード
+local function commitPlace(session, src, cell_index, hand_index)
+    local myHand = session.hands[src]
+    local card = table.remove(myHand, hand_index + 1)
+    local result = TcgBattleRule.PlaceAndResolve(session.board, cell_index, card, src)
+    session.turn_no = session.turn_no + 1
+    session.turn = src == session.p1_src and session.p2_src or session.p1_src
+    return result, card
+end
+
 --- @param session table
 --- @param viewer_src number
 --- @return table[]  インデックス 1..9（JSON 配列化しやすいよう連続テーブル）
@@ -250,8 +295,12 @@ local function destroySession(session_id)
         return
     end
     PvpBattles[session_id] = nil
-    srcToSessionId[s.p1_src] = nil
-    srcToSessionId[s.p2_src] = nil
+    if s.p1_src and not isVirtualSrc(s.p1_src) then
+        srcToSessionId[s.p1_src] = nil
+    end
+    if s.p2_src and not isVirtualSrc(s.p2_src) then
+        srcToSessionId[s.p2_src] = nil
+    end
 end
 
 --- @param session_id string
@@ -267,7 +316,7 @@ function BattlePvp.BroadcastState(session_id, extra, only_src)
         targets = { only_src }
     end
     for _, viewer in ipairs(targets) do
-        if GetPlayerName(viewer) ~= nil then
+        if not isVirtualSrc(viewer) and GetPlayerName(viewer) ~= nil then
             local payload = buildStatePayload(session, viewer, extra)
             if TcgBattleWireLogEnabled() then
                 print(('[jp-tcgbook][wire] server->client battlePvpState src=%d session=%s turn_no=%s'):format(
@@ -288,8 +337,9 @@ function BattlePvp.Finish(session_id, reason)
     local p1, p2 = session.p1_src, session.p2_src
     local pay1 = buildNormalEndedPayload(session, p1, reason)
     local pay2 = buildNormalEndedPayload(session, p2, reason)
+    local was_solo = session.is_solo == true
     destroySession(session_id)
-    if BattleLobbyClearPeerPairSilent then
+    if not was_solo and BattleLobbyClearPeerPairSilent then
         BattleLobbyClearPeerPairSilent(p1, p2)
     end
     if TcgBattleWireLogEnabled() then
@@ -298,7 +348,7 @@ function BattlePvp.Finish(session_id, reason)
     if GetPlayerName(p1) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
     end
-    if GetPlayerName(p2) ~= nil then
+    if not isVirtualSrc(p2) and GetPlayerName(p2) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
     end
 end
@@ -421,6 +471,169 @@ function BattlePvp.Start(p1_src, p2_src)
     return true
 end
 
+--- 疑似 PvP：本番 `battle_pvp.lua` の状態機械のみを通す（仮想相手 src=-1・サーバー AI）
+--- @param human_src number
+--- @return boolean
+function BattlePvp.StartSolo(human_src)
+    if Config.DebugCommands ~= true then
+        return false
+    end
+    local uid = GetPlayerUid(human_src)
+    if not uid or uid == '' then
+        pushLobbyErr(human_src, { error = '識別子を取得できません' })
+        return false
+    end
+    if BattleDebugInGame and BattleDebugInGame(human_src) then
+        pushLobbyErr(human_src, { error = 'デバッグCPU対戦中は使えません（先に終了）' })
+        return false
+    end
+    if BattleLobbyGetPeer and BattleLobbyGetPeer(human_src) then
+        pushLobbyErr(human_src, { error = '仮想対戦ロビー接続中です。先に切断してください' })
+        return false
+    end
+    if BattleLobbySoloWireTestActive and BattleLobbySoloWireTestActive(human_src) then
+        pushLobbyErr(human_src, { error = 'ソロ検証接続中です。先に仮想対戦を切断してください' })
+        return false
+    end
+
+    local deck, err = loadActiveDeckFor(uid)
+    if err then
+        pushLobbyErr(human_src, { error = err })
+        return false
+    end
+    local handHuman, herr = buildHandFiveFromDeck(deck)
+    if herr then
+        pushLobbyErr(human_src, { error = herr })
+        return false
+    end
+    local handVirt, verr = buildVirtualHandFromMaster()
+    if verr then
+        pushLobbyErr(human_src, { error = verr })
+        return false
+    end
+
+    local oldSid = srcToSessionId[human_src]
+    if oldSid then
+        local oldSess = PvpBattles[oldSid]
+        if oldSess and oldSess.is_solo ~= true then
+            pushLobbyErr(human_src, { error = '本番対戦中は疑似PvPを開始できません（先に終了）' })
+            return false
+        end
+        destroySession(oldSid)
+    end
+
+    math.randomseed(GetGameTimer() + human_src * 997)
+    local p1_src = human_src
+    local p2_src = VIRTUAL_SRC
+    local first_src = math.random(2) == 1 and p1_src or p2_src
+    local session_id = ('pvp_solo_%d_%d'):format(os.time(), human_src)
+
+    local session = {
+        session_id = session_id,
+        p1_src = p1_src,
+        p2_src = p2_src,
+        first_src = first_src,
+        board = TcgBattleRule.CreateEmptyBoard(),
+        hands = {
+            [p1_src] = handHuman,
+            [p2_src] = handVirt,
+        },
+        turn = first_src,
+        turn_no = 1,
+        started_at = os.time(),
+        is_solo = true,
+    }
+
+    PvpBattles[session_id] = session
+    srcToSessionId[human_src] = session_id
+
+    local function startedPay(v)
+        local opp = v == session.p1_src and session.p2_src or session.p1_src
+        local pay = {
+            session_id = session.session_id,
+            my_hand = {},
+            opponent_hand_count = #(session.hands[opp] or {}),
+            opponent_server_id = opp,
+            board = buildBoardArrayForViewer(session, v),
+            turn_server_id = session.turn,
+            turn_no = session.turn_no,
+            is_my_turn = v == session.first_src,
+        }
+        for _, c in ipairs(session.hands[v] or {}) do
+            pay.my_hand[#pay.my_hand + 1] = copyCardForClient(c)
+        end
+        return pay
+    end
+
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] BattlePvp.StartSolo session=%s first_src=%d virtual=%d'):format(
+            session_id, first_src, VIRTUAL_SRC))
+        print(('[jp-tcgbook][wire] server->client battlePvpStarted src=%d session=%s'):format(human_src, session_id))
+    end
+    TriggerClientEvent('jp-tcgbook:client:battlePvpStarted', human_src, startedPay(human_src))
+
+    BattlePvp.BroadcastState(session_id, nil, nil)
+
+    if isVirtualSrc(session.turn) then
+        Citizen.SetTimeout(500, function()
+            BattlePvp.SoloAiTurn(session_id)
+        end)
+    end
+    return true
+end
+
+--- @param session_id string
+function BattlePvp.SoloAiTurn(session_id)
+    local session = PvpBattles[session_id]
+    if not session then
+        return
+    end
+    if not isVirtualSrc(session.turn) then
+        return
+    end
+    local v = VIRTUAL_SRC
+    local empties = {}
+    for i = 1, 9 do
+        if session.board[i] == nil then
+            empties[#empties + 1] = i
+        end
+    end
+    local vhand = session.hands[v]
+    if not vhand or #vhand == 0 or #empties == 0 then
+        if TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire] solo_ai_turn abort session=%s (empty cell or hand)'):format(session_id))
+        end
+        return
+    end
+    local cell_index = empties[math.random(#empties)]
+    local hand_index = 0
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] solo_ai_turn session=%s cell=%d hand_index=%d vhand=%d'):format(
+            session_id, cell_index, hand_index, #vhand))
+    end
+    local result, card = commitPlace(session, v, cell_index, hand_index)
+
+    if TcgBattleRule.IsBoardFull(session.board) then
+        BattlePvp.Finish(session_id, 'normal')
+        return
+    end
+
+    BattlePvp.BroadcastState(session_id, {
+        last_action = {
+            src = v,
+            cell_index = cell_index,
+            card = card,
+            flipped_cells = result.flipped_cells or {},
+        },
+    })
+
+    if isVirtualSrc(session.turn) then
+        Citizen.SetTimeout(500, function()
+            BattlePvp.SoloAiTurn(session_id)
+        end)
+    end
+end
+
 --- @param src number
 --- @param ended_reason string|nil
 function BattlePvp.OnPlayerLeave(src, ended_reason)
@@ -440,9 +653,10 @@ function BattlePvp.OnPlayerLeave(src, ended_reason)
     local pay1 = buildAbortEndedPayload(session, p1, src, reason)
     local pay2 = buildAbortEndedPayload(session, p2, src, reason)
 
+    local was_solo = session.is_solo == true
     destroySession(session_id)
 
-    if BattleLobbyClearPeerPairSilent then
+    if not was_solo and BattleLobbyClearPeerPairSilent then
         BattleLobbyClearPeerPairSilent(p1, p2)
     end
 
@@ -452,7 +666,7 @@ function BattlePvp.OnPlayerLeave(src, ended_reason)
     if GetPlayerName(p1) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
     end
-    if GetPlayerName(p2) ~= nil then
+    if not isVirtualSrc(p2) and GetPlayerName(p2) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
     end
 end
@@ -537,11 +751,7 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpPlace', function(payload)
         return
     end
 
-    local card = table.remove(myHand, hand_index + 1)
-    local result = TcgBattleRule.PlaceAndResolve(session.board, cell_index, card, src)
-
-    session.turn_no = session.turn_no + 1
-    session.turn = src == session.p1_src and session.p2_src or session.p1_src
+    local result, card = commitPlace(session, src, cell_index, hand_index)
 
     if TcgBattleRule.IsBoardFull(session.board) then
         BattlePvp.Finish(session_id, 'normal')
@@ -556,6 +766,26 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpPlace', function(payload)
             flipped_cells = result.flipped_cells or {},
         },
     })
+
+    if isVirtualSrc(session.turn) then
+        Citizen.SetTimeout(500, function()
+            BattlePvp.SoloAiTurn(session_id)
+        end)
+    end
+end)
+
+RegisterNetEvent('jp-tcgbook:server:battlePvpStartSolo', function()
+    local src = source
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] server recv battlePvpStartSolo src=%d'):format(src))
+    end
+    if Config.DebugCommands ~= true then
+        return
+    end
+    if not getUidOrReject(src) then
+        return
+    end
+    BattlePvp.StartSolo(src)
 end)
 
 RegisterNetEvent('jp-tcgbook:server:battlePvpLeave', function()

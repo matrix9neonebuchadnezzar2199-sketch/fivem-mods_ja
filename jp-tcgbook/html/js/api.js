@@ -53,6 +53,9 @@
     battleDebugStartCpu() {
       N.send('battleDebugStartCpu', {});
     },
+    battlePvpStartSolo() {
+      N.send('battlePvpStartSolo', {});
+    },
     battleDebugPlace(cellIndex, handIndex) {
       N.send('battleDebugPlace', { cell_index: cellIndex, hand_index: handIndex });
     },
