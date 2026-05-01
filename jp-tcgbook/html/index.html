@@ -3,14 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>jp-tcgbook</title>
+  <title>BOOK</title>
   <link rel="stylesheet" href="css/common.css">
 </head>
 <body>
-  <div id="app" class="tcgbook-shell">
-    <p class="tcgbook-placeholder">フェーズ1-6で BOOK UI を実装予定</p>
-    <p class="tcgbook-hint">ESC で閉じる</p>
+
+<div id="app" class="book-wrap" hidden>
+  <div class="book" role="application">
+    <header class="header">
+      <div class="title-area">
+        <h1 class="title">B O O K</h1>
+        <button type="button" class="help-btn" id="helpOpenBtn" title="ルールブック" aria-label="ヘルプ">📖</button>
+      </div>
+      <div class="player-info" id="playerInfo">
+        <div class="name">—</div>
+        <div class="stats">所持: — ・ レート —</div>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="BOOK メニュー">
+      <button type="button" class="tab active" data-tab="collection" role="tab" aria-selected="true">📖 コレクション</button>
+      <button type="button" class="tab" data-tab="deck" role="tab" aria-selected="false">🎴 デッキ編成</button>
+      <button type="button" class="tab" data-tab="battle" role="tab" aria-selected="false">⚔ 対戦</button>
+      <button type="button" class="tab" data-tab="trade" role="tab" aria-selected="false">🤝 トレード</button>
+      <button type="button" class="tab" data-tab="ranking" role="tab" aria-selected="false">🏆 ランキング</button>
+    </nav>
+
+    <main class="main-tabs">
+      <section id="tab-collection" class="tab-content active" data-tab-panel="collection" role="tabpanel">
+        <div class="tab-inner placeholder-panel">
+          <p>コレクションタブは次サブタスクで実装予定</p>
+        </div>
+      </section>
+      <section id="tab-deck" class="tab-content" data-tab-panel="deck" role="tabpanel">
+        <div class="tab-inner placeholder-panel">
+          <p>デッキ編成タブは次サブタスクで実装予定</p>
+        </div>
+      </section>
+      <section id="tab-battle" class="tab-content" data-tab-panel="battle" role="tabpanel">
+        <div class="placeholder">⚔ 対戦機能は準備中です</div>
+      </section>
+      <section id="tab-trade" class="tab-content" data-tab-panel="trade" role="tabpanel">
+        <div class="placeholder">🤝 トレード機能は準備中です</div>
+      </section>
+      <section id="tab-ranking" class="tab-content" data-tab-panel="ranking" role="tabpanel">
+        <div class="placeholder">🏆 ランキング機能は準備中です</div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div><kbd>Tab</kbd> 切替 ・ <kbd>ESC</kbd> 閉じる（モーダル優先）</div>
+      <div>jp-tcgbook</div>
+    </footer>
   </div>
-  <script src="js/app.js"></script>
+
+  <div id="helpModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+      <div class="modal-header">
+        <h2 id="helpModalTitle">ルールブック</h2>
+        <button type="button" class="modal-close" id="helpCloseBtn" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <section class="help-section">
+          <h3>はじめに（初回配布）</h3>
+          <p>初回に <code>/book</code> を開くと、フリーカードが10枚配布され、「マイデッキ」が自動作成されます。</p>
+        </section>
+        <section class="help-section">
+          <h3>カードのランク</h3>
+          <table class="help-table">
+            <thead><tr><th>区分</th><th>ランク</th><th>同名上限/デッキ</th><th>編成枠</th></tr></thead>
+            <tbody>
+              <tr><td>指定</td><td>UR / SS</td><td>各1枚</td><td>指定枠 合計2枚まで</td></tr>
+              <tr><td>フリー</td><td>S〜C</td><td>各2枚</td><td>残り8枚</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <section class="help-section">
+          <h3>デッキ編成ルール</h3>
+          <ul>
+            <li>1デッキ10枚。指定カードは合計2枚まで。</li>
+            <li>使用デッキに設定できるのは <strong>10枚完成</strong> のデッキのみ。</li>
+            <li>デッキは最大10個まで。最後の1個は削除できません。</li>
+          </ul>
+        </section>
+        <section class="help-section">
+          <h3>操作方法</h3>
+          <p>📖 でこのヘルプを開閉。ヘルプ表示中は <kbd>ESC</kbd> でヘルプのみ閉じます。</p>
+        </section>
+        <section class="help-section">
+          <h3>バトルでのデッキ運用</h3>
+          <p>対戦タブはフェーズ2で実装予定です。使用デッキは完成デッキのみ設定してください。</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite" hidden></div>
+</div>
+
+<script src="js/nui.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/mock_data.js"></script>
 </body>
 </html>
