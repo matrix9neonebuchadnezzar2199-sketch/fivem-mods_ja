@@ -193,6 +193,11 @@
     if (appEl) appEl.hidden = false;
   });
 
+  NUI.on('forceClose', () => {
+    const appEl = $('#app');
+    if (appEl) appEl.hidden = true;
+  });
+
   NUI.on('bookData', (payload) => {
     if (!payload || !payload.success) {
       showError(payload && payload.error ? payload.error : 'データ取得に失敗しました');

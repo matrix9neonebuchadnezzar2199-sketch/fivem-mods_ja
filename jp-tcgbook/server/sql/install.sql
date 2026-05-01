@@ -56,3 +56,15 @@ CREATE TABLE IF NOT EXISTS tcg_deck_cards (
     FOREIGN KEY (deck_id) REFERENCES tcg_decks(id) ON DELETE CASCADE,
     FOREIGN KEY (card_id) REFERENCES tcg_cards_master(card_id)
 );
+
+-- =============================================================================
+-- ACE（jp-tcgbook デバッグコマンド /tcg_*）
+-- すべてのデバッグコマンドは permission command.tcg_debug で制御する。
+-- コンソール（source=0）はリソース側で常に許可。
+--
+-- server.cfg の例:
+--   add_ace group.admin command.tcg_debug allow
+--   add_principal identifier.license:xxxxxxxxxxxxxxxx group.admin
+--
+-- または txAdmin / 運営方針に合わせてグループへ付与する。
+-- =============================================================================

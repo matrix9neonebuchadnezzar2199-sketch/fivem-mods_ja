@@ -21,3 +21,9 @@ end)
 RegisterNetEvent('jp-tcgbook:client:deckListUpdated', function(result)
     SendNUIMessage({ action = 'deckListUpdated', payload = result })
 end)
+
+--- デバッグ: DBリセット等で BOOK を強制クローズ
+RegisterNetEvent('jp-tcgbook:client:debugForceCloseBook', function()
+    SetNuiFocus(false, false)
+    SendNUIMessage({ action = 'forceClose' })
+end)

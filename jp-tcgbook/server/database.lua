@@ -403,3 +403,43 @@ function Database.ResetPlayer(citizenid)
     end
     return { success = true, data = {} }
 end
+
+--- /tcg_clearcards 用：デッキ行は残し、スロットと所持インスタンスのみ削除（空デッキ化）
+function Database.ClearPlayerCardsAndDeckSlots(citizenid)
+    local ok, err = pcall(function()
+        MySQL.query.await(
+            'DELETE FROM tcg_deck_cards WHERE deck_id IN (SELECT id FROM tcg_decks WHERE citizenid = ?)',
+            { citizenid }
+        )
+        MySQL.query.await('DELETE FROM tcg_player_cards WHERE citizenid = ?', { citizenid })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- @param rating integer
+function Database.UpdatePlayerRating(citizenid, rating)
+    local ok, err = pcall(function()
+        MySQL.query.await('UPDATE tcg_players SET rating = ? WHERE citizenid = ?', { rating, citizenid })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+function Database.ListAllPlayers()
+    local ok, result = pcall(function()
+        return MySQL.query.await(
+            [[SELECT citizenid, rating, wins, losses, draws, initialized
+              FROM tcg_players ORDER BY citizenid ASC]],
+            {}
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(result) }
+    end
+    return { success = true, data = result or {} }
+end

@@ -19,6 +19,7 @@ server_scripts {
     'server/database.lua',
     'server/collection.lua',
     'server/deck.lua',
+    'server/debug.lua',
     'server/main.lua',
 }
 
