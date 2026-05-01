@@ -12,6 +12,9 @@ desktop.ini
 # GitHub 公開リポには含めない（ローカル開発用のみ）
 .cursor/
 docs/
+# jp-tcgbook の実装指示書はサブフォルダ docs をリポジトリに含める
+!jp-tcgbook/docs/
+!jp-tcgbook/docs/**
 
 # 一時・ログ
 *.log
