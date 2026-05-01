@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BOOK</title>
   <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/collection.css">
 </head>
 <body>
 
@@ -30,9 +31,82 @@
     </nav>
 
     <main class="main-tabs">
-      <section id="tab-collection" class="tab-content active" data-tab-panel="collection" role="tabpanel">
-        <div class="tab-inner placeholder-panel">
-          <p>コレクションタブは次サブタスクで実装予定</p>
+      <section id="tab-collection" class="tab-content active col-tab" data-tab-panel="collection" role="tabpanel">
+        <div class="tab-inner col-collection-inner">
+          <div class="col-root">
+            <aside class="col-sidebar" aria-label="検索・フィルタ">
+              <input type="search" id="colSearch" class="search-box" placeholder="カード名・IDで検索" autocomplete="off">
+              <h3>タイプ</h3>
+              <div class="filter-group">
+                <button type="button" class="filter-item active" data-col-filter-type="all">
+                  <span>すべて</span>
+                  <span class="count" data-col-count="type-all">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-type="free">
+                  <span>フリー</span>
+                  <span class="count" data-col-count="type-free">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-type="shitei">
+                  <span>指定</span>
+                  <span class="count" data-col-count="type-shitei">0</span>
+                </button>
+              </div>
+              <h3>ランク</h3>
+              <div class="filter-group">
+                <button type="button" class="filter-item active" data-col-filter-rank="all">
+                  <span>すべて</span>
+                  <span class="count" data-col-count="rank-all">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-rank="UR">
+                  <span><span class="rank-dot rank-UR" aria-hidden="true"></span>UR</span>
+                  <span class="count" data-col-count="rank-UR">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-rank="SS">
+                  <span><span class="rank-dot rank-SS" aria-hidden="true"></span>SS</span>
+                  <span class="count" data-col-count="rank-SS">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-rank="S">
+                  <span><span class="rank-dot rank-S" aria-hidden="true"></span>S</span>
+                  <span class="count" data-col-count="rank-S">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-rank="A">
+                  <span><span class="rank-dot rank-A" aria-hidden="true"></span>A</span>
+                  <span class="count" data-col-count="rank-A">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-rank="B">
+                  <span><span class="rank-dot rank-B" aria-hidden="true"></span>B</span>
+                  <span class="count" data-col-count="rank-B">0</span>
+                </button>
+                <button type="button" class="filter-item" data-col-filter-rank="C">
+                  <span><span class="rank-dot rank-C" aria-hidden="true"></span>C</span>
+                  <span class="count" data-col-count="rank-C">0</span>
+                </button>
+              </div>
+            </aside>
+            <div class="col-main">
+              <div class="col-toolbar">
+                <div class="completion">
+                  <span class="completion-label">完成度</span>
+                  <div class="progress-bar" aria-hidden="true"><div id="colCompletionBarFill"></div></div>
+                  <span id="colCompletionText" class="completion-count">0/0 (0%)</span>
+                </div>
+                <div class="sort-control">
+                  <span class="sort-label">並び替え</span>
+                  <div class="sort-buttons" role="group" aria-label="ソート">
+                    <button type="button" class="sort-btn active" data-col-sort="rank">ランク</button>
+                    <button type="button" class="sort-btn" data-col-sort="date">入手</button>
+                    <button type="button" class="sort-btn" data-col-sort="name">名前</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-grid-wrapper">
+                <div id="colGrid" class="card-grid" role="list"></div>
+              </div>
+            </div>
+            <aside class="col-detail" aria-label="カード詳細">
+              <div id="colDetailBody"></div>
+            </aside>
+          </div>
         </div>
       </section>
       <section id="tab-deck" class="tab-content" data-tab-panel="deck" role="tabpanel">
@@ -103,6 +177,7 @@
 
 <script src="js/nui.js"></script>
 <script src="js/api.js"></script>
+<script src="js/collection.js"></script>
 <script src="js/app.js"></script>
 <script src="js/mock_data.js"></script>
 </body>

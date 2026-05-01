@@ -8,6 +8,7 @@
   global.AppState = {
     player: null,
     cards: [],
+    cardsMaster: [],
     decks: [],
     activeDeckId: null,
     activeDeck: null,
@@ -58,10 +59,17 @@
     statsEl.textContent = `所持: ${n} 枚 ・ レート ${r} ・ ${w}勝 ${l}敗`;
   }
 
+  function renderCollectionIfNeeded() {
+    if (global.AppState.currentTab !== 'collection') return;
+    if (typeof global.Collection !== 'undefined' && global.Collection.render) {
+      global.Collection.render();
+    }
+  }
+
   function renderCurrentTab() {
     const tab = global.AppState.currentTab;
     if (tab === 'collection') {
-      console.log('[jp-tcgbook] tab=collection cards=', global.AppState.cards.length);
+      renderCollectionIfNeeded();
     } else if (tab === 'deck') {
       console.log('[jp-tcgbook] tab=deck selectedDeck=', global.AppState.selectedDeckDetail);
     } else {
@@ -160,6 +168,7 @@
     const d = payload.data || {};
     global.AppState.player = d.player || null;
     global.AppState.cards = Array.isArray(d.cards) ? d.cards : [];
+    global.AppState.cardsMaster = Array.isArray(d.cardsMaster) ? d.cardsMaster : [];
     global.AppState.decks = Array.isArray(d.decks) ? d.decks : [];
 
     const active = global.AppState.decks.find((x) => x.is_active === true || x.is_active === 1);
@@ -197,6 +206,7 @@
     const d = payload.data || {};
     global.AppState.decks = Array.isArray(d.decks) ? d.decks : [];
     global.AppState.cards = Array.isArray(d.cards) ? d.cards : [];
+    if (Array.isArray(d.cardsMaster)) global.AppState.cardsMaster = d.cardsMaster;
     global.AppState.activeDeck = d.activeDeck || null;
 
     const active = global.AppState.decks.find((x) => x.is_active === true || x.is_active === 1);

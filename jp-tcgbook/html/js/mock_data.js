@@ -4,7 +4,8 @@
  * FiveM では IS_FIVEM=true のためこのファイルはモック送信のみ初期化。
  */
 (function (global) {
-  const RANK_ORDER = [
+  /** 所持モックのベース47枚（デッキインデックスと整合） */
+  const RANK_ORDER_FIRST = [
     ...Array(2).fill('UR'),
     ...Array(3).fill('SS'),
     ...Array(6).fill('S'),
@@ -13,7 +14,15 @@
     ...Array(14).fill('C'),
   ];
 
-  const EMOJI = ['🐉', '🦅', '🛡', '⚔', '🔥', '❄', '⚡', '🌙', '⭐', '🎯'];
+  /** 図鑑120枚に足す73枚分のランク配分 */
+  const RANK_ORDER_EXTRA = [
+    ...Array(2).fill('UR'),
+    ...Array(5).fill('SS'),
+    ...Array(14).fill('S'),
+    ...Array(20).fill('A'),
+    ...Array(16).fill('B'),
+    ...Array(16).fill('C'),
+  ];
 
   function statsForRank(rank, idx) {
     const base =
@@ -38,13 +47,13 @@
   }
 
   /** @type {{ card_id: string, name: string, rank: string, type: string, stat_top: number, stat_right: number, stat_bottom: number, stat_left: number, image_path: string, description: string, no: number }[]} */
-  const master = [];
+  const masterBuild = [];
 
-  RANK_ORDER.forEach((rank, i) => {
+  RANK_ORDER_FIRST.forEach((rank, i) => {
     const type = rank === 'UR' || rank === 'SS' ? 'shitei' : 'free';
     const idNum = i + 1;
     const st = statsForRank(rank, i);
-    master.push({
+    masterBuild.push({
       card_id: `mock_${rank}_${String(idNum).padStart(3, '0')}`,
       name: `モック ${rank}-${idNum}`,
       rank,
@@ -56,14 +65,32 @@
     });
   });
 
+  RANK_ORDER_EXTRA.forEach((rank, j) => {
+    const i = 47 + j;
+    const type = rank === 'UR' || rank === 'SS' ? 'shitei' : 'free';
+    const st = statsForRank(rank, i);
+    masterBuild.push({
+      card_id: `mock_CAT_${String(i + 1).padStart(3, '0')}`,
+      name: `図鑑ダミー ${i + 1} (${rank})`,
+      rank,
+      type,
+      ...st,
+      image_path: '',
+      description: `未所持想定の ${rank} カード（モック ${i + 1}）`,
+      no: i + 1,
+    });
+  });
+
+  const MOCK_CARDS_MASTER = masterBuild;
+
   const citizenid = 'license:xxxxxxxxxxxxxxxx';
 
-  /** 所持行（サーバー GetPlayerCards 相当） */
-  const cards = master.map((m, i) => ({
+  /** 所持行（最初の47種のみ・ユニーク47） */
+  const cards = masterBuild.slice(0, 47).map((m, i) => ({
     instance_id: i + 1,
     citizenid,
     card_id: m.card_id,
-    obtained_at: '2026-01-01 12:00:00',
+    obtained_at: `2026-01-${String((i % 28) + 1).padStart(2, '0')} ${String(10 + (i % 8)).padStart(2, '0')}:00:00`,
     locked: false,
     name: m.name,
     rank: m.rank,
@@ -99,16 +126,20 @@
     };
   }
 
+  function cloneCardsMaster() {
+    return MOCK_CARDS_MASTER.map((m) => ({ ...m }));
+  }
+
   /**
    * @param {number} deckId
-   * @param {number[]} cardIndices master のインデックス（0-based）最大10個
+   * @param {number[]} cardIndices MOCK_CARDS_MASTER のインデックス（0-based）最大10個
    */
   function buildDeckDetail(deckId, cardIndices) {
     const summary = deckSummaries.find((d) => d.id === deckId);
     const slots = [];
     for (let i = 1; i <= 10; i++) {
       const mi = cardIndices[i - 1];
-      const m = mi !== undefined ? master[mi] : null;
+      const m = mi !== undefined ? MOCK_CARDS_MASTER[mi] : null;
       slots.push({
         slot_index: i,
         card: m ? cardPayload(m) : null,
@@ -142,6 +173,7 @@
       draws: 0,
     },
     cards,
+    cardsMaster: MOCK_CARDS_MASTER,
     decks: deckSummaries,
     /** @type {Record<number, ReturnType<typeof buildDeckDetail>>} */
     deckDetails: {
@@ -187,6 +219,7 @@
         decks: MOCK_DATA.decks.map((d) => ({ ...d })),
         activeDeck,
         cards: MOCK_DATA.cards.map((c) => ({ ...c })),
+        cardsMaster: cloneCardsMaster(),
       },
     };
   }
@@ -199,6 +232,7 @@
           player: { ...MOCK_DATA.player },
           cards: MOCK_DATA.cards.map((c) => ({ ...c })),
           decks: MOCK_DATA.decks.map((d) => ({ ...d })),
+          cardsMaster: cloneCardsMaster(),
         },
       };
     },
@@ -263,14 +297,17 @@
   };
 
   if (!global.NUI.IS_FIVEM) {
+    const rankTally = MOCK_CARDS_MASTER.reduce((acc, m) => {
+      acc[m.rank] = (acc[m.rank] || 0) + 1;
+      return acc;
+    }, {});
     console.info(
-      '[jp-tcgbook] mockData 読込:',
-      master.length,
-      '枚（ブラウザモード）。ランク内訳:',
-      RANK_ORDER.reduce((acc, r) => {
-        acc[r] = (acc[r] || 0) + 1;
-        return acc;
-      }, {}),
+      '[jp-tcgbook] mockData:',
+      MOCK_CARDS_MASTER.length,
+      'マスタ / 所持インスタンス',
+      MOCK_DATA.cards.length,
+      '（ブラウザモード）。ランク内訳:',
+      rankTally,
     );
   }
 })(window);

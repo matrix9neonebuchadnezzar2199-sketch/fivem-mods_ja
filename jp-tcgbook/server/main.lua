@@ -100,6 +100,7 @@ local function buildDeckListPayload(citizenid)
             decks = decksR.data or {},
             activeDeck = activeDeck,
             cards = cardsR.data or {},
+            cardsMaster = TcgCardsMaster,
         },
     }
 end
@@ -161,6 +162,7 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
             player = player.data,
             cards = cards.data or {},
             decks = decks.data or {},
+            cardsMaster = TcgCardsMaster,
         },
     })
 end)
