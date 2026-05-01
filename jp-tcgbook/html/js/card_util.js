@@ -63,7 +63,7 @@
   }
 
   /**
-   * 詳細プレビュー用 .detail-stat-num.stat-*
+   * .detail-stat-num 付きプレビュー用（現状コレクション詳細では数値非表示のため未使用）
    * @param {HTMLElement} root
    * @param {{ stat_top: number, stat_right: number, stat_bottom: number, stat_left: number }} stats
    */

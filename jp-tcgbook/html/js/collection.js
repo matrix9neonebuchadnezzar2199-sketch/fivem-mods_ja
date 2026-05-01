@@ -251,14 +251,8 @@
 
     const pa = document.createElement('div');
     pa.className = 'preview-art';
-    pa.innerHTML =
-      `<span class="detail-stat-num stat-top">${m.stat_top}</span>` +
-      `<span class="detail-stat-num stat-right">${m.stat_right}</span>` +
-      `<span class="detail-stat-num stat-bottom">${m.stat_bottom}</span>` +
-      `<span class="detail-stat-num stat-left">${m.stat_left}</span>` +
-      CU.cardArtMediaHtml(m.card_id, m.image_path);
-
-    CU.applyMaxHighlightDetail(pa, m);
+    /* 詳細プレビューはイラスト優先のため四方向数値は出さない（グリッド側で表示） */
+    pa.innerHTML = CU.cardArtMediaHtml(m.card_id, m.image_path);
 
     preview.appendChild(pt);
     preview.appendChild(pr);
@@ -279,16 +273,22 @@
     const actions = document.createElement('div');
     actions.className = 'actions';
 
-    [['デッキに追加', 'deck'], ['トレード申請', 'trade'], ['ベット', 'bet']].forEach(([label, key]) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'btn' + (key === 'deck' ? ' primary' : '');
-      b.textContent = label;
-      b.addEventListener('click', () => {
-        console.debug('[jp-tcgbook collection]', key, m.card_id);
-      });
-      actions.appendChild(b);
+    const deckBtn = document.createElement('button');
+    deckBtn.type = 'button';
+    deckBtn.className = 'btn primary';
+    deckBtn.textContent = 'デッキ編成へ';
+    deckBtn.addEventListener('click', () => {
+      if (typeof global.jpTcgbookSwitchTab === 'function') {
+        global.jpTcgbookSwitchTab('deck');
+      }
     });
+    actions.appendChild(deckBtn);
+
+    const note = document.createElement('div');
+    note.className = 'detail-acquire-note';
+    note.textContent =
+      '入手: 対戦で敗北時、相手に自分のデッキから1枚をランダムコピー（実装は後続）／パック購入（仕様は別途・保留）';
+    actions.appendChild(note);
 
     host.appendChild(preview);
     host.appendChild(title);
