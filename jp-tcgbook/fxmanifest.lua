@@ -22,4 +22,16 @@ server_scripts {
     'server/main.lua',
 }
 
--- フェーズ1-5以降: client_scripts、ui_page、files { 'html/**' } を追加
+client_scripts {
+    'client/main.lua',
+    'client/nui_callbacks.lua',
+}
+
+ui_page 'html/index.html'
+
+-- カードPNGは assets 追加後に 'html/assets/cards/*.png' を files に追記
+files {
+    'html/index.html',
+    'html/css/*.css',
+    'html/js/*.js',
+}
