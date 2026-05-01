@@ -23,9 +23,9 @@ server_scripts {
     'server/deck.lua',
     'server/debug.lua',
     'server/admin.lua',
+    'server/battle_lobby.lua',
     'server/battle_debug.lua',
     'server/battle_pvp.lua',
-    'server/battle_lobby.lua',
     'server/main.lua',
 }
 

@@ -199,19 +199,6 @@ RegisterNetEvent('jp-tcgbook:server:battleCallById', function(data)
     sessionPeer[src] = tid
     sessionPeer[tid] = src
 
-    local okPvP, errPvP = BattlePvpStart(tid, src)
-    if not okPvP then
-        sessionPeer[src] = nil
-        sessionPeer[tid] = nil
-        pushLobbyErr(src, {
-            error = errPvP or '対戦開始に失敗しました',
-        })
-        pushLobbyErr(tid, {
-            error = errPvP or '対戦開始に失敗しました',
-        })
-        return
-    end
-
     if TcgBattleWireLogEnabled() then
         print(('[jp-tcgbook][wire] server->client virtualBattleMatched src=%d peer=%d caller=true'):format(src, tid))
         print(('[jp-tcgbook][wire] server->client virtualBattleMatched src=%d peer=%d caller=false'):format(tid, src))
@@ -226,6 +213,9 @@ RegisterNetEvent('jp-tcgbook:server:battleCallById', function(data)
         is_caller = false,
         is_pvp = true,
     })
+
+    --- PvP 開始に失敗しても sessionPeer は維持（仮想ロビーとして温存）。エラーは BattlePvp.Start 内で両者へ通知済み。
+    BattlePvp.Start(tid, src)
 end)
 
 --- 友達クライアントなしで仮想ロビーの往復だけ試す（Config.DebugCommands のみ）
@@ -300,7 +290,7 @@ RegisterNetEvent('jp-tcgbook:server:battleVirtualLeave', function()
         TriggerClientEvent('jp-tcgbook:client:battleDebugEnded', src, {})
     end
     if BattlePvpInGame and BattlePvpInGame(src) then
-        BattlePvpLeave(src, 'peer_left')
+        BattlePvp.OnPlayerLeave(src, 'peer_left')
     end
     clearSessionFor(src, 'peer_left')
 end)
@@ -313,7 +303,7 @@ AddEventHandler('playerDropped', function()
     soloVirtualLobby[src] = nil
     waiting[src] = nil
     if BattlePvpInGame and BattlePvpInGame(src) then
-        BattlePvpLeave(src, 'peer_disconnect')
+        BattlePvp.OnPlayerLeave(src, 'peer_disconnect')
     end
     local peer = sessionPeer[src]
     if peer then
