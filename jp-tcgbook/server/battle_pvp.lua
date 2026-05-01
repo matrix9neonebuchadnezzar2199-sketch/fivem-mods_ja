@@ -300,7 +300,6 @@ function BattlePvpLeave(src, virtual_reason)
         return
     end
     local p1, p2 = st.p1, st.p2
-    local peer = opponentSrc(st, src)
     destroySessionInternal(key)
     notifyBattlePvpEnded(src, 'left')
     notifyBattlePvpEnded(peer, 'peer_left')
