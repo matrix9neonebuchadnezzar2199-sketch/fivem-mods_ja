@@ -1,0 +1,227 @@
+/* 対戦タブ（準備パネル） */
+
+#tab-battle.battle-tab {
+  padding: 16px 20px;
+  overflow: auto;
+}
+
+#tab-battle .battle-panel {
+  max-width: min(96vw, calc(560px * var(--book-fs-mul)));
+}
+
+#tab-battle .battle-section {
+  margin-bottom: 22px;
+}
+
+#tab-battle .battle-section-title {
+  font-size: calc(12px * var(--book-fs-mul));
+  letter-spacing: 2px;
+  color: #d4af37;
+  margin: 0 0 10px;
+  font-weight: bold;
+}
+
+#tab-battle .battle-readiness-loading {
+  min-height: 88px;
+}
+
+#tab-battle .battle-skeleton-title {
+  height: 14px;
+  width: 40%;
+  background: linear-gradient(90deg, #3d3020, #5a4830, #3d3020);
+  background-size: 200% 100%;
+  animation: battle-sk 1.2s ease-in-out infinite;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+#tab-battle .battle-skeleton-line {
+  height: 10px;
+  width: 55%;
+  background: linear-gradient(90deg, #2a2218, #4a3c28, #2a2218);
+  background-size: 200% 100%;
+  animation: battle-sk 1.2s ease-in-out infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+#tab-battle .battle-skeleton-line.wide {
+  width: 85%;
+}
+
+@keyframes battle-sk {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+#tab-battle .battle-goto.subtle {
+  margin-top: 10px;
+  opacity: 0.92;
+}
+
+#tab-battle .battle-my-id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #6b5530;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  margin-bottom: 12px;
+}
+
+#tab-battle .battle-my-id .label {
+  font-size: calc(10px * var(--book-fs-mul));
+  letter-spacing: 1px;
+  color: #b0a378;
+}
+
+#tab-battle .battle-my-id .num {
+  font-size: calc(22px * var(--book-fs-mul));
+  font-weight: bold;
+  color: #d4af37;
+  font-variant-numeric: tabular-nums;
+}
+
+#tab-battle .battle-wait-row,
+#tab-battle .battle-call-row {
+  margin-bottom: 12px;
+}
+
+#tab-battle .battle-call-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+#tab-battle .battle-call-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: calc(11px * var(--book-fs-mul));
+  color: #b0a378;
+  flex: 1;
+  min-width: 140px;
+}
+
+#tab-battle .battle-call-input {
+  padding: calc(8px * var(--book-fs-mul)) calc(10px * var(--book-fs-mul));
+  border-radius: 6px;
+  border: 1px solid #6b5530;
+  background: rgba(0, 0, 0, 0.45);
+  color: #e8e1c4;
+  font-family: inherit;
+  font-size: calc(14px * var(--book-fs-mul));
+  min-width: min(90vw, calc(200px * var(--book-fs-mul)));
+  max-width: min(90vw, calc(320px * var(--book-fs-mul)));
+  box-sizing: border-box;
+}
+
+#tab-battle .battle-virtual-on {
+  padding: 14px 16px;
+  border: 1px solid #4a7a4a;
+  border-radius: 8px;
+  background: rgba(20, 40, 20, 0.35);
+}
+
+#tab-battle .battle-virtual-on strong {
+  color: #9fdf9f;
+}
+
+#tab-battle .footnote {
+  margin-top: 8px;
+}
+
+#tab-battle code {
+  font-size: calc(11px * var(--book-fs-mul));
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #e8dca8;
+}
+
+#tab-battle .battle-lead {
+  color: #e8e1c4;
+  font-size: calc(14px * var(--book-fs-mul));
+  margin: 0 0 8px;
+}
+
+#tab-battle .battle-hint {
+  color: #b0a378;
+  font-size: calc(12px * var(--book-fs-mul));
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+#tab-battle .battle-next {
+  color: #8b7d4a;
+  font-size: calc(12px * var(--book-fs-mul));
+  line-height: 1.5;
+  margin: 16px 0 12px;
+}
+
+#tab-battle .battle-readiness {
+  border: 1px solid #6b5530;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+#tab-battle .battle-readiness.ready {
+  border-color: #4a7a4a;
+  box-shadow: 0 0 12px rgba(80, 160, 80, 0.15);
+}
+
+#tab-battle .battle-readiness.warn {
+  border-color: #8b6530;
+}
+
+#tab-battle .battle-readiness-title {
+  font-size: calc(10px * var(--book-fs-mul));
+  letter-spacing: 2px;
+  color: #d4af37;
+  margin-bottom: 6px;
+}
+
+#tab-battle .battle-deck-name {
+  font-size: calc(18px * var(--book-fs-mul));
+  font-weight: bold;
+  color: #f0e6d2;
+  margin-bottom: 12px;
+}
+
+#tab-battle .battle-readiness-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: calc(12px * var(--book-fs-mul));
+  color: #b0a378;
+  padding: 4px 0;
+  border-top: 1px solid rgba(107, 85, 48, 0.5);
+}
+
+#tab-battle .battle-readiness-row:first-of-type {
+  border-top: none;
+}
+
+#tab-battle .battle-readiness-row strong {
+  color: #e8e1c4;
+  font-weight: normal;
+}
+
+#tab-battle .battle-readiness.ready .battle-readiness-row strong {
+  color: #9fdf9f;
+}
+
+#tab-battle .battle-readiness.warn .battle-readiness-row strong {
+  color: #ffbb66;
+}
+
+#tab-battle .battle-goto {
+  margin-top: 4px;
+}

@@ -23,16 +23,16 @@
 
 /* 左サイドバー */
 #tab-collection .col-sidebar {
-  width: 200px;
-  padding: 16px;
+  width: clamp(280px, 28vw, 520px);
+  padding: 18px 16px;
+  flex-shrink: 0;
   border-right: 1px solid #8b6f3f;
   background: rgba(0, 0, 0, 0.2);
   overflow-y: auto;
-  flex-shrink: 0;
 }
 
 #tab-collection .col-sidebar h3 {
-  font-size: 11px;
+  font-size: calc(11px * var(--book-fs-mul));
   color: #d4af37;
   letter-spacing: 3px;
   margin-bottom: 8px;
@@ -42,14 +42,18 @@
 
 #tab-collection .search-box {
   width: 100%;
-  padding: 7px 10px;
+  padding: calc(8px * var(--book-fs-mul)) calc(10px * var(--book-fs-mul));
+  /* em は font-size に連動するため --book-fs-mul を掛けない */
+  min-height: 2.75em;
+  line-height: 1.35;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid #6b5530;
   color: #e8e1c4;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: calc(12px * var(--book-fs-mul));
   margin-bottom: 14px;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 #tab-collection .filter-group {
@@ -60,9 +64,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 8px;
+  gap: calc(8px * var(--book-fs-mul));
+  padding: calc(6px * var(--book-fs-mul)) calc(8px * var(--book-fs-mul));
   cursor: pointer;
-  font-size: 12px;
+  font-size: calc(12px * var(--book-fs-mul));
   border-radius: 4px;
   transition: background 0.15s;
   border: none;
@@ -71,6 +76,14 @@
   width: 100%;
   text-align: left;
   font-family: inherit;
+}
+
+#tab-collection .filter-item > span:first-child {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 #tab-collection .filter-item:hover {
@@ -83,8 +96,10 @@
 }
 
 #tab-collection .filter-item .count {
+  flex-shrink: 0;
+  margin-left: auto;
   color: #8b7d4a;
-  font-size: 10px;
+  font-size: calc(11px * var(--book-fs-mul));
 }
 
 #tab-collection .filter-item.active .count {
@@ -93,10 +108,10 @@
 
 #tab-collection .rank-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: calc(8px * var(--book-fs-mul));
+  height: calc(8px * var(--book-fs-mul));
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: calc(8px * var(--book-fs-mul));
   vertical-align: middle;
 }
 
@@ -163,7 +178,7 @@
 }
 
 #tab-collection .completion-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--book-fs-mul));
   color: #b0a378;
   letter-spacing: 1px;
   white-space: nowrap;
@@ -187,7 +202,7 @@
 }
 
 #tab-collection .completion-count {
-  font-size: 13px;
+  font-size: calc(13px * var(--book-fs-mul));
   color: #d4af37;
   font-weight: bold;
   white-space: nowrap;
@@ -200,7 +215,7 @@
 }
 
 #tab-collection .sort-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--book-fs-mul));
   color: #b0a378;
   letter-spacing: 1px;
 }
@@ -216,7 +231,7 @@
 
 #tab-collection .sort-btn {
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: calc(11px * var(--book-fs-mul));
   color: #b0a378;
   cursor: pointer;
   border-radius: 3px;
@@ -238,7 +253,11 @@
 #tab-collection .card-grid-wrapper {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 18px;
+  overflow-x: hidden;
+  padding-top: calc(10px * var(--book-fs-mul));
+  padding-left: 18px;
+  padding-right: 18px;
+  padding-bottom: 14px;
 }
 
 #tab-collection .card-grid {
@@ -286,13 +305,14 @@
   position: absolute;
   top: 5px;
   right: 5px;
-  width: 22px;
-  height: 22px;
+  min-width: calc(22px * var(--book-fs-mul));
+  min-height: calc(22px * var(--book-fs-mul));
+  padding: 0 calc(3px * var(--book-fs-mul));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: calc(10px * var(--book-fs-mul));
   font-weight: bold;
   color: #1a1208;
   z-index: 3;
@@ -334,8 +354,8 @@
   position: absolute;
   top: 5px;
   left: 5px;
-  font-size: 8px;
-  padding: 2px 4px;
+  font-size: calc(9px * var(--book-fs-mul));
+  padding: calc(2px * var(--book-fs-mul)) calc(5px * var(--book-fs-mul));
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.7);
   color: #d4af37;
@@ -356,14 +376,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: calc(26px * var(--book-fs-mul));
   color: #6b5530;
   position: relative;
 }
 
 #tab-collection .card-art .mini-stat {
   position: absolute;
-  font-size: 11px;
+  font-size: calc(12px * var(--book-fs-mul));
   font-weight: 600;
   color: #d4af37;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.8);
@@ -375,7 +395,7 @@
 #tab-collection .card-art .mini-stat.max {
   color: #ff4d4d;
   font-weight: 900;
-  font-size: 12px;
+  font-size: calc(13px * var(--book-fs-mul));
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 77, 77, 0.6);
 }
 
@@ -430,20 +450,29 @@
 }
 
 #tab-collection .card-name {
-  font-size: 10px;
+  font-size: calc(11px * var(--book-fs-mul));
   text-align: center;
   color: #e8e1c4;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  line-height: 1.2;
+  line-height: 1.25;
   margin-top: 3px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  padding: 0 2px;
 }
 
 #tab-collection .owned-badge {
   position: absolute;
   bottom: 4px;
   right: 4px;
-  font-size: 9px;
-  padding: 2px 5px;
+  font-size: calc(10px * var(--book-fs-mul));
+  padding: calc(2px * var(--book-fs-mul)) calc(5px * var(--book-fs-mul));
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.65);
   color: #6fcf6f;
@@ -453,8 +482,8 @@
 
 /* 右詳細 */
 #tab-collection .col-detail {
-  width: 250px;
-  padding: 16px;
+  width: clamp(300px, 30vw, 560px);
+  padding: 18px 20px;
   border-left: 1px solid #8b6f3f;
   background: rgba(0, 0, 0, 0.25);
   overflow-y: auto;
@@ -469,7 +498,7 @@
   align-items: center;
   justify-content: center;
   color: #8b7d4a;
-  font-size: 12px;
+  font-size: calc(12px * var(--book-fs-mul));
   text-align: center;
   padding: 12px;
 }
@@ -492,7 +521,7 @@
   align-items: center;
   justify-content: center;
   color: #6b5530;
-  font-size: 90px;
+  font-size: calc(90px * var(--book-fs-mul));
   background: radial-gradient(circle at center, #2a1f10 0%, #1a1208 100%);
 }
 
@@ -531,7 +560,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: calc(11px * var(--book-fs-mul));
   font-weight: bold;
   color: #1a1208;
   z-index: 3;
@@ -542,7 +571,7 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  font-size: 10px;
+  font-size: calc(10px * var(--book-fs-mul));
   padding: 3px 7px;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.75);
@@ -566,7 +595,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: calc(16px * var(--book-fs-mul));
   font-weight: bold;
   color: #d4af37;
   text-shadow: 0 0 4px rgba(212, 175, 55, 0.6);
@@ -607,23 +636,27 @@
 }
 
 #tab-collection .detail-name {
-  font-size: 16px;
+  font-size: calc(16px * var(--book-fs-mul));
   color: #d4af37;
   margin-bottom: 2px;
 }
 
 #tab-collection .detail-sub {
-  font-size: 11px;
+  font-size: calc(12px * var(--book-fs-mul));
   color: #b0a378;
   margin-bottom: 10px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 #tab-collection .detail-desc {
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: calc(12px * var(--book-fs-mul));
+  line-height: 1.55;
   color: #c8bfa0;
   margin-bottom: 12px;
-  padding: 8px 10px;
+  padding: calc(10px * var(--book-fs-mul)) calc(12px * var(--book-fs-mul));
+  word-break: break-word;
+  overflow-wrap: anywhere;
   background: rgba(0, 0, 0, 0.3);
   border-left: 2px solid #d4af37;
   border-radius: 0 4px 4px 0;
@@ -636,6 +669,15 @@
   margin-top: auto;
 }
 
+#tab-collection .detail-acquire-note {
+  font-size: calc(12px * var(--book-fs-mul));
+  color: #c4b88a;
+  line-height: 1.5;
+  margin-top: 8px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 #tab-collection .col-detail .btn {
   padding: 8px;
   background: linear-gradient(180deg, #6b5530, #4a3520);
@@ -643,7 +685,7 @@
   color: #e8e1c4;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: calc(12px * var(--book-fs-mul));
   letter-spacing: 1px;
   font-family: inherit;
 }

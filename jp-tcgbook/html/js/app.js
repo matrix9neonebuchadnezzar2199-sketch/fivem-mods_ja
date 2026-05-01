@@ -16,11 +16,18 @@
     currentDeckId: null,
     /** GetDeck / selectDeck / deckUpdated の詳細 */
     currentDeckDetail: null,
-    /** openBook の ui ブロック（デバウンス等） */
-    ui: { autoSaveDebounceMs: 500 },
+    /** openBook の ui ブロック（デバウンス・サーバーID 等） */
+    ui: { autoSaveDebounceMs: 500, playerServerId: null },
+    /** 仮想対戦ロビー（サーバー同期） */
+    battleVirtual: {
+      waiting: false,
+      connectedPeerId: null,
+      isCaller: null,
+      lastError: null,
+    },
   };
 
-  const TAB_ORDER = ['collection', 'deck', 'battle', 'trade', 'ranking'];
+  const TAB_ORDER = ['collection', 'deck', 'battle', 'ranking'];
 
   let helpOpen = false;
 
@@ -52,8 +59,8 @@
     }
 
     const cid = p.citizenid || '';
-    nameEl.textContent =
-      cid.length > 20 ? `${cid.slice(0, 18)}…` : cid || 'プレイヤー';
+    /* ライセンス全文を表示（長い場合は CSS で折り返し） */
+    nameEl.textContent = cid || 'プレイヤー';
 
     const n = global.AppState.cards.length;
     const r = p.rating ?? '—';
@@ -97,6 +104,10 @@
       renderCollectionIfNeeded();
     } else if (tab === 'deck') {
       renderDeckIfNeeded();
+    } else if (tab === 'battle') {
+      if (typeof global.Battle !== 'undefined' && global.Battle.render) {
+        global.Battle.render();
+      }
     } else {
       console.log('[jp-tcgbook] tab=', tab);
     }
@@ -182,6 +193,15 @@
         return;
       }
 
+      if (
+        typeof global.jpTcgbookConfirmIfVirtualBattle === 'function' &&
+        !global.jpTcgbookConfirmIfVirtualBattle(
+          'BOOK を閉じますか？\n\n仮想対戦が接続中です。続行すると対戦が終了し、相手側も切断されます。',
+        )
+      ) {
+        return;
+      }
+
       e.preventDefault();
       api.closeBook();
       appEl.hidden = true;
@@ -200,6 +220,37 @@
     if (appEl) appEl.hidden = true;
   });
 
+  NUI.on('battleWaitingAck', (p) => {
+    global.AppState.battleVirtual.waiting = !!(p && p.waiting);
+    renderCurrentTab();
+  });
+
+  NUI.on('virtualBattleMatched', (p) => {
+    global.AppState.battleVirtual.connectedPeerId =
+      p && p.peer_server_id != null ? Number(p.peer_server_id) : null;
+    if (p && p.is_caller === true) {
+      global.AppState.battleVirtual.isCaller = true;
+    } else if (p && p.is_caller === false) {
+      global.AppState.battleVirtual.isCaller = false;
+    } else {
+      global.AppState.battleVirtual.isCaller = null;
+    }
+    global.AppState.battleVirtual.waiting = false;
+    renderCurrentTab();
+  });
+
+  NUI.on('virtualBattleEnded', () => {
+    global.AppState.battleVirtual.connectedPeerId = null;
+    global.AppState.battleVirtual.isCaller = null;
+    global.AppState.battleVirtual.waiting = false;
+    renderCurrentTab();
+  });
+
+  NUI.on('battleLobbyError', (p) => {
+    showError(p && p.error ? p.error : 'エラー');
+    renderCurrentTab();
+  });
+
   NUI.on('bookData', (payload) => {
     if (!payload || !payload.success) {
       showError(payload && payload.error ? payload.error : 'データ取得に失敗しました');
@@ -214,13 +265,25 @@
     global.AppState.cardsMaster = Array.isArray(d.cardsMaster) ? d.cardsMaster : [];
     global.AppState.decks = Array.isArray(d.decks) ? d.decks : [];
     const debounce = Number(d.ui && d.ui.autoSaveDebounceMs);
+    const psid = Number(d.ui && d.ui.playerServerId);
     global.AppState.ui = {
       autoSaveDebounceMs: Number.isFinite(debounce) && debounce >= 0 ? debounce : 500,
+      playerServerId: Number.isFinite(psid) && psid >= 1 ? psid : null,
     };
+
+    global.AppState.battleVirtual = {
+      waiting: false,
+      connectedPeerId: null,
+      isCaller: null,
+      lastError: null,
+    };
+    if (d.battleSession && d.battleSession.peer_server_id != null) {
+      global.AppState.battleVirtual.connectedPeerId = Number(d.battleSession.peer_server_id);
+    }
 
     const active = global.AppState.decks.find((x) => x.is_active === true || x.is_active === 1);
     global.AppState.activeDeckId = active ? active.id : null;
-    global.AppState.activeDeck = null;
+    global.AppState.activeDeck = d.activeDeck || null;
     global.AppState.currentDeckDetail = null;
     global.AppState.currentDeckId = null;
 
@@ -241,6 +304,10 @@
     }
     global.AppState.currentDeckDetail = payload.data || null;
     global.AppState.currentDeckId = payload.data ? payload.data.id : null;
+    const adId = global.AppState.activeDeckId;
+    if (payload.data && adId != null && payload.data.id === adId) {
+      global.AppState.activeDeck = payload.data;
+    }
     if (typeof global.Deck?.markSynced === 'function') {
       global.Deck.markSynced();
     }
@@ -261,6 +328,10 @@
       return;
     }
     global.AppState.currentDeckDetail = payload.data || null;
+    const adId2 = global.AppState.activeDeckId;
+    if (payload.data && adId2 != null && payload.data.id === adId2) {
+      global.AppState.activeDeck = payload.data;
+    }
     renderCurrentTab();
   });
 
@@ -303,4 +374,14 @@
       api.openBook();
     }
   });
+
+  global.jpTcgbookSwitchTab = switchTab;
+  global.jpTcgbookShowError = showError;
+
+  /** 仮想対戦中のみ `window.confirm`。未接続なら常に true */
+  global.jpTcgbookConfirmIfVirtualBattle = function (message) {
+    const peer = global.AppState.battleVirtual && global.AppState.battleVirtual.connectedPeerId;
+    if (peer == null) return true;
+    return window.confirm(message);
+  };
 })(window);
