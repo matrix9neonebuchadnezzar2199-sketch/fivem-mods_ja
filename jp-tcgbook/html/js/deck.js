@@ -410,7 +410,7 @@
           `<span class="mini-stat s-right">${c.stat_right}</span>` +
           `<span class="mini-stat s-bottom">${c.stat_bottom}</span>` +
           `<span class="mini-stat s-left">${c.stat_left}</span>` +
-          `<span>${CU.emojiFromId(c.card_id)}</span>`;
+          CU.cardArtMediaHtml(c.card_id, c.image_path);
         CU.applyMaxHighlight(art, c);
 
         const nm = document.createElement('div');
@@ -534,7 +534,7 @@
         `<span class="mini-stat s-right">${m.stat_right}</span>` +
         `<span class="mini-stat s-bottom">${m.stat_bottom}</span>` +
         `<span class="mini-stat s-left">${m.stat_left}</span>` +
-        `<span>${CU.emojiFromId(m.card_id)}</span>`;
+        CU.cardArtMediaHtml(m.card_id, m.image_path);
       CU.applyMaxHighlight(art, m);
 
       const nm = document.createElement('div');

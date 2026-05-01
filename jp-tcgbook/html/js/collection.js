@@ -190,7 +190,7 @@
         `<span class="mini-stat s-right">${m.stat_right}</span>` +
         `<span class="mini-stat s-bottom">${m.stat_bottom}</span>` +
         `<span class="mini-stat s-left">${m.stat_left}</span>` +
-        `<span>${CU.emojiFromId(m.card_id)}</span>`;
+        CU.cardArtMediaHtml(m.card_id, m.image_path);
 
       CU.applyMaxHighlight(card, m);
 
@@ -256,7 +256,7 @@
       `<span class="detail-stat-num stat-right">${m.stat_right}</span>` +
       `<span class="detail-stat-num stat-bottom">${m.stat_bottom}</span>` +
       `<span class="detail-stat-num stat-left">${m.stat_left}</span>` +
-        `<span>${CU.emojiFromId(m.card_id)}</span>`;
+      CU.cardArtMediaHtml(m.card_id, m.image_path);
 
     CU.applyMaxHighlightDetail(pa, m);
 

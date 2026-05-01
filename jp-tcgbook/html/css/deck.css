@@ -557,6 +557,32 @@
   transform: translateY(-50%);
 }
 
+#tab-deck .slot-art .card-art-media {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+}
+
+#tab-deck .slot-art .card-art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+#tab-deck .slot-art .card-art-fallback {
+  position: relative;
+  z-index: 0;
+  font-size: inherit;
+}
+
 #tab-deck .slot-name {
   font-size: 8px;
   text-align: center;

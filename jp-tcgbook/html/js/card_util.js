@@ -12,6 +12,34 @@
     return EMOJI_POOL[h % EMOJI_POOL.length];
   }
 
+  function escapeHtmlAttr(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
+  }
+
+  /** NUI は html/index.html 基準。assets/... または旧 html/assets/... に対応 */
+  function resolveCardImageSrc(imagePath) {
+    const p = String(imagePath || '').trim();
+    if (!p || /^https?:\/\//i.test(p)) return p;
+    let u = p.replace(/^html\//i, '');
+    return u.replace(/^\//, '');
+  }
+
+  /** .card-art / .slot-art / .preview-art 内の中央イラスト（画像が無い・読込失敗時は絵文字） */
+  function cardArtMediaHtml(cardId, imagePath) {
+    const src = resolveCardImageSrc(imagePath);
+    const emoji = emojiFromId(cardId);
+    let inner = `<span class="card-art-fallback">${emoji}</span>`;
+    if (src) {
+      inner =
+        `<img class="card-art-img" src="${escapeHtmlAttr(src)}" alt="" loading="lazy" decoding="async" onerror="this.remove();">` +
+        inner;
+    }
+    return `<div class="card-art-media">${inner}</div>`;
+  }
+
   /**
    * .mini-stat.s-top / .s-right / .s-bottom / .s-left を対象に .max を付与
    * @param {HTMLElement} cardEl
@@ -96,6 +124,9 @@
 
   global.CardUtil = {
     emojiFromId,
+    escapeHtmlAttr,
+    resolveCardImageSrc,
+    cardArtMediaHtml,
     applyMaxHighlight,
     applyMaxHighlightDetail,
     normalizeMasterList,
