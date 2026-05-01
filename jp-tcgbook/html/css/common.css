@@ -47,12 +47,12 @@ body {
 }
 
 .header {
-  padding: 18px 36px 14px;
+  padding: 10px 32px 8px;
   border-bottom: 1px solid #8b6f3f;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
   background: rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
@@ -93,34 +93,37 @@ body {
 
 .player-info {
   text-align: right;
-  font-size: clamp(calc(14px * var(--book-fs-mul)), calc(1.45vw * var(--book-fs-mul)), calc(20px * var(--book-fs-mul)));
   flex: 1;
   min-width: 0;
   max-width: min(72vw, 1400px);
   margin-left: auto;
 }
 
+/* ライセンス等は ID 表示のため本文より一段小さくし、ヘッダー縦幅を抑える */
 .player-info .name {
   color: #d4af37;
-  font-size: clamp(calc(17px * var(--book-fs-mul)), calc(1.75vw * var(--book-fs-mul)), calc(26px * var(--book-fs-mul)));
-  font-weight: bold;
+  font-size: clamp(calc(10px * var(--book-fs-mul)), calc(0.85vw * var(--book-fs-mul)), calc(14px * var(--book-fs-mul)));
+  font-weight: 600;
+  font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
   word-break: break-all;
   overflow-wrap: anywhere;
   white-space: normal;
-  line-height: 1.25;
+  line-height: 1.15;
 }
 
 .player-info .stats {
   color: #b0a378;
-  margin-top: 6px;
+  margin-top: 3px;
+  font-size: clamp(calc(9px * var(--book-fs-mul)), calc(0.8vw * var(--book-fs-mul)), calc(13px * var(--book-fs-mul)));
   white-space: normal;
   overflow-wrap: break-word;
-  line-height: 1.35;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
 }
 
 .tabs {
   display: flex;
-  padding: 0 36px;
+  padding: 0 32px;
   gap: 6px;
   background: rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid #8b6f3f;
@@ -128,7 +131,7 @@ body {
 }
 
 .tab {
-  padding: 16px 30px;
+  padding: 12px 26px;
   cursor: pointer;
   color: #b0a378;
   font-size: clamp(calc(15px * var(--book-fs-mul)), calc(1.35vw * var(--book-fs-mul)), calc(22px * var(--book-fs-mul)));
@@ -572,19 +575,21 @@ body {
 
 .mini-stat {
   position: absolute;
-  font-size: calc(9px * var(--book-fs-mul));
+  font-size: calc(18px * var(--book-fs-mul));
   font-weight: 600;
   color: #d4af37;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.85);
   line-height: 1;
   z-index: 2;
   pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .mini-stat.max {
   color: #ff4d4d;
   font-weight: 900;
-  font-size: calc(10px * var(--book-fs-mul));
+  font-size: calc(20px * var(--book-fs-mul));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 5px rgba(255, 77, 77, 0.55);
 }
 
 .mini-stat.s-top {

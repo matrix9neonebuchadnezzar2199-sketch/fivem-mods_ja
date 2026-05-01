@@ -383,20 +383,21 @@
 
 #tab-collection .card-art .mini-stat {
   position: absolute;
-  font-size: calc(12px * var(--book-fs-mul));
+  font-size: calc(24px * var(--book-fs-mul));
   font-weight: 600;
   color: #d4af37;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.85);
   line-height: 1;
   z-index: 2;
   pointer-events: none;
+  font-variant-numeric: tabular-nums;
 }
 
 #tab-collection .card-art .mini-stat.max {
   color: #ff4d4d;
   font-weight: 900;
-  font-size: calc(13px * var(--book-fs-mul));
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(255, 77, 77, 0.6);
+  font-size: calc(26px * var(--book-fs-mul));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 6px rgba(255, 77, 77, 0.65);
 }
 
 #tab-collection .card-art .mini-stat.s-top {
@@ -587,20 +588,24 @@
 
 #tab-collection .detail-stat-num {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  box-sizing: border-box;
+  width: 1.65em;
+  height: 1.65em;
+  min-width: 1.65em;
+  min-height: 1.65em;
   background: rgba(0, 0, 0, 0.75);
   border: 1px solid #d4af37;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(16px * var(--book-fs-mul));
+  font-size: calc(32px * var(--book-fs-mul));
   font-weight: bold;
   color: #d4af37;
   text-shadow: 0 0 4px rgba(212, 175, 55, 0.6);
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
   z-index: 4;
+  font-variant-numeric: tabular-nums;
 }
 
 #tab-collection .detail-stat-num.max {
@@ -612,25 +617,25 @@
 }
 
 #tab-collection .detail-stat-num.stat-top {
-  top: 38px;
+  top: calc(8px * var(--book-fs-mul));
   left: 50%;
   transform: translateX(-50%);
 }
 
 #tab-collection .detail-stat-num.stat-bottom {
-  bottom: 8px;
+  bottom: calc(6px * var(--book-fs-mul));
   left: 50%;
   transform: translateX(-50%);
 }
 
 #tab-collection .detail-stat-num.stat-left {
-  left: 8px;
+  left: calc(6px * var(--book-fs-mul));
   top: 50%;
   transform: translateY(-50%);
 }
 
 #tab-collection .detail-stat-num.stat-right {
-  right: 8px;
+  right: calc(6px * var(--book-fs-mul));
   top: 50%;
   transform: translateY(-50%);
 }
