@@ -6,9 +6,18 @@ author 'JP-Mods'
 description 'トレーディングカードゲーム（BOOK・コレクション・デッキ編成・対戦予定）'
 version '0.1.0'
 
--- フェーズ1-2以降: @oxmysql、server/*.lua、client/*.lua、ui_page、files { 'html/**' } を追加
+dependency 'oxmysql'
+
 shared_scripts {
     'config.lua',
     'shared/identity.lua',
     'shared/cards.lua',
 }
+
+server_scripts {
+    '@oxmysql/lib/MySQL.lua',
+    'server/database.lua',
+    'server/main.lua',
+}
+
+-- フェーズ1-5以降: client_scripts、ui_page、files { 'html/**' } を追加
