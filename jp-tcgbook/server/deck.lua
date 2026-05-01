@@ -47,6 +47,49 @@ local function generateCopyName(citizenid, baseName)
     end
 end
 
+--[[
+DeleteDeck 後の autoSelectNextActive 想定挙動（実機テストは別途実施）:
+
+ケース1: 2デッキ保有（A:10枚active, B:10枚）→ A削除 → B がactiveになる
+ケース2: 2デッキ保有（A:10枚active, B:5枚） → A削除 → activeなしになる
+ケース3: 2デッキ保有（A:5枚active, B:10枚）→ A削除 → B がactiveになる
+ケース4: 1デッキ保有 → 削除拒否（既存仕様）
+]]
+
+--- アクティブデッキ削除後: 10枚完成デッキがあれば最古IDをアクティブ化、なければ全解除
+--- @param citizenid string
+local function autoSelectNextActive(citizenid)
+    local decksR = Database.GetPlayerDecks(citizenid)
+    if not decksR.success or not decksR.data or #decksR.data == 0 then
+        return
+    end
+
+    local decks = decksR.data
+    table.sort(decks, function(a, b)
+        return a.id < b.id
+    end)
+
+    for _, d in ipairs(decks) do
+        local rows = MySQL.query.await(
+            'SELECT COUNT(*) AS c FROM tcg_deck_cards WHERE deck_id = ?',
+            { d.id }
+        )
+        local n = 0
+        if rows and rows[1] then
+            n = tonumber(rows[1].c) or 0
+        end
+        if n == Config.DeckSize then
+            Database.SetActiveDeck(citizenid, d.id)
+            return
+        end
+    end
+
+    MySQL.query.await(
+        'UPDATE tcg_decks SET is_active = FALSE WHERE citizenid = ?',
+        { citizenid }
+    )
+end
+
 --- @param name string
 --- @return boolean, string|nil error
 local function validateDeckName(name)
@@ -136,13 +179,7 @@ function Deck.DeleteDeck(citizenid, deck_id)
     end
 
     if wasActive then
-        local decks = Database.GetPlayerDecks(citizenid)
-        if decks.success and decks.data and #decks.data > 0 then
-            table.sort(decks.data, function(a, b)
-                return a.id < b.id
-            end)
-            Database.SetActiveDeck(citizenid, decks.data[1].id)
-        end
+        autoSelectNextActive(citizenid)
     end
 
     return { success = true, data = {} }

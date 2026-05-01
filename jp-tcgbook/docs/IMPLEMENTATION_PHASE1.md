@@ -493,6 +493,7 @@ S×4、A×4、B×4、C×4）。マスタは段階的に拡張していく。
 - スロット解除 `RemoveCardFromDeck(deck_id, slot)`
 - デッキコピー `DuplicateDeck(deck_id)` （命名: `元名 - Copy`、連番付与）
 - デッキ名重複チェック（手動編集時はエラー、コピー時は連番自動付与）
+- **`DeleteDeck`**: アクティブだったデッキを削除した場合、残デッキのうち **`tcg_deck_cards` の件数が `Config.DeckSize` と一致する**（ちょうど10枚完成）ものの **最も古い `id`** を `Database.SetActiveDeck` でアクティブ化する。該当が1つも無いときは **`UPDATE tcg_decks SET is_active = FALSE WHERE citizenid = ?`** でアクティブなしを許容する（未完成デッキだけが残るデッドロックを防ぐ。NUI はフェーズ1-6で「使用デッキ未設定」を表示する）。
 
 #### 1-5. クライアント・NUI連携
 
