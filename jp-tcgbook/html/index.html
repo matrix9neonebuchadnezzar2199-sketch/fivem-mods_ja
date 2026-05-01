@@ -127,7 +127,10 @@
               <div class="deck-edit-header">
                 <div id="deckNameDisplay" class="deck-name-display">—</div>
                 <button type="button" id="deckHelpOpenBtn" class="deck-help-btn" title="デッキ編成ヘルプ" aria-label="デッキ編成ヘルプ">📖</button>
-                <div id="deckSaveStatus" class="save-status saved"><span class="save-dot"></span><span>保存済み</span></div>
+                <div class="deck-save-row">
+                  <div id="deckSaveStatus" class="save-status saved"><span class="save-dot"></span><span>保存済み</span></div>
+                  <button type="button" id="deckSaveRetryBtn" class="deck-save-retry" hidden>再同期</button>
+                </div>
                 <div class="counters">
                   <div id="deckCounterFilled" class="counter"><span class="num">0</span><span class="max"> / 10</span> 枚</div>
                   <div id="deckCounterShitei" class="counter">指定 <span class="num" style="color:#ff4d4d">0</span><span class="max"> / 2</span></div>
@@ -254,7 +257,7 @@
         </section>
         <section class="help-section">
           <h3>自動保存・デッキ切替</h3>
-          <p>カードの<strong>＋追加</strong>やスロットの<strong>×解除</strong>はサーバーへ送信され、ヘッダーのインジケータが保存状態を示します。左リストでデッキを選ぶとエディタが切り替わります。</p>
+          <p>カードの<strong>＋追加</strong>やスロットの<strong>×解除</strong>は、設定された間隔でまとめてサーバーへ順に送信されます（ヘッダーのインジケータが保存状態を示します）。失敗時は<strong>再同期</strong>で一覧を取り直せます。左リストでデッキを選ぶとエディタが切り替わります。</p>
         </section>
       </div>
     </div>
@@ -267,8 +270,11 @@
         <button type="button" class="modal-close" id="deckShuffleCloseBtn" aria-label="閉じる">✕</button>
       </div>
       <div class="modal-body">
-        <p>ローカルで10枚をシャッフルした結果の<strong>先頭5枚</strong>です。対戦開始時の実際の順序はサーバー側のシャッフルになります。</p>
+        <p>ブラウザ内で現在の10枚をシャッフルした結果の<strong>先頭5枚</strong>です。対戦開始時の実際の順序はサーバー側のシャッフルになります。</p>
         <div id="deckShufflePreview"></div>
+        <div class="deck-shuffle-actions">
+          <button type="button" id="deckShuffleAgainBtn" class="btn">もう一度シャッフル</button>
+        </div>
       </div>
     </div>
   </div>

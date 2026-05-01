@@ -16,6 +16,8 @@
     currentDeckId: null,
     /** GetDeck / selectDeck / deckUpdated の詳細 */
     currentDeckDetail: null,
+    /** openBook の ui ブロック（デバウンス等） */
+    ui: { autoSaveDebounceMs: 500 },
   };
 
   const TAB_ORDER = ['collection', 'deck', 'battle', 'trade', 'ranking'];
@@ -204,10 +206,17 @@
       return;
     }
     const d = payload.data || {};
+    if (typeof global.Deck?.resetMutationTransport === 'function') {
+      global.Deck.resetMutationTransport();
+    }
     global.AppState.player = d.player || null;
     global.AppState.cards = Array.isArray(d.cards) ? d.cards : [];
     global.AppState.cardsMaster = Array.isArray(d.cardsMaster) ? d.cardsMaster : [];
     global.AppState.decks = Array.isArray(d.decks) ? d.decks : [];
+    const debounce = Number(d.ui && d.ui.autoSaveDebounceMs);
+    global.AppState.ui = {
+      autoSaveDebounceMs: Number.isFinite(debounce) && debounce >= 0 ? debounce : 500,
+    };
 
     const active = global.AppState.decks.find((x) => x.is_active === true || x.is_active === 1);
     global.AppState.activeDeckId = active ? active.id : null;
@@ -223,18 +232,32 @@
   });
 
   NUI.on('deckSelected', (payload) => {
+    if (typeof global.Deck?.resetMutationTransport === 'function') {
+      global.Deck.resetMutationTransport();
+    }
     if (!payload || !payload.success) {
       showError(payload && payload.error ? payload.error : 'デッキ取得に失敗しました');
       return;
     }
     global.AppState.currentDeckDetail = payload.data || null;
     global.AppState.currentDeckId = payload.data ? payload.data.id : null;
+    if (typeof global.Deck?.markSynced === 'function') {
+      global.Deck.markSynced();
+    }
     renderCurrentTab();
   });
 
   NUI.on('deckUpdated', (payload) => {
+    if (typeof global.Deck?.onServerDeckUpdated === 'function') {
+      global.Deck.onServerDeckUpdated(payload);
+    }
+    const curId = global.AppState.currentDeckId;
+    if (payload && payload.success && payload.data && curId != null && payload.data.id !== curId) {
+      return;
+    }
     if (!payload || !payload.success) {
       showError(payload && payload.error ? payload.error : 'デッキ更新に失敗しました');
+      renderCurrentTab();
       return;
     }
     global.AppState.currentDeckDetail = payload.data || null;

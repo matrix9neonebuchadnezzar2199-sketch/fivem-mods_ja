@@ -31,7 +31,7 @@ Config.SeedCardsFromLua = false
 
 -- デバッグ（本番では false 推奨）
 Config.Debug = true -- 詳細ログなど
-Config.DebugCommands = true -- /tcg_* コマンドの前提フラグ（ACEと併用）
+Config.DebugCommands = true -- false のとき /tcg_* は一切実行不可（コンソール含む）。true 時は ACE command.tcg_debug またはコンソール
 
 -- NUI 自動保存のデバウンス（ミリ秒）
 Config.AutoSaveDebounceMs = 500

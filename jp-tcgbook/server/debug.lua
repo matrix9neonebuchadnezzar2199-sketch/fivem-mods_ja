@@ -1,8 +1,13 @@
---- 開発者向けデバッグコマンド（ACE: command.tcg_debug／コンソール source=0 は常時許可）
+--- 開発者向けデバッグコマンド
+--- 二重ゲート: Config.DebugCommands == true かつ（コンソール source=0 または ACE command.tcg_debug）
+--- Config が false のときはコマンド本文に入らず拒否（運営でデバッグを完全オフにできる）
 
 --- @param source number
 --- @return boolean
 local function isDebugAllowed(source)
+    if Config.DebugCommands ~= true then
+        return false
+    end
     if source == 0 then
         return true
     end
@@ -29,6 +34,9 @@ end
 --- @param source number
 --- @param msg string
 local function dbgDeny(source, msg)
+    if Config.DebugCommands ~= true then
+        msg = 'デバッグコマンドは無効です（Config.DebugCommands）'
+    end
     dbgPrint('DENY: ' .. msg)
     if type(source) == 'number' and source > 0 then
         TriggerClientEvent('chat:addMessage', source, {

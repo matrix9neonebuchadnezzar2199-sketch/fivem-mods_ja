@@ -163,6 +163,10 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
             cards = cards.data or {},
             decks = decks.data or {},
             cardsMaster = TcgCardsMaster,
+            -- NUI: デッキ自動保存デバウンス（ms）。0 でキューをほぼ即 flush
+            ui = {
+                autoSaveDebounceMs = math.max(0, math.floor(tonumber(Config.AutoSaveDebounceMs) or 500)),
+            },
         },
     })
 end)

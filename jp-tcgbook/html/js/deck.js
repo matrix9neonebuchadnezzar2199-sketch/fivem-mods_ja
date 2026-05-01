@@ -28,15 +28,121 @@
   let bound = false;
   let nuiHooked = false;
 
+  const deckMutWaiters = [];
+  const deckMutQueue = [];
+  let deckMutDebounceTimer = null;
+  let deckMutFlushing = false;
+  let pendingMutationDeckId = null;
+  let shufflePreviewNames = null;
+
+  function getAutoSaveDebounceMs() {
+    const n = Number(global.AppState.ui?.autoSaveDebounceMs);
+    return Number.isFinite(n) && n >= 0 ? n : 500;
+  }
+
+  function resetMutationTransport() {
+    clearTimeout(deckMutDebounceTimer);
+    deckMutDebounceTimer = null;
+    deckMutQueue.length = 0;
+    deckMutFlushing = false;
+    pendingMutationDeckId = null;
+    while (deckMutWaiters.length) {
+      const r = deckMutWaiters.shift();
+      if (r) r({ success: true, cancelled: true });
+    }
+  }
+
+  function markSynced() {
+    state.saveStatus = 'saved';
+  }
+
+  function onServerDeckUpdated(payload) {
+    const resolve = deckMutWaiters.shift();
+    if (!resolve) return;
+    const cur = global.AppState.currentDeckId;
+    if (
+      payload &&
+      payload.success &&
+      payload.data &&
+      cur != null &&
+      payload.data.id !== cur
+    ) {
+      resolve({ success: true, cancelled: true });
+      return;
+    }
+    if (
+      pendingMutationDeckId != null &&
+      payload &&
+      payload.success &&
+      payload.data &&
+      payload.data.id !== pendingMutationDeckId
+    ) {
+      resolve({ success: true, cancelled: true });
+      return;
+    }
+    resolve(payload || { success: false });
+  }
+
+  async function flushDeckMutationQueue() {
+    if (deckMutFlushing) return;
+    deckMutFlushing = true;
+    try {
+      let sawCancelled = false;
+      while (deckMutQueue.length) {
+        const job = deckMutQueue.shift();
+        pendingMutationDeckId = job.deckId;
+        state.saveStatus = 'saving';
+        global.Deck.render();
+        const payload = await new Promise((resolve) => {
+          deckMutWaiters.push(resolve);
+          job.sendFn();
+        });
+        pendingMutationDeckId = null;
+        if (payload && payload.cancelled) {
+          sawCancelled = true;
+          break;
+        }
+        if (!payload || !payload.success) {
+          state.saveStatus = 'error';
+          deckMutQueue.length = 0;
+          global.Deck.render();
+          const id = job.deckId;
+          if (id && id === global.AppState.currentDeckId) {
+            api.selectDeck(id);
+          }
+          break;
+        }
+      }
+      if (!sawCancelled && deckMutQueue.length === 0 && state.saveStatus !== 'error') {
+        state.saveStatus = 'saved';
+        global.Deck.render();
+      }
+    } finally {
+      deckMutFlushing = false;
+      pendingMutationDeckId = null;
+      if (deckMutQueue.length > 0) {
+        clearTimeout(deckMutDebounceTimer);
+        deckMutDebounceTimer = setTimeout(() => {
+          deckMutDebounceTimer = null;
+          void flushDeckMutationQueue();
+        }, getAutoSaveDebounceMs());
+      }
+    }
+  }
+
+  function enqueueDeckMutation(deckId, sendFn) {
+    deckMutQueue.push({ deckId, sendFn });
+    if (deckMutFlushing) return;
+    clearTimeout(deckMutDebounceTimer);
+    deckMutDebounceTimer = setTimeout(() => {
+      deckMutDebounceTimer = null;
+      void flushDeckMutationQueue();
+    }, getAutoSaveDebounceMs());
+  }
+
   function hookNui() {
     if (nuiHooked) return;
     nuiHooked = true;
-
-    NUI.on('deckUpdated', (payload) => {
-      if (global.AppState.currentTab !== 'deck') return;
-      state.saveStatus = payload && payload.success ? 'saved' : 'error';
-      Deck.render();
-    });
 
     NUI.on('deckListUpdated', (payload) => {
       if (!payload || !payload.success) {
@@ -346,6 +452,11 @@
 
     if (nameEl) nameEl.textContent = detail.name || '';
 
+    const retryBtn = $('#deckSaveRetryBtn');
+    if (retryBtn) {
+      retryBtn.hidden = state.saveStatus !== 'error';
+    }
+
     if (saveEl) {
       const st = state.saveStatus;
       saveEl.className = 'save-status ' + st;
@@ -390,9 +501,7 @@
         rm.title = 'スロットから外す';
         rm.addEventListener('click', (e) => {
           e.stopPropagation();
-          state.saveStatus = 'saving';
-          Deck.render();
-          api.removeDeckCard(deckId, i);
+          enqueueDeckMutation(deckId, () => api.removeDeckCard(deckId, i));
         });
 
         const tp = document.createElement('span');
@@ -559,9 +668,8 @@
       addBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!detail || addBtn.disabled) return;
-        state.saveStatus = 'saving';
-        Deck.render();
-        api.addCardToDeck(detail.id, m.card_id);
+        const did = detail.id;
+        enqueueDeckMutation(did, () => api.addCardToDeck(did, m.card_id));
       });
 
       card.appendChild(tp);
@@ -637,8 +745,28 @@
     $('#deckShuffleCloseBtn')?.addEventListener('click', () =>
       closeModal($('#deckShuffleModal')),
     );
+    $('#deckShuffleAgainBtn')?.addEventListener('click', () => {
+      if (!shufflePreviewNames || !shufflePreviewNames.length) return;
+      const shuffled = fisherYates(shufflePreviewNames);
+      const top5 = shuffled.slice(0, 5);
+      const prev = $('#deckShufflePreview');
+      if (prev) {
+        prev.innerHTML = top5
+          .map((n) => `<div class="shuffle-chip">${escapeHtml(n)}</div>`)
+          .join('');
+      }
+    });
     $('#deckShuffleModal')?.addEventListener('click', (e) => {
       if (e.target.id === 'deckShuffleModal') closeModal($('#deckShuffleModal'));
+    });
+
+    $('#deckSaveRetryBtn')?.addEventListener('click', () => {
+      const id = global.AppState.currentDeckId;
+      if (!id) return;
+      resetMutationTransport();
+      state.saveStatus = 'saving';
+      Deck.render();
+      api.selectDeck(id);
     });
 
     $('#deckDeleteCloseBtn')?.addEventListener('click', () =>
@@ -674,7 +802,8 @@
         if (sl && sl.card) names.push(sl.card.name || sl.card.card_id);
       }
       if (!names.length) return;
-      const shuffled = fisherYates(names);
+      shufflePreviewNames = names.slice();
+      const shuffled = fisherYates(shufflePreviewNames);
       const top5 = shuffled.slice(0, 5);
       const prev = $('#deckShufflePreview');
       if (prev) {
@@ -700,6 +829,10 @@
   }
 
   const Deck = {
+    resetMutationTransport,
+    markSynced,
+    onServerDeckUpdated,
+
     render(partial) {
       if (partial && typeof partial === 'object') {
         if (partial.collectionFilters && typeof partial.collectionFilters === 'object') {

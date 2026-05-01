@@ -272,6 +272,36 @@
   color: #1a1208;
 }
 
+#tab-deck .deck-save-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#tab-deck .deck-save-retry {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #8b6f3f;
+  background: linear-gradient(180deg, #5a4828, #3d3018);
+  color: #e8e1c4;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 1px;
+}
+
+#tab-deck .deck-save-retry:hover {
+  border-color: #d4af37;
+  color: #fff6cc;
+}
+
+#tab-deck .deck-shuffle-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 #tab-deck .save-status {
   display: flex;
   align-items: center;

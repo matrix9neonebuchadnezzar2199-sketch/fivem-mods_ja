@@ -391,6 +391,7 @@
           cards: MOCK_DATA.cards.map((c) => ({ ...c })),
           decks: MOCK_DATA.decks.map((d) => ({ ...d })),
           cardsMaster: cloneCardsMaster(),
+          ui: { autoSaveDebounceMs: 500 },
         },
       };
     },
