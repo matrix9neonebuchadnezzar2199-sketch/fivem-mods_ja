@@ -18,6 +18,7 @@ Config.InitialCardRanks = { 'B', 'B', 'B', 'C', 'C', 'C', 'A', 'A', 'B', 'C' } -
 
 -- レーティング（BattleStats: リアル PvP のみ更新。疑似PvP solo / CPU 戦は対象外）
 -- Elo・wins/losses/draws は BattlePvp.Finish（reason=normal・盤面埋め終了）経路のみ。投了・切断は OnPlayerLeave で Finish を呼ばないため不更新
+-- 敗北時コピー1枚（PHASE 2d）: リアル PvP・normal のみ。勝者の初期手札5枚から1枚を敗者へ Database.AddCardToPlayer。詳細は docs/design/PHASE_2d_defeat_reward.md
 Config.InitialRating = 1500
 Config.EloKFactor = 32
 

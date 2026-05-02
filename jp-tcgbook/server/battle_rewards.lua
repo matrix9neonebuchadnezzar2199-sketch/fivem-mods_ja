@@ -1,15 +1,72 @@
---- BattleRewards: 試合終了時の報酬付与責務（PHASE 2d）
---- BattlePvp.Finish からのみ呼ぶ
+--- BattleRewards: 試合終了時の報酬付与（PHASE 2d）
+--- BattlePvp.Finish からのみ呼ぶ。設計: docs/design/PHASE_2d_defeat_reward.md
 
 BattleRewards = {}
 
---- TODO[PHASE-2d]:
----   - 敗者の citizenid に対し、勝者デッキから 1 枚をコピーして付与
----   - URC ランクの扱い（一律ノーマル化 or 確率変動）は方針要決定
----   - リアル PvP の normal 終了のみ（is_real_pvp）
 --- @param ctx table collectFinishContext の戻り値
 function BattleRewards.GrantOnFinish(ctx)
-    if not ctx or not ctx.is_real_pvp then
+    if not ctx then
         return
+    end
+    if not ctx.is_real_pvp then
+        return
+    end
+    if ctx.reason ~= 'normal' then
+        return
+    end
+
+    if ctx.outcome_for_p1 == 'draw' then
+        if TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][rewards] skip draw session=%s'):format(tostring(ctx.session_id)))
+        end
+        return
+    end
+
+    local loser
+    if ctx.outcome_for_p1 == 'win' then
+        loser = ctx.p2
+    else
+        loser = ctx.p1
+    end
+
+    local loser_cid = loser and loser.citizenid
+    if type(loser_cid) ~= 'string' or loser_cid == '' then
+        if TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][rewards] skip no loser citizenid session=%s'):format(
+                tostring(ctx.session_id)))
+        end
+        return
+    end
+
+    local pool = ctx.winner_reward_pool
+    if not pool or #pool == 0 then
+        if TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][rewards] skip empty winner_reward_pool session=%s'):format(
+                tostring(ctx.session_id)))
+        end
+        return
+    end
+
+    local picked = pool[math.random(1, #pool)]
+    local card_id = picked and picked.card_id
+    if type(card_id) ~= 'string' or card_id == '' then
+        if TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][rewards] skip invalid card_id session=%s'):format(
+                tostring(ctx.session_id)))
+        end
+        return
+    end
+
+    local res = Database.AddCardToPlayer(loser_cid, card_id)
+    local ok = res and res.success == true
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire][rewards] grant loser=%s card_id=%s ok=%s session=%s'):format(
+            loser_cid,
+            card_id,
+            tostring(ok),
+            tostring(ctx.session_id)))
+        if not ok and res and res.error then
+            print(('[jp-tcgbook][wire][rewards] grant err: %s'):format(tostring(res.error)))
+        end
     end
 end

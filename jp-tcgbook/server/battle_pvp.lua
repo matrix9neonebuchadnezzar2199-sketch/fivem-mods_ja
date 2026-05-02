@@ -87,6 +87,27 @@ local function shuffleInPlace(t)
     end
 end
 
+--- PHASE 2d: 対戦開始時の手札コピー（敗者報酬プールの元／live hands との参照切り離し）
+--- @param hand table[]|nil
+--- @return table[]
+local function snapshotInitialHand(hand)
+    local out = {}
+    if not hand then
+        return out
+    end
+    for i = 1, #hand do
+        local c = hand[i]
+        if type(c) == 'table' then
+            local copy = {}
+            for k, v in pairs(c) do
+                copy[k] = v
+            end
+            out[#out + 1] = copy
+        end
+    end
+    return out
+end
+
 --- @param uid string
 --- @return table|nil
 --- @return string|nil
@@ -314,6 +335,16 @@ local function collectFinishContext(session, reason)
         return GetPlayerUid(src)
     end
 
+    --- PHASE 2d: 勝者の初期5枚スナップから報酬プール（ctx のみで GrantOnFinish 可能）
+    local winner_reward_pool = nil
+    if outcome_for_p1 ~= 'draw' then
+        local winner_src = outcome_for_p1 == 'win' and p1_src or p2_src
+        local snap = session.initial_hands and session.initial_hands[winner_src]
+        if snap and #snap > 0 then
+            winner_reward_pool = snapshotInitialHand(snap)
+        end
+    end
+
     return {
         session_id = session.session_id,
         reason = reason,
@@ -324,6 +355,7 @@ local function collectFinishContext(session, reason)
         outcome_for_p1 = outcome_for_p1,
         outcome_for_p2 = outcome_for_p2,
         finished_at = os.time(),
+        winner_reward_pool = winner_reward_pool,
     }
 end
 
@@ -488,6 +520,10 @@ function BattlePvp.Start(p1_src, p2_src)
         turn = first_src,
         turn_no = 1,
         started_at = os.time(),
+        initial_hands = {
+            [p1_src] = snapshotInitialHand(hand1),
+            [p2_src] = snapshotInitialHand(hand2),
+        },
     }
 
     PvpBattles[session_id] = session
@@ -595,6 +631,10 @@ function BattlePvp.StartSolo(human_src)
         turn_no = 1,
         started_at = os.time(),
         is_solo = true,
+        initial_hands = {
+            [p1_src] = snapshotInitialHand(handHuman),
+            [p2_src] = snapshotInitialHand(handVirt),
+        },
     }
 
     PvpBattles[session_id] = session
