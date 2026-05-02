@@ -375,7 +375,7 @@
       } else {
         item.innerHTML =
           `${activeMark}<div class="deck-name-row">` +
-          `<span class="deck-item-name">${escapeHtml(d.name)}</span>` +
+          `<span class="deck-item-name">${escapeHtml(CU.formatDeckDisplayName(d.name))}</span>` +
           `<button type="button" class="deck-edit-pencil" title="${escapeAttr(tt('deck_rename_btn_title'))}" aria-label="${escapeAttr(tt('deck_rename_btn_aria'))}">✏</button></div>` +
           `<div class="deck-item-info"><span>${filled}/${DECK_SIZE}</span><span class="deck-item-power">${power}</span></div>`;
 
@@ -454,7 +454,7 @@
       return;
     }
 
-    if (nameEl) nameEl.textContent = detail.name || '';
+    if (nameEl) nameEl.textContent = CU.formatDeckDisplayName(detail.name || '');
 
     const retryBtn = $('#deckSaveRetryBtn');
     if (retryBtn) {

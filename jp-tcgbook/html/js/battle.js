@@ -86,7 +86,9 @@
     }
 
     const filled = countFilled(detail);
-    const name = detail.name ? escapeHtml(detail.name) : '—';
+    const name = detail.name
+      ? escapeHtml(global.CardUtil.formatDeckDisplayName(detail.name))
+      : '—';
     const ready = filled >= DECK_SIZE;
     const pwr = deckPower(detail);
     const statusClass = ready ? 'ready' : 'warn';

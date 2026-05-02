@@ -40,6 +40,7 @@ function Database.ApplyOptionalSchemaPatches()
         'ALTER TABLE tcg_players ADD COLUMN pvp_exp INT UNSIGNED NOT NULL DEFAULT 0',
         'ALTER TABLE tcg_players ADD COLUMN pvp_level INT UNSIGNED NOT NULL DEFAULT 1',
         'ALTER TABLE tcg_players ADD COLUMN pvp_win_streak INT UNSIGNED NOT NULL DEFAULT 0',
+        'ALTER TABLE tcg_cards_master ADD COLUMN description_en TEXT NULL',
     }
     for _, sql in ipairs(stmts) do
         local ok, err = pcall(function()
@@ -91,8 +92,8 @@ function Database.InitializeTables()
     if runLuaSeed then
         local upsertSql = [[
 INSERT INTO tcg_cards_master
-    (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, no)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, description_en, no)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     rank = VALUES(rank),
@@ -103,6 +104,7 @@ ON DUPLICATE KEY UPDATE
     stat_left = VALUES(stat_left),
     image_path = VALUES(image_path),
     description = VALUES(description),
+    description_en = VALUES(description_en),
     no = VALUES(no)
 ]]
 
@@ -119,6 +121,7 @@ ON DUPLICATE KEY UPDATE
                     c.stat_left,
                     c.image_path,
                     c.description,
+                    type(c.description_en) == 'string' and c.description_en or '',
                     c.no,
                 })
                 count = count + 1
@@ -193,6 +196,7 @@ SELECT
     m.stat_left,
     m.image_path,
     m.description,
+    m.description_en,
     m.no
 FROM tcg_player_cards pc
 INNER JOIN tcg_cards_master m ON m.card_id = pc.card_id
@@ -261,6 +265,7 @@ SELECT
     m.stat_left,
     m.image_path,
     m.description,
+    m.description_en,
     m.no
 FROM tcg_deck_cards dc
 INNER JOIN tcg_cards_master m ON m.card_id = dc.card_id
@@ -297,6 +302,7 @@ ORDER BY dc.slot_index ASC
                     stat_left = r.stat_left,
                     image_path = r.image_path,
                     description = r.description,
+                    description_en = r.description_en,
                     no = r.no,
                 },
             }
@@ -802,7 +808,7 @@ function Database.AdminListMaster()
         return MySQL.query.await(
             [[SELECT card_id, name, rank, type,
                      stat_top, stat_right, stat_bottom, stat_left,
-                     image_path, description, no
+                     image_path, description, description_en, no
               FROM tcg_cards_master ORDER BY no ASC, card_id ASC]],
             {}
         )
@@ -819,7 +825,7 @@ function Database.AdminGetMaster(card_id)
         return MySQL.query.await(
             [[SELECT card_id, name, rank, type,
                      stat_top, stat_right, stat_bottom, stat_left,
-                     image_path, description, no
+                     image_path, description, description_en, no
               FROM tcg_cards_master WHERE card_id = ? LIMIT 1]],
             { card_id }
         )
@@ -857,10 +863,29 @@ end
 
 --- マスタ UPSERT（管理者）
 function Database.AdminUpsertMaster(row)
+    --- description_en を省略した管理者保存で Lua シードの英語を消さない
+    local den = row.description_en
+    if den == nil then
+        local okEx, ex = pcall(function()
+            return MySQL.query.await(
+                'SELECT description_en FROM tcg_cards_master WHERE card_id = ? LIMIT 1',
+                { row.card_id }
+            )
+        end)
+        if okEx and ex and ex[1] and ex[1].description_en ~= nil then
+            den = ex[1].description_en
+        else
+            den = ''
+        end
+    end
+    if type(den) ~= 'string' then
+        den = tostring(den)
+    end
+
     local sql = [[
 INSERT INTO tcg_cards_master
-    (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, no)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, description_en, no)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     rank = VALUES(rank),
@@ -871,6 +896,7 @@ ON DUPLICATE KEY UPDATE
     stat_left = VALUES(stat_left),
     image_path = VALUES(image_path),
     description = VALUES(description),
+    description_en = VALUES(description_en),
     no = VALUES(no)
 ]]
     local ok, err = pcall(function()
@@ -885,6 +911,7 @@ ON DUPLICATE KEY UPDATE
             row.stat_left,
             row.image_path,
             row.description,
+            den,
             row.no,
         })
     end)

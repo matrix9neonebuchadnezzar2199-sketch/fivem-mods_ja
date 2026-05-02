@@ -2,6 +2,7 @@
 --- image_path は NUI 基準（html/ からの相対）。実ファイル: html/assets/cards/{character|monster}/
 --- 割当: 人物・英雄寄り tcg_ch_001〜010 / モンスター寄り tcg_m_001〜010（20枚。素材差し替え時は番号だけ合わせれば可）
 --- 合計の目安: UR 28〜32, SS 24〜27, S 20〜23, A 16〜19, B 12〜15, C 8〜11
+--- description_en: BOOK NUI 英語表示用（DB 列 description_en にシードされる）
 TcgCardsMaster = {
     {
         card_id = 'tcg_ur_antares',
@@ -14,6 +15,7 @@ TcgCardsMaster = {
         stat_left = 7,
         image_path = 'assets/cards/character/tcg_ch_001.png',
         description = '四方位にほぼ隙がない絶対王者。デッキの柱に据えたい。',
+        description_en = 'Nearly flawless on all four sides—the backbone of your deck.',
         no = 1,
     },
     {
@@ -27,6 +29,7 @@ TcgCardsMaster = {
         stat_left = 9,
         image_path = 'assets/cards/character/tcg_ch_002.png',
         description = '右辺と左辺に極大火力。配置で脅威の脅威帯を形成する。',
+        description_en = 'Huge power on left and right—placement builds a brutal horizontal threat.',
         no = 2,
     },
     {
@@ -40,6 +43,7 @@ TcgCardsMaster = {
         stat_left = 6,
         image_path = 'assets/cards/character/tcg_ch_003.png',
         description = '上方向への突破力が高く、先攻配置に向く。',
+        description_en = 'Strong upward punch—great when you place first.',
         no = 3,
     },
     {
@@ -53,6 +57,7 @@ TcgCardsMaster = {
         stat_left = 7,
         image_path = 'assets/cards/character/tcg_ch_004.png',
         description = '下・左を厚くし、盤面下角の確保に強い。',
+        description_en = 'Thick toward bottom-left—locks down the lower corner.',
         no = 4,
     },
     {
@@ -66,6 +71,7 @@ TcgCardsMaster = {
         stat_left = 5,
         image_path = 'assets/cards/character/tcg_ch_005.png',
         description = '攻め寄りのバランス。上・右でプレッシャーをかける。',
+        description_en = 'Aggressive balance—applies pressure from the top and right.',
         no = 5,
     },
     {
@@ -79,6 +85,7 @@ TcgCardsMaster = {
         stat_left = 6,
         image_path = 'assets/cards/character/tcg_ch_006.png',
         description = '下方向をやや厚くした防衛型。',
+        description_en = 'Slightly thicker downward—leans defensive.',
         no = 6,
     },
     {
@@ -92,6 +99,7 @@ TcgCardsMaster = {
         stat_left = 5,
         image_path = 'assets/cards/character/tcg_ch_007.png',
         description = '機動力重視。上辺からの奇襲に。',
+        description_en = 'Mobility-focused—strikes along the top edge.',
         no = 7,
     },
     {
@@ -105,6 +113,7 @@ TcgCardsMaster = {
         stat_left = 5,
         image_path = 'assets/cards/character/tcg_ch_008.png',
         description = '右辺特化の盾。横並びの奪取に強い。',
+        description_en = 'Right-side shield—strong in sideways trades.',
         no = 8,
     },
     {
@@ -118,6 +127,7 @@ TcgCardsMaster = {
         stat_left = 4,
         image_path = 'assets/cards/character/tcg_ch_009.png',
         description = '堅実なオールラウンダー。',
+        description_en = 'Reliable all-rounder.',
         no = 9,
     },
     {
@@ -131,6 +141,7 @@ TcgCardsMaster = {
         stat_left = 5,
         image_path = 'assets/cards/character/tcg_ch_010.png',
         description = '上と左右のバランス取り。隙を突く動き向き。',
+        description_en = 'Balanced top and sides—looks for angles.',
         no = 10,
     },
     {
@@ -144,6 +155,7 @@ TcgCardsMaster = {
         stat_left = 5,
         image_path = 'assets/cards/monster/tcg_m_001.png',
         description = '右への伸びで軽く有利を取る。',
+        description_en = 'Reaches right for a slight advantage.',
         no = 11,
     },
     {
@@ -157,6 +169,7 @@ TcgCardsMaster = {
         stat_left = 5,
         image_path = 'assets/cards/monster/tcg_m_002.png',
         description = '地味だが角で事故を減らす。',
+        description_en = 'Plain but helps avoid corner disasters.',
         no = 12,
     },
     {
@@ -170,6 +183,7 @@ TcgCardsMaster = {
         stat_left = 4,
         image_path = 'assets/cards/monster/tcg_m_003.png',
         description = '完全バランスの凡庸カード。',
+        description_en = 'Perfectly even stats—a filler staple.',
         no = 13,
     },
     {
@@ -183,6 +197,7 @@ TcgCardsMaster = {
         stat_left = 4,
         image_path = 'assets/cards/monster/tcg_m_004.png',
         description = '上だけ突出した奇襲役。',
+        description_en = 'Top-heavy surprise striker.',
         no = 14,
     },
     {
@@ -196,6 +211,7 @@ TcgCardsMaster = {
         stat_left = 4,
         image_path = 'assets/cards/monster/tcg_m_005.png',
         description = '右に振った火力。',
+        description_en = 'Power shifted to the right.',
         no = 15,
     },
     {
@@ -209,6 +225,7 @@ TcgCardsMaster = {
         stat_left = 4,
         image_path = 'assets/cards/monster/tcg_m_006.png',
         description = '下が弱め。上でつなぐ前提。',
+        description_en = 'Weak below—plan to link from the top.',
         no = 16,
     },
     {
@@ -222,6 +239,7 @@ TcgCardsMaster = {
         stat_left = 3,
         image_path = 'assets/cards/monster/tcg_m_007.png',
         description = 'どこも強くないが敷き詰めやすい。',
+        description_en = 'Nowhere strong—easy slot filler.',
         no = 17,
     },
     {
@@ -235,6 +253,7 @@ TcgCardsMaster = {
         stat_left = 3,
         image_path = 'assets/cards/monster/tcg_m_008.png',
         description = '上が弱い。下レーンでのつなぎ用。',
+        description_en = 'Soft on top—bridging piece for the bottom lane.',
         no = 18,
     },
     {
@@ -248,6 +267,7 @@ TcgCardsMaster = {
         stat_left = 3,
         image_path = 'assets/cards/monster/tcg_m_009.png',
         description = '右が穴場。逆に右からは狙われやすい。',
+        description_en = 'Weak on the right—watch for attacks from that side.',
         no = 19,
     },
     {
@@ -261,6 +281,7 @@ TcgCardsMaster = {
         stat_left = 3,
         image_path = 'assets/cards/monster/tcg_m_010.png',
         description = '下・左にわずかな粘り。',
+        description_en = 'A little staying power on bottom-left.',
         no = 20,
     },
 }

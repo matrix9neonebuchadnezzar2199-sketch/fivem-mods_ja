@@ -277,7 +277,7 @@
 
     const desc = document.createElement('div');
     desc.className = 'detail-desc';
-    desc.textContent = m.description || '—';
+    desc.textContent = CU.cardDescriptionForLocale(m) || '—';
 
     const actions = document.createElement('div');
     actions.className = 'actions';

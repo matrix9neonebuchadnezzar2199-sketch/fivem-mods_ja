@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS tcg_cards_master (
     stat_left TINYINT NOT NULL,
     image_path VARCHAR(128),
     description TEXT,
+    description_en TEXT,
     no INT
 );
 

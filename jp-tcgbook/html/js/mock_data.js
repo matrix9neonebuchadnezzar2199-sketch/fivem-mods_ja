@@ -67,6 +67,7 @@
       ...st,
       image_path: '',
       description: `${rank}ランクのダミーカードです`,
+      description_en: `Dummy ${rank} card for UI mock.`,
       no: idNum,
     });
   });
@@ -83,6 +84,7 @@
       ...st,
       image_path: '',
       description: `未所持想定の ${rank} カード（モック ${i + 1}）`,
+      description_en: `Mock ${rank} card for unowned catalog entry (${i + 1}).`,
       no: i + 1,
     });
   });
@@ -108,6 +110,7 @@
     stat_left: m.stat_left,
     image_path: m.image_path,
     description: m.description,
+    description_en: m.description_en,
     no: m.no,
   }));
 
@@ -129,6 +132,7 @@
       stat_left: m.stat_left,
       image_path: m.image_path,
       description: m.description,
+      description_en: m.description_en,
       no: m.no,
     };
   }

@@ -106,6 +106,7 @@
         stat_left: row.stat_left,
         image_path: row.image_path || '',
         description: row.description || '',
+        description_en: row.description_en || '',
         no: row.no,
       });
     });
@@ -122,12 +123,35 @@
     );
   }
 
+  /** 初回作成デッキの DB 上の名前（日本語固定）を UI 言語で表示 */
+  function formatDeckDisplayName(name) {
+    const n = String(name || '');
+    if (n === 'マイデッキ' && global.I18n && global.I18n.t) {
+      const x = global.I18n.t('deck_builtin_my_deck');
+      return x !== 'deck_builtin_my_deck' ? x : n;
+    }
+    return n;
+  }
+
+  /** @param {{ description?: string, description_en?: string }} c */
+  function cardDescriptionForLocale(c) {
+    const row = c || {};
+    const ja = String(row.description || '').trim();
+    const en = String(row.description_en || '').trim();
+    if (global.I18n && global.I18n.getLang && global.I18n.getLang() === 'en') {
+      return en || ja;
+    }
+    return ja;
+  }
+
   global.CardUtil = {
     emojiFromId,
     escapeHtmlAttr,
     resolveCardImageSrc,
     cardArtMediaHtml,
     applyMaxHighlight,
+    formatDeckDisplayName,
+    cardDescriptionForLocale,
     applyMaxHighlightDetail,
     normalizeMasterList,
     cardPower,
