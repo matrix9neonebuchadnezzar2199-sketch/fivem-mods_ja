@@ -869,19 +869,34 @@
   background: rgba(212, 175, 55, 0.07);
 }
 
+/* 盤セルは手札カードと同じ縦長（3:4）。空マスは「＋」を中央に */
+.battle-arena-root .battle-dbg-grid.battle-arena-grid > .battle-dbg-cell {
+  aspect-ratio: 3 / 4;
+}
+
+.battle-arena-root .battle-dbg-grid.battle-arena-grid > .battle-dbg-cell.empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.battle-arena-root .battle-dbg-grid.battle-arena-grid > .battle-dbg-cell.empty .battle-dbg-cell-placeholder {
+  margin: 0;
+}
+
 .battle-arena-root .battle-arena-cell-slot {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
   width: 100%;
-  max-height: 78%;
+  aspect-ratio: 3 / 4;
+  max-height: none;
+  min-height: 0;
 }
 
 .battle-arena-root .battle-arena-cell-slot .mini-stat {
-  font-size: calc(17px * var(--book-fs-mul));
+  font-size: calc(13px * var(--book-fs-mul));
 }
 
 .battle-arena-root .battle-arena-cell-slot .mini-stat.max {
-  font-size: calc(20px * var(--book-fs-mul));
+  font-size: calc(15px * var(--book-fs-mul));
 }
 
 .battle-arena-root .battle-dbg-cell-meta {
@@ -894,11 +909,11 @@
 }
 
 .battle-arena-root .battle-dbg-cell-meta .battle-dbg-cell-name {
-  font-size: calc(10px * var(--book-fs-mul));
+  font-size: calc(8px * var(--book-fs-mul));
 }
 
 .battle-arena-root .battle-dbg-cell-rank {
-  font-size: calc(9px * var(--book-fs-mul));
+  font-size: calc(7px * var(--book-fs-mul));
   color: #d4af37;
   font-weight: 600;
 }
@@ -973,23 +988,33 @@
   overflow-x: hidden;
 }
 
+/* #tab-battle 側より ID 特異度で wrap を無効化（縦 1 列に強制） */
+#battleArenaRoot .battle-dbg-hand.battle-arena-hand-col {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  margin-bottom: 0;
+}
+
 .battle-arena-hand-col .battle-dbg-hand-card {
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  max-width: min(220px, 100%);
+  max-width: min(165px, 100%);
   min-width: 0;
   box-sizing: border-box;
+  padding: calc(5px * var(--book-fs-mul)) calc(6px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card .hn {
   text-align: center;
-  margin-top: 4px;
+  margin-top: 3px;
+  font-size: calc(8px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card .hs {
   text-align: center;
   display: block;
+  font-size: calc(7px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card.selected {
@@ -1005,9 +1030,9 @@
 
 .battle-arena-root .battle-dbg-hand-pick-star {
   position: absolute;
-  top: 4px;
-  right: 6px;
-  font-size: calc(14px * var(--book-fs-mul));
+  top: 3px;
+  right: 5px;
+  font-size: calc(11px * var(--book-fs-mul));
   color: #f0dc78;
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.85);
   z-index: 4;
@@ -1022,11 +1047,11 @@
 }
 
 .battle-arena-hand-col .battle-dbg-hand-slot .mini-stat {
-  font-size: calc(17px * var(--book-fs-mul));
+  font-size: calc(13px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-slot .mini-stat.max {
-  font-size: calc(20px * var(--book-fs-mul));
+  font-size: calc(15px * var(--book-fs-mul));
 }
 
 .battle-during-cpu {

@@ -830,3 +830,165 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpRequestState', function(payload)
     end
     BattlePvp.BroadcastState(session_id, nil, src)
 end)
+
+--- 不正着手デバッグ（コマンドは resource 起動時に必ず登録。権限はハンドラ内）
+--- @param source number
+--- @param optArg string|nil
+--- @return integer|nil
+--- @return string|nil
+local function pvpTestInvalidResolveTarget(cmdSource, optArg)
+    if optArg ~= nil and optArg ~= '' then
+        local tid = tonumber(optArg)
+        if not tid or tid < 1 or math.floor(tid) ~= tid then
+            return nil, '不正なプレイヤーIDです（server ID の数値を指定）'
+        end
+        if GetPlayerName(tid) == nil then
+            return nil, '対象プレイヤーがオンラインではありません'
+        end
+        return tid
+    end
+    if cmdSource == 0 then
+        return nil, 'コンソール実行時はプレイヤーID（server ID）を指定してください'
+    end
+    if GetPlayerName(cmdSource) == nil then
+        return nil, '実行者のプレイヤー情報が取得できません'
+    end
+    return cmdSource
+end
+
+--- @param source number
+--- @return boolean
+local function pvpTestInvalidAllowed(source)
+    if Config.DebugCommands ~= true then
+        return false
+    end
+    if source == 0 then
+        return true
+    end
+    return IsPlayerAceAllowed(source, 'command.tcg_debug')
+end
+
+--- @param source number
+--- @param msg string
+local function pvpTestInvalidDeny(source, msg)
+    if Config.DebugCommands ~= true then
+        msg = 'デバッグコマンドは無効です（Config.DebugCommands）'
+    end
+    print('[tcg-debug] DENY: ' .. tostring(msg))
+    if type(source) == 'number' and source > 0 then
+        TriggerClientEvent('chat:addMessage', source, {
+            args = { '[tcg-debug]', tostring(msg) },
+        })
+    end
+end
+
+RegisterCommand('tcg_pvp_test_invalid', function(source, args)
+    if not pvpTestInvalidAllowed(source) then
+        pvpTestInvalidDeny(source, '権限がありません (ACE: command.tcg_debug)')
+        return
+    end
+
+    local reason_code = args[1]
+    if not reason_code or reason_code == '' then
+        print('[tcg-debug] usage: /tcg_pvp_test_invalid <reason_code> [target_server_id]')
+        print('[tcg-debug]   reason_code: turn_no | not_turn | cell_occ | cell_inv | hand_inv | session')
+        return
+    end
+
+    local target, terr = pvpTestInvalidResolveTarget(source, args[2])
+    if not target then
+        pvpTestInvalidDeny(source, terr or '対象を特定できません')
+        return
+    end
+
+    local session = BattlePvp.GetSessionBySrc(target)
+    if reason_code ~= 'session' and not session then
+        print(('[tcg-debug] target src=%d は対戦セッション中ではありません'):format(target))
+        return
+    end
+
+    local payload
+    if reason_code == 'turn_no' then
+        payload = {
+            session_id = session.session_id,
+            turn_no = (session.turn_no or 1) - 5,
+            cell_index = 1,
+            hand_index = 0,
+        }
+    elseif reason_code == 'not_turn' then
+        if session.turn == target then
+            print('[tcg-debug] 現在 target のターンです。仮想ターン中に再実行してください。')
+            return
+        end
+        payload = {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = 1,
+            hand_index = 0,
+        }
+    elseif reason_code == 'cell_occ' then
+        local occupied = nil
+        for i = 1, 9 do
+            if session.board[i] ~= nil then
+                occupied = i
+                break
+            end
+        end
+        if not occupied then
+            print('[tcg-debug] 盤面が空のため cell_occ は再現不可。1 手以上進めてから再実行してください。')
+            return
+        end
+        payload = {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = occupied,
+            hand_index = 0,
+        }
+    elseif reason_code == 'cell_inv' then
+        payload = {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = 0,
+            hand_index = 0,
+        }
+    elseif reason_code == 'hand_inv' then
+        local emptyCell = nil
+        for i = 1, 9 do
+            if session.board[i] == nil then
+                emptyCell = i
+                break
+            end
+        end
+        if not emptyCell then
+            print('[tcg-debug] 空マスがないため hand_inv は別状態で試してください。')
+            return
+        end
+        payload = {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = emptyCell,
+            hand_index = 99,
+        }
+    elseif reason_code == 'session' then
+        payload = {
+            session_id = 'pvp_solo_invalid_test',
+            turn_no = 1,
+            cell_index = 1,
+            hand_index = 0,
+        }
+    else
+        print(('[tcg-debug] 未知の reason_code: %s'):format(tostring(reason_code)))
+        return
+    end
+
+    local enc = ''
+    local okEnc, out = pcall(json.encode, payload)
+    if okEnc and type(out) == 'string' then
+        enc = out
+    else
+        enc = tostring(payload)
+    end
+    print(('[tcg-debug][pvp-invalid] target=%d code=%s payload=%s'):format(target, reason_code, enc))
+
+    BattlePvp.HandlePlace(target, payload)
+end, false)
