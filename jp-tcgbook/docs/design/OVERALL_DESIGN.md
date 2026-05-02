@@ -15,6 +15,7 @@
 | | `docs/design/PHASE_E_ranking_season_ui.md` | ランキング UI・履歴・段位・EXP／連勝・徽章 **`html/assets/ranc/`** |
 | | `docs/design/RANKING_SEASON_LEVEL_HISTORY.md` | ランキング補足メモ |
 | | `docs/design/M3_M4_HISTORY_EXP.md` | **M3/M4** 対戦履歴タブ・PvP EXP／連勝（実装設計） |
+| ★ | `docs/design/DEV_SOLO_VERIFICATION_POLICY.md` | **1人開発方針**・疑似PvPソロを本番経路で検証する設計・パッチ手順（意図と現状ギャップ） |
 
 長期引継ぎ・過去の経緯: `2026-05-01 開発日記.md` §19。実務の現在地: `2026-05-02 開発日記.md`。
 
