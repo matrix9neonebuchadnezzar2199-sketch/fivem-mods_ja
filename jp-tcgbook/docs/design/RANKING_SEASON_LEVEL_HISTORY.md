@@ -53,6 +53,10 @@
 - **G〜B** は素材語を **Wood / Bronze / Iron / Silver / Gold / Platinum** とする（銅・鉄・銀・金・白金の漢字は使わない）。
 - **A・S** は **Astral / Dragon**。**SS** は **Mythologyの徽章**（他段と同様に「〜の徽章」で統一）。
 
+### 3.1 徽章画像（`html/assets/ranc/`）
+
+NUI 用 PNG。**ファイル名 ↔ `rank_code`** は `docs/design/PHASE_E_ranking_season_ui.md` **§4.1** と同一（`Wood.png` … `Mythology.png`）。`fxmanifest.lua` の `files` に `html/assets/ranc/**/*.png` を含めること。
+
 ### ランクとレート（Elo）の結び方（案）
 
 - **表示ランク**は **`rating` の閾値**で決定（MTG Arena 系）。シーズン開始時に **rating をソフトタッチで下げる**とランク表示も連動。

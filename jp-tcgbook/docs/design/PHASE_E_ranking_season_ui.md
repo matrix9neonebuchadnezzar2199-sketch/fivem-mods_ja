@@ -83,6 +83,26 @@
 
 詳細メモのコピー: `docs/design/RANKING_SEASON_LEVEL_HISTORY.md`（§3 同期維持）。
 
+### 4.1 徽章画像アセット（NUI）
+
+- **配置**: `html/assets/ranc/`（フォルダ名 **ranc** で固定）
+- **マニフェスト**: `fxmanifest.lua` の `files` に **`html/assets/ranc/**/*.png`** を含める（含めないと `cfx-nui` 経由で読めず真っ黒になる）
+- **NUI URL**: 既存カード・`duel_back` と同様 **`https://cfx-nui-<resource名>/html/assets/ranc/<ファイル>`** を組み立てる
+
+| `rank_code` | ファイル（現状） |
+|-------------|-------------------|
+| `g` | `Wood.png` |
+| `f` | `Bronze.png` |
+| `e` | `Iron.png` |
+| `d` | `Silver.png` |
+| `c` | `Gold.png` |
+| `b` | `Platinum.png` |
+| `a` | `Astral.png` |
+| `s` | `Dragon.png` |
+| `ss` | `Mythology.png` |
+
+- **フォールバック**: `img.onerror` またはプレースホルダー画像で欠損・改名に耐える（運営がファイルを差し替えたときの事故防止）
+
 ---
 
 ## 5. レベル・EXP・連勝
@@ -148,6 +168,23 @@
 
 **PHASE C**（日次カウンタ）は **E1 と並行可能**。履歴が無くても日次は動くが、**運営ダッシュボード**を見るなら履歴があると解析しやすい。
 
+### 8.1 実装初期から入れておく推奨（おすすめ機能・エラー防止）
+
+「後から足すと漏れやすい」ものを **E1〜E5 の受け入れに織り込む**想定で列挙する。
+
+| 区分 | 内容 |
+|------|------|
+| **アセット配信** | 徽章 PNG を **`fxmanifest` `files`** に登録（§4.1）。デプロイ後に `/refresh` 忘れで詰まりがち |
+| **履歴の一意性** | `match_id`（または `session_id`）に **UNIQUE**。`Finish` の異常二重呼び出し・リトライで **履歴が複製**されないようにする |
+| **一覧クエリ** | リーダーボード・履歴は **`LIMIT` 上限**＋必要なら **ページング**。`rating` / `finished_at` 用 **INDEX** を `install.sql` で先に定義 |
+| **権限** | 対戦履歴 API は **ログイン中の `citizenid` の行のみ**。他人の履歴を返さない（サーバーで必ずフィルタ） |
+| **XSS** | 表示名スナップは NUI で **エスケープ**またはテキストバインドのみ |
+| **段位フォールバック** | `rating` が閾値テーブルの隙間に落ちないよう **下限＝G** をコード側で保証（config ミス耐性） |
+| **除外リスト** | dryrun 用 **`jp-tcgbook-debug-peer-dummy`** 等を **リーダーボードから除外**（`Config` 配列が扱いやすい） |
+| **履歴 INSERT 失敗** | Elo 更新と履歴の **どちらを優先するか**を決め、失敗時は **`[wire]` または `print`** で検知可能に（サイレント欠損を避ける） |
+| **機能フラグ** | `Config.EnableRankingUi` のような **タブ自体の ON/OFF**（未完成 UI を本番に出すミス防止） |
+| **時刻表示** | プレイヤー向けは **JST 表記で統一**（UTC 保存でも UI でそろえる） |
+
 ---
 
 ## 9. 有名 TCG のランキング類型（設計の参考）
@@ -170,6 +207,7 @@
 | 終了フック | `server/battle_stats.lua`, `server/battle_rewards.lua` |
 | 設定 | `config.lua` |
 | API / BOOK | `server/main.lua`（または専用 server モジュール）、`client/*`、`html/*` |
+| 徽章画像 | `html/assets/ranc/*.png`、`fxmanifest.lua` `files` |
 | 文言 | `locales/ja.lua` |
 
 ---

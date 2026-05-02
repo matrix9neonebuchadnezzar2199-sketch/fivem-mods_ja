@@ -49,4 +49,6 @@ files {
     'html/assets/cards/**/*.png',
     'html/assets/cards/asset_manifest.json',
     'html/assets/duel_back.png',
+    -- 段位徽章（ランキングタブ用・PHASE E）。`html/assets/ranc/` 参照
+    'html/assets/ranc/**/*.png',
 }
