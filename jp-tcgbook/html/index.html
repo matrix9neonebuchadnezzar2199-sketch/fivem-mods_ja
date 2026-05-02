@@ -17,7 +17,22 @@
     <header class="header">
       <div class="title-area">
         <h1 class="title">B O O K</h1>
-        <button type="button" class="help-btn" id="helpOpenBtn" title="ルールブック" aria-label="ヘルプ">📖</button>
+        <button
+          type="button"
+          class="help-btn"
+          id="helpOpenBtn"
+          data-i18n-title="help_title"
+          data-i18n-aria="help_aria"
+        >
+          📖
+        </button>
+      </div>
+      <div class="header-lang-wrap">
+        <label class="lang-label" for="bookLangSelect" data-i18n="lang_label">言語</label>
+        <select id="bookLangSelect" class="book-lang-select" data-i18n-aria="lang_select_aria">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+        </select>
       </div>
       <div class="player-info" id="playerInfo">
         <div class="name">—</div>
@@ -25,39 +40,39 @@
       </div>
     </header>
 
-    <nav class="tabs" role="tablist" aria-label="BOOK メニュー">
-      <button type="button" class="tab active" data-tab="collection" role="tab" aria-selected="true">📖 コレクション</button>
-      <button type="button" class="tab" data-tab="deck" role="tab" aria-selected="false">🎴 デッキ編成</button>
-      <button type="button" class="tab" data-tab="battle" role="tab" aria-selected="false">⚔ 対戦</button>
-      <button type="button" class="tab" data-tab="history" role="tab" aria-selected="false">📜 対戦履歴</button>
-      <button type="button" class="tab" data-tab="ranking" role="tab" aria-selected="false">🏆 ランキング</button>
+    <nav class="tabs" role="tablist" data-i18n-aria="nav_book_menu">
+      <button type="button" class="tab active" data-tab="collection" role="tab" aria-selected="true" data-i18n="tab_collection">📖 コレクション</button>
+      <button type="button" class="tab" data-tab="deck" role="tab" aria-selected="false" data-i18n="tab_deck">🎴 デッキ編成</button>
+      <button type="button" class="tab" data-tab="battle" role="tab" aria-selected="false" data-i18n="tab_battle">⚔ 対戦</button>
+      <button type="button" class="tab" data-tab="history" role="tab" aria-selected="false" data-i18n="tab_history">📜 対戦履歴</button>
+      <button type="button" class="tab" data-tab="ranking" role="tab" aria-selected="false" data-i18n="tab_ranking">🏆 ランキング</button>
     </nav>
 
     <main class="main-tabs">
       <section id="tab-collection" class="tab-content active col-tab" data-tab-panel="collection" role="tabpanel">
         <div class="tab-inner col-collection-inner">
           <div class="col-root">
-            <aside class="col-sidebar" aria-label="検索・フィルタ">
-              <input type="search" id="colSearch" class="search-box" placeholder="カード名・IDで検索" autocomplete="off">
-              <h3>タイプ</h3>
+            <aside class="col-sidebar" data-i18n-aria="col_sidebar_aria">
+              <input type="search" id="colSearch" class="search-box" data-i18n-placeholder="col_search_placeholder" placeholder="カード名・IDで検索" autocomplete="off">
+              <h3 data-i18n="col_type_heading">タイプ</h3>
               <div class="filter-group">
                 <button type="button" class="filter-item active" data-col-filter-type="all">
-                  <span>すべて</span>
+                  <span data-i18n="filter_all">すべて</span>
                   <span class="count" data-col-count="type-all">0</span>
                 </button>
                 <button type="button" class="filter-item" data-col-filter-type="free">
-                  <span>フリー</span>
+                  <span data-i18n="filter_free">フリー</span>
                   <span class="count" data-col-count="type-free">0</span>
                 </button>
                 <button type="button" class="filter-item" data-col-filter-type="shitei">
-                  <span>指定</span>
+                  <span data-i18n="filter_designated">指定</span>
                   <span class="count" data-col-count="type-shitei">0</span>
                 </button>
               </div>
-              <h3>ランク</h3>
+              <h3 data-i18n="col_rank_heading">ランク</h3>
               <div class="filter-group">
                 <button type="button" class="filter-item active" data-col-filter-rank="all">
-                  <span>すべて</span>
+                  <span data-i18n="filter_all">すべて</span>
                   <span class="count" data-col-count="rank-all">0</span>
                 </button>
                 <button type="button" class="filter-item" data-col-filter-rank="UR">
@@ -89,16 +104,16 @@
             <div class="col-main">
               <div class="col-toolbar">
                 <div class="completion">
-                  <span class="completion-label">完成度</span>
+                  <span class="completion-label" data-i18n="completion_label">完成度</span>
                   <div class="progress-bar" aria-hidden="true"><div id="colCompletionBarFill"></div></div>
                   <span id="colCompletionText" class="completion-count">0/0 (0%)</span>
                 </div>
                 <div class="sort-control">
-                  <span class="sort-label">並び替え</span>
-                  <div class="sort-buttons" role="group" aria-label="ソート">
-                    <button type="button" class="sort-btn active" data-col-sort="rank">ランク</button>
-                    <button type="button" class="sort-btn" data-col-sort="date">入手</button>
-                    <button type="button" class="sort-btn" data-col-sort="name">名前</button>
+                  <span class="sort-label" data-i18n="sort_label">並び替え</span>
+                  <div class="sort-buttons" role="group" data-i18n-aria="sort_group_aria">
+                    <button type="button" class="sort-btn active" data-col-sort="rank" data-i18n="sort_rank">ランク</button>
+                    <button type="button" class="sort-btn" data-col-sort="date" data-i18n="sort_date">入手</button>
+                    <button type="button" class="sort-btn" data-col-sort="name" data-i18n="sort_name">名前</button>
                   </div>
                 </div>
               </div>
@@ -106,7 +121,7 @@
                 <div id="colGrid" class="card-grid" role="list"></div>
               </div>
             </div>
-            <aside class="col-detail" aria-label="カード詳細">
+            <aside class="col-detail" data-i18n-aria="col_detail_aria">
               <div id="colDetailBody"></div>
             </aside>
           </div>
@@ -184,22 +199,22 @@
       <section id="tab-history" class="tab-content" data-tab-panel="history" role="tabpanel">
         <div class="tab-inner hist-root">
           <div class="hist-toolbar">
-            直近 <span id="histCount">0</span> 件。<span id="histToolbarHelp"></span>
+            <span data-i18n="hist_lead" id="histToolbarLead">直近 </span><span id="histCount">0</span><span data-i18n="hist_trail" id="histToolbarTrail"> 件。</span><span id="histToolbarHelp"></span>
           </div>
           <div id="histEmpty" class="hist-placeholder">
-            <p class="hist-empty-line">対戦履歴はまだありません。</p>
+            <p class="hist-empty-line" data-i18n="hist_empty">対戦履歴はまだありません。</p>
             <p id="histEmptyNote" class="hist-empty-note"></p>
           </div>
           <div class="hist-table-wrap">
-            <table class="hist-table" aria-label="対戦履歴">
+            <table class="hist-table" data-i18n-aria="hist_table_aria">
               <thead>
                 <tr>
-                  <th>日時</th>
-                  <th>相手</th>
-                  <th>結果</th>
-                  <th>スコア</th>
-                  <th>レート（変化）</th>
-                  <th>敗北コピー</th>
+                  <th data-i18n="hist_th_time">日時</th>
+                  <th data-i18n="hist_th_opponent">相手</th>
+                  <th data-i18n="hist_th_result">結果</th>
+                  <th data-i18n="hist_th_score">スコア</th>
+                  <th data-i18n="hist_th_rating">レート（変化）</th>
+                  <th data-i18n="hist_th_copy">敗北コピー</th>
                 </tr>
               </thead>
               <tbody id="histTableBody"></tbody>
@@ -208,7 +223,7 @@
         </div>
       </section>
       <section id="tab-ranking" class="tab-content" data-tab-panel="ranking" role="tabpanel">
-        <div class="placeholder ranking-placeholder">🏆 ランキングタブは<strong>仕様検討中</strong>です（表示・並び・更新タイミングは後続 PHASE で決定）。</div>
+        <div class="placeholder ranking-placeholder" data-i18n-html="ranking_placeholder_html">🏆 ランキングタブは<strong>仕様検討中</strong>です（表示・並び・更新タイミングは後続 PHASE で決定）。</div>
       </section>
     </main>
 
@@ -216,7 +231,7 @@
     <div id="battleArenaRoot" class="battle-arena-root" hidden aria-hidden="true"></div>
 
     <footer class="footer">
-      <div><kbd>Tab</kbd> 切替 ・ <kbd>ESC</kbd> 閉じる（モーダル優先）</div>
+      <div data-i18n-html="footer_keyboard_hints_html"><kbd>Tab</kbd> 切替 ・ <kbd>ESC</kbd> 閉じる（モーダル優先）</div>
       <div>jp-tcgbook</div>
     </footer>
   </div>
@@ -224,13 +239,13 @@
   <div id="tcgConfirmModal" class="modal-overlay tcg-confirm-overlay" aria-hidden="true">
     <div class="modal tcg-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="tcgConfirmTitle">
       <div class="modal-header">
-        <h2 id="tcgConfirmTitle" class="tcg-confirm-title">確認</h2>
+        <h2 id="tcgConfirmTitle" class="tcg-confirm-title" data-i18n="confirm_title">確認</h2>
       </div>
       <div class="modal-body tcg-confirm-body">
         <p id="tcgConfirmMessage" class="tcg-confirm-msg"></p>
         <div class="tcg-confirm-actions">
-          <button type="button" id="tcgConfirmCancel" class="btn">キャンセル</button>
-          <button type="button" id="tcgConfirmOk" class="btn danger">OK</button>
+          <button type="button" id="tcgConfirmCancel" class="btn" data-i18n="confirm_cancel">キャンセル</button>
+          <button type="button" id="tcgConfirmOk" class="btn danger" data-i18n="confirm_ok">OK</button>
         </div>
       </div>
     </div>
@@ -345,6 +360,7 @@
 
 <script src="js/nui_nav.js"></script>
 <script src="js/nui.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/card_util.js"></script>
 <script src="js/collection.js"></script>

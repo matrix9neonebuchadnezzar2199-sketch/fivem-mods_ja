@@ -6,10 +6,17 @@
     return (root || document).querySelector(sel);
   }
 
-  function outcomeJa(o) {
-    if (o === 'win') return '勝ち';
-    if (o === 'lose') return '負け';
-    if (o === 'draw') return '引分';
+  function outcomeLabel(o) {
+    const tr = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
+    if (tr) {
+      if (o === 'win') return tr('hist_outcome_win');
+      if (o === 'lose') return tr('hist_outcome_lose');
+      if (o === 'draw') return tr('hist_outcome_draw');
+    } else {
+      if (o === 'win') return '勝ち';
+      if (o === 'lose') return '負け';
+      if (o === 'draw') return '引分';
+    }
     return o || '—';
   }
 
@@ -23,7 +30,8 @@
     const n = Number(epochSec);
     if (!Number.isFinite(n) || n <= 0) return '—';
     try {
-      return new Date(n * 1000).toLocaleString('ja-JP');
+      const loc = global.I18n && global.I18n.getLang && global.I18n.getLang() === 'en' ? 'en-US' : 'ja-JP';
+      return new Date(n * 1000).toLocaleString(loc);
     } catch (_) {
       return String(epochSec);
     }
@@ -70,7 +78,7 @@
 
       const tdRes = document.createElement('td');
       const sp = document.createElement('span');
-      sp.textContent = outcomeJa(r.outcome_me);
+      sp.textContent = outcomeLabel(r.outcome_me);
       sp.className = outcomeClass(r.outcome_me);
       tdRes.appendChild(sp);
 
@@ -82,10 +90,13 @@
       tdRate.textContent = fmtRating(r.rating_me_before, r.rating_me_after);
 
       const tdCopy = document.createElement('td');
+      const tr = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
       if (r.defeat_copy_received && r.defeat_copy_card_id) {
-        tdCopy.textContent = `コピー: ${r.defeat_copy_card_id}`;
+        tdCopy.textContent = tr
+          ? tr('hist_copy_prefix') + r.defeat_copy_card_id
+          : `コピー: ${r.defeat_copy_card_id}`;
       } else if (r.defeat_copy_received) {
-        tdCopy.textContent = 'コピーあり';
+        tdCopy.textContent = tr ? tr('hist_copy_yes') : 'コピーあり';
       } else {
         tdCopy.textContent = '—';
       }

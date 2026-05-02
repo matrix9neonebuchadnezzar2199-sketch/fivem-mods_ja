@@ -91,6 +91,36 @@ body {
   color: #1a1208;
 }
 
+.header-lang-wrap {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--book-fs-mul));
+  flex-shrink: 0;
+}
+
+.lang-label {
+  font-size: clamp(calc(10px * var(--book-fs-mul)), calc(0.85vw * var(--book-fs-mul)), calc(13px * var(--book-fs-mul)));
+  color: #c4b898;
+  white-space: nowrap;
+}
+
+.book-lang-select {
+  font-family: inherit;
+  font-size: clamp(calc(10px * var(--book-fs-mul)), calc(0.85vw * var(--book-fs-mul)), calc(13px * var(--book-fs-mul)));
+  padding: calc(4px * var(--book-fs-mul)) calc(8px * var(--book-fs-mul));
+  border-radius: 6px;
+  border: 1px solid #8b6f3f;
+  background: rgba(0, 0, 0, 0.45);
+  color: #e8e1c4;
+  cursor: pointer;
+  min-width: calc(110px * var(--book-fs-mul));
+}
+
+.book-lang-select:focus {
+  outline: 2px solid #d4af37;
+  outline-offset: 2px;
+}
+
 .player-info {
   text-align: right;
   flex: 1;

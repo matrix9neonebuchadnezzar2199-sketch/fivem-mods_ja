@@ -122,7 +122,11 @@
   function showError(message) {
     const t = document.getElementById('toast');
     if (!t) return;
-    t.textContent = message || 'エラーが発生しました';
+    const fb =
+      global.I18n && typeof global.I18n.t === 'function'
+        ? global.I18n.t('error_generic')
+        : 'エラーが発生しました';
+    t.textContent = message || fb;
     t.hidden = false;
     clearTimeout(showError._tm);
     showError._tm = setTimeout(() => {
@@ -138,13 +142,16 @@
 
     if (!p) {
       nameEl.textContent = '—';
-      statsEl.textContent = '所持: — ・ レート —';
+      statsEl.textContent =
+        global.I18n && global.I18n.t ? global.I18n.t('header_stats_empty') : '所持: — ・ レート —';
       return;
     }
 
     const cid = p.citizenid || '';
     /* ライセンス全文を表示（長い場合は CSS で折り返し） */
-    nameEl.textContent = cid || 'プレイヤー';
+    nameEl.textContent =
+      cid ||
+      (global.I18n && global.I18n.t ? global.I18n.t('header_player_fallback') : 'プレイヤー');
 
     const n = global.AppState.cards.length;
     const r = p.rating ?? '—';
@@ -153,7 +160,22 @@
     const lv = p.pvp_level != null ? p.pvp_level : '—';
     const xp = p.pvp_exp != null ? p.pvp_exp : '—';
     const st = p.pvp_win_streak != null ? p.pvp_win_streak : '—';
-    statsEl.textContent = `所持: ${n} 枚 ・ Lv ${lv}（EXP ${xp}）・ 連勝 ${st} ・ レート ${r} ・ ${w}勝 ${l}敗`;
+    if (global.I18n && global.I18n.t) {
+      const wl = global.I18n
+        .t('header_record_wl')
+        .replace('{w}', String(w))
+        .replace('{l}', String(l));
+      statsEl.textContent = global.I18n
+        .t('header_stats_fmt')
+        .replace('{n}', String(n))
+        .replace('{lv}', String(lv))
+        .replace('{xp}', String(xp))
+        .replace('{st}', String(st))
+        .replace('{r}', String(r))
+        .replace('{wl}', wl);
+    } else {
+      statsEl.textContent = `所持: ${n} 枚 ・ Lv ${lv}（EXP ${xp}）・ 連勝 ${st} ・ レート ${r} ・ ${w}勝 ${l}敗`;
+    }
   }
 
   /** 対戦履歴タブ: サーバ設定（ソロ検証ON/OFF）に応じた説明文 */
@@ -161,8 +183,11 @@
     const help = $('#histToolbarHelp');
     const note = $('#histEmptyNote');
     const on = !!(global.AppState.ui && global.AppState.ui.pvp_solo_finish_hooks);
+    const tr = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
     if (help) {
-      if (on) {
+      if (tr) {
+        help.innerHTML = on ? tr('history_help_on') : tr('history_help_off');
+      } else if (on) {
         help.textContent =
           '開発構成（DebugCommands）: 疑似PvPソロの完走も本番 Finish 経路で履歴・レート・EXP・敗北コピーに反映されます（相手はDBの検証用ダミー）。';
       } else {
@@ -171,9 +196,13 @@
       }
     }
     if (note) {
-      note.textContent = on
-        ? 'ソロ完走も一覧に載ります。相手は「仮想対戦相手（検証）」表示・DB上はダミー citizenid です。'
-        : 'この環境ではソロ経由の履歴はありません。仮想ロビーで二人がリアルPvPを完了すると表示されます。';
+      if (tr) {
+        note.textContent = on ? tr('history_note_on') : tr('history_note_off');
+      } else {
+        note.textContent = on
+          ? 'ソロ完走も一覧に載ります。相手は「仮想対戦相手（検証）」表示・DB上はダミー citizenid です。'
+          : 'この環境ではソロ経由の履歴はありません。仮想ロビーで二人がリアルPvPを完了すると表示されます。';
+      }
     }
   }
 
@@ -667,6 +696,23 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
+    if (global.I18n && typeof global.I18n.init === 'function') {
+      global.I18n.init();
+    }
+    const langSel = document.getElementById('bookLangSelect');
+    if (langSel && global.I18n && typeof global.I18n.setLang === 'function') {
+      langSel.addEventListener('change', () => {
+        global.I18n.setLang(langSel.value);
+      });
+    }
+    if (global.I18n && typeof global.I18n.onLocaleChange === 'function') {
+      global.I18n.onLocaleChange(() => {
+        renderHeader();
+        syncHistoryTabUi();
+        renderCurrentTab();
+      });
+    }
+
     bindTabs();
     bindHelp();
     bindKeyboard();

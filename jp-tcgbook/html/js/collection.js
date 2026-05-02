@@ -7,6 +7,10 @@
 
   const CU = global.CardUtil;
 
+  function sortLocale() {
+    return global.I18n && global.I18n.getLang && global.I18n.getLang() === 'en' ? 'en' : 'ja';
+  }
+
   /** @type {{ filters: { search: string, type: string, rank: string }, sort: string, selectedCardId: string|null }} */
   const state = {
     filters: { search: '', type: 'all', rank: 'all' },
@@ -66,7 +70,7 @@
     const copy = rows.slice();
     if (sortKey === 'name') {
       copy.sort((a, b) =>
-        String(a.master.name || '').localeCompare(String(b.master.name || ''), 'ja'),
+        String(a.master.name || '').localeCompare(String(b.master.name || ''), sortLocale()),
       );
     } else if (sortKey === 'date') {
       copy.sort((a, b) => {
@@ -79,7 +83,7 @@
       copy.sort((a, b) => {
         const rd = rankSortValue(b.master.rank) - rankSortValue(a.master.rank);
         if (rd !== 0) return rd;
-        return String(a.master.name || '').localeCompare(String(b.master.name || ''), 'ja');
+        return String(a.master.name || '').localeCompare(String(b.master.name || ''), sortLocale());
       });
     }
     return copy;
