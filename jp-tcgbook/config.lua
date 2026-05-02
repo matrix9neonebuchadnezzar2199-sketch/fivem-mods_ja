@@ -53,6 +53,7 @@ Config.PvpExpPerLevelBeyondTable = 800
 Config.PvpLevelCap = 99 -- 表示レベルの上限
 
 -- 1人開発検証（docs/design/DEV_SOLO_VERIFICATION_POLICY.md）: 疑似PvPソロを RecordFinish・履歴・EXP・2d 報酬まで本番と同一経路に載せる
+-- 終了オーバーレイの「敗北コピー入手」も **この経路が有効なときだけ**表示される（あくまで敗北時のみ付与・表示）
 -- 本番サーバーでは false 固定推奨。true でも Config.DebugCommands == true でないと StartSolo・Finish 内のガードが成立しない
 Config.PvpSoloApplyFullFinishHooks = false
 -- ソロ検証時の仮想相手 citizenid（tcg_players に 1 行。Database.EnsureVerificationDummyPeer で作成）。dryrun コマンドと共用
