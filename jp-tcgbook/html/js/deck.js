@@ -293,6 +293,10 @@
     el.setAttribute('aria-hidden', 'true');
   }
 
+  function tt(key, vars) {
+    return global.I18n && global.I18n.tf ? global.I18n.tf(key, vars) : key;
+  }
+
   function renderSidebar() {
     const list = $('#deckSidebarList');
     const badge = $('#deckCountBadge');
@@ -336,7 +340,7 @@
         if (state.renameRevert != null) state.renameRevert = null;
         item.innerHTML =
           `${activeMark}<div class="deck-name-row">` +
-          `<input type="text" class="deck-name-input-inline" maxlength="64" value="${escapeAttr(rev)}" aria-label="デッキ名"></div>` +
+          `<input type="text" class="deck-name-input-inline" maxlength="64" value="${escapeAttr(rev)}" aria-label="${escapeAttr(tt('deck_name_input_aria'))}"></div>` +
           `<div class="deck-item-info"><span>${filled}/${DECK_SIZE}</span><span class="deck-item-power">${power}</span></div>`;
         const inp = item.querySelector('.deck-name-input-inline');
         if (inp) {
@@ -372,7 +376,7 @@
         item.innerHTML =
           `${activeMark}<div class="deck-name-row">` +
           `<span class="deck-item-name">${escapeHtml(d.name)}</span>` +
-          `<button type="button" class="deck-edit-pencil" title="名前を編集" aria-label="名前を編集">✏</button></div>` +
+          `<button type="button" class="deck-edit-pencil" title="${escapeAttr(tt('deck_rename_btn_title'))}" aria-label="${escapeAttr(tt('deck_rename_btn_aria'))}">✏</button></div>` +
           `<div class="deck-item-info"><span>${filled}/${DECK_SIZE}</span><span class="deck-item-power">${power}</span></div>`;
 
         const pencil = item.querySelector('.deck-edit-pencil');
@@ -437,7 +441,7 @@
     const fullDecks = deckCount >= MAX_DECKS;
 
     if (!detail || !curId) {
-      if (nameEl) nameEl.textContent = 'デッキを選択してください';
+      if (nameEl) nameEl.textContent = tt('deck_select_prompt');
       if (saveEl) {
         saveEl.className = 'save-status saved';
         saveEl.innerHTML = '<span class="save-dot"></span><span>—</span>';
@@ -460,8 +464,9 @@
     if (saveEl) {
       const st = state.saveStatus;
       saveEl.className = 'save-status ' + st;
-      const label = st === 'saved' ? '保存済み' : st === 'saving' ? '保存中…' : 'エラー';
-      saveEl.innerHTML = `<span class="save-dot"></span><span>${label}</span>`;
+      const label =
+        st === 'saved' ? tt('deck_save_saved') : st === 'saving' ? tt('deck_save_saving') : tt('deck_save_error');
+      saveEl.innerHTML = `<span class="save-dot"></span><span>${escapeHtml(label)}</span>`;
     }
 
     const slots = detail.slots || [];
@@ -469,11 +474,11 @@
     const shiteiN = countShiteiSlots(slots);
 
     if (filledEl) {
-      filledEl.innerHTML = `<span class="num">${filled}</span><span class="max"> / ${DECK_SIZE}</span> 枚`;
+      filledEl.innerHTML = `<span class="num">${filled}</span><span class="max"> / ${DECK_SIZE}</span> <span class="deck-counter-suffix">${escapeHtml(tt('deck_counter_cards_suffix'))}</span>`;
       filledEl.classList.toggle('full', filled >= DECK_SIZE);
     }
     if (shiteiEl) {
-      shiteiEl.innerHTML = `指定 <span class="num" style="color:#ff4d4d">${shiteiN}</span><span class="max"> / ${MAX_SHITEI}</span>`;
+      shiteiEl.innerHTML = `${escapeHtml(tt('deck_shitei_label'))} <span class="num" style="color:#ff4d4d">${shiteiN}</span><span class="max"> / ${MAX_SHITEI}</span>`;
     }
 
     if (grid) {
@@ -486,7 +491,7 @@
         cell.dataset.slot = String(i);
 
         if (!sl || !sl.card) {
-          cell.textContent = '空き';
+          cell.textContent = tt('deck_slot_empty');
           grid.appendChild(cell);
           continue;
         }
@@ -498,7 +503,7 @@
         rm.type = 'button';
         rm.className = 'slot-remove';
         rm.textContent = '×';
-        rm.title = 'スロットから外す';
+        rm.title = tt('deck_slot_remove_title');
         rm.addEventListener('click', (e) => {
           e.stopPropagation();
           enqueueDeckMutation(deckId, () => api.removeDeckCard(deckId, i));
@@ -506,7 +511,7 @@
 
         const tp = document.createElement('span');
         tp.className = 'slot-type' + (c.type === 'shitei' ? ' shitei' : '');
-        tp.textContent = c.type === 'shitei' ? '指定' : 'フリー';
+        tp.textContent = c.type === 'shitei' ? tt('col_type_shitei') : tt('col_type_free');
 
         const rk = document.createElement('span');
         rk.className = 'slot-rank rank-' + c.rank;
@@ -544,11 +549,11 @@
     if (statsEl) {
       const parts = rankMiniSpans(st.rankCounts);
       statsEl.innerHTML =
-        `<div class="stat-block"><div class="stat-value">${st.totalPwr}</div><div class="stat-label">総合PWR</div></div>` +
-        `<div class="stat-block"><div class="stat-value">${st.avg}</div><div class="stat-label">平均PWR</div></div>` +
-        `<div class="stat-block"><div class="stat-value">${st.maxStat}</div><div class="stat-label">最大ステ</div></div>` +
-        `<div class="stat-block"><div class="stat-value" style="color:#ff4d4d">${st.shitei}/${st.free}</div><div class="stat-label">指定/フリー</div></div>` +
-        `<div class="stat-block"><div class="stat-label" style="margin-top:0">ランク内訳</div><div class="rank-mini-bar">${parts}</div></div>`;
+        `<div class="stat-block"><div class="stat-value">${st.totalPwr}</div><div class="stat-label">${escapeHtml(tt('deck_stat_total_pwr'))}</div></div>` +
+        `<div class="stat-block"><div class="stat-value">${st.avg}</div><div class="stat-label">${escapeHtml(tt('deck_stat_avg_pwr'))}</div></div>` +
+        `<div class="stat-block"><div class="stat-value">${st.maxStat}</div><div class="stat-label">${escapeHtml(tt('deck_stat_max_stat'))}</div></div>` +
+        `<div class="stat-block"><div class="stat-value" style="color:#ff4d4d">${st.shitei}/${st.free}</div><div class="stat-label">${escapeHtml(tt('deck_stat_shitei_free'))}</div></div>` +
+        `<div class="stat-block"><div class="stat-label" style="margin-top:0">${escapeHtml(tt('deck_stat_rank_breakdown'))}</div><div class="rank-mini-bar">${parts}</div></div>`;
     }
 
     const lastDeck = deckCount <= 1;
@@ -598,7 +603,8 @@
     const shiteiSlots = countShiteiSlots(slots);
     const deckFull = filled >= DECK_SIZE;
 
-    if (ownEl) ownEl.textContent = `${global.AppState.cards?.length || 0}枚`;
+    if (ownEl)
+      ownEl.textContent = tt('deck_owned_count_fmt', { n: global.AppState.cards?.length || 0 });
 
     const q = state.collectionFilters.search.trim().toLowerCase();
     const filtered = masters.filter(
@@ -630,7 +636,7 @@
 
       const tp = document.createElement('span');
       tp.className = 'slot-type' + (m.type === 'shitei' ? ' shitei' : '');
-      tp.textContent = m.type === 'shitei' ? '指定' : 'フリー';
+      tp.textContent = m.type === 'shitei' ? tt('col_type_shitei') : tt('col_type_free');
 
       const rk = document.createElement('span');
       rk.className = 'slot-rank rank-' + m.rank;
@@ -654,10 +660,10 @@
       badge.className = 'remain-badge';
       if (remainInv <= 0) {
         badge.classList.add('zero');
-        badge.textContent = '残0';
+        badge.textContent = tt('deck_inv_badge_0');
       } else {
         badge.classList.add(m.type === 'shitei' ? 'shitei' : 'free');
-        badge.textContent = `残${remainInv}`;
+        badge.textContent = tt('deck_inv_badge_remain', { n: remainInv });
       }
 
       const addBtn = document.createElement('button');
@@ -704,7 +710,7 @@
     $('#deckNewBtn')?.addEventListener('click', () => {
       const decks = global.AppState.decks || [];
       if (decks.length >= MAX_DECKS) return;
-      let base = '新規デッキ';
+      let base = tt('deck_new_base_name');
       const names = new Set(decks.map((d) => d.name));
       let name = base;
       let i = 2;

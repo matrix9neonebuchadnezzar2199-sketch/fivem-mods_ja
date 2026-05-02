@@ -90,13 +90,13 @@
       tdRate.textContent = fmtRating(r.rating_me_before, r.rating_me_after);
 
       const tdCopy = document.createElement('td');
-      const tr = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
+      const i18nT = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
       if (r.defeat_copy_received && r.defeat_copy_card_id) {
-        tdCopy.textContent = tr
-          ? tr('hist_copy_prefix') + r.defeat_copy_card_id
+        tdCopy.textContent = i18nT
+          ? i18nT('hist_copy_prefix') + r.defeat_copy_card_id
           : `コピー: ${r.defeat_copy_card_id}`;
       } else if (r.defeat_copy_received) {
-        tdCopy.textContent = tr ? tr('hist_copy_yes') : 'コピーあり';
+        tdCopy.textContent = i18nT ? i18nT('hist_copy_yes') : 'コピーあり';
       } else {
         tdCopy.textContent = '—';
       }

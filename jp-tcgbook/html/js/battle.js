@@ -10,6 +10,10 @@
   /** デバッグ盤面: 選択中の手札インデックス（0-based）。配置後にサーバー状態でリセット */
   let dbgSelectedHand = null;
 
+  function tt(key, vars) {
+    return global.I18n && global.I18n.tf ? global.I18n.tf(key, vars) : key;
+  }
+
   function $(sel) {
     return document.querySelector(sel);
   }
@@ -59,9 +63,9 @@
     if (activeId == null) {
       return (
         '<section class="battle-section">' +
-        '<p class="battle-lead">使用デッキ（★）が設定されていません。</p>' +
-        '<p class="battle-hint">デッキ編成で 10 枚揃ったデッキを「使用デッキに設定」してください。</p>' +
-        '<button type="button" class="btn primary battle-goto" data-goto-deck>デッキ編成へ</button>' +
+        `<p class="battle-lead">${escapeHtml(tt('battle_no_deck_lead'))}</p>` +
+        `<p class="battle-hint">${escapeHtml(tt('battle_no_deck_hint'))}</p>` +
+        `<button type="button" class="btn primary battle-goto" data-goto-deck>${escapeHtml(tt('battle_goto_deck'))}</button>` +
         '</section>'
       );
     }
@@ -75,8 +79,8 @@
         '<div class="battle-skeleton-line wide"></div>' +
         '<div class="battle-skeleton-line"></div>' +
         '</div>' +
-        '<p class="battle-hint">アクティブデッキを読み込み中です。</p>' +
-        '<button type="button" class="btn primary battle-refresh-deck">再読込</button>' +
+        `<p class="battle-hint">${escapeHtml(tt('battle_loading_hint'))}</p>` +
+        `<button type="button" class="btn primary battle-refresh-deck">${escapeHtml(tt('battle_refresh_deck'))}</button>` +
         '</section>'
       );
     }
@@ -86,22 +90,24 @@
     const ready = filled >= DECK_SIZE;
     const pwr = deckPower(detail);
     const statusClass = ready ? 'ready' : 'warn';
-    const statusLabel = ready ? '対戦準備OK（10枚）' : `枚数不足（${filled} / ${DECK_SIZE}）`;
+    const statusLabel = ready
+      ? tt('battle_ready_ok')
+      : tt('battle_ready_short', { filled, size: DECK_SIZE });
 
     let rows =
-      `<div class="battle-readiness-row"><span>状態</span><strong>${escapeHtml(statusLabel)}</strong></div>` +
-      `<div class="battle-readiness-row"><span>レート</span><strong>${escapeHtml(String(rating))}</strong></div>`;
+      `<div class="battle-readiness-row"><span>${escapeHtml(tt('battle_row_state'))}</span><strong>${escapeHtml(statusLabel)}</strong></div>` +
+      `<div class="battle-readiness-row"><span>${escapeHtml(tt('battle_row_rating'))}</span><strong>${escapeHtml(String(rating))}</strong></div>`;
     if (ready) {
-      rows += `<div class="battle-readiness-row"><span>総合PWR</span><strong>${pwr}</strong></div>`;
+      rows += `<div class="battle-readiness-row"><span>${escapeHtml(tt('battle_row_pwr'))}</span><strong>${pwr}</strong></div>`;
     }
 
     const inner =
       `<div class="battle-readiness ${statusClass}">` +
-      `<div class="battle-readiness-title">使用デッキ</div>` +
+      `<div class="battle-readiness-title">${escapeHtml(tt('battle_readiness_title'))}</div>` +
       `<div class="battle-deck-name">${name}</div>` +
       rows +
       `</div>` +
-      '<button type="button" class="btn battle-goto subtle" data-goto-deck>デッキを確認・編集</button>';
+      `<button type="button" class="btn battle-goto subtle" data-goto-deck>${escapeHtml(tt('battle_review_deck'))}</button>`;
 
     if (compact) {
       return `<section class="battle-section battle-readiness-compact">${inner}</section>`;
@@ -115,59 +121,59 @@
 
     if (bv.connectedPeerId != null || bv.soloWireTest) {
       const peerLabel = bv.soloWireTest
-        ? escapeHtml(bv.soloPeerLabel || 'ソロ検証（2人目なし）')
+        ? escapeHtml(bv.soloPeerLabel || tt('battle_peer_solo_label'))
         : escapeHtml(String(bv.connectedPeerId));
       const role = bv.soloWireTest
-        ? 'ソロ検証'
+        ? tt('battle_mode_solo_verify')
         : bv.isCaller === true
-          ? '呼び出し側'
+          ? tt('battle_role_caller')
           : bv.isCaller === false
-            ? '待受側'
-            : '接続済み';
+            ? tt('battle_role_callee')
+            : tt('battle_connected');
       const peerLine = bv.soloWireTest
         ? `<strong>${peerLabel}</strong>`
-        : `相手のサーバーID <strong>${peerLabel}</strong>`;
+        : tt('battle_peer_html', { id: peerLabel });
       const hint = bv.soloWireTest
-        ? '実プレイヤーはいません。通信経路と UI のみの確認です。盤面・報酬は未実装です。'
-        : 'マッチ成立後は全画面アリーナで対戦します（サーバー権威・PHASE A）。敗北時のカードコピー付与は別 PHASE。';
+        ? tt('battle_virtual_no_player_note')
+        : tt('battle_virtual_after_match_note');
       const prep =
         bv.matchPrepLabel && String(bv.matchPrepLabel).trim()
           ? `<p class="battle-hint battle-match-prep">${escapeHtml(String(bv.matchPrepLabel))}</p>`
           : '';
       return (
         '<section class="battle-section battle-lobby">' +
-        '<h3 class="battle-section-title">仮想対戦</h3>' +
+        `<h3 class="battle-section-title">${escapeHtml(tt('battle_section_virtual'))}</h3>` +
         `<div class="battle-virtual-on"><p class="battle-lead">${escapeHtml(role)}：${peerLine}</p>` +
         prep +
-        `<p class="battle-hint">${hint}</p>` +
-        '<button type="button" class="btn danger battle-leave">切断する</button></div>' +
+        `<p class="battle-hint">${escapeHtml(hint)}</p>` +
+        `<button type="button" class="btn danger battle-leave">${escapeHtml(tt('battle_disconnect'))}</button></div>` +
         '</section>'
       );
     }
 
     const waitingOn = bv.waiting === true;
+    const peerAria = escapeHtml(tt('battle_label_peer_number'));
     return (
       '<section class="battle-section battle-lobby">' +
-      '<h3 class="battle-section-title">仮想対戦（デバッグ／検証）</h3>' +
-      '<p class="battle-hint">近距離招待は使わず、<strong>相手プレイヤーのサーバーID（番号）</strong>で呼び出します。待ち受ける側は「招待待機」を ON にして番号を伝え、呼ぶ側がその番号を入力します。</p>' +
-      `<div class="battle-my-id"><span class="label">あなたの番号（サーバーID）</span>` +
+      `<h3 class="battle-section-title">${escapeHtml(tt('battle_section_debug_virtual'))}</h3>` +
+      `<p class="battle-hint">${tt('battle_debug_virtual_hint')}</p>` +
+      `<div class="battle-my-id"><span class="label">${escapeHtml(tt('battle_label_your_server_id'))}</span>` +
       `<span class="num">${escapeHtml(sidLabel)}</span></div>` +
       `<div class="battle-wait-row">` +
-      `<button type="button" class="btn ${waitingOn ? '' : 'primary'} battle-wait-toggle">${waitingOn ? '招待待機をやめる' : '招待待機を開始'}</button>` +
+      `<button type="button" class="btn ${waitingOn ? '' : 'primary'} battle-wait-toggle">${escapeHtml(waitingOn ? tt('battle_wait_stop') : tt('battle_wait_start'))}</button>` +
       `</div>` +
       `<div class="battle-call-row">` +
-      `<label class="battle-call-label"><span>相手の番号</span>` +
-      `<input type="number" min="1" step="1" class="battle-call-input" id="battleCallInput" placeholder="例: 12" aria-label="相手のサーバーID"></label>` +
-      `<button type="button" class="btn primary battle-call-btn">呼び出す</button>` +
+      `<label class="battle-call-label"><span>${escapeHtml(tt('battle_label_peer_number'))}</span>` +
+      `<input type="number" min="1" step="1" class="battle-call-input" id="battleCallInput" placeholder="${escAttr(tt('battle_call_placeholder'))}" aria-label="${peerAria}"></label>` +
+      `<button type="button" class="btn primary battle-call-btn">${escapeHtml(tt('battle_call_btn'))}</button>` +
       `</div>` +
       (allowDebugBattleUi()
         ? '<div class="battle-solo-wire-row">' +
-          '<button type="button" class="btn subtle battle-solo-wire-btn">1人で仮想接続の往復を試す</button>' +
-          '<p class="battle-hint">友達のクライアントは不要です（<code>Config.DebugCommands</code> 有効時のみサーバが応答）。' +
-          'F8 や <code>[jp-tcgbook][wire]</code> ログで NUI→client→server→client→NUI を追えます。</p>' +
+          `<button type="button" class="btn subtle battle-solo-wire-btn">${escapeHtml(tt('battle_solo_wire_btn'))}</button>` +
+          `<p class="battle-hint">${tt('battle_solo_wire_hint')}</p>` +
           '</div>'
         : '') +
-      '<p class="battle-next">コマンド <code>/tcg_battleid</code>（デバッグ権限）でも自分の番号を確認できます。</p>' +
+      `<p class="battle-next">${tt('battle_battleid_note')}</p>` +
       '</section>'
     );
   }
@@ -178,28 +184,29 @@
     const lookupLabel = bc && bc.lookupLabel ? escapeHtml(bc.lookupLabel) : '';
     let panel = '';
     if (open) {
+      const dbgLookupAria = escapeHtml(tt('battle_debug_lookup_label'));
       panel =
         '<div class="battle-dbg-lobby-panel">' +
-        '<p class="battle-hint">検索はオンライン確認をしません（応答のみの検証用）。「CPU対戦を開始」は <code>battle_debug</code> 経由。「疑似 PvP 対戦を開始」は <code>battle_pvp.lua</code> 本番経路（仮想相手・サーバー AI）です。</p>' +
+        `<p class="battle-hint">${tt('battle_debug_lobby_hint')}</p>` +
         '<div class="battle-call-row battle-dbg-lookup-row">' +
-        '<label class="battle-call-label"><span>検索するサーバーID</span>' +
-        '<input type="number" min="1" step="1" class="battle-call-input" id="battleDbgLookupInput" placeholder="例: 99" aria-label="検索するサーバーID"></label>' +
-        '<button type="button" class="btn battle-dbg-lookup-btn">検索</button>' +
+        `<label class="battle-call-label"><span>${escapeHtml(tt('battle_debug_lookup_label'))}</span>` +
+        `<input type="number" min="1" step="1" class="battle-call-input" id="battleDbgLookupInput" placeholder="${escAttr(tt('battle_dbg_lookup_ph'))}" aria-label="${dbgLookupAria}"></label>` +
+        `<button type="button" class="btn battle-dbg-lookup-btn">${escapeHtml(tt('battle_dbg_lookup_btn'))}</button>` +
         '</div>' +
         (lookupLabel
-          ? `<p class="battle-dbg-lookup-result"><strong>検索結果:</strong> ${lookupLabel}</p>`
+          ? `<p class="battle-dbg-lookup-result"><strong>${escapeHtml(tt('battle_dbg_lookup_result'))}</strong> ${lookupLabel}</p>`
           : '') +
         '<div class="battle-call-row battle-wait-row">' +
-        '<button type="button" class="btn primary battle-dbg-start-cpu">CPU対戦を開始</button>' +
-        '<button type="button" class="btn primary battle-pvp-start-solo">疑似 PvP 対戦を開始</button>' +
+        `<button type="button" class="btn primary battle-dbg-start-cpu">${escapeHtml(tt('battle_dbg_start_cpu'))}</button>` +
+        `<button type="button" class="btn primary battle-pvp-start-solo">${escapeHtml(tt('battle_dbg_start_pvp_solo'))}</button>` +
         '</div>' +
         '</div>';
     }
     return (
       '<section class="battle-section battle-dbg-lobby">' +
-      '<h3 class="battle-section-title">デバッグ用ロビー</h3>' +
-      '<p class="battle-hint"><code>Config.DebugCommands</code> が有効なときのみ表示されます。本番 PvP とは別経路です。</p>' +
-      `<label class="battle-dbg-toggle"><input type="checkbox" id="battleDbgLobbyToggle" ${open ? 'checked' : ''}/> デバッグ用ロビーを表示する</label>` +
+      `<h3 class="battle-section-title">${escapeHtml(tt('battle_debug_panel_title'))}</h3>` +
+      `<p class="battle-hint">${tt('battle_debug_panel_note')}</p>` +
+      `<label class="battle-dbg-toggle"><input type="checkbox" id="battleDbgLobbyToggle" ${open ? 'checked' : ''}/> ${escapeHtml(tt('battle_debug_toggle_label'))}</label>` +
       panel +
       '</section>'
     );
@@ -244,37 +251,47 @@
 
   /** @param {'cpu'|'pvp'} mode */
   function buildDbgStatusLineHtml(st, mode) {
-    const opp = mode === 'pvp' ? '相手' : 'CPU';
+    const opp =
+      mode === 'pvp' ? tt('battle_opp_pvp') : tt('battle_opp_cpu');
     if (mode === 'pvp' && st.pvp_status_plain) {
       return escapeHtml(st.pvp_status_plain);
     }
-    const turnLabel = st.turn === 'human' ? 'あなた' : opp;
-    const fp = st.first_player === 'human' ? 'あなた' : opp;
-    return `先攻: ${escapeHtml(fp)} ・ いまのターン: <strong>${escapeHtml(
-      turnLabel,
-    )}</strong> ・ ${escapeHtml(opp)}手札残: ${Number(st.cpu_hand_count) || 0}`;
+    const you = tt('battle_you');
+    const turnLabel = st.turn === 'human' ? you : opp;
+    const fp = st.first_player === 'human' ? you : opp;
+    return tt('battle_line_first_turn', {
+      fp: escapeHtml(fp),
+      turn: escapeHtml(turnLabel),
+      opp: escapeHtml(opp),
+      n: Number(st.cpu_hand_count) || 0,
+    });
   }
 
   /** 終了時のみ：メイン領域中央に重ね表示（対戦終了で state 消滅 → 再描画で DOM ごと消える） */
   /** @param {'cpu'|'pvp'} mode */
   function buildDbgResultOverlayHtml(st, mode) {
     if (st.phase !== 'ended' || !st.scores || !st.winner) return '';
-    const opp = mode === 'pvp' ? '相手' : 'CPU';
+    const opp =
+      mode === 'pvp' ? tt('battle_opp_pvp') : tt('battle_opp_cpu');
     const w =
       st.winner === 'human'
-        ? 'あなたの勝ち'
+        ? tt('battle_result_win')
         : st.winner === 'cpu'
-          ? `${opp} の勝ち`
-          : '引き分け';
-    const scoreLine = `スコア（盤の色＋手札）: あなた ${st.scores.human} vs ${opp} ${st.scores.cpu}`;
+          ? tt('battle_result_lose', { opp })
+          : tt('battle_result_draw');
+    const scoreLine = tt('battle_score_line', {
+      h: st.scores.human,
+      opp,
+      c: st.scores.cpu,
+    });
     let policyHint = '';
     if (mode === 'pvp') {
       if (st.is_real_pvp === false) {
         policyHint =
-          `<p class="battle-arena-result-hint">疑似PvP（本番経路オフ）ではカードの付与・敗北コピーはありません。</p>`;
+          `<p class="battle-arena-result-hint">${escapeHtml(tt('battle_hint_pseudo_off'))}</p>`;
       } else if (st.is_real_pvp === true && st.winner === 'human') {
         policyHint =
-          `<p class="battle-arena-result-hint">勝利時のカード入手はありません（敗北時コピーのみ）。</p>`;
+          `<p class="battle-arena-result-hint">${escapeHtml(tt('battle_hint_win_no_card'))}</p>`;
       }
     }
     const defeatCopy =
@@ -282,15 +299,15 @@
       st.defeat_copy_received &&
       typeof st.defeat_copy_card_name === 'string' &&
       st.defeat_copy_card_name !== ''
-        ? `<p class="battle-arena-result-copy">敗北コピー入手: <strong>${escapeHtml(
+        ? `<p class="battle-arena-result-copy">${escapeHtml(tt('battle_defeat_copy'))} <strong>${escapeHtml(
             st.defeat_copy_card_name,
           )}</strong></p>`
         : '';
     const foot =
       mode === 'pvp'
-        ? `<p class="battle-arena-result-foot">「対戦タブに戻る」でロビーへ戻ります</p>` +
-          `<button type="button" class="btn primary battle-pvp-result-dismiss">対戦タブに戻る</button>`
-        : `<p class="battle-arena-result-foot">上部の「対戦終了」でロビーに戻れます</p>`;
+        ? `<p class="battle-arena-result-foot">${escapeHtml(tt('battle_foot_back_tab'))}</p>` +
+          `<button type="button" class="btn primary battle-pvp-result-dismiss">${escapeHtml(tt('battle_btn_back_tab'))}</button>`
+        : `<p class="battle-arena-result-foot">${escapeHtml(tt('battle_foot_cpu_end'))}</p>`;
     return (
       `<div class="battle-arena-result-overlay" role="alertdialog" aria-modal="true" aria-labelledby="battleArenaResultTitle">` +
       `<div class="battle-arena-result-panel">` +
@@ -298,6 +315,7 @@
       `<p class="battle-arena-result-score">${escapeHtml(scoreLine)}</p>` +
       policyHint +
       defeatCopy +
+      foot +
       `</div>` +
       `</div>`
     );
@@ -307,7 +325,7 @@
   function buildDbgGridHtml(st, humanTurn, gridExtraClass, opts) {
     const arenaLarge = !!(opts && opts.arenaLarge);
     const gcls = gridExtraClass ? `battle-dbg-grid ${gridExtraClass}` : 'battle-dbg-grid';
-    let grid = `<div class="${gcls}" role="grid" aria-label="3x3盤面">`;
+    let grid = `<div class="${gcls}" role="grid" aria-label="${escAttr(tt('battle_grid_aria'))}">`;
     for (let i = 1; i <= 9; i++) {
       const cell = getDbgBoardCell(st, i);
       let cls = 'battle-dbg-cell';
@@ -341,7 +359,7 @@
         if (!humanTurn) disabled = true;
       }
       grid +=
-        `<button type="button" class="${cls}" data-dbg-cell="${i}" ${disabled ? 'disabled' : ''} aria-label="マス ${i}">${inner}</button>`;
+        `<button type="button" class="${cls}" data-dbg-cell="${i}" ${disabled ? 'disabled' : ''} aria-label="${escAttr(tt('battle_cell_aria', { i }))}">${inner}</button>`;
     }
     grid += '</div>';
     return grid;
@@ -381,7 +399,7 @@
   function buildDbgLogHtml(st, logWrapClass) {
     const logs = Array.isArray(st.log) ? st.log.slice(-14) : [];
     const lw = logWrapClass ? `battle-dbg-log ${logWrapClass}` : 'battle-dbg-log';
-    let logHtml = `<div class="${lw}" aria-live="polite"><strong>ログ</strong><ul>`;
+    let logHtml = `<div class="${lw}" aria-live="polite"><strong>${escapeHtml(tt('battle_log_head'))}</strong><ul>`;
     logs.forEach((line) => {
       logHtml += `<li>${escapeHtml(line)}</li>`;
     });
@@ -418,9 +436,16 @@
       if (b.result.outcome === 'win') winner = 'human';
       else if (b.result.outcome === 'lose') winner = 'cpu';
       else winner = 'draw';
-      pvpPlain = `終了: あなた ${b.result.my_score} vs 相手 ${b.result.opponent_score}`;
+      pvpPlain = tt('battle_pvp_status_end', {
+        my: b.result.my_score,
+        op: b.result.opponent_score,
+      });
     } else {
-      pvpPlain = `いまのターン: ${b.is_my_turn ? 'あなた' : '相手'} ・ 相手手札残: ${Number(b.opponent_hand_count) || 0}`;
+      const who = b.is_my_turn ? tt('battle_you') : tt('battle_opp_pvp');
+      pvpPlain = tt('battle_pvp_status_playing', {
+        who,
+        n: Number(b.opponent_hand_count) || 0,
+      });
     }
     const res = ended && b.result ? b.result : null;
     const defeatReceived = !!(res && res.defeat_copy_received);
@@ -455,10 +480,11 @@
     const statusLine = buildDbgStatusLineHtml(st, mode);
     const resultOverlay = buildDbgResultOverlayHtml(st, mode);
     const badge = mode === 'pvp' ? 'PVP' : 'DEBUG';
-    const sub = mode === 'pvp' ? 'vs 相手 · PHASE A' : 'vs CPU · PHASE A';
+    const sub = mode === 'pvp' ? tt('battle_sub_pvp') : tt('battle_sub_cpu');
     const grid = buildDbgGridHtml(st, humanTurn, 'battle-arena-grid', { arenaLarge: true });
     const handRow = buildDbgHandHtml(st, 'battle-arena-hand-col', humanTurn);
-    const quitLabel = mode === 'pvp' ? (playing ? '投了' : '終了') : '対戦終了';
+    const quitLabel =
+      mode === 'pvp' ? (playing ? tt('battle_resign') : tt('battle_end')) : tt('battle_quit_cpu');
     const logHtml = buildDbgLogHtml(st, 'battle-arena-log-inner');
     const arenaRes =
       typeof global.GetParentResourceName === 'function'
@@ -467,7 +493,7 @@
     const duelBackCssUrl = `https://cfx-nui-${arenaRes}/html/assets/duel_back.png`;
     const pvpInvalidBatchBtn =
       allowDebugBattleUi() && mode === 'pvp' && playing
-        ? `<button type="button" class="btn battle-arena-pvp-invalid-batch" title="サーバーで不正着手5ケース連続検証（ログ）。盤に1枚あると cell_occ も実行されます">PvP不正5</button>`
+        ? `<button type="button" class="btn battle-arena-pvp-invalid-batch" title="${escAttr(tt('battle_invalid_batch_title'))}">${escapeHtml(tt('battle_invalid_batch_btn'))}</button>`
         : '';
 
     return (
@@ -493,12 +519,12 @@
       `<div class="battle-arena-column battle-arena-column-board battle-arena-column-center">` +
       `<div class="battle-arena-status battle-hint">${statusLine}</div>` +
       `<div class="battle-arena-grid-wrap">${grid}</div>` +
-      `<p class="battle-arena-footnote">隣接比較・配置直後のみ奪取・連鎖なし</p>` +
+      `<p class="battle-arena-footnote">${escapeHtml(tt('battle_footnote'))}</p>` +
       `</div>` +
       `<aside class="battle-arena-column battle-arena-column-hand">` +
       `<div class="battle-arena-hand-head-block">` +
-      `<span class="battle-dbg-hand-label battle-arena-hand-head">手札</span>` +
-      `<span class="battle-arena-hand-hint">カードを選び、空マスをタップ（最大5枚・縦並び）</span>` +
+      `<span class="battle-dbg-hand-label battle-arena-hand-head">${escapeHtml(tt('battle_hand_head'))}</span>` +
+      `<span class="battle-arena-hand-hint">${escapeHtml(tt('battle_hand_hint'))}</span>` +
       `</div>` +
       `${handRow}` +
       `</aside>` +
@@ -544,7 +570,7 @@
         if (!st || st.phase !== 'playing' || st.turn !== 'human') return;
         if (dbgSelectedHand == null) {
           if (typeof global.jpTcgbookShowError === 'function') {
-            global.jpTcgbookShowError('先に手札のカードを選んでください');
+            global.jpTcgbookShowError(tt('battle_err_pick_hand'));
           }
           return;
         }
@@ -555,7 +581,7 @@
           if (!b || b.mode !== 'pvp' || b.ended) return;
           if (b.session_id == null || b.turn_no == null) {
             if (typeof global.jpTcgbookShowError === 'function') {
-              global.jpTcgbookShowError('対戦状態が不正です（再読込してください）');
+              global.jpTcgbookShowError(tt('battle_err_bad_pvp_state'));
             }
             return;
           }
@@ -595,9 +621,7 @@
         }
         const fn = global.jpTcgbookConfirmIfVirtualBattleAsync;
         const msg =
-          mode === 'pvp'
-            ? '投了するとこの対局を負けとして終了し、相手のセッションも終了します。よろしいですか？'
-            : 'デバッグ対戦を終了しますか？';
+          mode === 'pvp' ? tt('battle_confirm_resign_pvp') : tt('battle_confirm_quit_cpu');
         if (typeof fn === 'function' && !(await fn(msg))) return;
         if (mode === 'pvp') {
           api.battlePvpLeave();
@@ -644,7 +668,7 @@
       const tid = parseInt(String(raw).trim(), 10);
       if (!Number.isFinite(tid) || tid < 1) {
         if (typeof global.jpTcgbookShowError === 'function') {
-          global.jpTcgbookShowError('相手の番号を入力してください');
+          global.jpTcgbookShowError(tt('battle_err_peer_id'));
         }
         return;
       }
@@ -655,8 +679,8 @@
         const fn = global.jpTcgbookConfirmIfVirtualBattleAsync;
         const bv = global.AppState.battleVirtual || {};
         const msg = bv.soloWireTest
-          ? 'ソロ検証の仮想接続を終了しますか？'
-          : '仮想対戦を終了しますか？\n\n相手側のセッションも終了します。誤操作防止のため確認しています。';
+          ? tt('battle_leave_solo_confirm')
+          : tt('battle_leave_virtual_confirm');
         if (typeof fn === 'function' && !(await fn(msg))) {
           return;
         }
@@ -680,7 +704,7 @@
       const tid = parseInt(String(raw).trim(), 10);
       if (!Number.isFinite(tid) || tid < 1) {
         if (typeof global.jpTcgbookShowError === 'function') {
-          global.jpTcgbookShowError('検索するサーバーID を入力してください');
+          global.jpTcgbookShowError(tt('battle_err_lookup_id'));
         }
         return;
       }
@@ -765,7 +789,7 @@
       if (arena) {
         root.innerHTML =
           '<section class="battle-section battle-during-cpu">' +
-          '<p class="battle-hint">対戦は全画面で表示されています。終了は対戦画面上部の「対戦終了」から行ってください。</p>' +
+          `<p class="battle-hint">${escapeHtml(tt('battle_fullscreen_hint'))}</p>` +
           '</section>';
         return;
       }
@@ -777,7 +801,7 @@
       }
       html += renderLobbySection(bv);
       html +=
-        '<p class="battle-next footnote">仮想ロビーでマッチしたプレイヤー同士は同一ルール（PHASE A）で対戦できます。自動マッチングは別フェーズです。デバッグ時は「デバッグ用ロビー」から CPU 戦も利用できます。</p>';
+        `<p class="battle-next footnote">${escapeHtml(tt('battle_footer_long'))}</p>`;
 
       root.innerHTML = html;
       bindSectionHandlers(root);

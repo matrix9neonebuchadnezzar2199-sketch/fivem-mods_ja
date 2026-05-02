@@ -7,6 +7,10 @@
 
   const CU = global.CardUtil;
 
+  function tt(key, vars) {
+    return global.I18n && global.I18n.tf ? global.I18n.tf(key, vars) : key;
+  }
+
   function sortLocale() {
     return global.I18n && global.I18n.getLang && global.I18n.getLang() === 'en' ? 'en' : 'ja';
   }
@@ -181,7 +185,7 @@
 
       const typeEl = document.createElement('span');
       typeEl.className = 'card-type' + (m.type === 'shitei' ? ' shitei' : '');
-      typeEl.textContent = m.type === 'shitei' ? '指定' : 'フリー';
+      typeEl.textContent = m.type === 'shitei' ? tt('col_type_shitei') : tt('col_type_free');
 
       const rankEl = document.createElement('span');
       rankEl.className = 'card-rank rank-' + m.rank;
@@ -233,9 +237,7 @@
     if (!rowOrNull || rowOrNull.ownedCount === 0) {
       const empty = document.createElement('div');
       empty.className = 'detail-empty';
-      empty.textContent = rowOrNull
-        ? '未所持のカードです'
-        : 'カードを選択すると詳細が表示されます';
+      empty.textContent = rowOrNull ? tt('col_detail_not_owned') : tt('col_detail_pick_hint');
       host.appendChild(empty);
       return;
     }
@@ -247,7 +249,7 @@
 
     const pt = document.createElement('span');
     pt.className = 'preview-type' + (m.type === 'shitei' ? ' shitei' : '');
-    pt.textContent = m.type === 'shitei' ? '指定' : 'フリー';
+    pt.textContent = m.type === 'shitei' ? tt('col_type_shitei') : tt('col_type_free');
 
     const pr = document.createElement('span');
     pr.className = 'preview-rank rank-' + m.rank;
@@ -268,7 +270,10 @@
 
     const sub = document.createElement('div');
     sub.className = 'detail-sub';
-    sub.textContent = `${m.card_id} ・ 所持 ${rowOrNull.ownedCount} 枚`;
+    sub.textContent = tt('col_detail_owned_fmt', {
+      id: m.card_id,
+      count: rowOrNull.ownedCount,
+    });
 
     const desc = document.createElement('div');
     desc.className = 'detail-desc';
@@ -280,7 +285,7 @@
     const deckBtn = document.createElement('button');
     deckBtn.type = 'button';
     deckBtn.className = 'btn primary';
-    deckBtn.textContent = 'デッキ編成へ';
+    deckBtn.textContent = tt('col_btn_goto_deck');
     deckBtn.addEventListener('click', () => {
       if (typeof global.jpTcgbookSwitchTab === 'function') {
         global.jpTcgbookSwitchTab('deck');
@@ -290,8 +295,7 @@
 
     const note = document.createElement('div');
     note.className = 'detail-acquire-note';
-    note.textContent =
-      '入手: 対戦で敗北時、相手に自分のデッキから1枚をランダムコピー（実装は後続）／パック購入（仕様は別途・保留）';
+    note.textContent = tt('col_acquire_hint');
     actions.appendChild(note);
 
     host.appendChild(preview);

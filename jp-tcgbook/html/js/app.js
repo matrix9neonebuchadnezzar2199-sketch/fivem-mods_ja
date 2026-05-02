@@ -49,6 +49,22 @@
 
   const TAB_ORDER = ['collection', 'deck', 'battle', 'history', 'ranking'];
 
+  function tt(key, vars) {
+    return global.I18n && global.I18n.tf ? global.I18n.tf(key, vars) : key;
+  }
+
+  function pvpErrMsg(reason) {
+    const r = String(reason || '').trim();
+    const key = r ? `pvp_err_${r}` : '';
+    if (global.I18n && global.I18n.t && key) {
+      const msg = global.I18n.t(key);
+      if (msg !== key) return msg;
+    }
+    return global.I18n && global.I18n.tf
+      ? global.I18n.tf('app_pvp_err_wrap', { reason: r || 'unknown' })
+      : `対戦エラー（${r || 'unknown'}）`;
+  }
+
   let helpOpen = false;
 
   /** @type {null | (() => void)} */
@@ -258,7 +274,7 @@
 
   function switchTab(tabName) {
     if (tabName !== global.AppState.currentTab && isBattleArenaActive()) {
-      showError('対戦中は他のタブに切り替えられません。全画面の「対戦終了」で抜けてください。');
+      showError(tt('app_battle_tab_blocked'));
       return;
     }
 
@@ -364,9 +380,7 @@
           const soloOnly =
             !!(bvEsc && bvEsc.soloWireTest) && peer == null && !isBattleArenaActive();
           const ok = await openTcgConfirm(
-            soloOnly
-              ? 'BOOK を閉じますか？\n\nソロ検証の仮想接続を終了します。'
-              : 'BOOK を閉じますか？\n\n仮想対戦の接続中、または対戦アリーナ進行中です。続行すると終了し、接続中なら相手側も切断されます。',
+            soloOnly ? tt('app_book_close_solo') : tt('app_book_close_virtual'),
           );
           if (!ok) return;
           api.closeBook();
@@ -424,7 +438,7 @@
     }
     global.AppState.battleVirtual.waiting = false;
     if (p && p.is_pvp === true && global.AppState.battleVirtual.connectedPeerId != null) {
-      global.AppState.battleVirtual.matchPrepLabel = '対戦準備中…';
+      global.AppState.battleVirtual.matchPrepLabel = tt('app_match_prep');
     }
     renderCurrentTab();
   });
@@ -440,7 +454,7 @@
   });
 
   NUI.on('battleLobbyError', (p) => {
-    showError(p && p.error ? p.error : 'エラー');
+    showError(p && p.error ? p.error : tt('app_err_short'));
     renderCurrentTab();
   });
 
@@ -452,10 +466,10 @@
   NUI.on('battleDebugLookupAck', (p) => {
     global.AppState.battleCpuLobby = global.AppState.battleCpuLobby || {};
     if (p && p.ok === true) {
-      global.AppState.battleCpuLobby.lookupLabel = p.display_name || '応答OK';
+      global.AppState.battleCpuLobby.lookupLabel = p.display_name || tt('battle_dbg_lookup_ok');
     } else {
       global.AppState.battleCpuLobby.lookupLabel = '';
-      showError(p && p.error ? p.error : '検索に失敗しました');
+      showError(p && p.error ? p.error : tt('app_dbg_lookup_fail'));
     }
     renderCurrentTab();
   });
@@ -467,17 +481,6 @@
     }
     renderCurrentTab();
   });
-
-  const PVP_ERROR_REASON_JA = {
-    session_not_found: '対戦セッションが見つかりません',
-    not_in_session: 'この対戦の参加者ではありません',
-    not_your_turn: '自分のターンではありません',
-    turn_no_mismatch: '手番情報が古いです（画面を更新してください）',
-    invalid_cell: 'マス指定が不正です',
-    cell_occupied: 'そのマスは既に埋まっています',
-    invalid_hand_index: '手札の指定が不正です',
-    hand_card_missing: 'その手札はありません',
-  };
 
   NUI.on('battlePvpStarted', (p) => {
     global.AppState.battleVirtual.matchPrepLabel = '';
@@ -557,13 +560,13 @@
 
   NUI.on('battlePvpError', (p) => {
     const r = p && p.reason;
-    showError(PVP_ERROR_REASON_JA[r] || `対戦エラー（${r || 'unknown'}）`);
+    showError(pvpErrMsg(r));
     renderCurrentTab();
   });
 
   NUI.on('bookData', (payload) => {
     if (!payload || !payload.success) {
-      showError(payload && payload.error ? payload.error : 'データ取得に失敗しました');
+      showError(payload && payload.error ? payload.error : tt('app_err_book_data'));
       return;
     }
     const d = payload.data || {};
@@ -631,7 +634,7 @@
       global.Deck.resetMutationTransport();
     }
     if (!payload || !payload.success) {
-      showError(payload && payload.error ? payload.error : 'デッキ取得に失敗しました');
+      showError(payload && payload.error ? payload.error : tt('app_err_deck_load'));
       return;
     }
     global.AppState.currentDeckDetail = payload.data || null;
@@ -655,7 +658,7 @@
       return;
     }
     if (!payload || !payload.success) {
-      showError(payload && payload.error ? payload.error : 'デッキ更新に失敗しました');
+      showError(payload && payload.error ? payload.error : tt('app_err_deck_save'));
       renderCurrentTab();
       return;
     }
@@ -669,7 +672,7 @@
 
   NUI.on('deckListUpdated', (payload) => {
     if (!payload || !payload.success) {
-      showError(payload && payload.error ? payload.error : '一覧の更新に失敗しました');
+      showError(payload && payload.error ? payload.error : tt('app_err_list'));
       return;
     }
     const d = payload.data || {};
