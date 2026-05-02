@@ -482,6 +482,7 @@
       final_board: mockPvpBuildViewerPayload(me).board,
       my_hand_remaining: (s.hands[me] || []).length,
       defeat_copy_received: false,
+      is_real_pvp: true,
     };
     if (reason === 'normal' && outcome === 'lose') {
       baseEnded.defeat_copy_received = true;

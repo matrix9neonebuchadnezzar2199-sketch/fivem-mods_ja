@@ -748,6 +748,13 @@
   line-height: 1.5;
 }
 
+.battle-arena-result-hint {
+  margin: calc(9px * var(--book-fs-mul)) 0 0;
+  font-size: clamp(calc(10px * var(--book-fs-mul)), 1.15vw, calc(13px * var(--book-fs-mul)));
+  color: #b8a878;
+  line-height: 1.45;
+}
+
 .battle-arena-result-copy {
   margin: calc(10px * var(--book-fs-mul)) 0 0;
   font-size: clamp(calc(12px * var(--book-fs-mul)), 1.45vw, calc(17px * var(--book-fs-mul)));

@@ -267,6 +267,16 @@
           ? `${opp} の勝ち`
           : '引き分け';
     const scoreLine = `スコア（盤の色＋手札）: あなた ${st.scores.human} vs ${opp} ${st.scores.cpu}`;
+    let policyHint = '';
+    if (mode === 'pvp') {
+      if (st.is_real_pvp === false) {
+        policyHint =
+          `<p class="battle-arena-result-hint">疑似PvP（本番経路オフ）ではカードの付与・敗北コピーはありません。</p>`;
+      } else if (st.is_real_pvp === true && st.winner === 'human') {
+        policyHint =
+          `<p class="battle-arena-result-hint">勝利時のカード入手はありません（敗北時コピーのみ）。</p>`;
+      }
+    }
     const defeatCopy =
       mode === 'pvp' &&
       st.defeat_copy_received &&
@@ -286,6 +296,7 @@
       `<div class="battle-arena-result-panel">` +
       `<h2 id="battleArenaResultTitle" class="battle-arena-result-title">${escapeHtml(w)}</h2>` +
       `<p class="battle-arena-result-score">${escapeHtml(scoreLine)}</p>` +
+      policyHint +
       defeatCopy +
       `</div>` +
       `</div>`
@@ -419,6 +430,8 @@
         : defeatReceived && typeof res.defeat_copy_card_id === 'string'
           ? res.defeat_copy_card_id
           : '';
+    const isRealPvp =
+      res && typeof res.is_real_pvp === 'boolean' ? res.is_real_pvp : undefined;
     return {
       phase: ended ? 'ended' : 'playing',
       turn: playing && b.is_my_turn ? 'human' : 'cpu',
@@ -432,6 +445,7 @@
       pvp_status_plain: pvpPlain,
       defeat_copy_received: defeatReceived,
       defeat_copy_card_name: defeatName,
+      is_real_pvp: isRealPvp,
     };
   }
 

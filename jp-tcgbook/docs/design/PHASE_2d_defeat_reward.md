@@ -30,8 +30,9 @@
 | `defeat_copy_received` | boolean | この viewer が敗北コピーを **実際に付与された**場合のみ `true` |
 | `defeat_copy_card_id` | string? | 付与された `card_id`（`received==true` のとき） |
 | `defeat_copy_card_name` | string? | マスタ参照の表示名（なければ `card_id` にフォールバック） |
+| `is_real_pvp` | boolean | リアル PvP / ソロ検証フルフック経路なら `true`。`false` のとき NUI は「カード付与・敗北コピーなし」と注記 |
 
-勝者・引き分け・付与失敗時は `defeat_copy_received === false`（または関連キー省略と同等の扱い）。
+勝者・引き分け・付与失敗時は `defeat_copy_received === false`（または関連キー省略と同等の扱い）。**勝利時のカード入手 UI は仕様外**（敗北コピーのみ）。リアル PvP で勝った場合も同様。
 
 ### 1.4 スコープ外（本 PHASE ではやらない）
 

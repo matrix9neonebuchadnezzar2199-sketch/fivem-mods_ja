@@ -292,6 +292,7 @@ end
 --- @param defeat_copy_received boolean|nil
 --- @param defeat_copy_card_id string|nil
 --- @param defeat_copy_card_name string|nil
+--- @param is_real_pvp boolean|nil NUI 注記用（疑似PvP 既定 false では報酬・敗北コピー経路なし）
 --- @return table
 local function buildNormalEndedPayload(
     session,
@@ -299,7 +300,8 @@ local function buildNormalEndedPayload(
     reason,
     defeat_copy_received,
     defeat_copy_card_id,
-    defeat_copy_card_name
+    defeat_copy_card_name,
+    is_real_pvp
 )
     local p1, p2 = session.p1_src, session.p2_src
     local s1 = TcgBattleRule.CalcFinalScore(session.board, p1, #(session.hands[p1] or {}))
@@ -323,6 +325,7 @@ local function buildNormalEndedPayload(
         final_board = buildBoardArrayForViewer(session, viewer_src),
         my_hand_remaining = #(session.hands[viewer_src] or {}),
         defeat_copy_received = defeat_copy_received == true,
+        is_real_pvp = is_real_pvp == true,
     }
     if defeat_copy_received == true then
         pay.defeat_copy_card_id = defeat_copy_card_id
@@ -552,8 +555,8 @@ function BattlePvp.Finish(session_id, reason)
 
     local dc1_got, dc1_id, dc1_nm = defeatCopyForViewer(ctx, p1, grant_ok, grant_card)
     local dc2_got, dc2_id, dc2_nm = defeatCopyForViewer(ctx, p2, grant_ok, grant_card)
-    local pay1 = buildNormalEndedPayload(session, p1, reason, dc1_got, dc1_id, dc1_nm)
-    local pay2 = buildNormalEndedPayload(session, p2, reason, dc2_got, dc2_id, dc2_nm)
+    local pay1 = buildNormalEndedPayload(session, p1, reason, dc1_got, dc1_id, dc1_nm, ctx.is_real_pvp)
+    local pay2 = buildNormalEndedPayload(session, p2, reason, dc2_got, dc2_id, dc2_nm, ctx.is_real_pvp)
 
     if hist_ok then
         local nm_a = GetPlayerName(p1)
