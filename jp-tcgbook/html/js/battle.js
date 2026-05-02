@@ -5,6 +5,7 @@
 (function (global) {
   const NUI = global.NUI;
   const api = global.api;
+  const CU = global.CardUtil;
   const DECK_SIZE = 10;
 
   /** デバッグ盤面: 選択中の手札インデックス（0-based）。配置後にサーバー状態でリセット */
@@ -297,12 +298,9 @@
       }
     }
     const defeatCopy =
-      mode === 'pvp' &&
-      st.defeat_copy_received &&
-      typeof st.defeat_copy_card_name === 'string' &&
-      st.defeat_copy_card_name !== ''
+      mode === 'pvp' && st.defeat_copy_received && st.defeat_copy_card_name
         ? `<p class="battle-arena-result-copy">${escapeHtml(tt('battle_defeat_copy'))} <strong>${escapeHtml(
-            st.defeat_copy_card_name,
+            String(st.defeat_copy_card_name),
           )}</strong></p>`
         : '';
     const foot =
@@ -336,8 +334,10 @@
       if (cell) {
         cls += cell.owner === 'human' ? ' owner-human' : ' owner-cpu';
         const c = cell.card || {};
-        const nm = escapeHtml(c.name || c.card_id || '');
-        const fullnm = escAttr(c.name || c.card_id || '');
+        const locNm = dbgLocalizedCardName(c);
+        const nm =
+          `<span class="card-name battle-cell-card-name"><span class="card-name-inner">${escapeHtml(locNm || c.card_id || '')}</span></span>`;
+        const fullnm = escAttr(locNm || c.card_id || '');
         const rk = c.rank != null && String(c.rank) !== '' ? escapeHtml(String(c.rank)) : '';
         const slotCls = arenaLarge ? 'battle-dbg-cell-slot battle-arena-cell-slot' : 'battle-dbg-cell-slot';
         if (arenaLarge) {
@@ -378,7 +378,8 @@
     handArr.forEach((c, i) => {
       const sel = dbgSelectedHand === i ? ' selected' : '';
       const c2 = c || {};
-      const tit = escAttr(c2.name || c2.card_id || '');
+      const locH = dbgLocalizedCardName(c2);
+      const tit = escAttr(locH || c2.card_id || '');
       const dis = !hi ? ' disabled' : '';
       const star =
         dbgSelectedHand === i ? `<span class="battle-dbg-hand-pick-star" aria-hidden="true">★</span>` : '';
@@ -390,7 +391,7 @@
         `<button type="button" class="battle-dbg-hand-card${sel}${dis}" data-dbg-hand="${i}" title="${tit}" ${!hi ? 'disabled' : ''}>` +
         star +
         `${dbgSlotArtHtml(c2, 'battle-dbg-hand-slot', 'battle-dbg-hand-art')}` +
-        `<span class="hn">${escapeHtml(c2.name || c2.card_id || '')}</span>` +
+        `<span class="hn card-name"><span class="card-name-inner">${escapeHtml(locH || c2.card_id || '')}</span></span>` +
         rk +
         `</button>`;
     });
@@ -451,12 +452,19 @@
     }
     const res = ended && b.result ? b.result : null;
     const defeatReceived = !!(res && res.defeat_copy_received);
-    const defeatName =
-      defeatReceived && typeof res.defeat_copy_card_name === 'string' && res.defeat_copy_card_name !== ''
-        ? res.defeat_copy_card_name
-        : defeatReceived && typeof res.defeat_copy_card_id === 'string'
-          ? res.defeat_copy_card_id
-          : '';
+    let defeatName = '';
+    if (defeatReceived) {
+      const cid = typeof res.defeat_copy_card_id === 'string' ? res.defeat_copy_card_id : '';
+      const cm = global.AppState && Array.isArray(global.AppState.cardsMaster) ? global.AppState.cardsMaster : [];
+      const row = cid ? cm.find((x) => x && x.card_id === cid) : null;
+      if (row && CU && typeof CU.getLocalizedCardName === 'function') {
+        defeatName = CU.getLocalizedCardName(row) || cid;
+      } else if (typeof res.defeat_copy_card_name === 'string' && res.defeat_copy_card_name !== '') {
+        defeatName = res.defeat_copy_card_name;
+      } else {
+        defeatName = cid;
+      }
+    }
     const isRealPvp =
       res && typeof res.is_real_pvp === 'boolean' ? res.is_real_pvp : undefined;
     return {
@@ -733,6 +741,17 @@
     return typeof f === 'function' ? f(s) : escapeHtml(s);
   }
 
+  function dbgLocalizedCardName(c) {
+    if (!c) return '';
+    if (!CU || typeof CU.getLocalizedCardName !== 'function') return String(c.name || c.card_id || '');
+    const id = c.card_id;
+    const cm =
+      global.AppState && Array.isArray(global.AppState.cardsMaster) ? global.AppState.cardsMaster : [];
+    const m = cm.find((row) => row && row.card_id === id);
+    const merged = m ? Object.assign({}, m, c) : c;
+    return CU.getLocalizedCardName(merged) || String(c.card_id || '');
+  }
+
   /** Lua→JSON で board が配列になった旧ペイロードとも整合（1〜9 はマス番号） */
   function getDbgBoardCell(st, idx1to9) {
     const b = st && st.board;
@@ -777,6 +796,9 @@
           arenaRoot.setAttribute('aria-hidden', 'false');
           arenaRoot.innerHTML = renderArenaDocument(arena.st, arena.mode);
           bindArenaGameplay(arenaRoot, arena.mode);
+          if (typeof global.applyMarqueeIfOverflow === 'function') {
+            global.applyMarqueeIfOverflow(arenaRoot);
+          }
           bookEl?.classList.add('book--cpu-duel');
         } else {
           arenaRoot.hidden = true;

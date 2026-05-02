@@ -458,14 +458,8 @@
   line-height: 1.25;
   margin-top: 3px;
   flex-shrink: 0;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  word-break: break-word;
-  overflow-wrap: anywhere;
   padding: 0 2px;
+  max-width: 100%;
 }
 
 #tab-collection .owned-badge {

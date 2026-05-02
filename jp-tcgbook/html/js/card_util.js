@@ -98,6 +98,7 @@
       byId.set(row.card_id, {
         card_id: row.card_id,
         name: row.name,
+        name_en: row.name_en,
         rank: row.rank,
         type: row.type,
         stat_top: row.stat_top,
@@ -133,6 +134,17 @@
     return n;
   }
 
+  /** @param {{ name?: string, name_en?: string, card_id?: string }|null|undefined} card */
+  function getLocalizedCardName(card) {
+    if (!card) return '';
+    const lang = global.I18n && global.I18n.getLang ? global.I18n.getLang() : 'ja';
+    const ne = card.name_en;
+    if (lang === 'en' && typeof ne === 'string' && ne.trim() !== '') {
+      return ne;
+    }
+    return typeof card.name === 'string' ? card.name : '';
+  }
+
   /** @param {{ description?: string, description_en?: string }} c */
   function cardDescriptionForLocale(c) {
     const row = c || {};
@@ -151,6 +163,7 @@
     cardArtMediaHtml,
     applyMaxHighlight,
     formatDeckDisplayName,
+    getLocalizedCardName,
     cardDescriptionForLocale,
     applyMaxHighlightDetail,
     normalizeMasterList,

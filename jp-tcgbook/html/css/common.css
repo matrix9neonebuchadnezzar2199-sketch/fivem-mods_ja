@@ -709,3 +709,42 @@ body {
   z-index: 50;
   pointer-events: none;
 }
+
+/* 長い名前のマーキー（ランキング・コレクション・対戦・デッキ共有） */
+.player-name,
+.card-name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  max-width: 100%;
+}
+
+.player-name-inner,
+.card-name-inner {
+  display: inline-block;
+}
+
+[data-overflow='true'] > .player-name-inner,
+[data-overflow='true'] > .card-name-inner {
+  animation: tcg-name-marquee 15s linear infinite;
+  padding-left: 100%;
+}
+
+[data-overflow='true']:hover > .player-name-inner,
+[data-overflow='true']:hover > .card-name-inner {
+  animation-play-state: paused;
+}
+
+@keyframes tcg-name-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.player-name-unknown {
+  color: #888;
+}

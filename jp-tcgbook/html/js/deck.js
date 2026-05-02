@@ -225,8 +225,9 @@
   function passesCollSearch(m, q) {
     if (!q) return true;
     const n = String(m.name || '').toLowerCase();
+    const ne = String(m.name_en || '').toLowerCase();
     const id = String(m.card_id || '').toLowerCase();
-    return n.includes(q) || id.includes(q);
+    return n.includes(q) || ne.includes(q) || id.includes(q);
   }
 
   function passesCollType(m, t) {
@@ -528,8 +529,11 @@
         CU.applyMaxHighlight(art, c);
 
         const nm = document.createElement('div');
-        nm.className = 'slot-name';
-        nm.textContent = c.name || c.card_id;
+        nm.className = 'slot-name card-name';
+        const nmInner = document.createElement('span');
+        nmInner.className = 'card-name-inner';
+        nmInner.textContent = CU.getLocalizedCardName(c) || c.card_id || '';
+        nm.appendChild(nmInner);
 
         const ix = document.createElement('span');
         ix.className = 'slot-index';
@@ -653,8 +657,11 @@
       CU.applyMaxHighlight(art, m);
 
       const nm = document.createElement('div');
-      nm.className = 'slot-name';
-      nm.textContent = m.name || m.card_id;
+      nm.className = 'slot-name card-name';
+      const nmInner = document.createElement('span');
+      nmInner.className = 'card-name-inner';
+      nmInner.textContent = CU.getLocalizedCardName(m) || m.card_id || '';
+      nm.appendChild(nmInner);
 
       const badge = document.createElement('span');
       badge.className = 'remain-badge';
@@ -805,7 +812,7 @@
       const names = [];
       for (let i = 1; i <= DECK_SIZE; i++) {
         const sl = getSlot(d.slots, i);
-        if (sl && sl.card) names.push(sl.card.name || sl.card.card_id);
+        if (sl && sl.card) names.push(CU.getLocalizedCardName(sl.card) || sl.card.card_id || '');
       }
       if (!names.length) return;
       shufflePreviewNames = names.slice();
@@ -851,6 +858,10 @@
       renderSidebar();
       renderEditor(detail);
       renderCollectionPane(detail);
+
+      if (typeof global.applyMarqueeIfOverflow === 'function') {
+        global.applyMarqueeIfOverflow(document.getElementById('tab-deck'));
+      }
     },
 
     closeDeckModals() {

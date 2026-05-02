@@ -62,6 +62,10 @@
     masterBuild.push({
       card_id: `mock_${rank}_${String(idNum).padStart(3, '0')}`,
       name: `モック ${rank}-${idNum}`,
+      name_en:
+        i === 0
+          ? 'Aria Wonderfield-Maximilian-Standing Mock Legend EN'
+          : `Mock EN ${rank}-${idNum}`,
       rank,
       type,
       ...st,
@@ -79,6 +83,7 @@
     masterBuild.push({
       card_id: `mock_CAT_${String(i + 1).padStart(3, '0')}`,
       name: `図鑑ダミー ${i + 1} (${rank})`,
+      name_en: `Catalog Mock EN ${i + 1} (${rank})`,
       rank,
       type,
       ...st,
@@ -111,6 +116,7 @@
     image_path: m.image_path,
     description: m.description,
     description_en: m.description_en,
+    name_en: m.name_en,
     no: m.no,
   }));
 
@@ -124,6 +130,7 @@
     return {
       card_id: m.card_id,
       name: m.name,
+      name_en: m.name_en,
       rank: m.rank,
       type: m.type,
       stat_top: m.stat_top,
@@ -230,6 +237,7 @@
   const MOCK_DATA = {
     player: {
       citizenid,
+      display_name: 'モックプレイヤー表示名',
       initialized: true,
       rating: 1620,
       wins: 3,
@@ -776,9 +784,9 @@
         }
         return { rank_code: 'g', badge: 'Wood' };
       }
-      const mk = (id, rating, lv, xp, st) => {
+      const mk = (id, rating, lv, xp, st, displayName) => {
         const t = mockTierFromRating(rating);
-        return {
+        const row = {
           citizenid: id,
           rating,
           wins: 1,
@@ -790,18 +798,21 @@
           rank_code: t.rank_code,
           badge: t.badge,
         };
+        if (displayName !== undefined) row.display_name = displayName;
+        return row;
       };
       const top = [
-        mk('license:aaaaaaaaaaaaaaaa', 1700, 7, 900, 1),
+        mk('license:aaaaaaaaaaaaaaaa', 1700, 7, 900, 1, 'Aria Wonderfield-Maximilian'),
         mk(
           cid,
           MOCK_DATA.player.rating,
           MOCK_DATA.player.pvp_level,
           MOCK_DATA.player.pvp_exp,
           MOCK_DATA.player.pvp_win_streak,
+          MOCK_DATA.player.display_name || null,
         ),
-        mk('license:bbbbbbbbbbbbbbbb', 1580, 4, 200, 0),
-        mk('license:cccccccccccccccc', 1500, 2, 50, 0),
+        mk('license:bbbbbbbbbbbbbbbb', 1580, 4, 200, 0, 'Bob'),
+        mk('license:cccccccccccccccc', 1500, 2, 50, 0, null),
       ];
       const myT = mockTierFromRating(MOCK_DATA.player.rating);
       return {
@@ -814,6 +825,8 @@
           total: 120,
           rank_code: myT.rank_code,
           badge: myT.badge,
+          citizenid: cid,
+          display_name: MOCK_DATA.player.display_name || null,
         },
         my_in_top: true,
         around_me: [],

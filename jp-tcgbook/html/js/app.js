@@ -185,10 +185,12 @@
       return;
     }
 
-    const cid = p.citizenid || '';
-    /* ライセンス全文を表示（長い場合は CSS で折り返し） */
+    const disp =
+      p.display_name != null && String(p.display_name).trim() !== ''
+        ? String(p.display_name).trim()
+        : '';
     nameEl.textContent =
-      cid ||
+      disp ||
       (global.I18n && global.I18n.t ? global.I18n.t('header_player_fallback') : 'プレイヤー');
 
     const n = global.AppState.cards.length;
@@ -757,6 +759,9 @@
         renderHeader();
         syncHistoryTabUi();
         renderCurrentTab();
+        if (typeof global.applyMarqueeIfOverflow === 'function') {
+          global.applyMarqueeIfOverflow(document.getElementById('app'));
+        }
       });
     }
 

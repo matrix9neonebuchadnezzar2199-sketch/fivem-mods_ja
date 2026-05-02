@@ -107,6 +107,17 @@
   vertical-align: middle;
 }
 
+.ranking-table td.rank-name-col .player-name {
+  max-width: clamp(120px, 22vw, 280px);
+}
+
+.my-rank-name-row {
+  margin-top: calc(4px * var(--book-fs-mul));
+  font-size: calc(14px * var(--book-fs-mul));
+  font-weight: 600;
+  color: #e8e1c4;
+}
+
 .ranking-table th {
   font-weight: 600;
   background: rgba(40, 32, 24, 0.6);

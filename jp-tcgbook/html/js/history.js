@@ -6,6 +6,28 @@
     return (root || document).querySelector(sel);
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]),
+    );
+  }
+
+  function playerUnknownLabel() {
+    return global.I18n && global.I18n.t ? global.I18n.t('player.unknown') : '不明なプレイヤー';
+  }
+
+  function localizedCopyCardLabel(cardId) {
+    const id = String(cardId || '');
+    const cm = global.AppState && Array.isArray(global.AppState.cardsMaster) ? global.AppState.cardsMaster : [];
+    const row = cm.find((x) => x && x.card_id === id);
+    const CU = global.CardUtil;
+    if (row && CU && typeof CU.getLocalizedCardName === 'function') {
+      const nm = CU.getLocalizedCardName(row);
+      if (nm) return nm;
+    }
+    return id || '—';
+  }
+
   function outcomeLabel(o) {
     const tr = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
     if (tr) {
@@ -71,10 +93,16 @@
       tdWhen.textContent = fmtTime(r.finished_at);
 
       const tdOpp = document.createElement('td');
-      const oppName = r.opponent_display || '';
+      tdOpp.className = 'hist-opp-cell';
+      const oppRaw = r.opponent_display != null ? String(r.opponent_display).trim() : '';
       const oppId = r.opponent_citizenid || '';
-      tdOpp.textContent = oppName || oppId || '—';
-      tdOpp.title = oppId || '';
+      if (oppRaw !== '') {
+        tdOpp.innerHTML = `<div class="player-name"><span class="player-name-inner">${escapeHtml(oppRaw)}</span></div>`;
+        tdOpp.title = '';
+      } else {
+        tdOpp.innerHTML = `<div class="player-name"><span class="player-name-inner"><span class="player-name-unknown">${escapeHtml(playerUnknownLabel())}</span></span></div>`;
+        tdOpp.title = '';
+      }
 
       const tdRes = document.createElement('td');
       const sp = document.createElement('span');
@@ -92,9 +120,8 @@
       const tdCopy = document.createElement('td');
       const i18nT = global.I18n && global.I18n.t ? global.I18n.t.bind(global.I18n) : null;
       if (r.defeat_copy_received && r.defeat_copy_card_id) {
-        tdCopy.textContent = i18nT
-          ? i18nT('hist_copy_prefix') + r.defeat_copy_card_id
-          : `コピー: ${r.defeat_copy_card_id}`;
+        const lbl = localizedCopyCardLabel(r.defeat_copy_card_id);
+        tdCopy.textContent = i18nT ? i18nT('hist_copy_prefix') + lbl : `コピー: ${lbl}`;
       } else if (r.defeat_copy_received) {
         tdCopy.textContent = i18nT ? i18nT('hist_copy_yes') : 'コピーあり';
       } else {
@@ -108,6 +135,10 @@
       tr.appendChild(tdRate);
       tr.appendChild(tdCopy);
       tbody.appendChild(tr);
+    }
+
+    if (typeof global.applyMarqueeIfOverflow === 'function') {
+      global.applyMarqueeIfOverflow(document.getElementById('tab-history'));
     }
   }
 

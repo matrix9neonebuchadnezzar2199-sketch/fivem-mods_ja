@@ -228,6 +228,7 @@ SELECT
     pc.obtained_at,
     pc.locked,
     m.name,
+    m.name_en,
     m.rank,
     m.type,
     m.stat_top,
@@ -297,6 +298,7 @@ SELECT
     dc.slot_index,
     dc.card_id,
     m.name,
+    m.name_en,
     m.rank,
     m.type,
     m.stat_top,
@@ -334,6 +336,7 @@ ORDER BY dc.slot_index ASC
                 card = {
                     card_id = r.card_id,
                     name = r.name,
+                    name_en = r.name_en,
                     rank = r.rank,
                     type = r.type,
                     stat_top = r.stat_top,

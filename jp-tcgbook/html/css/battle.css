@@ -958,6 +958,11 @@
 
 .battle-arena-root .battle-dbg-cell-meta .battle-dbg-cell-name {
   font-size: calc(8px * var(--book-fs-mul));
+  max-width: 100%;
+}
+
+.battle-arena-root .battle-dbg-cell-meta .battle-dbg-cell-name .card-name {
+  max-width: min(100%, 14vw);
 }
 
 .battle-arena-root .battle-dbg-cell-rank {

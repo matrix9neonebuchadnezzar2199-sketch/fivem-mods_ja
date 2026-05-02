@@ -18,6 +18,24 @@
     );
   }
 
+  function playerUnknownLabel() {
+    return global.I18n && global.I18n.t ? global.I18n.t('player.unknown') : '不明なプレイヤー';
+  }
+
+  function renderPlayerNameInnerHtml(displayName) {
+    const has = displayName != null && String(displayName).trim() !== '';
+    if (has) {
+      return `<span class="player-name-inner">${escapeHtml(String(displayName))}</span>`;
+    }
+    return (
+      `<span class="player-name-inner"><span class="player-name-unknown">${escapeHtml(playerUnknownLabel())}</span></span>`
+    );
+  }
+
+  function renderPlayerNameCellHtml(displayName) {
+    return `<div class="player-name">${renderPlayerNameInnerHtml(displayName)}</div>`;
+  }
+
   /** @param {string} [rankCode] @param {string} [badge] */
   function renderRankBadgeCell(rankCode, badge) {
     if (!rankCode || !badge) {
@@ -180,8 +198,14 @@
       const rating = mi.rating != null ? mi.rating : my.rating;
       const tierBadgeHtml = renderRankBadgeCell(mi.rank_code, mi.badge);
       const tierName = escapeHtml(tierDisplayName(mi.rank_code));
+      const disp =
+        my.display_name !== undefined && my.display_name !== null
+          ? my.display_name
+          : mi.display_name;
+      const nameRow = `<div class="my-rank-name-row"><div class="player-name">${renderPlayerNameInnerHtml(disp)}</div></div>`;
       wrap.innerHTML = `
         <div class="my-rank-num">${tf('rank_my_rank', { rank: mi.rank, total: mi.total })}</div>
+        ${nameRow}
         <div class="my-rank-tier-row">
           <span class="my-rank-tier-label">${escapeHtml(tf('rank_my_tier_label'))}</span>
           <span class="my-rank-tier">${tierBadgeHtml}<span class="my-rank-tier-name">${tierName}</span></span>
@@ -217,14 +241,16 @@
       const rows = this.buildDisplayRows();
       if (rows.length === 0) {
         if (emptyEl) emptyEl.hidden = false;
-        return;
+      } else {
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < rows.length; i++) {
+          frag.appendChild(this.makeRow(rows[i]));
+        }
+        tbody.appendChild(frag);
       }
-
-      const frag = document.createDocumentFragment();
-      for (let i = 0; i < rows.length; i++) {
-        frag.appendChild(this.makeRow(rows[i]));
+      if (typeof global.applyMarqueeIfOverflow === 'function') {
+        global.applyMarqueeIfOverflow(document.getElementById('tab-ranking'));
       }
-      tbody.appendChild(frag);
     },
 
     makeRow(item) {
@@ -244,8 +270,6 @@
         tr.classList.add('ranking-row-me');
       }
 
-      const nameStr = r.citizenid != null ? String(r.citizenid) : '—';
-
       function addTd(className, text) {
         const td = document.createElement('td');
         if (className) td.className = className;
@@ -253,15 +277,19 @@
         tr.appendChild(td);
       }
 
-      addTd('rank-num', String(item.rank));
+      addTd('rank-no', String(item.rank));
       const tdTier = document.createElement('td');
-      tdTier.className = 'rank-tier-cell';
+      tdTier.className = 'rank-tier';
       tdTier.innerHTML = renderRankBadgeCell(r.rank_code, r.badge);
       tr.appendChild(tdTier);
-      addTd('rank-rating', String(r.rating != null ? r.rating : '—'));
-      addTd('rank-lv', String(r.pvp_level != null ? r.pvp_level : 0));
-      addTd('rank-exp', String(r.pvp_exp != null ? r.pvp_exp : 0));
-      addTd('rank-streak', String(r.pvp_win_streak != null ? r.pvp_win_streak : 0));
+      const tdName = document.createElement('td');
+      tdName.className = 'rank-name-col';
+      tdName.innerHTML = renderPlayerNameCellHtml(r.display_name);
+      tr.appendChild(tdName);
+      addTd('rating', String(r.rating != null ? r.rating : '—'));
+      addTd('lv', String(r.pvp_level != null ? r.pvp_level : '—'));
+      addTd('exp', String(r.pvp_exp != null ? r.pvp_exp : '—'));
+      addTd('streak', String(r.pvp_win_streak != null ? r.pvp_win_streak : 0));
 
       return tr;
     },

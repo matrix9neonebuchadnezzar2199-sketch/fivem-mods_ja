@@ -50,8 +50,9 @@
   function passesSearch(m, q) {
     if (!q) return true;
     const n = String(m.name || '').toLowerCase();
+    const ne = String(m.name_en || '').toLowerCase();
     const id = String(m.card_id || '').toLowerCase();
-    return n.includes(q) || id.includes(q);
+    return n.includes(q) || ne.includes(q) || id.includes(q);
   }
 
   function passesType(m, t) {
@@ -74,7 +75,10 @@
     const copy = rows.slice();
     if (sortKey === 'name') {
       copy.sort((a, b) =>
-        String(a.master.name || '').localeCompare(String(b.master.name || ''), sortLocale()),
+        String(CU.getLocalizedCardName(a.master) || '').localeCompare(
+          String(CU.getLocalizedCardName(b.master) || ''),
+          sortLocale(),
+        ),
       );
     } else if (sortKey === 'date') {
       copy.sort((a, b) => {
@@ -87,7 +91,10 @@
       copy.sort((a, b) => {
         const rd = rankSortValue(b.master.rank) - rankSortValue(a.master.rank);
         if (rd !== 0) return rd;
-        return String(a.master.name || '').localeCompare(String(b.master.name || ''), sortLocale());
+        return String(CU.getLocalizedCardName(a.master) || '').localeCompare(
+          String(CU.getLocalizedCardName(b.master) || ''),
+          sortLocale(),
+        );
       });
     }
     return copy;
@@ -204,7 +211,10 @@
 
       const nm = document.createElement('div');
       nm.className = 'card-name';
-      nm.textContent = m.name || m.card_id;
+      const nmInner = document.createElement('span');
+      nmInner.className = 'card-name-inner';
+      nmInner.textContent = CU.getLocalizedCardName(m) || m.card_id || '';
+      nm.appendChild(nmInner);
 
       card.appendChild(typeEl);
       card.appendChild(rankEl);
@@ -265,8 +275,11 @@
     preview.appendChild(pa);
 
     const title = document.createElement('div');
-    title.className = 'detail-name';
-    title.textContent = m.name || '';
+    title.className = 'detail-name card-name';
+    const titleInner = document.createElement('span');
+    titleInner.className = 'card-name-inner';
+    titleInner.textContent = CU.getLocalizedCardName(m) || m.name || '';
+    title.appendChild(titleInner);
 
     const sub = document.createElement('div');
     sub.className = 'detail-sub';
@@ -385,6 +398,10 @@
         if (!selRow) state.selectedCardId = null;
       }
       renderDetail(selRow);
+
+      if (typeof global.applyMarqueeIfOverflow === 'function') {
+        global.applyMarqueeIfOverflow(document.getElementById('tab-collection'));
+      }
     },
   };
 
