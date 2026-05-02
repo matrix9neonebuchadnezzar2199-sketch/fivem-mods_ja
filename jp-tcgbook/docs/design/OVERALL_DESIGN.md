@@ -44,14 +44,17 @@
 ```
 BattlePvp.Finish
   → collectFinishContext（ctx）
-  → TriggerClient ended …
-  → BattleStats.RecordFinish(ctx)     ← Elo / winloss／【C】日次 counters／【M4】pvp_exp・pvp_level・pvp_win_streak
+  → BattleStats.RecordFinish(ctx)     ← Elo / winloss／【C】日次 counters／【M4】pvp_exp・pvp_level・pvp_win_streak（ctx により実質スキップ可）
   → BattleRewards.GrantOnFinish(ctx)  ← 2d コピー／【C】copies_received 日次
-  → 【E1】`Database.InsertMatchHistory`（リアル PvP のみ）
+  → 【E1】`Database.InsertMatchHistory`（`ctx.is_real_pvp` が true のとき）
+  → TriggerClient `battlePvpEnded`（Grant 確定後のペイロード）
   → destroySession …
 ```
 
-- **solo / CPU**: `ctx.is_real_pvp == false` → Stats の一部・Rewards は早期 return（現状どおり）。
+- **CPU デバッグ対戦**: 別経路。`ctx.is_real_pvp == false` 相当でランキング経済・履歴の対象外（現状どおり）。
+- **疑似PvPソロ（`BattlePvp.StartSolo`）は二段階**（詳細は **`DEV_SOLO_VERIFICATION_POLICY.md`**）:
+  - **既定**（`PvpSoloApplyFullFinishHooks=false` または `DebugCommands=false`）: `is_real_pvp=false` → **状態機械のみ本番と同じ `BattlePvp`**。Stats / Rewards / 履歴 INSERT は early return（ログの `skip non-real-pvp`）。**本番 Finish の副作用とは設計上別経路**。
+  - **検証オプトイン**（上記フラグ **両方 true**）: ダミー `citizenid` を差し込み **`is_real_pvp=true`** → **RecordFinish・GrantOnFinish・InsertMatchHistory・終了 NUI を本番と同一パイプライン**で検証可能。**本番サーバーではフラグ ON にしない**（同ドキュメント §3.1）。
 - **投了・切断**: `Finish` 非経由 → 本パイプラインは動かない（意図どおり）。**連勝のみ** `OnPlayerLeave` で離脱者の `pvp_win_streak` を 0 にリセット（M4）。
 
 ---
