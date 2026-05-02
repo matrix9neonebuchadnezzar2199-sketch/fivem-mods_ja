@@ -59,6 +59,10 @@ UI の HTML モックは **`デザイン仕様/` を正** とする。
 
 [docs/IMPLEMENTATION_PHASE1.md](docs/IMPLEMENTATION_PHASE1.md) を参照。
 
+## 全体設計（対戦・日次・ランキング）
+
+対戦タブ以降の PHASE・DB・実装順の **入口**は **[docs/design/OVERALL_DESIGN.md](docs/design/OVERALL_DESIGN.md)**。
+
 ## ライセンス
 
 未定。

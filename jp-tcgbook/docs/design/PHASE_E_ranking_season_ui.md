@@ -1,6 +1,7 @@
 # PHASE E — ランキング（シーズン）・段位表示・レベル／連勝・対戦履歴（全体設計）
 
 **対象リソース**: `jp-tcgbook`  
+**全体の入口**: **`docs/design/OVERALL_DESIGN.md`**（ロードマップ・データ俯瞰）。  
 **前提**: PHASE 2c（`tcg_players.rating`・戦績）、PHASE 2d（敗北コピー）、`BattlePvp.Finish` → `RecordFinish` → `GrantOnFinish` の順が確立済み。  
 **関連**: 日次集計は **PHASE C**（`tcg_daily_counters`）。本 PHASE は **試合履歴・ランキング UI・段位／EXP** を主担当。  
 **文字コード**: UTF-8（BOM なし）
@@ -214,6 +215,7 @@
 
 ## 11. 参照
 
+- `docs/design/OVERALL_DESIGN.md` — **全体設計・実装順（マスター）**
 - `docs/design/RANKING_SEASON_LEVEL_HISTORY.md` — 呼称・EXP・連勝の補足メモ
 - `docs/design/PHASE_C_daily_counters.md`
 - `docs/design/PHASE_2d_defeat_reward.md`

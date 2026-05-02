@@ -1,6 +1,7 @@
 # PHASE C — JST 日次カウンタ（`tcg_daily_counters`）全体設計
 
 **対象リソース**: `jp-tcgbook`  
+**全体の入口**: **`docs/design/OVERALL_DESIGN.md`**（ロードマップ・他 PHASE との位置）。  
 **前提**: PHASE 2c 済み（`BattleStats.RecordFinish` がリアル PvP normal 終了で呼ばれる）。PHASE 2d 済み（`BattleRewards.GrantOnFinish` が同一 `Finish` 内で **Stats の直後**に呼ばれる）。  
 **文字コード**: UTF-8（BOM なし）
 
@@ -225,6 +226,7 @@ end
 
 ## 12. 参照
 
+- `docs/design/OVERALL_DESIGN.md` — 全体設計・実装順  
 - `server/battle_stats.lua` — `updateDailyCounter` TODO  
 - `docs/design/PHASE_2d_defeat_reward.md` — Finish 順序・コピー責務  
 - `2026-05-02 開発日記.md` — PHASE C 着手メモ  
