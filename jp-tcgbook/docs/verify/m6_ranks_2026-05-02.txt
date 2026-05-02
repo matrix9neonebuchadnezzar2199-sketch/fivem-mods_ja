@@ -6,16 +6,16 @@ jp-tcgbook — M6 PHASE E5（段位・徽章）検証チェックリスト
 - `html/assets/ranc/` に **PascalCase** 9 枚（`Wood.png` … `Mythology.png`）が存在し、`fxmanifest.lua` の `files` に明示列挙されていること。
 - `Config.DebugCommands`・ACE `command.tcg_debug` で `/tcg_setrating` が使えること。
 
-手順（Step 7）
+手順（Step 1〜8）
 ----
-[ ] 1. `ensure jp-tcgbook`
-[ ] 2. `/book` → ランキング。リスト行・サマリに徽章 PNG（rating に応じた tier）
-[ ] 3. 徽章にホバー → `title` に英バッジ名（例 Gold）
-[ ] 4. `/tcg_setrating 2400 [server_id]` → 再オープンまたはランキングタブで **Mythology** に変化
-[ ] 5. `/tcg_setrating 1 [server_id]` → **Wood**
-[ ] 6. `/tcg_setrating 1500 [server_id]` で復旧（または普段のレート）
-[ ] 7. （フォールバック）例: `Gold.png` を一時リネーム → 該当行で **文字**フォールバック（例 `C`）→ 元に戻して再起動
-[ ] 8. 言語 EN/JA で段位名が切り替わること
+[x] 1. ensure jp-tcgbook
+[x] 2. /book → ランキング、徽章 PNG 表示
+[x] 3. ホバーで title 英バッジ名
+[x] 4. rating 2400 → Mythology
+[x] 5. rating 1 → Wood
+[x] 6. rating 復旧
+[x] 7. PNG リネームでテキストフォールバック動作
+[x] 8. EN/JA 言語切替で段位名切替
 
 Wire（`Config.BattleWireLog = true`）
 -------------------------------------
@@ -25,7 +25,16 @@ Wire（`Config.BattleWireLog = true`）
 
 実測貼付欄
 ----------
-（以下に txAdmin ログを貼る）
+実測 Wire（rating=1500 時）:
+[jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1 my_rank_code=c my_badge=Gold
 
+実測 Wire（rating=2400 時）:
+[jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1 my_rank_code=ss my_badge=Mythology
 
+実測 Wire（rating=1 時）:
+[jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1 my_rank_code=g my_badge=Wood
+
+判定: 全 8 項目 OK（2026-05-02）
+
+（スクショ撮影済みの場合は任意でファイル名をここに記載）
 
