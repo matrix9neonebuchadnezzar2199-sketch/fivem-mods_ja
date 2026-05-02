@@ -29,7 +29,7 @@ end
 --- @param src number
 --- @param reason string
 local function pushPvpError(src, reason)
-    if TcgBattleWireLogEnabled() then
+    if TcgBattleWireLogEnabled() or Config.DebugCommands == true then
         print(('[jp-tcgbook][wire] server->client battlePvpError src=%d reason=%s'):format(src, tostring(reason)))
     end
     TriggerClientEvent('jp-tcgbook:client:battlePvpError', src, { reason = reason })
@@ -689,8 +689,10 @@ function BattlePvpGetClientState(_src)
     return nil
 end
 
-RegisterNetEvent('jp-tcgbook:server:battlePvpPlace', function(payload)
-    local src = source
+--- NUI 経路・デバッグコマンド経路の共通：着手検証と反映
+--- @param src number 着手主体の server id
+--- @param payload table|nil
+function BattlePvp.HandlePlace(src, payload)
     payload = payload or {}
     if TcgBattleWireLogEnabled() then
         print(('[jp-tcgbook][wire] server recv battlePvpPlace src=%d'):format(src))
@@ -772,6 +774,10 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpPlace', function(payload)
             BattlePvp.SoloAiTurn(session_id)
         end)
     end
+end
+
+RegisterNetEvent('jp-tcgbook:server:battlePvpPlace', function(payload)
+    BattlePvp.HandlePlace(source, payload)
 end)
 
 RegisterNetEvent('jp-tcgbook:server:battlePvpStartSolo', function()
