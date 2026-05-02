@@ -823,14 +823,15 @@
   min-width: 148px;
   padding-left: calc(10px * var(--book-fs-mul));
   border-left: 1px solid rgba(212, 175, 55, 0.22);
+  overflow: hidden;
 }
 
 .battle-arena-hand-head-block {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: calc(4px * var(--book-fs-mul));
-  margin-bottom: calc(6px * var(--book-fs-mul));
+  gap: calc(3px * var(--book-fs-mul));
+  margin-bottom: calc(4px * var(--book-fs-mul));
 }
 
 .battle-arena-column-hand .battle-dbg-hand-label {
@@ -971,15 +972,14 @@
   line-height: 1.35;
 }
 
-/* 手札：右ペーン 2 列グリッド（最大 5 枚・2 列×3 段想定、カード幅は max-width で上限） */
+/* 手札：右ペーン 2 列グリッド（約 70% 縮小・5 枚をスクロールなしで収める） */
 .battle-arena-hand-col {
-  --arena-hand-gap: calc(10px * var(--book-fs-mul));
+  --arena-hand-gap: calc(7px * var(--book-fs-mul));
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
-  padding: calc(4px * var(--book-fs-mul)) 0 calc(6px * var(--book-fs-mul));
-  overflow-y: auto;
-  overflow-x: hidden;
+  padding: calc(3px * var(--book-fs-mul)) 0 calc(4px * var(--book-fs-mul));
+  overflow: visible;
 }
 
 /* #tab-battle 側の display:flex / flex-wrap を上書きして 2 列 grid に固定 */
@@ -996,22 +996,22 @@
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  max-width: min(165px, 100%);
+  max-width: min(115px, 100%);
   min-width: 0;
   box-sizing: border-box;
-  padding: calc(5px * var(--book-fs-mul)) calc(6px * var(--book-fs-mul));
+  padding: calc(4px * var(--book-fs-mul)) calc(4px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card .hn {
   text-align: center;
-  margin-top: 3px;
-  font-size: calc(8px * var(--book-fs-mul));
+  margin-top: 2px;
+  font-size: calc(6px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card .hs {
   text-align: center;
   display: block;
-  font-size: calc(7px * var(--book-fs-mul));
+  font-size: calc(5px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card.selected {
@@ -1027,9 +1027,9 @@
 
 .battle-arena-root .battle-dbg-hand-pick-star {
   position: absolute;
-  top: 3px;
-  right: 5px;
-  font-size: calc(11px * var(--book-fs-mul));
+  top: 2px;
+  right: 4px;
+  font-size: calc(8px * var(--book-fs-mul));
   color: #f0dc78;
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.85);
   z-index: 4;
@@ -1044,11 +1044,11 @@
 }
 
 .battle-arena-hand-col .battle-dbg-hand-slot .mini-stat {
-  font-size: calc(13px * var(--book-fs-mul));
+  font-size: calc(9px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-slot .mini-stat.max {
-  font-size: calc(15px * var(--book-fs-mul));
+  font-size: calc(10px * var(--book-fs-mul));
 }
 
 .battle-during-cpu {
