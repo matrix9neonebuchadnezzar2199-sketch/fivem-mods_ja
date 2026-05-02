@@ -47,10 +47,10 @@
 | 6 | `b` | **B：Platinumの徽章** |
 | 7 | `a` | **A：Astralの徽章** |
 | 8 | `s` | **S：Dragonの徽章** |
-| 9 | `ss` | **SS：Mythology** |
+| 9 | `ss` | **SS：Mythologyの徽章** |
 
 - **G〜B** は素材語を **Wood / Bronze / Iron / Silver / Gold / Platinum** とする（銅・鉄・銀・金・白金の漢字は使わない）。
-- **A・S** は **Astral / Dragon**。**SS** は最上位名として **Mythology**（旧「神話の座」の意味を英語 1 語に寄せた呼称）。
+- **A・S** は **Astral / Dragon**。**SS** は **Mythologyの徽章**（他段と同様に「〜の徽章」で統一）。
 
 ### ランクとレート（Elo）の結び方（案）
 
