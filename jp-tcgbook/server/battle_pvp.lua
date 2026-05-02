@@ -419,11 +419,76 @@ function BattlePvp.Finish(session_id, reason)
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
     end
 
+    --- PHASE E1: 履歴用レートは RecordFinish の前後でスナップ（p1=A・p2=B）
+    local initialR = tonumber(Config.InitialRating) or 1500
+    local function snapRating(cid)
+        if type(cid) ~= 'string' or cid == '' then
+            return initialR
+        end
+        local r = Database.GetPlayer(cid)
+        if r.success and r.data then
+            return tonumber(r.data.rating) or initialR
+        end
+        return initialR
+    end
+
+    local hist_ok = ctx.is_real_pvp
+        and type(ctx.p1.citizenid) == 'string'
+        and ctx.p1.citizenid ~= ''
+        and type(ctx.p2.citizenid) == 'string'
+        and ctx.p2.citizenid ~= ''
+
+    local rb_a, rb_b
+    if hist_ok then
+        rb_a = snapRating(ctx.p1.citizenid)
+        rb_b = snapRating(ctx.p2.citizenid)
+    end
+
     if BattleStats and BattleStats.RecordFinish then
         BattleStats.RecordFinish(ctx)
     end
+
+    local ra_a, ra_b
+    if hist_ok then
+        ra_a = snapRating(ctx.p1.citizenid)
+        ra_b = snapRating(ctx.p2.citizenid)
+    end
+
+    local grant_ok, grant_card = false, nil
     if BattleRewards and BattleRewards.GrantOnFinish then
-        BattleRewards.GrantOnFinish(ctx)
+        grant_ok, grant_card = BattleRewards.GrantOnFinish(ctx)
+    end
+
+    if hist_ok then
+        local nm_a = GetPlayerName(p1)
+        local nm_b = not isVirtualSrc(p2) and GetPlayerName(p2) or ''
+        local ins = Database.InsertMatchHistory({
+            match_id = ctx.session_id,
+            finished_at = ctx.finished_at,
+            reason = ctx.reason,
+            is_real_pvp = true,
+            citizenid_a = ctx.p1.citizenid,
+            citizenid_b = ctx.p2.citizenid,
+            display_name_a = nm_a or '',
+            display_name_b = nm_b or '',
+            score_a = ctx.p1.score,
+            score_b = ctx.p2.score,
+            outcome_a = ctx.outcome_for_p1,
+            rating_a_before = rb_a,
+            rating_a_after = ra_a,
+            rating_b_before = rb_b,
+            rating_b_after = ra_b,
+            defeat_copy_granted = grant_ok == true,
+            defeat_copy_card_id = grant_ok and grant_card or nil,
+            season_id = 0,
+        })
+        if not ins.success and TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][match_history] insert fail session=%s err=%s'):format(
+                tostring(ctx.session_id),
+                tostring(ins.error)))
+        elseif ins.success and TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][match_history] insert ok session=%s'):format(tostring(ctx.session_id)))
+        end
     end
 
     destroySession(session_id)

@@ -544,6 +544,79 @@ ON DUPLICATE KEY UPDATE
     return { success = true, data = {} }
 end
 
+local function truncDisplayName(s, maxLen)
+    maxLen = maxLen or 128
+    if type(s) ~= 'string' then
+        return ''
+    end
+    if #s <= maxLen then
+        return s
+    end
+    return s:sub(1, maxLen)
+end
+
+--- PHASE E1: 対戦履歴 1 行 INSERT（`match_id` PRIMARY KEY・同一試合の二重 INSERT は DB エラー）
+--- `row`: match_id, finished_at, reason, citizenid_a/b, display_name_a/b?, score_a/b, outcome_a ('win'|'lose'|'draw'),
+--- rating_*_before/after, defeat_copy_granted, defeat_copy_card_id?, season_id?, is_real_pvp?
+--- @param row table
+--- @return table { success, error? }
+function Database.InsertMatchHistory(row)
+    if type(row) ~= 'table' then
+        return { success = false, error = 'row must be table' }
+    end
+    local mid = row.match_id
+    if type(mid) ~= 'string' or mid == '' or #mid > 128 then
+        return { success = false, error = 'invalid match_id' }
+    end
+
+    local oa = row.outcome_a
+    if oa ~= 'win' and oa ~= 'lose' and oa ~= 'draw' then
+        return { success = false, error = 'invalid outcome_a' }
+    end
+
+    local copyId = row.defeat_copy_card_id
+    if copyId ~= nil and (type(copyId) ~= 'string' or copyId == '') then
+        copyId = nil
+    end
+
+    local sql = [[
+INSERT INTO tcg_match_history (
+    match_id, finished_at, reason, is_real_pvp,
+    citizenid_a, citizenid_b, display_name_a, display_name_b,
+    score_a, score_b, outcome_a,
+    rating_a_before, rating_a_after, rating_b_before, rating_b_after,
+    defeat_copy_granted, defeat_copy_card_id, season_id
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+]]
+
+    local ok, err = pcall(function()
+        MySQL.query.await(sql, {
+            mid,
+            tonumber(row.finished_at) or 0,
+            tostring(row.reason or 'unknown'),
+            row.is_real_pvp ~= false,
+            tostring(row.citizenid_a or ''),
+            tostring(row.citizenid_b or ''),
+            truncDisplayName(row.display_name_a),
+            truncDisplayName(row.display_name_b),
+            tonumber(row.score_a) or 0,
+            tonumber(row.score_b) or 0,
+            oa,
+            tonumber(row.rating_a_before) or 1500,
+            tonumber(row.rating_a_after) or 1500,
+            tonumber(row.rating_b_before) or 1500,
+            tonumber(row.rating_b_after) or 1500,
+            row.defeat_copy_granted == true,
+            copyId,
+            tonumber(row.season_id) or 0,
+        })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
 function Database.ListAllPlayers()
     local ok, result = pcall(function()
         return MySQL.query.await(

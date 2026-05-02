@@ -68,6 +68,31 @@ CREATE TABLE IF NOT EXISTS tcg_admin_audit (
     INDEX idx_card (card_id)
 );
 
+-- PHASE E1: リアル PvP・BattlePvp.Finish 経由で 1 試合 1 行（match_id = session_id UNIQUE）
+CREATE TABLE IF NOT EXISTS tcg_match_history (
+    match_id VARCHAR(128) NOT NULL PRIMARY KEY,
+    finished_at INT UNSIGNED NOT NULL,
+    reason VARCHAR(16) NOT NULL,
+    is_real_pvp BOOLEAN NOT NULL DEFAULT TRUE,
+    citizenid_a VARCHAR(64) NOT NULL,
+    citizenid_b VARCHAR(64) NOT NULL,
+    display_name_a VARCHAR(128) DEFAULT '',
+    display_name_b VARCHAR(128) DEFAULT '',
+    score_a INT NOT NULL,
+    score_b INT NOT NULL,
+    outcome_a ENUM('win', 'lose', 'draw') NOT NULL,
+    rating_a_before INT UNSIGNED NOT NULL DEFAULT 1500,
+    rating_a_after INT UNSIGNED NOT NULL DEFAULT 1500,
+    rating_b_before INT UNSIGNED NOT NULL DEFAULT 1500,
+    rating_b_after INT UNSIGNED NOT NULL DEFAULT 1500,
+    defeat_copy_granted BOOLEAN NOT NULL DEFAULT FALSE,
+    defeat_copy_card_id VARCHAR(32),
+    season_id INT UNSIGNED NOT NULL DEFAULT 0,
+    INDEX idx_citizen_a_time (citizenid_a, finished_at DESC),
+    INDEX idx_citizen_b_time (citizenid_b, finished_at DESC),
+    INDEX idx_finished (finished_at DESC)
+);
+
 -- PHASE C: リアル PvP normal 終了時のみ更新（BattleStats / BattleRewards）。JST 暦日キー・レイジー UPSERT
 CREATE TABLE IF NOT EXISTS tcg_daily_counters (
     citizenid VARCHAR(64) NOT NULL,

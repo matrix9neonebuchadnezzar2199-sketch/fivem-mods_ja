@@ -27,7 +27,7 @@
 | **Wire ログ** | 済 | `Config.BattleWireLog`、`shared/battle_wire_log.lua` |
 | **リアル PvP 終了フック** | 済 | `BattleStats.RecordFinish`（Elo・win/loss/draw）、`BattleRewards.GrantOnFinish`（2d） |
 | **日次カウンタ** | **済（M1）** | `tcg_daily_counters`・`Database.IncrementDaily*`・`battle_stats` / `battle_rewards` 連携。再起動で `install.sql` がテーブル作成 |
-| **試合履歴テーブル** | **未** | → **PHASE E1** |
+| **試合履歴テーブル** | **済（M2）** | `tcg_match_history`・`Finish` 時 INSERT・`GrantOnFinish` の戻りでコピー列 |
 | **ランキング／履歴タブ・EXP** | **未** | → **PHASE E2〜E5** |
 
 **単独検証**: `tcg_debug_finish_hooks_dryrun`（`server/battle_finish_dryrun.lua`）で 2c/2d フックを疑似実行可能。
@@ -44,6 +44,7 @@ BattlePvp.Finish
   → TriggerClient ended …
   → BattleStats.RecordFinish(ctx)     ← Elo / winloss／【C】日次 counters／【E】EXP・連勝・将来ほか
   → BattleRewards.GrantOnFinish(ctx)  ← 2d コピー／【C】copies_received 日次
+  → 【E1】`Database.InsertMatchHistory`（リアル PvP のみ）
   → destroySession …
 ```
 
@@ -64,7 +65,7 @@ BattlePvp.Finish
 | 名前 | PHASE | 役割 |
 |------|-------|------|
 | **`tcg_daily_counters`** | **C** | JST 暦日ごとの battles/wins/losses/draws/copies_received |
-| **`tcg_match_history`**（仮） | **E1** | 試合 1 行（相手・時刻・勝敗・レート before/after・2d 成否など）。`match_id` **UNIQUE** |
+| **`tcg_match_history`** | **E1 済** | 試合 1 行。一覧 API は **E2** |
 | **`tcg_players` 列追加** | **E3** 目安 | `exp`, `level`, `win_streak_current` 等（列名は実装で確定） |
 | **シーズンマスタ** | **E6（任意）** | 番号シーズン時のみ。通年は `season_id=0` 等で十分な場合あり |
 
@@ -91,7 +92,7 @@ BattlePvp.Finish
 | ステップ | 内容 | 主な成果物 |
 |----------|------|------------|
 | **M1** | ~~**PHASE C** 本実装~~ **済** | `tcg_daily_counters`、`Database.IncrementDaily*`、`battle_stats` / `battle_rewards` |
-| **M2** | **PHASE E1** | `tcg_match_history` + Finish 時 INSERT（一意制約・INDEX） |
+| **M2** | ~~**PHASE E1**~~ **済** | `tcg_match_history`、`Database.InsertMatchHistory`、`battle_pvp.Finish` |
 | **M3** | **PHASE E2** | 履歴一覧 API + NUI **対戦履歴**タブ |
 | **M4** | **PHASE E3** | EXP・連勝・連勝ボーナス（`RecordFinish`／関連 DB） |
 | **M5** | **PHASE E4** | ランキングタブ骨格（通年ラベル・`rating` 順・自分順位） |
@@ -123,3 +124,4 @@ BattlePvp.Finish
 |------|------|
 | 2026-05-02 | 初版（PHASE C / E 統合ロードマップ、`ranc` 徽章前提） |
 | 2026-05-02 | M1 PHASE C 実装済を現在地に反映 |
+| 2026-05-02 | M2 PHASE E1 `tcg_match_history`・Finish 時 INSERT |

@@ -141,9 +141,10 @@
 
 **保存しない**: 全着手ログ、盤面全歴、IP・HW ID。
 
-### 6.2 タイミング
+### 6.2 タイミング（実装済・E1）
 
-- **`BattleStats.RecordFinish` 成功後**（または同一トランザクション相当の直後）に INSERT。`GrantOnFinish` 後に **コピー列だけ UPDATE** する二段でも可。
+- **`BattlePvp.Finish`**: `RecordFinish` → `GrantOnFinish`（戻り値でコピー成否・`card_id`）→ **`Database.InsertMatchHistory`**。`destroySession` より前。
+- dryrun（`battle_finish_dryrun`）は **`Finish` を経由しない**ため **履歴行は増えない**（意図どおり。履歴テストは実 PvP 完走または将来のデバッグ拡張）。
 
 ---
 
@@ -160,8 +161,8 @@
 
 | ID | 内容 | 受け入れの目安 |
 |----|------|----------------|
-| **E1** | `tcg_match_history` + Finish 時書き込み + 自分用一覧 API | DB に行が溜まり、API が最新 N 件を返す |
-| **E2** | NUI **対戦履歴**タブ | 実機で一覧表示 |
+| **E1** | ~~`tcg_match_history` + Finish 時 INSERT~~ **済** | `Database.InsertMatchHistory`・Wire `[match_history]` |
+| **E2** | 自分用一覧 API + NUI **対戦履歴**タブ | 実機で一覧表示 |
 | **E3** | `exp` / `level` / `win_streak` + Finish 時更新 + **連勝 EXP ボーナス** | 勝敗で値が変わる |
 | **E4** | NUI **ランキング**タブ（通年・`rating` 順・自分サマリ） | 文言「シーズン：通年開催」 |
 | **E5** | **段位表示**（閾値 config + §4 文字列） | `rating` と表示ランクが一致 |
@@ -203,9 +204,9 @@
 
 | 種別 | ファイル例 |
 |------|------------|
-| SQL | `server/sql/install.sql` |
-| DB | `server/database.lua` |
-| 終了フック | `server/battle_stats.lua`, `server/battle_rewards.lua` |
+| SQL | `server/sql/install.sql`（`tcg_match_history`・`tcg_daily_counters`） |
+| DB | `server/database.lua`（`InsertMatchHistory`） |
+| 終了フック | `server/battle_stats.lua`, `server/battle_rewards.lua`, **`server/battle_pvp.lua` `Finish`** |
 | 設定 | `config.lua` |
 | API / BOOK | `server/main.lua`（または専用 server モジュール）、`client/*`、`html/*` |
 | 徽章画像 | `html/assets/ranc/*.png`、`fxmanifest.lua` `files` |
