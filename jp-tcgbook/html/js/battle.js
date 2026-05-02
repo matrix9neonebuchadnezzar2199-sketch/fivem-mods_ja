@@ -206,20 +206,23 @@
   }
 
   /** デッキ／コレクションと同じ 4 方向ミニステ＋中央イラスト（.mini-stat + CardUtil.applyMaxHighlight） */
-  function dbgSlotArtHtml(c, extraClass) {
+  /** @param {string} [artWrapClass] 指定時はイラストのみこのクラスでラップ（アリーナ手札で画像領域だけ縮小するため） */
+  function dbgSlotArtHtml(c, extraClass, artWrapClass) {
     const c2 = c || {};
     const t = Number(c2.stat_top) || 0;
     const r = Number(c2.stat_right) || 0;
     const b = Number(c2.stat_bottom) || 0;
     const l = Number(c2.stat_left) || 0;
     const cls = extraClass ? `battle-dbg-slot-art ${extraClass}` : 'battle-dbg-slot-art';
+    const rawArt = dbgCardArtHtml(c2);
+    const artHtml = artWrapClass ? `<div class="${artWrapClass}">${rawArt}</div>` : rawArt;
     return (
       `<div class="${cls}" data-stat-top="${t}" data-stat-right="${r}" data-stat-bottom="${b}" data-stat-left="${l}">` +
       `<span class="mini-stat s-top">${t}</span>` +
       `<span class="mini-stat s-right">${r}</span>` +
       `<span class="mini-stat s-bottom">${b}</span>` +
       `<span class="mini-stat s-left">${l}</span>` +
-      `${dbgCardArtHtml(c2)}` +
+      artHtml +
       `</div>`
     );
   }
@@ -346,7 +349,7 @@
       handHtml +=
         `<button type="button" class="battle-dbg-hand-card${sel}${dis}" data-dbg-hand="${i}" title="${tit}" ${!hi ? 'disabled' : ''}>` +
         star +
-        `${dbgSlotArtHtml(c2, 'battle-dbg-hand-slot')}` +
+        `${dbgSlotArtHtml(c2, 'battle-dbg-hand-slot', 'battle-dbg-hand-art')}` +
         `<span class="hn">${escapeHtml(c2.name || c2.card_id || '')}</span>` +
         rk +
         `</button>`;

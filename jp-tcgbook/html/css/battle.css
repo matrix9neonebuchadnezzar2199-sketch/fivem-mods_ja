@@ -830,8 +830,8 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: calc(3px * var(--book-fs-mul));
-  margin-bottom: calc(4px * var(--book-fs-mul));
+  gap: calc(4px * var(--book-fs-mul));
+  margin-bottom: calc(6px * var(--book-fs-mul));
 }
 
 .battle-arena-column-hand .battle-dbg-hand-label {
@@ -972,13 +972,13 @@
   line-height: 1.35;
 }
 
-/* 手札：右ペーン 2 列グリッド（約 70% 縮小・5 枚をスクロールなしで収める） */
+/* 手札：右ペーン 2 列グリッド。イラストは .battle-dbg-hand-art で約70%幅、文字・四方向数値は従来サイズ */
 .battle-arena-hand-col {
-  --arena-hand-gap: calc(7px * var(--book-fs-mul));
+  --arena-hand-gap: calc(10px * var(--book-fs-mul));
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
-  padding: calc(3px * var(--book-fs-mul)) 0 calc(4px * var(--book-fs-mul));
+  padding: calc(4px * var(--book-fs-mul)) 0 calc(6px * var(--book-fs-mul));
   overflow: visible;
 }
 
@@ -996,22 +996,22 @@
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  max-width: min(115px, 100%);
+  max-width: min(165px, 100%);
   min-width: 0;
   box-sizing: border-box;
-  padding: calc(4px * var(--book-fs-mul)) calc(4px * var(--book-fs-mul));
+  padding: calc(5px * var(--book-fs-mul)) calc(6px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card .hn {
   text-align: center;
-  margin-top: 2px;
-  font-size: calc(6px * var(--book-fs-mul));
+  margin-top: 3px;
+  font-size: calc(8px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card .hs {
   text-align: center;
   display: block;
-  font-size: calc(5px * var(--book-fs-mul));
+  font-size: calc(7px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-card.selected {
@@ -1027,9 +1027,9 @@
 
 .battle-arena-root .battle-dbg-hand-pick-star {
   position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: calc(8px * var(--book-fs-mul));
+  top: 3px;
+  right: 5px;
+  font-size: calc(11px * var(--book-fs-mul));
   color: #f0dc78;
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.85);
   z-index: 4;
@@ -1037,18 +1037,63 @@
   line-height: 1;
 }
 
+/* 縦を圧縮: 高さ = 幅×2.8/3 = 中央イラスト(幅70%・3:4)の高さ 0.7×幅×4/3 と一致 */
 .battle-arena-hand-col .battle-dbg-hand-slot {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 3 / 2.8;
   width: 100%;
   max-height: none;
 }
 
 .battle-arena-hand-col .battle-dbg-hand-slot .mini-stat {
-  font-size: calc(9px * var(--book-fs-mul));
+  font-size: calc(13px * var(--book-fs-mul));
 }
 
 .battle-arena-hand-col .battle-dbg-hand-slot .mini-stat.max {
-  font-size: calc(10px * var(--book-fs-mul));
+  font-size: calc(15px * var(--book-fs-mul));
+}
+
+/* アリーナ手札のみ: イラスト領域をスロット幅の 70% に収める（#battleArenaRoot でテーマの .battle-dbg-hand-art ルールを上書き） */
+#battleArenaRoot .battle-dbg-hand-slot .battle-dbg-hand-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  aspect-ratio: 3 / 4;
+  max-height: none;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+#battleArenaRoot .battle-dbg-hand-slot .battle-dbg-hand-art .card-art-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#battleArenaRoot .battle-dbg-hand-slot .battle-dbg-hand-art .card-art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  z-index: 1;
+}
+
+#battleArenaRoot .battle-dbg-hand-slot .battle-dbg-hand-art .card-art-fallback {
+  position: relative;
+  z-index: 0;
+  font-size: calc(18px * var(--book-fs-mul));
+  line-height: 1;
 }
 
 .battle-during-cpu {
