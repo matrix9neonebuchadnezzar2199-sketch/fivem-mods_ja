@@ -444,7 +444,7 @@
     const sub = mode === 'pvp' ? 'vs 相手 · PHASE A' : 'vs CPU · PHASE A';
     const grid = buildDbgGridHtml(st, humanTurn, 'battle-arena-grid', { arenaLarge: true });
     const handRow = buildDbgHandHtml(st, 'battle-arena-hand-col', humanTurn);
-    const quitLabel = mode === 'pvp' ? '投了' : '対戦終了';
+    const quitLabel = mode === 'pvp' ? (playing ? '投了' : '終了') : '対戦終了';
     const logHtml = buildDbgLogHtml(st, 'battle-arena-log-inner');
     const arenaRes =
       typeof global.GetParentResourceName === 'function'
@@ -563,6 +563,22 @@
     });
     root.querySelector('.battle-arena-quit')?.addEventListener('click', () => {
       void (async () => {
+        const rawBattle = global.AppState.battle;
+        /* Finish 済みだとサーバーはセッション破棄済み → battlePvpLeave は OnPlayerLeave が即 return し NUI が残る */
+        if (
+          mode === 'pvp' &&
+          rawBattle &&
+          rawBattle.mode === 'pvp' &&
+          rawBattle.ended === true
+        ) {
+          global.AppState.battle = null;
+          const bv = global.AppState.battleVirtual || {};
+          bv.connectedPeerId = null;
+          bv.isCaller = null;
+          bv.matchPrepLabel = '';
+          Battle.render();
+          return;
+        }
         const fn = global.jpTcgbookConfirmIfVirtualBattleAsync;
         const msg =
           mode === 'pvp'
