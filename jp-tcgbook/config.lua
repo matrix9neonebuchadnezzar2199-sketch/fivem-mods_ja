@@ -31,6 +31,15 @@ Config.EloKFactor = 32
 Config.MatchHistoryLimitOpenBook = 50 -- BOOK オープン時に返す履歴の既定件数
 Config.MatchHistoryLimitMax = 100 -- 履歴クエリのハード上限（チートで巨大 LIMIT を指定されてもこの値で頭打ち）
 
+-- PHASE E4 / M5（ランキングタブ骨格）: NUI から `requestRankingData` でオンデマンド取得。オフ時はタブ非表示
+Config.EnableRankingUi = true -- true で BOOK に「ランキング」タブを表示
+Config.RankingDisplayLimit = 50 -- 上位テーブルに載せる人数（TOP N）
+Config.RankingMaxLimit = 100 -- `GetRankingTopN` の上限クリップ（肥大化防止）
+-- リーダーボードから除外する citizenid（運営・検証ダミー等）。順位 COUNT・around 取得でも同一リストを適用
+Config.RankingExcludeCitizenids = {
+    'jp-tcgbook-debug-peer-dummy',
+}
+
 -- PHASE E3 / M4（PvP EXP・連勝）: `BattleStats.RecordFinish`（`ctx.is_real_pvp` のみ）で更新。敗北・引き分けで連勝 0。投了・切断は `OnPlayerLeave` で離脱者の連勝のみ 0（レート・勝敗数は Finish のみの既存方針）
 Config.PvpExpWinBase = 25 -- 勝利時に加算する基本 EXP
 Config.PvpWinStreakBonusCap = 10 -- 連勝ボーナス計算に使う「試合前連勝」の上限（これ以上はボーナス増えない）

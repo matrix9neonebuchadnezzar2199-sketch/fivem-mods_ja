@@ -66,6 +66,10 @@ RegisterNetEvent('jp-tcgbook:client:bookData', function(result)
     SendNUIMessage({ action = 'bookData', payload = result })
 end)
 
+RegisterNetEvent('jp-tcgbook:client:rankingData', function(msg)
+    SendNUIMessage({ action = 'rankingData', payload = msg })
+end)
+
 RegisterNetEvent('jp-tcgbook:client:deckSelected', function(result)
     SendNUIMessage({ action = 'deckSelected', payload = result })
 end)

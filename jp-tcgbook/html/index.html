@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/deck.css">
   <link rel="stylesheet" href="css/battle.css">
   <link rel="stylesheet" href="css/history.css">
+  <link rel="stylesheet" href="css/ranking.css">
 </head>
 <body>
 
@@ -223,7 +224,28 @@
         </div>
       </section>
       <section id="tab-ranking" class="tab-content" data-tab-panel="ranking" role="tabpanel">
-        <div class="placeholder ranking-placeholder" data-i18n-html="ranking_placeholder_html">🏆 ランキングタブは<strong>仕様検討中</strong>です（表示・並び・更新タイミングは後続 PHASE で決定）。</div>
+        <div class="ranking-root">
+          <p class="ranking-season-label" data-i18n="rank_season_evergreen">シーズン：通年開催</p>
+          <div class="ranking-my-summary" hidden></div>
+          <div class="ranking-board-wrap">
+            <table class="ranking-table" data-i18n-aria="rank_table_aria">
+              <thead>
+                <tr>
+                  <th data-i18n="rank_th_rank">順位</th>
+                  <th data-i18n="rank_th_tier">段位</th>
+                  <th data-i18n="rank_th_name">名前</th>
+                  <th data-i18n="rank_th_rating">レート</th>
+                  <th data-i18n="rank_th_lv">Lv</th>
+                  <th data-i18n="rank_th_exp">EXP</th>
+                  <th data-i18n="rank_th_streak">連勝</th>
+                </tr>
+              </thead>
+              <tbody class="ranking-rows"></tbody>
+            </table>
+          </div>
+          <p class="ranking-loading" hidden data-i18n="rank_loading">読み込み中…</p>
+          <p class="ranking-empty" hidden data-i18n="rank_empty">データがありません</p>
+        </div>
       </section>
     </main>
 
@@ -367,6 +389,7 @@
 <script src="js/deck.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/history.js"></script>
+<script src="js/ranking.js"></script>
 <script src="js/app.js"></script>
 <script src="js/mock_data.js"></script>
 </body>

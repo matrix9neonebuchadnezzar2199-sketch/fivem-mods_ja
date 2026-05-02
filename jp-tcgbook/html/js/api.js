@@ -81,5 +81,8 @@
     battlePvpTestInvalidBatch() {
       N.send('battlePvpTestInvalidBatch', {});
     },
+    requestRankingData() {
+      N.send('requestRankingData', {});
+    },
   };
 })(window);

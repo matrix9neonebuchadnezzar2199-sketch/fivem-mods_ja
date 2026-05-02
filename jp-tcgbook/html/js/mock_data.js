@@ -574,6 +574,7 @@
 
   const MOCK_ACTION_MAP = {
     openBook: 'bookData',
+    requestRankingData: 'rankingData',
     selectDeck: 'deckSelected',
     addCardToDeck: 'deckUpdated',
     removeDeckCard: 'deckUpdated',
@@ -748,8 +749,44 @@
             allow_debug_battle: true,
             wire_log: true,
             pvp_solo_finish_hooks: true,
+            enable_ranking_ui: true,
           },
         },
+      };
+    },
+
+    requestRankingData() {
+      const cid = MOCK_DATA.player.citizenid;
+      const mk = (id, rating, lv, xp, st) => ({
+        citizenid: id,
+        rating,
+        wins: 1,
+        losses: 0,
+        draws: 0,
+        pvp_exp: xp,
+        pvp_level: lv,
+        pvp_win_streak: st,
+      });
+      const top = [
+        mk('license:aaaaaaaaaaaaaaaa', 1700, 7, 900, 1),
+        mk(
+          cid,
+          MOCK_DATA.player.rating,
+          MOCK_DATA.player.pvp_level,
+          MOCK_DATA.player.pvp_exp,
+          MOCK_DATA.player.pvp_win_streak,
+        ),
+        mk('license:bbbbbbbbbbbbbbbb', 1580, 4, 200, 0),
+        mk('license:cccccccccccccccc', 1500, 2, 50, 0),
+      ];
+      return {
+        success: true,
+        season: 'evergreen',
+        top,
+        my_info: { rank: 2, rating: MOCK_DATA.player.rating, total: 120 },
+        my_in_top: true,
+        around_me: [],
+        my_citizenid: cid,
       };
     },
 

@@ -23,6 +23,7 @@
       allow_debug_battle: false,
       wire_log: false,
       pvp_solo_finish_hooks: false,
+      enable_ranking_ui: false,
     },
     /** 仮想対戦ロビー（サーバー同期） */
     battleVirtual: {
@@ -48,6 +49,27 @@
   };
 
   const TAB_ORDER = ['collection', 'deck', 'battle', 'history', 'ranking'];
+
+  function rankingTabVisible() {
+    return !!(global.AppState.ui && global.AppState.ui.enable_ranking_ui);
+  }
+
+  /** Tab / Tab キーで巡回する順序（ランキング無効時はスキップ） */
+  function visibleTabOrder() {
+    if (rankingTabVisible()) return TAB_ORDER;
+    return TAB_ORDER.filter((x) => x !== 'ranking');
+  }
+
+  function syncRankingTabVisibility() {
+    const on = rankingTabVisible();
+    const btn = document.querySelector('.tabs .tab[data-tab="ranking"]');
+    const panel = document.getElementById('tab-ranking');
+    if (btn) btn.hidden = !on;
+    if (panel) panel.setAttribute('aria-hidden', on ? 'false' : 'true');
+    if (!on && global.AppState.currentTab === 'ranking') {
+      switchTab('collection');
+    }
+  }
 
   function tt(key, vars) {
     return global.I18n && global.I18n.tf ? global.I18n.tf(key, vars) : key;
@@ -264,6 +286,13 @@
       if (typeof global.HistoryTab !== 'undefined' && global.HistoryTab.render) {
         global.HistoryTab.render();
       }
+    } else if (tab === 'ranking') {
+      if (typeof global.Ranking !== 'undefined' && global.Ranking.ensureFetched) {
+        global.Ranking.ensureFetched();
+      }
+      if (typeof global.Ranking !== 'undefined' && global.Ranking.render) {
+        global.Ranking.render();
+      }
     } else {
       console.log('[jp-tcgbook] tab=', tab);
     }
@@ -350,8 +379,10 @@
           return;
         }
         e.preventDefault();
-        const i = TAB_ORDER.indexOf(global.AppState.currentTab);
-        const next = TAB_ORDER[(i + 1 + TAB_ORDER.length) % TAB_ORDER.length];
+        const order = visibleTabOrder();
+        const i = order.indexOf(global.AppState.currentTab);
+        const idx = i >= 0 ? i : 0;
+        const next = order[(idx + 1 + order.length) % order.length];
         switchTab(next);
         return;
       }
@@ -586,8 +617,14 @@
       allow_debug_battle: !!(d.ui && d.ui.allow_debug_battle),
       wire_log: !!(d.ui && d.ui.wire_log),
       pvp_solo_finish_hooks: !!(d.ui && d.ui.pvp_solo_finish_hooks),
+      enable_ranking_ui: !!(d.ui && d.ui.enable_ranking_ui),
     };
     global.__tcgWireLog = !!(d.ui && d.ui.wire_log);
+
+    syncRankingTabVisibility();
+    if (typeof global.Ranking !== 'undefined' && global.Ranking.onBookOpened) {
+      global.Ranking.onBookOpened();
+    }
 
     syncHistoryTabUi();
 
@@ -670,6 +707,13 @@
     renderCurrentTab();
   });
 
+  NUI.on('rankingData', (payload) => {
+    if (typeof global.Ranking !== 'undefined' && global.Ranking.onData) {
+      global.Ranking.onData(payload);
+    }
+    renderCurrentTab();
+  });
+
   NUI.on('deckListUpdated', (payload) => {
     if (!payload || !payload.success) {
       showError(payload && payload.error ? payload.error : tt('app_err_list'));
@@ -719,6 +763,7 @@
     bindTabs();
     bindHelp();
     bindKeyboard();
+    syncRankingTabVisibility();
 
     if (!NUI.IS_FIVEM) {
       const appEl = $('#app');

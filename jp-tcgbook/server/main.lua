@@ -201,6 +201,8 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
                 wire_log = TcgBattleWireLogEnabled(),
                 --- 疑似PvPソロが本番 Finish 経路になるか（DebugCommands 時のみ StartSolo 可のため実質同義・履歴タブ説明用）
                 pvp_solo_finish_hooks = Config.DebugCommands == true,
+                --- PHASE E4: ランキングタブ表示（Config.EnableRankingUi）
+                enable_ranking_ui = Config.EnableRankingUi == true,
             },
             --- BOOK 再オープン時にデバッグ対戦状態を復元表示
             battleCpuSession = BattleDebugGetClientState and BattleDebugGetClientState(src) or nil,
@@ -402,6 +404,70 @@ RegisterNetEvent('jp-tcgbook:server:setActiveDeck', function(data)
     end
 
     replyDeckListUpdated(src, buildDeckListPayload(uid))
+end)
+
+RegisterNetEvent('jp-tcgbook:server:requestRankingData', function()
+    local src = source
+    local uid = getUidOrReject(src)
+    if not uid then
+        return
+    end
+
+    if Config.EnableRankingUi ~= true then
+        TriggerClientEvent('jp-tcgbook:client:rankingData', src, {
+            success = false,
+            error = 'ランキングは無効です',
+        })
+        return
+    end
+
+    local topN = tonumber(Config.RankingDisplayLimit) or 50
+    local top = Database.GetRankingTopN(topN)
+    local mine = Database.GetMyRankInfo(uid)
+
+    local inTop = false
+    if top.success and top.data then
+        for _, row in ipairs(top.data) do
+            if row.citizenid == uid then
+                inTop = true
+                break
+            end
+        end
+    end
+
+    local around = {}
+    if top.success and mine.success and (not inTop) and mine.data then
+        local ar = Database.GetRankingAround(uid, 3)
+        if ar.success and ar.data then
+            around = ar.data
+        end
+    end
+
+    local ok = top.success and mine.success
+    local errMsg = nil
+    if not ok then
+        errMsg = (not top.success and top.error) or (not mine.success and mine.error) or 'ランキング取得に失敗しました'
+    end
+
+    TriggerClientEvent('jp-tcgbook:client:rankingData', src, {
+        success = ok,
+        error = errMsg,
+        season = 'evergreen',
+        top = top.data or {},
+        my_info = mine.data,
+        my_in_top = inTop,
+        around_me = around,
+        my_citizenid = uid,
+    })
+
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire][ranking] sent src=%s top_rows=%s in_top=%s rank=%s'):format(
+            tostring(src),
+            tostring(top.data and #top.data),
+            tostring(inTop),
+            tostring(mine.data and mine.data.rank)
+        ))
+    end
 end)
 
 CreateThread(function()

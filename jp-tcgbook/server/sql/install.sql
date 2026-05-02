@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS tcg_players (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- ランキング `ORDER BY rating DESC, citizenid ASC` 向けインデックスは、既存 DB 互換のため
+-- リソース起動時 `Database.ApplyOptionalSchemaPatches` で `idx_tcg_players_rating_leaderboard` を作成する（重複は無視）。
+
 CREATE TABLE IF NOT EXISTS tcg_cards_master (
     card_id VARCHAR(32) PRIMARY KEY,
     name VARCHAR(64) NOT NULL,

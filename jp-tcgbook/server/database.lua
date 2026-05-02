@@ -41,6 +41,8 @@ function Database.ApplyOptionalSchemaPatches()
         'ALTER TABLE tcg_players ADD COLUMN pvp_level INT UNSIGNED NOT NULL DEFAULT 1',
         'ALTER TABLE tcg_players ADD COLUMN pvp_win_streak INT UNSIGNED NOT NULL DEFAULT 0',
         'ALTER TABLE tcg_cards_master ADD COLUMN description_en TEXT NULL',
+        --- PHASE E4: `ORDER BY rating DESC, citizenid ASC` 向け（既存環境は起動時に一度だけ作成）
+        'CREATE INDEX idx_tcg_players_rating_leaderboard ON tcg_players (rating, citizenid)',
     }
     for _, sql in ipairs(stmts) do
         local ok, err = pcall(function()
@@ -48,7 +50,10 @@ function Database.ApplyOptionalSchemaPatches()
         end)
         if not ok then
             local msg = tostring(err):lower()
-            if not msg:find('duplicate column', 1, true) and not msg:find('already exists', 1, true) then
+            if not msg:find('duplicate column', 1, true)
+                and not msg:find('already exists', 1, true)
+                and not msg:find('duplicate key name', 1, true)
+            then
                 print(('[jp-tcgbook] schema patch: %s'):format(tostring(err)))
             end
         end
@@ -993,4 +998,225 @@ function Database.AdminListAudit(limit)
         return { success = false, error = tostring(rows) }
     end
     return { success = true, data = rows or {} }
+end
+
+--- ランキング除外リスト（Config.RankingExcludeCitizenids）を正規化
+--- @return string[]
+local function rankingExcludeList()
+    local t = Config.RankingExcludeCitizenids
+    if type(t) ~= 'table' then
+        return {}
+    end
+    local out = {}
+    for _, v in ipairs(t) do
+        if type(v) == 'string' and v ~= '' then
+            out[#out + 1] = v
+        end
+    end
+    return out
+end
+
+--- NOT IN 句とプレースホルダ配列を構築（空なら clause は空文字）
+--- @param exclude string[]
+--- @return string @SQL 断片 ` AND citizenid NOT IN (?,?,?)` または ``
+--- @return string[] @`?` の個数 = #exclude
+local function rankingExcludeSql(exclude)
+    if #exclude == 0 then
+        return '', {}
+    end
+    local marks = {}
+    for i = 1, #exclude do
+        marks[i] = '?'
+    end
+    return ' AND citizenid NOT IN (' .. table.concat(marks, ',') .. ')', exclude
+end
+
+--- ランキング上位 N 件（除外適用・タイブレーク citizenid ASC）
+--- @param limit number
+--- @return table { success, data?, error? }
+function Database.GetRankingTopN(limit)
+    local exclude = rankingExcludeList()
+    local maxL = tonumber(Config.RankingMaxLimit) or 100
+    local n = math.min(tonumber(limit) or 50, maxL)
+    if n < 1 then
+        n = 1
+    end
+
+    local notInClause, notInParams = rankingExcludeSql(exclude)
+
+    local sql = ([[
+SELECT citizenid, rating, wins, losses, draws,
+       pvp_exp, pvp_level, pvp_win_streak
+FROM tcg_players
+WHERE 1 = 1%s
+ORDER BY rating DESC, citizenid ASC
+LIMIT ?
+]]):format(notInClause)
+
+    local params = {}
+    for _, cid in ipairs(notInParams) do
+        params[#params + 1] = cid
+    end
+    params[#params + 1] = n
+
+    local ok, result = pcall(function()
+        return MySQL.query.await(sql, params)
+    end)
+    if not ok then
+        return { success = false, error = tostring(result) }
+    end
+    return { success = true, data = result or {} }
+end
+
+--- 自分の順位（自分より上の人数 + 1）。ORDER は `GetRankingTopN` と同一タイブレーク
+--- @param citizenid string
+--- @return table { success, data?, error? }
+function Database.GetMyRankInfo(citizenid)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+
+    local exclude = rankingExcludeList()
+    local notInClause, notInParams = rankingExcludeSql(exclude)
+
+    local meRes = Database.GetPlayer(citizenid)
+    if not (meRes.success and meRes.data) then
+        return { success = false, error = 'player not found' }
+    end
+    local myRating = tonumber(meRes.data.rating) or 0
+
+    local sqlAbove = ([[
+SELECT COUNT(*) AS above
+FROM tcg_players
+WHERE citizenid <> ?
+  AND (rating > ? OR (rating = ? AND citizenid < ?))%s
+]]):format(notInClause)
+
+    local sqlTotal = ([[
+SELECT COUNT(*) AS total
+FROM tcg_players
+WHERE 1 = 1%s
+]]):format(notInClause)
+
+    local paramsAbove = { citizenid, myRating, myRating, citizenid }
+    for _, cid in ipairs(notInParams) do
+        paramsAbove[#paramsAbove + 1] = cid
+    end
+
+    local paramsTotal = {}
+    for _, cid in ipairs(notInParams) do
+        paramsTotal[#paramsTotal + 1] = cid
+    end
+
+    local ok1, r1 = pcall(function()
+        return MySQL.query.await(sqlAbove, paramsAbove)
+    end)
+    local ok2, r2 = pcall(function()
+        return MySQL.query.await(sqlTotal, paramsTotal)
+    end)
+    if not (ok1 and ok2) then
+        return { success = false, error = tostring(r1 or r2) }
+    end
+
+    local above = tonumber(r1[1] and r1[1].above) or 0
+    local total = tonumber(r2[1] and r2[1].total) or 0
+
+    return {
+        success = true,
+        data = {
+            rank = above + 1,
+            rating = myRating,
+            total = total,
+        },
+    }
+end
+
+--- 自分の直前後プレイヤー（上位 n + 自分 + 下位 n）。除外リスト適用
+--- @param citizenid string
+--- @param around number
+--- @return table { success, data?, error? }
+function Database.GetRankingAround(citizenid, around)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+
+    local exclude = rankingExcludeList()
+    local notInClause, notInParams = rankingExcludeSql(exclude)
+    local n = tonumber(around) or 3
+    if n < 0 then
+        n = 0
+    end
+
+    local meRes = Database.GetPlayer(citizenid)
+    if not (meRes.success and meRes.data) then
+        return { success = false, error = 'player not found' }
+    end
+    local myRating = tonumber(meRes.data.rating) or 0
+
+    local sqlUp = ([[
+SELECT citizenid, rating, wins, losses, draws,
+       pvp_exp, pvp_level, pvp_win_streak
+FROM tcg_players
+WHERE citizenid <> ?
+  AND (rating > ? OR (rating = ? AND citizenid < ?))%s
+ORDER BY rating ASC, citizenid DESC
+LIMIT ?
+]]):format(notInClause)
+
+    local sqlDown = ([[
+SELECT citizenid, rating, wins, losses, draws,
+       pvp_exp, pvp_level, pvp_win_streak
+FROM tcg_players
+WHERE citizenid <> ?
+  AND (rating < ? OR (rating = ? AND citizenid > ?))%s
+ORDER BY rating DESC, citizenid ASC
+LIMIT ?
+]]):format(notInClause)
+
+    local sqlSelf = [[
+SELECT citizenid, rating, wins, losses, draws,
+       pvp_exp, pvp_level, pvp_win_streak
+FROM tcg_players
+WHERE citizenid = ?
+LIMIT 1
+]]
+
+    local paramsUp = { citizenid, myRating, myRating, citizenid }
+    local paramsDown = { citizenid, myRating, myRating, citizenid }
+    for _, cid in ipairs(notInParams) do
+        paramsUp[#paramsUp + 1] = cid
+        paramsDown[#paramsDown + 1] = cid
+    end
+    paramsUp[#paramsUp + 1] = n
+    paramsDown[#paramsDown + 1] = n
+
+    local okU, up = pcall(function()
+        return MySQL.query.await(sqlUp, paramsUp)
+    end)
+    local okD, down = pcall(function()
+        return MySQL.query.await(sqlDown, paramsDown)
+    end)
+    local okS, selfRows = pcall(function()
+        return MySQL.query.await(sqlSelf, { citizenid })
+    end)
+    if not (okU and okD and okS) then
+        return { success = false, error = tostring(up or down or selfRows) }
+    end
+
+    up = up or {}
+    down = down or {}
+    selfRows = selfRows or {}
+
+    local result = {}
+    for i = #up, 1, -1 do
+        result[#result + 1] = up[i]
+    end
+    if selfRows[1] then
+        result[#result + 1] = selfRows[1]
+    end
+    for _, row in ipairs(down) do
+        result[#result + 1] = row
+    end
+
+    return { success = true, data = result }
 end

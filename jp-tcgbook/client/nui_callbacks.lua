@@ -170,6 +170,14 @@ RegisterNUICallback('battlePvpTestInvalidBatch', function(_, cb)
     cb({ ok = true })
 end)
 
+RegisterNUICallback('requestRankingData', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server requestRankingData')
+    end
+    TriggerServerEvent('jp-tcgbook:server:requestRankingData')
+    cb({ ok = true })
+end)
+
 --- /bookadmin（別 HTML）
 
 RegisterNUICallback('adminBootstrap', function(_, cb)
