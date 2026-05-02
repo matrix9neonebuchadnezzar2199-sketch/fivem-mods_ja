@@ -1,0 +1,28 @@
+# Phase 4: PvP 不正リクエスト検証ログ
+
+検証日時: 2026-05-02 18:08:28 JST
+セッション: pvp_solo_1777712897_4
+プレイヤー: src=4 (license:1c6ca3b1768044f9f0d69ef9aee06ee98fb02c9f)
+実行方法: NUI バッチ（ボタン「PvP不正5」 / battlePvpTestInvalidBatch）
+コミット: e7ccb66
+
+## 結果サマリ
+| # | kind     | 期待 reason         | 実測 reason         | 判定 |
+|---|----------|---------------------|---------------------|------|
+| 1 | turn_no  | turn_no_mismatch    | turn_no_mismatch    | OK   |
+| 2 | cell_inv | invalid_cell        | invalid_cell        | OK   |
+| 3 | hand_inv | invalid_hand_index  | invalid_hand_index  | OK   |
+| 4 | cell_occ | cell_occupied       | cell_occupied       | OK   |
+| 5 | session  | session_not_found   | session_not_found   | OK   |
+
+## 補足
+- not_turn は AI 手番中に発火させる必要があるため、NUI バッチからは
+  除外（コードレビューで HandlePlace 内 current_turn_src チェックの
+  存在を確認済み）。リアル PvP 実装時に再検証する。
+- バッチは同一秒内（18:08:28）に5ケース完走し、各ケースで
+  HandlePlace reject と battlePvpError の出力が一致した。
+
+## 生ログ（抜粋）
+（検証実施環境のサーバーコンソールから、18:08:28 付近の
+[tcg-trace][pvp-inv]・HandlePlace reject・server->client battlePvpError
+の行をそのまま貼り付け）
