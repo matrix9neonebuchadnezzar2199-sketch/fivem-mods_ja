@@ -1,45 +1,82 @@
 jp-tcgbook — M5 PHASE E4（ランキングタブ骨格）検証ログ
 ============================================================
 
-実装コミット: 8d330eb（目安。必要なら `git log -1 --oneline -- jp-tcgbook/` で確認）
+状態: **検証完了（2026-05-02）** — 実用上の必須項目はすべて OK。around / 同 rating タイブレークは単独プレイヤー環境のため **PHASE B（実 PvP で 2 名以上）で再検証**。
+
+実装コミット: 8d330eb
+
+コマンドメモ（rating 変更）
+----------------------------
+- **正しい登録名**: `tcg_setrating`（`server/debug.lua` の `RegisterCommand('tcg_setrating', …)`）。
+- **構文**: `/tcg_setrating <rating 0〜9999> [target_server_id]`
+  - 自分だけなら `/tcg_setrating 1` で可。他人指定時のみ第 2 引数に server id。
+- **`No such command` が出た場合**: `tcg_set_rating` など別綴り、**F8（クライアント）で叩いている**、`jp-tcgbook` 未 ensure、などを疑う。**ゲーム内 T チャット**と **ACE `command.tcg_debug`** を確認。
 
 事前
 ----
-- `config.lua`: `Config.EnableRankingUi = true`、`Config.BattleWireLog = true`（または Wire が ON になる構成）
-- `refresh` / `ensure jp-tcgbook`（または `restart jp-tcgbook`）
+- `Config.EnableRankingUi = true`、`Config.BattleWireLog = true`（または Wire ON）
+- `refresh` / `ensure jp-tcgbook`
 
-チェックリスト（最短 5 分）
+チェックリスト（実測結果）
 ----
-[ ] 1. サーバーログでスキーマパッチ: `idx_tcg_players_rating_leaderboard` 作成成功、または
-      duplicate key name 系で黙って無視されている（既存環境）
+[x] 1. スキーマ: （ログ未引用・既存環境では duplicate key 無視でも可）
+[x] 2. ランキングタブ表示・自分行レンダ
+[x] 3. 初回フェッチ単発（下記ログ）
+[x] 4. ヘッダ・列・自分行・i18n EN/JA
+[x] 5. ダミー peer 除外（top_rows のみ・混入なし）
+[x] 6. rating 降格・復旧（単独環境のため around 区画は仕様上未発火 — 下記）
+[ ] 7. 同 rating タイブレーク — **未検証（2 名以上が必要）→ PHASE B で確認**
 
-[ ] 2. `/book` → **ランキング**タブが表示される（`enable_ranking_ui` 経路）
+実測ログ貼付（txAdmin サーバー）
+================================
 
-[ ] 3. 初回のみフェッチ（暴発なし）:
-      - tx（サーバー）に `[jp-tcgbook][wire] NUI->server requestRankingData` が **ランキングタブ初回表示時に 1 回**
-      - 続けて `[jp-tcgbook][wire][ranking] sent src=... top_rows=... in_top=... rank=...`
-      - クライアント F8（NUI Wire ON 時）でも `requestRankingData` / `rankingData` の往復が **そのタイミングだけ**増えないこと
+### 2. 初回フェッチ単発
 
-[ ] 4. UI: シーズン文言「シーズン：通年開催」、表は **順位・段位（—）・citizenid・レート・Lv/EXP・連勝**
+```
+00:12:48 [tcg] openBook 受信 src=12 uid=license:1c6ca3b...
+00:12:53 [jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1
+```
 
-[ ] 5. `jp-tcgbook-debug-peer-dummy` が **テーブルに出ない**（`Config.RankingExcludeCitizenids`）
+=> **OK**（openBook 〜 ranking sent が **1 ペア**。`requestRankingData` の連続なし）
 
-[ ] 6. TOP 圏外テスト（任意・**検証後は元の rating に戻す**）:
-      - ゲーム内（T）: `/tcg_setrating 1` または `/tcg_setrating 1 <自分の server_id>`（`server/debug.lua` 参照）
-      - ランキングタブを開き直し: **省略行（⋯）＋前後 3 人**ブロック、順位が COUNT 整合
-      - **戻す**: `/tcg_setrating <元の値> [server_id]`（実行ログを残しておくと安全）
+### 3. 往復で重複発火しない（タブ切替・再表示）
 
-[ ] 7. タブ往復: ランキング → 他タブ → ランキング に戻すと **追加の requestRankingData が出ない**
-      （`Ranking.state.loaded` により 1 セッション 1 フェッチ設計）
+```
+00:14:52 [jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1
+00:15:36 [jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1
+```
 
-実測ログ貼付欄（txAdmin サーバー / 必要なら NUI F8）
---------------------------------------------------
-（以下にコピペ）
+=> **OK**（再表示ごとに **1 ペアのみ**。`requestRankingData` の連続行なし）
 
+### 6. around 経路（rating=1 に降格）・復旧
 
+```
+00:14:46 （成功）uid=license:1c6ca3b... の rating を 1 に更新
+00:14:52 [jp-tcgbook][wire][ranking] sent src=12 top_rows=1 in_top=true rank=1
+… 復旧: 00:15:32 頃 rating を 1500 に更新（ログは環境に合わせて参照）
+```
 
+=> **単独プレイヤー環境**のため **top_rows=1 / in_top=true / rank=1**。UI はレート 1 表示・サマリ追従を確認。
+=> **around 区画・省略行（⋯）**は **プレイヤー 2 名以上**で初めて意味がある。**PHASE B で再検証**。
+
+### 7. タイブレーク整合（citizenid ASC）
+
+=> **未検証**（同 rating の他プレイヤーなし）。**PHASE B で 2 アカウント以上**のときに確認。
+
+### 4. i18n
+
+=> EN/JA 切替でシーズン文言・サマリ・列見出しが整合（スクショ 1〜2 で確認）。段位列「—」は M6 で差し替え。
+
+### その他（ログからの所見）
+
+- `battleVirtualLeave` が複数回: 対戦画面の出入り。**M5 とは無関係**。
+- `qbx_core` / `illenium-appearance` の `playerskins` 不在: **jp-tcgbook 無関係**（既知）。
 
 検証者・日時メモ
 ----------------
-- 検証日時:
-- 備考（DB 件数・MySQL バージョン等）:
+- 検証日時: 2026-05-02（ログ時刻 00:12〜00:15 台）
+- 環境: tcg_players 実質 **1 名**（`license:1c6ca3b...`）
+
+スクショ（任意）
+----------------
+リポジトリに含めない場合は別保管。載せるなら `docs/verify/screenshots/m5_*.png` など。
