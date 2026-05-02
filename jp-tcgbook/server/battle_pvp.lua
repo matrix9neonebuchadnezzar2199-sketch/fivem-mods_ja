@@ -309,6 +309,22 @@ local function buildAbortEndedPayload(session, viewer_src, resigned_src, reason)
     }
 end
 
+--- 1人開発検証: 疑似PvPソロを本番 Finish パイプラインに載せるか（DEV_SOLO_VERIFICATION_POLICY.md）
+--- @param session table|nil
+--- @return boolean
+local function pvpSoloFullFinishHooksEnabled(session)
+    if not session or session.is_solo ~= true then
+        return false
+    end
+    if Config.DebugCommands ~= true then
+        return false
+    end
+    if Config.PvpSoloApplyFullFinishHooks ~= true then
+        return false
+    end
+    return true
+end
+
 --- Finish 用コンテキスト（destroySession より前に呼ぶこと）
 --- @param session table
 --- @param reason string
@@ -335,6 +351,33 @@ local function collectFinishContext(session, reason)
         return GetPlayerUid(src)
     end
 
+    local soloFull = pvpSoloFullFinishHooksEnabled(session)
+    local dummyCid = tostring(Config.PvpSoloVerificationDummyCitizenid or 'jp-tcgbook-debug-peer-dummy')
+    local p1cid = uidOf(p1_src)
+    local p2cid = uidOf(p2_src)
+    if soloFull then
+        if isVirtualSrc(p2_src) then
+            p2cid = dummyCid
+        elseif isVirtualSrc(p1_src) then
+            p1cid = dummyCid
+        end
+        if type(p1cid) ~= 'string' or p1cid == '' or type(p2cid) ~= 'string' or p2cid == '' then
+            soloFull = false
+            if TcgBattleWireLogEnabled() then
+                print('[jp-tcgbook][wire] solo verification: abort full hooks (missing citizenid)')
+            end
+            p1cid = uidOf(p1_src)
+            p2cid = uidOf(p2_src)
+        end
+    end
+
+    local is_real_pvp
+    if session.is_solo == true then
+        is_real_pvp = soloFull == true
+    else
+        is_real_pvp = true
+    end
+
     --- PHASE 2d: 勝者の初期5枚スナップから報酬プール（ctx のみで GrantOnFinish 可能）
     local winner_reward_pool = nil
     if outcome_for_p1 ~= 'draw' then
@@ -348,10 +391,10 @@ local function collectFinishContext(session, reason)
     return {
         session_id = session.session_id,
         reason = reason,
-        is_real_pvp = session.is_solo ~= true,
+        is_real_pvp = is_real_pvp,
         is_solo = session.is_solo == true,
-        p1 = { src = p1_src, citizenid = uidOf(p1_src), score = p1_score },
-        p2 = { src = p2_src, citizenid = uidOf(p2_src), score = p2_score },
+        p1 = { src = p1_src, citizenid = p1cid, score = p1_score },
+        p2 = { src = p2_src, citizenid = p2cid, score = p2_score },
         outcome_for_p1 = outcome_for_p1,
         outcome_for_p2 = outcome_for_p2,
         finished_at = os.time(),
@@ -412,6 +455,10 @@ function BattlePvp.Finish(session_id, reason)
 
     local ctx = collectFinishContext(session, reason)
 
+    if ctx.is_solo == true and ctx.is_real_pvp == true and TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] solo verification: full finish hooks (2P pipeline)')
+    end
+
     if GetPlayerName(p1) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
     end
@@ -462,6 +509,12 @@ function BattlePvp.Finish(session_id, reason)
     if hist_ok then
         local nm_a = GetPlayerName(p1)
         local nm_b = not isVirtualSrc(p2) and GetPlayerName(p2) or ''
+        if nm_b == '' and ctx.is_real_pvp and ctx.is_solo == true then
+            local dummyId = tostring(Config.PvpSoloVerificationDummyCitizenid or 'jp-tcgbook-debug-peer-dummy')
+            if ctx.p2.citizenid == dummyId then
+                nm_b = '仮想対戦相手（検証）'
+            end
+        end
         local ins = Database.InsertMatchHistory({
             match_id = ctx.session_id,
             finished_at = ctx.finished_at,
@@ -666,6 +719,16 @@ function BattlePvp.StartSolo(human_src)
     if verr then
         pushLobbyErr(human_src, { error = verr })
         return false
+    end
+
+    if Config.PvpSoloApplyFullFinishHooks == true then
+        local ens = Database.EnsureVerificationDummyPeer(nil)
+        if not ens.success then
+            pushLobbyErr(human_src, {
+                error = '検証用ダミープレイヤー作成失敗: ' .. tostring(ens.error or '?'),
+            })
+            return false
+        end
     end
 
     local oldSid = srcToSessionId[human_src]

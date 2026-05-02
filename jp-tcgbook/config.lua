@@ -16,7 +16,7 @@ Config.CardLimit = {
 Config.InitialCards = 10 -- 初回に配る枚数
 Config.InitialCardRanks = { 'B', 'B', 'B', 'C', 'C', 'C', 'A', 'A', 'B', 'C' } -- ランクの候補プール（実装で解釈）
 
--- レーティング（BattleStats: リアル PvP のみ更新。疑似PvP solo / CPU 戦は対象外）
+-- レーティング（BattleStats: リアル PvP のみ更新。疑似PvP solo は既定では対象外 → `PvpSoloApplyFullFinishHooks` で検証時のみ本番経路。CPU 戦は対象外）
 -- Elo・wins/losses/draws は BattlePvp.Finish（reason=normal・盤面埋め終了）経路のみ。投了・切断は OnPlayerLeave で Finish を呼ばないため不更新
 -- 敗北時コピー1枚（PHASE 2d）: リアル PvP・normal のみ。勝者の初期手札5枚から1枚を敗者へ Database.AddCardToPlayer。詳細は docs/design/PHASE_2d_defeat_reward.md
 Config.InitialRating = 1500
@@ -51,6 +51,12 @@ Config.PvpLevelExpThresholds = {
 -- 上記テーブルの最終閾値を超えたあと、レベルを 1 上げるのに必要な追加 EXP（0 ならテーブル外ではレベルは伸びない）
 Config.PvpExpPerLevelBeyondTable = 800
 Config.PvpLevelCap = 99 -- 表示レベルの上限
+
+-- 1人開発検証（docs/design/DEV_SOLO_VERIFICATION_POLICY.md）: 疑似PvPソロを RecordFinish・履歴・EXP・2d 報酬まで本番と同一経路に載せる
+-- 本番サーバーでは false 固定推奨。true でも Config.DebugCommands == true でないと StartSolo・Finish 内のガードが成立しない
+Config.PvpSoloApplyFullFinishHooks = false
+-- ソロ検証時の仮想相手 citizenid（tcg_players に 1 行。Database.EnsureVerificationDummyPeer で作成）。dryrun コマンドと共用
+Config.PvpSoloVerificationDummyCitizenid = 'jp-tcgbook-debug-peer-dummy'
 
 -- 管理者 UI（/bookadmin）。server.cfg 例: add_ace group.admin command.tcg_book_admin allow
 Config.BookAdminAce = 'command.tcg_book_admin'

@@ -1,8 +1,7 @@
 --- 1 人開発用: BattleStats.RecordFinish / BattleRewards.GrantOnFinish を疑似 ctx で実行
 --- 仮想ロビーは「相手 server ID 必須」のため単独クライアントでは本番 Start を踏めない——DB・ログ検証は本コマンドで代替
 --- Config.DebugCommands +（プレイヤー実行時は ACE command.tcg_debug）。コンソールは server ID 必須
-
-local DUMMY_CITIZENID = 'jp-tcgbook-debug-peer-dummy'
+--- ダミー peer は `Config.PvpSoloVerificationDummyCitizenid`（`Database.EnsureVerificationDummyPeer` と共用）
 
 local function dryrunGate(source)
     if Config.DebugCommands ~= true then
@@ -69,21 +68,14 @@ local function copyPoolForCtx(pool)
     return out
 end
 
-local function ensureDummyPeer()
-    local r = Database.GetPlayer(DUMMY_CITIZENID)
-    if r.success and r.data then
-        return true
-    end
-    local c = Database.CreatePlayer(DUMMY_CITIZENID)
-    return c.success == true
-end
-
 --- lose: 実プレイヤーが敗北 → 報酬は自分へ（BOOK で増えた枚数を確認しやすい）
 --- win:  実プレイヤーが勝利 → 報酬はダミー行へ（DB で tcg_player_cards を確認）
 RegisterCommand('tcg_debug_finish_hooks_dryrun', function(source, args, _raw)
     if not dryrunGate(source) then
         return
     end
+
+    local dummyId = Config.PvpSoloVerificationDummyCitizenid or 'jp-tcgbook-debug-peer-dummy'
 
     local mode = 'lose'
     local tidIdx = 1
@@ -117,8 +109,9 @@ RegisterCommand('tcg_debug_finish_hooks_dryrun', function(source, args, _raw)
         return
     end
 
-    if not ensureDummyPeer() then
-        print('[tcg-debug] finish_hooks dryrun: ダミー相手 tcg_players の作成に失敗しました')
+    local ens = Database.EnsureVerificationDummyPeer(dummyId)
+    if not ens.success then
+        print('[tcg-debug] finish_hooks dryrun: ダミー相手 tcg_players の作成に失敗: ' .. tostring(ens.error))
         return
     end
 
@@ -136,7 +129,7 @@ RegisterCommand('tcg_debug_finish_hooks_dryrun', function(source, args, _raw)
             is_real_pvp = true,
             is_solo = false,
             p1 = { src = target, citizenid = uid, score = 10 },
-            p2 = { src = 0, citizenid = DUMMY_CITIZENID, score = 5 },
+            p2 = { src = 0, citizenid = dummyId, score = 5 },
             outcome_for_p1 = 'win',
             outcome_for_p2 = 'lose',
             finished_at = os.time(),
@@ -149,7 +142,7 @@ RegisterCommand('tcg_debug_finish_hooks_dryrun', function(source, args, _raw)
             is_real_pvp = true,
             is_solo = false,
             p1 = { src = target, citizenid = uid, score = 4 },
-            p2 = { src = 0, citizenid = DUMMY_CITIZENID, score = 9 },
+            p2 = { src = 0, citizenid = dummyId, score = 9 },
             outcome_for_p1 = 'lose',
             outcome_for_p2 = 'win',
             finished_at = os.time(),
@@ -160,7 +153,7 @@ RegisterCommand('tcg_debug_finish_hooks_dryrun', function(source, args, _raw)
     print(('[tcg-debug] finish_hooks dryrun START mode=%s target_src=%d dummy=%s'):format(
         mode,
         target,
-        DUMMY_CITIZENID))
+        dummyId))
 
     if BattleStats and BattleStats.RecordFinish then
         BattleStats.RecordFinish(ctx)

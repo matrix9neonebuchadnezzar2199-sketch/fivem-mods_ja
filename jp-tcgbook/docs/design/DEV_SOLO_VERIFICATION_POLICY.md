@@ -13,16 +13,16 @@
   - **`Database.InsertMatchHistory`**（対戦履歴）
 - **CPU対戦**（`battle_debug`・フリー／練習モード）は従来どおり **ランキング経済・履歴の対象外** でよい。
 
-※現状コード（未パッチ）では `collectFinishContext` が **`is_real_pvp = (session.is_solo ~= true)`** のため、ソロは上記フックがすべてスキップされる。**本ファイルは「あるべき仕様」とパッチ方針を定義する。**
+**実装**: `Config.DebugCommands` + `Config.PvpSoloApplyFullFinishHooks` が両方 true のとき、`collectFinishContext` でダミー `citizenid` を差し込み **`is_real_pvp = true`** とする（`server/battle_pvp.lua`）。本ファイルは設計根拠・運用注意の記録として残す。
 
 ---
 
 ## 2. 現状とギャップ
 
-| 項目 | CPU対戦（デバッグ） | 疑似PvPソロ（現状） | 目標（本ドキュメント） |
-|------|---------------------|----------------------|-------------------------|
-| 状態機械 | `battle_debug` | `BattlePvp`（仮想 `p2`） | そのまま利用 |
-| `is_real_pvp` | false 相当（別経路） | **false**（スキップ） | フラグ ON 時 **true** |
+| 項目 | CPU対戦（デバッグ） | 疑似PvPソロ（フラグ OFF・既定） | 疑似PvPソロ（フラグ ON・検証） |
+|------|---------------------|----------------------------------|--------------------------------|
+| 状態機械 | `battle_debug` | `BattlePvp`（仮想 `p2`） | 同左 |
+| `is_real_pvp` | false 相当（別経路） | **false** | **true**（ダミー citizenid） |
 | 履歴・EXP・報酬 | 対象外 | 対象外 | **本番と同一経路** |
 
 ---
@@ -70,37 +70,14 @@
 
 ---
 
-## 4. パッチ実装チェックリスト（実装時）
+## 4. 実装チェックリスト（完了確認・再検証用）
 
-1. **`config.lua`**  
-   - `PvpSoloApplyFullFinishHooks`（既定 `false`）  
-   - `PvpSoloVerificationDummyCitizenid`（既定 `jp-tcgbook-debug-peer-dummy`）  
-   - いずれも **日本語コメント**で「本番禁止・DebugCommands と併用」の旨を記載。
-
-2. **`server/database.lua` または共用モジュール**  
-   - `EnsureVerificationDummyPeer(citizenid)` を **dryrun と共用**（重複コード削除）。
-
-3. **`server/battle_pvp.lua`**  
-   - `StartSolo`: ガード成立時のみ **`EnsureVerificationDummyPeer`** 呼び出し。  
-   - `collectFinishContext`: §3.3 のとおり `is_real_pvp` と `p2.citizenid`（または仮想側）を設定。  
-   - `Finish`: `display_name_b` のフォールバック（§3.4）。  
-   - Wire ログ 1 行（例: `[wire] solo verification: applying full finish hooks`）を任意で追加。
-
-4. **`server/battle_finish_dryrun.lua`**  
-   - ダミー ID を **config 参照**に寄せ、文字列の二重定義をやめる。
-
-5. **NUI（`html/index.html` / `history.css` まわり）**  
-   - 「ソロは記録されない」固定文は、**検証フラグ ON のときは誤解を招く**ため、  
-     - **config をクライアントへ渡す**（`openBook` の `ui` ブロックに `solo_finish_hooks: bool`）か、  
-     - または運営向けに「開発サーバーでは設定により記録される」を本文に追記。  
-   - 実装時は **文言をデータ駆動**にすると安全。
-
-6. **ドキュメント**  
-   - `OVERALL_DESIGN.md` のドキュメントマップに本ファイルを載せる。  
-   - 開発日記に「1人開発・ソロ本番経路検証」の方針と本ファイルへのリンクを残す。
-
-7. **検証手順**  
-   - `DebugCommands=true`・`PvpSoloApplyFullFinishHooks=true` でソロ完走 → TX に **`skip non-real-pvp` が出ない**こと、`[match_history] insert ok`・`pvp_progress`・BOOK 履歴に行が出ること。
+1. **`config.lua`** — `PvpSoloApplyFullFinishHooks`（既定 `false`）・`PvpSoloVerificationDummyCitizenid`・日本語コメント。
+2. **`Database.EnsureVerificationDummyPeer`** — `database.lua`、dryrun から利用。
+3. **`battle_pvp.lua`** — `StartSolo` でダミー確保、`collectFinishContext` で `is_real_pvp` / ダミー `citizenid`、`Finish` で表示名フォールバック・Wire ログ。
+4. **`battle_finish_dryrun.lua`** — ダミー ID を config 共用。
+5. **NUI** — `openBook` の `ui.pvp_solo_finish_hooks` と `app.js` の `syncHistoryTabUi`。
+6. **検証** — `DebugCommands=true` かつ `PvpSoloApplyFullFinishHooks=true` でソロ完走 → **`skip non-real-pvp` が出ない**、`[match_history] insert ok`、履歴タブ・ヘッダの更新。
 
 ---
 

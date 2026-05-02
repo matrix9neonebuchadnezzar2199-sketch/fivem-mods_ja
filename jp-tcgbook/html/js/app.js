@@ -17,7 +17,13 @@
     /** GetDeck / selectDeck / deckUpdated の詳細 */
     currentDeckDetail: null,
     /** openBook の ui ブロック（デバウンス・サーバーID 等） */
-    ui: { autoSaveDebounceMs: 500, playerServerId: null, allow_debug_battle: false },
+    ui: {
+      autoSaveDebounceMs: 500,
+      playerServerId: null,
+      allow_debug_battle: false,
+      wire_log: false,
+      pvp_solo_finish_hooks: false,
+    },
     /** 仮想対戦ロビー（サーバー同期） */
     battleVirtual: {
       waiting: false,
@@ -150,6 +156,27 @@
     statsEl.textContent = `所持: ${n} 枚 ・ Lv ${lv}（EXP ${xp}）・ 連勝 ${st} ・ レート ${r} ・ ${w}勝 ${l}敗`;
   }
 
+  /** 対戦履歴タブ: サーバ設定（ソロ検証ON/OFF）に応じた説明文 */
+  function syncHistoryTabUi() {
+    const help = $('#histToolbarHelp');
+    const note = $('#histEmptyNote');
+    const on = !!(global.AppState.ui && global.AppState.ui.pvp_solo_finish_hooks);
+    if (help) {
+      if (on) {
+        help.textContent =
+          '開発検証ON: 疑似PvPソロの完走分も履歴・レート・EXP・報酬に反映されます（相手はDBの検証用ダミー）。';
+      } else {
+        help.innerHTML =
+          '「疑似PvP（ソロ）」は既定では記録されません。<strong>2人のリアルPvPを盤面まで完走</strong>した試合がここに載ります（config: PvpSoloApplyFullFinishHooks でソロも記録可）。';
+      }
+    }
+    if (note) {
+      note.textContent = on
+        ? '検証モードではソロ完走も一覧に載ります。相手は「仮想対戦相手（検証）」表示・DB上はダミー citizenid です。'
+        : 'ソロ練習（既定）の結果はここに載りません。仮想ロビーで二人がリアルPvPを完了すると表示されます。';
+    }
+  }
+
   function renderCollectionIfNeeded() {
     if (global.AppState.currentTab !== 'collection') return;
     if (typeof global.Collection !== 'undefined' && global.Collection.render) {
@@ -188,6 +215,7 @@
     } else if (tab === 'battle') {
       /* Battle.render は下で常に呼ぶ（CPU 対戦中は他タブ表示でもアリーナ更新のため） */
     } else if (tab === 'history') {
+      syncHistoryTabUi();
       if (typeof global.HistoryTab !== 'undefined' && global.HistoryTab.render) {
         global.HistoryTab.render();
       }
@@ -525,8 +553,11 @@
       playerServerId: Number.isFinite(psid) && psid >= 1 ? psid : null,
       allow_debug_battle: !!(d.ui && d.ui.allow_debug_battle),
       wire_log: !!(d.ui && d.ui.wire_log),
+      pvp_solo_finish_hooks: !!(d.ui && d.ui.pvp_solo_finish_hooks),
     };
     global.__tcgWireLog = !!(d.ui && d.ui.wire_log);
+
+    syncHistoryTabUi();
 
     const prevLobby = global.AppState.battleCpuLobby || {};
     global.AppState.battleCpuLobby = {

@@ -735,6 +735,7 @@
             playerServerId: 101,
             allow_debug_battle: true,
             wire_log: true,
+            pvp_solo_finish_hooks: false,
           },
         },
       };

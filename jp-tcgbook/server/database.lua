@@ -145,6 +145,21 @@ function Database.GetPlayer(citizenid)
     return { success = true, data = result[1] }
 end
 
+--- dryrun・疑似PvPソロ検証用: `tcg_players` にダミー行が無ければ作成する
+--- @param citizenid string|nil 省略時は `Config.PvpSoloVerificationDummyCitizenid`
+--- @return table { success = bool, error? }
+function Database.EnsureVerificationDummyPeer(citizenid)
+    local cid = citizenid
+    if type(cid) ~= 'string' or cid == '' then
+        cid = Config.PvpSoloVerificationDummyCitizenid or 'jp-tcgbook-debug-peer-dummy'
+    end
+    local r = Database.GetPlayer(cid)
+    if r.success and r.data then
+        return { success = true, data = {} }
+    end
+    return Database.CreatePlayer(cid)
+end
+
 function Database.CreatePlayer(citizenid)
     local ok, err = pcall(function()
         MySQL.query.await(
