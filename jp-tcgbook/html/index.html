@@ -184,9 +184,12 @@
       <section id="tab-history" class="tab-content" data-tab-panel="history" role="tabpanel">
         <div class="tab-inner hist-root">
           <div class="hist-toolbar">
-            直近 <span id="histCount">0</span> 件（リアル PvP 完走分のみ記録）
+            直近 <span id="histCount">0</span> 件。「疑似PvP（ソロ）」は記録されず、<strong>2人のリアル PvP を盤面まで完走</strong>した試合のみがここに載ります。
           </div>
-          <div id="histEmpty" class="hist-placeholder">対戦履歴はまだありません。</div>
+          <div id="histEmpty" class="hist-placeholder">
+            <p class="hist-empty-line">対戦履歴はまだありません。</p>
+            <p class="hist-empty-note"><strong>ソロ練習（疑似PvP）</strong>で遊んだ結果はここに載りません（履歴・レート・勝敗も更新されません）。<strong>仮想ロビーで二人が接続したリアル PvP</strong>を盤面まで完了すると、一覧に表示されます。</p>
+          </div>
           <div class="hist-table-wrap">
             <table class="hist-table" aria-label="対戦履歴">
               <thead>
