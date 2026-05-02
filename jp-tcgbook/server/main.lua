@@ -128,7 +128,9 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
         return
     end
 
-    print(('[tcg] openBook 受信 src=%d uid=%s'):format(src, uid))
+    if Config.Debug == true then
+        print(('[tcg] openBook 受信 src=%d uid=%s'):format(src, uid))
+    end
 
     if not Collection.IsInitialized(uid) then
         local init = Collection.InitializePlayer(uid)

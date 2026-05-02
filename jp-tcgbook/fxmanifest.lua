@@ -3,8 +3,8 @@ game 'gta5'
 lua54 'yes'
 
 author 'JP-Mods'
-description 'TCG BOOK（コレクション・デッキ・対戦／パック入手想定）'
-version '0.1.0'
+description 'Standalone TCG BOOK for FiveM: collection, deck builder, CPU duel, peer PvP (server-authoritative), Elo, match history, leaderboard & rank tiers. oxmysql + optional QBCore/ESX display names.'
+version '0.6.0'
 
 dependency 'oxmysql'
 

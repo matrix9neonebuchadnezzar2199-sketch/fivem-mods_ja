@@ -3,8 +3,11 @@ Thumbs.db
 .DS_Store
 desktop.ini
 
-# エディタ
+# エディタ・バックアップ
 *.swp
+*.bak
+*.tmp
+*.orig
 *~
 .vscode/
 .idea/

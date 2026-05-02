@@ -90,13 +90,13 @@ Config.BookAdminAce = 'command.tcg_book_admin'
 -- nil 省略時は true（従来どおり毎回 UPSERT）
 Config.SeedCardsFromLua = false
 
--- デバッグ（本番では false 推奨）
-Config.Debug = true -- 詳細ログなど
-Config.DebugCommands = true -- false のとき /tcg_* は一切実行不可（コンソール含む）。true 時は ACE command.tcg_debug またはコンソール
+-- デバッグ（本番では false。開発サーバーだけ true に戻す）
+Config.Debug = false -- 詳細ログ・openBook 受信ログ等
+Config.DebugCommands = false -- false のとき /tcg_* は一切実行不可（コンソール含む）。true 時は ACE command.tcg_debug またはコンソール
 
 -- 対戦タブ: NUI↔client↔server の往復ログ（txAdmin server log）。true=常時ON / false=常時OFF / nil=Config.Debug に追随
--- 本番では false を明示推奨（nil のままだと Config.Debug=true の開発構成では Wire が ON になる）
-Config.BattleWireLog = nil
+-- 本番では false 明示（nil だと Debug=true のとき Wire が追随 ON になる）
+Config.BattleWireLog = false
 
 -- NUI 自動保存のデバウンス（ミリ秒）
 Config.AutoSaveDebounceMs = 500
