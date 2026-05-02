@@ -27,6 +27,31 @@ Config.EloKFactor = 32
 
 -- PHASE E1（対戦履歴 `tcg_match_history`）: リアル PvP のみ・同一試合は `match_id`（= session_id）で UNIQUE。`BattlePvp.Finish` 内で Grant 後に INSERT。設計: docs/design/PHASE_E_ranking_season_ui.md §6
 
+-- PHASE E2 / M3（対戦履歴タブ）: `openBook` 応答に同梱する最大件数。サーバー側で `MatchHistoryLimitMax` を超えない
+Config.MatchHistoryLimitOpenBook = 50 -- BOOK オープン時に返す履歴の既定件数
+Config.MatchHistoryLimitMax = 100 -- 履歴クエリのハード上限（チートで巨大 LIMIT を指定されてもこの値で頭打ち）
+
+-- PHASE E3 / M4（PvP EXP・連勝）: `BattleStats.RecordFinish`（リアル PvP のみ）で更新。敗北・引き分けで連勝 0。投了・切断は `OnPlayerLeave` で離脱者の連勝のみ 0（レート・勝敗数は Finish のみの既存方針）
+Config.PvpExpWinBase = 25 -- 勝利時に加算する基本 EXP
+Config.PvpWinStreakBonusCap = 10 -- 連勝ボーナス計算に使う「試合前連勝」の上限（これ以上はボーナス増えない）
+Config.PvpExpPerStreakStep = 2 -- 試合前連勝 1 につき勝利 EXP に加算する値（0 で連勝ボーナス無効）
+-- 累積 EXP がこの値以上なら次のレベルへ（昇順・Lv1→2 に必要な累積が最初の要素）
+Config.PvpLevelExpThresholds = {
+    100,
+    300,
+    600,
+    1000,
+    1500,
+    2200,
+    3000,
+    4000,
+    5200,
+    6600,
+}
+-- 上記テーブルの最終閾値を超えたあと、レベルを 1 上げるのに必要な追加 EXP（0 ならテーブル外ではレベルは伸びない）
+Config.PvpExpPerLevelBeyondTable = 800
+Config.PvpLevelCap = 99 -- 表示レベルの上限
+
 -- 管理者 UI（/bookadmin）。server.cfg 例: add_ace group.admin command.tcg_book_admin allow
 Config.BookAdminAce = 'command.tcg_book_admin'
 

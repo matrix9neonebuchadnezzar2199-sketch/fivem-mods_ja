@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/collection.css">
   <link rel="stylesheet" href="css/deck.css">
+  <link rel="stylesheet" href="css/battle.css">
+  <link rel="stylesheet" href="css/history.css">
 </head>
 <body>
 
@@ -27,7 +29,7 @@
       <button type="button" class="tab active" data-tab="collection" role="tab" aria-selected="true">📖 コレクション</button>
       <button type="button" class="tab" data-tab="deck" role="tab" aria-selected="false">🎴 デッキ編成</button>
       <button type="button" class="tab" data-tab="battle" role="tab" aria-selected="false">⚔ 対戦</button>
-      <button type="button" class="tab" data-tab="trade" role="tab" aria-selected="false">🤝 トレード</button>
+      <button type="button" class="tab" data-tab="history" role="tab" aria-selected="false">📜 対戦履歴</button>
       <button type="button" class="tab" data-tab="ranking" role="tab" aria-selected="false">🏆 ランキング</button>
     </nav>
 
@@ -176,21 +178,59 @@
           </div>
         </div>
       </section>
-      <section id="tab-battle" class="tab-content" data-tab-panel="battle" role="tabpanel">
-        <div class="placeholder">⚔ 対戦機能は準備中です</div>
+      <section id="tab-battle" class="tab-content battle-tab" data-tab-panel="battle" role="tabpanel">
+        <div id="battlePanel" class="battle-panel"></div>
       </section>
-      <section id="tab-trade" class="tab-content" data-tab-panel="trade" role="tabpanel">
-        <div class="placeholder">🤝 トレード機能は準備中です</div>
+      <section id="tab-history" class="tab-content" data-tab-panel="history" role="tabpanel">
+        <div class="tab-inner hist-root">
+          <div class="hist-toolbar">
+            直近 <span id="histCount">0</span> 件（リアル PvP 完走分のみ記録）
+          </div>
+          <div id="histEmpty" class="hist-placeholder">対戦履歴はまだありません。</div>
+          <div class="hist-table-wrap">
+            <table class="hist-table" aria-label="対戦履歴">
+              <thead>
+                <tr>
+                  <th>日時</th>
+                  <th>相手</th>
+                  <th>結果</th>
+                  <th>スコア</th>
+                  <th>レート（変化）</th>
+                  <th>敗北コピー</th>
+                </tr>
+              </thead>
+              <tbody id="histTableBody"></tbody>
+            </table>
+          </div>
+        </div>
       </section>
       <section id="tab-ranking" class="tab-content" data-tab-panel="ranking" role="tabpanel">
-        <div class="placeholder">🏆 ランキング機能は準備中です</div>
+        <div class="placeholder ranking-placeholder">🏆 ランキングタブは<strong>仕様検討中</strong>です（表示・並び・更新タイミングは後続 PHASE で決定）。</div>
       </section>
     </main>
+
+    <!-- CPU／将来オンライン対戦の全画面レイヤー（ロビーとは別 UI） -->
+    <div id="battleArenaRoot" class="battle-arena-root" hidden aria-hidden="true"></div>
 
     <footer class="footer">
       <div><kbd>Tab</kbd> 切替 ・ <kbd>ESC</kbd> 閉じる（モーダル優先）</div>
       <div>jp-tcgbook</div>
     </footer>
+  </div>
+
+  <div id="tcgConfirmModal" class="modal-overlay tcg-confirm-overlay" aria-hidden="true">
+    <div class="modal tcg-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="tcgConfirmTitle">
+      <div class="modal-header">
+        <h2 id="tcgConfirmTitle" class="tcg-confirm-title">確認</h2>
+      </div>
+      <div class="modal-body tcg-confirm-body">
+        <p id="tcgConfirmMessage" class="tcg-confirm-msg"></p>
+        <div class="tcg-confirm-actions">
+          <button type="button" id="tcgConfirmCancel" class="btn">キャンセル</button>
+          <button type="button" id="tcgConfirmOk" class="btn danger">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="helpModal" class="modal-overlay" aria-hidden="true">
@@ -227,8 +267,12 @@
           <p>📖 でこのヘルプを開閉。ヘルプ表示中は <kbd>ESC</kbd> でヘルプのみ閉じます。</p>
         </section>
         <section class="help-section">
+          <h3>カードの入手（方針）</h3>
+          <p><strong>トレードはありません。</strong>入手は <strong>対戦</strong> と <strong>パック購入（10枚）</strong> を想定しています。対戦では <strong>敗北した側のデッキから 1 枚がランダムに選ばれ、勝者に「コピー」として渡る</strong>予定です（あなたのデッキ枚数は減りません）。パックの排出レンジ・購入 UI は<strong>仕様確定まで保留</strong>です。</p>
+        </section>
+        <section class="help-section">
           <h3>バトルでのデッキ運用</h3>
-          <p>対戦タブはフェーズ2で実装予定です。使用デッキは完成デッキのみ設定してください。</p>
+          <p>対戦タブでは <strong>使用デッキ（★）</strong> の準備状況を確認できます。マッチングや盤面は今後のフェーズで追加します。使用デッキは <strong>10枚完成</strong> のデッキのみ設定できます。</p>
         </section>
       </div>
     </div>
@@ -302,6 +346,8 @@
 <script src="js/card_util.js"></script>
 <script src="js/collection.js"></script>
 <script src="js/deck.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/history.js"></script>
 <script src="js/app.js"></script>
 <script src="js/mock_data.js"></script>
 </body>

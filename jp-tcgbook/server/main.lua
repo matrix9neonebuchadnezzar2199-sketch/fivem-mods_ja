@@ -174,6 +174,12 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
 
     local battlePeer = BattleLobbyGetPeer(src)
 
+    local histRows = {}
+    local histRes = Database.ListMatchHistoryForCitizenid(uid, nil)
+    if histRes.success and histRes.data then
+        histRows = histRes.data
+    end
+
     replyBookData(src, {
         success = true,
         data = {
@@ -182,6 +188,7 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
             decks = decks.data or {},
             cardsMaster = TcgCardsMaster,
             activeDeck = activeDeckPayload,
+            match_history = histRows,
             battleSession = battlePeer and { peer_server_id = battlePeer } or nil,
             -- NUI: デッキ自動保存デバウンス（ms）。0 でキューをほぼ即 flush
             ui = {

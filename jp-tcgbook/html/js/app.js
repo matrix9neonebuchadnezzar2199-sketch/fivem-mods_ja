@@ -37,9 +37,11 @@
       debugLobbyOpen: false,
       lookupLabel: '',
     },
+    /** openBook で受け取る対戦履歴（正規化済み） */
+    matchHistory: [],
   };
 
-  const TAB_ORDER = ['collection', 'deck', 'battle', 'ranking'];
+  const TAB_ORDER = ['collection', 'deck', 'battle', 'history', 'ranking'];
 
   let helpOpen = false;
 
@@ -142,7 +144,10 @@
     const r = p.rating ?? '—';
     const w = p.wins ?? 0;
     const l = p.losses ?? 0;
-    statsEl.textContent = `所持: ${n} 枚 ・ レート ${r} ・ ${w}勝 ${l}敗`;
+    const lv = p.pvp_level != null ? p.pvp_level : '—';
+    const xp = p.pvp_exp != null ? p.pvp_exp : '—';
+    const st = p.pvp_win_streak != null ? p.pvp_win_streak : '—';
+    statsEl.textContent = `所持: ${n} 枚 ・ Lv ${lv}（EXP ${xp}）・ 連勝 ${st} ・ レート ${r} ・ ${w}勝 ${l}敗`;
   }
 
   function renderCollectionIfNeeded() {
@@ -182,6 +187,10 @@
       renderDeckIfNeeded();
     } else if (tab === 'battle') {
       /* Battle.render は下で常に呼ぶ（CPU 対戦中は他タブ表示でもアリーナ更新のため） */
+    } else if (tab === 'history') {
+      if (typeof global.HistoryTab !== 'undefined' && global.HistoryTab.render) {
+        global.HistoryTab.render();
+      }
     } else {
       console.log('[jp-tcgbook] tab=', tab);
     }
@@ -505,6 +514,7 @@
       global.Deck.resetMutationTransport();
     }
     global.AppState.player = d.player || null;
+    global.AppState.matchHistory = Array.isArray(d.match_history) ? d.match_history : [];
     global.AppState.cards = Array.isArray(d.cards) ? d.cards : [];
     global.AppState.cardsMaster = Array.isArray(d.cardsMaster) ? d.cardsMaster : [];
     global.AppState.decks = Array.isArray(d.decks) ? d.decks : [];

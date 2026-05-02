@@ -1,4 +1,4 @@
---- BattleStats: 試合終了時の Elo / 戦績 / 日次カウンタ更新責務
+--- BattleStats: 試合終了時の Elo / 戦績 / 日次カウンタ / 【M4】PvP EXP・連勝 更新責務
 --- BattlePvp.Finish からのみ呼ぶ（OnPlayerLeave は経由しない → normal 終了のみが自然に対象）
 
 BattleStats = {}
@@ -117,6 +117,93 @@ local function updateDailyCounter(ctx)
     end
 end
 
+--- M4: 累積 EXP から表示レベル（閾値テーブル + 任意のテーブル外伸長）
+--- @param totalExp number
+--- @return integer
+function BattleStats.ComputePvpLevelFromExp(totalExp)
+    local exp = math.max(0, math.floor(tonumber(totalExp) or 0))
+    local tbl = Config.PvpLevelExpThresholds
+    if type(tbl) ~= 'table' or #tbl == 0 then
+        return 1
+    end
+    local level = 1
+    for i, t in ipairs(tbl) do
+        local th = tonumber(t)
+        if not th then
+            break
+        end
+        if exp >= th then
+            level = i + 1
+        else
+            break
+        end
+    end
+    local lastTh = tonumber(tbl[#tbl]) or 0
+    local extraPer = tonumber(Config.PvpExpPerLevelBeyondTable) or 0
+    if extraPer > 0 and exp > lastTh and lastTh > 0 then
+        level = (#tbl + 1) + math.floor((exp - lastTh) / extraPer)
+    end
+    local capLv = tonumber(Config.PvpLevelCap) or 999
+    if level > capLv then
+        level = capLv
+    end
+    if level < 1 then
+        level = 1
+    end
+    return level
+end
+
+--- M4: リアル PvP のみ・勝敗に応じて EXP・連勝・レベル更新
+--- @param ctx table
+local function updatePvpProgress(ctx)
+    local function applyFor(cid, outcome)
+        if type(cid) ~= 'string' or cid == '' then
+            return
+        end
+        local gr = Database.GetPlayer(cid)
+        if not gr.success or not gr.data then
+            if TcgBattleWireLogEnabled() then
+                print(('[jp-tcgbook][wire][stats] pvp_progress skip GetPlayer failed cid=%s'):format(cid))
+            end
+            return
+        end
+        local row = gr.data
+        local streak = tonumber(row.pvp_win_streak) or 0
+        local exp = tonumber(row.pvp_exp) or 0
+
+        if outcome == 'win' then
+            local base = tonumber(Config.PvpExpWinBase) or 25
+            local cap = tonumber(Config.PvpWinStreakBonusCap) or 10
+            local step = tonumber(Config.PvpExpPerStreakStep) or 2
+            local bonus = math.min(streak, math.max(0, cap)) * math.max(0, step)
+            exp = exp + base + bonus
+            streak = streak + 1
+        elseif outcome == 'lose' or outcome == 'draw' then
+            streak = 0
+        else
+            return
+        end
+
+        local level = BattleStats.ComputePvpLevelFromExp(exp)
+        local up = Database.UpdatePlayerPvpProgress(cid, exp, level, streak)
+        if TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][stats] pvp_progress cid=%s outcome=%s exp=%d lvl=%d streak=%d ok=%s'):format(
+                cid,
+                outcome,
+                exp,
+                level,
+                streak,
+                tostring(up.success)))
+            if not up.success then
+                print(('[jp-tcgbook][wire][stats] pvp_progress err: %s'):format(tostring(up.error)))
+            end
+        end
+    end
+
+    applyFor(ctx.p1.citizenid, ctx.outcome_for_p1)
+    applyFor(ctx.p2.citizenid, ctx.outcome_for_p2)
+end
+
 --- @param ctx table collectFinishContext の戻り値
 function BattleStats.RecordFinish(ctx)
     if not ctx then
@@ -141,4 +228,5 @@ function BattleStats.RecordFinish(ctx)
     updateRating(ctx)
     updateWinLoss(ctx)
     updateDailyCounter(ctx)
+    updatePvpProgress(ctx)
 end

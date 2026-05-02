@@ -576,6 +576,8 @@ function BattlePvp.Start(p1_src, p2_src)
         session_id = session_id,
         p1_src = p1_src,
         p2_src = p2_src,
+        p1_citizenid = uid1,
+        p2_citizenid = uid2,
         first_src = first_src,
         board = TcgBattleRule.CreateEmptyBoard(),
         hands = {
@@ -807,6 +809,26 @@ function BattlePvp.OnPlayerLeave(src, ended_reason)
     local p1, p2 = session.p1_src, session.p2_src
     local session_id = session.session_id
     local reason = ended_reason or 'peer_left'
+
+    --- M4: 離脱者の連勝のみリセット（Finish 非経路のため Elo 等は触らない）
+    if session.is_solo ~= true then
+        local uidLeave = GetPlayerUid(src)
+        if type(uidLeave) ~= 'string' or uidLeave == '' then
+            if src == p1 then
+                uidLeave = session.p1_citizenid
+            elseif src == p2 then
+                uidLeave = session.p2_citizenid
+            end
+        end
+        if type(uidLeave) == 'string' and uidLeave ~= '' and Database.ResetPvpWinStreak then
+            local rr = Database.ResetPvpWinStreak(uidLeave)
+            if TcgBattleWireLogEnabled() and rr.success then
+                print(('[jp-tcgbook][wire][stats] pvp streak reset (leave) cid=%s reason=%s'):format(
+                    uidLeave,
+                    reason))
+            end
+        end
+    end
 
     local pay1 = buildAbortEndedPayload(session, p1, src, reason)
     local pay2 = buildAbortEndedPayload(session, p2, src, reason)

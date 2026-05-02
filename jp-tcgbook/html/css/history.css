@@ -1,0 +1,60 @@
+/* 対戦履歴タブ（M3） */
+.hist-root {
+  padding: 12px 16px;
+  color: #e8e1c4;
+  font-size: 14px;
+}
+
+.hist-toolbar {
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.hist-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(139, 111, 63, 0.35);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.hist-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.hist-table th,
+.hist-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(139, 111, 63, 0.25);
+  vertical-align: top;
+}
+
+.hist-table th {
+  font-weight: 600;
+  background: rgba(40, 32, 24, 0.6);
+  white-space: nowrap;
+}
+
+.hist-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.hist-outcome-win {
+  color: #8fcf9a;
+}
+
+.hist-outcome-lose {
+  color: #e08080;
+}
+
+.hist-outcome-draw {
+  color: #c9c6a8;
+}
+
+.hist-placeholder {
+  padding: 24px;
+  text-align: center;
+  opacity: 0.75;
+}

@@ -34,6 +34,26 @@ local function loadSqlStatements()
     return stmts
 end
 
+--- 既存 DB 向け: 列が無い環境のみ ALTER（重複列エラーは無視）
+function Database.ApplyOptionalSchemaPatches()
+    local stmts = {
+        'ALTER TABLE tcg_players ADD COLUMN pvp_exp INT UNSIGNED NOT NULL DEFAULT 0',
+        'ALTER TABLE tcg_players ADD COLUMN pvp_level INT UNSIGNED NOT NULL DEFAULT 1',
+        'ALTER TABLE tcg_players ADD COLUMN pvp_win_streak INT UNSIGNED NOT NULL DEFAULT 0',
+    }
+    for _, sql in ipairs(stmts) do
+        local ok, err = pcall(function()
+            MySQL.query.await(sql, {})
+        end)
+        if not ok then
+            local msg = tostring(err):lower()
+            if not msg:find('duplicate column', 1, true) and not msg:find('already exists', 1, true) then
+                print(('[jp-tcgbook] schema patch: %s'):format(tostring(err)))
+            end
+        end
+    end
+end
+
 local function isDuplicateKeyError(err)
     if type(err) ~= 'string' then
         return false
@@ -109,6 +129,8 @@ ON DUPLICATE KEY UPDATE
             return { success = false, error = 'カードマスタUPSERT失敗: ' .. tostring(err) }
         end
     end
+
+    Database.ApplyOptionalSchemaPatches()
 
     return { success = true, data = { cardMasterCount = count, luaSeedSkipped = not runLuaSeed } }
 end
@@ -610,6 +632,134 @@ INSERT INTO tcg_match_history (
             copyId,
             tonumber(row.season_id) or 0,
         })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- @param raw table DB 行
+--- @param myCid string 閲覧者 citizenid
+--- @return table NUI 向けに正規化した 1 行
+local function normalizeMatchHistoryRow(raw, myCid)
+    local isA = raw.citizenid_a == myCid
+    local oppName = isA and raw.display_name_b or raw.display_name_a
+    local oppCid = isA and raw.citizenid_b or raw.citizenid_a
+    local outcome_me
+    if isA then
+        outcome_me = raw.outcome_a
+    elseif raw.outcome_a == 'win' then
+        outcome_me = 'lose'
+    elseif raw.outcome_a == 'lose' then
+        outcome_me = 'win'
+    else
+        outcome_me = 'draw'
+    end
+    local score_me = isA and tonumber(raw.score_a) or tonumber(raw.score_b)
+    local score_opp = isA and tonumber(raw.score_b) or tonumber(raw.score_a)
+    local r_before = isA and tonumber(raw.rating_a_before) or tonumber(raw.rating_b_before)
+    local r_after = isA and tonumber(raw.rating_a_after) or tonumber(raw.rating_b_after)
+    local copy_received = false
+    if raw.defeat_copy_granted == true or raw.defeat_copy_granted == 1 then
+        local loser_cid
+        if raw.outcome_a == 'win' then
+            loser_cid = raw.citizenid_b
+        elseif raw.outcome_a == 'lose' then
+            loser_cid = raw.citizenid_a
+        end
+        if loser_cid == myCid then
+            copy_received = true
+        end
+    end
+    return {
+        match_id = raw.match_id,
+        finished_at = tonumber(raw.finished_at) or 0,
+        reason = tostring(raw.reason or ''),
+        opponent_display = oppName or '',
+        opponent_citizenid = oppCid or '',
+        outcome_me = outcome_me,
+        score_me = score_me or 0,
+        score_opp = score_opp or 0,
+        rating_me_before = r_before or 1500,
+        rating_me_after = r_after or 1500,
+        defeat_copy_received = copy_received,
+        defeat_copy_card_id = copy_received and raw.defeat_copy_card_id or nil,
+    }
+end
+
+--- M3: 自分の対戦履歴（新しい順・上限あり）
+--- @param citizenid string
+--- @param limit integer|nil 省略時は Config.MatchHistoryLimitOpenBook
+--- @return table { success, data?, error? }
+function Database.ListMatchHistoryForCitizenid(citizenid, limit)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+    local lim = tonumber(limit)
+    local defaultLim = tonumber(Config.MatchHistoryLimitOpenBook) or 50
+    local maxLim = tonumber(Config.MatchHistoryLimitMax) or 100
+    if not lim or lim < 1 then
+        lim = defaultLim
+    end
+    if lim > maxLim then
+        lim = maxLim
+    end
+
+    local sql = [[
+SELECT *
+FROM tcg_match_history
+WHERE citizenid_a = ? OR citizenid_b = ?
+ORDER BY finished_at DESC
+LIMIT ?
+]]
+    local ok, rows = pcall(function()
+        return MySQL.query.await(sql, { citizenid, citizenid, lim })
+    end)
+    if not ok then
+        return { success = false, error = tostring(rows) }
+    end
+    local out = {}
+    for _, raw in ipairs(rows or {}) do
+        out[#out + 1] = normalizeMatchHistoryRow(raw, citizenid)
+    end
+    return { success = true, data = out }
+end
+
+--- M4: PvP 進行（EXP・表示レベル・連勝）
+--- @return table { success, error? }
+function Database.UpdatePlayerPvpProgress(citizenid, pvp_exp, pvp_level, pvp_win_streak)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+    local ok, err = pcall(function()
+        MySQL.query.await(
+            'UPDATE tcg_players SET pvp_exp = ?, pvp_level = ?, pvp_win_streak = ? WHERE citizenid = ?',
+            {
+                math.max(0, math.floor(tonumber(pvp_exp) or 0)),
+                math.max(1, math.floor(tonumber(pvp_level) or 1)),
+                math.max(0, math.floor(tonumber(pvp_win_streak) or 0)),
+                citizenid,
+            }
+        )
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- M4: 離脱時のみ連勝リセット（レート・戦績は変更しない）
+--- @return table { success, error? }
+function Database.ResetPvpWinStreak(citizenid)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+    local ok, err = pcall(function()
+        MySQL.query.await(
+            'UPDATE tcg_players SET pvp_win_streak = 0 WHERE citizenid = ?',
+            { citizenid }
+        )
     end)
     if not ok then
         return { success = false, error = tostring(err) }
