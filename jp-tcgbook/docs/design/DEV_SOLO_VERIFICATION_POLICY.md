@@ -7,23 +7,24 @@
 ## 1. 開発コンテキスト（運用方針・記録）
 
 - **jp-tcgbook は基本 1人で開発する**。2クライアント常設やペア検証が前提になりにくい。
-- そのため **「疑似PvPソロ」（`battlePvpStartSolo` / `BattlePvp.StartSolo`）は、開発時には本番と同じサーバー経路で検証できることが望ましい** とする。
+- そのため **「疑似PvPソロ」は、開発時に本番と同じ Finish サーバー経路で動かす**（`battlePvpStartSolo` / `BattlePvp.StartSolo`）。
   - 対象: **`BattleStats.RecordFinish`**（Elo・勝敗・日次・**PvP EXP／連勝**）
   - **`BattleRewards.GrantOnFinish`**（敗北コピー等）
   - **`Database.InsertMatchHistory`**（対戦履歴）
 - **CPU対戦**（`battle_debug`・フリー／練習モード）は従来どおり **ランキング経済・履歴の対象外** でよい。
 
-**実装**: `Config.DebugCommands` + `Config.PvpSoloApplyFullFinishHooks` が両方 true のとき、`collectFinishContext` でダミー `citizenid` を差し込み **`is_real_pvp = true`** とする（`server/battle_pvp.lua`）。本ファイルは設計根拠・運用注意の記録として残す。
+**実装**: **`Config.DebugCommands == true` のときのみ** `StartSolo` が成功する。その場合、`collectFinishContext` でダミー `citizenid` を差し込み **常に `is_real_pvp = true`**（`server/battle_pvp.lua`）。本ファイルは設計根拠・運用注意の記録として残す。
 
 ---
 
 ## 2. 現状とギャップ
 
-| 項目 | CPU対戦（デバッグ） | 疑似PvPソロ（フラグ OFF・既定） | 疑似PvPソロ（フラグ ON・検証） |
-|------|---------------------|----------------------------------|--------------------------------|
-| 状態機械 | `battle_debug` | `BattlePvp`（仮想 `p2`） | 同左 |
-| `is_real_pvp` | false 相当（別経路） | **false** | **true**（ダミー citizenid） |
-| 履歴・EXP・報酬 | 対象外 | 対象外 | **本番と同一経路** |
+| 項目 | CPU対戦（デバッグ） | 疑似PvPソロ（`DebugCommands=true` で開始可） |
+|------|---------------------|-----------------------------------------------|
+| 状態機械 | `battle_debug` | `BattlePvp`（仮想 `p2`） |
+| `is_real_pvp` | false 相当（別経路） | **true**（ダミー citizenid） |
+| 履歴・EXP・報酬 | 対象外 | **本番 Finish と同一経路** |
+| 備考 | — | `DebugCommands=false` の環境では **StartSolo 不可**（本番で経済混入を防ぐ） |
 
 ---
 
@@ -31,12 +32,8 @@
 
 ### 3.1 本番安全性（必須）
 
-- **本番サーバーでは絶対に「ソロ＝本番経路」を有効にしない。**
-- 有効化は **二重ガード** とする（例）:
-  1. `Config.DebugCommands == true`（デバッグビルド想定）
-  2. **`Config.PvpSoloApplyFullFinishHooks == true`**（明示オプトイン・既定 `false`）
-
-欠ければ従来どおり `is_real_pvp=false`（現状互換）。
+- **本番サーバーでは `Config.DebugCommands=false`** とし、**疑似PvPソロ（`StartSolo`）を開始できなくする**（`BattlePvp.StartSolo` 先頭で拒否）。これにより **ソロ経由の Finish 経済は開発構成に閉じる**。
+- リアル 2 人 PvP は `DebugCommands` と無関係に従来どおり動作する。
 
 ### 3.2 仮想相手の `citizenid`
 
@@ -48,7 +45,7 @@
 
 ### 3.3 `collectFinishContext` の振る舞い
 
-- 条件: `session.is_solo == true` かつ **§3.1 の二重ガード成立**
+- 条件: `session.is_solo == true` かつ **`Config.DebugCommands == true`**（ソロ開始時と同一）
 - 処理:
   - **`is_real_pvp = true`**（本番 Finish パイプラインに載せる）
   - 人間側は従来どおり `GetPlayerUid(human_src)`
@@ -72,12 +69,12 @@
 
 ## 4. 実装チェックリスト（完了確認・再検証用）
 
-1. **`config.lua`** — `PvpSoloApplyFullFinishHooks`（既定 `false`）・`PvpSoloVerificationDummyCitizenid`・日本語コメント。
+1. **`config.lua`** — `PvpSoloVerificationDummyCitizenid`・`DebugCommands` の説明（本番では false）。
 2. **`Database.EnsureVerificationDummyPeer`** — `database.lua`、dryrun から利用。
 3. **`battle_pvp.lua`** — `StartSolo` でダミー確保、`collectFinishContext` で `is_real_pvp` / ダミー `citizenid`、`Finish` で表示名フォールバック・Wire ログ。
 4. **`battle_finish_dryrun.lua`** — ダミー ID を config 共用。
-5. **NUI** — `openBook` の `ui.pvp_solo_finish_hooks` と `app.js` の `syncHistoryTabUi`。
-6. **検証** — `DebugCommands=true` かつ `PvpSoloApplyFullFinishHooks=true` でソロ完走 → **`skip non-real-pvp` が出ない**、`[match_history] insert ok`、履歴タブ・ヘッダの更新。
+5. **NUI** — `openBook` の `ui.pvp_solo_finish_hooks`（`DebugCommands` と連動）と `app.js` の `syncHistoryTabUi`。
+6. **検証** — `DebugCommands=true` でソロ完走 → **`skip non-real-pvp` が出ない**、`[match_history] insert ok`、履歴タブ・ヘッダの更新。
 
 ---
 

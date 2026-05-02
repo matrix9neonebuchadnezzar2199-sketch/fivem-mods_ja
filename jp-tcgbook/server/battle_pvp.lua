@@ -365,17 +365,14 @@ local function buildAbortEndedPayload(session, viewer_src, resigned_src, reason)
     }
 end
 
---- 1人開発検証: 疑似PvPソロを本番 Finish パイプラインに載せるか（DEV_SOLO_VERIFICATION_POLICY.md）
+--- 疑似PvPソロで `is_real_pvp` にするか（DEV_SOLO_VERIFICATION_POLICY.md）。StartSolo は DebugCommands 時のみ。
 --- @param session table|nil
 --- @return boolean
-local function pvpSoloFullFinishHooksEnabled(session)
+local function pvpSoloUsesProductionFinish(session)
     if not session or session.is_solo ~= true then
         return false
     end
     if Config.DebugCommands ~= true then
-        return false
-    end
-    if Config.PvpSoloApplyFullFinishHooks ~= true then
         return false
     end
     return true
@@ -407,7 +404,7 @@ local function collectFinishContext(session, reason)
         return GetPlayerUid(src)
     end
 
-    local soloFull = pvpSoloFullFinishHooksEnabled(session)
+    local soloFull = pvpSoloUsesProductionFinish(session)
     local dummyCid = tostring(Config.PvpSoloVerificationDummyCitizenid or 'jp-tcgbook-debug-peer-dummy')
     local p1cid = uidOf(p1_src)
     local p2cid = uidOf(p2_src)
@@ -781,14 +778,12 @@ function BattlePvp.StartSolo(human_src)
         return false
     end
 
-    if Config.PvpSoloApplyFullFinishHooks == true then
-        local ens = Database.EnsureVerificationDummyPeer(nil)
-        if not ens.success then
-            pushLobbyErr(human_src, {
-                error = '検証用ダミープレイヤー作成失敗: ' .. tostring(ens.error or '?'),
-            })
-            return false
-        end
+    local ens = Database.EnsureVerificationDummyPeer(nil)
+    if not ens.success then
+        pushLobbyErr(human_src, {
+            error = '検証用ダミープレイヤー作成失敗: ' .. tostring(ens.error or '?'),
+        })
+        return false
     end
 
     local oldSid = srcToSessionId[human_src]

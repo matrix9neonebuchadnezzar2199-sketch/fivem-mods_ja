@@ -199,8 +199,8 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
                 allow_debug_battle = Config.DebugCommands == true,
                 --- NUI コンソールに fetch / message の往復ログ（TcgBattleWireLogEnabled）
                 wire_log = TcgBattleWireLogEnabled(),
-                --- 疑似PvPソロを本番 Finish 経路に載せる開発検証が有効か（対戦履歴タブの説明文切替）
-                pvp_solo_finish_hooks = Config.DebugCommands == true and Config.PvpSoloApplyFullFinishHooks == true,
+                --- 疑似PvPソロが本番 Finish 経路になるか（DebugCommands 時のみ StartSolo 可のため実質同義・履歴タブ説明用）
+                pvp_solo_finish_hooks = Config.DebugCommands == true,
             },
             --- BOOK 再オープン時にデバッグ対戦状態を復元表示
             battleCpuSession = BattleDebugGetClientState and BattleDebugGetClientState(src) or nil,
