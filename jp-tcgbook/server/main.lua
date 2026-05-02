@@ -148,6 +148,10 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
     local dispName = GetPlayerDisplayName(src)
     if dispName and dispName ~= '' then
         Database.UpsertPlayerDisplayName(uid, dispName)
+        --- NUI ヘッダ即時反映: 上の GetPlayer は UPSERT 前の行で display_name が NULL のことがある
+        if player.data then
+            player.data.display_name = dispName
+        end
     end
 
     local cards = Collection.GetCollection(uid)
