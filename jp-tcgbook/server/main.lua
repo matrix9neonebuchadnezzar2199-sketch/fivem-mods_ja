@@ -144,6 +144,12 @@ RegisterNetEvent('jp-tcgbook:server:openBook', function()
         return
     end
 
+    --- M6 後追い: ランキング・履歴に出すユーザー名を更新（ベストエフォート、失敗しても openBook は続行）
+    local dispName = GetPlayerDisplayName(src)
+    if dispName and dispName ~= '' then
+        Database.UpsertPlayerDisplayName(uid, dispName)
+    end
+
     local cards = Collection.GetCollection(uid)
     if not cards.success then
         replyBookData(src, { success = false, error = cards.error or '所持カードの取得に失敗しました' })
@@ -456,6 +462,39 @@ RegisterNetEvent('jp-tcgbook:server:requestRankingData', function()
         EnrichRankingRowWithTier(mine.data)
     end
 
+    --- `GetMyRankInfo` は rank/rating/total のみのため、表示名・citizenid をマスタ行から付与
+    if mine.success and mine.data then
+        mine.data.citizenid = uid
+        local pr = Database.GetPlayer(uid)
+        if pr.success and pr.data then
+            mine.data.display_name = pr.data.display_name
+        end
+    end
+
+    --- NUI は NULL をフォールバック表示に回す（空文字は nil に正規化）
+    local function normalizeRankingDisplayName(row)
+        if type(row) ~= 'table' then
+            return
+        end
+        local d = row.display_name
+        if type(d) == 'string' and d ~= '' then
+            return
+        end
+        row.display_name = nil
+    end
+
+    if top.success and top.data then
+        for _, row in ipairs(top.data) do
+            normalizeRankingDisplayName(row)
+        end
+    end
+    for _, row in ipairs(around) do
+        normalizeRankingDisplayName(row)
+    end
+    if mine.success and mine.data then
+        normalizeRankingDisplayName(mine.data)
+    end
+
     local ok = top.success and mine.success
     local errMsg = nil
     if not ok then
@@ -474,15 +513,28 @@ RegisterNetEvent('jp-tcgbook:server:requestRankingData', function()
     })
 
     if TcgBattleWireLogEnabled() then
-        local rc = mine.data and mine.data.rank_code or ''
-        local bd = mine.data and mine.data.badge or ''
-        print(('[jp-tcgbook][wire][ranking] sent src=%s top_rows=%s in_top=%s rank=%s my_rank_code=%s my_badge=%s'):format(
+        local function shortCid(cid)
+            if type(cid) ~= 'string' or cid == '' then
+                return '?'
+            end
+            if #cid <= 8 then
+                return cid
+            end
+            return cid:sub(-8)
+        end
+        local mi = mine.data
+        local rc = mi and mi.rank_code or ''
+        local bd = mi and mi.badge or ''
+        local md = mi and mi.display_name
+        print(('[jp-tcgbook][wire][ranking] sent src=%s top_rows=%s in_top=%s rank=%s my_rank_code=%s my_badge=%s my_disp=%s my_cid_tail=%s'):format(
             tostring(src),
             tostring(top.data and #top.data),
             tostring(inTop),
-            tostring(mine.data and mine.data.rank),
+            tostring(mi and mi.rank),
             tostring(rc),
-            tostring(bd)
+            tostring(bd),
+            tostring(md ~= nil and md or '<nil>'),
+            shortCid(mi and mi.citizenid)
         ))
     end
 end)

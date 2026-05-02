@@ -2,11 +2,12 @@
 --- image_path は NUI 基準（html/ からの相対）。実ファイル: html/assets/cards/{character|monster}/
 --- 割当: 人物・英雄寄り tcg_ch_001〜010 / モンスター寄り tcg_m_001〜010（20枚。素材差し替え時は番号だけ合わせれば可）
 --- 合計の目安: UR 28〜32, SS 24〜27, S 20〜23, A 16〜19, B 12〜15, C 8〜11
---- description_en: BOOK NUI 英語表示用（DB 列 description_en にシードされる）
+--- name_en / description_en: BOOK NUI 英語表示用（DB 列にシードされる）
 TcgCardsMaster = {
     {
         card_id = 'tcg_ur_antares',
         name = '覇星アンタレス',
+        name_en = 'Antares the Sovereign Star',
         rank = 'UR',
         type = 'shitei',
         stat_top = 9,
@@ -21,6 +22,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_ur_void_edge',
         name = '虚空の刃鬼',
+        name_en = 'Void Blade Oni',
         rank = 'UR',
         type = 'shitei',
         stat_top = 6,
@@ -35,6 +37,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_ss_silver_knight',
         name = '銀翼の聖騎士',
+        name_en = 'Silverwing Paladin',
         rank = 'SS',
         type = 'shitei',
         stat_top = 9,
@@ -49,6 +52,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_ss_moon_sage',
         name = '月虹の賢者',
+        name_en = 'Moonbow Sage',
         rank = 'SS',
         type = 'shitei',
         stat_top = 6,
@@ -63,6 +67,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_s_flame_fist',
         name = '烈火の拳士',
+        name_en = 'Blazing Pugilist',
         rank = 'S',
         type = 'free',
         stat_top = 7,
@@ -77,6 +82,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_s_aqua_shield',
         name = '深水の盾艇',
+        name_en = 'Deepwater Bulwark',
         rank = 'S',
         type = 'free',
         stat_top = 5,
@@ -91,6 +97,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_s_wind_runner',
         name = '疾風の斥候',
+        name_en = 'Galewind Scout',
         rank = 'S',
         type = 'free',
         stat_top = 7,
@@ -105,6 +112,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_s_stone_wall',
         name = '磐石の守人',
+        name_en = 'Bedrock Warden',
         rank = 'S',
         type = 'free',
         stat_top = 4,
@@ -119,6 +127,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_a_iron_spike',
         name = '鉄棘の番人',
+        name_en = 'Iron Thorn Sentinel',
         rank = 'A',
         type = 'free',
         stat_top = 5,
@@ -133,6 +142,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_a_shadow_cat',
         name = '影歩きの猫盗賊',
+        name_en = 'Shadowstep Cat Thief',
         rank = 'A',
         type = 'free',
         stat_top = 6,
@@ -147,6 +157,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_a_holy_moth',
         name = '燐火の聖蛾',
+        name_en = 'Witchfire Holy Moth',
         rank = 'A',
         type = 'free',
         stat_top = 4,
@@ -161,6 +172,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_a_rust_golem',
         name = '錆鉄の小ゴーレム',
+        name_en = 'Rustiron Golemling',
         rank = 'A',
         type = 'free',
         stat_top = 5,
@@ -175,6 +187,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_b_moss_sprite',
         name = '苔森のスプライト',
+        name_en = 'Mossgrove Sprite',
         rank = 'B',
         type = 'free',
         stat_top = 4,
@@ -189,6 +202,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_b_cave_bat',
         name = '洞窟コウモリ',
+        name_en = 'Cavern Bat',
         rank = 'B',
         type = 'free',
         stat_top = 5,
@@ -203,6 +217,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_b_mud_frog',
         name = '泥沼ガエル',
+        name_en = 'Mire Frog',
         rank = 'B',
         type = 'free',
         stat_top = 3,
@@ -217,6 +232,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_b_coal_imp',
         name = '炭坑インプ',
+        name_en = 'Colliery Imp',
         rank = 'B',
         type = 'free',
         stat_top = 4,
@@ -231,6 +247,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_c_slime',
         name = 'グリーンスライム',
+        name_en = 'Green Slime',
         rank = 'C',
         type = 'free',
         stat_top = 2,
@@ -245,6 +262,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_c_rat',
         name = '溝ネズミ',
+        name_en = 'Gutter Rat',
         rank = 'C',
         type = 'free',
         stat_top = 2,
@@ -259,6 +277,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_c_mushroom',
         name = '歩くキノコ',
+        name_en = 'Walking Mushroom',
         rank = 'C',
         type = 'free',
         stat_top = 3,
@@ -273,6 +292,7 @@ TcgCardsMaster = {
     {
         card_id = 'tcg_c_ghost_jelly',
         name = '幽霊クラゲ',
+        name_en = 'Ghost Jelly',
         rank = 'C',
         type = 'free',
         stat_top = 2,

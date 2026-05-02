@@ -506,6 +506,19 @@ function BattlePvp.Finish(session_id, reason)
 
     local ctx = collectFinishContext(session, reason)
 
+    --- M6 後追い: 実 PvP のみ `tcg_players.display_name` を最新化（ソロ検証・CPU は除外）
+    if session.is_solo ~= true then
+        for _, ps in ipairs({ session.p1_src, session.p2_src }) do
+            if type(ps) == 'number' and ps > 0 and not isVirtualSrc(ps) then
+                local cid = GetPlayerUid(ps)
+                local nm = GetPlayerDisplayName(ps)
+                if cid and cid ~= '' and nm and nm ~= '' then
+                    Database.UpsertPlayerDisplayName(cid, nm)
+                end
+            end
+        end
+    end
+
     if ctx.is_solo == true and ctx.is_real_pvp == true and TcgBattleWireLogEnabled() then
         print('[jp-tcgbook][wire] solo verification: full finish hooks (2P pipeline)')
     end
@@ -556,8 +569,8 @@ function BattlePvp.Finish(session_id, reason)
     local pay2 = buildNormalEndedPayload(session, p2, reason, dc2_got, dc2_id, dc2_nm, ctx.is_real_pvp)
 
     if hist_ok then
-        local nm_a = GetPlayerName(p1)
-        local nm_b = not isVirtualSrc(p2) and GetPlayerName(p2) or ''
+        local nm_a = not isVirtualSrc(p1) and GetPlayerDisplayName(p1) or ''
+        local nm_b = not isVirtualSrc(p2) and GetPlayerDisplayName(p2) or ''
         if nm_b == '' and ctx.is_real_pvp and ctx.is_solo == true then
             local dummyId = tostring(Config.PvpSoloVerificationDummyCitizenid or 'jp-tcgbook-debug-peer-dummy')
             if ctx.p2.citizenid == dummyId then
