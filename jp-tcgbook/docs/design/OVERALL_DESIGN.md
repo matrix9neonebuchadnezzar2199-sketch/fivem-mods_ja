@@ -83,7 +83,7 @@ BattlePvp.Finish
 |--------------|------|-------|
 | コレクション／デッキ／対戦（既存） | 済 | — |
 | **対戦履歴** | **済（M3）** | `openBook` で一覧同梱・NUI タブ |
-| **ランキング** | 未 | **E4〜E5**（段位徽章は `html/assets/ranc/*.png`） |
+| **ランキング** | **済（M5〜M6）** | **E4〜E5** 確定（段位徽章 `html/assets/ranc/*.png`・検証ログ `docs/verify/m5_ranking_2026-05-02.txt` / `m6_ranks_2026-05-02.txt`） |
 
 機能フラグで未完成タブを隠す運用は **PHASE E §8.1**。
 
@@ -99,8 +99,8 @@ BattlePvp.Finish
 | **M2** | ~~**PHASE E1**~~ **済** | `tcg_match_history`、`Database.InsertMatchHistory`、`battle_pvp.Finish` |
 | **M3** | ~~**PHASE E2**~~ **済** | 履歴一覧（`openBook`）+ NUI **対戦履歴**タブ |
 | **M4** | ~~**PHASE E3**~~ **済** | EXP・連勝・連勝ボーナス（`RecordFinish`・`OnPlayerLeave` で連勝リセット） |
-| **M5** | **PHASE E4** | ランキングタブ骨格（通年ラベル・`rating` 順・自分順位） |
-| **M6** | **PHASE E5** | **段位**（config 閾値 + `ranc` 画像 + フォールバック） |
+| **M5** | ~~**PHASE E4**~~ **済** | ランキングタブ骨格（通年ラベル・`rating` 順・自分順位） — 実装 `8d330eb` / 検証 `34c50af` |
+| **M6** | ~~**PHASE E5**~~ **済** | **段位**（config 閾値 + `ranc` 画像 + フォールバック） — 実装 `a9390b5` / 検証 `67a8391` |
 | **M7** | **PHASE E6（任意）** | 番号シーズン・締め・ランクソフト降下 |
 
 **検証**: 各マイルストーン後に dryrun または 2 クライアントで Wire・DB・BOOK を確認。
