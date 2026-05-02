@@ -431,7 +431,7 @@
       typeof global.GetParentResourceName === 'function'
         ? global.GetParentResourceName()
         : 'jp-tcgbook';
-    const duelBackCssUrl = `https://cfx-nui-${arenaRes}/html/assets/duel_back.jpg`;
+    const duelBackCssUrl = `https://cfx-nui-${arenaRes}/html/assets/duel_back.png`;
 
     return (
       `<div class="battle-arena-shell battle-dbg-theme" style="--battle-duel-back: url(${duelBackCssUrl})">` +
