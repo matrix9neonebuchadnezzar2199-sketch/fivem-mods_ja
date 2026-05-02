@@ -427,9 +427,14 @@
     const handRow = buildDbgHandHtml(st, 'battle-arena-hand-col', humanTurn);
     const quitLabel = mode === 'pvp' ? '投了' : '対戦終了';
     const logHtml = buildDbgLogHtml(st, 'battle-arena-log-inner');
+    const arenaRes =
+      typeof global.GetParentResourceName === 'function'
+        ? global.GetParentResourceName()
+        : 'jp-tcgbook';
+    const duelBackCssUrl = `https://cfx-nui-${arenaRes}/html/assets/duel_back.jpg`;
 
     return (
-      `<div class="battle-arena-shell battle-dbg-theme">` +
+      `<div class="battle-arena-shell battle-dbg-theme" style="--battle-duel-back: url(${duelBackCssUrl})">` +
       `<div class="battle-arena-bg" aria-hidden="true"></div>` +
       `<div class="battle-arena-vignette" aria-hidden="true"></div>` +
       `<div class="battle-arena-frame">` +

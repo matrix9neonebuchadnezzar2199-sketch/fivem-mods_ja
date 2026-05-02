@@ -584,12 +584,13 @@
   position: relative;
 }
 
+/* --battle-duel-back は battle.js の renderArenaDocument で cfx-nui URL を注入（NUI で css 相対 url が効かない対策） */
 .battle-arena-bg {
   position: absolute;
   inset: 0;
   background:
     linear-gradient(rgba(10, 6, 3, 0.55), rgba(10, 6, 3, 0.55)),
-    url('../assets/duel_back.jpg') center center / cover no-repeat,
+    var(--battle-duel-back, url('../assets/duel_back.jpg')) center center / cover no-repeat,
     radial-gradient(ellipse 85% 65% at 50% 38%, rgba(95, 58, 32, 0.92), transparent 58%),
     linear-gradient(185deg, #0f0805 0%, #1a100a 40%, #080504 100%);
   pointer-events: none;
