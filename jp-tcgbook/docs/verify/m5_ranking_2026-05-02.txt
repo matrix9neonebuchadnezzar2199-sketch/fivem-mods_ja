@@ -1,0 +1,45 @@
+jp-tcgbook — M5 PHASE E4（ランキングタブ骨格）検証ログ
+============================================================
+
+実装コミット: 8d330eb（目安。必要なら `git log -1 --oneline -- jp-tcgbook/` で確認）
+
+事前
+----
+- `config.lua`: `Config.EnableRankingUi = true`、`Config.BattleWireLog = true`（または Wire が ON になる構成）
+- `refresh` / `ensure jp-tcgbook`（または `restart jp-tcgbook`）
+
+チェックリスト（最短 5 分）
+----
+[ ] 1. サーバーログでスキーマパッチ: `idx_tcg_players_rating_leaderboard` 作成成功、または
+      duplicate key name 系で黙って無視されている（既存環境）
+
+[ ] 2. `/book` → **ランキング**タブが表示される（`enable_ranking_ui` 経路）
+
+[ ] 3. 初回のみフェッチ（暴発なし）:
+      - tx（サーバー）に `[jp-tcgbook][wire] NUI->server requestRankingData` が **ランキングタブ初回表示時に 1 回**
+      - 続けて `[jp-tcgbook][wire][ranking] sent src=... top_rows=... in_top=... rank=...`
+      - クライアント F8（NUI Wire ON 時）でも `requestRankingData` / `rankingData` の往復が **そのタイミングだけ**増えないこと
+
+[ ] 4. UI: シーズン文言「シーズン：通年開催」、表は **順位・段位（—）・citizenid・レート・Lv/EXP・連勝**
+
+[ ] 5. `jp-tcgbook-debug-peer-dummy` が **テーブルに出ない**（`Config.RankingExcludeCitizenids`）
+
+[ ] 6. TOP 圏外テスト（任意・**検証後は元の rating に戻す**）:
+      - ゲーム内（T）: `/tcg_setrating 1` または `/tcg_setrating 1 <自分の server_id>`（`server/debug.lua` 参照）
+      - ランキングタブを開き直し: **省略行（⋯）＋前後 3 人**ブロック、順位が COUNT 整合
+      - **戻す**: `/tcg_setrating <元の値> [server_id]`（実行ログを残しておくと安全）
+
+[ ] 7. タブ往復: ランキング → 他タブ → ランキング に戻すと **追加の requestRankingData が出ない**
+      （`Ranking.state.loaded` により 1 セッション 1 フェッチ設計）
+
+実測ログ貼付欄（txAdmin サーバー / 必要なら NUI F8）
+--------------------------------------------------
+（以下にコピペ）
+
+
+
+
+検証者・日時メモ
+----------------
+- 検証日時:
+- 備考（DB 件数・MySQL バージョン等）:
