@@ -41,6 +41,10 @@ function Database.ApplyOptionalSchemaPatches()
         'ALTER TABLE tcg_players ADD COLUMN pvp_level INT UNSIGNED NOT NULL DEFAULT 1',
         'ALTER TABLE tcg_players ADD COLUMN pvp_win_streak INT UNSIGNED NOT NULL DEFAULT 0',
         'ALTER TABLE tcg_cards_master ADD COLUMN description_en TEXT NULL',
+        --- M6 後追い: カード名英語（BOOK EN）
+        'ALTER TABLE tcg_cards_master ADD COLUMN name_en VARCHAR(64) DEFAULT NULL AFTER name',
+        --- M6 後追い: ランキング等の表示名
+        'ALTER TABLE tcg_players ADD COLUMN display_name VARCHAR(64) DEFAULT NULL',
         --- PHASE E4: `ORDER BY rating DESC, citizenid ASC` 向け（既存環境は起動時に一度だけ作成）
         'CREATE INDEX idx_tcg_players_rating_leaderboard ON tcg_players (rating, citizenid)',
     }
@@ -97,10 +101,11 @@ function Database.InitializeTables()
     if runLuaSeed then
         local upsertSql = [[
 INSERT INTO tcg_cards_master
-    (card_id, name, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, description_en, no)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (card_id, name, name_en, rank, type, stat_top, stat_right, stat_bottom, stat_left, image_path, description, description_en, no)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
+    name_en = VALUES(name_en),
     rank = VALUES(rank),
     type = VALUES(type),
     stat_top = VALUES(stat_top),
@@ -115,9 +120,14 @@ ON DUPLICATE KEY UPDATE
 
         ok, err = pcall(function()
             for _, c in ipairs(TcgCardsMaster) do
+                local nameEn = nil
+                if type(c.name_en) == 'string' and c.name_en ~= '' then
+                    nameEn = c.name_en
+                end
                 MySQL.query.await(upsertSql, {
                     c.card_id,
                     c.name,
+                    nameEn,
                     c.rank,
                     c.type,
                     c.stat_top,
@@ -182,6 +192,31 @@ function Database.CreatePlayer(citizenid)
         return { success = false, error = tostring(err) }
     end
     return { success = true, data = {} }
+end
+
+--- M6 後追い: ランキング・履歴向け表示名（行が無ければ DEFAULT で新規行を作成）
+--- @param citizenid string
+--- @param display_name string
+--- @return boolean
+function Database.UpsertPlayerDisplayName(citizenid, display_name)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return false
+    end
+    if type(display_name) ~= 'string' or display_name == '' then
+        return false
+    end
+    local dn = display_name
+    if #dn > 64 then
+        dn = dn:sub(1, 64)
+    end
+    local ok = pcall(function()
+        MySQL.query.await([[
+INSERT INTO tcg_players (citizenid, display_name)
+VALUES (?, ?)
+ON DUPLICATE KEY UPDATE display_name = VALUES(display_name)
+]], { citizenid, dn })
+    end)
+    return ok
 end
 
 function Database.GetPlayerCards(citizenid)
@@ -1046,7 +1081,7 @@ function Database.GetRankingTopN(limit)
 
     local sql = ([[
 SELECT citizenid, rating, wins, losses, draws,
-       pvp_exp, pvp_level, pvp_win_streak
+       pvp_exp, pvp_level, pvp_win_streak, display_name
 FROM tcg_players
 WHERE 1 = 1%s
 ORDER BY rating DESC, citizenid ASC
@@ -1155,7 +1190,7 @@ function Database.GetRankingAround(citizenid, around)
 
     local sqlUp = ([[
 SELECT citizenid, rating, wins, losses, draws,
-       pvp_exp, pvp_level, pvp_win_streak
+       pvp_exp, pvp_level, pvp_win_streak, display_name
 FROM tcg_players
 WHERE citizenid <> ?
   AND (rating > ? OR (rating = ? AND citizenid < ?))%s
@@ -1165,7 +1200,7 @@ LIMIT ?
 
     local sqlDown = ([[
 SELECT citizenid, rating, wins, losses, draws,
-       pvp_exp, pvp_level, pvp_win_streak
+       pvp_exp, pvp_level, pvp_win_streak, display_name
 FROM tcg_players
 WHERE citizenid <> ?
   AND (rating < ? OR (rating = ? AND citizenid > ?))%s
@@ -1175,7 +1210,7 @@ LIMIT ?
 
     local sqlSelf = [[
 SELECT citizenid, rating, wins, losses, draws,
-       pvp_exp, pvp_level, pvp_win_streak
+       pvp_exp, pvp_level, pvp_win_streak, display_name
 FROM tcg_players
 WHERE citizenid = ?
 LIMIT 1

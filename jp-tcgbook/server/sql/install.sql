@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS tcg_players (
     pvp_exp INT UNSIGNED NOT NULL DEFAULT 0,
     pvp_level INT UNSIGNED NOT NULL DEFAULT 1,
     pvp_win_streak INT UNSIGNED NOT NULL DEFAULT 0,
+    display_name VARCHAR(64) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS tcg_players (
 CREATE TABLE IF NOT EXISTS tcg_cards_master (
     card_id VARCHAR(32) PRIMARY KEY,
     name VARCHAR(64) NOT NULL,
+    name_en VARCHAR(64) DEFAULT NULL,
     rank ENUM('UR','SS','S','A','B','C') NOT NULL,
     type ENUM('shitei','free') NOT NULL,
     stat_top TINYINT NOT NULL,
