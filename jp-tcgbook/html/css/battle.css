@@ -747,7 +747,7 @@
   align-items: stretch;
 }
 
-/* ログ | 盤 | 手札 の 3 カラム（幅は近似 18% / 60% / 22%） */
+/* ログ | 盤 | 手札 の 3 カラム（幅は近似 18% / 50% / 32%） */
 .battle-arena-three-col {
   flex: 1;
   display: flex;
@@ -801,7 +801,7 @@
 }
 
 .battle-arena-column-center {
-  flex: 1 1 60%;
+  flex: 1 1 50%;
   min-width: 0;
 }
 
@@ -818,8 +818,8 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  flex: 0 0 22%;
-  max-width: 22%;
+  flex: 0 0 32%;
+  max-width: 32%;
   min-width: 148px;
   padding-left: calc(10px * var(--book-fs-mul));
   border-left: 1px solid rgba(212, 175, 55, 0.22);
@@ -971,15 +971,9 @@
   line-height: 1.35;
 }
 
-/* 手札：右ペーンに最大 5 枚縦並び（カード幅は盤セルに近いスケール） */
+/* 手札：右ペーン 2 列グリッド（最大 5 枚・2 列×3 段想定、カード幅は max-width で上限） */
 .battle-arena-hand-col {
   --arena-hand-gap: calc(10px * var(--book-fs-mul));
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: center;
-  gap: var(--arena-hand-gap);
   width: 100%;
   flex: 1 1 auto;
   min-height: 0;
@@ -988,10 +982,13 @@
   overflow-x: hidden;
 }
 
-/* #tab-battle 側より ID 特異度で wrap を無効化（縦 1 列に強制） */
+/* #tab-battle 側の display:flex / flex-wrap を上書きして 2 列 grid に固定 */
 #battleArenaRoot .battle-dbg-hand.battle-arena-hand-col {
-  flex-direction: column;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--arena-hand-gap);
+  justify-items: center;
+  align-content: start;
   margin-bottom: 0;
 }
 
