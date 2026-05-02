@@ -698,50 +698,59 @@ function BattlePvp.HandlePlace(src, payload)
         print(('[jp-tcgbook][wire] server recv battlePvpPlace src=%d'):format(src))
     end
     if not getUidOrReject(src) then
+        print('[tcg-trace][pvp-inv] HandlePlace reject no_uid')
         return
     end
 
     local session_id = payload.session_id
     if type(session_id) ~= 'string' or session_id == '' then
+        print('[tcg-trace][pvp-inv] HandlePlace reject session_not_found (bad session_id)')
         pushPvpError(src, 'session_not_found')
         return
     end
 
     local session = PvpBattles[session_id]
     if not session then
+        print('[tcg-trace][pvp-inv] HandlePlace reject session_not_found (no row)')
         pushPvpError(src, 'session_not_found')
         return
     end
 
     if session.p1_src ~= src and session.p2_src ~= src then
+        print('[tcg-trace][pvp-inv] HandlePlace reject not_in_session')
         pushPvpError(src, 'not_in_session')
         return
     end
 
     if session.turn ~= src then
+        print('[tcg-trace][pvp-inv] HandlePlace reject not_your_turn')
         pushPvpError(src, 'not_your_turn')
         return
     end
 
     local turn_no = tonumber(payload.turn_no)
     if not turn_no or turn_no ~= session.turn_no then
+        print('[tcg-trace][pvp-inv] HandlePlace reject turn_no_mismatch')
         pushPvpError(src, 'turn_no_mismatch')
         return
     end
 
     local cell_index = tonumber(payload.cell_index)
     if type(cell_index) ~= 'number' or cell_index < 1 or cell_index > 9 or math.floor(cell_index) ~= cell_index then
+        print('[tcg-trace][pvp-inv] HandlePlace reject invalid_cell')
         pushPvpError(src, 'invalid_cell')
         return
     end
 
     if session.board[cell_index] ~= nil then
+        print('[tcg-trace][pvp-inv] HandlePlace reject cell_occupied')
         pushPvpError(src, 'cell_occupied')
         return
     end
 
     local hand_index = tonumber(payload.hand_index)
     if type(hand_index) ~= 'number' or hand_index < 0 or hand_index > 4 or math.floor(hand_index) ~= hand_index then
+        print('[tcg-trace][pvp-inv] HandlePlace reject invalid_hand_index')
         pushPvpError(src, 'invalid_hand_index')
         return
     end
@@ -749,6 +758,7 @@ function BattlePvp.HandlePlace(src, payload)
     local myHand = session.hands[src]
     local cardSlot = myHand and myHand[hand_index + 1]
     if cardSlot == nil then
+        print('[tcg-trace][pvp-inv] HandlePlace reject hand_card_missing')
         pushPvpError(src, 'hand_card_missing')
         return
     end
@@ -831,7 +841,18 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpRequestState', function(payload)
     BattlePvp.BroadcastState(session_id, nil, src)
 end)
 
+--- 調査用: アクティブ PvP セッション数（[tcg-trace][pvp-inv] ログ向け）
+--- @return integer
+local function tracePvpBattleSessionCount()
+    local n = 0
+    for _ in pairs(PvpBattles) do
+        n = n + 1
+    end
+    return n
+end
+
 --- 不正着手デバッグ（コマンドは resource 起動時に必ず登録。権限はハンドラ内）
+--- 切り分けログは grep 削除用に `[tcg-trace][pvp-inv]` で統一
 --- @param source number
 --- @param optArg string|nil
 --- @return integer|nil
@@ -882,14 +903,41 @@ local function pvpTestInvalidDeny(source, msg)
     end
 end
 
-RegisterCommand('tcg_pvp_test_invalid', function(source, args)
-    if not pvpTestInvalidAllowed(source) then
+RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
+    local argsJson = '{}'
+    do
+        local okJ, j = pcall(json.encode, args or {})
+        if okJ and type(j) == 'string' then
+            argsJson = j
+        end
+    end
+    print(('[tcg-trace][pvp-inv] #1 cmd entered src=%s args=%s raw=%s'):format(
+        tostring(source),
+        argsJson,
+        tostring(rawCommand)
+    ))
+
+    local allowed = pvpTestInvalidAllowed(source)
+    local aceStr = 'n/a'
+    if type(source) == 'number' and source > 0 then
+        aceStr = tostring(IsPlayerAceAllowed(source, 'command.tcg_debug'))
+    elseif source == 0 then
+        aceStr = 'console_skip'
+    end
+    print(('[tcg-trace][pvp-inv] #2 allowed=%s DebugCommands=%s ace_tcg_debug=%s'):format(
+        tostring(allowed),
+        tostring(Config.DebugCommands),
+        aceStr
+    ))
+
+    if not allowed then
         pvpTestInvalidDeny(source, '権限がありません (ACE: command.tcg_debug)')
         return
     end
 
     local reason_code = args[1]
     if not reason_code or reason_code == '' then
+        print('[tcg-trace][pvp-inv] #3 skip (usage / no kind)')
         print('[tcg-debug] usage: /tcg_pvp_test_invalid <reason_code> [target_server_id]')
         print('[tcg-debug]   reason_code: turn_no | not_turn | cell_occ | cell_inv | hand_inv | session')
         return
@@ -897,12 +945,20 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args)
 
     local target, terr = pvpTestInvalidResolveTarget(source, args[2])
     if not target then
+        print(('[tcg-trace][pvp-inv] #3x abort resolveTarget err=%s'):format(tostring(terr)))
         pvpTestInvalidDeny(source, terr or '対象を特定できません')
         return
     end
 
     local session = BattlePvp.GetSessionBySrc(target)
+    print(('[tcg-trace][pvp-inv] #3 kind=%s target=%s session_found=%s active_sessions=%s'):format(
+        tostring(reason_code),
+        tostring(target),
+        tostring(session ~= nil),
+        tostring(tracePvpBattleSessionCount())
+    ))
     if reason_code ~= 'session' and not session then
+        print('[tcg-trace][pvp-inv] #3x abort no session for target (start solo PvP first)')
         print(('[tcg-debug] target src=%d は対戦セッション中ではありません'):format(target))
         return
     end
@@ -917,6 +973,7 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args)
         }
     elseif reason_code == 'not_turn' then
         if session.turn == target then
+            print('[tcg-trace][pvp-inv] #3x abort not_turn (wait for virtual opponent turn)')
             print('[tcg-debug] 現在 target のターンです。仮想ターン中に再実行してください。')
             return
         end
@@ -935,6 +992,7 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args)
             end
         end
         if not occupied then
+            print('[tcg-trace][pvp-inv] #3x abort cell_occ needs occupied cell')
             print('[tcg-debug] 盤面が空のため cell_occ は再現不可。1 手以上進めてから再実行してください。')
             return
         end
@@ -960,6 +1018,7 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args)
             end
         end
         if not emptyCell then
+            print('[tcg-trace][pvp-inv] #3x abort hand_inv needs empty board cell')
             print('[tcg-debug] 空マスがないため hand_inv は別状態で試してください。')
             return
         end
@@ -977,6 +1036,7 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args)
             hand_index = 0,
         }
     else
+        print(('[tcg-trace][pvp-inv] #3x abort unknown kind=%s'):format(tostring(reason_code)))
         print(('[tcg-debug] 未知の reason_code: %s'):format(tostring(reason_code)))
         return
     end
@@ -989,6 +1049,9 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args)
         enc = tostring(payload)
     end
     print(('[tcg-debug][pvp-invalid] target=%d code=%s payload=%s'):format(target, reason_code, enc))
+    print(('[tcg-trace][pvp-inv] #4a calling HandlePlace target=%s payload=%s'):format(tostring(target), enc))
 
     BattlePvp.HandlePlace(target, payload)
+
+    print('[tcg-trace][pvp-inv] #4b HandlePlace returned')
 end, false)
