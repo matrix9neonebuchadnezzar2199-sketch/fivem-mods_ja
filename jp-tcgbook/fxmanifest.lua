@@ -45,4 +45,5 @@ files {
     'html/admin/js/*.js',
     'html/assets/cards/**/*.png',
     'html/assets/cards/asset_manifest.json',
+    'html/assets/duel_back.jpg',
 }
