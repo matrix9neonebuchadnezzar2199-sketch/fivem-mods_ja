@@ -194,7 +194,17 @@ Database.AddCardToPlayer(loser_citizenid, grant_id)
 
 ---
 
-## 11. 参照
+## 11. 単一クライアント検証（finish フック dryrun）
+
+仮想ロビーは **自分自身を相手にできない**ため、**疑似通信対戦で完走**は単一クライアントでは踏めない。  
+検証は **`tcg_debug_finish_hooks_dryrun`**（`server/battle_finish_dryrun.lua`）で `BattleStats.RecordFinish` と `BattleRewards.GrantOnFinish` を **実プレイヤー + DB 固定ダミー `jp-tcgbook-debug-peer-dummy`** のコンテキストで実行する（フック直叩き）。
+
+- tx コンソール例: `tcg_debug_finish_hooks_dryrun lose 5`（src=5 が敗北→敗者コピーは自分）、`tcg_debug_finish_hooks_dryrun win 5`（勝利→コピーはダミー行）。
+- 前提: `Config.DebugCommands`、マスタにカードが存在すること。
+
+---
+
+## 12. 参照
 
 - `2026-05-02 開発日記.md` — PHASE 2c 検証・次タスク・ランキング検討メモ  
 - `2026-05-01 開発日記.md` §19 — 引継ぎ・`tcg_players` TODO  

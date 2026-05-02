@@ -21,6 +21,7 @@ server_scripts {
     'server/database.lua',
     'server/battle_stats.lua',
     'server/battle_rewards.lua',
+    'server/battle_finish_dryrun.lua',
     'server/collection.lua',
     'server/deck.lua',
     'server/debug.lua',
