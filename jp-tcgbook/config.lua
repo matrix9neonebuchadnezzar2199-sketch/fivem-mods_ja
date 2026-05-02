@@ -16,7 +16,8 @@ Config.CardLimit = {
 Config.InitialCards = 10 -- 初回に配る枚数
 Config.InitialCardRanks = { 'B', 'B', 'B', 'C', 'C', 'C', 'A', 'A', 'B', 'C' } -- ランクの候補プール（実装で解釈）
 
--- レーティング（フェーズ2以降で更新ロジックを接続）
+-- レーティング（BattleStats: リアル PvP のみ更新。疑似PvP solo / CPU 戦は対象外）
+-- Elo・wins/losses/draws は BattlePvp.Finish（reason=normal・盤面埋め終了）経路のみ。投了・切断は OnPlayerLeave で Finish を呼ばないため不更新
 Config.InitialRating = 1500
 Config.EloKFactor = 32
 

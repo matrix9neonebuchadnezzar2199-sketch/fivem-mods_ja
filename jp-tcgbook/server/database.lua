@@ -440,6 +440,32 @@ function Database.UpdatePlayerRating(citizenid, rating)
     return { success = true, data = {} }
 end
 
+--- 試合結果を 1 件分加算する。outcome は 'win' | 'lose' | 'draw' のみ（caller 側で固定）
+--- @param citizenid string
+--- @param outcome string
+--- @return table { success, error? }
+function Database.IncrementMatchStats(citizenid, outcome)
+    local col
+    if outcome == 'win' then
+        col = 'wins'
+    elseif outcome == 'lose' then
+        col = 'losses'
+    elseif outcome == 'draw' then
+        col = 'draws'
+    else
+        return { success = false, error = 'invalid outcome: ' .. tostring(outcome) }
+    end
+
+    local sql = ('UPDATE tcg_players SET %s = %s + 1 WHERE citizenid = ?'):format(col, col)
+    local ok, err = pcall(function()
+        MySQL.query.await(sql, { citizenid })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
 function Database.ListAllPlayers()
     local ok, result = pcall(function()
         return MySQL.query.await(

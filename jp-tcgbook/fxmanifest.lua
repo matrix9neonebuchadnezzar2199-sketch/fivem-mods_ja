@@ -19,6 +19,8 @@ shared_scripts {
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/database.lua',
+    'server/battle_stats.lua',
+    'server/battle_rewards.lua',
     'server/collection.lua',
     'server/deck.lua',
     'server/debug.lua',

@@ -288,6 +288,45 @@ local function buildAbortEndedPayload(session, viewer_src, resigned_src, reason)
     }
 end
 
+--- Finish 用コンテキスト（destroySession より前に呼ぶこと）
+--- @param session table
+--- @param reason string
+--- @return table
+local function collectFinishContext(session, reason)
+    local p1_src = session.p1_src
+    local p2_src = session.p2_src
+    local p1_score = TcgBattleRule.CalcFinalScore(session.board, p1_src, #(session.hands[p1_src] or {}))
+    local p2_score = TcgBattleRule.CalcFinalScore(session.board, p2_src, #(session.hands[p2_src] or {}))
+
+    local outcome_for_p1, outcome_for_p2
+    if p1_score > p2_score then
+        outcome_for_p1, outcome_for_p2 = 'win', 'lose'
+    elseif p2_score > p1_score then
+        outcome_for_p1, outcome_for_p2 = 'lose', 'win'
+    else
+        outcome_for_p1, outcome_for_p2 = 'draw', 'draw'
+    end
+
+    local function uidOf(src)
+        if isVirtualSrc(src) then
+            return nil
+        end
+        return GetPlayerUid(src)
+    end
+
+    return {
+        session_id = session.session_id,
+        reason = reason,
+        is_real_pvp = session.is_solo ~= true,
+        is_solo = session.is_solo == true,
+        p1 = { src = p1_src, citizenid = uidOf(p1_src), score = p1_score },
+        p2 = { src = p2_src, citizenid = uidOf(p2_src), score = p2_score },
+        outcome_for_p1 = outcome_for_p1,
+        outcome_for_p2 = outcome_for_p2,
+        finished_at = os.time(),
+    }
+end
+
 --- @param session_id string
 local function destroySession(session_id)
     local s = PvpBattles[session_id]
@@ -338,18 +377,32 @@ function BattlePvp.Finish(session_id, reason)
     local pay1 = buildNormalEndedPayload(session, p1, reason)
     local pay2 = buildNormalEndedPayload(session, p2, reason)
     local was_solo = session.is_solo == true
-    destroySession(session_id)
-    if not was_solo and BattleLobbyClearPeerPairSilent then
-        BattleLobbyClearPeerPairSilent(p1, p2)
-    end
-    if TcgBattleWireLogEnabled() then
-        print(('[jp-tcgbook][wire] BattlePvp.Finish session=%s reason=%s'):format(session_id, reason))
-    end
+
+    local ctx = collectFinishContext(session, reason)
+
     if GetPlayerName(p1) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
     end
     if not isVirtualSrc(p2) and GetPlayerName(p2) ~= nil then
         TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
+    end
+
+    if BattleStats and BattleStats.RecordFinish then
+        BattleStats.RecordFinish(ctx)
+    end
+    if BattleRewards and BattleRewards.GrantOnFinish then
+        BattleRewards.GrantOnFinish(ctx)
+    end
+
+    destroySession(session_id)
+    if not was_solo and BattleLobbyClearPeerPairSilent then
+        BattleLobbyClearPeerPairSilent(p1, p2)
+    end
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire] BattlePvp.Finish session=%s reason=%s real_pvp=%s'):format(
+            session_id,
+            reason,
+            tostring(ctx.is_real_pvp)))
     end
 end
 
