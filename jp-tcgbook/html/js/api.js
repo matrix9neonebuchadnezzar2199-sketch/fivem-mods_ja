@@ -78,5 +78,8 @@
       const p = payload && typeof payload === 'object' ? payload : {};
       N.send('battlePvpRequestState', { session_id: p.session_id });
     },
+    battlePvpTestInvalidBatch() {
+      N.send('battlePvpTestInvalidBatch', {});
+    },
   };
 })(window);

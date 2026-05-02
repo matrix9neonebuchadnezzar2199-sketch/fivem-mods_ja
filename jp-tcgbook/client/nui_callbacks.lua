@@ -162,6 +162,14 @@ RegisterNUICallback('battlePvpRequestState', function(data, cb)
     cb({ ok = true })
 end)
 
+RegisterNUICallback('battlePvpTestInvalidBatch', function(_, cb)
+    if TcgBattleWireLogEnabled() then
+        print('[jp-tcgbook][wire] NUI->server battlePvpTestInvalidBatch')
+    end
+    TriggerServerEvent('jp-tcgbook:server:battlePvpTestInvalidBatch')
+    cb({ ok = true })
+end)
+
 --- /bookadmin（別 HTML）
 
 RegisterNUICallback('adminBootstrap', function(_, cb)

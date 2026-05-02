@@ -905,6 +905,163 @@ local function pvpTestInvalidDeny(source, msg)
     end
 end
 
+--- 不正着手検証用 payload（tcg_pvp_test_invalid / NUI バッチ共通）
+--- @param session table|nil 対象プレイヤーのセッション（reason が session 以外では必須）
+--- @param target number 検証対象の server id（not_turn 判定に使用）
+--- @param reason_code string
+--- @return table|nil payload
+--- @return string|nil skip_reason
+local function pvpTestInvalidBuildPayload(session, target, reason_code)
+    if reason_code == 'turn_no' then
+        if not session then
+            return nil, 'no_session'
+        end
+        return {
+            session_id = session.session_id,
+            turn_no = (session.turn_no or 1) - 5,
+            cell_index = 1,
+            hand_index = 0,
+        }
+    elseif reason_code == 'not_turn' then
+        if not session then
+            return nil, 'no_session'
+        end
+        if session.turn == target then
+            return nil, 'not_opponent_turn_yet'
+        end
+        return {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = 1,
+            hand_index = 0,
+        }
+    elseif reason_code == 'cell_occ' then
+        if not session then
+            return nil, 'no_session'
+        end
+        local occupied = nil
+        for i = 1, 9 do
+            if session.board[i] ~= nil then
+                occupied = i
+                break
+            end
+        end
+        if not occupied then
+            return nil, 'cell_occ_needs_occupied'
+        end
+        return {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = occupied,
+            hand_index = 0,
+        }
+    elseif reason_code == 'cell_inv' then
+        if not session then
+            return nil, 'no_session'
+        end
+        return {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = 0,
+            hand_index = 0,
+        }
+    elseif reason_code == 'hand_inv' then
+        if not session then
+            return nil, 'no_session'
+        end
+        local emptyCell = nil
+        for i = 1, 9 do
+            if session.board[i] == nil then
+                emptyCell = i
+                break
+            end
+        end
+        if not emptyCell then
+            return nil, 'hand_inv_needs_empty_cell'
+        end
+        return {
+            session_id = session.session_id,
+            turn_no = session.turn_no,
+            cell_index = emptyCell,
+            hand_index = 99,
+        }
+    elseif reason_code == 'session' then
+        return {
+            session_id = 'pvp_solo_invalid_test',
+            turn_no = 1,
+            cell_index = 1,
+            hand_index = 0,
+        }
+    end
+    return nil, 'unknown_kind'
+end
+
+--- @param target number
+--- @param reason_code string
+--- @param payload table
+local function pvpTestInvalidDispatchPlace(target, reason_code, payload)
+    local enc = ''
+    local okEnc, out = pcall(json.encode, payload)
+    if okEnc and type(out) == 'string' then
+        enc = out
+    else
+        enc = tostring(payload)
+    end
+    print(('[tcg-debug][pvp-invalid] target=%d code=%s payload=%s'):format(target, reason_code, enc))
+    print(('[tcg-trace][pvp-inv] #4a calling HandlePlace target=%s payload=%s'):format(tostring(target), enc))
+    BattlePvp.HandlePlace(target, payload)
+    print('[tcg-trace][pvp-inv] #4b HandlePlace returned')
+end
+
+--- BOOK 表示中でも実行できる不正検証バッチ（ACE 不要・セッション内かつ DebugCommands のみ）
+--- @param src number
+--- @return boolean
+local function pvpTestInvalidNuiBatchAllowed(src)
+    if Config.DebugCommands ~= true then
+        return false
+    end
+    if type(src) ~= 'number' or src < 1 then
+        return false
+    end
+    if GetPlayerName(src) == nil then
+        return false
+    end
+    return BattlePvp.GetSessionBySrc(src) ~= nil
+end
+
+RegisterNetEvent('jp-tcgbook:server:battlePvpTestInvalidBatch', function()
+    local src = source
+    print(('[tcg-trace][pvp-inv] batch START src=%s'):format(tostring(src)))
+    if not pvpTestInvalidNuiBatchAllowed(src) then
+        print('[tcg-trace][pvp-inv] batch DENY (Config.DebugCommands と PvP セッション内が必要)')
+        return
+    end
+    --- not_turn はソロ時に実機で踏みにくいためバッチ対象外（HandlePlace の分岐はコードレビューで確認）
+    local order = { 'turn_no', 'cell_inv', 'hand_inv', 'cell_occ', 'session' }
+    for _, kind in ipairs(order) do
+        local session = BattlePvp.GetSessionBySrc(src)
+        if kind ~= 'session' and not session then
+            print(('[tcg-trace][pvp-inv] batch abort mid-run lost session at kind=%s'):format(kind))
+            break
+        end
+        local payload, skip = pvpTestInvalidBuildPayload(session, src, kind)
+        if not payload then
+            print(('[tcg-trace][pvp-inv] batch skip kind=%s reason=%s'):format(kind, tostring(skip)))
+        else
+            local enc = ''
+            local okEnc, out = pcall(json.encode, payload)
+            if okEnc and type(out) == 'string' then
+                enc = out
+            else
+                enc = tostring(payload)
+            end
+            print(('[tcg-trace][pvp-inv] batch step kind=%s payload=%s'):format(kind, enc))
+            pvpTestInvalidDispatchPlace(src, kind, payload)
+        end
+    end
+    print(('[tcg-trace][pvp-inv] batch END src=%s'):format(tostring(src)))
+end)
+
 RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
     local argsJson = '{}'
     do
@@ -965,97 +1122,29 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
         return
     end
 
-    local payload
-    if reason_code == 'turn_no' then
-        payload = {
-            session_id = session.session_id,
-            turn_no = (session.turn_no or 1) - 5,
-            cell_index = 1,
-            hand_index = 0,
-        }
-    elseif reason_code == 'not_turn' then
-        if session.turn == target then
+    local payload, skip = pvpTestInvalidBuildPayload(session, target, reason_code)
+    if not payload then
+        if skip == 'not_opponent_turn_yet' then
             print('[tcg-trace][pvp-inv] #3x abort not_turn (wait for virtual opponent turn)')
             print('[tcg-debug] 現在 target のターンです。仮想ターン中に再実行してください。')
-            return
-        end
-        payload = {
-            session_id = session.session_id,
-            turn_no = session.turn_no,
-            cell_index = 1,
-            hand_index = 0,
-        }
-    elseif reason_code == 'cell_occ' then
-        local occupied = nil
-        for i = 1, 9 do
-            if session.board[i] ~= nil then
-                occupied = i
-                break
-            end
-        end
-        if not occupied then
+        elseif skip == 'cell_occ_needs_occupied' then
             print('[tcg-trace][pvp-inv] #3x abort cell_occ needs occupied cell')
             print('[tcg-debug] 盤面が空のため cell_occ は再現不可。1 手以上進めてから再実行してください。')
-            return
-        end
-        payload = {
-            session_id = session.session_id,
-            turn_no = session.turn_no,
-            cell_index = occupied,
-            hand_index = 0,
-        }
-    elseif reason_code == 'cell_inv' then
-        payload = {
-            session_id = session.session_id,
-            turn_no = session.turn_no,
-            cell_index = 0,
-            hand_index = 0,
-        }
-    elseif reason_code == 'hand_inv' then
-        local emptyCell = nil
-        for i = 1, 9 do
-            if session.board[i] == nil then
-                emptyCell = i
-                break
-            end
-        end
-        if not emptyCell then
+        elseif skip == 'hand_inv_needs_empty_cell' then
             print('[tcg-trace][pvp-inv] #3x abort hand_inv needs empty board cell')
             print('[tcg-debug] 空マスがないため hand_inv は別状態で試してください。')
-            return
+        elseif skip == 'unknown_kind' then
+            print(('[tcg-trace][pvp-inv] #3x abort unknown kind=%s'):format(tostring(reason_code)))
+            print(('[tcg-debug] 未知の reason_code: %s'):format(tostring(reason_code)))
+        elseif skip == 'no_session' then
+            print('[tcg-trace][pvp-inv] #3x abort no_session (internal)')
+        else
+            print(('[tcg-trace][pvp-inv] #3x abort build skip=%s'):format(tostring(skip)))
         end
-        payload = {
-            session_id = session.session_id,
-            turn_no = session.turn_no,
-            cell_index = emptyCell,
-            hand_index = 99,
-        }
-    elseif reason_code == 'session' then
-        payload = {
-            session_id = 'pvp_solo_invalid_test',
-            turn_no = 1,
-            cell_index = 1,
-            hand_index = 0,
-        }
-    else
-        print(('[tcg-trace][pvp-inv] #3x abort unknown kind=%s'):format(tostring(reason_code)))
-        print(('[tcg-debug] 未知の reason_code: %s'):format(tostring(reason_code)))
         return
     end
 
-    local enc = ''
-    local okEnc, out = pcall(json.encode, payload)
-    if okEnc and type(out) == 'string' then
-        enc = out
-    else
-        enc = tostring(payload)
-    end
-    print(('[tcg-debug][pvp-invalid] target=%d code=%s payload=%s'):format(target, reason_code, enc))
-    print(('[tcg-trace][pvp-inv] #4a calling HandlePlace target=%s payload=%s'):format(tostring(target), enc))
-
-    BattlePvp.HandlePlace(target, payload)
-
-    print('[tcg-trace][pvp-inv] #4b HandlePlace returned')
+    pvpTestInvalidDispatchPlace(target, reason_code, payload)
 end, false)
 
 print('[tcg-trace][boot] RegisterCommand tcg_pvp_test_invalid OK (サーバー側・ゲーム内 T チャットまたは txAdmin のコンソールから実行。F8 クライアントコンソールでは動きません)')

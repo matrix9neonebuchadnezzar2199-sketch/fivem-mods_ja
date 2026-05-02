@@ -625,6 +625,19 @@
   border-bottom: 1px solid rgba(212, 175, 55, 0.38);
 }
 
+.battle-arena-actions {
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--book-fs-mul));
+  flex-shrink: 0;
+}
+
+#battleArenaRoot button.battle-arena-pvp-invalid-batch {
+  font-size: calc(10px * var(--book-fs-mul));
+  padding: 4px 8px;
+  opacity: 0.9;
+}
+
 .battle-arena-brand {
   display: flex;
   align-items: baseline;

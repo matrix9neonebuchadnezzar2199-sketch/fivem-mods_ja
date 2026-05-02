@@ -1222,6 +1222,10 @@
       }
       mockPvpPushState();
     },
+
+    battlePvpTestInvalidBatch() {
+      console.log('[jp-tcgbook][mock] battlePvpTestInvalidBatch（サーバー相当の5連検証は未実装・noop）');
+    },
   };
 
   global.mockDispatchServerEvent = function (eventName, data) {
@@ -1233,6 +1237,7 @@
       battlePvpPlace: true,
       battlePvpLeave: true,
       battlePvpRequestState: true,
+      battlePvpTestInvalidBatch: true,
     };
     if (dbgEvents[eventName]) {
       setTimeout(() => {

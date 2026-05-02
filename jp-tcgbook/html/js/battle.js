@@ -432,6 +432,10 @@
         ? global.GetParentResourceName()
         : 'jp-tcgbook';
     const duelBackCssUrl = `https://cfx-nui-${arenaRes}/html/assets/duel_back.png`;
+    const pvpInvalidBatchBtn =
+      allowDebugBattleUi() && mode === 'pvp' && playing
+        ? `<button type="button" class="btn battle-arena-pvp-invalid-batch" title="サーバーで不正着手5ケース連続検証（ログ）。盤に1枚あると cell_occ も実行されます">PvP不正5</button>`
+        : '';
 
     return (
       `<div class="battle-arena-shell battle-dbg-theme" style="--battle-duel-back: url(${duelBackCssUrl})">` +
@@ -444,7 +448,10 @@
       `<span class="battle-arena-title">DUEL</span>` +
       `<span class="battle-arena-sub">${escapeHtml(sub)}</span>` +
       `</div>` +
+      `<div class="battle-arena-actions">` +
+      pvpInvalidBatchBtn +
       `<button type="button" class="btn danger battle-arena-quit">${escapeHtml(quitLabel)}</button>` +
+      `</div>` +
       `</header>` +
       `<div class="battle-arena-main-wrap">` +
       `<div class="battle-arena-body">` +
@@ -530,6 +537,10 @@
         }
         dbgSelectedHand = null;
       });
+    });
+    root.querySelector('.battle-arena-pvp-invalid-batch')?.addEventListener('click', () => {
+      if (mode !== 'pvp') return;
+      api.battlePvpTestInvalidBatch();
     });
     root.querySelector('.battle-arena-quit')?.addEventListener('click', () => {
       void (async () => {
