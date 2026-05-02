@@ -225,3 +225,833 @@
 #tab-battle .battle-goto {
   margin-top: 4px;
 }
+
+/* デバッグ用ロビー・CPU対戦盤 */
+#tab-battle .battle-readiness-compact .battle-readiness {
+  margin-bottom: 8px;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: calc(12px * var(--book-fs-mul));
+  color: #e8e1c4;
+  margin-bottom: 12px;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-lobby-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #6b5530;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-lookup-result {
+  font-size: calc(12px * var(--book-fs-mul));
+  color: #9fdf9f;
+  margin: 10px 0;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-ended {
+  padding: 12px;
+  border: 1px solid #8b6f3f;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  margin-bottom: 12px;
+}
+
+/* アリーナは #tab-battle 外のため、:is(..., .battle-dbg-theme) だと #tab-battle 側の ID 特異性で max-width:720px が勝ち、盤が伸びない */
+.battle-dbg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+#tab-battle .battle-dbg-grid {
+  gap: calc(8px * var(--book-fs-mul));
+  max-width: min(720px, 90vw);
+  margin: 16px 0;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px solid #6b5530;
+  background: rgba(0, 0, 0, 0.35);
+  color: #e8e1c4;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: calc(11px * var(--book-fs-mul));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 4px;
+  gap: 2px;
+  overflow: hidden;
+  text-align: center;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-art {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-height: 58%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-art .card-art-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-art .card-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-art .card-art-fallback {
+  font-size: calc(22px * var(--book-fs-mul));
+  line-height: 1;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-placeholder {
+  margin: auto;
+  font-size: calc(22px * var(--book-fs-mul));
+  color: #8b7d4a;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell.empty {
+  color: #8b7d4a;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell.owner-human {
+  border-color: #4a7a9a;
+  box-shadow: inset 0 0 0 2px rgba(74, 122, 154, 0.45);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell.owner-cpu {
+  border-color: #9a4a4a;
+  box-shadow: inset 0 0 0 2px rgba(154, 74, 74, 0.45);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-name {
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.15;
+  word-break: break-word;
+  font-size: calc(9px * var(--book-fs-mul));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+/* コレクション／デッキと同型: 4 辺に mini-stat、中央にイラスト */
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1208, #3a2818);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .mini-stat {
+  position: absolute;
+  font-weight: 600;
+  color: #d4af37;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.85);
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .mini-stat.max {
+  color: #ff4d4d;
+  font-weight: 900;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 6px rgba(255, 77, 77, 0.65);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .mini-stat.s-top {
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .mini-stat.s-bottom {
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .mini-stat.s-left {
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .mini-stat.s-right {
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .card-art-media {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .card-art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  z-index: 1;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-slot-art .card-art-fallback {
+  position: relative;
+  z-index: 0;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-slot {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-height: 72%;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-slot .mini-stat {
+  font-size: calc(13px * var(--book-fs-mul));
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-cell-slot .mini-stat.max {
+  font-size: calc(15px * var(--book-fs-mul));
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-label {
+  font-size: calc(11px * var(--book-fs-mul));
+  color: #b0a378;
+  margin: 8px 0 6px;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-card {
+  min-width: calc(88px * var(--book-fs-mul));
+  max-width: calc(120px * var(--book-fs-mul));
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 2px solid #6b5530;
+  background: rgba(0, 0, 0, 0.4);
+  color: #e8e1c4;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  align-items: stretch;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-art {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: calc(72px * var(--book-fs-mul));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-art .card-art-media {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-art .card-art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-art .card-art-fallback {
+  font-size: calc(26px * var(--book-fs-mul));
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-card.selected {
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-card .hn {
+  font-size: calc(10px * var(--book-fs-mul));
+  font-weight: bold;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-hand-card .hs {
+  font-size: calc(9px * var(--book-fs-mul));
+  color: #d4af37;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-log {
+  font-size: calc(11px * var(--book-fs-mul));
+  color: #b0a378;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 12px 0;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+}
+
+:is(#tab-battle, .battle-dbg-theme) .battle-dbg-log ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+}
+
+/* --- 全画面対戦アリーナ（#tab-battle 外・ヘッダー／タブも覆う） --- */
+.battle-arena-root {
+  position: absolute;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-arena-root[hidden] {
+  display: none !important;
+}
+
+.battle-arena-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.battle-arena-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 38%, rgba(95, 58, 32, 0.92), transparent 58%),
+    linear-gradient(185deg, #0f0805 0%, #1a100a 40%, #080504 100%);
+  pointer-events: none;
+}
+
+.battle-arena-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.82);
+  pointer-events: none;
+}
+
+.battle-arena-frame {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(10px * var(--book-fs-mul)) calc(16px * var(--book-fs-mul));
+}
+
+.battle-arena-top {
+  position: relative;
+  z-index: 420;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: calc(10px * var(--book-fs-mul));
+  padding-bottom: calc(8px * var(--book-fs-mul));
+  border-bottom: 1px solid rgba(212, 175, 55, 0.38);
+}
+
+.battle-arena-brand {
+  display: flex;
+  align-items: baseline;
+  gap: calc(12px * var(--book-fs-mul));
+  flex-wrap: wrap;
+}
+
+.battle-arena-badge {
+  font-size: calc(10px * var(--book-fs-mul));
+  letter-spacing: 3px;
+  color: #1a120a;
+  background: linear-gradient(180deg, #f0dc78, #c9a232);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.battle-arena-title {
+  font-size: clamp(calc(20px * var(--book-fs-mul)), 3.5vw, calc(38px * var(--book-fs-mul)));
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  color: #f5ebe0;
+  text-shadow:
+    0 0 28px rgba(212, 175, 55, 0.5),
+    0 4px 14px rgba(0, 0, 0, 0.85);
+}
+
+.battle-arena-sub {
+  font-size: calc(11px * var(--book-fs-mul));
+  color: #9a8a6a;
+  letter-spacing: 2px;
+}
+
+.battle-arena-quit {
+  flex-shrink: 0;
+}
+
+.battle-arena-main-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.battle-arena-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: calc(10px * var(--book-fs-mul));
+  min-height: 0;
+}
+
+/* 勝敗：メイン領域（盤＋手札）の中央に全面重ね。対戦終了で state 破棄 → innerHTML 差し替えで消える */
+.battle-arena-result-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(8px * var(--book-fs-mul));
+  background: rgba(5, 3, 1, 0.78);
+  backdrop-filter: blur(3px);
+  animation: battle-arena-result-in 0.38s ease-out;
+}
+
+@keyframes battle-arena-result-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.battle-arena-result-panel {
+  text-align: center;
+  max-width: min(96%, 1380px);
+  padding: calc(14px * var(--book-fs-mul)) calc(18px * var(--book-fs-mul));
+  border-radius: 8px;
+  border: 2px solid rgba(212, 175, 55, 0.88);
+  background: linear-gradient(165deg, rgba(42, 26, 14, 0.98), rgba(14, 8, 4, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 14px 45px rgba(0, 0, 0, 0.88),
+    0 0 36px rgba(212, 175, 55, 0.28);
+}
+
+.battle-arena-result-title {
+  margin: 0 0 calc(7px * var(--book-fs-mul));
+  font-size: clamp(calc(17px * var(--book-fs-mul)), 3.25vw, calc(38px * var(--book-fs-mul)));
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #fff8ec;
+  text-shadow:
+    0 2px 14px rgba(0, 0, 0, 0.95),
+    0 0 24px rgba(212, 175, 55, 0.42);
+}
+
+.battle-arena-result-score {
+  margin: 0;
+  font-size: clamp(calc(11px * var(--book-fs-mul)), 1.3vw, calc(15px * var(--book-fs-mul)));
+  color: #e4d8b8;
+  line-height: 1.5;
+}
+
+.battle-arena-result-foot {
+  margin: calc(11px * var(--book-fs-mul)) 0 0;
+  font-size: calc(10px * var(--book-fs-mul));
+  color: #9a8a6e;
+}
+
+.battle-arena-upper {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: calc(14px * var(--book-fs-mul));
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* ログ | 盤 | 手札 の 3 カラム（幅は近似 18% / 60% / 22%） */
+.battle-arena-three-col {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: calc(12px * var(--book-fs-mul));
+  min-height: 0;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .battle-arena-upper {
+    flex-direction: column;
+  }
+
+  .battle-arena-three-col {
+    flex-direction: column;
+  }
+
+  .battle-arena-column-log .battle-arena-log-inner {
+    max-height: min(96vh, 1080px);
+    height: auto;
+    flex: 0 1 auto;
+    min-height: min(360px, 40vh);
+  }
+
+  .battle-arena-column-hand {
+    flex: 0 0 auto;
+    max-width: none;
+    width: 100%;
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid rgba(212, 175, 55, 0.22);
+    padding-top: calc(10px * var(--book-fs-mul));
+  }
+
+  .battle-arena-column-log {
+    flex: 0 0 auto;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+.battle-arena-column-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.battle-arena-column-center {
+  flex: 1 1 60%;
+  min-width: 0;
+}
+
+.battle-arena-grid-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-arena-column-hand {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 0 0 22%;
+  max-width: 22%;
+  min-width: 148px;
+  padding-left: calc(10px * var(--book-fs-mul));
+  border-left: 1px solid rgba(212, 175, 55, 0.22);
+}
+
+.battle-arena-hand-head-block {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(4px * var(--book-fs-mul));
+  margin-bottom: calc(6px * var(--book-fs-mul));
+}
+
+.battle-arena-column-hand .battle-dbg-hand-label {
+  margin: 0;
+}
+
+/* 「先攻・・・」行（大きめ表示のうえ 50% スケール） */
+.battle-arena-root .battle-arena-status {
+  margin-bottom: calc(12px * var(--book-fs-mul));
+  text-align: center;
+  font-size: clamp(calc(14px * var(--book-fs-mul)), 1.4vw, calc(21px * var(--book-fs-mul)));
+  line-height: 1.35;
+  font-weight: 600;
+  color: #efe6d4;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+}
+
+.battle-arena-root .battle-arena-status strong {
+  color: #f5ecd8;
+}
+
+/* 盤 3×3（中央ペーンいっぱい・セルは従来比おおよそ 1.5 倍相当の表示域） */
+.battle-arena-root .battle-dbg-grid.battle-arena-grid {
+  gap: calc(18px * var(--book-fs-mul));
+  width: 100%;
+  max-width: min(1050px, 100%);
+  margin: 8px auto;
+  box-sizing: border-box;
+}
+
+.battle-arena-root .battle-dbg-grid.battle-arena-grid .battle-dbg-cell.empty:not(:disabled):hover {
+  border-color: #d4af37;
+  box-shadow:
+    0 0 16px rgba(212, 175, 55, 0.38),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.25);
+  background: rgba(212, 175, 55, 0.07);
+}
+
+.battle-arena-root .battle-arena-cell-slot {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-height: 78%;
+}
+
+.battle-arena-root .battle-arena-cell-slot .mini-stat {
+  font-size: calc(17px * var(--book-fs-mul));
+}
+
+.battle-arena-root .battle-arena-cell-slot .mini-stat.max {
+  font-size: calc(20px * var(--book-fs-mul));
+}
+
+.battle-arena-root .battle-dbg-cell-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.battle-arena-root .battle-dbg-cell-meta .battle-dbg-cell-name {
+  font-size: calc(10px * var(--book-fs-mul));
+}
+
+.battle-arena-root .battle-dbg-cell-rank {
+  font-size: calc(9px * var(--book-fs-mul));
+  color: #d4af37;
+  font-weight: 600;
+}
+
+.battle-arena-footnote {
+  margin-top: 12px;
+  font-size: calc(10px * var(--book-fs-mul));
+  color: #6b5c48;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* ログ：左ペーン（約 18%） */
+.battle-arena-column-log {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+  flex: 0 0 18%;
+  max-width: 18%;
+  min-width: 130px;
+}
+
+.battle-arena-column-log .battle-arena-log-inner {
+  margin: 0;
+  flex: 1 1 auto;
+  min-height: 480px;
+  max-height: none;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* 共通 .battle-dbg-log の max-height:200px（ID 特異性）を超えてアリーナ左ペーンに合わせる */
+#battleArenaRoot .battle-dbg-log.battle-arena-log-inner {
+  max-height: min(720px, calc(100vh - 140px));
+  min-height: min(420px, 52vh);
+}
+
+@media (max-width: 900px) {
+  #battleArenaRoot .battle-dbg-log.battle-arena-log-inner {
+    max-height: min(90vh, 1080px);
+    min-height: min(360px, 40vh);
+  }
+}
+
+.battle-arena-hand-head {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.battle-arena-hand-hint {
+  font-size: calc(10px * var(--book-fs-mul));
+  color: #8b7d60;
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* 手札：右ペーンに最大 5 枚縦並び（カード幅は盤セルに近いスケール） */
+.battle-arena-hand-col {
+  --arena-hand-gap: calc(10px * var(--book-fs-mul));
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--arena-hand-gap);
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: calc(4px * var(--book-fs-mul)) 0 calc(6px * var(--book-fs-mul));
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.battle-arena-hand-col .battle-dbg-hand-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: min(220px, 100%);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.battle-arena-hand-col .battle-dbg-hand-card .hn {
+  text-align: center;
+  margin-top: 4px;
+}
+
+.battle-arena-hand-col .battle-dbg-hand-card .hs {
+  text-align: center;
+  display: block;
+}
+
+.battle-arena-hand-col .battle-dbg-hand-card.selected {
+  border-color: #f0dc78;
+  box-shadow:
+    0 0 14px rgba(212, 175, 55, 0.55),
+    inset 0 0 0 1px rgba(240, 220, 120, 0.35);
+}
+
+.battle-arena-hand-col .battle-dbg-hand-card:disabled {
+  opacity: 0.48;
+}
+
+.battle-arena-root .battle-dbg-hand-pick-star {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: calc(14px * var(--book-fs-mul));
+  color: #f0dc78;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.85);
+  z-index: 4;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.battle-arena-hand-col .battle-dbg-hand-slot {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  max-height: none;
+}
+
+.battle-arena-hand-col .battle-dbg-hand-slot .mini-stat {
+  font-size: calc(17px * var(--book-fs-mul));
+}
+
+.battle-arena-hand-col .battle-dbg-hand-slot .mini-stat.max {
+  font-size: calc(20px * var(--book-fs-mul));
+}
+
+.battle-during-cpu {
+  opacity: 0.9;
+}
+
+/* BOOK 共通の確認ダイアログ（FiveM で native confirm が使えないため） */
+.tcg-confirm-overlay {
+  z-index: 5000;
+}
+
+.tcg-confirm-msg {
+  white-space: pre-line;
+  line-height: 1.55;
+}
+
+.tcg-confirm-actions {
+  display: flex;
+  gap: calc(12px * var(--book-fs-mul));
+  justify-content: flex-end;
+  margin-top: calc(16px * var(--book-fs-mul));
+  flex-wrap: wrap;
+}
+
+.tcg-confirm-title {
+  letter-spacing: 4px;
+  font-size: calc(14px * var(--book-fs-mul));
+}

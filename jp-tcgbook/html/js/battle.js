@@ -280,7 +280,9 @@
     );
   }
 
-  function buildDbgGridHtml(st, humanTurn, gridExtraClass) {
+  /** @param {{ arenaLarge?: boolean }} [opts] */
+  function buildDbgGridHtml(st, humanTurn, gridExtraClass, opts) {
+    const arenaLarge = !!(opts && opts.arenaLarge);
     const gcls = gridExtraClass ? `battle-dbg-grid ${gridExtraClass}` : 'battle-dbg-grid';
     let grid = `<div class="${gcls}" role="grid" aria-label="3x3盤面">`;
     for (let i = 1; i <= 9; i++) {
@@ -293,11 +295,23 @@
         const c = cell.card || {};
         const nm = escapeHtml(c.name || c.card_id || '');
         const fullnm = escAttr(c.name || c.card_id || '');
-        inner =
-          `<div class="battle-dbg-cell-inner">` +
-          `${dbgSlotArtHtml(c, 'battle-dbg-cell-slot')}` +
-          `<span class="battle-dbg-cell-name" title="${fullnm}">${nm}</span>` +
-          `</div>`;
+        const rk = c.rank != null && String(c.rank) !== '' ? escapeHtml(String(c.rank)) : '';
+        const slotCls = arenaLarge ? 'battle-dbg-cell-slot battle-arena-cell-slot' : 'battle-dbg-cell-slot';
+        if (arenaLarge) {
+          inner =
+            `<div class="battle-dbg-cell-inner">` +
+            `${dbgSlotArtHtml(c, slotCls)}` +
+            `<div class="battle-dbg-cell-meta">` +
+            `<span class="battle-dbg-cell-name" title="${fullnm}">${nm}</span>` +
+            (rk ? `<span class="battle-dbg-cell-rank">${rk}</span>` : '') +
+            `</div></div>`;
+        } else {
+          inner =
+            `<div class="battle-dbg-cell-inner">` +
+            `${dbgSlotArtHtml(c, slotCls)}` +
+            `<span class="battle-dbg-cell-name" title="${fullnm}">${nm}</span>` +
+            `</div>`;
+        }
       } else {
         cls += ' empty';
         inner = '<span class="battle-dbg-cell-placeholder">＋</span>';
@@ -323,10 +337,18 @@
       const c2 = c || {};
       const tit = escAttr(c2.name || c2.card_id || '');
       const dis = !hi ? ' disabled' : '';
+      const star =
+        dbgSelectedHand === i ? `<span class="battle-dbg-hand-pick-star" aria-hidden="true">★</span>` : '';
+      const rk =
+        c2.rank != null && String(c2.rank) !== ''
+          ? `<span class="hs">${escapeHtml(String(c2.rank))}</span>`
+          : '';
       handHtml +=
         `<button type="button" class="battle-dbg-hand-card${sel}${dis}" data-dbg-hand="${i}" title="${tit}" ${!hi ? 'disabled' : ''}>` +
+        star +
         `${dbgSlotArtHtml(c2, 'battle-dbg-hand-slot')}` +
         `<span class="hn">${escapeHtml(c2.name || c2.card_id || '')}</span>` +
+        rk +
         `</button>`;
     });
     handHtml += '</div>';
@@ -398,8 +420,8 @@
     const resultOverlay = buildDbgResultOverlayHtml(st, mode);
     const badge = mode === 'pvp' ? 'PVP' : 'DEBUG';
     const sub = mode === 'pvp' ? 'vs 相手 · PHASE A' : 'vs CPU · PHASE A';
-    const grid = buildDbgGridHtml(st, humanTurn, 'battle-arena-grid');
-    const handRow = buildDbgHandHtml(st, 'battle-arena-hand-row', humanTurn);
+    const grid = buildDbgGridHtml(st, humanTurn, 'battle-arena-grid', { arenaLarge: true });
+    const handRow = buildDbgHandHtml(st, 'battle-arena-hand-col', humanTurn);
     const quitLabel = mode === 'pvp' ? '投了' : '対戦終了';
     const logHtml = buildDbgLogHtml(st, 'battle-arena-log-inner');
 
@@ -418,20 +440,20 @@
       `</header>` +
       `<div class="battle-arena-main-wrap">` +
       `<div class="battle-arena-body">` +
-      `<div class="battle-arena-upper">` +
+      `<div class="battle-arena-upper battle-arena-three-col">` +
       `<aside class="battle-arena-column battle-arena-column-log">${logHtml}</aside>` +
-      `<div class="battle-arena-column battle-arena-column-board">` +
+      `<div class="battle-arena-column battle-arena-column-board battle-arena-column-center">` +
       `<div class="battle-arena-status battle-hint">${statusLine}</div>` +
-      `${grid}` +
+      `<div class="battle-arena-grid-wrap">${grid}</div>` +
       `<p class="battle-arena-footnote">隣接比較・配置直後のみ奪取・連鎖なし</p>` +
       `</div>` +
-      `</div>` +
-      `<div class="battle-arena-hand-bar">` +
-      `<div class="battle-arena-hand-bar-head">` +
+      `<aside class="battle-arena-column battle-arena-column-hand">` +
+      `<div class="battle-arena-hand-head-block">` +
       `<span class="battle-dbg-hand-label battle-arena-hand-head">手札</span>` +
-      `<span class="battle-arena-hand-hint">カードを選び、空マスをタップ（最大5枚・横並び）</span>` +
+      `<span class="battle-arena-hand-hint">カードを選び、空マスをタップ（最大5枚・縦並び）</span>` +
       `</div>` +
       `${handRow}` +
+      `</aside>` +
       `</div>` +
       `</div>` +
       `${resultOverlay}` +
