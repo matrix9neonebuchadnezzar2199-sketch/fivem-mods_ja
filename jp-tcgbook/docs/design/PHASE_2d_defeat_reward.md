@@ -19,9 +19,23 @@
 - セッション開始時の **`initial_hands` スナップショット**（ε3）
 - `collectFinishContext` への **報酬用フィールド**追加（`GrantOnFinish` が `PvpBattles` に再アクセスしない）
 
-### 1.3 スコープ外（本 PHASE ではやらない）
+### 1.3 NUI（終了オーバーレイ）— 実装済み
 
-- NUI トースト・「コピーを獲得しました」演出（別タスク）
+**PvP 対戦アリーナ**の終了パネル（`battle.js` `buildDbgResultOverlayHtml`）に、**敗者かつ `GrantOnFinish` が成功したときのみ**「敗北コピー入手: （カード名）」を表示する。
+
+**サーバー**: `BattlePvp.Finish` は **`GrantOnFinish` 確定後**に `jp-tcgbook:client:battlePvpEnded` を送る。`buildNormalEndedPayload` に以下を載せる（敗者のクライアントにのみ意味がある）。
+
+| フィールド | 型 | 説明 |
+|------------|-----|------|
+| `defeat_copy_received` | boolean | この viewer が敗北コピーを **実際に付与された**場合のみ `true` |
+| `defeat_copy_card_id` | string? | 付与された `card_id`（`received==true` のとき） |
+| `defeat_copy_card_name` | string? | マスタ参照の表示名（なければ `card_id` にフォールバック） |
+
+勝者・引き分け・付与失敗時は `defeat_copy_received === false`（または関連キー省略と同等の扱い）。
+
+### 1.4 スコープ外（本 PHASE ではやらない）
+
+- NUI トースト・軽量ポップアップ（オーバーレイ以外の別演出）
 - ランキング・実績バッジ
 - **C2**（UR/SS をランクダウンして付与）— **運用観測後の調整候補**として config で差し替え可能な余地だけ設計メモに残す
 - `tcg_players` 行不在時の EnsurePlayer 自動挿入（§19 TODO。必要になったら別パッチ）

@@ -748,6 +748,19 @@
   line-height: 1.5;
 }
 
+.battle-arena-result-copy {
+  margin: calc(10px * var(--book-fs-mul)) 0 0;
+  font-size: clamp(calc(12px * var(--book-fs-mul)), 1.45vw, calc(17px * var(--book-fs-mul)));
+  color: #c8e8c4;
+  line-height: 1.45;
+}
+
+.battle-arena-result-copy strong {
+  color: #f2fff0;
+  font-weight: 700;
+  text-shadow: 0 0 18px rgba(120, 200, 140, 0.45);
+}
+
 .battle-arena-result-foot {
   margin: calc(11px * var(--book-fs-mul)) 0 0;
   font-size: calc(10px * var(--book-fs-mul));

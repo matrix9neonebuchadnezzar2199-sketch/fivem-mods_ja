@@ -267,6 +267,15 @@
           ? `${opp} の勝ち`
           : '引き分け';
     const scoreLine = `スコア（盤の色＋手札）: あなた ${st.scores.human} vs ${opp} ${st.scores.cpu}`;
+    const defeatCopy =
+      mode === 'pvp' &&
+      st.defeat_copy_received &&
+      typeof st.defeat_copy_card_name === 'string' &&
+      st.defeat_copy_card_name !== ''
+        ? `<p class="battle-arena-result-copy">敗北コピー入手: <strong>${escapeHtml(
+            st.defeat_copy_card_name,
+          )}</strong></p>`
+        : '';
     const foot =
       mode === 'pvp'
         ? `<p class="battle-arena-result-foot">「対戦タブに戻る」でロビーへ戻ります</p>` +
@@ -277,7 +286,7 @@
       `<div class="battle-arena-result-panel">` +
       `<h2 id="battleArenaResultTitle" class="battle-arena-result-title">${escapeHtml(w)}</h2>` +
       `<p class="battle-arena-result-score">${escapeHtml(scoreLine)}</p>` +
-      foot +
+      defeatCopy +
       `</div>` +
       `</div>`
     );
@@ -402,6 +411,14 @@
     } else {
       pvpPlain = `いまのターン: ${b.is_my_turn ? 'あなた' : '相手'} ・ 相手手札残: ${Number(b.opponent_hand_count) || 0}`;
     }
+    const res = ended && b.result ? b.result : null;
+    const defeatReceived = !!(res && res.defeat_copy_received);
+    const defeatName =
+      defeatReceived && typeof res.defeat_copy_card_name === 'string' && res.defeat_copy_card_name !== ''
+        ? res.defeat_copy_card_name
+        : defeatReceived && typeof res.defeat_copy_card_id === 'string'
+          ? res.defeat_copy_card_id
+          : '';
     return {
       phase: ended ? 'ended' : 'playing',
       turn: playing && b.is_my_turn ? 'human' : 'cpu',
@@ -413,6 +430,8 @@
       winner,
       log: [],
       pvp_status_plain: pvpPlain,
+      defeat_copy_received: defeatReceived,
+      defeat_copy_card_name: defeatName,
     };
   }
 

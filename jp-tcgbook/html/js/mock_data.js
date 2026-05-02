@@ -473,18 +473,25 @@
     } else {
       outcome = 'lose';
     }
+    const baseEnded = {
+      session_id: s.session_id,
+      reason,
+      my_score: myS,
+      opponent_score: opS,
+      outcome,
+      final_board: mockPvpBuildViewerPayload(me).board,
+      my_hand_remaining: (s.hands[me] || []).length,
+      defeat_copy_received: false,
+    };
+    if (reason === 'normal' && outcome === 'lose') {
+      baseEnded.defeat_copy_received = true;
+      baseEnded.defeat_copy_card_id = 'mock_defeat_copy';
+      baseEnded.defeat_copy_card_name = '（モック）敗北コピー';
+    }
     global.postMessage(
       {
         action: 'battlePvpEnded',
-        payload: {
-          session_id: s.session_id,
-          reason,
-          my_score: myS,
-          opponent_score: opS,
-          outcome,
-          final_board: mockPvpBuildViewerPayload(me).board,
-          my_hand_remaining: (s.hands[me] || []).length,
-        },
+        payload: baseEnded,
       },
       '*',
     );

@@ -249,11 +249,58 @@ local function buildStatePayload(session, viewer_src, extra)
     return payload
 end
 
+--- @param ctx table collectFinishContext の戻り
+--- @param viewer_src number
+--- @param grant_ok boolean
+--- @param grant_card_id string|nil
+--- @return boolean received この viewer が敗北コピーを受け取ったか
+--- @return string|nil card_id
+--- @return string|nil display_name マスタ参照のカード名
+local function defeatCopyForViewer(ctx, viewer_src, grant_ok, grant_card_id)
+    if grant_ok ~= true or type(grant_card_id) ~= 'string' or grant_card_id == '' then
+        return false, nil, nil
+    end
+    if not ctx or ctx.reason ~= 'normal' or ctx.outcome_for_p1 == 'draw' then
+        return false, nil, nil
+    end
+    local loser_cid
+    if ctx.outcome_for_p1 == 'lose' then
+        loser_cid = ctx.p1.citizenid
+    elseif ctx.outcome_for_p1 == 'win' then
+        loser_cid = ctx.p2.citizenid
+    else
+        return false, nil, nil
+    end
+    if type(loser_cid) ~= 'string' or loser_cid == '' then
+        return false, nil, nil
+    end
+    local vid = GetPlayerUid(viewer_src)
+    if type(vid) ~= 'string' or vid == '' or vid ~= loser_cid then
+        return false, nil, nil
+    end
+    local dispName = grant_card_id
+    local m = masterRow(grant_card_id)
+    if m and type(m.name) == 'string' and m.name ~= '' then
+        dispName = m.name
+    end
+    return true, grant_card_id, dispName
+end
+
 --- @param session table
 --- @param viewer_src number
 --- @param reason string
+--- @param defeat_copy_received boolean|nil
+--- @param defeat_copy_card_id string|nil
+--- @param defeat_copy_card_name string|nil
 --- @return table
-local function buildNormalEndedPayload(session, viewer_src, reason)
+local function buildNormalEndedPayload(
+    session,
+    viewer_src,
+    reason,
+    defeat_copy_received,
+    defeat_copy_card_id,
+    defeat_copy_card_name
+)
     local p1, p2 = session.p1_src, session.p2_src
     local s1 = TcgBattleRule.CalcFinalScore(session.board, p1, #(session.hands[p1] or {}))
     local s2 = TcgBattleRule.CalcFinalScore(session.board, p2, #(session.hands[p2] or {}))
@@ -267,7 +314,7 @@ local function buildNormalEndedPayload(session, viewer_src, reason)
     else
         outcome = 'draw'
     end
-    return {
+    local pay = {
         session_id = session.session_id,
         reason = reason,
         my_score = my_s,
@@ -275,7 +322,13 @@ local function buildNormalEndedPayload(session, viewer_src, reason)
         outcome = outcome,
         final_board = buildBoardArrayForViewer(session, viewer_src),
         my_hand_remaining = #(session.hands[viewer_src] or {}),
+        defeat_copy_received = defeat_copy_received == true,
     }
+    if defeat_copy_received == true then
+        pay.defeat_copy_card_id = defeat_copy_card_id
+        pay.defeat_copy_card_name = defeat_copy_card_name or defeat_copy_card_id
+    end
+    return pay
 end
 
 --- @param session table
@@ -449,21 +502,12 @@ function BattlePvp.Finish(session_id, reason)
         return
     end
     local p1, p2 = session.p1_src, session.p2_src
-    local pay1 = buildNormalEndedPayload(session, p1, reason)
-    local pay2 = buildNormalEndedPayload(session, p2, reason)
     local was_solo = session.is_solo == true
 
     local ctx = collectFinishContext(session, reason)
 
     if ctx.is_solo == true and ctx.is_real_pvp == true and TcgBattleWireLogEnabled() then
         print('[jp-tcgbook][wire] solo verification: full finish hooks (2P pipeline)')
-    end
-
-    if GetPlayerName(p1) ~= nil then
-        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
-    end
-    if not isVirtualSrc(p2) and GetPlayerName(p2) ~= nil then
-        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
     end
 
     --- PHASE E1: 履歴用レートは RecordFinish の前後でスナップ（p1=A・p2=B）
@@ -506,6 +550,11 @@ function BattlePvp.Finish(session_id, reason)
         grant_ok, grant_card = BattleRewards.GrantOnFinish(ctx)
     end
 
+    local dc1_got, dc1_id, dc1_nm = defeatCopyForViewer(ctx, p1, grant_ok, grant_card)
+    local dc2_got, dc2_id, dc2_nm = defeatCopyForViewer(ctx, p2, grant_ok, grant_card)
+    local pay1 = buildNormalEndedPayload(session, p1, reason, dc1_got, dc1_id, dc1_nm)
+    local pay2 = buildNormalEndedPayload(session, p2, reason, dc2_got, dc2_id, dc2_nm)
+
     if hist_ok then
         local nm_a = GetPlayerName(p1)
         local nm_b = not isVirtualSrc(p2) and GetPlayerName(p2) or ''
@@ -542,6 +591,14 @@ function BattlePvp.Finish(session_id, reason)
         elseif ins.success and TcgBattleWireLogEnabled() then
             print(('[jp-tcgbook][wire][match_history] insert ok session=%s'):format(tostring(ctx.session_id)))
         end
+    end
+
+    --- Grant 確定後に終了通知（敗北コピー入手をペイロードに載せる）
+    if GetPlayerName(p1) ~= nil then
+        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p1, pay1)
+    end
+    if not isVirtualSrc(p2) and GetPlayerName(p2) ~= nil then
+        TriggerClientEvent('jp-tcgbook:client:battlePvpEnded', p2, pay2)
     end
 
     destroySession(session_id)
