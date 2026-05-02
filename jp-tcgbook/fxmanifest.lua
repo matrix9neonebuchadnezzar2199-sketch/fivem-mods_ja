@@ -3,8 +3,9 @@ game 'gta5'
 lua54 'yes'
 
 author 'JP-Mods'
-description 'Standalone TCG BOOK for FiveM: collection, deck builder, CPU duel, peer PvP (server-authoritative), Elo, match history, leaderboard & rank tiers. oxmysql + optional QBCore/ESX display names.'
+description 'jp-tcgbook — TCG card collection, deck building, and PvP system for FiveM (QBox/QBCore/ESX compatible)'
 version '0.6.0'
+repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
 
 dependency 'oxmysql'
 
