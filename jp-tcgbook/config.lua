@@ -33,5 +33,9 @@ Config.SeedCardsFromLua = false
 Config.Debug = true -- 詳細ログなど
 Config.DebugCommands = true -- false のとき /tcg_* は一切実行不可（コンソール含む）。true 時は ACE command.tcg_debug またはコンソール
 
+-- 対戦タブ: NUI↔client↔server の往復ログ（txAdmin server log）。true=常時ON / false=常時OFF / nil=Config.Debug に追随
+-- 本番では false を明示推奨（nil のままだと Config.Debug=true の開発構成では Wire が ON になる）
+Config.BattleWireLog = nil
+
 -- NUI 自動保存のデバウンス（ミリ秒）
 Config.AutoSaveDebounceMs = 500

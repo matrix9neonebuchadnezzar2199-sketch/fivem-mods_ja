@@ -23,6 +23,6 @@
   HandlePlace reject と battlePvpError の出力が一致した。
 
 ## 生ログ（抜粋）
-（検証実施環境のサーバーコンソールから、18:08:28 付近の
-[tcg-trace][pvp-inv]・HandlePlace reject・server->client battlePvpError
-の行をそのまま貼り付け）
+（検証実施環境のサーバーコンソールから、18:08:28 付近の当時の
+トレース・Wire・battlePvpError 行をそのまま貼り付け。※検証後クリーンアップで
+`[tcg-trace]` は削除済み。現行は Wire 有効時のみ `[jp-tcgbook][wire]…` 相当）

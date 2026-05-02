@@ -1,7 +1,5 @@
 --- PHASE 2b 本番 2 人対戦（サーバー権威・PHASE A）
 
-print(('[tcg-trace][boot] battle_pvp.lua chunk loaded DebugCommands=%s'):format(tostring(Config and Config.DebugCommands)))
-
 BattlePvp = BattlePvp or {}
 
 --- @type table<string, table>
@@ -31,7 +29,7 @@ end
 --- @param src number
 --- @param reason string
 local function pushPvpError(src, reason)
-    if TcgBattleWireLogEnabled() or Config.DebugCommands == true then
+    if TcgBattleWireLogEnabled() then
         print(('[jp-tcgbook][wire] server->client battlePvpError src=%d reason=%s'):format(src, tostring(reason)))
     end
     TriggerClientEvent('jp-tcgbook:client:battlePvpError', src, { reason = reason })
@@ -700,59 +698,50 @@ function BattlePvp.HandlePlace(src, payload)
         print(('[jp-tcgbook][wire] server recv battlePvpPlace src=%d'):format(src))
     end
     if not getUidOrReject(src) then
-        print('[tcg-trace][pvp-inv] HandlePlace reject no_uid')
         return
     end
 
     local session_id = payload.session_id
     if type(session_id) ~= 'string' or session_id == '' then
-        print('[tcg-trace][pvp-inv] HandlePlace reject session_not_found (bad session_id)')
         pushPvpError(src, 'session_not_found')
         return
     end
 
     local session = PvpBattles[session_id]
     if not session then
-        print('[tcg-trace][pvp-inv] HandlePlace reject session_not_found (no row)')
         pushPvpError(src, 'session_not_found')
         return
     end
 
     if session.p1_src ~= src and session.p2_src ~= src then
-        print('[tcg-trace][pvp-inv] HandlePlace reject not_in_session')
         pushPvpError(src, 'not_in_session')
         return
     end
 
     if session.turn ~= src then
-        print('[tcg-trace][pvp-inv] HandlePlace reject not_your_turn')
         pushPvpError(src, 'not_your_turn')
         return
     end
 
     local turn_no = tonumber(payload.turn_no)
     if not turn_no or turn_no ~= session.turn_no then
-        print('[tcg-trace][pvp-inv] HandlePlace reject turn_no_mismatch')
         pushPvpError(src, 'turn_no_mismatch')
         return
     end
 
     local cell_index = tonumber(payload.cell_index)
     if type(cell_index) ~= 'number' or cell_index < 1 or cell_index > 9 or math.floor(cell_index) ~= cell_index then
-        print('[tcg-trace][pvp-inv] HandlePlace reject invalid_cell')
         pushPvpError(src, 'invalid_cell')
         return
     end
 
     if session.board[cell_index] ~= nil then
-        print('[tcg-trace][pvp-inv] HandlePlace reject cell_occupied')
         pushPvpError(src, 'cell_occupied')
         return
     end
 
     local hand_index = tonumber(payload.hand_index)
     if type(hand_index) ~= 'number' or hand_index < 0 or hand_index > 4 or math.floor(hand_index) ~= hand_index then
-        print('[tcg-trace][pvp-inv] HandlePlace reject invalid_hand_index')
         pushPvpError(src, 'invalid_hand_index')
         return
     end
@@ -760,7 +749,6 @@ function BattlePvp.HandlePlace(src, payload)
     local myHand = session.hands[src]
     local cardSlot = myHand and myHand[hand_index + 1]
     if cardSlot == nil then
-        print('[tcg-trace][pvp-inv] HandlePlace reject hand_card_missing')
         pushPvpError(src, 'hand_card_missing')
         return
     end
@@ -843,18 +831,8 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpRequestState', function(payload)
     BattlePvp.BroadcastState(session_id, nil, src)
 end)
 
---- 調査用: アクティブ PvP セッション数（[tcg-trace][pvp-inv] ログ向け）
---- @return integer
-local function tracePvpBattleSessionCount()
-    local n = 0
-    for _ in pairs(PvpBattles) do
-        n = n + 1
-    end
-    return n
-end
-
 --- 不正着手デバッグ（コマンドは resource 起動時に必ず登録。権限はハンドラ内）
---- 切り分けログは grep 削除用に `[tcg-trace][pvp-inv]` で統一
+--- `[tcg-debug][pvp-invalid]` は Config.BattleWireLog（TcgBattleWireLogEnabled）連動
 --- @param source number
 --- @param optArg string|nil
 --- @return integer|nil
@@ -1007,10 +985,11 @@ local function pvpTestInvalidDispatchPlace(target, reason_code, payload)
     else
         enc = tostring(payload)
     end
-    print(('[tcg-debug][pvp-invalid] target=%d code=%s payload=%s'):format(target, reason_code, enc))
-    print(('[tcg-trace][pvp-inv] #4a calling HandlePlace target=%s payload=%s'):format(tostring(target), enc))
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire][pvp-invalid-harness] target=%d code=%s payload=%s'):format(
+            target, reason_code, enc))
+    end
     BattlePvp.HandlePlace(target, payload)
-    print('[tcg-trace][pvp-inv] #4b HandlePlace returned')
 end
 
 --- BOOK 表示中でも実行できる不正検証バッチ（ACE 不要・セッション内かつ DebugCommands のみ）
@@ -1031,9 +1010,7 @@ end
 
 RegisterNetEvent('jp-tcgbook:server:battlePvpTestInvalidBatch', function()
     local src = source
-    print(('[tcg-trace][pvp-inv] batch START src=%s'):format(tostring(src)))
     if not pvpTestInvalidNuiBatchAllowed(src) then
-        print('[tcg-trace][pvp-inv] batch DENY (Config.DebugCommands と PvP セッション内が必要)')
         return
     end
     --- not_turn はソロ時に実機で踏みにくいためバッチ対象外（HandlePlace の分岐はコードレビューで確認）
@@ -1041,54 +1018,17 @@ RegisterNetEvent('jp-tcgbook:server:battlePvpTestInvalidBatch', function()
     for _, kind in ipairs(order) do
         local session = BattlePvp.GetSessionBySrc(src)
         if kind ~= 'session' and not session then
-            print(('[tcg-trace][pvp-inv] batch abort mid-run lost session at kind=%s'):format(kind))
             break
         end
-        local payload, skip = pvpTestInvalidBuildPayload(session, src, kind)
-        if not payload then
-            print(('[tcg-trace][pvp-inv] batch skip kind=%s reason=%s'):format(kind, tostring(skip)))
-        else
-            local enc = ''
-            local okEnc, out = pcall(json.encode, payload)
-            if okEnc and type(out) == 'string' then
-                enc = out
-            else
-                enc = tostring(payload)
-            end
-            print(('[tcg-trace][pvp-inv] batch step kind=%s payload=%s'):format(kind, enc))
+        local payload, _skip = pvpTestInvalidBuildPayload(session, src, kind)
+        if payload then
             pvpTestInvalidDispatchPlace(src, kind, payload)
         end
     end
-    print(('[tcg-trace][pvp-inv] batch END src=%s'):format(tostring(src)))
 end)
 
-RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
-    local argsJson = '{}'
-    do
-        local okJ, j = pcall(json.encode, args or {})
-        if okJ and type(j) == 'string' then
-            argsJson = j
-        end
-    end
-    print(('[tcg-trace][pvp-inv] #1 cmd entered src=%s args=%s raw=%s'):format(
-        tostring(source),
-        argsJson,
-        tostring(rawCommand)
-    ))
-
+RegisterCommand('tcg_pvp_test_invalid', function(source, args, _rawCommand)
     local allowed = pvpTestInvalidAllowed(source)
-    local aceStr = 'n/a'
-    if type(source) == 'number' and source > 0 then
-        aceStr = tostring(IsPlayerAceAllowed(source, 'command.tcg_debug'))
-    elseif source == 0 then
-        aceStr = 'console_skip'
-    end
-    print(('[tcg-trace][pvp-inv] #2 allowed=%s DebugCommands=%s ace_tcg_debug=%s'):format(
-        tostring(allowed),
-        tostring(Config.DebugCommands),
-        aceStr
-    ))
-
     if not allowed then
         pvpTestInvalidDeny(source, '権限がありません (ACE: command.tcg_debug)')
         return
@@ -1096,7 +1036,6 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
 
     local reason_code = args[1]
     if not reason_code or reason_code == '' then
-        print('[tcg-trace][pvp-inv] #3 skip (usage / no kind)')
         print('[tcg-debug] usage: /tcg_pvp_test_invalid <reason_code> [target_server_id]')
         print('[tcg-debug]   reason_code: turn_no | not_turn | cell_occ | cell_inv | hand_inv | session')
         return
@@ -1104,20 +1043,12 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
 
     local target, terr = pvpTestInvalidResolveTarget(source, args[2])
     if not target then
-        print(('[tcg-trace][pvp-inv] #3x abort resolveTarget err=%s'):format(tostring(terr)))
         pvpTestInvalidDeny(source, terr or '対象を特定できません')
         return
     end
 
     local session = BattlePvp.GetSessionBySrc(target)
-    print(('[tcg-trace][pvp-inv] #3 kind=%s target=%s session_found=%s active_sessions=%s'):format(
-        tostring(reason_code),
-        tostring(target),
-        tostring(session ~= nil),
-        tostring(tracePvpBattleSessionCount())
-    ))
     if reason_code ~= 'session' and not session then
-        print('[tcg-trace][pvp-inv] #3x abort no session for target (start solo PvP first)')
         print(('[tcg-debug] target src=%d は対戦セッション中ではありません'):format(target))
         return
     end
@@ -1125,26 +1056,18 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
     local payload, skip = pvpTestInvalidBuildPayload(session, target, reason_code)
     if not payload then
         if skip == 'not_opponent_turn_yet' then
-            print('[tcg-trace][pvp-inv] #3x abort not_turn (wait for virtual opponent turn)')
             print('[tcg-debug] 現在 target のターンです。仮想ターン中に再実行してください。')
         elseif skip == 'cell_occ_needs_occupied' then
-            print('[tcg-trace][pvp-inv] #3x abort cell_occ needs occupied cell')
             print('[tcg-debug] 盤面が空のため cell_occ は再現不可。1 手以上進めてから再実行してください。')
         elseif skip == 'hand_inv_needs_empty_cell' then
-            print('[tcg-trace][pvp-inv] #3x abort hand_inv needs empty board cell')
             print('[tcg-debug] 空マスがないため hand_inv は別状態で試してください。')
         elseif skip == 'unknown_kind' then
-            print(('[tcg-trace][pvp-inv] #3x abort unknown kind=%s'):format(tostring(reason_code)))
             print(('[tcg-debug] 未知の reason_code: %s'):format(tostring(reason_code)))
-        elseif skip == 'no_session' then
-            print('[tcg-trace][pvp-inv] #3x abort no_session (internal)')
-        else
-            print(('[tcg-trace][pvp-inv] #3x abort build skip=%s'):format(tostring(skip)))
+        elseif skip ~= 'no_session' then
+            print(('[tcg-debug] tcg_pvp_test_invalid skip=%s'):format(tostring(skip)))
         end
         return
     end
 
     pvpTestInvalidDispatchPlace(target, reason_code, payload)
 end, false)
-
-print('[tcg-trace][boot] RegisterCommand tcg_pvp_test_invalid OK (サーバー側・ゲーム内 T チャットまたは txAdmin のコンソールから実行。F8 クライアントコンソールでは動きません)')
