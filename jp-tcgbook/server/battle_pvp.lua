@@ -1,5 +1,7 @@
 --- PHASE 2b 本番 2 人対戦（サーバー権威・PHASE A）
 
+print(('[tcg-trace][boot] battle_pvp.lua chunk loaded DebugCommands=%s'):format(tostring(Config and Config.DebugCommands)))
+
 BattlePvp = BattlePvp or {}
 
 --- @type table<string, table>
@@ -1055,3 +1057,5 @@ RegisterCommand('tcg_pvp_test_invalid', function(source, args, rawCommand)
 
     print('[tcg-trace][pvp-inv] #4b HandlePlace returned')
 end, false)
+
+print('[tcg-trace][boot] RegisterCommand tcg_pvp_test_invalid OK (サーバー側・ゲーム内 T チャットまたは txAdmin のコンソールから実行。F8 クライアントコンソールでは動きません)')

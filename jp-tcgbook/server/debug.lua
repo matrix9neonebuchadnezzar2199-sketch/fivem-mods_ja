@@ -2,6 +2,8 @@
 --- 二重ゲート: Config.DebugCommands == true かつ（コンソール source=0 または ACE command.tcg_debug）
 --- Config が false のときはコマンド本文に入らず拒否（運営でデバッグを完全オフにできる）
 
+print(('[tcg-trace][boot] debug.lua chunk loaded DebugCommands=%s'):format(tostring(Config and Config.DebugCommands)))
+
 --- @param source number
 --- @return boolean
 local function isDebugAllowed(source)
@@ -463,4 +465,5 @@ RegisterCommand('tcg_battleid', function(source)
     )
 end, false)
 
---- `/tcg_pvp_test_invalid` は `server/battle_pvp.lua` で登録（`BattlePvp` 読込後・コマンド欠落防止）
+--- `/tcg_pvp_test_invalid` は `server/battle_pvp.lua` で登録（本ファイルでは未登録・二重登録防止）
+--- 実行はサーバー側コマンドのため **ゲーム内チャット（T）** または **txAdmin サーバーコンソール**。F8 はクライアント用。
