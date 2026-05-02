@@ -59,6 +59,17 @@ function BattleRewards.GrantOnFinish(ctx)
 
     local res = Database.AddCardToPlayer(loser_cid, card_id)
     local ok = res and res.success == true
+    if ok then
+        local epoch = ctx.finished_at
+        if type(epoch) ~= 'number' then
+            epoch = os.time()
+        end
+        local date_jst = Database.JstDateStringFromEpoch(epoch)
+        local dc = Database.IncrementDailyCopiesReceived(loser_cid, date_jst)
+        if not dc.success and TcgBattleWireLogEnabled() then
+            print(('[jp-tcgbook][wire][rewards] daily copies_received err: %s'):format(tostring(dc.error)))
+        end
+    end
     if TcgBattleWireLogEnabled() then
         print(('[jp-tcgbook][wire][rewards] grant loser=%s card_id=%s ok=%s session=%s'):format(
             loser_cid,

@@ -89,13 +89,32 @@ local function updateWinLoss(ctx)
     end
 end
 
---- 日次カウンタ更新（PHASE C 着手時に本実装）
---- TODO[PHASE-C]:
----   - tcg_daily_counters (citizenid, date_jst, battles, wins, copies_received) を新設
----   - JST 0:00 レイジーリセット: 既存行の date_jst が今日でなければ全カラム0で UPSERT
----   - ctx.p1 / ctx.p2 それぞれに対して battles += 1、勝者は wins += 1
---- @param _ctx table
-local function updateDailyCounter(_ctx)
+--- PHASE C: tcg_daily_counters（JST 暦日・レイジー UPSERT）
+--- @param ctx table
+local function updateDailyCounter(ctx)
+    local epoch = ctx.finished_at
+    if type(epoch) ~= 'number' then
+        epoch = os.time()
+    end
+    local date_jst = Database.JstDateStringFromEpoch(epoch)
+    local a = Database.IncrementDailyMatchCounters(ctx.p1.citizenid, date_jst, ctx.outcome_for_p1)
+    local b = Database.IncrementDailyMatchCounters(ctx.p2.citizenid, date_jst, ctx.outcome_for_p2)
+    if TcgBattleWireLogEnabled() then
+        print(('[jp-tcgbook][wire][stats] daily date_jst=%s p1=%s/%s ok=%s p2=%s/%s ok=%s'):format(
+            date_jst,
+            ctx.p1.citizenid,
+            ctx.outcome_for_p1,
+            tostring(a.success),
+            ctx.p2.citizenid,
+            ctx.outcome_for_p2,
+            tostring(b.success)))
+        if not a.success then
+            print(('[jp-tcgbook][wire][stats] daily err p1: %s'):format(tostring(a.error)))
+        end
+        if not b.success then
+            print(('[jp-tcgbook][wire][stats] daily err p2: %s'):format(tostring(b.error)))
+        end
+    end
 end
 
 --- @param ctx table collectFinishContext の戻り値

@@ -466,6 +466,84 @@ function Database.IncrementMatchStats(citizenid, outcome)
     return { success = true, data = {} }
 end
 
+--- UTC エポック秒から JST の暦日 `YYYY-MM-DD`（固定 UTC+9・サマータイムなし）。PHASE C・将来の履歴表示でも共用可。
+--- @param epochSec number|nil 省略時は現在時刻
+--- @return string
+function Database.JstDateStringFromEpoch(epochSec)
+    local e = tonumber(epochSec)
+    if not e then
+        e = os.time()
+    end
+    local t = os.date('!*t', math.floor(e) + 9 * 3600)
+    return ('%04d-%02d-%02d'):format(t.year, t.month, t.day)
+end
+
+--- PHASE C: 日次・試合 1 プレイヤー分を加算（リアル PvP のみ caller 側）
+--- @param outcome string 'win'|'lose'|'draw'
+--- @return table { success, error? }
+function Database.IncrementDailyMatchCounters(citizenid, date_jst, outcome)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+    if type(date_jst) ~= 'string' or #date_jst ~= 10 then
+        return { success = false, error = 'invalid date_jst' }
+    end
+    local w, l, d = 0, 0, 0
+    if outcome == 'win' then
+        w = 1
+    elseif outcome == 'lose' then
+        l = 1
+    elseif outcome == 'draw' then
+        d = 1
+    else
+        return { success = false, error = 'invalid outcome: ' .. tostring(outcome) }
+    end
+
+    local sql = [[
+INSERT INTO tcg_daily_counters
+    (citizenid, date_jst, battles, wins, losses, draws, copies_received)
+VALUES (?, ?, 1, ?, ?, ?, 0)
+ON DUPLICATE KEY UPDATE
+    battles = battles + 1,
+    wins = wins + VALUES(wins),
+    losses = losses + VALUES(losses),
+    draws = draws + VALUES(draws)
+]]
+    local ok, err = pcall(function()
+        MySQL.query.await(sql, { citizenid, date_jst, w, l, d })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
+--- PHASE C: 敗北コピー成功 1 回（同日行が無ければ battles=0 で作成）
+--- @return table { success, error? }
+function Database.IncrementDailyCopiesReceived(citizenid, date_jst)
+    if type(citizenid) ~= 'string' or citizenid == '' then
+        return { success = false, error = 'invalid citizenid' }
+    end
+    if type(date_jst) ~= 'string' or #date_jst ~= 10 then
+        return { success = false, error = 'invalid date_jst' }
+    end
+
+    local sql = [[
+INSERT INTO tcg_daily_counters
+    (citizenid, date_jst, battles, wins, losses, draws, copies_received)
+VALUES (?, ?, 0, 0, 0, 0, 1)
+ON DUPLICATE KEY UPDATE
+    copies_received = copies_received + 1
+]]
+    local ok, err = pcall(function()
+        MySQL.query.await(sql, { citizenid, date_jst })
+    end)
+    if not ok then
+        return { success = false, error = tostring(err) }
+    end
+    return { success = true, data = {} }
+end
+
 function Database.ListAllPlayers()
     local ok, result = pcall(function()
         return MySQL.query.await(

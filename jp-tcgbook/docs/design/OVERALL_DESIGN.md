@@ -26,7 +26,7 @@
 | **仮想ロビー・PvP コア** | 済（PHASE 2b） | `battle_lobby.lua` / `battle_pvp.lua` / `shared/battle_rule.lua` |
 | **Wire ログ** | 済 | `Config.BattleWireLog`、`shared/battle_wire_log.lua` |
 | **リアル PvP 終了フック** | 済 | `BattleStats.RecordFinish`（Elo・win/loss/draw）、`BattleRewards.GrantOnFinish`（2d） |
-| **日次カウンタ** | **未** | `battle_stats.lua` の `_updateDailyCounter` は空実装 → **PHASE C** |
+| **日次カウンタ** | **済（M1）** | `tcg_daily_counters`・`Database.IncrementDaily*`・`battle_stats` / `battle_rewards` 連携。再起動で `install.sql` がテーブル作成 |
 | **試合履歴テーブル** | **未** | → **PHASE E1** |
 | **ランキング／履歴タブ・EXP** | **未** | → **PHASE E2〜E5** |
 
@@ -90,7 +90,7 @@ BattlePvp.Finish
 
 | ステップ | 内容 | 主な成果物 |
 |----------|------|------------|
-| **M1** | **PHASE C** 本実装 | `install.sql`, `Database`, `_updateDailyCounter`, `IncrementDailyCopies`（Rewards） |
+| **M1** | ~~**PHASE C** 本実装~~ **済** | `tcg_daily_counters`、`Database.IncrementDaily*`、`battle_stats` / `battle_rewards` |
 | **M2** | **PHASE E1** | `tcg_match_history` + Finish 時 INSERT（一意制約・INDEX） |
 | **M3** | **PHASE E2** | 履歴一覧 API + NUI **対戦履歴**タブ |
 | **M4** | **PHASE E3** | EXP・連勝・連勝ボーナス（`RecordFinish`／関連 DB） |
@@ -122,3 +122,4 @@ BattlePvp.Finish
 | 日付 | 内容 |
 |------|------|
 | 2026-05-02 | 初版（PHASE C / E 統合ロードマップ、`ranc` 徽章前提） |
+| 2026-05-02 | M1 PHASE C 実装済を現在地に反映 |

@@ -22,6 +22,9 @@ Config.InitialCardRanks = { 'B', 'B', 'B', 'C', 'C', 'C', 'A', 'A', 'B', 'C' } -
 Config.InitialRating = 1500
 Config.EloKFactor = 32
 
+-- PHASE C（日次カウンタ `tcg_daily_counters`）: リアル PvP・`BattlePvp.Finish` → `RecordFinish` / `GrantOnFinish` のみ更新（solo / CPU は対象外）
+-- 暦日キーは JST（`Database.JstDateStringFromEpoch`・UTC+9 固定）。設計: docs/design/PHASE_C_daily_counters.md
+
 -- 管理者 UI（/bookadmin）。server.cfg 例: add_ace group.admin command.tcg_book_admin allow
 Config.BookAdminAce = 'command.tcg_book_admin'
 

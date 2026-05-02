@@ -68,6 +68,20 @@ CREATE TABLE IF NOT EXISTS tcg_admin_audit (
     INDEX idx_card (card_id)
 );
 
+-- PHASE C: リアル PvP normal 終了時のみ更新（BattleStats / BattleRewards）。JST 暦日キー・レイジー UPSERT
+CREATE TABLE IF NOT EXISTS tcg_daily_counters (
+    citizenid VARCHAR(64) NOT NULL,
+    date_jst CHAR(10) NOT NULL,
+    battles INT UNSIGNED NOT NULL DEFAULT 0,
+    wins INT UNSIGNED NOT NULL DEFAULT 0,
+    losses INT UNSIGNED NOT NULL DEFAULT 0,
+    draws INT UNSIGNED NOT NULL DEFAULT 0,
+    copies_received INT UNSIGNED NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (citizenid, date_jst),
+    INDEX idx_date_jst (date_jst)
+);
+
 -- =============================================================================
 -- ACE（jp-tcgbook デバッグコマンド /tcg_*）
 -- すべてのデバッグコマンドは permission command.tcg_debug で制御する。
