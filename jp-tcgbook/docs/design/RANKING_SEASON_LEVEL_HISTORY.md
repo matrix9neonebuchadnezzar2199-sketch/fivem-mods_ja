@@ -1,6 +1,7 @@
 # ランキング・ランク制・レベル制・対戦履歴（設計メモ）
 
 **対象**: `jp-tcgbook`  
+**正典（PHASE 全体・分割着手順）**: **`docs/design/PHASE_E_ranking_season_ui.md`** — 本ファイルは呼称・数値案の補足として同期する。  
 **前提**: 対戦履歴に保存する項目は「試合 1 行」中心（session・両者・終了時刻・勝敗・スコア・レート before/after・2d コピー成否等）。**保存しない**: 全着手ログ・盤面スナップショット一式／IP・ハードウェア ID。  
 **文字コード**: UTF-8（BOM なし）
 
@@ -117,6 +118,7 @@
 
 ## 8. 参照
 
+- `docs/design/PHASE_E_ranking_season_ui.md` — **ランキング（シーズン）・履歴の PHASE 設計（主）**
 - `docs/design/PHASE_C_daily_counters.md` — 日次集計（履歴とは補完関係）
 - `server/battle_stats.lua` — Finish フック
-- `2026-05-02 開発日記.md` — ランキング確認メモ
+- `2026-05-02 開発日記.md` — PHASE E 整理の追記
