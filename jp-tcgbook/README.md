@@ -2,6 +2,8 @@
 
 FiveM 上で動作する **スタンドアロン** TCG リソース（BOOK: コレクション・デッキ編成・CPU 対戦・疑似／実プレイヤー PvP・Elo・対戦履歴・ランキング／段位徽章・JA/EN UI とカード名 `name_en`）。パック入手・経済連携は将来拡張。
 
+**English**: [README.en.md](README.en.md)
+
 ## 親リポジトリでの管理
 
 このフォルダは **単体では `git init` しません**。親リポジトリ（例: [fivem-mods_ja](https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja)）のサブディレクトリとして追加・コミットしてください。
@@ -65,4 +67,6 @@ UI の HTML モックは **`デザイン仕様/` を正** とする。
 
 ## ライセンス
 
-未定。
+**MIT License** — 詳細は [LICENSE](LICENSE) を参照。
+
+カード画像（`html/assets/cards/`）および段位徽章（`html/assets/ranc/`）は本リソース用オリジナル素材として同梱している。第三者素材に差し替える場合は独自のライセンス整理と必要なら `docs/CREDITS.md` で出典を記載すること。
