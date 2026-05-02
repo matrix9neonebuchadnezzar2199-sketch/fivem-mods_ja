@@ -14,6 +14,7 @@ shared_scripts {
     'shared/battle_wire_log.lua',
     'shared/identity.lua',
     'shared/cards.lua',
+    'shared/rank.lua',
 }
 
 server_scripts {
@@ -49,6 +50,14 @@ files {
     'html/assets/cards/**/*.png',
     'html/assets/cards/asset_manifest.json',
     'html/assets/duel_back.png',
-    -- 段位徽章（ランキングタブ用・PHASE E）。`html/assets/ranc/` 参照
-    'html/assets/ranc/**/*.png',
+    -- 段位徽章（M6）。ワイルドカード可だが欠け検知のため 9 枚明示（ファイル名は Linux 本番で厳密一致）
+    'html/assets/ranc/Wood.png',
+    'html/assets/ranc/Bronze.png',
+    'html/assets/ranc/Iron.png',
+    'html/assets/ranc/Silver.png',
+    'html/assets/ranc/Gold.png',
+    'html/assets/ranc/Platinum.png',
+    'html/assets/ranc/Astral.png',
+    'html/assets/ranc/Dragon.png',
+    'html/assets/ranc/Mythology.png',
 }

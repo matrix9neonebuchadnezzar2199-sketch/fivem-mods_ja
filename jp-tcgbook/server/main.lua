@@ -443,6 +443,19 @@ RegisterNetEvent('jp-tcgbook:server:requestRankingData', function()
         end
     end
 
+    --- M6: 段位（SQL は変更せずペイロードに rank_code / badge を注入）
+    if top.success and top.data then
+        for _, row in ipairs(top.data) do
+            EnrichRankingRowWithTier(row)
+        end
+    end
+    for _, row in ipairs(around) do
+        EnrichRankingRowWithTier(row)
+    end
+    if mine.success and mine.data then
+        EnrichRankingRowWithTier(mine.data)
+    end
+
     local ok = top.success and mine.success
     local errMsg = nil
     if not ok then
@@ -461,11 +474,15 @@ RegisterNetEvent('jp-tcgbook:server:requestRankingData', function()
     })
 
     if TcgBattleWireLogEnabled() then
-        print(('[jp-tcgbook][wire][ranking] sent src=%s top_rows=%s in_top=%s rank=%s'):format(
+        local rc = mine.data and mine.data.rank_code or ''
+        local bd = mine.data and mine.data.badge or ''
+        print(('[jp-tcgbook][wire][ranking] sent src=%s top_rows=%s in_top=%s rank=%s my_rank_code=%s my_badge=%s'):format(
             tostring(src),
             tostring(top.data and #top.data),
             tostring(inTop),
-            tostring(mine.data and mine.data.rank)
+            tostring(mine.data and mine.data.rank),
+            tostring(rc),
+            tostring(bd)
         ))
     end
 end)

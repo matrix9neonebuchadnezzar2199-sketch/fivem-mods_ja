@@ -25,10 +25,64 @@
   font-size: calc(20px * var(--book-fs-mul));
 }
 
+.my-rank-tier-row {
+  margin-top: calc(8px * var(--book-fs-mul));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(6px * var(--book-fs-mul));
+  font-size: calc(13px * var(--book-fs-mul));
+  color: #d8cfa8;
+}
+
+.my-rank-tier-label {
+  font-weight: 600;
+  color: #c8a868;
+}
+
+.my-rank-tier {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6px * var(--book-fs-mul));
+}
+
+.my-rank-tier-name {
+  font-weight: 600;
+}
+
 .my-rank-detail {
   margin-top: calc(6px * var(--book-fs-mul));
   color: #b0a378;
   font-size: calc(12px * var(--book-fs-mul));
+}
+
+.rank-badge-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(28px * var(--book-fs-mul));
+  height: calc(28px * var(--book-fs-mul));
+}
+
+.rank-badge {
+  width: calc(24px * var(--book-fs-mul));
+  height: calc(24px * var(--book-fs-mul));
+  vertical-align: middle;
+  object-fit: contain;
+}
+
+.rank-badge-fallback {
+  display: none;
+  min-width: calc(24px * var(--book-fs-mul));
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  color: #c8a868;
+}
+
+.rank-badge-empty {
+  color: #888;
 }
 
 .ranking-board-wrap {

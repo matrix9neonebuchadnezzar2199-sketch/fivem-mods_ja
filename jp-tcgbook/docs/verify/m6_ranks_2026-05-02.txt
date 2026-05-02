@@ -1,0 +1,31 @@
+jp-tcgbook — M6 PHASE E5（段位・徽章）検証チェックリスト
+=========================================================
+
+前提
+----
+- `html/assets/ranc/` に **PascalCase** 9 枚（`Wood.png` … `Mythology.png`）が存在し、`fxmanifest.lua` の `files` に明示列挙されていること。
+- `Config.DebugCommands`・ACE `command.tcg_debug` で `/tcg_setrating` が使えること。
+
+手順（Step 7）
+----
+[ ] 1. `ensure jp-tcgbook`
+[ ] 2. `/book` → ランキング。リスト行・サマリに徽章 PNG（rating に応じた tier）
+[ ] 3. 徽章にホバー → `title` に英バッジ名（例 Gold）
+[ ] 4. `/tcg_setrating 2400 [server_id]` → 再オープンまたはランキングタブで **Mythology** に変化
+[ ] 5. `/tcg_setrating 1 [server_id]` → **Wood**
+[ ] 6. `/tcg_setrating 1500 [server_id]` で復旧（または普段のレート）
+[ ] 7. （フォールバック）例: `Gold.png` を一時リネーム → 該当行で **文字**フォールバック（例 `C`）→ 元に戻して再起動
+[ ] 8. 言語 EN/JA で段位名が切り替わること
+
+Wire（`Config.BattleWireLog = true`）
+-------------------------------------
+期待ログ例:
+
+`[jp-tcgbook][wire][ranking] sent src=... top_rows=... in_top=... rank=... my_rank_code=... my_badge=...`
+
+実測貼付欄
+----------
+（以下に txAdmin ログを貼る）
+
+
+

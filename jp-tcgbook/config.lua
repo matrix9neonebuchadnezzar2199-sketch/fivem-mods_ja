@@ -40,6 +40,21 @@ Config.RankingExcludeCitizenids = {
     'jp-tcgbook-debug-peer-dummy',
 }
 
+-- PHASE E5 / M6（段位・徽章ファイル名）: **min_rating 降順**（`ResolvePvpRankTier` が先頭からマッチ）
+-- `badge` は `html/assets/ranc/<badge>.png` と **大文字小文字まで一致**（Linux 本番想定）
+-- 閾値は初期値。運用後に K 因子・分布を見て再調整してよい
+Config.PvpRankTiers = {
+    { rank_code = 'ss', rank_order = 9, badge = 'Mythology', min_rating = 2300 },
+    { rank_code = 's', rank_order = 8, badge = 'Dragon', min_rating = 2000 },
+    { rank_code = 'a', rank_order = 7, badge = 'Astral', min_rating = 1800 },
+    { rank_code = 'b', rank_order = 6, badge = 'Platinum', min_rating = 1600 },
+    { rank_code = 'c', rank_order = 5, badge = 'Gold', min_rating = 1450 },
+    { rank_code = 'd', rank_order = 4, badge = 'Silver', min_rating = 1300 },
+    { rank_code = 'e', rank_order = 3, badge = 'Iron', min_rating = 1150 },
+    { rank_code = 'f', rank_order = 2, badge = 'Bronze', min_rating = 1000 },
+    { rank_code = 'g', rank_order = 1, badge = 'Wood', min_rating = 0 },
+}
+
 -- PHASE E3 / M4（PvP EXP・連勝）: `BattleStats.RecordFinish`（`ctx.is_real_pvp` のみ）で更新。敗北・引き分けで連勝 0。投了・切断は `OnPlayerLeave` で離脱者の連勝のみ 0（レート・勝敗数は Finish のみの既存方針）
 Config.PvpExpWinBase = 25 -- 勝利時に加算する基本 EXP
 Config.PvpWinStreakBonusCap = 10 -- 連勝ボーナス計算に使う「試合前連勝」の上限（これ以上はボーナス増えない）

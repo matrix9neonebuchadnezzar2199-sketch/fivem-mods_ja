@@ -757,16 +757,40 @@
 
     requestRankingData() {
       const cid = MOCK_DATA.player.citizenid;
-      const mk = (id, rating, lv, xp, st) => ({
-        citizenid: id,
-        rating,
-        wins: 1,
-        losses: 0,
-        draws: 0,
-        pvp_exp: xp,
-        pvp_level: lv,
-        pvp_win_streak: st,
-      });
+      /** @param {number} rating */
+      function mockTierFromRating(rating) {
+        const r = Number(rating) || 0;
+        const tiers = [
+          [2300, 'ss', 'Mythology'],
+          [2000, 's', 'Dragon'],
+          [1800, 'a', 'Astral'],
+          [1600, 'b', 'Platinum'],
+          [1450, 'c', 'Gold'],
+          [1300, 'd', 'Silver'],
+          [1150, 'e', 'Iron'],
+          [1000, 'f', 'Bronze'],
+          [0, 'g', 'Wood'],
+        ];
+        for (let i = 0; i < tiers.length; i++) {
+          if (r >= tiers[i][0]) return { rank_code: tiers[i][1], badge: tiers[i][2] };
+        }
+        return { rank_code: 'g', badge: 'Wood' };
+      }
+      const mk = (id, rating, lv, xp, st) => {
+        const t = mockTierFromRating(rating);
+        return {
+          citizenid: id,
+          rating,
+          wins: 1,
+          losses: 0,
+          draws: 0,
+          pvp_exp: xp,
+          pvp_level: lv,
+          pvp_win_streak: st,
+          rank_code: t.rank_code,
+          badge: t.badge,
+        };
+      };
       const top = [
         mk('license:aaaaaaaaaaaaaaaa', 1700, 7, 900, 1),
         mk(
@@ -779,11 +803,18 @@
         mk('license:bbbbbbbbbbbbbbbb', 1580, 4, 200, 0),
         mk('license:cccccccccccccccc', 1500, 2, 50, 0),
       ];
+      const myT = mockTierFromRating(MOCK_DATA.player.rating);
       return {
         success: true,
         season: 'evergreen',
         top,
-        my_info: { rank: 2, rating: MOCK_DATA.player.rating, total: 120 },
+        my_info: {
+          rank: 2,
+          rating: MOCK_DATA.player.rating,
+          total: 120,
+          rank_code: myT.rank_code,
+          badge: myT.badge,
+        },
         my_in_top: true,
         around_me: [],
         my_citizenid: cid,

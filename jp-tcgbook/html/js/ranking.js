@@ -12,6 +12,39 @@
     return (root || document).querySelector(sel);
   }
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]),
+    );
+  }
+
+  /** @param {string} [rankCode] @param {string} [badge] */
+  function renderRankBadgeCell(rankCode, badge) {
+    if (!rankCode || !badge) {
+      return '<span class="rank-badge-empty">—</span>';
+    }
+    const safeRank = escapeHtml(rankCode);
+    const safeBadge = escapeHtml(badge);
+    const upperRank = safeRank.toUpperCase();
+    return (
+      `<span class="rank-badge-cell" title="${safeBadge}">` +
+      `<img class="rank-badge" src="assets/ranc/${safeBadge}.png" alt="${upperRank}" ` +
+      `onerror="this.style.display='none';var n=this.nextElementSibling;if(n)n.style.display='inline-block';">` +
+      `<span class="rank-badge-fallback" style="display:none;">${upperRank}</span>` +
+      `</span>`
+    );
+  }
+
+  function tierDisplayName(rankCode) {
+    if (!rankCode) return '—';
+    const key = 'rank.' + rankCode;
+    if (global.I18n && typeof global.I18n.t === 'function') {
+      const tr = global.I18n.t(key);
+      if (tr !== key) return tr;
+    }
+    return String(rankCode).toUpperCase();
+  }
+
   function initialState() {
     return {
       loaded: false,
@@ -145,8 +178,14 @@
       const xp = my.pvp_exp != null ? my.pvp_exp : 0;
       const st = my.pvp_win_streak != null ? my.pvp_win_streak : 0;
       const rating = mi.rating != null ? mi.rating : my.rating;
+      const tierBadgeHtml = renderRankBadgeCell(mi.rank_code, mi.badge);
+      const tierName = escapeHtml(tierDisplayName(mi.rank_code));
       wrap.innerHTML = `
         <div class="my-rank-num">${tf('rank_my_rank', { rank: mi.rank, total: mi.total })}</div>
+        <div class="my-rank-tier-row">
+          <span class="my-rank-tier-label">${escapeHtml(tf('rank_my_tier_label'))}</span>
+          <span class="my-rank-tier">${tierBadgeHtml}<span class="my-rank-tier-name">${tierName}</span></span>
+        </div>
         <div class="my-rank-detail">${tf('rank_my_detail', { rating, lv, exp: xp, streak: st })}</div>
       `;
     },
@@ -205,8 +244,6 @@
         tr.classList.add('ranking-row-me');
       }
 
-      const tierPlaceholder =
-        global.I18n && global.I18n.t ? global.I18n.t('rank_tier_placeholder') : '—';
       const nameStr = r.citizenid != null ? String(r.citizenid) : '—';
 
       function addTd(className, text) {
@@ -217,8 +254,10 @@
       }
 
       addTd('rank-num', String(item.rank));
-      addTd('rank-badge', tierPlaceholder);
-      addTd('rank-name', nameStr);
+      const tdTier = document.createElement('td');
+      tdTier.className = 'rank-tier-cell';
+      tdTier.innerHTML = renderRankBadgeCell(r.rank_code, r.badge);
+      tr.appendChild(tdTier);
       addTd('rank-rating', String(r.rating != null ? r.rating : '—'));
       addTd('rank-lv', String(r.pvp_level != null ? r.pvp_level : 0));
       addTd('rank-exp', String(r.pvp_exp != null ? r.pvp_exp : 0));
