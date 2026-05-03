@@ -2,7 +2,7 @@
 
 他リソースから `AddEventHandler` で購読します。イベント名は **`jp-UnderworldBounty:` + 名前** です（サーバー側で `TriggerEvent` 発火）。
 
-報復の状態・サブ結果・タイミングは **`docs/RETALIATION_FSM.md`** と整合させること。
+報復の状態・サブ結果・タイミングは **`docs/RETALIATION_FSM.md`** と整合させること。クライアントとの送受信イベント名・payload の一覧・シーケンス図は **`docs/SEQUENCE_DIAGRAMS.md`** を参照。
 
 ## 一覧
 

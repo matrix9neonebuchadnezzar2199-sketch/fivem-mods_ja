@@ -2,7 +2,7 @@
 
 **ファイル**: `docs/RETALIATION_FSM.md`  
 **対象**: PHASE 4「闇の指名手配システム」実装  
-**関連**: `docs/DESIGN.md`、`docs/PLAYER_FLOW.md`（シーン #21〜#28）、`docs/EVENT_HOOKS.md`、`config/retaliation.lua`  
+**関連**: `docs/DESIGN.md`、`docs/PLAYER_FLOW.md`（シーン #21〜#28）、`docs/SEQUENCE_DIAGRAMS.md`（クライアント往復・payload）、`docs/EVENT_HOOKS.md`、`config/retaliation.lua`  
 **最終更新**: 2026-05-03（§13 追記）
 
 ---
@@ -1068,7 +1068,7 @@ end
 
 ### 13.11 次の改訂で追加予定
 
-実装後のタイムアウト値調整、Mermaid サブ図（PRE_WARNING / SPAWNING）、サーバー↔クライアントシーケンス（`reportWaveResult`）、事例集 `docs/RETALIATION_BUGS.md` など。
+実装後のタイムアウト値調整、Mermaid サブ図（PRE_WARNING / SPAWNING の縦分解）、事例集 `docs/RETALIATION_BUGS.md` など。サーバー↔クライアントシーケンスと payload は **`docs/SEQUENCE_DIAGRAMS.md`（v1.0）** に記載済み。
 
 ---
 

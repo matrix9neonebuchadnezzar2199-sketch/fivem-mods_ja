@@ -2,7 +2,7 @@
 
 時系列でプレイヤー体験を追いながら、各シーンで **開発者が設置・設定すべきもの** を併記する。実装漏れ防止と Config スキーマ設計のたたき台として使う。
 
-**関連**: `docs/DESIGN.md`（全体設計）、`docs/RETALIATION_FSM.md`（報復の 8 状態 FSM・遷移表）、`docs/SCENARIO_TEMPLATE.md`（運営向けテンプレ）、`docs/EVENT_HOOKS.md`（イベント名は実装上 `jp-UnderworldBounty:on*` プレフィックス）。
+**関連**: `docs/DESIGN.md`（全体設計）、`docs/RETALIATION_FSM.md`（報復の 8 状態 FSM・遷移表）、`docs/SEQUENCE_DIAGRAMS.md`（メッセージング・シーケンス図）、`docs/SCENARIO_TEMPLATE.md`（運営向けテンプレ）、`docs/EVENT_HOOKS.md`（イベント名は実装上 `jp-UnderworldBounty:on*` プレフィックス）。
 
 ---
 

@@ -52,6 +52,7 @@ jp-UnderworldBounty/
 │   ├── CONFIG_GUIDE.md         # 運営者向けConfig設定ガイド
 │   ├── SCENARIO_GUIDE.md       # シナリオ追加方法のガイド
 │   ├── EVENT_HOOKS.md          # 開発者向けイベントフック仕様
+│   ├── SEQUENCE_DIAGRAMS.md    # サーバー↔クライアントシーケンス・payload
 │   └── images/                 # ドキュメント用画像
 │
 ├── config/
@@ -345,5 +346,6 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 
 - **プレイヤー体験フロー（時系列 + 開発者設置項目）**: `docs/PLAYER_FLOW.md`  
 - **報復システム FSM（PHASE 4 実装の正本）**: `docs/RETALIATION_FSM.md`  
+- **サーバー↔クライアントシーケンス（payload・Mermaid）**: `docs/SEQUENCE_DIAGRAMS.md`  
 - **シナリオ設計テンプレ（運営が空欄埋め）**: `docs/SCENARIO_TEMPLATE.md`  
 - **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`
