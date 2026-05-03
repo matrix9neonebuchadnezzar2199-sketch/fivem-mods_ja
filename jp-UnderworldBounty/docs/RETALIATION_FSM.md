@@ -3,7 +3,7 @@
 **ファイル**: `docs/RETALIATION_FSM.md`  
 **対象**: PHASE 4「闇の指名手配システム」実装  
 **関連**: `docs/DESIGN.md`、`docs/PLAYER_FLOW.md`（シーン #21〜#28）、`docs/EVENT_HOOKS.md`、`config/retaliation.lua`  
-**最終更新**: 2026-05-03  
+**最終更新**: 2026-05-03（§13 追記）
 
 ---
 
@@ -485,7 +485,7 @@ PHASE 4 実装時に、以下を順番に潰していく。
 - [ ] サーバースキャナー（一定間隔の `CreateThread`）
 - [ ] `playerDropped` ハンドラ
 - [ ] `onResourceStop` ハンドラ
-- [ ] 公開イベント発火（`onBountyTriggered`、`onRetaliationStart`、`onRetaliationWaveEnd`、`onBountyCleared`、`onRetaliationAbort`）
+- [ ] 公開イベント発火（`onBountyTriggered`、`onRetaliationStart`、`onRetaliationEnd`／ウェーブ結果ペイロード、`onBountyCleared`、`onRetaliationAbort`）
 
 ### 9.2 クライアント側（`client/retaliation.lua`）
 
@@ -544,6 +544,531 @@ PHASE 4 実装時に、以下を順番に潰していく。
 - `docs/EVENT_HOOKS.md` — 公開イベントの完全仕様
 - `docs/CONFIG_GUIDE.md` — Config 設定の運営者向けガイド
 - `config/retaliation.lua` — 実装側の Config 定義
+- **§13（本書後半）** — `transitionTo` 擬似コード・遷移テーブル・フック・タイムアウト・着手手順
+
+---
+
+## 13. `transitionTo` 擬似コードと実装パターン
+
+### 13.1 本節の目的
+
+本節は、§3〜§5 で定義した FSM を Lua で実装する際の**正規パターン**を擬似コードで示す。本節に従って実装することで、以下が保証される：
+
+不正な状態遷移は遷移マトリクス（§4）で機械的に検証され、コードに散らばらない。状態固有の処理（入場/退場フック）は明確に分離され、状態追加時の影響範囲が局所化される。副作用（イベント発火、エンティティ操作、DB 書き込み）の発生タイミングが遷移境界に集約され、デバッグが容易になる。エラーハンドリングのパターンが統一され、外部リソース異常で FSM 状態が壊れない。
+
+擬似コードは Lua 5.4 を想定し、FiveM ネイティブ API を呼ぶ箇所はコメントで明示する。実装時はこの擬似コードを叩き台として、`server/bounty.lua` および関連モジュールに展開する。
+
+**実装ノート**: `require('server.bounty.transitions')` のようなパスは FiveM ではリソース構成に依存する。モジュール分割する場合は `fxmanifest.lua` の `server_scripts` 読み込み順でグローバルに公開するか、同一ファイル内で定義する。**公開 `TriggerEvent` は第 1 引数のみテーブル**（`target` / `reason` / `patternId` 等）とし、`docs/EVENT_HOOKS.md` と一致させる。
+
+---
+
+### 13.2 命名規則
+
+#### 13.2.1 状態定数
+
+状態名は SCREAMING_SNAKE_CASE の文字列定数として `shared/constants.lua` に定義する（既存の `UbEvent` と併存）：
+
+```lua
+-- shared/constants.lua（追記例）
+BountyStates = {
+    IDLE        = "IDLE",
+    SCHEDULED   = "SCHEDULED",
+    PRE_WARNING = "PRE_WARNING",
+    SPAWNING    = "SPAWNING",
+    APPROACHING = "APPROACHING",
+    ENGAGING    = "ENGAGING",
+    RESOLVING   = "RESOLVING",
+    TERMINATED  = "TERMINATED",
+}
+
+ValidBountyStates = {}
+for _, v in pairs(BountyStates) do
+    ValidBountyStates[v] = true
+end
+```
+
+文字列定数を使う理由は、デバッグログでそのまま読める、JSON シリアライズが直感的、Config ファイルから参照しやすい、の 3 点。
+
+#### 13.2.2 入場/退場フック
+
+| フック種別 | 関数名パターン | 例 |
+|---|---|---|
+| 入場フック | `onEnter<StateName>` | `onEnterScheduled`、`onEnterEngaging` |
+| 退場フック | `onExit<StateName>` | `onExitScheduled`、`onExitEngaging` |
+| サブステート処理（RESOLVING 用） | `resolve<Substate>` | `resolveVictory`、`resolveDefeat` |
+
+`<StateName>` は PascalCase（`PRE_WARNING` → `PreWarning`）。
+
+#### 13.2.3 トリガー名
+
+```lua
+Triggers = {
+    HEIST_SUCCESS         = "heist.success",
+    SCHEDULE_TIMER_FIRED  = "schedule.timer_fired",
+    PRE_WARNING_COMPLETE  = "prewarning.complete",
+    SPAWN_COMPLETE        = "spawn.complete",
+    SPAWN_FAILED          = "spawn.failed",
+    APPROACH_COMPLETE     = "approach.complete",
+    APPROACH_TIMEOUT      = "approach.timeout",
+    WAVE_VICTORY          = "wave.victory",
+    WAVE_DEFEAT           = "wave.defeat",
+    WAVE_FLEE             = "wave.flee",
+    WAVE_TIMEOUT          = "wave.timeout",
+    RESOLVE_COMPLETE      = "resolve.complete",
+    BOUNTY_EXPIRED        = "bounty.expired",
+    PLAYER_DROPPED        = "player.dropped",
+    RESOURCE_STOP         = "resource.stop",
+    FORCE_TERMINATE       = "force.terminate",
+}
+```
+
+---
+
+### 13.3 遷移マトリクスのコード表現
+
+```lua
+-- server/bounty_transitions.lua（ファイル名は任意）
+
+local S = BountyStates
+
+local ALLOWED_TRANSITIONS = {
+    [S.IDLE]        = { [S.SCHEDULED] = true },
+    [S.SCHEDULED]   = { [S.PRE_WARNING] = true, [S.TERMINATED] = true },
+    [S.PRE_WARNING] = { [S.SPAWNING] = true, [S.RESOLVING] = true, [S.TERMINATED] = true },
+    [S.SPAWNING]    = { [S.APPROACHING] = true, [S.RESOLVING] = true, [S.TERMINATED] = true },
+    [S.APPROACHING] = { [S.ENGAGING] = true, [S.RESOLVING] = true, [S.TERMINATED] = true },
+    [S.ENGAGING]    = { [S.RESOLVING] = true, [S.TERMINATED] = true },
+    [S.RESOLVING]   = { [S.SCHEDULED] = true, [S.TERMINATED] = true },
+    [S.TERMINATED]  = {},
+}
+
+local function isTransitionAllowed(from, to)
+    if to == S.TERMINATED then return true end
+    local allowed = ALLOWED_TRANSITIONS[from]
+    if not allowed then return false end
+    return allowed[to] == true
+end
+
+return {
+    isTransitionAllowed = isTransitionAllowed,
+    ALLOWED_TRANSITIONS = ALLOWED_TRANSITIONS,
+}
+```
+
+§4 のマトリクスと本テーブルを**常に同時更新**する。
+
+---
+
+### 13.4 `BountyState:transitionTo` 擬似コード本体
+
+```lua
+-- server/bounty_state.lua（概念）
+
+-- 実装では §13.3 のモジュールを読み込み isTransitionAllowed を代入する
+local Transitions
+local Hooks = BountyHooks
+
+function BountyState:transitionTo(newState, trigger, payload)
+    payload = payload or {}
+    local oldState = self.current_state
+
+    -- PART 1: 検証
+    if not ValidBountyStates[newState] then
+        logError("Invalid target state", { bounty_id = self.bounty_id, attempted = newState, trigger = trigger })
+        return false
+    end
+    if oldState == newState then
+        logWarn("Self-transition rejected", { bounty_id = self.bounty_id, state = oldState, trigger = trigger })
+        return false
+    end
+    if not Transitions.isTransitionAllowed(oldState, newState) then
+        logWarn("Invalid transition rejected", {
+            bounty_id = self.bounty_id, from = oldState, to = newState, trigger = trigger,
+        })
+        return false
+    end
+    if not self:assertInvariants() then
+        logError("Invariant violation, forcing TERMINATED", { bounty_id = self.bounty_id, current_state = oldState })
+        if newState ~= BountyStates.TERMINATED then
+            return self:transitionTo(BountyStates.TERMINATED, Triggers.FORCE_TERMINATE, { reason = "invariant_violation" })
+        end
+    end
+
+    -- PART 2: 退場（失敗しても進行性のため続行）
+    local exitOk, exitErr = pcall(function()
+        Hooks.invokeExit(oldState, self, payload)
+    end)
+    if not exitOk then
+        logError("Exit hook failed (continuing transition)", {
+            bounty_id = self.bounty_id, state = oldState, error = tostring(exitErr),
+        })
+    end
+
+    -- PART 3: 状態更新と入場
+    self.previous_state = oldState
+    self.current_state = newState
+    self.state_entered_at = os.time()
+    self.last_trigger = trigger
+
+    logTransition(self, oldState, newState, trigger, payload)
+
+    local enterOk, enterErr = pcall(function()
+        Hooks.invokeEnter(newState, self, payload)
+    end)
+    if not enterOk then
+        logError("Enter hook failed, forcing TERMINATED", {
+            bounty_id = self.bounty_id, state = newState, error = tostring(enterErr),
+        })
+        if newState ~= BountyStates.TERMINATED then
+            return self:transitionTo(BountyStates.TERMINATED, Triggers.FORCE_TERMINATE, {
+                reason = "enter_hook_failed",
+                failed_state = newState,
+            })
+        end
+        return false
+    end
+
+    if self._pending_transition then
+        local pending = self._pending_transition
+        self._pending_transition = nil
+        return self:transitionTo(pending.state, pending.trigger, pending.payload)
+    end
+
+    return true
+end
+
+function BountyState:assertInvariants()
+    if self.waves_remaining < 0 or self.waves_remaining > self.max_waves then return false end
+    if self.expires_at <= self.triggered_at then return false end
+    if not self.player_id or self.player_id <= 0 then return false end
+    return true
+end
+```
+### 13.5 入場/退場フック実装パターン
+
+以下の `Config.Retaliation` は**正規化済み設定**の総称とする。現行リポジトリでは `Config.RetaliationPatterns[pattern_id]` 等から組み立ててもよい。
+
+```lua
+-- server/bounty_hooks.lua（概念）
+
+local M = {}
+local ENTER_HOOKS = {}
+local EXIT_HOOKS = {}
+
+function M.invokeEnter(state, bountyState, payload)
+    local hook = ENTER_HOOKS[state]
+    if hook then hook(bountyState, payload) end
+end
+
+function M.invokeExit(state, bountyState, payload)
+    local hook = EXIT_HOOKS[state]
+    if hook then hook(bountyState, payload) end
+end
+
+ENTER_HOOKS[BountyStates.IDLE] = function(_s, _payload) end
+EXIT_HOOKS[BountyStates.IDLE] = function(_s, _payload) end
+
+ENTER_HOOKS[BountyStates.SCHEDULED] = function(s, _payload)
+    local cfg = Config.Retaliation -- 正規化済み想定
+    local minSec = cfg.strike_interval_min_sec or 900
+    local maxSec = cfg.strike_interval_max_sec or 2700
+    local interval = math.random(minSec, maxSec)
+    s.next_wave_scheduled_at = os.time() + interval
+
+    if s.waves_completed == 0 then
+        TriggerClientEvent('jp-UnderworldBounty:client:bountyHud', s.player_id, { active = true })
+        TriggerEvent('jp-UnderworldBounty:onBountyTriggered', {
+            target = s.player_id,
+            bounty_id = s.bounty_id,
+            scenarioId = s.triggered_by_scenario,
+            patternId = s.pattern_id,
+            expires_at = s.expires_at,
+            max_waves = s.max_waves,
+        })
+    end
+end
+
+EXIT_HOOKS[BountyStates.SCHEDULED] = function(_s, _payload) end
+
+ENTER_HOOKS[BountyStates.PRE_WARNING] = function(s, _payload)
+    local cfg = Config.Retaliation
+    local messages = cfg.pre_warning_messages or { "notify_retaliation_hint" }
+    local selected = messages[math.random(#messages)]
+    TriggerClientEvent('jp-UnderworldBounty:client:preWarning', s.player_id, {
+        bounty_id = s.bounty_id,
+        message_key = selected,
+        duration_sec = cfg.pre_warning_seconds or 30,
+    })
+end
+
+EXIT_HOOKS[BountyStates.PRE_WARNING] = function(_s, _payload) end
+
+ENTER_HOOKS[BountyStates.SPAWNING] = function(s, _payload)
+    TriggerClientEvent('jp-UnderworldBounty:client:spawnWave', s.player_id, {
+        bounty_id = s.bounty_id,
+        pattern_id = s.pattern_id,
+        wave_index = s.waves_completed + 1,
+    })
+    s:startTimeout(15, Triggers.SPAWN_FAILED)
+end
+
+EXIT_HOOKS[BountyStates.SPAWNING] = function(s, _payload)
+    s:cancelTimeout()
+end
+
+ENTER_HOOKS[BountyStates.APPROACHING] = function(s, _payload)
+    s:startTimeout(60, Triggers.APPROACH_TIMEOUT)
+end
+
+EXIT_HOOKS[BountyStates.APPROACHING] = function(s, _payload)
+    s:cancelTimeout()
+end
+
+ENTER_HOOKS[BountyStates.ENGAGING] = function(s, _payload)
+    s.active_wave = s.active_wave or {}
+    s.active_wave.wave_started_at = os.time()
+    local maxSec = (Config.Retaliation and Config.Retaliation.max_engagement_seconds) or 300
+    s:startTimeout(maxSec, Triggers.WAVE_TIMEOUT)
+
+    TriggerEvent('jp-UnderworldBounty:onRetaliationStart', {
+        target = s.player_id,
+        bounty_id = s.bounty_id,
+        patternId = s.pattern_id,
+        wave_index = s.waves_completed + 1,
+    })
+end
+
+EXIT_HOOKS[BountyStates.ENGAGING] = function(s, _payload)
+    s:cancelTimeout()
+end
+
+ENTER_HOOKS[BountyStates.RESOLVING] = function(s, payload)
+    local result = (payload and payload.result) or "unknown"
+    local resolvers = {
+        victory = resolveVictory,
+        defeat = resolveDefeat,
+        flee = resolveFlee,
+        timeout = resolveTimeout,
+        abort = resolveAbort,
+    }
+    local resolver = resolvers[result]
+    if resolver then
+        resolver(s, payload)
+    else
+        resolveAbort(s, payload)
+    end
+
+    TriggerClientEvent('jp-UnderworldBounty:client:waveCleanup', s.player_id, {
+        bounty_id = s.bounty_id,
+        result = result,
+    })
+
+    TriggerEvent('jp-UnderworldBounty:onRetaliationEnd', {
+        target = s.player_id,
+        bounty_id = s.bounty_id,
+        patternId = s.pattern_id,
+        result = result,
+        wave_index = s.waves_completed,
+        waves_remaining = s.waves_remaining,
+    })
+
+    if s.waves_remaining > 0 and os.time() < s.expires_at then
+        s._pending_transition = {
+            state = BountyStates.SCHEDULED,
+            trigger = Triggers.RESOLVE_COMPLETE,
+            payload = {},
+        }
+    else
+        s._pending_transition = {
+            state = BountyStates.TERMINATED,
+            trigger = Triggers.RESOLVE_COMPLETE,
+            payload = {
+                reason = (s.waves_remaining <= 0) and "completed" or "expired",
+            },
+        }
+    end
+end
+
+EXIT_HOOKS[BountyStates.RESOLVING] = function(s, _payload)
+    s.active_wave = nil
+end
+
+ENTER_HOOKS[BountyStates.TERMINATED] = function(s, payload)
+    local reason = (payload and payload.reason) or "unknown"
+    TriggerClientEvent('jp-UnderworldBounty:client:forceCleanup', s.player_id)
+
+    TriggerEvent('jp-UnderworldBounty:onBountyCleared', {
+        target = s.player_id,
+        reason = reason,
+        bounty_id = s.bounty_id,
+        waves_completed = s.waves_completed,
+        triggered_at = s.triggered_at,
+        terminated_at = os.time(),
+    })
+
+    if Config.Retaliation and Config.Retaliation.persist_history then
+        saveToHistoryDB(s, reason)
+    end
+
+    ActiveBounties[s.player_id] = nil
+end
+
+EXIT_HOOKS[BountyStates.TERMINATED] = function(s, _payload)
+    logWarn("Exit from TERMINATED should never happen", { bounty_id = s.bounty_id })
+end
+
+return M
+```
+
+**クライアントイベント**: `client:preWarning` / `client:spawnWave` / `client:waveCleanup` は FSM 実装時に追加する。既存の `client:openFlavor` 等と統合してもよい。
+
+---
+
+### 13.6 RESOLVING サブステート処理
+
+```lua
+local function resolveVictory(s, payload)
+    s.waves_remaining = s.waves_remaining - 1
+    s.waves_completed = s.waves_completed + 1
+    local pattern = Config.RetaliationPatterns and Config.RetaliationPatterns[s.pattern_id]
+    local drops = calculateDrops((pattern and pattern.drops) or {})
+    for _, drop in ipairs(drops) do
+        pcall(function()
+            Bridge.AddItem(s.player_id, drop.item, drop.count)
+        end)
+    end
+end
+
+local function resolveDefeat(s, _payload)
+    local clearOnDeath = Config.Retaliation and Config.Retaliation.clear_bounty_on_player_death
+    if clearOnDeath then
+        s.waves_remaining = 0
+    else
+        s.waves_remaining = s.waves_remaining - 1
+        s.waves_completed = s.waves_completed + 1
+    end
+end
+
+local function resolveFlee(s, _payload)
+    if Config.Retaliation and Config.Retaliation.flee_consumes_count ~= false then
+        s.waves_remaining = s.waves_remaining - 1
+        s.waves_completed = s.waves_completed + 1
+    end
+end
+
+local function resolveTimeout(s, _payload)
+    if Config.Retaliation and Config.Retaliation.timeout_consumes_count ~= false then
+        s.waves_remaining = s.waves_remaining - 1
+        s.waves_completed = s.waves_completed + 1
+    end
+end
+
+local function resolveAbort(s, payload)
+    TriggerEvent('jp-UnderworldBounty:onRetaliationAbort', {
+        target = s.player_id,
+        bounty_id = s.bounty_id,
+        reason = (payload and payload.reason) or "unknown",
+    })
+end
+```
+
+---
+
+### 13.7 タイムアウト管理
+
+```lua
+--- mapTriggerToNextState(fromState, trigger) は別テーブルで実装。
+--- 例: APPROACHING + APPROACH_TIMEOUT -> ENGAGING
+
+function BountyState:startTimeout(seconds, trigger)
+    self:cancelTimeout()
+    local snapshot = { bounty_id = self.bounty_id, state = self.current_state, trigger = trigger }
+
+    -- FiveM: Citizen.SetTimeout(ms, fn) が無い／不安な場合は CreateThread + Wait で代替
+    self._timeout_token = Citizen.SetTimeout(math.floor(seconds * 1000), function()
+        local current = ActiveBounties[self.player_id]
+        if not current or current.bounty_id ~= snapshot.bounty_id then return end
+        if current.current_state ~= snapshot.state then return end
+
+        local nextState = mapTriggerToNextState(snapshot.state, snapshot.trigger)
+        if nextState then
+            current:transitionTo(nextState, snapshot.trigger, { reason = "timeout" })
+        end
+    end)
+end
+
+function BountyState:cancelTimeout()
+    if self._timeout_token then
+        -- ClearTimeout が無い環境は token を無効フラグにするだけでも可
+        if ClearTimeout then ClearTimeout(self._timeout_token) end
+        self._timeout_token = nil
+    end
+end
+```
+
+---
+
+### 13.8 デバッグログのフォーマット仕様
+
+```lua
+local function formatLog(level, msg, fields)
+    local parts = { string.format("[UB:%s]", level), msg }
+    if fields then
+        for k, v in pairs(fields) do
+            parts[#parts + 1] = string.format("%s=%s", k, tostring(v))
+        end
+    end
+    return table.concat(parts, " ")
+end
+
+function logTransition(s, from, to, trigger, payload)
+    if Config.Debug then
+        print(formatLog("DEBUG", "FSM transition", {
+            bounty_id = s.bounty_id,
+            player = s.player_id,
+            from = from,
+            to = to,
+            trigger = trigger,
+            wave = string.format("%d/%d", s.waves_completed, s.max_waves),
+        }))
+    elseif to == BountyStates.SCHEDULED or to == BountyStates.TERMINATED then
+        print(formatLog("INFO", "FSM transition", { bounty_id = s.bounty_id, from = from, to = to }))
+    end
+end
+```
+
+---
+
+### 13.9 エラーハンドリング・パターン総括
+
+| エラー発生箇所 | 対処 | 理由 |
+|---|---|---|
+| 引数バリデーション | ログして `return false` | 呼び出し側のバグ |
+| 不正な遷移要求 | ログして `return false` | 仕様違反 |
+| 不変条件違反 | TERMINATED へ強制 | データ破損 |
+| 退場フック失敗 | ログして遷移続行 | 進行性優先 |
+| 入場フック失敗 | TERMINATED へ強制 | 新状態が機能しない |
+| タイムアウト発火時に状態変化済 | 無視 | スナップショット検証 |
+| 外部リソース失敗 | `pcall`、ログ | FSM を外部に依存させない |
+| 連鎖遷移の再帰 | DAG で無限ループ防止 | マトリクス設計 |
+
+---
+
+### 13.10 実装着手手順
+
+1. `shared/constants.lua` に `BountyStates` / `Triggers` を定義。`server/bounty_transitions.lua` に §13.3 を実装。  
+2. `BountyState` と `transitionTo`（§13.4）を実装し、フックは空でも可。  
+3. §13.5 のフックを順に実装。クライアントはスタブで応答。  
+4. `startTimeout` / `cancelTimeout`（§13.7）と短縮 Config でフルサイクル検証。  
+5. 本番向けにクライアント NPC・戦闘演出を接続。  
+
+各段階でコミットし、`v0.4.0-fsm-step1` などタグを付けると切り戻しが容易。
+
+---
+
+### 13.11 次の改訂で追加予定
+
+実装後のタイムアウト値調整、Mermaid サブ図（PRE_WARNING / SPAWNING）、サーバー↔クライアントシーケンス（`reportWaveResult`）、事例集 `docs/RETALIATION_BUGS.md` など。
 
 ---
 
@@ -551,4 +1076,5 @@ PHASE 4 実装時に、以下を順番に潰していく。
 
 | 日付 | バージョン | 変更内容 |
 |---|---|---|
+| 2026-05-03 | v1.1 | §13「transitionTo」擬似コード・フック・サブステート・タイムアウト・ログ・着手手順を追加 |
 | 2026-05-03 | v1.0 | 初版作成、PHASE 4 実装前の設計確定版 |

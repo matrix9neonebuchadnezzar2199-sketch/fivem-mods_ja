@@ -14,7 +14,7 @@
 | `jp-UnderworldBounty:onBountyTriggered` | 指名手配が付与されたとき | `{ target = src, scenarioId = string, patternId = string }` |
 | `jp-UnderworldBounty:onBountyCleared` | 期限・撃退完了・死亡解除等 | `{ target = src, reason = string }` |
 | `jp-UnderworldBounty:onRetaliationStart` | 襲撃ウェーブをクライアントへ送ったとき | `{ target = src, patternId = string }` |
-| `jp-UnderworldBounty:onRetaliationEnd` | プレイヤーがウェーブを生き延びたとき | `{ target = src, patternId = string }` |
+| `jp-UnderworldBounty:onRetaliationEnd` | ウェーブ終了時（勝敗・中断・タイムアウト等。FSM §13.5 参照） | `{ target = src, patternId = string, result?, bounty_id?, wave_index?, waves_remaining? }` |
 | `jp-UnderworldBounty:onPlayerKilled` | 報復中にプレイヤーが死亡したとき | `{ target = src, context = string }` |
 | `jp-UnderworldBounty:onRetaliationAbort` | スポーン失敗等でウェーブを消費しない強制終了（FSM RESOLVING abort） | `{ target = src, reason = string }`（実装時に発火を追加） |
 
