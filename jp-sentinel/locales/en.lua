@@ -4,6 +4,7 @@ Locales.en = {
     not_police          = 'Only law enforcement can use this.',
     cooldown_active     = 'Cooldown active (%d s remaining)',
     throw_ready         = 'Sentinel Ball ready to throw.',
+    throw_timeout       = 'Throw timed out; cancelled.',
     throw_missed        = 'No target acquired.',
     throw_hit           = 'Sentinel deployed on target.',
     target_lost_speed   = 'Target lost: high speed.',

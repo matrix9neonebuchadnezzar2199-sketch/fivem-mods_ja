@@ -127,6 +127,12 @@ RegisterNetEvent('jp-sentinel:server:requestThrow', function(fromItem)
     handleRequestThrow(source, fromItem and true or false)
 end)
 
+--- 投擲モードをキャンセルしたとき（アイテム消費なしで PendingThrow のみ解除）
+RegisterNetEvent('jp-sentinel:server:reportThrowAbort', function()
+    local src = source
+    PendingThrow[src] = nil
+end)
+
 RegisterNetEvent('jp-sentinel:server:reportMiss', function()
     local src = source
     local p = PendingThrow[src]

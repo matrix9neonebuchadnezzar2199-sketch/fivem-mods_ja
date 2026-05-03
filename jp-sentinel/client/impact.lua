@@ -1,33 +1,10 @@
 local BALL_HASHES = {
     `w_am_baseball`,
     `prop_baseball_01`,
+    joaat('prop_baseball'),
     `prop_cs_baseball`,
+    `prop_proj_snowball`,
 }
-
----@param ped integer
----@param maxDist number
----@return integer|nil entity
-local function findThrownBallNear(ped, maxDist)
-    local pcoords = GetEntityCoords(ped)
-    local best = nil
-    local bestD = maxDist
-    for _, ent in ipairs(GetGamePool('CObject')) do
-        if DoesEntityExist(ent) then
-            local m = GetEntityModel(ent)
-            for i = 1, #BALL_HASHES do
-                if m == BALL_HASHES[i] then
-                    local d = #(pcoords - GetEntityCoords(ent))
-                    if d < bestD then
-                        bestD = d
-                        best = ent
-                    end
-                    break
-                end
-            end
-        end
-    end
-    return best
-end
 
 ---@param coords vector3
 ---@param radius number
@@ -49,36 +26,67 @@ local function findClosestPedNear(coords, radius, excludePed)
     return best
 end
 
----@param thrower integer
-function StartImpactTracking(thrower)
-    local startTime = GetGameTimer()
-    local lastBallCoords = nil
-
+---@param ballObj integer
+---@param throwerPed integer
+local function startImpactTrackingFromBall(ballObj, throwerPed)
     CreateThread(function()
+        local startTime = GetGameTimer()
+        local lastValidCoords = nil
+
         while GetGameTimer() - startTime < Config.Throw.MaxFlightTime do
-            local ballEnt = findThrownBallNear(thrower, 80.0)
-            if ballEnt then
-                local ballCoords = GetEntityCoords(ballEnt)
-                lastBallCoords = ballCoords
-
-                local hitPed = findClosestPedNear(ballCoords, Config.Throw.HitRadius, thrower)
-                if hitPed then
-                    TriggerEvent('jp-sentinel:client:spawnDroneLocal', hitPed, ballCoords)
-                    return
+            if not DoesEntityExist(ballObj) then
+                if lastValidCoords then
+                    local target = findClosestPedNear(lastValidCoords, Config.Throw.SearchRadius, throwerPed)
+                    if target then
+                        TriggerEvent('jp-sentinel:client:spawnDroneLocal', target, lastValidCoords)
+                        return
+                    end
                 end
+                break
             end
-            Wait(50)
-        end
 
-        if lastBallCoords then
-            local ped = findClosestPedNear(lastBallCoords, Config.Throw.SearchRadius, thrower)
-            if ped then
-                TriggerEvent('jp-sentinel:client:spawnDroneLocal', ped, lastBallCoords)
+            local ballCoords = GetEntityCoords(ballObj)
+            lastValidCoords = ballCoords
+
+            local hitTarget = findClosestPedNear(ballCoords, Config.Throw.HitRadius, throwerPed)
+            if hitTarget then
+                TriggerEvent('jp-sentinel:client:spawnDroneLocal', hitTarget, ballCoords)
+                if DoesEntityExist(ballObj) then
+                    DeleteEntity(ballObj)
+                end
                 return
             end
+
+            local vel = GetEntityVelocity(ballObj)
+            local speed = math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z)
+            if speed < 0.5 and (GetGameTimer() - startTime) > 500 then
+                local nearTarget = findClosestPedNear(ballCoords, Config.Throw.SearchRadius, throwerPed)
+                if nearTarget then
+                    TriggerEvent('jp-sentinel:client:spawnDroneLocal', nearTarget, ballCoords)
+                    if DoesEntityExist(ballObj) then
+                        DeleteEntity(ballObj)
+                    end
+                    return
+                end
+                break
+            end
+
+            Wait(0)
         end
 
         TriggerServerEvent('jp-sentinel:server:reportMiss')
         TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_missed'), 'error')
     end)
 end
+
+AddEventHandler('jp-sentinel:client:startImpactFromBall', function(ballObj, throwerPed)
+    if type(ballObj) ~= 'number' or type(throwerPed) ~= 'number' then
+        return
+    end
+    if not DoesEntityExist(ballObj) then
+        TriggerServerEvent('jp-sentinel:server:reportMiss')
+        TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_missed'), 'error')
+        return
+    end
+    startImpactTrackingFromBall(ballObj, throwerPed)
+end)

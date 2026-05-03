@@ -4,6 +4,7 @@ Locales.ja = {
     not_police          = 'このアイテムは警察関係者のみ使用できます。',
     cooldown_active     = 'クールダウン中です（残り %d 秒）',
     throw_ready         = 'Sentinel Ball を投擲する準備ができました。',
+    throw_timeout       = '投擲タイムアウト：キャンセルしました。',
     throw_missed        = '対象を捉えられませんでした。',
     throw_hit           = 'Sentinel をターゲットに展開しました。',
     target_lost_speed   = 'ターゲットがロスト：高速移動を検知。',
