@@ -57,6 +57,10 @@ end
 ---@return boolean
 function Inv.RemoveItem(source, itemName, count)
     count = count or 1
+    if GetResourceState('ox_inventory') == 'started' then
+        local ok = exports.ox_inventory:RemoveItem(source, itemName, count)
+        return ok == true
+    end
     local fw = Config.Framework
     if fw == 'esx' then
         local ESX = getESX()

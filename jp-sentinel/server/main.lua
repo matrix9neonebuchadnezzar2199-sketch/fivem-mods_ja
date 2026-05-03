@@ -67,30 +67,48 @@ local function finalizeSentinel(sentinelId, reason)
     broadcastEnded(sentinelId, reason, thrower)
 end
 
+---@param src number
+---@param fromItem boolean
+---@return boolean ok allowThrow を送れたとき true（ox_inventory では false で使用キャンセル）
 local function handleRequestThrow(src, fromItem)
     if not JB.IsPolice(src) then
         Config.Notify(src, Config.Lang('not_police'), 'error')
-        return
+        return false
     end
     if hasActiveSentinelForThrower(src) then
         Config.Notify(src, Config.Lang('already_active'), 'error')
-        return
+        return false
     end
     if PendingThrow[src] then
         TriggerClientEvent('jp-sentinel:client:denyThrow', src, { reason = 'busy', remain = 0 })
-        return
+        return false
     end
 
     local ident = primaryIdentifier(src)
-    local ok, remain = Cooldown.Check(ident)
-    if not ok then
+    local okCd, remain = Cooldown.Check(ident)
+    if not okCd then
         TriggerClientEvent('jp-sentinel:client:denyThrow', src, { reason = 'cooldown', remain = remain })
-        return
+        return false
     end
 
     PendingThrow[src] = { fromItem = fromItem and true or false }
     TriggerClientEvent('jp-sentinel:client:allowThrow', src)
+    return true
 end
+
+--- ox_inventory の data/items.lua で server.export = 'jp-sentinel.useSentinelBall' としたときに呼ばれる
+exports('useSentinelBall', function(event, _item, inventory, _slot, _data)
+    if event ~= 'usingItem' then
+        return
+    end
+    local src = tonumber(inventory.id) or inventory.id
+    if type(src) ~= 'number' then
+        return false
+    end
+    if not handleRequestThrow(src, true) then
+        return false
+    end
+end)
 
 local function registerItemUsable()
     Inv.RegisterUsable(Config.ItemName, function(source)
