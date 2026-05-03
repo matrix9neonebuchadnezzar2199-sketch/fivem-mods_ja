@@ -341,4 +341,6 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 
 ## 付録: 運営・開発ドキュメント
 
-詳細はリポジトリ内 `docs/CONFIG_GUIDE.md`・`docs/SCENARIO_GUIDE.md`・`docs/EVENT_HOOKS.md` を参照。
+- **プレイヤー体験フロー（時系列 + 開発者設置項目）**: `docs/PLAYER_FLOW.md`  
+- **シナリオ設計テンプレ（運営が空欄埋め）**: `docs/SCENARIO_TEMPLATE.md`  
+- **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`

@@ -1,5 +1,7 @@
 # シナリオ追加ガイド
 
+設計の全体像とプレイヤー視点の流れは **`docs/PLAYER_FLOW.md`**、運営向けの空欄テンプレは **`docs/SCENARIO_TEMPLATE.md`** を参照。
+
 ## 手順
 
 1. `config/scenarios.lua` の `Config.Scenarios` にテーブルを **1 ブロック追加**する。  
