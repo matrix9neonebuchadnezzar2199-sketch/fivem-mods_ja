@@ -49,6 +49,7 @@ files {
     'html/admin/css/*.css',
     'html/admin/js/*.js',
     'html/assets/cards/**/*.png',
+    'html/assets/cards/**/*.jpg',
     'html/assets/cards/asset_manifest.json',
     'html/assets/duel_back.png',
     -- 段位徽章（M6）。ワイルドカード可だが欠け検知のため 9 枚明示（ファイル名は Linux 本番で厳密一致）
