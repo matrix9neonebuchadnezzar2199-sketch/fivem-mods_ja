@@ -5,6 +5,60 @@ Database = {}
 
 local resourceName = GetCurrentResourceName()
 
+--- shared/cards.lua 優先（DB が Seed 前でもデッキ UI・画像パスが Lua と一致する）
+local LuaMasterByCardId = {}
+do
+    for _, c in ipairs(TcgCardsMaster) do
+        LuaMasterByCardId[c.card_id] = c
+    end
+end
+
+--- @param row table SQL JOIN 行（card_id, name, …）
+--- @return table NUI / クライアント向けカードペイロード
+local function deckCardPayloadFromLuaOrRow(row)
+    local lm = LuaMasterByCardId[row.card_id]
+    if not lm then
+        local nameEnFallback = nil
+        if type(row.name_en) == 'string' and row.name_en ~= '' then
+            nameEnFallback = row.name_en
+        end
+        return {
+            card_id = row.card_id,
+            name = row.name,
+            name_en = nameEnFallback,
+            rank = row.rank,
+            type = row.type,
+            stat_top = row.stat_top,
+            stat_right = row.stat_right,
+            stat_bottom = row.stat_bottom,
+            stat_left = row.stat_left,
+            image_path = row.image_path,
+            description = row.description,
+            description_en = type(row.description_en) == 'string' and row.description_en or '',
+            no = row.no,
+        }
+    end
+    local nameEn = nil
+    if type(lm.name_en) == 'string' and lm.name_en ~= '' then
+        nameEn = lm.name_en
+    end
+    return {
+        card_id = lm.card_id,
+        name = lm.name,
+        name_en = nameEn,
+        rank = lm.rank,
+        type = lm.type,
+        stat_top = lm.stat_top,
+        stat_right = lm.stat_right,
+        stat_bottom = lm.stat_bottom,
+        stat_left = lm.stat_left,
+        image_path = lm.image_path,
+        description = lm.description,
+        description_en = type(lm.description_en) == 'string' and lm.description_en or '',
+        no = lm.no,
+    }
+end
+
 --- install.sql を読み込み、コメント除去後にセミコロンで分割して返す
 local function loadSqlStatements()
     local raw = LoadResourceFile(resourceName, 'server/sql/install.sql')
@@ -333,21 +387,7 @@ ORDER BY dc.slot_index ASC
         if r then
             slots[i] = {
                 slot_index = i,
-                card = {
-                    card_id = r.card_id,
-                    name = r.name,
-                    name_en = r.name_en,
-                    rank = r.rank,
-                    type = r.type,
-                    stat_top = r.stat_top,
-                    stat_right = r.stat_right,
-                    stat_bottom = r.stat_bottom,
-                    stat_left = r.stat_left,
-                    image_path = r.image_path,
-                    description = r.description,
-                    description_en = r.description_en,
-                    no = r.no,
-                },
+                card = deckCardPayloadFromLuaOrRow(r),
             }
         else
             slots[i] = { slot_index = i, card = nil }

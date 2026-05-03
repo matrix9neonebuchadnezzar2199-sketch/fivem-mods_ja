@@ -173,8 +173,67 @@
 
   function getSlot(slots, idx1) {
     if (!Array.isArray(slots)) return null;
-    const found = slots.find((s) => Number(s.slot_index) === idx1);
+    const found = slots.find((s) => s && Number(s.slot_index) === idx1);
     return found || slots[idx1 - 1] || null;
+  }
+
+  /** FiveM→NUI で slots が連番配列にならない場合のずれを防ぐ（1〜10 を slot_index で固定） */
+  function normalizeDeckSlots(raw) {
+    const empty = (i) => ({ slot_index: i, card: null });
+    if (raw == null) {
+      const out = [];
+      for (let i = 1; i <= DECK_SIZE; i++) out.push(empty(i));
+      return out;
+    }
+    if (Array.isArray(raw)) {
+      const byIx = new Map();
+      raw.forEach((s, idx) => {
+        if (!s || typeof s !== 'object') return;
+        let ix = Number(s.slot_index);
+        if (!Number.isFinite(ix) || ix < 1 || ix > DECK_SIZE) ix = idx + 1;
+        if (ix >= 1 && ix <= DECK_SIZE) byIx.set(ix, { ...s, slot_index: ix });
+      });
+      const out = [];
+      for (let i = 1; i <= DECK_SIZE; i++) out.push(byIx.get(i) || empty(i));
+      return out;
+    }
+    if (typeof raw === 'object') {
+      const out = [];
+      for (let i = 1; i <= DECK_SIZE; i++) {
+        const s = raw[i] ?? raw[String(i)];
+        if (s && typeof s === 'object') {
+          let ix = Number(s.slot_index);
+          if (!Number.isFinite(ix) || ix < 1 || ix > DECK_SIZE) ix = i;
+          out.push({ ...s, slot_index: ix });
+        } else out.push(empty(i));
+      }
+      return out;
+    }
+    const out = [];
+    for (let i = 1; i <= DECK_SIZE; i++) out.push(empty(i));
+    return out;
+  }
+
+  /** DB と AppState.cardsMaster のずれ時もデッキ表示をマスタに合わせる */
+  function hydrateDeckCardDisplay(card, mMap) {
+    if (!card || !card.card_id || !mMap) return card;
+    const m = mMap.get(card.card_id);
+    if (!m) return card;
+    return {
+      ...card,
+      name: m.name,
+      name_en: m.name_en,
+      rank: m.rank,
+      type: m.type,
+      stat_top: m.stat_top,
+      stat_right: m.stat_right,
+      stat_bottom: m.stat_bottom,
+      stat_left: m.stat_left,
+      image_path: m.image_path,
+      description: m.description,
+      description_en: m.description_en,
+      no: m.no,
+    };
   }
 
   function countFilled(slots) {
@@ -243,7 +302,7 @@
   }
 
   function computeDeckStats(detail) {
-    const slots = detail && detail.slots ? detail.slots : [];
+    const slots = normalizeDeckSlots(detail && detail.slots ? detail.slots : null);
     const filled = countFilled(slots);
     let totalPwr = 0;
     let maxStat = 0;
@@ -251,10 +310,11 @@
     let shitei = 0;
     let free = 0;
 
+    const mMapSt = masterById();
     for (let i = 1; i <= DECK_SIZE; i++) {
       const sl = getSlot(slots, i);
       if (!sl || !sl.card) continue;
-      const c = sl.card;
+      const c = hydrateDeckCardDisplay(sl.card, mMapSt);
       const p = CU.cardPower(c);
       totalPwr += p;
       ['stat_top', 'stat_right', 'stat_bottom', 'stat_left'].forEach((k) => {
@@ -470,9 +530,10 @@
       saveEl.innerHTML = `<span class="save-dot"></span><span>${escapeHtml(label)}</span>`;
     }
 
-    const slots = detail.slots || [];
+    const slots = normalizeDeckSlots(detail.slots);
     const filled = countFilled(slots);
     const shiteiN = countShiteiSlots(slots);
+    const mMapDeck = masterById();
 
     if (filledEl) {
       filledEl.innerHTML = `<span class="num">${filled}</span><span class="max"> / ${DECK_SIZE}</span> <span class="deck-counter-suffix">${escapeHtml(tt('deck_counter_cards_suffix'))}</span>`;
@@ -498,7 +559,7 @@
         }
 
         cell.classList.add('filled');
-        const c = sl.card;
+        const c = hydrateDeckCardDisplay(sl.card, mMapDeck);
 
         const rm = document.createElement('button');
         rm.type = 'button';
@@ -602,7 +663,7 @@
 
     const masters = CU.normalizeMasterList(global.AppState);
     const own = ownershipMap();
-    const slots = detail && detail.slots ? detail.slots : [];
+    const slots = normalizeDeckSlots(detail && detail.slots ? detail.slots : null);
     const filled = countFilled(slots);
     const shiteiSlots = countShiteiSlots(slots);
     const deckFull = filled >= DECK_SIZE;
