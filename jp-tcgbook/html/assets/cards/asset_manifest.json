@@ -40,7 +40,27 @@
     "assets/cards/monster/tcg_m_b_crystal_golem.jpg",
     "assets/cards/monster/tcg_m_c_carrion_raven.jpg",
     "assets/cards/monster/tcg_m_c_armored_slime.jpg",
-    "assets/cards/monster/tcg_m_c_rot_zombie.jpg"
+    "assets/cards/monster/tcg_m_c_rot_zombie.jpg",
+    "assets/cards/character/tcg_ss_lion_paladin.jpg",
+    "assets/cards/character/tcg_s_runic_ranger.jpg",
+    "assets/cards/monster/tcg_m_ur_vampire_lord.jpg",
+    "assets/cards/monster/tcg_m_ur_void_archdemon.jpg",
+    "assets/cards/monster/tcg_m_ur_rune_colossus.jpg",
+    "assets/cards/monster/tcg_m_ss_steam_colossus.jpg",
+    "assets/cards/monster/tcg_m_ss_crimson_dragon.jpg",
+    "assets/cards/monster/tcg_m_ss_succubus_queen.jpg",
+    "assets/cards/monster/tcg_m_ss_inferno_demon_king.jpg",
+    "assets/cards/monster/tcg_m_ss_arcane_grimoire.jpg",
+    "assets/cards/monster/tcg_m_ss_necro_matron.jpg",
+    "assets/cards/monster/tcg_m_ss_lich_overlord.jpg",
+    "assets/cards/monster/tcg_m_s_light_phantom.jpg",
+    "assets/cards/monster/tcg_m_s_crystal_oracle.jpg",
+    "assets/cards/monster/tcg_m_s_livingwood_archer.jpg",
+    "assets/cards/monster/tcg_m_s_mirror_ranger.jpg",
+    "assets/cards/monster/tcg_m_s_nightshade_assassin.jpg",
+    "assets/cards/monster/tcg_m_s_dusk_spellblade.jpg",
+    "assets/cards/monster/tcg_m_s_storm_dragonkin.jpg",
+    "assets/cards/monster/tcg_m_a_blue_runeweaver.jpg"
   ],
-  "_note": "jp-tcgbook admin: image_path は html からの相対（例 assets/cards/monster/x.jpg）。cards.lua の並びと一致させる。"
+  "_note": "jp-tcgbook admin: image_path は html からの相対。shared/cards.lua の no 順と一致。"
 }
