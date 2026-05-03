@@ -1,0 +1,3 @@
+-- jp-UnderworldBounty 任意永続化用プレースホルダ
+-- Config.EnableDatabasePersistence 実装時にスキーマを定義する。
+-- CREATE TABLE IF NOT EXISTS jp_ub_bounty (...);

@@ -1,0 +1,8 @@
+# jp-UnderworldBounty
+
+- 実装・改修時は必ず `docs/DESIGN.md` を参照する。
+- 座標・モデル・武器・報酬などの固有値は Lua 本体にハードコードしない。`config/` に置く。
+- フレームワーク依存処理は `bridge/sv_bridge.lua` / `bridge/cl_bridge.lua` 経由に寄せる（クライアントから ESX/QBCore 直参照しない）。
+- プレイヤー向け文言は `locales/*.lua` と `_L()`。日本語コメント可。
+- FiveM: `fx_version 'cerulean'`、`lua54 'yes'`、Wait(0) 常時ループを作らない。
+- 文字コード UTF-8（BOM なし）。

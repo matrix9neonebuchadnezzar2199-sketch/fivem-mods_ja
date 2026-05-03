@@ -1,0 +1,144 @@
+:root {
+  --bg: rgba(12, 8, 10, 0.92);
+  --accent: #c41e3a;
+  --accent-dim: #7a1022;
+  --text: #f5f0e8;
+  --muted: #b8a99a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Meiryo', system-ui, sans-serif;
+  color: var(--text);
+}
+
+.panel {
+  position: absolute;
+  top: 18%;
+  right: 3%;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--accent-dim);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.hud-icon {
+  color: var(--accent);
+  font-size: 18px;
+  text-shadow: 0 0 8px rgba(196, 30, 58, 0.8);
+}
+
+.hud-hidden {
+  display: none !important;
+}
+
+.toast {
+  position: absolute;
+  bottom: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  background: var(--bg);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  max-width: 70%;
+  font-size: 14px;
+}
+
+.toast-hidden {
+  display: none;
+}
+
+.mg-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mg-hidden {
+  display: none !important;
+}
+
+.mg-card {
+  width: min(420px, 92vw);
+  padding: 22px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #1a1215, #0c090a);
+  border: 1px solid var(--accent-dim);
+}
+
+.mg-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.mg-desc {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mg-bar-wrap {
+  height: 22px;
+  background: #2a2226;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.mg-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  transition: width 0.05s linear;
+}
+
+.mg-keys {
+  font-size: 28px;
+  letter-spacing: 6px;
+  text-align: center;
+  margin: 16px 0;
+  color: #ffd7dc;
+}
+
+.mg-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.mg-btn:active {
+  transform: scale(0.98);
+}
+
+.mg-status {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 1.2em;
+}
