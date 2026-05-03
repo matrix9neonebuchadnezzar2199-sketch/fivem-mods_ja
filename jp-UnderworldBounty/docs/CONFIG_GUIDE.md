@@ -27,3 +27,7 @@
 ## 警察ジョブ
 
 `Config.PoliceJobs` にオンライン警官として数えるジョブ名（小文字キー）を追加します。
+
+## 報復（指名手配）
+
+キーの意味・FSM との対応は **`docs/RETALIATION_FSM.md`** の §6・§6.1 を参照（目標スキーマと現行 `retaliation.lua` の差分あり）。

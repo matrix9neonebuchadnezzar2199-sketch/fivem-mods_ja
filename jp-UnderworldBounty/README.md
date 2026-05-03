@@ -41,4 +41,4 @@ MIT — see `LICENSE`.
 4. `config/rewards.lua` のアイテム名を自サーバーのアイテムに合わせる。  
 5. ゲーム内でサンプルロケーション（南 LS / 港 / 市内）付近のマーカーに入り **E** で開始。
 
-詳細は `docs/` を参照（体験フロー表: `docs/PLAYER_FLOW.md`、シナリオ設計テンプレ: `docs/SCENARIO_TEMPLATE.md`）。
+詳細は `docs/` を参照（体験フロー表: `docs/PLAYER_FLOW.md`、報復 FSM: `docs/RETALIATION_FSM.md`、シナリオ設計テンプレ: `docs/SCENARIO_TEMPLATE.md`）。

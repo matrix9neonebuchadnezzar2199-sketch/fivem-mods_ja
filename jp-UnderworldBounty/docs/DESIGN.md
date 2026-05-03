@@ -263,6 +263,8 @@ NPCのAI挙動パターン（passive / alert / aggressive / boss）を実装。a
 
 ### PHASE 4: 闇の指名手配システム（所要7〜10日）
 
+**状態遷移の厳密仕様**: `docs/RETALIATION_FSM.md`（8 状態 FSM、遷移マトリクス、Mermaid、Config 紐付け、エラーハンドリング、実装チェックリスト）。プレイヤー視点の対応シーンは `docs/PLAYER_FLOW.md` の #21〜#28。
+
 このプロジェクトの最大の差別化機能なので時間をかける。
 
 `server/bounty.lua`でプレイヤーごとの指名手配状態を管理。強盗成功時に`SetBounty(playerId, scenarioId, retaliationPatternId)`を呼び、有効期限・残り回数・襲撃間隔を設定。
@@ -342,5 +344,6 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 ## 付録: 運営・開発ドキュメント
 
 - **プレイヤー体験フロー（時系列 + 開発者設置項目）**: `docs/PLAYER_FLOW.md`  
+- **報復システム FSM（PHASE 4 実装の正本）**: `docs/RETALIATION_FSM.md`  
 - **シナリオ設計テンプレ（運営が空欄埋め）**: `docs/SCENARIO_TEMPLATE.md`  
 - **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`

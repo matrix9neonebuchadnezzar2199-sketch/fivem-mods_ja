@@ -2,7 +2,13 @@
 
 時系列でプレイヤー体験を追いながら、各シーンで **開発者が設置・設定すべきもの** を併記する。実装漏れ防止と Config スキーマ設計のたたき台として使う。
 
-**関連**: `docs/DESIGN.md`（全体設計）、`docs/SCENARIO_TEMPLATE.md`（運営向けテンプレ）、`docs/EVENT_HOOKS.md`（イベント名は実装上 `jp-UnderworldBounty:on*` プレフィックス）。
+**関連**: `docs/DESIGN.md`（全体設計）、`docs/RETALIATION_FSM.md`（報復の 8 状態 FSM・遷移表）、`docs/SCENARIO_TEMPLATE.md`（運営向けテンプレ）、`docs/EVENT_HOOKS.md`（イベント名は実装上 `jp-UnderworldBounty:on*` プレフィックス）。
+
+---
+
+## 報復シーン（#21〜#28）と FSM
+
+シーン **#21〜#28**（指名手配開始〜残り回数チェック）は、サーバー主導の報復ライフサイクルに対応する。**状態・遷移・Config・エッジケースの正本は `docs/RETALIATION_FSM.md`**。実装時は同書の §3（状態定義）・§4（遷移マトリクス）・§9（チェックリスト）を優先する。
 
 ---
 
@@ -39,14 +45,14 @@
 | 18 | 退出フェーズ | 退出ポイントへ向かう道中、追加用心棒 | 退出時追加敵 | `config/scenarios.lua` の `escape_enemies[]`（設計案） | PHASE 3 |
 | 19 | 退出成功 | 退出ゾーン到達で成功、「闇の指名手配」通知 | 退出ゾーン、成功演出、報酬トリガー | `config/locations.lua` の `exit_zone`（設計案）、`server/heist.lua` | PHASE 3,4 |
 | 20 | 報酬付与 | 現金・ブラックマネー・アイテム | サーバー側のみで抽選・付与 | `server/rewards.lua`、`config/rewards.lua` | PHASE 3 |
-| 21 | 指名手配開始 | HUD にアイコン、残り時間表示（設計案） | アイコン画像、HUD、`server/bounty.lua` | `ui/assets/`、`server/bounty.lua` | PHASE 4,6 |
-| 22 | 通常 RP 継続 | 自由行動 | （システムなし） | - | - |
-| 23 | 不穏な気配 | 「視線を感じる…」フレーバー | 事前警告タイミング・文言 | `config/retaliation.lua` の `pre_warning_seconds`（設計案） | PHASE 4 |
-| 24 | 報復隊接近 | 黒い SUV が接近 | 車両モデル、スポーン距離、走行 AI | `config/retaliation.lua` の `vehicle_model`、`spawn_distance`（設計案） | PHASE 4 |
-| 25 | 降車・襲撃 | 武装 NPC が降車 | 人数・武器・モデル | `config/retaliation.lua` のパターン定義 | PHASE 4 |
-| 26 | 戦闘 | 警察は介入しない | 関係性グループ | `client/retaliation.lua` | PHASE 4 |
-| 27 | 撃退成功 | ドロップ入手（設計案） | `drops[]` 確率 | `config/retaliation.lua` | PHASE 4 |
-| 28 | 残り回数チェック | 0 なら指名解除、HUD 消灯 | 回数・解除・通知 | `server/bounty.lua` | PHASE 4 |
+| 21 | 指名手配開始 | HUD にアイコン、残り時間表示（設計案） | アイコン画像、HUD、`server/bounty.lua` | `ui/assets/`、`server/bounty.lua` | PHASE 4,6 → [FSM](RETALIATION_FSM.md): SCHEDULED 入場 |
+| 22 | 通常 RP 継続 | 自由行動 | （システムなし） | - | - → [FSM](RETALIATION_FSM.md): SCHEDULED 滞在 |
+| 23 | 不穏な気配 | 「視線を感じる…」フレーバー | 事前警告タイミング・文言 | `config/retaliation.lua` の `pre_warning_seconds`（設計案） | PHASE 4 → [FSM](RETALIATION_FSM.md): PRE_WARNING |
+| 24 | 報復隊接近 | 黒い SUV が接近 | 車両モデル、スポーン距離、走行 AI | `config/retaliation.lua` の `vehicle_model`、`spawn_distance`（設計案） | PHASE 4 → [FSM](RETALIATION_FSM.md): APPROACHING |
+| 25 | 降車・襲撃 | 武装 NPC が降車 | 人数・武器・モデル | `config/retaliation.lua` のパターン定義 | PHASE 4 → [FSM](RETALIATION_FSM.md): SPAWNING〜ENGAGING |
+| 26 | 戦闘 | 警察は介入しない | 関係性グループ | `client/retaliation.lua` | PHASE 4 → [FSM](RETALIATION_FSM.md): ENGAGING |
+| 27 | 撃退成功 | ドロップ入手（設計案） | `drops[]` 確率 | `config/retaliation.lua` | PHASE 4 → [FSM](RETALIATION_FSM.md): RESOLVING(victory) |
+| 28 | 残り回数チェック | 0 なら指名解除、HUD 消灯 | 回数・解除・通知 | `server/bounty.lua` | PHASE 4 → [FSM](RETALIATION_FSM.md): RESOLVING→TERMINATED |
 | 29 | RP 継続 | クールダウン後に再挑戦 | CD 管理 | `config/config.lua` の `LocationCooldownSec`、シナリオ単位 CD は設計案 | PHASE 2 |
 | 30 | イベントフック | 他リソースへ通知 | `TriggerEvent` による公開フック | `server/events.lua`（実装名は `jp-UnderworldBounty:onHeistComplete` 等） | PHASE 7 |
 
@@ -111,7 +117,7 @@
 | `entry_minigame`（シナリオ先頭の 1 種） | 実装済み |
 | `vault_minigame`・`props[]`・`escape_enemies[]`・`exit_zone`・警報伝播 | 未実装（拡張ポイント） |
 | 成功条件 | 敵全滅で完了（退出ゾーン未使用） |
-| 報復 `pre_warning_seconds`・`spawn_distance`・`drops` 実処理・逃走離脱 | 一部のみ（襲撃直前フレーバー・車両接近は実装、drops 抽選はスタブ寄り） |
+| 報復 `pre_warning_seconds`・`spawn_distance`・`drops` 実処理・逃走離脱 | 一部のみ（襲撃直前フレーバー・車両接近は実装、drops 抽選はスタブ寄り）。**完全な 8 状態 FSM は `docs/RETALIATION_FSM.md` を参照し段階的に寄せる。** |
 | HUD 残り時間 | NUI はアイコン中心、カウントダウンは設計案 |
 | 公開イベント | `jp-UnderworldBounty:on*`（詳細は `EVENT_HOOKS.md`） |
 

@@ -2,6 +2,8 @@
 
 他リソースから `AddEventHandler` で購読します。イベント名は **`jp-UnderworldBounty:` + 名前** です（サーバー側で `TriggerEvent` 発火）。
 
+報復の状態・サブ結果・タイミングは **`docs/RETALIATION_FSM.md`** と整合させること。
+
 ## 一覧
 
 | イベント名 | タイミング | payload（例） |
@@ -14,6 +16,7 @@
 | `jp-UnderworldBounty:onRetaliationStart` | 襲撃ウェーブをクライアントへ送ったとき | `{ target = src, patternId = string }` |
 | `jp-UnderworldBounty:onRetaliationEnd` | プレイヤーがウェーブを生き延びたとき | `{ target = src, patternId = string }` |
 | `jp-UnderworldBounty:onPlayerKilled` | 報復中にプレイヤーが死亡したとき | `{ target = src, context = string }` |
+| `jp-UnderworldBounty:onRetaliationAbort` | スポーン失敗等でウェーブを消費しない強制終了（FSM RESOLVING abort） | `{ target = src, reason = string }`（実装時に発火を追加） |
 
 ## サンプル（Discord 通知のフック先）
 
