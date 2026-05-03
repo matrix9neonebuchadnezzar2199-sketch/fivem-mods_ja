@@ -23,7 +23,8 @@
 
 1. 警察ジョブ（または standalone の ACE）を付与する  
 2. ゲーム内で **`/sentinel`**（`Config.EnableCommand = true` のとき）  
-3. 左手に **`WEAPON_BALL`** が付いたら攻撃ボタンで投擲  
+3. **左クリックで投擲**（物理ボール prop を生成して発射。**WEAPON_BALL は使用しない**ため ox_inventory の武器剥奪の影響を受けない）  
+4. **右クリックでキャンセル**（Pending のみ解除・アイテム消費なし）  
 
 ### ox_inventory（共通）：`data/items.lua` に登録
 
@@ -75,7 +76,7 @@ jp-sentinel は **命中／不発のタイミングでサーバーから `Remove
 
 1. `ensure jp-sentinel` でエラーなし  
 2. 警察ジョブ（または ACE）を確認  
-3. `/sentinel` または `sentinel_ball` を使用 → ボールが手に入る → 投擲  
+3. `/sentinel` または `sentinel_ball` を使用 → 案内に従い **左クリックで投擲**（物理ボール）  
 4. NPC／プレイヤー命中でドローン・ブリップ確認  
 5. 撃墜・タイムアウトの演出確認  
 

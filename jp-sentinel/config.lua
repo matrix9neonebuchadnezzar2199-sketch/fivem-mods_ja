@@ -32,11 +32,16 @@ Config.CommandName = 'sentinel'
 -- 投擲・命中
 -- ============================================================
 
+-- 投擲は WEAPON を使わず物理 prop を生成して ApplyForce（ox_inventory 等の武器剥奪と無関係）
 Config.Throw = {
-    WeaponHash = `WEAPON_BALL`,
+    BallModel = `prop_baseball_01`, -- スポーンするボール prop（ビルドで無い場合は `prop_cs_baseball` 等に変更）
+    ThrowPower = 25.0, -- 前方への力の係数
+    ThrowUpward = 5.0, -- 上方向への力（ApplyForce の Z）
+    ReleaseDelay = 300, -- アニメ開始からボール生成までの遅延（ms）
+    MaxWaitMs = 20000, -- 投擲待機タイムアウト（左クリック待ち）
     MaxFlightTime = 5000, -- ボール飛行追跡の最大時間（ms）
-    HitRadius = 2.0, -- 命中判定半径（m）：ボール周辺に Ped がいればヒット候補
-    SearchRadius = 3.0, -- タイムアウト時の最終探索半径（m）
+    HitRadius = 2.0, -- 命中判定半径（m）
+    SearchRadius = 3.0, -- 着弾・タイムアウト時の探索半径（m）
 }
 
 -- ============================================================

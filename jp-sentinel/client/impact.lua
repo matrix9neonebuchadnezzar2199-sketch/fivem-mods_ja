@@ -1,4 +1,5 @@
 local BALL_HASHES = {
+    Config.Throw.BallModel,
     `w_am_baseball`,
     `prop_baseball_01`,
     joaat('prop_baseball'),

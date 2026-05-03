@@ -1,70 +1,72 @@
 local IsThrowMode = false
 
--- WEAPON_BALL 投擲後に世界に出る可能性があるモデル（近い候補はすべて列挙）
-local BALL_HASHES = {
-    `prop_baseball_01`,
-    joaat('prop_baseball'),
-    `prop_cs_baseball`,
-    `w_am_baseball`,
-    `prop_proj_snowball`,
-}
+local ANIM_DICT = 'anim@mp_player_intthrow'
+local ANIM_NAME = 'throw'
 
----FindFirstObject 列挙（ネイティブ失敗時は何も yield しない）
----@return fun(): integer|nil
-local function enumerateObjects()
-    return coroutine.wrap(function()
-        local ok, handle, object = pcall(FindFirstObject)
-        if not ok or not handle or handle == -1 then
-            return
-        end
-        local success
-        repeat
-            if object and object ~= 0 then
-                coroutine.yield(object)
-            end
-            success, object = FindNextObject(handle)
-        until not success
-        pcall(EndFindObject, handle)
-    end)
-end
-
----プレイヤーから離れた野球ボールを1つ選ぶ（誤発火した手元トラッキングを避ける）
 ---@param ped integer
----@return integer|nil
-local function findRecentlyThrownBall(ped)
-    local pcoords = GetEntityCoords(ped)
-    local best = nil
-    local bestD = 31.0
+local function manualThrow(ped)
+    if not DoesEntityExist(ped) then
+        TriggerServerEvent('jp-sentinel:server:reportCancel')
+        return
+    end
 
-    local function considerEntity(obj)
-        if not DoesEntityExist(obj) then
+    local ballModel = Config.Throw.BallModel
+
+    RequestAnimDict(ANIM_DICT)
+    local deadline = GetGameTimer() + 5000
+    while not HasAnimDictLoaded(ANIM_DICT) and GetGameTimer() < deadline do
+        Wait(10)
+    end
+    if HasAnimDictLoaded(ANIM_DICT) then
+        TaskPlayAnim(ped, ANIM_DICT, ANIM_NAME, 8.0, -8.0, -1, 48, 0.0, false, false, false)
+    end
+
+    RequestModel(ballModel)
+    deadline = GetGameTimer() + 5000
+    while not HasModelLoaded(ballModel) and GetGameTimer() < deadline do
+        Wait(10)
+    end
+    if not HasModelLoaded(ballModel) then
+        ClearPedTasks(ped)
+        TriggerServerEvent('jp-sentinel:server:reportCancel')
+        TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_model_fail'), 'error')
+        return
+    end
+
+    local delay = Config.Throw.ReleaseDelay or 300
+    SetTimeout(delay, function()
+        local p = PlayerPedId()
+        if not DoesEntityExist(p) then
+            SetModelAsNoLongerNeeded(ballModel)
+            TriggerServerEvent('jp-sentinel:server:reportCancel')
             return
         end
-        local m = GetEntityModel(obj)
-        for i = 1, #BALL_HASHES do
-            local h = BALL_HASHES[i]
-            if h ~= 0 and m == h then
-                local d = #(GetEntityCoords(obj) - pcoords)
-                if d > 1.5 and d < 30.0 and d < bestD then
-                    bestD = d
-                    best = obj
-                end
-                break
-            end
+
+        local pos = GetEntityCoords(p)
+        local fwd = GetEntityForwardVector(p)
+        local spawnPos = vector3(pos.x + fwd.x * 0.5, pos.y + fwd.y * 0.5, pos.z + 0.6)
+
+        local ball = CreateObject(ballModel, spawnPos.x, spawnPos.y, spawnPos.z, true, true, false)
+        SetModelAsNoLongerNeeded(ballModel)
+
+        ClearPedTasks(p)
+
+        if not ball or ball == 0 or not DoesEntityExist(ball) then
+            TriggerServerEvent('jp-sentinel:server:reportMiss')
+            TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_missed'), 'error')
+            return
         end
-    end
 
-    for obj in enumerateObjects() do
-        considerEntity(obj)
-    end
+        SetEntityAsMissionEntity(ball, true, true)
+        SetEntityDynamic(ball, true)
+        SetEntityHeading(ball, GetEntityHeading(p))
 
-    if not best then
-        for _, obj in ipairs(GetGamePool('CObject')) do
-            considerEntity(obj)
-        end
-    end
+        local power = Config.Throw.ThrowPower or 25.0
+        local up = Config.Throw.ThrowUpward or 5.0
+        ApplyForceToEntity(ball, 1, fwd.x * power, fwd.y * power, up, 0.0, 0.0, 0.0, 0, false, true, true, false, true)
 
-    return best
+        TriggerEvent('jp-sentinel:client:startImpactFromBall', ball, p)
+    end)
 end
 
 RegisterNetEvent('jp-sentinel:client:allowThrow', function()
@@ -72,13 +74,9 @@ RegisterNetEvent('jp-sentinel:client:allowThrow', function()
         return
     end
 
-    local ped = PlayerPedId()
     IsThrowMode = true
-
-    GiveWeaponToPed(ped, Config.Throw.WeaponHash, 1, false, true)
-    SetCurrentPedWeapon(ped, Config.Throw.WeaponHash, true)
-
     TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_ready'), 'info')
+    TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_instructions'), 'info')
 
     CreateThread(function()
         Wait(800)
@@ -87,32 +85,32 @@ RegisterNetEvent('jp-sentinel:client:allowThrow', function()
         end
 
         local activatedAt = GetGameTimer()
-        local cancelTimeout = 20000
-        local thrown = false
+        local maxWait = Config.Throw.MaxWaitMs or 20000
 
         while IsThrowMode do
             local elapsed = GetGameTimer() - activatedAt
 
-            if not thrown and elapsed > 200 then
-                local ballObj = findRecentlyThrownBall(ped)
-                if ballObj then
-                    thrown = true
-                    IsThrowMode = false
-                    RemoveWeaponFromPed(ped, Config.Throw.WeaponHash)
-                    TriggerEvent('jp-sentinel:client:startImpactFromBall', ballObj, ped)
-                    break
-                end
+            if IsControlJustReleased(0, 24) then
+                IsThrowMode = false
+                manualThrow(PlayerPedId())
+                break
             end
 
-            if elapsed > cancelTimeout then
+            if IsControlJustReleased(0, 25) then
                 IsThrowMode = false
-                RemoveWeaponFromPed(ped, Config.Throw.WeaponHash)
-                TriggerServerEvent('jp-sentinel:server:reportThrowAbort')
+                TriggerServerEvent('jp-sentinel:server:reportCancel')
+                TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_cancelled'), 'info')
+                break
+            end
+
+            if elapsed > maxWait then
+                IsThrowMode = false
+                TriggerServerEvent('jp-sentinel:server:reportCancel')
                 TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_timeout'), 'info')
                 break
             end
 
-            Wait(50)
+            Wait(0)
         end
     end)
 end)
