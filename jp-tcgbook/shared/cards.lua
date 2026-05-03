@@ -450,8 +450,8 @@ TcgCardsMaster = {
         stat_bottom = 6,
         stat_left = 5,
         image_path = 'assets/cards/monster/tcg_m_a_demon_warlord.jpg',
-        description = '巻角と赤い肌を持つ魔族の将。双刃槍の一撃は鋼鎧を紙のように切り裂く。',
-        description_en = 'A demon warlord with curling horns and crimson skin. A single strike of his double-bladed glaive shears steel armor like paper.',
+        description = '赤き肌に巻角を持つ魔族の将。両手大斧の一振りは、敵陣の隊列ごと薙ぎ払う。',
+        description_en = 'A demon warlord with crimson skin and curling horns. A single swing of his great axe sweeps away entire battle lines.',
         no = 30,
     },
     {
