@@ -290,7 +290,9 @@ git filter-repo --path-glob 'jp-tcgbook/html/assets/cards/character/*.jpg' --inv
 git filter-repo --path-glob 'jp-tcgbook/html/assets/cards/monster/*.jpg' --invert-paths --force
 ```
 
-**注意**: `git filter-repo` 実行後、現在の HEAD には新しい AI 生成画像 (`tcg_*.jpg`) が**含まれた状態**で残る。`--invert-paths` で削除されるのは「マッチした PNG/JPG が過去にコミットされた履歴」のみで、ファイル名が `tcg_*.jpg` の現在の画像は新規ファイルとして保持される。
+**注意（履歴削除と新 JPG の関係）**: `--path-glob '.../*.jpg' --invert-paths` は **そのパターンに一致したパスを全コミットから削除**する。`character/*.jpg` にマッチする **新しい `tcg_*.jpg` も消える**ため、指示どおりの glob だけでは「旧素材だけ消して新 AI だけ残す」にはならないことがある。**安全策の例**: (1) 削除対象を **旧 BOOTH 由来のファイル名・旧 `tcg_*.png` だけ**に限定した glob／`--path` リストにする、(2) あるいは filter 実行後に **新 20 枚を再度コミット**して履歴を完成させる、(3) 本番実行前にバックアップ復元可能な環境でドライランする。`git filter-repo --help` を確認すること。
+
+**リポジトリルート**: 手元が `H:\CURSOR\Dev` のように親フォルダ名が異なる場合は、`cd` とバックアップパスを環境に合わせて読み替える（`jp-tcgbook/` はサブディレクトリのまま）。
 
 **動作確認:**
 
