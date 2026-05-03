@@ -438,12 +438,22 @@
     return handHtml;
   }
 
+  /** サーバーが送る { key, ...params } またはレガシー文字列を現在 UI 言語で表示 */
+  function formatBattleLogLine(line) {
+    if (line && typeof line === 'object' && !Array.isArray(line) && typeof line.key === 'string') {
+      const vars = Object.assign({}, line);
+      delete vars.key;
+      return tt(line.key, vars);
+    }
+    return String(line == null ? '' : line);
+  }
+
   function buildDbgLogHtml(st, logWrapClass) {
     const logs = Array.isArray(st.log) ? st.log.slice(-14) : [];
     const lw = logWrapClass ? `battle-dbg-log ${logWrapClass}` : 'battle-dbg-log';
     let logHtml = `<div class="${lw}" aria-live="polite"><strong>${escapeHtml(tt('battle_log_head'))}</strong><ul>`;
     logs.forEach((line) => {
-      logHtml += `<li>${escapeHtml(line)}</li>`;
+      logHtml += `<li>${escapeHtml(formatBattleLogLine(line))}</li>`;
     });
     logHtml += '</ul></div>';
     return logHtml;

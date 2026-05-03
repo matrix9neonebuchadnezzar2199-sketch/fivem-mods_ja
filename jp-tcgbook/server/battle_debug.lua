@@ -34,6 +34,20 @@ local function cardFromMaster(m)
     }
 end
 
+--- NUI の `i18n.js` で `battle_log_*` として解決（言語切替で再描画）
+--- @param key string
+--- @param params table|nil
+--- @return table
+local function logMsg(key, params)
+    local row = { key = key }
+    if params then
+        for k, v in pairs(params) do
+            row[k] = v
+        end
+    end
+    return row
+end
+
 --- @param t table
 local function shuffleInPlace(t)
     for i = #t, 2, -1 do
@@ -202,7 +216,9 @@ local function startGame(src, citizenid, activeDeck)
         first_player = first,
         scores = nil,
         winner = nil,
-        log = { ('先攻: %s'):format(first == 'human' and 'あなた' or 'CPU') },
+        log = {
+            first == 'human' and logMsg('battle_log_first_you') or logMsg('battle_log_first_cpu'),
+        },
     }
 
     games[src] = st
@@ -210,7 +226,7 @@ local function startGame(src, citizenid, activeDeck)
     if first == 'cpu' then
         cpuRandomPlace(st)
         if st.log then
-            st.log[#st.log + 1] = 'CPU がランダムに配置しました'
+            st.log[#st.log + 1] = logMsg('battle_log_cpu_placed')
         end
     end
 
@@ -374,10 +390,11 @@ RegisterNetEvent('jp-tcgbook:server:battleDebugPlace', function(data)
 
     local card = table.remove(st.human_hand, handIdx + 1)
     TcgBattleRule.PlaceAndResolve(st.board, cellIdx, card, 'human')
-    st.log[#st.log + 1] = ('あなた: マス %d に配置'):format(cellIdx)
+    st.log[#st.log + 1] = logMsg('battle_log_you_cell', { cell = cellIdx })
 
     if finalizeIfEnded(st) then
-        st.log[#st.log + 1] = ('終了: あなた %d vs CPU %d'):format(st.scores.human, st.scores.cpu)
+        st.log[#st.log + 1] =
+            logMsg('battle_log_match_end', { h = st.scores.human, c = st.scores.cpu })
         pushState(src, st)
         return
     end
@@ -385,9 +402,10 @@ RegisterNetEvent('jp-tcgbook:server:battleDebugPlace', function(data)
     st.turn = 'cpu'
     cpuRandomPlace(st)
     if st.phase == 'playing' then
-        st.log[#st.log + 1] = 'CPU がランダムに配置しました'
+        st.log[#st.log + 1] = logMsg('battle_log_cpu_placed')
     else
-        st.log[#st.log + 1] = ('終了: あなた %d vs CPU %d'):format(st.scores.human, st.scores.cpu)
+        st.log[#st.log + 1] =
+            logMsg('battle_log_match_end', { h = st.scores.human, c = st.scores.cpu })
     end
     pushState(src, st)
 end)

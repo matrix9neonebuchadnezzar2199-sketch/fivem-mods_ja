@@ -1196,12 +1196,12 @@
         first_player: first,
         scores: null,
         winner: null,
-        log: [first === 'human' ? '先攻: あなた' : '先攻: CPU'],
+        log: [first === 'human' ? { key: 'battle_log_first_you' } : { key: 'battle_log_first_cpu' }],
       };
 
       if (first === 'cpu') {
         mockDbgCpuRandomPlace(mockDbgCpuState);
-        mockDbgCpuState.log.push('CPU がランダムに配置しました');
+        mockDbgCpuState.log.push({ key: 'battle_log_cpu_placed' });
       }
 
       mockDbgPushState();
@@ -1245,12 +1245,14 @@
       const card = mockDbgCpuState.human_hand.splice(handIdx, 1)[0];
       mockDbgCpuState.board[cellIdx] = { owner: 'human', card };
       mockDbgApplyCaptures(mockDbgCpuState, cellIdx, 'human', card);
-      mockDbgCpuState.log.push(`あなた: マス ${cellIdx} に配置`);
+      mockDbgCpuState.log.push({ key: 'battle_log_you_cell', cell: cellIdx });
 
       if (mockDbgFinalizeIfEnded(mockDbgCpuState)) {
-        mockDbgCpuState.log.push(
-          `終了: あなた ${mockDbgCpuState.scores.human} vs CPU ${mockDbgCpuState.scores.cpu}`,
-        );
+        mockDbgCpuState.log.push({
+          key: 'battle_log_match_end',
+          h: mockDbgCpuState.scores.human,
+          c: mockDbgCpuState.scores.cpu,
+        });
         mockDbgPushState();
         return;
       }
@@ -1258,11 +1260,13 @@
       mockDbgCpuState.turn = 'cpu';
       mockDbgCpuRandomPlace(mockDbgCpuState);
       if (mockDbgCpuState.phase === 'playing') {
-        mockDbgCpuState.log.push('CPU がランダムに配置しました');
+        mockDbgCpuState.log.push({ key: 'battle_log_cpu_placed' });
       } else {
-        mockDbgCpuState.log.push(
-          `終了: あなた ${mockDbgCpuState.scores.human} vs CPU ${mockDbgCpuState.scores.cpu}`,
-        );
+        mockDbgCpuState.log.push({
+          key: 'battle_log_match_end',
+          h: mockDbgCpuState.scores.human,
+          c: mockDbgCpuState.scores.cpu,
+        });
       }
       mockDbgPushState();
     },
