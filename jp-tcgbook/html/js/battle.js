@@ -1,5 +1,5 @@
 /**
- * 対戦タブ（使用デッキ準備・仮想ロビー・デバッグCPU対戦）
+ * 対戦タブ（使用デッキ準備・フリーバトルCPU練習・仮想ロビー・デバッグ用ロビー）
  * グローバル: window.Battle
  */
 (function (global) {
@@ -118,6 +118,52 @@
     return `<section class="battle-section">${inner}</section>`;
   }
 
+  /** フリーバトル（CPU練習）— DebugCommands 不要。疑似通信・ソロ検証接続中はブロック */
+  function renderPracticeCpuSection(activeId, detail, bv) {
+    const bvSafe = bv || {};
+    const blockedLobby =
+      bvSafe.connectedPeerId != null || bvSafe.soloWireTest === true;
+
+    if (activeId == null) {
+      return (
+        '<section class="battle-section battle-practice">' +
+        `<h3 class="battle-section-title">${escapeHtml(tt('battle_section_practice'))}</h3>` +
+        `<p class="battle-hint">${escapeHtml(tt('battle_practice_need_active_deck'))}</p>` +
+        '</section>'
+      );
+    }
+
+    const loading = !detail || !detail.slots;
+    if (loading) {
+      return (
+        '<section class="battle-section battle-practice">' +
+        `<h3 class="battle-section-title">${escapeHtml(tt('battle_section_practice'))}</h3>` +
+        `<p class="battle-hint">${escapeHtml(tt('battle_loading_hint'))}</p>` +
+        '</section>'
+      );
+    }
+
+    const filled = countFilled(detail);
+    const ready = filled >= DECK_SIZE;
+    let hintHtml = escapeHtml(tt('battle_practice_hint'));
+    if (blockedLobby) {
+      hintHtml = escapeHtml(tt('battle_practice_blocked_virtual'));
+    } else if (!ready) {
+      hintHtml = escapeHtml(tt('battle_practice_need_full_deck', { filled, size: DECK_SIZE }));
+    }
+
+    const canStart = ready && !blockedLobby;
+    const disabledAttr = canStart ? '' : ' disabled';
+
+    return (
+      '<section class="battle-section battle-practice">' +
+      `<h3 class="battle-section-title">${escapeHtml(tt('battle_section_practice'))}</h3>` +
+      `<p class="battle-hint">${hintHtml}</p>` +
+      `<button type="button" class="btn primary battle-practice-start-cpu"${disabledAttr}>${escapeHtml(tt('battle_practice_start'))}</button>` +
+      '</section>'
+    );
+  }
+
   function renderLobbySection(bv) {
     const sid = playerServerIdUi();
     const sidLabel = sid != null ? String(sid) : NUI.IS_FIVEM ? '—' : String(101);
@@ -170,18 +216,12 @@
       `<input type="number" min="1" step="1" class="battle-call-input" id="battleCallInput" placeholder="${escAttr(tt('battle_call_placeholder'))}" aria-label="${peerAria}"></label>` +
       `<button type="button" class="btn primary battle-call-btn">${escapeHtml(tt('battle_call_btn'))}</button>` +
       `</div>` +
-      (allowDebugBattleUi()
-        ? '<div class="battle-solo-wire-row">' +
-          `<button type="button" class="btn subtle battle-solo-wire-btn">${escapeHtml(tt('battle_solo_wire_btn'))}</button>` +
-          `<p class="battle-hint">${tt('battle_solo_wire_hint')}</p>` +
-          '</div>'
-        : '') +
       `<p class="battle-next">${tt('battle_battleid_note')}</p>` +
       '</section>'
     );
   }
 
-  /** Config.DebugCommands 時のみ（サーバーが allow_debug_battle で通知） */
+  /** Config.DebugCommands 時のみ（サーバーが allow_debug_battle で通知）。疑似PvPソロ等（CPU練習は別セクション） */
   function renderDebugLobbySection(bc) {
     const open = !!(bc && bc.debugLobbyOpen);
     const lookupLabel = bc && bc.lookupLabel ? escapeHtml(bc.lookupLabel) : '';
@@ -200,7 +240,6 @@
           ? `<p class="battle-dbg-lookup-result"><strong>${escapeHtml(tt('battle_dbg_lookup_result'))}</strong> ${lookupLabel}</p>`
           : '') +
         '<div class="battle-call-row battle-wait-row">' +
-        `<button type="button" class="btn primary battle-dbg-start-cpu">${escapeHtml(tt('battle_dbg_start_cpu'))}</button>` +
         `<button type="button" class="btn primary battle-pvp-start-solo">${escapeHtml(tt('battle_dbg_start_pvp_solo'))}</button>` +
         '</div>' +
         '</div>';
@@ -698,8 +737,10 @@
       })();
     });
 
-    root.querySelector('.battle-solo-wire-btn')?.addEventListener('click', () => {
-      api.battleSoloVirtualWireTest();
+    root.querySelector('.battle-practice-start-cpu')?.addEventListener('click', (ev) => {
+      const btn = ev.currentTarget;
+      if (btn && 'disabled' in btn && btn.disabled) return;
+      api.battleDebugStartCpu();
     });
 
     root.querySelector('#battleDbgLobbyToggle')?.addEventListener('change', (e) => {
@@ -719,9 +760,6 @@
         return;
       }
       api.battleDebugLookupId(tid);
-    });
-    root.querySelector('.battle-dbg-start-cpu')?.addEventListener('click', () => {
-      api.battleDebugStartCpu();
     });
     root.querySelector('.battle-pvp-start-solo')?.addEventListener('click', () => {
       api.battlePvpStartSolo();
@@ -820,6 +858,7 @@
 
       let html = '';
       html += renderReadinessSection(activeId, detail, false);
+      html += renderPracticeCpuSection(activeId, detail, bv);
       if (allowDebugBattleUi() && bv.connectedPeerId == null && !bv.soloWireTest) {
         html += renderDebugLobbySection(global.AppState.battleCpuLobby || {});
       }

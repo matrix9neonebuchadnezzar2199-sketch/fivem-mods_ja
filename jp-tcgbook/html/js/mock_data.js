@@ -1093,7 +1093,7 @@
       if (mockDbgCpuState) {
         setTimeout(() => {
           global.postMessage(
-            { action: 'battleLobbyError', payload: { error: 'デバッグ対戦中は使えません（先に終了）' } },
+            { action: 'battleLobbyError', payload: { error: 'CPU対戦（練習）中は使えません（先に終了）' } },
             '*',
           );
         }, 15);

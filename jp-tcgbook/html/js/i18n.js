@@ -222,6 +222,14 @@
       battle_row_pwr: '総合PWR',
       battle_readiness_title: '使用デッキ',
       battle_review_deck: 'デッキを確認・編集',
+      battle_section_practice: 'フリーバトル（練習）',
+      battle_practice_hint:
+        'CPU相手です。ランキング・対戦履歴・報酬の対象外です（PHASE A ルール）。',
+      battle_practice_start: 'CPU と対戦する',
+      battle_practice_need_active_deck: 'アクティブデッキが無いときは開始できません（デッキ編成で選択してください）。',
+      battle_practice_need_full_deck: 'デッキが10枚そろうと開始できます（現在 {filled} / {size}）。',
+      battle_practice_blocked_virtual:
+        '仮想対戦に接続中は開始できません（先に「切断する」でロビーを抜けてください）。',
       battle_peer_solo_label: 'ソロ検証（2人目なし）',
       battle_mode_solo_verify: 'ソロ検証',
       battle_role_caller: '呼び出し側',
@@ -250,7 +258,7 @@
         'コマンド <code>/tcg_battleid</code>（デバッグ権限）でも自分の番号を確認できます。',
       battle_debug_lobby_section: 'デバッグ用ロビー',
       battle_debug_lobby_hint:
-        '検索はオンライン確認をしません（応答のみの検証用）。「CPU対戦を開始」は <code>battle_debug</code> 経由。「疑似 PvP 対戦を開始」は <code>battle_pvp.lua</code> 本番経路（仮想相手・サーバー AI）です。',
+        '検索はオンライン確認をしません（応答のみの検証用）。「疑似 PvP 対戦を開始」は <code>battle_pvp.lua</code> 本番経路（仮想相手・サーバー AI）。CPU練習は対戦タブ上部の「フリーバトル」から。',
       battle_debug_lookup_label: '検索するサーバーID',
       battle_dbg_lookup_ph: '例: 99',
       battle_dbg_lookup_btn: '検索',
@@ -297,7 +305,7 @@
       battle_err_bad_pvp_state: '対戦状態が不正です（再読込してください）',
       battle_confirm_resign_pvp:
         '投了するとこの対局を負けとして終了し、相手のセッションも終了します。よろしいですか？',
-      battle_confirm_quit_cpu: 'デバッグ対戦を終了しますか？',
+      battle_confirm_quit_cpu: 'CPU対戦（練習）を終了しますか？',
       battle_err_peer_id: '相手の番号を入力してください',
       battle_leave_solo_confirm: 'ソロ検証の仮想接続を終了しますか？',
       battle_leave_virtual_confirm:
@@ -306,7 +314,7 @@
       battle_fullscreen_hint:
         '対戦は全画面で表示されています。終了は対戦画面上部の「対戦終了」から行ってください。',
       battle_footer_long:
-        '仮想ロビーでマッチしたプレイヤー同士は同一ルール（PHASE A）で対戦できます。自動マッチングは別フェーズです。デバッグ時は「デバッグ用ロビー」から CPU 戦も利用できます。',
+        'フリーバトル（練習）はCPU相手でいつでも開始できます（経済対象外）。仮想ロビーでマッチしたプレイヤー同士も同一ルール（PHASE A）です。自動マッチングは別フェーズです。',
     },
     en: {
       lang_label: 'Language',
@@ -532,6 +540,14 @@
       battle_row_pwr: 'Total PWR',
       battle_readiness_title: 'Active deck',
       battle_review_deck: 'Review / edit deck',
+      battle_section_practice: 'Free battle (practice)',
+      battle_practice_hint:
+        'Vs CPU. Not ranked—no match history rewards or economy hooks (PHASE A rules).',
+      battle_practice_start: 'Battle CPU',
+      battle_practice_need_active_deck: 'Set an active deck in the deck builder first.',
+      battle_practice_need_full_deck: 'Need 10 cards to start ({filled} / {size}).',
+      battle_practice_blocked_virtual:
+        'Disconnect from virtual battle first (“Disconnect”), then you can start practice.',
       battle_peer_solo_label: 'Solo verify (no second player)',
       battle_mode_solo_verify: 'Solo verify',
       battle_role_caller: 'Caller',
@@ -560,7 +576,7 @@
         'Command <code>/tcg_battleid</code> (debug) also shows your ID.',
       battle_debug_lobby_section: 'Debug lobby',
       battle_debug_lobby_hint:
-        'Lookup skips online checks (response-only). “Start CPU battle” uses <code>battle_debug</code>. “Start pseudo PvP” uses production <code>battle_pvp.lua</code> (virtual opponent / server AI).',
+        'Lookup skips online checks (response-only). “Start pseudo PvP” uses production <code>battle_pvp.lua</code> (virtual opponent / server AI). CPU practice is under Free battle above.',
       battle_debug_lookup_label: 'Lookup server ID',
       battle_dbg_lookup_ph: 'e.g. 99',
       battle_dbg_lookup_btn: 'Lookup',
@@ -608,7 +624,7 @@
       battle_err_bad_pvp_state: 'Invalid battle state (reload)',
       battle_confirm_resign_pvp:
         'Resign ends this match as your loss and ends the peer session. Continue?',
-      battle_confirm_quit_cpu: 'End debug battle?',
+      battle_confirm_quit_cpu: 'End CPU practice battle?',
       battle_err_peer_id: 'Enter peer ID',
       battle_leave_solo_confirm: 'End solo virtual connection?',
       battle_leave_virtual_confirm:
@@ -617,7 +633,7 @@
       battle_fullscreen_hint:
         'Battle is fullscreen. End from “End battle” at the top.',
       battle_footer_long:
-        'Matched players use the same rules (PHASE A). Matchmaking is later. Debug lobby can start CPU battles.',
+        'Free battle (practice) vs CPU anytime (no economy). Matched virtual players use the same PHASE A rules. Matchmaking is later.',
     },
   };
 

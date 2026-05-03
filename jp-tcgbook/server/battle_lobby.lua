@@ -89,7 +89,7 @@ RegisterNetEvent('jp-tcgbook:server:battleSetWaiting', function(data)
     end
     if BattleDebugInGame and BattleDebugInGame(src) then
         pushLobbyErr(src, {
-            error = 'デバッグ対戦中は仮想ロビーを操作できません（先に終了）',
+            error = 'CPU対戦（練習）中は仮想ロビーを操作できません（先に終了）',
         })
         return
     end
@@ -137,7 +137,7 @@ RegisterNetEvent('jp-tcgbook:server:battleCallById', function(data)
     end
     if BattleDebugInGame and BattleDebugInGame(src) then
         pushLobbyErr(src, {
-            error = 'デバッグ対戦中は呼び出せません（先に終了）',
+            error = 'CPU対戦（練習）中は呼び出せません（先に終了）',
         })
         return
     end
@@ -232,7 +232,7 @@ RegisterNetEvent('jp-tcgbook:server:battleSoloVirtualWireTest', function()
     end
     if BattleDebugInGame and BattleDebugInGame(src) then
         pushLobbyErr(src, {
-            error = 'デバッグ対戦中は使えません（先に終了）',
+            error = 'CPU対戦（練習）中は使えません（先に終了）',
         })
         return
     end

@@ -763,7 +763,7 @@ function BattlePvp.StartSolo(human_src)
         return false
     end
     if BattleDebugInGame and BattleDebugInGame(human_src) then
-        pushLobbyErr(human_src, { error = 'デバッグCPU対戦中は使えません（先に終了）' })
+        pushLobbyErr(human_src, { error = 'CPU対戦（練習）中は使えません（先に終了）' })
         return false
     end
     if BattleLobbyGetPeer and BattleLobbyGetPeer(human_src) then

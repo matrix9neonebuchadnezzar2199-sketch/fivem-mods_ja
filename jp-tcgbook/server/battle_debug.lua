@@ -1,6 +1,7 @@
---- デバッグ用 CPU 対戦（Config.DebugCommands のみ）
+--- CPU 練習対戦（フリーバトル・ランキング／履歴／報酬の対象外）
 --- 隣接辺比較・配置直後のみ奪取・連鎖なし（設計書 PHASE A 準拠）
 --- 本番 PvP とは別セッション（battle_lobby の peer とは両立しない）
+--- NUI の開始／着手は **常時許可**。サーバーID検索だけ Config.DebugCommands 必須（応答のみの検証用）
 
 --- @type table<number, table>  src -> game state
 local games = {}
@@ -263,12 +264,6 @@ RegisterNetEvent('jp-tcgbook:server:battleDebugStartCpu', function()
     if TcgBattleWireLogEnabled() then
         print(('[jp-tcgbook][wire] server recv battleDebugStartCpu src=%d'):format(src))
     end
-    if Config.DebugCommands ~= true then
-        pushLobbyErr(src, {
-            error = 'デバッグ対戦は無効です（Config.DebugCommands）',
-        })
-        return
-    end
     local uid = getUidOrReject(src)
     if not uid then
         return
@@ -287,13 +282,13 @@ RegisterNetEvent('jp-tcgbook:server:battleDebugStartCpu', function()
     end
     if BattlePvpInGame and BattlePvpInGame(src) then
         pushLobbyErr(src, {
-            error = '本番対戦中はデバッグ対戦を開始できません（先に対戦終了）',
+            error = '本番対戦中はCPU対戦（練習）を開始できません（先に対戦終了）',
         })
         return
     end
     if games[src] then
         pushLobbyErr(src, {
-            error = '既にデバッグ対戦中です',
+            error = '既にCPU対戦（練習）中です',
         })
         return
     end
@@ -342,9 +337,6 @@ end)
 
 RegisterNetEvent('jp-tcgbook:server:battleDebugPlace', function(data)
     local src = source
-    if Config.DebugCommands ~= true then
-        return
-    end
     local uid = getUidOrReject(src)
     if not uid then
         return
