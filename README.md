@@ -22,6 +22,7 @@
 | [jp-losmon](jp-losmon/README.md) | 育成型 Los-Mon（クライアント完結・サーバー負荷ほぼなし） |
 | [jp-mechanic](jp-mechanic/README.md) | 整備工場 伝票整理内職（NUI・部品照合・Qbox） |
 | [jp-slot](jp-slot/README.md) | カジノスロット（着席 NUI・抽選/現金はサーバー権威） |
+| [jp-sentinel](jp-sentinel/README.md) | 警察向け Sentinel Ball（追尾ドローン・マップ共有・ESX/QB/Qbox/ACE） |
 | [jp-tcgbook](jp-tcgbook/README.md) | スタンドアロン TCG・BOOK（コレクション／デッキ編成／CPU・PvP・Elo・対戦履歴・ランキング・段位徽章・JA/EN UI・oxmysql） |
 | [jp-timer](jp-timer/README.md) | 画面カウントダウン（`/min`・RP 向け軽量） |
 
