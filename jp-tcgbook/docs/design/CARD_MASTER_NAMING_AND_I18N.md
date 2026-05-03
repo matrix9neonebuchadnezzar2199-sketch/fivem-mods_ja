@@ -46,10 +46,10 @@
 | tcg_b_cave_bat | 洞窟コウモリ | Cavern Bat |
 | tcg_b_mud_frog | 泥沼ガエル | Mire Frog |
 | tcg_b_coal_imp | 炭坑インプ | Colliery Imp |
-| tcg_c_slime | グリーンスライム | Green Slime |
-| tcg_c_rat | 溝ネズミ | Gutter Rat |
-| tcg_c_mushroom | 歩くキノコ | Walking Mushroom |
-| tcg_c_ghost_jelly | 幽霊クラゲ | Ghost Jelly |
+| tcg_c_slime | 緋衣の吟遊詩人 | Crimson Troubadour |
+| tcg_c_rat | 紺鉄の若侍 | Indigo Steel Samurai |
+| tcg_c_mushroom | 翠瓶の錬金術師 | Emerald Flask Alchemist |
+| tcg_c_ghost_jelly | 碧珀の獅子騎士 | Sapphire Lion Knight |
 
 ## DB・UPSERT（実装時の確定方針）
 
