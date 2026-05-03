@@ -264,9 +264,13 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 10px;
+  /* 行の最大高に引き伸ばさず、各セルは aspect-ratio ベースの高さに統一 */
+  align-items: start;
 }
 
 #tab-collection .card {
+  width: 100%;
+  min-width: 0;
   aspect-ratio: 3 / 4;
   background: linear-gradient(160deg, #2a1f10, #4a3520);
   border: 2px solid #8b6f3f;
@@ -277,6 +281,7 @@
   transition: all 0.15s;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 #tab-collection .card:hover:not(.unowned) {
@@ -369,7 +374,8 @@
 }
 
 #tab-collection .card-art {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   background: linear-gradient(135deg, #1a1208, #3a2818);
   border-radius: 3px;
   margin: 20px 4px 4px;
@@ -379,6 +385,7 @@
   font-size: calc(26px * var(--book-fs-mul));
   color: #6b5530;
   position: relative;
+  overflow: hidden;
 }
 
 #tab-collection .card-art .mini-stat {
@@ -427,6 +434,7 @@
 #tab-collection .card-art .card-art-media {
   position: absolute;
   inset: 0;
+  min-height: 0;
   border-radius: inherit;
   overflow: hidden;
   display: flex;
@@ -440,7 +448,11 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: cover;
+  object-position: center;
+  display: block;
   z-index: 1;
 }
 
@@ -460,6 +472,13 @@
   flex-shrink: 0;
   padding: 0 2px;
   max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 #tab-collection .owned-badge {
