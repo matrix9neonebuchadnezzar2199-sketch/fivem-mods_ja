@@ -327,14 +327,18 @@ RegisterNetEvent('jp-sentinel:server:requestActive', function()
     if not JB.IsPolice(src) then
         return
     end
+    local now = os.time()
     local list = {}
     for id, s in pairs(ActiveSentinels) do
-        list[#list + 1] = {
-            sentinelId = id,
-            coords = s.lastCoords,
-            endTime = s.endTime,
-            indoor = s.lastIndoor or false,
-        }
+        local remain = (s.endTime or now) - now
+        if remain > 0 and s.lastCoords then
+            list[#list + 1] = {
+                sentinelId = id,
+                coords = s.lastCoords,
+                remainSec = remain,
+                indoor = s.lastIndoor or false,
+            }
+        end
     end
     TriggerClientEvent('jp-sentinel:client:syncActive', src, list)
 end)

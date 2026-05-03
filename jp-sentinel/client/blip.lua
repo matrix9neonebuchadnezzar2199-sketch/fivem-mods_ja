@@ -84,9 +84,8 @@ RegisterNetEvent('jp-sentinel:client:syncActive', function(list)
     if type(list) ~= 'table' then
         return
     end
-    local now = os.time()
     for _, row in ipairs(list) do
-        local remain = (row.endTime or now) - now
+        local remain = tonumber(row.remainSec) or 0
         if remain > 0 and row.coords then
             applyUpdateBlip({
                 sentinelId = row.sentinelId,
