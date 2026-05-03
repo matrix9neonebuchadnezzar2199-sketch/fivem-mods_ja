@@ -37,6 +37,29 @@ A trading card game (TCG) resource for FiveM: card collection, deck building, CP
 4. **Optional ACE**: book admin UI — `add_ace group.admin command.tcg_book_admin allow` (see `Config.BookAdminAce`).
 5. **Production**: keep `Config.Debug`, `Config.DebugCommands`, and `Config.BattleWireLog` at **`false`** (see `config.lua`). Operators may grant `command.tcg_debug` for `/tcg_*` tools when `DebugCommands` is enabled.
 
+## Card artwork & database master
+
+Paths are **relative to the NUI root `html/`**.
+
+| Slot | Folder | Filename |
+|------|--------|----------|
+| Character cards | `html/assets/cards/character/` | `tcg_<card_id>.jpg` must match `card_id` in `shared/cards.lua` |
+| Monster cards | `html/assets/cards/monster/` | Same rule |
+
+Example: `card_id` `tcg_ur_antares` → file `html/assets/cards/character/tcg_ur_antares.jpg` and `image_path` `assets/cards/character/tcg_ur_antares.jpg`.
+
+**Replace art only**: overwrite the same JPG, then `restart jp-tcgbook`. Names and descriptions **do not** auto-update—edit `name`, `name_en`, `description`, `description_en` in `shared/cards.lua` if the illustration’s identity changed.
+
+**Add a new card**: place the JPG, append a full entry to `TcgCardsMaster` in `shared/cards.lua` (same fields as existing rows). The master row must exist in MySQL before rows in `tcg_player_cards` can reference that `card_id` (foreign key).
+
+**Sync MySQL with Lua** (`config.lua`):
+
+- Set **`Config.SeedCardsFromLua = true`**, restart the resource (or server). All `TcgCardsMaster` rows are **UPSERT**ed into `tcg_cards_master` (existing `card_id` rows are overwritten from Lua).
+- Set **`false`** to avoid overwriting an existing populated master on each restart. **First install**: if `tcg_cards_master` is empty, Lua is seeded once regardless of this flag (see `server/database.lua`).
+- **Suggested production workflow** after editing masters: turn `true` → restart → verify BOOK and DB → set `false` again.
+
+Save Lua and HTML as **UTF-8 without BOM**. Full operator notes (Japanese): [README.md](README.md) §カード画像 / §カードマスタと DB。
+
 ## Configuration
 
 All tunables are in **`config.lua`** (Japanese comments). Highlights:
@@ -49,7 +72,7 @@ All tunables are in **`config.lua`** (Japanese comments). Highlights:
 | `Config.PvpRankTiers` | Thresholds and badge filenames under `html/assets/ranc/`. |
 | `Config.InitialRating` / `Config.EloKFactor` | Rating parameters. |
 | `Config.Debug` / `Config.DebugCommands` / `Config.BattleWireLog` | Diagnostics and wire tracing—off in production. |
-| `Config.SeedCardsFromLua` | When `false`, existing master rows are not overwritten on restart (admin UI edits preserved). |
+| `Config.SeedCardsFromLua` | `true`: UPSERT full master from Lua on startup. `false`: skip that when the table already has rows (empty DB still seeds once). See **Card artwork & database master** above. |
 
 ## Screenshots
 
