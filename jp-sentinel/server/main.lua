@@ -363,3 +363,47 @@ AddEventHandler('playerDropped', function()
         finalizeSentinel(id, 'disconnect')
     end
 end)
+
+--- 進行中トラッキングと投擲ペンディングをまとめてクリア（リセット／コンソール用）
+---@param reason string
+local function clearAllSentinelState(reason)
+    local ids = {}
+    for id in pairs(ActiveSentinels) do
+        ids[#ids + 1] = id
+    end
+    for _, id in ipairs(ids) do
+        finalizeSentinel(id, reason)
+    end
+    for k in pairs(PendingThrow) do
+        PendingThrow[k] = nil
+    end
+end
+
+AddEventHandler('onResourceStart', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then
+        return
+    end
+    clearAllSentinelState('resource_restart')
+end)
+
+RegisterCommand(Config.ResetCommandName or 'sentinel_reset', function(source, _, _)
+    if source == 0 then
+        clearAllSentinelState('console_reset')
+        print('[jp-sentinel] ActiveSentinels / PendingThrow を全クリアしました')
+        return
+    end
+    if not IsPlayerAceAllowed(source, Config.ResetCommandAce or 'command.sentinel_reset') then
+        return
+    end
+    clearPendingThrow(source)
+    local ids = {}
+    for id, s in pairs(ActiveSentinels) do
+        if s.throwerSrc == source then
+            ids[#ids + 1] = id
+        end
+    end
+    for _, id in ipairs(ids) do
+        finalizeSentinel(id, 'admin_reset')
+    end
+    Config.Notify(source, Config.Lang('state_reset'), 'success')
+end, false)

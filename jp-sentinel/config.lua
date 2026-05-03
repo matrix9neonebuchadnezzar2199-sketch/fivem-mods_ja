@@ -34,7 +34,18 @@ Config.CommandName = 'sentinel'
 
 -- 投擲は WEAPON を使わず物理 prop を生成して ApplyForce（ox_inventory 等の武器剥奪と無関係）
 Config.Throw = {
-    BallModel = `prop_baseball_01`, -- スポーンするボール prop（ビルドで無い場合は `prop_cs_baseball` 等に変更）
+    -- 表示・ドキュメント用の第一候補（実際は BallModelFallbacks を順に試す）
+    BallModel = `prop_tennis_ball`,
+    -- 上から順に RequestModel。環境で無いモデルは自動スキップ
+    BallModelFallbacks = {
+        `prop_tennis_ball`,
+        `prop_pool_ball_01`,
+        `prop_bskball_01`,
+        `prop_beach_volball01`,
+        `prop_bowling_ball`,
+        `prop_cs_baseball`,
+        `prop_baseball_01`,
+    },
     ThrowPower = 25.0, -- 前方への力の係数
     ThrowUpward = 5.0, -- 上方向への力（ApplyForce の Z）
     ReleaseDelay = 300, -- アニメ開始からボール生成までの遅延（ms）
@@ -43,6 +54,10 @@ Config.Throw = {
     HitRadius = 2.0, -- 命中判定半径（m）
     SearchRadius = 3.0, -- 着弾・タイムアウト時の探索半径（m）
 }
+
+-- スタックした Sentinel 状態を管理者がクリア（ACE: command.sentinel_reset）
+Config.ResetCommandName = 'sentinel_reset'
+Config.ResetCommandAce = 'command.sentinel_reset'
 
 -- ============================================================
 -- 追尾

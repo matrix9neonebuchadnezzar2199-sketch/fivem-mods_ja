@@ -80,6 +80,12 @@ jp-sentinel は **命中／不発のタイミングでサーバーから `Remove
 4. NPC／プレイヤー命中でドローン・ブリップ確認  
 5. 撃墜・タイムアウトの演出確認  
 
+### 状態が残って「既に展開中」だけが出るとき
+
+- サーバーで **`restart jp-sentinel`**（メモリ状態リセット）
+- または **`sentinel_reset`**（運営向け）：**ACE `command.sentinel_reset`** を付けたプレイヤーが実行すると、**自分の Pending と自分が投げた Sentinel** をサーバー側で強制終了。コンソール（txAdmin）から実行すると **全員分を一括クリア**
+- リソース **`onResourceStart`** でも進行中エントリを初期化するため、**`restart` 後は空の状態から始まります**
+
 ## クールダウン永続化（任意）
 
 `Config.Cooldown.Persist = true` にした場合:

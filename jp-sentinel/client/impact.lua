@@ -1,11 +1,28 @@
-local BALL_HASHES = {
-    Config.Throw.BallModel,
-    `w_am_baseball`,
-    `prop_baseball_01`,
-    joaat('prop_baseball'),
-    `prop_cs_baseball`,
-    `prop_proj_snowball`,
-}
+local BALL_HASHES = {}
+do
+    local seen = {}
+    local function addHash(h)
+        if h and h ~= 0 and not seen[h] then
+            seen[h] = true
+            BALL_HASHES[#BALL_HASHES + 1] = h
+        end
+    end
+    if type(Config.Throw.BallModelFallbacks) == 'table' then
+        for _, h in ipairs(Config.Throw.BallModelFallbacks) do
+            addHash(h)
+        end
+    end
+    addHash(Config.Throw.BallModel)
+    for _, h in ipairs({
+        `w_am_baseball`,
+        `prop_baseball_01`,
+        joaat('prop_baseball'),
+        `prop_cs_baseball`,
+        `prop_proj_snowball`,
+    }) do
+        addHash(h)
+    end
+end
 
 ---@param coords vector3
 ---@param radius number

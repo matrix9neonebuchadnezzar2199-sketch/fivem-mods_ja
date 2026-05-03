@@ -3,6 +3,45 @@ local IsThrowMode = false
 local ANIM_DICT = 'anim@mp_player_intthrow'
 local ANIM_NAME = 'throw'
 
+---@return integer|nil
+local function resolveBallModel()
+    local list = Config.Throw.BallModelFallbacks
+    if type(list) ~= 'table' or #list == 0 then
+        list = { Config.Throw.BallModel }
+    end
+
+    for _, candidate in ipairs(list) do
+        if candidate and candidate ~= 0 and IsModelValid(candidate) and IsModelInCdimage(candidate) then
+            RequestModel(candidate)
+            local timeout = GetGameTimer() + 2000
+            while not HasModelLoaded(candidate) and GetGameTimer() < timeout do
+                Wait(10)
+            end
+            if HasModelLoaded(candidate) then
+                return candidate
+            end
+            SetModelAsNoLongerNeeded(candidate)
+        end
+    end
+
+    -- CD チェックが厳しい環境向け：IsModelValid のみで再試行
+    for _, candidate in ipairs(list) do
+        if candidate and candidate ~= 0 and IsModelValid(candidate) then
+            RequestModel(candidate)
+            local timeout = GetGameTimer() + 2000
+            while not HasModelLoaded(candidate) and GetGameTimer() < timeout do
+                Wait(10)
+            end
+            if HasModelLoaded(candidate) then
+                return candidate
+            end
+            SetModelAsNoLongerNeeded(candidate)
+        end
+    end
+
+    return nil
+end
+
 ---@param ped integer
 local function manualThrow(ped)
     if not DoesEntityExist(ped) then
@@ -10,7 +49,12 @@ local function manualThrow(ped)
         return
     end
 
-    local ballModel = Config.Throw.BallModel
+    local ballModel = resolveBallModel()
+    if not ballModel then
+        TriggerServerEvent('jp-sentinel:server:reportCancel')
+        TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_no_ball_models'), 'error')
+        return
+    end
 
     RequestAnimDict(ANIM_DICT)
     local deadline = GetGameTimer() + 5000
@@ -19,18 +63,6 @@ local function manualThrow(ped)
     end
     if HasAnimDictLoaded(ANIM_DICT) then
         TaskPlayAnim(ped, ANIM_DICT, ANIM_NAME, 8.0, -8.0, -1, 48, 0.0, false, false, false)
-    end
-
-    RequestModel(ballModel)
-    deadline = GetGameTimer() + 5000
-    while not HasModelLoaded(ballModel) and GetGameTimer() < deadline do
-        Wait(10)
-    end
-    if not HasModelLoaded(ballModel) then
-        ClearPedTasks(ped)
-        TriggerServerEvent('jp-sentinel:server:reportCancel')
-        TriggerEvent('jp-sentinel:client:notifyLocal', Config.Lang('throw_model_fail'), 'error')
-        return
     end
 
     local delay = Config.Throw.ReleaseDelay or 300
