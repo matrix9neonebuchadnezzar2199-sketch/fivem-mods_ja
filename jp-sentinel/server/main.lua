@@ -101,7 +101,9 @@ exports('useSentinelBall', function(event, _item, inventory, _slot, _data)
     if event ~= 'usingItem' then
         return
     end
-    local src = tonumber(inventory.id) or inventory.id
+    -- ox_inventory の版により inventory がテーブル（.id）／プレイヤーIDそのもののどちらでも来うる
+    local raw = type(inventory) == 'table' and inventory.id or inventory
+    local src = tonumber(raw)
     if type(src) ~= 'number' then
         return false
     end

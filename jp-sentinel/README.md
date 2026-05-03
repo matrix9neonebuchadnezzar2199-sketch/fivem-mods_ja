@@ -51,6 +51,16 @@ jp-sentinel は **命中／不発のタイミングでサーバーから `Remove
 - jp-sentinel 側では **`exports('useSentinelBall', ...)`** を実装済み。失敗時（非警察・CD・多重など）は **`usingItem` で `false` を返して使用をキャンセル**します。  
 - **`ox_inventory` が動いているとき**、`reportMiss` / `reportHit` 後の消費は **`exports.ox_inventory:RemoveItem`** を優先します。
 
+### Qbox + ox_inventory（よくある構成の確定メモ）
+
+- **`config.lua`**: `Config.Framework = 'qbox'` のまま。`Config.ItemName = 'sentinel_ball'`、`Config.EnableCommand = true`、`Config.CommandName = 'sentinel'`。`Config.PoliceJobs` は **`qbx_core/shared/jobs.lua`（またはプロジェクト内のジョブ定義）の警察ジョブ名と一致**させる（デフォルトは多くが `police`。`lspd` 等に改名しているサーバーはそれに合わせる）。
+- **`server.cfg` の起動順**: `oxmysql` → `ox_lib` → `ox_inventory` → `qbx_core` など Qbox 一式 → 最後に **`ensure [jp-mods]`**（`jp-sentinel` を含む MOD は依存の後ろ）。
+- **アイテム付与（テスト）**: 多くの環境で **`/giveitem [プレイヤーID] sentinel_ball 1`**。無効なら **`/additem [ID] sentinel_ball 1`** 等、サーバー付属の管理者コマンドを確認。
+- **警察ジョブ**: 例 **`/setjob [ID] police 1`**（グレードはサーバー仕様に合わせる。jp-sentinel の判定は **ジョブ名の一致**が中心）。
+- **まず `/sentinel` だけで [3][4] 相当を確認**してから `sentinel_ball` の使用テストに進むと切り分けが早い。
+- **通常自爆の時短テスト**: テスト中のみ `Config.TrackDuration = 30` などに下げ、終わったら **`600` に戻す**。
+- **トラブル**: `not_police` はジョブ名不一致が典型。コンソールに **`no export`** が出たら `items.lua` の `server.export = 'jp-sentinel.useSentinelBall'` とリソース名を確認。
+
 ### アイテム付与（テスト用）
 
 - **ox_inventory**: コンソール／管理者コマンドは環境依存（多くは `giveitem` 系）。txAdmin やサーバー付属の admin で **`sentinel_ball` を 1 個**付与する。  
