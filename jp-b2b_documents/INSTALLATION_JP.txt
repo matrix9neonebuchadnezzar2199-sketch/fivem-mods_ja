@@ -25,10 +25,17 @@
   server.cfg の ensure 名と、ox_inventory の export / nui:// の名前を一致させてください。
 
 ----------------------------------------------------------
-STEP 1：データベース
+STEP 1：データベース（未実施だと保存・ロックが必ず失敗します）
 ----------------------------------------------------------
-  sql/b2b_documents.sql を MySQL にインポート。
-  ESX 標準インベントリを使う場合、b2b_documents_links は初回起動時に自動作成されます。
+  sql/b2b_documents.sql を、**oxmysql が接続しているのと同じデータベース**（例: fivem_db）
+  にインポートする。phpMyAdmin / HeidiSQL 等で当該 DB を開き、SQL を実行すればよい。
+
+  コンソールに次のように出る場合はテーブル未作成のままです:
+    Table 'fivem_db.b2b_documents' doesn't exist
+  → 上記 SQL をその DB 名で実行し直し、`restart jp-b2b_documents` する。
+
+  ESX 標準インベントリを使う場合、b2b_documents_links は初回起動時に自動作成されますが、
+  **b2b_documents 本体のテーブルは本 SQL のみ**（自動では作りません）。
 
 ----------------------------------------------------------
 STEP 2：配置

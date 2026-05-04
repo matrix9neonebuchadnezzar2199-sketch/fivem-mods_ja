@@ -12,8 +12,9 @@ INSTALLATION:
 ---------------------------------------------------------------------------------------------------------------------------------------------
 STEP 1
 
-Import the file "b2b_documents.sql" into your database.
-You can do this via phpMyAdmin, HeidiSQL, or any MySQL client.
+Import "sql/b2b_documents.sql" into the **same database** oxmysql uses (see mysql_connection_string).
+If you skip this, saves will fail with: Table 'your_db.b2b_documents' doesn't exist.
+The b2b_documents table is not auto-created by the resource; only b2b_documents_links is (ESX path).
 --
 STEP 2
 
