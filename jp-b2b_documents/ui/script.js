@@ -150,4 +150,23 @@ function triggerAction(actionType) {
 
 function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
 
-document.onkeyup = (e) => { if (e.key === "Escape") closeUI(); };
+function confirmLock() {
+    const m = document.getElementById('lockModal');
+    if (m) m.classList.add('hidden');
+    triggerAction('lock');
+}
+
+document.onkeyup = (e) => {
+    if (e.key !== "Escape") return;
+    const lock = document.getElementById('lockModal');
+    const dup = document.getElementById('duplicateModal');
+    if (lock && !lock.classList.contains('hidden')) {
+        lock.classList.add('hidden');
+        return;
+    }
+    if (dup && !dup.classList.contains('hidden')) {
+        dup.classList.add('hidden');
+        return;
+    }
+    closeUI();
+};

@@ -238,11 +238,10 @@ body {
     -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
-/* 日本語フォント（CDN + ローカル @font-face フォールバック） */
+/* 和文フォント: jp-uv-books2 と同様に ui/fonts/*.woff2 を同梱（fonts.css の @font-face） */
 body, .ql-container, .ql-editor, .ql-picker, .notification, #docTitle, .btn-action {
     font-family:
         'Noto Sans JP',
-        'Noto Sans JP Local',
         'Inter',
         -apple-system, BlinkMacSystemFont,
         'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
@@ -254,7 +253,7 @@ body, .ql-container, .ql-editor, .ql-picker, .notification, #docTitle, .btn-acti
 .ql-editor h1, .ql-editor h2, .ql-editor h3 {
     font-family:
         'Noto Serif JP',
-        'Noto Serif JP Local',
+        'Shippori Mincho',
         'Yu Mincho', 'Hiragino Mincho ProN', serif;
     font-weight: 700;
     letter-spacing: 0.02em;

@@ -84,10 +84,10 @@ STEP 4：config.lua
   Config.PaperCooldown / Config.DistributionPoints を調整。
 
 ----------------------------------------------------------
-STEP 5（任意）：オフライン用フォント
+STEP 5（任意）：フォントの差し替え
 ----------------------------------------------------------
-  ui/fonts/ に NotoSansJP-Regular.woff2 / NotoSansJP-Bold.woff2 /
-  NotoSerifJP-Bold.woff2 を配置（fonts.css を参照）。
+  **jp-uv-books2 と同様**、和文用 .woff2 と `ui/fonts/OFL.txt` はリポジトリに同梱済み（`fonts.css` で読み込み）。
+  別字形に差し替える場合のみ、`ui/fonts/` の woff2 を入れ替え、`fonts.css` の @font-face を編集する。
 
 ==========================================================
   ESX 標準インベントリの制約

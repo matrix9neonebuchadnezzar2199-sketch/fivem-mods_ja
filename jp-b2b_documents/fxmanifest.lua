@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'alnd（日本語化・改修: matrix9neonebuchadnezzar2199）'
 description 'B2B ROLEPLAY DOCUMENTS — 日本語版（ESX / QB-Core / Qbox + 複数インベントリ）'
-version '2.0.1-jp.1'
+version '2.0.2-jp.1'
 
 ui_page 'ui/index.html'
 
@@ -14,6 +14,7 @@ files {
     'ui/script.js',
     'ui/img/logo.png',
     'ui/fonts/fonts.css',
+    'ui/fonts/OFL.txt',
     'ui/fonts/*.woff2',
     'web/images/*.png',
 }

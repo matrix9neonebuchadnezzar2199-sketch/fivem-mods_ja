@@ -4,6 +4,18 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.2-jp.1] — 2026-05-05
+
+### Added
+
+- Japanese webfonts bundled under `ui/fonts/` (same families as jp-uv-books2: Noto Sans/Serif JP, Shippori Mincho, Klee One, Yuji*, Hina Mincho, Zen Kurenaido, Yusei Magic, Reggae One) with `OFL.txt`.
+- Lock confirmation modal before signing; new locale keys `ui_modal_lock_title`, `ui_modal_lock_desc`, `ui_btn_lock_confirm`.
+
+### Changed
+
+- NUI: Google Fonts limited to Inter; Japanese text uses local `@font-face` (`fonts.css`).
+- `style.css`: body uses `Noto Sans JP`, headings use `Noto Serif JP` / `Shippori Mincho`.
+
 ## [2.0.1-jp.1] — 2026-05-05
 
 ### Changed
