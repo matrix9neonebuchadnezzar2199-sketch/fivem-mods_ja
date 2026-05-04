@@ -21,6 +21,38 @@ local function clear_waypoint_nav()
   DeleteWaypoint()
 end
 
+--- ベランダ等で GetGroundZ がズレるため、レイで衝突面の Z を優先する
+local function informant_probe_floor_z(x, y, zHint)
+  RequestCollisionAtCoord(x, y, zHint)
+  local tCol = GetGameTimer()
+  while GetGameTimer() - tCol < 150 do
+    Wait(0)
+  end
+  -- 上に伸ばしすぎると手すり上や屋根コリジョンに先に当たるため、足元付近の短いレイにする
+  local zTop = zHint + 4.0
+  local zBot = zHint - 14.0
+  local handle = StartShapeTestLosProbe(x, y, zTop, x, y, zBot, 511, 0, 7)
+  local tRay = GetGameTimer() + 250
+  while GetGameTimer() < tRay do
+    local retval, hit, endCoords = GetShapeTestResult(handle)
+    if retval == 1 then
+      Wait(0)
+    elseif retval == 2 then
+      if hit and endCoords then
+        return endCoords.z - 0.05
+      end
+      break
+    else
+      break
+    end
+  end
+  local gok, gz = GetGroundZFor_3dCoord(x, y, zHint + 80.0, false)
+  if gok then
+    return gz - 0.03
+  end
+  return zHint
+end
+
 local function spawn_informant()
   local ci = Config.ContractInformant
   if not ci or not ci.coords then
@@ -44,15 +76,13 @@ local function spawn_informant()
   local c = ci.coords
   local hx = c.x
   local hy = c.y
-  local hz = c.z
-  local ground, gz = GetGroundZFor_3dCoord(hx, hy, hz + 50.0, false)
-  if ground then
-    hz = gz + 0.08
-  end
-  informantPed = CreatePed(4, model, hx, hy, hz, c.w or 0.0, false, false)
+  local hz = informant_probe_floor_z(hx, hy, c.z)
+  local heading = c.w or 0.0
+  informantPed = CreatePed(4, model, hx, hy, hz, heading, false, false)
   SetEntityAsMissionEntity(informantPed, true, true)
   SetBlockingOfNonTemporaryEvents(informantPed, true)
-  SetEntityHeading(informantPed, c.w or 0.0)
+  SetEntityCoordsNoOffset(informantPed, hx, hy, hz, false, false, false)
+  SetEntityHeading(informantPed, heading)
   FreezeEntityPosition(informantPed, true)
   SetPedFleeAttributes(informantPed, 0, false)
   SetPedCombatAttributes(informantPed, 46, true)
