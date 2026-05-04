@@ -29,6 +29,7 @@
 | [INSTRUCTIONS_PHASE_1A_FOLLOWUP.md](docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md) | PHASE 1a フォローアップ（要確認の確定・保留コメント・§9 整理） |
 | [INSTRUCTIONS_PHASE_1B.md](docs/INSTRUCTIONS_PHASE_1B.md) | PHASE 1b 作業指示（§9 改善候補の優先度・工数評価、`BRIDGE_API_IMPROVEMENTS.md` 作成手順・Cursor 向け） |
 | [BRIDGE_API.md](docs/BRIDGE_API.md) | Bridge 層 API リファレンス（v1.0.0 コードスナップショット） |
+| [BRIDGE_API_IMPROVEMENTS.md](docs/BRIDGE_API_IMPROVEMENTS.md) | Bridge層改善候補の優先度・工数評価 |
 | [CONFIG_GUIDE.md](docs/CONFIG_GUIDE.md) | 運営向け設定 |
 | [SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) | シナリオ追加 |
 | [SCENARIO_TEMPLATE.md](docs/SCENARIO_TEMPLATE.md) | シナリオ設計テンプレ |
