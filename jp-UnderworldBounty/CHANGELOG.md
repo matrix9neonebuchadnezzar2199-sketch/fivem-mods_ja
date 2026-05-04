@@ -17,6 +17,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`: §5.2 手順を実装実態に合わせて修正、§16.4 補足追加（v1.2）。
 - `docs/DESIGN.md`、`README.md`、`.cursorrules` — PHASE 1a 実機テスト指示書の相互参照および一時優先指定を追加
 - `docs/BRIDGE_API.md`: §9 冒頭に `BRIDGE_API_IMPROVEMENTS.md` への参照を追加。
 - `docs/DESIGN.md`、`README.md`: `BRIDGE_API_IMPROVEMENTS.md` をツリー・ドキュメント表に追加。

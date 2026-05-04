@@ -3,7 +3,7 @@
 PHASE 1a 実機テスト手順書（手動実施・完全版）
 
 - 最終更新: 2026-05-04
-- バージョン: v1.1
+- バージョン: v1.2
 - 対象リポジトリ: `fivem-mods_ja/jp-UnderworldBounty/`
 - 想定所要時間: 60〜90分（環境準備込み）
 - 実施者: ユーザー（手動）
@@ -141,20 +141,16 @@ clear_bounty_on_player_death = true    -- テスト容易性のため
 
 **手順**:
 
-1. F8 コンソールで以下を実行（サーバ管理権限が必要）:
-
-   ```
-   /jpub_test_additem
-   ```
-
-   このコマンドが存在しない場合、手順2のSQL直接挿入に進む。
-
-2. または、強盗成功フローを完了させ、`server/rewards.lua` 経由で `Bridge.AddItem` が呼ばれる場面を作る:
+1. デバッグコマンド `ub_test`（サーバコンソール）または `/ub_test`（ゲーム内）を実行可能なら使用する。詳細は §16 実装メモを参照。
+2. デバッグコマンドで AddItem を直接呼べない場合、強盗成功フローを完了させて `server/rewards.lua` 経由で `Bridge.AddItem` が呼ばれる場面を作る:
    a. LT-1 と同じ手順で強盗ロケーションに進入
    b. 強盗を完了（金庫ハックミニゲーム→退出ゾーン到達）
    c. 報酬付与時のサーバログで `AddItem` 呼び出しと戻り値を観察
-
-3. `Config.Debug = true` の場合、`server/rewards.lua` でデバッグログが出るはず。出ない場合は一時的に `print()` を追加してもよいが、**テスト終了後に必ず削除**し、コミットしないこと。
+3. `server/rewards.lua` には現状 Debug 分岐のログが**実装されていない**ため、戻り値を直接観察するには一時的に `print()` を追加する必要がある。追加する場合は:
+   - 追加位置: `Bridge.AddItem` 呼び出し直後の1行のみ
+   - フォーマット例: `print(('[ub-livetest] AddItem ret=%s type=%s'):format(tostring(ret), type(ret)))`
+   - **テスト終了後に必ず削除**し、コミットしないこと（`git diff server/rewards.lua` で確認）
+   - 削除確認は §7.4 環境復元時に併せて実施
 
 **記録項目**:
 
@@ -490,6 +486,7 @@ git push origin main
 
 ## 14. 改訂履歴
 
+- 2026-05-04 v1.2: §5.2 手順を実装実態（rewards.lua に Debug ログ未実装、SQL手順なし）に合わせて修正。§16.4 補足を追加。
 - 2026-05-04 v1.1: §4.2 の「元」注釈を現行 `config/retaliation.lua`（default 90〜180 秒等）に整合。§16 に v1.0.0 実装メモ（`ub_test`、locations 3 件、`/jpub_*` 未登録）を追加。
 - 2026-05-04 v1.0: 初版作成。
 
@@ -517,3 +514,9 @@ git push origin main
 | `/jpub_debug_bridge_check`、`/jpub_test_additem` | **`RegisterCommand` としては未定義**。代替: **サーバコンソール**で `ub_test`（先頭 `/` なし、`src==0`）を実行すると `Framework` と `VERSION` が出力される（`server/main.lua:20-24`）。**ゲーム内**では `/ub_test` で `Bridge.GetPlayerData` と **`Bridge.GetCopCount`** の結果が通知される（LT-3 の観察に利用可能）。 |
 | `config/locations.lua` のエントリ数 | **3 件**（`loc_training_yard` / `loc_docks_gamblers` / `loc_vinewood_backroom`）。LT-4 で別エントリを使う場合は `id` を指定して記録する。 |
 | 職業変更コマンド | `/setjob` は **qbx_core の実コマンド名と異なる場合がある**。運営環境のドキュメントに合わせて読み替えること。 |
+
+### §16.4 §5.2 補足
+
+- **SQL直接挿入手順は本文に記載なし**: §5.2 手順1の「SQL直接挿入に進む」表現は誤り。手順1のデバッグコマンド `ub_test` が使えない場合は、手順2の強盗成功フロー経由で観察するか、運営自身の oxmysql 手順で実施する。本指示書ではSQL手順を提供しない。
+- **rewards.lua の Debug ログ未実装**: 現行 `server/rewards.lua` に `Config.Debug` 分岐のログは存在しない。AddItem 戻り値を観察するには一時 `print()` 追加が必須。修正済みの §5.2 手順3 を参照。
+- **ub_test コマンドの所在**: `server/main.lua` に登録されており、サーバコンソールでは `ub_test`、ゲーム内 F8 では `/ub_test` で実行可能。引数仕様は実装を直接確認すること。
