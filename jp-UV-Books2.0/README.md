@@ -29,13 +29,17 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
 
 > ESX 標準インベントリはアイテムメタデータ非対応のため、ドラフト保存・ジャンル・カスタムフォントは保存されません。**ox_inventory との併用を強く推奨**します。
 
+## 原作との同時起動について
+
+本リソースは原作 [uv-books 2.0](https://github.com/CocoDeee/uv-books2.0)（CocoDeee 氏作）の日本語ローカライズ版で、内部の **ネットイベント名** および **アイテム名**（既定 `book`）は原作踏襲です。**原作の `uv-books` リソースと同じサーバーで同時に起動することはできません**（イベント・アイテムの衝突）。どちらか一方のみ `ensure` してください。
+
 ## インストール
 
-1. リソースフォルダを `resources/` に配置（フォルダ名は `jp-uv-books` など任意。`ensure` 名と一致させる）
-2. `server.cfg` に追記：
+1. リソースフォルダを `resources/` に配置（フォルダ名は **`jp-uv-books2.0` など小文字＋ハイフン**を推奨。Linux サーバーでは `ensure` 名とディレクトリ名の大小文字が一致する必要があります）
+2. `server.cfg` に追記（フォルダ名に合わせる）：
 
    ```
-   ensure jp-uv-books
+   ensure jp-uv-books2.0
    ```
 
 3. アイテム定義を追加：
@@ -53,11 +57,11 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
    ```lua
    ['book'] = {
        label = '本', weight = 200, stack = false, close = true, consume = 0,
-       server = { export = 'jp-uv-books.book' }
+       server = { export = 'jp-uv-books2.0.book' }
    },
    ```
 
-   （リソース名が `jp-uv-books` の場合。フォルダ名に合わせて `リソース名.book` に変更。）
+   （`export` は **リソース名（フォルダ名）** + `.book`。フォルダ名を変えた場合はそれに合わせて書き換え。）
 
    **ESX**
 
