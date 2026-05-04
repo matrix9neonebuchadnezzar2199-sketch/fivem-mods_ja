@@ -224,8 +224,10 @@ function INV.SetMetadata(src, slot, instanceId, metadata)
     if INV.name == 'ox_inventory' then
         return exports.ox_inventory:SetMetadata(src, tonumber(slot), metadata)
     elseif INV.name == 'qb-inventory' then
+        local it = INV.GetSlot(src, tonumber(slot))
+        local nm = (it and it.name) or Config.Items.document
         local ok = pcall(function()
-            exports['qb-inventory']:SetItemData(src, Config.Items.document, 'info', metadata, tonumber(slot))
+            exports['qb-inventory']:SetItemData(src, nm, 'info', metadata, tonumber(slot))
         end)
         return ok
     elseif INV.name == 'esx_inventory' then
