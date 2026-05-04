@@ -256,7 +256,15 @@ local function OnBookUsed(src, item)
     end
 end
 
-exports(ITEM_NAME, function(event, item, inventory, slot, data)
+-- ox_inventory useExport は exports(res, exp)(nil, 'usingItem', item, inv, slot) を呼ぶため
+-- 第1引数が nil・第2引数がイベント名になる。従来の (event, item, ...) も受け付ける。
+exports(ITEM_NAME, function(a, b, c, d, e)
+    local event, item, inventory, slot
+    if a == nil and b == 'usingItem' then
+        event, item, inventory, slot = b, c, d, e
+    else
+        event, item, inventory, slot = a, b, c, d
+    end
     if event ~= 'usingItem' then return end
     local src = inventory.id
     local slotData = exports.ox_inventory:GetSlot(src, slot)
