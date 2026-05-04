@@ -57,6 +57,8 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
    ```lua
    ['book'] = {
        label = '本', weight = 200, stack = false, close = true, consume = 0,
+       -- 武器装備中でも USE したい場合に必要（未指定だと ox が拒否することがある）
+       allowArmed = true,
        client = { image = 'book.png' },
        server = { export = 'jp-uv-books2.0.book' }
    },
