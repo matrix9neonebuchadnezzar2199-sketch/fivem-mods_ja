@@ -1,5 +1,21 @@
 # Changelog
 
+Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+### Added
+
+- `fxmanifest.full.lua.template` — greenfield manifest reference（現行 `fxmanifest.lua` とは bridge 構成が異なる旨を記載）
+- `client/_stub.lua` — `Config.DebugUseClientStub` が true のときのみ読み込み意味を持つ開発用スタブ
+
+### Changed
+
+- `fxmanifest.lua` — ドキュメント参照コメント、`client/_stub.lua` をクライアント読み込みに追加
+- `.cursorrules` — ドキュメント階層・設計原則・現行 bridge パスを追記
+- `.gitignore` — OS/IDE/ドラフト/アセット源ファイルなどのパターンを拡張
+- `README.md` — ドキュメント表・バージョン表記・英語セクション整理
+
 ## v1.0.0 — 2026-05-03
 
 - 初版リリース候補: Bridge（ESX / QBCore・Qbox検出 / Standalone）、シナリオ駆動強盗、NPC 戦闘、闇の指名手配と報復ウェーブ、NUI ミニゲーム（鍵開け・ハッキング・力ずく）、イベントフック、`config` / `locales` 分離。

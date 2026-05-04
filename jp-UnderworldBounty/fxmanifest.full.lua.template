@@ -1,0 +1,71 @@
+-- ============================================================
+-- TEMPLATE ONLY — NOT LOADED BY FIVEM
+-- Greenfield / migration reference for a split bridge layout.
+--
+-- 現行 jp-UnderworldBounty は bridge/_init.lua + bridge/sv_bridge.lua /
+-- bridge/cl_bridge.lua 構成のため、このファイルはそのままでは置き換えに使わない。
+-- 参照: docs/DESIGN.md / ルートの fxmanifest.lua
+-- ============================================================
+
+fx_version 'cerulean'
+game 'gta5'
+lua54 'yes'
+
+author 'JP-Mods'
+description 'Yakuza-themed underground heist with retaliation system (闇の指名手配)'
+version '0.0.1'
+
+--[[
+shared_scripts {
+  'shared/version.lua',
+  'shared/constants.lua',
+  'config/config.lua',
+  'config/locations.lua',
+  'config/scenarios.lua',
+  'config/retaliation.lua',
+  'config/rewards.lua',
+  'config/blacklist.lua',
+  'locales/ja.lua',
+  'locales/en.lua',
+}
+
+server_scripts {
+  'bridge/_init.lua',
+  'bridge/esx.lua',
+  'bridge/qbcore.lua',
+  'bridge/qbox.lua',
+  'bridge/standalone.lua',
+  'server/utils.lua',
+  'server/main.lua',
+  'server/heist.lua',
+  'server/bounty.lua',
+  'server/rewards.lua',
+  'server/events.lua',
+  'server/persistence.lua',
+}
+
+client_scripts {
+  'bridge/_init.lua',
+  'bridge/esx.lua',
+  'bridge/qbcore.lua',
+  'bridge/qbox.lua',
+  'bridge/standalone.lua',
+  'client/utils.lua',
+  'client/main.lua',
+  'client/heist.lua',
+  'client/npc_manager.lua',
+  'client/retaliation.lua',
+  'client/notifications.lua',
+  'client/minigames.lua',
+  'client/ui.lua',
+  'client/_stub.lua',
+}
+
+ui_page 'ui/index.html'
+
+files {
+  'ui/index.html',
+  'ui/css/style.css',
+  'ui/js/app.js',
+}
+--]]

@@ -6,6 +6,9 @@ Config.Framework = 'auto'
 -- デバッグ（本番では false）
 Config.Debug = false
 
+-- 開発用: client/_stub.lua を有効化（サーバー↔クライアント契約の検証用。既定 false）
+Config.DebugUseClientStub = false
+
 -- UI・通知の言語キー（locales と対応）
 Config.Locale = 'ja'
 

@@ -16,6 +16,7 @@
 | `Config.Framework` | `auto` / `esx` / `qbcore` / `qbox` / `standalone` |
 | `Config.Locale` | `ja` または `en` |
 | `Config.Debug` | `true` でクールダウン無効などテスト向け（未実装項目あり） |
+| `Config.DebugUseClientStub` | `true` で `client/_stub.lua` がログ出力など開発用分岐を実行（本番では `false`） |
 | `Config.LocationCooldownSec` | 同一ロケーションの再プレイ禁止秒 |
 | `Config.MinOnDutyCops` | 開始に必要なオンライン警官の最小人数 |
 | `Config.BountyScanIntervalMs` | 指名手配・襲撃スケジュールのスキャン間隔 |

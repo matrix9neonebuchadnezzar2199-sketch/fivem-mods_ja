@@ -1,6 +1,66 @@
-*.log
+# OS / editor
 .DS_Store
 Thumbs.db
-*.zip
+desktop.ini
+*.swp
+*.swo
+*~
+
+# Cursor / VS Code (local machine state)
+.cursor/
+.vscode/*
+!.vscode/settings.json.example
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.iml
+
+# Logs / build / cache
+*.log
+logs/
+*.cache
+*.tmp
+*.luac
+
+# Node (if tooling is added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local secrets / overrides (never commit)
+server.cfg.local
+*.local.lua
 .env
 .env.*
+!.env.example
+secrets/
+
+# FiveM local artifacts
+cache/
+crashes/
+
+# Draft docs
+_draft_*.md
+_wip_*.md
+_*.tmp.md
+NOTES.md
+TODO.local.md
+scratch/
+
+dist/
+build/
+*.zip
+*.tar.gz
+
+# Asset sources (commit exported assets only)
+ui/assets/*.psd
+ui/assets/*.xcf
+ui/assets/*.ai
+ui/assets/_src/
+
+# DB dumps
+*.sql.bak
+*.sqlite
+*.db

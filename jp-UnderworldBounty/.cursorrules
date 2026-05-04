@@ -1,8 +1,82 @@
-# jp-UnderworldBounty
+# Cursor Rules for jp-UnderworldBounty
 
-- 実装・改修時は必ず `docs/DESIGN.md` を参照する。
-- 座標・モデル・武器・報酬などの固有値は Lua 本体にハードコードしない。`config/` に置く。
-- フレームワーク依存処理は `bridge/sv_bridge.lua` / `bridge/cl_bridge.lua` 経由に寄せる（クライアントから ESX/QBCore 直参照しない）。
-- プレイヤー向け文言は `locales/*.lua` と `_L()`。日本語コメント可。
-- FiveM: `fx_version 'cerulean'`、`lua54 'yes'`、Wait(0) 常時ループを作らない。
-- 文字コード UTF-8（BOM なし）。
+This file guides Cursor when working in this resource folder.
+
+## Project Identity
+
+FiveM resource (GTA V multiplayer RP). Theme: Japanese yakuza-style underground heist + **Underworld Bounty** retaliation. Monorepo path: `fivem-mods_ja` → `jp-UnderworldBounty/`.
+
+## Documentation hierarchy (read first)
+
+When implementing or reviewing code, consult in this order:
+
+1. `docs/DESIGN.md` — Architecture, principles, PHASE plan  
+2. `docs/PLAYER_FLOW.md` — Player scenes (#1–#30)  
+3. `docs/RETALIATION_FSM.md` — Bounty FSM (especially §13)  
+4. `docs/SEQUENCE_DIAGRAMS.md` — Client/server event contracts  
+5. `docs/EVENT_HOOKS.md` — Public hooks (`jp-UnderworldBounty:on*`)  
+6. `docs/CONFIG_GUIDE.md` — Operator config reference  
+7. `docs/SCENARIO_GUIDE.md` — Adding scenarios  
+
+If a request conflicts with these docs, prefer the docs and state the conflict.
+
+## Core principles
+
+### No hardcoding
+
+Coordinates, models, weapons, rewards, timings: `config/*.lua` or named constants — not scattered literals.
+
+### Bridge-only framework access
+
+Do **not** call ESX / QBCore / Qbox APIs directly from `client/` or `server/`. Use `bridge/sv_bridge.lua`, `bridge/cl_bridge.lua`, and `Bridge.*` / helpers loaded via `bridge/_init.lua` (see existing code).
+
+### Server is source of truth
+
+Money, items, bounty/heist state, rewards: server-side validation. Client sends **fact reports** only; never trust amounts or success flags without checks.
+
+### Single-table payloads for jp-UnderworldBounty events
+
+- `TriggerEvent('jp-UnderworldBounty:on...', payloadTable)` — **one table**; use `target` for player source per `EVENT_HOOKS.md` (not ad-hoc `player_id` unless documented).  
+- `TriggerClientEvent(UbEvent('client:...'), src, payloadTable)` — prefer one table.  
+Exception: framework notifications invoked from `bridge/` follow that framework’s signature.
+
+### Localization
+
+Player-facing strings: `locales/ja.lua`, `locales/en.lua` via `_L()`. Keep keys in sync.
+
+### Cleanup
+
+Track spawned NPCs, vehicles, blips. `onResourceStop` / disconnect paths must clean up client state.
+
+### Encoding
+
+UTF-8, no BOM (Lua / NUI / config).
+
+## Lua / FiveM conventions
+
+- Prefer `local`; shared config is `Config = {}` only as already used.  
+- Avoid `Wait(0)` tight loops; poll intervals from Config where applicable.  
+- Event prefixes: `jp-UnderworldBounty:client:*` (S→C), `jp-UnderworldBounty:server:*` (C→S), `jp-UnderworldBounty:on*` (public hooks). Use `UbEvent()` from `shared/constants.lua` for suffixes.
+
+## When changing behavior
+
+1. Confirm PHASE / scope in `DESIGN.md`.  
+2. Check `PLAYER_FLOW.md` for UX impact.  
+3. FSM changes → `RETALIATION_FSM.md` §13.  
+4. New wire protocol → `SEQUENCE_DIAGRAMS.md` + `EVENT_HOOKS.md` if hooks change.  
+5. Update `CHANGELOG.md` (Unreleased) and dated dev diary in `docs/` when appropriate.
+
+## Do not
+
+- Change `config` schema without updating `CONFIG_GUIDE.md`.  
+- Add user-facing strings without ja/en locale keys.  
+- Delete server-side validation for client-reported outcomes.  
+- Use `DeleteEntity` on the server for client-spawned entities.
+
+## Commit messages (Conventional Commits)
+
+`docs(jp-UnderworldBounty): …`, `feat(jp-UnderworldBounty): …`, `fix(jp-UnderworldBounty): …`, etc.
+
+## Implementation status
+
+PHASE 0–8 baseline is implemented (v1.0.x). Further work (full FSM parity, stubs, docs) follows `DESIGN.md` and `RETALIATION_FSM.md`; update this section when milestones shift.

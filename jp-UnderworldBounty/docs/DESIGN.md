@@ -43,6 +43,7 @@ NPCの座標やモデル名をLuaファイルにハードコードしないこ�
 ```
 jp-UnderworldBounty/
 ├── fxmanifest.lua              # FiveMリソースマニフェスト
+├── fxmanifest.full.lua.template # Greenfield向けマニフェスト参照（実ロードは fxmanifest.lua）
 ├── README.md                   # 日本語+英語のREADME
 ├── LICENSE
 ├── CHANGELOG.md
@@ -69,11 +70,9 @@ jp-UnderworldBounty/
 │   └── _template.lua           # 翻訳者向けテンプレート
 │
 ├── bridge/                     # フレームワーク抽象化レイヤー
-│   ├── _init.lua               # フレームワーク自動検出
-│   ├── esx.lua
-│   ├── qbcore.lua
-│   ├── qbox.lua
-│   └── standalone.lua
+│   ├── _init.lua               # フレームワーク自動検出・共通初期化
+│   ├── sv_bridge.lua           # サーバー側 Bridge 実装
+│   └── cl_bridge.lua           # クライアント側 Bridge 実装
 │
 ├── client/
 │   ├── main.lua                # エントリーポイント
@@ -83,10 +82,12 @@ jp-UnderworldBounty/
 │   ├── ui.lua                  # NUI制御
 │   ├── notifications.lua       # 通知システム
 │   ├── minigames.lua           # ミニゲーム呼び出し
+│   ├── _stub.lua               # 開発用スタブ（Config.DebugUseClientStub）
 │   └── utils.lua
 │
 ├── server/
 │   ├── main.lua
+│   ├── scenario_loader.lua     # シナリオ／ロケーション参照整合
 │   ├── heist.lua               # 強盗ロジック（サーバー側、報酬付与）
 │   ├── bounty.lua              # 闇の指名手配状態管理
 │   ├── rewards.lua             # 報酬計算
@@ -95,7 +96,8 @@ jp-UnderworldBounty/
 │   └── utils.lua
 │
 ├── shared/
-│   ├── constants.lua           # 共通定数
+│   ├── constants.lua           # 共通定数・UbEvent
+│   ├── locale.lua              # _L() ヘルパ
 │   └── version.lua
 │
 ├── ui/                         # NUI（HTML/CSS/JS）
