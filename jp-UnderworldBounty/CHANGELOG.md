@@ -11,6 +11,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `docs/2026-05-04_開発日記.md` を新設し、2026-05-04 以降の作業メモを移設（`docs/2026-05-03_開発日記.md` からリンク）
 - `fxmanifest.lua` — ドキュメント参照コメント、`client/_stub.lua` をクライアント読み込みに追加
 - `.cursorrules` — ドキュメント階層・設計原則・現行 bridge パスを追記
 - `.gitignore` — OS/IDE/ドラフト/アセット源ファイルなどのパターンを拡張
