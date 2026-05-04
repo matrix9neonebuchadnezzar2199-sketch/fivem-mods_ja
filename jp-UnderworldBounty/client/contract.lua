@@ -21,18 +21,18 @@ local function clear_waypoint_nav()
   DeleteWaypoint()
 end
 
---- 衝突ロード後に GetGroundZ のみ使用。設定Zと大きくズレる値（下の道路など）は捨てる。
-local function informant_resolve_spawn_z(x, y, zConfig)
+--- 既定は設定 Z そのまま（測定値を信頼）。use_ground_snap 時のみ地面を参照し、測定より下にはしない。
+local function informant_resolve_spawn_z(x, y, zConfig, ci)
   RequestCollisionAtCoord(x, y, zConfig)
-  for _ = 1, 30 do
+  for _ = 1, 20 do
     Wait(0)
   end
-  local gok, gz = GetGroundZFor_3dCoord(x, y, zConfig + 15.0, false)
+  if not ci or ci.use_ground_snap ~= true then
+    return zConfig
+  end
+  local gok, gz = GetGroundZFor_3dCoord(x, y, zConfig + 20.0, false)
   if gok and gz then
-    local dz = gz - zConfig
-    if dz > -6.0 and dz < 3.5 then
-      return gz + 0.02
-    end
+    return math.max(zConfig, gz) + 0.04
   end
   return zConfig
 end
@@ -60,7 +60,7 @@ local function spawn_informant()
   local c = ci.coords
   local hx = c.x
   local hy = c.y
-  local hz = informant_resolve_spawn_z(hx, hy, c.z) + (ci.spawn_z_offset or 0.0)
+  local hz = informant_resolve_spawn_z(hx, hy, c.z, ci) + (ci.spawn_z_offset or 0.0)
   local heading = c.w or 0.0
   informantPed = CreatePed(4, model, hx, hy, hz, heading, false, false)
   if informantPed == 0 or not DoesEntityExist(informantPed) then

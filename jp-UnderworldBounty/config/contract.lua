@@ -10,6 +10,8 @@ Config.ContractInformant = {
   radius = 2.2,
   -- スポーンZの手動微調整（足が浮く場合は負の小数、沈みすぎる場合は正）
   spawn_z_offset = 0.0,
+  -- true のときだけ GetGroundZ で足元補正（ナビが実床より低いと埋まることがある）。jp-slot 測定を信頼するなら false 推奨。
+  use_ground_snap = false,
 }
 
 -- 受注後、現地で E を押してギミックを開始できる半径
