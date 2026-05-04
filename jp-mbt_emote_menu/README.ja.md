@@ -13,12 +13,14 @@
 英語版 `README.md` の「Requirements」「Installation」と同じです。要点のみ:
 
 - FiveM サーバービルド **6116+**、**OneSync** 有効
-- **`rpemotes-reborn`** を先に `ensure` し、その後に **`mbt_emote_menu`**
+- **rpemotes 系リソース**（例: `rpemotes-reborn` や `rpemotes`）を先に `ensure` し、その後に本リソース（フォルダ名が **`jp-mbt_emote_menu`** の場合はその名前で `ensure`）
 
 ```cfg
 ensure rpemotes-reborn
-ensure mbt_emote_menu
+ensure jp-mbt_emote_menu
 ```
+
+※ `fxmanifest.lua` の `dependencies` には rpemotes を含めていません（フォルダ名がサーバーごとに異なるため）。未導入・未起動の場合はコンソールにサーバー側の検出エラーが出ます。
 
 ## フロントエンドのビルド
 
