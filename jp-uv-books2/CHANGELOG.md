@@ -25,4 +25,4 @@
 - `html/index.html` の NUI 全面 i18n・和文 `@font-face` は次コミットで対応予定
 - イベント名は原作踏襲の `uv-books:` を維持（原作との差分マージのため）
 - 原作 `uv-books` リソースとの同時起動は不可（イベント・アイテム名衝突）
-- Git インデックス上の `jp-uv-books2.0/` 重複パスを削除（Windows 大小文字の副作用）。物理フォルダを `jp-uv-books2.0` に揃える手順は `RENAME_TO_LOWERCASE.md` を参照
+- リソースフォルダ名を **`jp-uv-books2`** に統一（`ox_inventory` の `server.export` が **`resource.export` を先頭の `.` のみで分割**するため、`jp-uv-books2.0.book` は誤解釈され USE が効かない）。旧名からの移行は `RENAME_TO_LOWERCASE.md` を参照

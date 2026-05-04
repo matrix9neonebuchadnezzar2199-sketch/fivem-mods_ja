@@ -35,11 +35,11 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
 
 ## インストール
 
-1. リソースフォルダを `resources/` に配置（フォルダ名は **`jp-uv-books2.0` など小文字＋ハイフン**を推奨。Linux サーバーでは `ensure` 名とディレクトリ名の大小文字が一致する必要があります）
+1. リソースフォルダを `resources/` に配置（フォルダ名は **`jp-uv-books2`** を推奨。**ピリオド（`.`）を含めない**こと。`ox_inventory` の `server.export` は **先頭の `.` だけ**で `リソース名` と `エクスポート名` に分割するため、`jp-uv-books2.0.book` は誤解釈され **USE が無反応**になります。Linux では `ensure` 名とディレクトリ名の大小文字も一致させてください）
 2. `server.cfg` に追記（フォルダ名に合わせる）：
 
    ```
-   ensure jp-uv-books2.0
+   ensure jp-uv-books2
    ```
 
 3. アイテム定義を追加：
@@ -60,12 +60,12 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
        -- 武器装備中でも USE したい場合に必要（未指定だと ox が拒否することがある）
        allowArmed = true,
        client = { image = 'book.png' },
-       server = { export = 'jp-uv-books2.0.book' }
+       server = { export = 'jp-uv-books2.book' }
    },
    ```
 
-   （`export` は **リソース名（フォルダ名）** + `.book`。フォルダ名を変えた場合はそれに合わせて書き換え。）  
-   **`client.image`** は **ox_inventory が参照するファイル名**だけ指定します。実体の PNG は次の手順で **ox 側**に置きます（`jp-uv-books2.0/html/images/` に同梱されていても、ox はそこを見に行きません）。
+   （`export` は **リソース名（フォルダ名）** + `.book`。フォルダ名を変えた場合はそれに合わせて書き換え。**リソース名に `.` を含めない**こと。）  
+   **`client.image`** は **ox_inventory が参照するファイル名**だけ指定します。実体の PNG は次の手順で **ox 側**に置きます（`jp-uv-books2/html/images/` に同梱されていても、ox はそこを見に行きません）。
 
    **ESX**
 
