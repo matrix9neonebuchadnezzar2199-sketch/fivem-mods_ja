@@ -15,6 +15,11 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `fxmanifest.full.lua.template` — greenfield manifest reference（現行 `fxmanifest.lua` とは bridge 構成が異なる旨を記載）
 - `client/_stub.lua` — `Config.DebugUseClientStub` が true のときのみ読み込み意味を持つ開発用スタブ
 
+### Fixed
+
+- 強盗侵入ヘルプが高速点滅する問題（`client/heist.lua` で `DisplayHelp` の再描画を間引き）
+- 侵入プロンプトを `~INPUT_CONTEXT~` から **E キー表記**へ（`locales/ja.lua` / `locales/en.lua`）
+
 ### Changed
 
 - `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`: §4.3・§5.3 の `setjob` 例を server ID 先頭形式に修正、§16 の職業行を整合（v1.3）。

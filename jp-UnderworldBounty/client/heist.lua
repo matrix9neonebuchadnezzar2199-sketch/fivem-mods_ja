@@ -1,5 +1,8 @@
 local NearLocationId = nil
 local HeistRunning = false
+-- 侵入ヘルプを毎ループ呼ぶと点滅するため、表示だけ間引く（入力は CONTROL 38 = E を毎フレーム近くで確認）
+local HEIST_HELP_REFRESH_MS = 750
+local lastHeistHelpAt = 0
 
 RegisterNetEvent(UbEvent('client:heistSync'), function(data)
   HeistRunning = true
@@ -36,14 +39,18 @@ CreateThread(function()
       end
     end
     if NearLocationId and not HeistRunning then
-      BeginTextCommandDisplayHelp('STRING')
-      AddTextComponentSubstringPlayerName(_L('prompt_enter'))
-      EndTextCommandDisplayHelp(0, false, true, -1)
+      local now = GetGameTimer()
+      if now - lastHeistHelpAt >= HEIST_HELP_REFRESH_MS then
+        BeginTextCommandDisplayHelp('STRING')
+        AddTextComponentSubstringPlayerName(_L('prompt_enter'))
+        EndTextCommandDisplayHelp(0, false, false, -1)
+        lastHeistHelpAt = now
+      end
       if IsControlJustReleased(0, 38) then
         TriggerServerEvent(UbEvent('server:requestStart'), NearLocationId)
         Wait(600)
       end
-      Wait(100)
+      Wait(16)
     else
       Wait(Config.ZonePollIntervalMs or 500)
     end
