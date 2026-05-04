@@ -1,8 +1,10 @@
 local NearLocationId = nil
 local HeistRunning = false
--- 侵入ヘルプを毎ループ呼ぶと点滅するため、表示だけ間引く（入力は CONTROL 38 = E を毎フレーム近くで確認）
-local HEIST_HELP_REFRESH_MS = 750
+-- DisplayHelp を短間隔で呼ぶと毎回アニメが頭から再生されて点滅するため、更新は長めに間引く
+local HEIST_HELP_REFRESH_MS = 4000
 local lastHeistHelpAt = 0
+-- トリガー可視化（地上の薄い円）。描画負荷は近接時のみ Wait(0)
+local HEIST_MARKER_DRAW_DIST = 42.0
 
 RegisterNetEvent(UbEvent('client:heistSync'), function(data)
   HeistRunning = true
@@ -24,6 +26,43 @@ RegisterNetEvent(UbEvent('client:heistEnded'), function(payload)
   UbUiMinigameClose()
   if payload and payload.reason == 'success' then
     UbNotify(_L('notify_heist_success'), 'success')
+  end
+end)
+
+-- 強盗開始トリガー位置を黄色い円で示す（タイプ25＝地上のフラット円）
+CreateThread(function()
+  while true do
+    local waitMs = 500
+    if not HeistRunning then
+      local ped = PlayerPedId()
+      local pos = GetEntityCoords(ped)
+      for _, loc in ipairs(Config.Locations or {}) do
+        if loc.enabled then
+          local c = loc.trigger.coords
+          local dist = #(pos - c)
+          if dist <= HEIST_MARKER_DRAW_DIST then
+            waitMs = 0
+            local r = loc.trigger.radius or 2.0
+            DrawMarker(
+              25,
+              c.x, c.y, c.z - 0.98,
+              0.0, 0.0, 0.0,
+              0.0, 0.0, 0.0,
+              r * 2.4, r * 2.4, 0.4,
+              255, 220, 0, 130,
+              false,
+              false,
+              2,
+              false,
+              nil,
+              nil,
+              false
+            )
+          end
+        end
+      end
+    end
+    Wait(waitMs)
   end
 end)
 
