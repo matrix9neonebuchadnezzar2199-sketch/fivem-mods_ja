@@ -96,7 +96,8 @@ Config.Scenarios = {
     retaliation_pattern_id = 'default',
     success_condition = 'eliminate_all',
   },
-  -- 情報屋契約：enemies_relative 時は coords の x,y,z を現場アンカーからのオフセット、w を現場 heading からの差分（度）として解釈する
+  -- 情報屋契約：enemies_relative 時は coords の x,y,z を現場アンカーからのオフセット（メートル・世界軸）、w を現場 heading からの差分（度）。
+  -- 以下3体はアンカーから水平約 15 m（正三角形の頂点）に配置。
   {
     id = 'scenario_yakuza_contract',
     difficulty = 'normal',
@@ -109,19 +110,19 @@ Config.Scenarios = {
       {
         model = `g_m_m_armgoon_01`,
         weapon = `WEAPON_MICROSMG`,
-        coords = vector4(1.4, 0.8, 0.0, -35.0),
+        coords = vector4(15.0, 0.0, 0.0, 0.0),
         behavior = 'aggressive',
       },
       {
         model = `g_m_m_armgoon_02`,
         weapon = `WEAPON_PISTOL`,
-        coords = vector4(-1.6, 1.1, 0.0, 40.0),
+        coords = vector4(-7.5, 12.99, 0.0, 0.0),
         behavior = 'aggressive',
       },
       {
         model = `g_m_m_armlieut_01`,
         weapon = `WEAPON_PISTOL`,
-        coords = vector4(0.2, -2.0, 0.0, 5.0),
+        coords = vector4(-7.5, -12.99, 0.0, 0.0),
         behavior = 'boss',
       },
     },
