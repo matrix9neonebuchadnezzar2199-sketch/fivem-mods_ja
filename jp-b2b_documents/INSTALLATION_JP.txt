@@ -19,8 +19,10 @@
 【フレームワーク（自動検出）】
   - es_extended / qb-core / qbx_core
 
-※ リソースフォルダ名を <RESOURCE> とします（例: jp-b2b_documents）。
-  server.cfg の ensure 名と、ox_inventory の nui:// パスを一致させてください。
+※ 下記の <RESOURCE> は「置き換え前の記号」です。items.lua や server.cfg に
+  **<RESOURCE> とそのまま書かないでください**（エラー: No such export usePaper in resource <RESOURCE>）。
+  フォルダ名が例えば jp-b2b_documents なら、すべて **jp-b2b_documents** に置換します。
+  server.cfg の ensure 名と、ox_inventory の export / nui:// の名前を一致させてください。
 
 ----------------------------------------------------------
 STEP 1：データベース
@@ -31,8 +33,8 @@ STEP 1：データベース
 ----------------------------------------------------------
 STEP 2：配置
 ----------------------------------------------------------
-  本フォルダを resources 配下に置き、server.cfg に:
-      ensure <RESOURCE>
+  本フォルダを resources 配下に置き、server.cfg に（例: フォルダ名が jp-b2b_documents のとき）:
+      ensure jp-b2b_documents
 
 ----------------------------------------------------------
 STEP 3：アイテム登録
@@ -43,18 +45,20 @@ STEP 3：アイテム登録
   同一の return { ... } テーブル内で、このあとに別アイテム（例: ['bandage']）が続く場合は、
   **各ブロックの閉じを必ず `},`（カンマ付き）にする**。`}` だけだと Lua 構文エラーになる。
 
+  以下は **フォルダ名が jp-b2b_documents のときの完成例**（コピーするなら <RESOURCE> を自分の名前に読み替え）:
+
   ['paper_blank'] = {
       label = '白紙の用紙', weight = 10, stack = false, close = true,
       client = {
-          image = 'nui://<RESOURCE>/web/images/paper.png',
-          export = '<RESOURCE>.usePaper'
+          image = 'nui://jp-b2b_documents/web/images/paper.png',
+          export = 'jp-b2b_documents.usePaper'
       }
   },
   ['document'] = {
       label = 'ドキュメント', weight = 10, stack = false, close = true,
       client = {
-          image = 'nui://<RESOURCE>/web/images/document.png',
-          export = '<RESOURCE>.usePaper'
+          image = 'nui://jp-b2b_documents/web/images/document.png',
+          export = 'jp-b2b_documents.usePaper'
       }
   },
 

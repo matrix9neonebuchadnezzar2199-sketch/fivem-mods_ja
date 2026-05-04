@@ -17,8 +17,9 @@ You can do this via phpMyAdmin, HeidiSQL, or any MySQL client.
 --
 STEP 2
 
-Place the "b2b_documents" folder inside your resources folder.
-Add "ensure b2b_documents" to your server.cfg
+Place the resource folder (e.g. jp-b2b_documents) under resources and add to server.cfg, e.g.:
+    ensure jp-b2b_documents
+Do not leave a literal "<RESOURCE>" string in items.lua exports — use the real resource name.
 --
 STEP 3
 
@@ -32,8 +33,8 @@ each block must end with `},` — a bare `}` before the next `['key']` causes a 
         stack = false,
         close = true,
         client = {
-            image = 'nui://b2b_documents/web/images/paper.png',
-            export = 'b2b_documents.usePaper'
+            image = 'nui://jp-b2b_documents/web/images/paper.png',
+            export = 'jp-b2b_documents.usePaper'
         }
     },
 
@@ -43,15 +44,15 @@ each block must end with `},` — a bare `}` before the next `['key']` causes a 
         stack = false,
         close = true,
         client = {
-            image = 'nui://b2b_documents/web/images/document.png',
-            export = 'b2b_documents.usePaper'
+            image = 'nui://jp-b2b_documents/web/images/document.png',
+            export = 'jp-b2b_documents.usePaper'
         }
     },
 
 --
 STEP 4
 
-Open "b2b_documents/config.lua"
+Open "jp-b2b_documents/config.lua" (or your folder name)/config.lua
 Set your preferred locale (en or fr), configure your distribution points, then save.
 
 
