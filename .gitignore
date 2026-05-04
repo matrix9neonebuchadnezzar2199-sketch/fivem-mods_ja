@@ -14,8 +14,9 @@ desktop.ini
 
 # GitHub 公開リポには含めない（ローカル開発用のみ）
 .cursor/
-docs/
-# jp-tcgbook の実装指示書はサブフォルダ docs をリポジトリに含める
+# 各所の docs/ 配下は原則無視（ルート docs/STYLEGUIDE.md と jp-tcgbook/docs は例外）
+docs/*
+!docs/STYLEGUIDE.md
 !jp-tcgbook/docs/
 !jp-tcgbook/docs/**
 
