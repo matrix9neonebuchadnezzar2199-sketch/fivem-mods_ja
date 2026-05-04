@@ -798,7 +798,7 @@ function openWriter(draft) {
         bk.images[i] = imgs || [];
       }
     }
-    if (draft.font) bk.font = draft.font;
+    if (draft.font) bk.font = window.normalizeFontKey ? window.normalizeFontKey(draft.font) : draft.font;
   }
   
   buildWriterBook(!!draft);
@@ -812,11 +812,14 @@ function openWriter(draft) {
     // Skip title step, go straight to writing
     document.getElementById('coverTitleInput').value = bk.title;
     document.getElementById('insideTitle').textContent = bk.title;
-    // Restore font selection
+    // Restore font selection（内部キー／旧形式どちらも normalize）
     if (bk.font) {
       var sel = document.getElementById('fontSelect');
-      if (sel) sel.value = bk.font;
-      applyBookFont(bk.font);
+      if (sel) {
+        var fk = window.normalizeFontKey ? window.normalizeFontKey(bk.font) : bk.font;
+        sel.value = fk;
+        applyBookFont(fk);
+      }
     }
     document.getElementById('writerNav').classList.remove('hidden');
     writerSpread = 0;
@@ -847,18 +850,29 @@ function buildWriterBook(isDraft) {
       '<div class="font-picker">' +
         '<div class="font-picker-label" data-i18n="ui_font_picker_label">Choose a Font</div>' +
         '<select id="fontSelect" onchange="previewFont()">' +
-          '<option value="Palatino Linotype" style="font-family:Palatino Linotype">Classic Serif</option>' +
-          '<option value="Merriweather" style="font-family:Merriweather">Merriweather</option>' +
-          '<option value="Cinzel" style="font-family:Cinzel">Cinzel</option>' +
-          '<option value="Lato" style="font-family:Lato">Modern Sans</option>' +
-          '<option value="Zilla Slab" style="font-family:Zilla Slab">Zilla Slab</option>' +
-          '<option value="Great Vibes" style="font-family:Great Vibes">Script</option>' +
-          '<option value="Dancing Script" style="font-family:Dancing Script">Dancing Script</option>' +
-          '<option value="Caveat" style="font-family:Caveat">Handwritten</option>' +
-          '<option value="Indie Flower" style="font-family:Indie Flower">Indie</option>' +
-          '<option value="Special Elite" style="font-family:Special Elite">Typewriter</option>' +
-          '<option value="Orbitron" style="font-family:Orbitron">Futuristic</option>' +
-          '<option value="Rajdhani" style="font-family:Rajdhani">Tech</option>' +
+          '<option value="classic-serif" data-i18n="font_classic_serif">Classic Serif</option>' +
+          '<option value="merriweather" data-i18n="font_merriweather">Merriweather</option>' +
+          '<option value="cinzel" data-i18n="font_cinzel">Cinzel</option>' +
+          '<option value="modern-sans" data-i18n="font_modern_sans">Modern Sans</option>' +
+          '<option value="zilla-slab" data-i18n="font_zilla_slab">Zilla Slab</option>' +
+          '<option value="script" data-i18n="font_script">Script</option>' +
+          '<option value="dancing" data-i18n="font_dancing">Dancing Script</option>' +
+          '<option value="handwritten" data-i18n="font_handwritten">Handwritten</option>' +
+          '<option value="indie" data-i18n="font_indie">Indie</option>' +
+          '<option value="typewriter" data-i18n="font_typewriter">Typewriter</option>' +
+          '<option value="futuristic" data-i18n="font_futuristic">Futuristic</option>' +
+          '<option value="tech" data-i18n="font_tech">Tech</option>' +
+          '<option value="jp-noto-serif" data-i18n="font_jp_noto_serif">Noto Serif JP</option>' +
+          '<option value="jp-noto-sans" data-i18n="font_jp_noto_sans">Noto Sans JP</option>' +
+          '<option value="jp-shippori" data-i18n="font_jp_shippori">Shippori Mincho</option>' +
+          '<option value="jp-klee" data-i18n="font_jp_klee">Klee One</option>' +
+          '<option value="jp-yuji-syuku" data-i18n="font_jp_yuji_syuku">Yuji Syuku</option>' +
+          '<option value="jp-yuji-mai" data-i18n="font_jp_yuji_mai">Yuji Mai</option>' +
+          '<option value="jp-yuji-boku" data-i18n="font_jp_yuji_boku">Yuji Boku</option>' +
+          '<option value="jp-hina" data-i18n="font_jp_hina">Hina Mincho</option>' +
+          '<option value="jp-zen-kurenaido" data-i18n="font_jp_zen_kurenaido">Zen Kurenaido</option>' +
+          '<option value="jp-yusei" data-i18n="font_jp_yusei">Yusei Magic</option>' +
+          '<option value="jp-reggae" data-i18n="font_jp_reggae">Reggae One</option>' +
         '</select>' +
         '<div class="font-preview" id="fontPreview">The quick brown fox jumps over the lazy dog</div>' +
       '</div>' +
@@ -946,6 +960,7 @@ function buildWriterBook(isDraft) {
     }
   }
   if (typeof window.applyI18n === 'function') window.applyI18n();
+  previewFont();
 }
 
 // ── Font Picker ──
@@ -953,28 +968,29 @@ function buildWriterBook(isDraft) {
 function previewFont() {
   var sel = document.getElementById('fontSelect');
   var prev = document.getElementById('fontPreview');
-  if (sel && prev) {
-    prev.style.fontFamily = "'" + sel.value + "', serif";
-  }
+  if (!sel || !prev || !window.normalizeFontKey || !window.applyFontClass) return;
+  var key = window.normalizeFontKey(sel.value);
+  prev.style.fontFamily = '';
+  window.applyFontClass(prev, key);
 }
 
-function applyBookFont(fontName) {
-  if (!fontName) return;
-  var ff = "'" + fontName + "', serif";
-  // Apply to all writer textareas
+function applyBookFont(rawFont) {
+  if (!window.normalizeFontKey || !window.applyFontClass) return;
+  var key = window.normalizeFontKey(rawFont || 'classic-serif');
   var tas = document.querySelectorAll('.write-area');
   for (var i = 0; i < tas.length; i++) {
-    tas[i].style.fontFamily = ff;
+    tas[i].style.fontFamily = '';
+    window.applyFontClass(tas[i], key);
   }
-  // Apply to reader text
   var rts = document.querySelectorAll('.read-text');
-  for (var i = 0; i < rts.length; i++) {
-    rts[i].style.fontFamily = ff;
+  for (var j = 0; j < rts.length; j++) {
+    rts[j].style.fontFamily = '';
+    window.applyFontClass(rts[j], key);
   }
-  // Apply to titles
   var titles = document.querySelectorAll('.cover-title-display, .inside-title, .cover-input');
-  for (var i = 0; i < titles.length; i++) {
-    titles[i].style.fontFamily = ff;
+  for (var k = 0; k < titles.length; k++) {
+    titles[k].style.fontFamily = '';
+    window.applyFontClass(titles[k], key);
   }
 }
 
@@ -982,7 +998,7 @@ function doBeginWriting() {
   var v = document.getElementById('coverTitleInput').value.trim();
   if (!v) { document.getElementById('coverTitleInput').focus(); return; }
   bk.title = v;
-  bk.font = document.getElementById('fontSelect').value || 'Palatino Linotype';
+  bk.font = window.normalizeFontKey ? window.normalizeFontKey(document.getElementById('fontSelect').value) : (document.getElementById('fontSelect').value || 'classic-serif');
   document.getElementById('insideTitle').textContent = v;
   document.getElementById('writerNav').classList.remove('hidden');
   applyBookFont(bk.font);

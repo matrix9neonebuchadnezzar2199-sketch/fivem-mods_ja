@@ -46,7 +46,46 @@
     return s;
   };
 
-  // フォントキー → CSS クラス切替（'classic-serif' / 'jp-yuji-mai' 等）
+  // 原作・段階2以前の font-family 名 → 内部キー（メタデータ後方互換）
+  var LEGACY_FONT_MAP = {
+    'Palatino Linotype': 'classic-serif',
+    Merriweather: 'merriweather',
+    Cinzel: 'cinzel',
+    Lato: 'modern-sans',
+    'Zilla Slab': 'zilla-slab',
+    'Great Vibes': 'script',
+    'Dancing Script': 'dancing',
+    Caveat: 'handwritten',
+    'Indie Flower': 'indie',
+    'Special Elite': 'typewriter',
+    Orbitron: 'futuristic',
+    Rajdhani: 'tech',
+  };
+
+  var VALID_FONT_KEYS = {};
+  [
+    'classic-serif', 'merriweather', 'cinzel', 'modern-sans', 'zilla-slab', 'script', 'dancing',
+    'handwritten', 'indie', 'typewriter', 'futuristic', 'tech',
+    'jp-noto-serif', 'jp-noto-sans', 'jp-shippori', 'jp-klee', 'jp-yuji-syuku', 'jp-yuji-mai',
+    'jp-yuji-boku', 'jp-hina', 'jp-zen-kurenaido', 'jp-yusei', 'jp-reggae',
+  ].forEach(function (k) {
+    VALID_FONT_KEYS[k] = 1;
+  });
+
+  window.normalizeFontKey = function (v) {
+    if (v == null || v === '') return 'classic-serif';
+    if (typeof v !== 'string') v = String(v);
+    v = v.trim();
+    if (!v) return 'classic-serif';
+    if (LEGACY_FONT_MAP[v]) return LEGACY_FONT_MAP[v];
+    if (v.length > 1 && v.charAt(0).toLowerCase() === 'f' && v.charAt(1) === '-') {
+      v = v.slice(2);
+    }
+    if (VALID_FONT_KEYS[v]) return v;
+    return 'classic-serif';
+  };
+
+  // フォントキー → CSS クラス切替（'classic-serif' / 'jp-yuji-mai' 等）。fontKey は normalizeFontKey 済みを渡す。
   window.applyFontClass = function (el, fontKey) {
     if (!el || !fontKey) return;
     el.className = el.className.replace(/\bf-[a-z0-9-]+\b/gi, '').trim();
