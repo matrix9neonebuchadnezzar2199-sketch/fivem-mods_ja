@@ -1,0 +1,25 @@
+/* ローカル .woff2 を ui/fonts/ に置くと CDN 失敗時のフォールバックになります（任意） */
+
+@font-face {
+    font-family: 'Noto Sans JP Local';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('NotoSansJP-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Sans JP Local';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('NotoSansJP-Bold.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Noto Serif JP Local';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('NotoSerifJP-Bold.woff2') format('woff2');
+}

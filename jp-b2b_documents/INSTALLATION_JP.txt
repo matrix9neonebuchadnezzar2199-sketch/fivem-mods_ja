@@ -1,0 +1,85 @@
+==========================================================
+  jp-b2b_documents（b2b_documents 日本語版）— インストール
+==========================================================
+
+【必須】
+  - ox_lib
+  - oxmysql
+
+【インベントリ（いずれか 1 つ）】
+  - ox_inventory（推奨: metadata 対応）
+  - qb-inventory（info を metadata 相当として利用）
+  - ESX 標準インベントリ（metadata 非対応のため b2b_documents_links を自動作成）
+
+【ターゲット（任意）】
+  - ox_target（推奨）
+  - qb-target
+  - どちらも無い場合は配布拠点で [E] キー（距離フォールバック）
+
+【フレームワーク（自動検出）】
+  - es_extended / qb-core / qbx_core
+
+※ リソースフォルダ名を <RESOURCE> とします（例: jp-b2b_documents）。
+  server.cfg の ensure 名と、ox_inventory の nui:// パスを一致させてください。
+
+----------------------------------------------------------
+STEP 1：データベース
+----------------------------------------------------------
+  sql/b2b_documents.sql を MySQL にインポート。
+  ESX 標準インベントリを使う場合、b2b_documents_links は初回起動時に自動作成されます。
+
+----------------------------------------------------------
+STEP 2：配置
+----------------------------------------------------------
+  本フォルダを resources 配下に置き、server.cfg に:
+      ensure <RESOURCE>
+
+----------------------------------------------------------
+STEP 3：アイテム登録
+----------------------------------------------------------
+
+【ox_inventory】
+  ox_inventory/data/items.lua に追記（末尾カンマに注意）:
+
+  ['paper_blank'] = {
+      label = '白紙の用紙', weight = 10, stack = false, close = true,
+      client = {
+          image = 'nui://<RESOURCE>/web/images/paper.png',
+          export = '<RESOURCE>.usePaper'
+      }
+  },
+  ['document'] = {
+      label = 'ドキュメント', weight = 10, stack = false, close = true,
+      client = {
+          image = 'nui://<RESOURCE>/web/images/document.png',
+          export = '<RESOURCE>.usePaper'
+      }
+  }
+
+【qb-inventory】
+  qb-core/shared/items.lua 等に paper_blank / document を追加し、
+  qb-inventory/html/images/ に paper.png / document.png を配置。
+  本リソースの server が CreateUseableItem を登録します（ox_inventory 未使用時）。
+
+【ESX 標準】
+  データベース items テーブルに paper_blank / document を追加し、
+  limit 等をサーバー方針に合わせて設定。
+
+----------------------------------------------------------
+STEP 4：config.lua
+----------------------------------------------------------
+  Config.Locale / Config.Framework / Config.Inventory / Config.UseOxTarget
+  Config.PaperCooldown / Config.DistributionPoints を調整。
+
+----------------------------------------------------------
+STEP 5（任意）：オフライン用フォント
+----------------------------------------------------------
+  ui/fonts/ に NotoSansJP-Regular.woff2 / NotoSansJP-Bold.woff2 /
+  NotoSerifJP-Bold.woff2 を配置（fonts.css を参照）。
+
+==========================================================
+  ESX 標準インベントリの制約
+==========================================================
+  同一プレイヤーが複数の「ドキュメント」を所持する場合、
+  どのインスタンスを開いたか厳密には区別できません（リンクは「最新1件」推定）。
+  厳密運用が必要な場合は ox_inventory 等の metadata 対応インベントリを推奨します。

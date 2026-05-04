@@ -1,0 +1,26 @@
+if Config.Locale ~= 'ja' then return end
+
+Locale = {
+    success              = "成功",
+    error                = "エラー",
+    paper_taken          = "白紙の用紙を1枚受け取りました。",
+    pockets_full         = "ポケットがいっぱいです。",
+    cooldown             = "次の用紙を受け取るまで少しお待ちください。",
+    ui_title_placeholder = "ドキュメントのタイトル...",
+    ui_btn_save          = "保存",
+    ui_btn_lock          = "ロック（署名）",
+    ui_btn_duplicate     = "複製",
+    ui_btn_close         = "閉じる",
+    ui_modal_dup_title   = "ドキュメントを複製",
+    ui_modal_dup_desc    = "このドキュメントの複製を作成します。よろしいですか？",
+    ui_btn_cancel        = "キャンセル",
+    ui_btn_copy          = "複製する",
+    ui_size_normal       = "標準",
+    ui_size_small        = "小",
+    ui_size_large        = "大",
+    ui_size_title        = "見出し",
+    ui_untitled          = "無題のドキュメント",
+    ui_signed_locked     = "署名済み / ロック済み",
+    ui_editable          = "編集可能なドキュメント",
+    ui_copy_suffix       = "（コピー）",
+}

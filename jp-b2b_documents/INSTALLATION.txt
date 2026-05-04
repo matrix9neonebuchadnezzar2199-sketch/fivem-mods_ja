@@ -1,0 +1,57 @@
+DEPENDENCIES:
+
+- ox_lib
+- oxmysql
+- One inventory: ox_inventory (recommended), qb-inventory, or ESX default inventory
+- Target (optional): ox_target, qb-target, or [E] distance fallback
+- Framework (auto): es_extended, qb-core, or qbx_core
+
+See INSTALLATION_JP.txt for the maintained Japanese install guide (resource name / nui paths).
+
+INSTALLATION:
+---------------------------------------------------------------------------------------------------------------------------------------------
+STEP 1
+
+Import the file "b2b_documents.sql" into your database.
+You can do this via phpMyAdmin, HeidiSQL, or any MySQL client.
+--
+STEP 2
+
+Place the "b2b_documents" folder inside your resources folder.
+Add "ensure b2b_documents" to your server.cfg
+--
+STEP 3
+
+Go to "ox_inventory/data/items.lua"
+Scroll to the end of the file and paste the following, respecting the existing syntax, then save:
+
+    ['paper_blank'] = {
+        label = 'Blank Sheet',
+        weight = 10,
+        stack = false,
+        close = true,
+        client = {
+            image = 'nui://b2b_documents/web/images/paper.png',
+            export = 'b2b_documents.usePaper'
+        }
+    },
+
+    ['document'] = {
+        label = 'Document',
+        weight = 10,
+        stack = false,
+        close = true,
+        client = {
+            image = 'nui://b2b_documents/web/images/document.png',
+            export = 'b2b_documents.usePaper'
+        }
+    }
+
+--
+STEP 4
+
+Open "b2b_documents/config.lua"
+Set your preferred locale (en or fr), configure your distribution points, then save.
+
+
+
