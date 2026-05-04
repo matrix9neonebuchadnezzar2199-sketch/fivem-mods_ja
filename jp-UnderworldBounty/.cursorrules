@@ -20,6 +20,8 @@ When implementing or reviewing code, consult in this order:
 
 If a request conflicts with these docs, prefer the docs and state the conflict.
 
+**PHASE 1a**（Bridge API スナップショットのみ・コード変更なし）: follow `docs/INSTRUCTIONS_PHASE_1A.md` first for that task.
+
 ## Core principles
 
 ### No hardcoding

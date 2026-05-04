@@ -54,6 +54,7 @@ jp-UnderworldBounty/
 │   ├── SCENARIO_GUIDE.md       # シナリオ追加方法のガイド
 │   ├── EVENT_HOOKS.md          # 開発者向けイベントフック仕様
 │   ├── SEQUENCE_DIAGRAMS.md    # サーバー↔クライアントシーケンス・payload
+│   ├── INSTRUCTIONS_PHASE_1A.md # PHASE 1a: Bridge API スナップショット化作業指示（Cursor）
 │   └── images/                 # ドキュメント用画像
 │
 ├── config/
@@ -173,6 +174,8 @@ ESX/QBCore/Qboxは関数名・データ構造・イベント名がすべて違�
 抽象化すべき主要API：プレイヤーデータ取得、所持金確認、所持金加算/減算、アイテム所持確認、アイテム付与/削除、ジョブ取得、警察人数取得、通知表示、ロケール取得。これらすべてを `Bridge.GetPlayerData()` `Bridge.AddMoney()` のような統一インターフェースで呼べるようにする。
 
 クライアント側コードからはフレームワーク固有のグローバル変数（ESX, QBCore等）を**絶対に直接呼ばない**。全てBridge経由。これでメンテ性が劇的に向上する。
+
+**現行 API のスナップショット**: PHASE 1a 完了後、`docs/BRIDGE_API.md` に実装観察ベースで一覧する（コード変更は伴わない記録作業）。手順は **`docs/INSTRUCTIONS_PHASE_1A.md`** を参照。
 
 ---
 
@@ -350,4 +353,5 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 - **報復システム FSM（PHASE 4 実装の正本）**: `docs/RETALIATION_FSM.md`  
 - **サーバー↔クライアントシーケンス（payload・Mermaid）**: `docs/SEQUENCE_DIAGRAMS.md`  
 - **シナリオ設計テンプレ（運営が空欄埋め）**: `docs/SCENARIO_TEMPLATE.md`  
-- **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`
+- **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`  
+- **PHASE 1a（Bridge API スナップショット化・Cursor 向け手順）**: `docs/INSTRUCTIONS_PHASE_1A.md` → 成果物 `docs/BRIDGE_API.md`

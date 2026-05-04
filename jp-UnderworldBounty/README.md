@@ -25,6 +25,8 @@
 | [RETALIATION_FSM.md](docs/RETALIATION_FSM.md) | 報復 FSM（§13 実装パターン） |
 | [SEQUENCE_DIAGRAMS.md](docs/SEQUENCE_DIAGRAMS.md) | サーバー↔クライアント通信 |
 | [EVENT_HOOKS.md](docs/EVENT_HOOKS.md) | 公開イベント API |
+| [INSTRUCTIONS_PHASE_1A.md](docs/INSTRUCTIONS_PHASE_1A.md) | PHASE 1a 作業指示（Bridge API をドキュメント化する手順・Cursor 向け） |
+| `docs/BRIDGE_API.md`（PHASE 1a 完了後） | Bridge 層 API リファレンスのスナップショット |
 | [CONFIG_GUIDE.md](docs/CONFIG_GUIDE.md) | 運営向け設定 |
 | [SCENARIO_GUIDE.md](docs/SCENARIO_GUIDE.md) | シナリオ追加 |
 | [SCENARIO_TEMPLATE.md](docs/SCENARIO_TEMPLATE.md) | シナリオ設計テンプレ |
