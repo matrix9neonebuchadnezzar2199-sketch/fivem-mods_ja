@@ -11,6 +11,8 @@ end
 
 local MAX_PAGES = Config.MaxPages or 20
 local MAX_CHARS = Config.MaxCharsPerPage or 600
+local UI_SCALE = tonumber(Config.UiScale) or 1.0
+if UI_SCALE < 0.45 then UI_SCALE = 0.45 elseif UI_SCALE > 1.4 then UI_SCALE = 1.4 end
 local isWriting = false
 
 local Framework = nil
@@ -56,6 +58,7 @@ local function PushLocaleToNui()
             maxTitleChars  = Config.MaxTitleChars  or 30,
             maxAuthorChars = Config.MaxAuthorChars or 20,
             maxGenreChars  = Config.MaxGenreChars  or 30,
+            uiScale        = UI_SCALE,
         },
     })
 end

@@ -6,6 +6,7 @@
   window.__cfg  = {
     maxPages: 20, maxChars: 600,
     maxTitleChars: 30, maxAuthorChars: 20, maxGenreChars: 30,
+    uiScale: 1,
   };
 
   function applyI18n() {
@@ -35,6 +36,12 @@
     if (a) a.maxLength = window.__cfg.maxAuthorChars;
     if (g) g.maxLength = window.__cfg.maxGenreChars;
     if (s) s.maxLength = window.__cfg.maxAuthorChars;
+    var sc = parseFloat(window.__cfg.uiScale);
+    if (isNaN(sc) || sc <= 0) sc = 1;
+    if (sc < 0.45) sc = 0.45;
+    if (sc > 1.4) sc = 1.4;
+    window.__cfg.uiScale = sc;
+    document.documentElement.style.setProperty('--book-ui-scale', String(sc));
   }
   window.applyConfig = applyConfig;
 

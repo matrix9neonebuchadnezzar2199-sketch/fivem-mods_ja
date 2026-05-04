@@ -82,6 +82,7 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
 
 - `Config.Locale` — `'ja'` または `'en'`
 - `Config.MaxPages` / `Config.MaxCharsPerPage` 等の上限値
+- `Config.UiScale` — 本 NUI 全体の表示倍率（既定 `1.0`。例: `0.82` でやや小さく）
 - `Config.ForceFramework` / `Config.ForceInventory` — 自動検出を上書き
 
 ## 同梱フォント
