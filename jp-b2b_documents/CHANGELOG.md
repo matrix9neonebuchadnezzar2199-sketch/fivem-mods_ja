@@ -4,6 +4,12 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.1] — 2026-05-05
+
+### Added
+
+- Quill toolbar **font family picker** (`formats/font`) wired to bundled faces: Noto Sans/Serif JP, Shippori Mincho, Klee One, Yuji Mai, Zen Kurenaido + default. Picker labels i18n (`ui_font_*` keys). CSS classes `.ql-font-*` map to `@font-face` families.
+
 ## [2.0.2-jp.1] — 2026-05-05
 
 ### Added

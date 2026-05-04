@@ -8,8 +8,8 @@ FiveM 向けのドキュメント／メモエディター（**日本語版**）�
 
 README でも拾いやすいよう、**運営・プレイヤー向けの売り**としてまとめています（改修の記録は [開発日記](./2026-05-05%20開発日記.md) / [CHANGELOG](./CHANGELOG.md) にも残します）。
 
-1. **和文 Web フォントをリソース同梱（jp-uv-books2 と同系）**  
-   `ui/fonts/*.woff2` と `OFL.txt` を同梱し、`fonts.css` で `@font-face` 登録。Noto Sans/Serif JP に加え、Shippori Mincho・Klee One・Yuji 系など **jp-uv-books2 の和文セットと同じ出自の字形**をそのまま使えるようにしてある。日本語表示を **Google Fonts 依存から切り離し**、オフライン・制限ネットでも崩れにくい（欧文 UI 用に Inter のみ CDN を併用）。
+1. **和文 Web フォントをリソース同梱（jp-uv-books2 と同系）＋ツールバーから選択**  
+   `ui/fonts/*.woff2` と `OFL.txt` を同梱し、`fonts.css` で `@font-face` 登録。Noto Sans/Serif JP に加え、Shippori Mincho・Klee One・Yuji 系など **jp-uv-books2 の和文セットと同じ出自の字形**をそのまま使えるようにしてある。Quill の **「フォント」ドロップダウン**から主要な書体を段落内に適用可能。日本語表示を **Google Fonts 依存から切り離し**、オフライン・制限ネットでも崩れにくい（欧文 UI 用に Inter のみ CDN を併用）。
 
 2. **ロック（署名）前に確認モーダル**  
    赤ボタンは即確定ではなく、**「ロックすると編集不可」**の説明付きダイアログで一度止める。誤タップ・RP 上の「うっかり署名」を減らす UX。Esc はモーダルを先に閉じ、複製モーダルも同様。

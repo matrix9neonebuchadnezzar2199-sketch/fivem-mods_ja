@@ -161,6 +161,19 @@ body {
 
 .ql-snow .ql-picker.ql-size { width: 110px !important; }
 
+.ql-snow .ql-picker.ql-font {
+    min-width: 10.5em !important;
+    width: auto !important;
+}
+
+/* Quill フォントピッカー → ui/fonts の @font-face と対応 */
+.ql-font-noto-sans-jp { font-family: 'Noto Sans JP', 'Inter', sans-serif !important; }
+.ql-font-noto-serif-jp { font-family: 'Noto Serif JP', 'Shippori Mincho', serif !important; }
+.ql-font-shippori-mincho { font-family: 'Shippori Mincho', 'Noto Serif JP', serif !important; }
+.ql-font-klee-one { font-family: 'Klee One', 'Noto Sans JP', cursive !important; }
+.ql-font-yuji-mai { font-family: 'Yuji Mai', 'Yuji Syuku', cursive !important; }
+.ql-font-zen-kurenaido { font-family: 'Zen Kurenaido', 'Klee One', cursive !important; }
+
 .ql-snow .ql-picker.ql-size .ql-picker-label::before,
 .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: 'Normal' !important; }
 .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,

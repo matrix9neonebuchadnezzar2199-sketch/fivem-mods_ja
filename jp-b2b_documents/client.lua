@@ -51,6 +51,13 @@ local function openUI(payload)
                 ui_size_small = T('ui_size_small'),
                 ui_size_large = T('ui_size_large'),
                 ui_size_title = T('ui_size_title'),
+                ui_font_default = T('ui_font_default'),
+                ui_font_noto_sans = T('ui_font_noto_sans'),
+                ui_font_noto_serif = T('ui_font_noto_serif'),
+                ui_font_shippori = T('ui_font_shippori'),
+                ui_font_klee = T('ui_font_klee'),
+                ui_font_yuji_mai = T('ui_font_yuji_mai'),
+                ui_font_zen = T('ui_font_zen'),
                 ui_untitled = T('ui_untitled'),
             }
         })

@@ -8,16 +8,49 @@ Quill.register(ColorStyle, true);
 const AlignStyle = Quill.import('attributors/style/align');
 Quill.register(AlignStyle, true);
 
+/** ui/fonts と対応（Quill の class 名は英小文字・ハイフン） */
+const B2B_FONT_WHITELIST = [
+    'noto-sans-jp',
+    'noto-serif-jp',
+    'shippori-mincho',
+    'klee-one',
+    'yuji-mai',
+    'zen-kurenaido',
+    false
+];
+
+let FontFormat = null;
+try {
+    FontFormat = Quill.import('formats/font');
+} catch (e) {
+    FontFormat = null;
+}
+let b2bFontToolbarRow = null;
+if (FontFormat) {
+    FontFormat.whitelist = B2B_FONT_WHITELIST;
+    Quill.register(FontFormat, true);
+    b2bFontToolbarRow = [{ 'font': B2B_FONT_WHITELIST }];
+} else {
+    console.warn('[jp-b2b_documents] Quill に formats/font がありません — フォントピッカーを省略します');
+}
+
+const toolbarRows = [
+    [{ 'header': [1, 2, 3, false] }],
+];
+if (b2bFontToolbarRow) {
+    toolbarRows.push(b2bFontToolbarRow);
+}
+toolbarRows.push(
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'align': [] }],
+    ['image', 'clean']
+);
+
 const quill = new Quill('#editor', {
     theme: 'snow',
     modules: {
-        toolbar: [
-            [{ 'header': [1, 2, 3, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['image', 'clean']
-        ],
+        toolbar: toolbarRows,
         clipboard: {
             matchVisual: false
         }
@@ -61,6 +94,34 @@ function applyQuillSizeLabels(loc) {
 `;
 }
 
+function applyQuillFontLabels(loc) {
+    if (!loc || !loc.ui_font_default || !b2bFontToolbarRow) return;
+    const id = 'b2b-quill-font-i18n';
+    let el = document.getElementById(id);
+    if (!el) {
+        el = document.createElement('style');
+        el.id = id;
+        document.head.appendChild(el);
+    }
+    const q = (s) => JSON.stringify(String(s));
+    const pairs = [
+        ['false', loc.ui_font_default],
+        ['noto-sans-jp', loc.ui_font_noto_sans],
+        ['noto-serif-jp', loc.ui_font_noto_serif],
+        ['shippori-mincho', loc.ui_font_shippori],
+        ['klee-one', loc.ui_font_klee],
+        ['yuji-mai', loc.ui_font_yuji_mai],
+        ['zen-kurenaido', loc.ui_font_zen]
+    ];
+    const rules = pairs.map(([val, label]) => {
+        const sel = val === 'false'
+            ? `.ql-snow .ql-picker.ql-font .ql-picker-label:not([data-value])::before, .ql-snow .ql-picker.ql-font .ql-picker-item:not([data-value])::before, .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="false"]::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="false"]::before`
+            : `.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="${val}"]::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="${val}"]::before`;
+        return `${sel} { content: ${q(label)} !important; }`;
+    }).join('\n');
+    el.textContent = rules;
+}
+
 window.addEventListener('message', (event) => {
     if (event.data.action !== "open") return;
 
@@ -83,6 +144,7 @@ window.addEventListener('message', (event) => {
     });
 
     applyQuillSizeLabels(loc);
+    applyQuillFontLabels(loc);
 
     window.b2bItemName = event.data.itemName || null;
 

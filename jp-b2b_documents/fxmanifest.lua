@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'alnd（日本語化・改修: matrix9neonebuchadnezzar2199）'
 description 'B2B ROLEPLAY DOCUMENTS — 日本語版（ESX / QB-Core / Qbox + 複数インベントリ）'
-version '2.0.2-jp.1'
+version '2.0.3-jp.1'
 
 ui_page 'ui/index.html'
 
