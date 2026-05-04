@@ -274,7 +274,14 @@ exports(ITEM_NAME, function(event, item, inventory, slot, data)
 end)
 
 CreateThread(function()
-    while Framework == nil do Wait(100) end
+    local deadline = GetGameTimer() + 15000
+    while Framework == nil and GetGameTimer() < deadline do
+        Wait(100)
+    end
+    if Framework == nil then
+        print('[jp-uv-books] ^1' .. _L('no_framework') .. ' (init timeout)^0')
+        return
+    end
 
     if Inventory == 'jaksam' then
         exports['jaksam_inventory']:registerUsableItem(ITEM_NAME, function(playerId, item)

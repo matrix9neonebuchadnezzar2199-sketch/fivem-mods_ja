@@ -31,11 +31,11 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
 
 ## インストール
 
-1. このフォルダを `resources/` に配置（フォルダ名を `server.cfg` の `ensure` と一致させる）
+1. リソースフォルダを `resources/` に配置（フォルダ名は `jp-uv-books` など任意。`ensure` 名と一致させる）
 2. `server.cfg` に追記：
 
    ```
-   ensure <フォルダ名>
+   ensure jp-uv-books
    ```
 
 3. アイテム定義を追加：
@@ -48,15 +48,16 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
               ['shouldClose']=true, ['description']='まだ何も書かれていない本。'},
    ```
 
-   **QBox / ox_inventory**（`ox_inventory/data/items.lua`）  
-   `<resource>` は実際のリソース名（フォルダ名）に置き換え。
+   **QBox / ox_inventory**（`ox_inventory/data/items.lua`）
 
    ```lua
    ['book'] = {
        label = '本', weight = 200, stack = false, close = true, consume = 0,
-       server = { export = '<resource>.book' }
+       server = { export = 'jp-uv-books.book' }
    },
    ```
+
+   （リソース名が `jp-uv-books` の場合。フォルダ名に合わせて `リソース名.book` に変更。）
 
    **ESX**
 
