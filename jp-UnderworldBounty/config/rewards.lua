@@ -19,4 +19,11 @@ Config.RewardTables = {
       { item = 'markedbills', count_min = 4, count_max = 8, chance = 0.7 },
     },
   },
+  -- 情報屋契約：ギミック成功後にヤクザを全滅させたときの報酬
+  reward_contract = {
+    cash = { min = 3500, max = 7000, chance = 1.0 },
+    items = {
+      { item = 'markedbills', count_min = 1, count_max = 3, chance = 0.45 },
+    },
+  },
 }

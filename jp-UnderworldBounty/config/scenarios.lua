@@ -96,4 +96,37 @@ Config.Scenarios = {
     retaliation_pattern_id = 'default',
     success_condition = 'eliminate_all',
   },
+  -- 情報屋契約：enemies_relative 時は coords の x,y,z を現場アンカーからのオフセット、w を現場 heading からの差分（度）として解釈する
+  {
+    id = 'scenario_yakuza_contract',
+    difficulty = 'normal',
+    flavor_key = 'scenario_flavor_contract',
+    entry_minigame = 'none',
+    time_limit_sec = 420,
+    required_items = {},
+    enemies_relative = true,
+    enemies = {
+      {
+        model = `g_m_m_armgoon_01`,
+        weapon = `WEAPON_MICROSMG`,
+        coords = vector4(1.4, 0.8, 0.0, -35.0),
+        behavior = 'aggressive',
+      },
+      {
+        model = `g_m_m_armgoon_02`,
+        weapon = `WEAPON_PISTOL`,
+        coords = vector4(-1.6, 1.1, 0.0, 40.0),
+        behavior = 'aggressive',
+      },
+      {
+        model = `g_m_m_armlieut_01`,
+        weapon = `WEAPON_PISTOL`,
+        coords = vector4(0.2, -2.0, 0.0, 5.0),
+        behavior = 'boss',
+      },
+    },
+    reward_table_id = 'reward_contract',
+    retaliation_pattern_id = 'dark',
+    success_condition = 'eliminate_all',
+  },
 }

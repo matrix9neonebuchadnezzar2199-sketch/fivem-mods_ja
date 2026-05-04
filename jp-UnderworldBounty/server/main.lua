@@ -13,6 +13,9 @@ AddEventHandler('onResourceStop', function(resName)
   end
   for _, sid in ipairs(GetPlayers()) do
     local src = tonumber(sid)
+    if UbForceCleanupContract then
+      UbForceCleanupContract(src)
+    end
     TriggerClientEvent(UbEvent('client:forceCleanup'), src)
   end
 end)

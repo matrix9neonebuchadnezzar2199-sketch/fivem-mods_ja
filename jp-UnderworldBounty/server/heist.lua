@@ -38,6 +38,10 @@ end
 
 RegisterNetEvent(UbEvent('server:requestStart'), function(location_id)
   local src = source
+  if UbHasActiveContract and UbHasActiveContract(src) then
+    notify_denied(src)
+    return
+  end
   if Active[src] then
     return
   end
@@ -176,6 +180,9 @@ end)
 
 function UbForceCleanupPlayer(src)
   Active[src] = nil
+  if UbForceCleanupContract then
+    UbForceCleanupContract(src)
+  end
 end
 
 function UbExportActiveHeist(src)

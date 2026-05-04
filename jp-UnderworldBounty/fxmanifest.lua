@@ -29,6 +29,7 @@ shared_scripts {
   'config/retaliation.lua',
   'config/scenarios.lua',
   'config/locations.lua',
+  'config/contract.lua',
   'locales/ja.lua',
   'locales/en.lua',
   'shared/locale.lua',
@@ -43,6 +44,7 @@ client_scripts {
   'client/minigames.lua',
   'client/npc_manager.lua',
   'client/heist.lua',
+  'client/contract.lua',
   'client/retaliation.lua',
   'client/_stub.lua',
   'client/main.lua',
@@ -57,6 +59,7 @@ server_scripts {
   'server/persistence.lua',
   'server/bounty.lua',
   'server/heist.lua',
+  'server/contract.lua',
   'server/main.lua',
 }
 

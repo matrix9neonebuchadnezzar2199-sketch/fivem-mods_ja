@@ -1,6 +1,8 @@
 local Managed = {}
 local HeistGroup = nil
 local HeistCombatActive = false
+-- 'heist' | 'contract' — 全滅時に送るサーバーイベントを切り替える
+local NpcCombatSession = 'heist'
 -- UbNpcCleanup 呼び出しで無効化され、遅延削除スレッドを打ち切る
 local npcCleanupEpoch = 0
 
@@ -38,12 +40,18 @@ local function apply_behavior(ped, behavior)
   TaskCombatPed(ped, player, 0, 16)
 end
 
-function UbNpcBeginScenario(scenario_id)
+--- @param scenario_id string
+--- @param spawn_opts table|nil { session='heist'|'contract', anchor=vector3, anchor_heading=number }
+function UbNpcBeginScenario(scenario_id, spawn_opts)
+  spawn_opts = spawn_opts or {}
   UbNpcCleanup(false)
   local sc = UbClientFindScenario(scenario_id)
   if not sc then
     return
   end
+  NpcCombatSession = spawn_opts.session or 'heist'
+  local anchor = spawn_opts.anchor
+  local anchorHeading = spawn_opts.anchor_heading or 0.0
   local grp = ensure_heist_group()
   HeistCombatActive = true
   for _, row in ipairs(sc.enemies or {}) do
@@ -58,7 +66,16 @@ function UbNpcBeginScenario(scenario_id)
     end
     if HasModelLoaded(model) then
       local c = row.coords
-      local ped = CreatePed(4, model, c.x, c.y, c.z, c.w or 0.0, false, true)
+      local wx, wy, wz, wh
+      if sc.enemies_relative and anchor then
+        wx = anchor.x + c.x
+        wy = anchor.y + c.y
+        wz = anchor.z + c.z
+        wh = anchorHeading + (c.w or 0.0)
+      else
+        wx, wy, wz, wh = c.x, c.y, c.z, c.w or 0.0
+      end
+      local ped = CreatePed(4, model, wx, wy, wz, wh, false, true)
       SetEntityAsMissionEntity(ped, true, true)
       SetPedRelationshipGroupHash(ped, grp)
       SetPedArmour(ped, (row.behavior == 'boss') and 100 or 40)
@@ -75,7 +92,11 @@ function UbNpcBeginScenario(scenario_id)
   end
   if #Managed == 0 then
     HeistCombatActive = false
-    TriggerServerEvent(UbEvent('server:npcSpawnFailed'))
+    if NpcCombatSession == 'contract' then
+      TriggerServerEvent(UbEvent('server:contractNpcSpawnFailed'))
+    else
+      TriggerServerEvent(UbEvent('server:npcSpawnFailed'))
+    end
     return
   end
   CreateThread(function()
@@ -89,7 +110,11 @@ function UbNpcBeginScenario(scenario_id)
       end
       if alive == 0 and #Managed > 0 then
         HeistCombatActive = false
-        TriggerServerEvent(UbEvent('server:completeCombat'))
+        if NpcCombatSession == 'contract' then
+          TriggerServerEvent(UbEvent('server:contractCombatComplete'))
+        else
+          TriggerServerEvent(UbEvent('server:completeCombat'))
+        end
         break
       end
     end

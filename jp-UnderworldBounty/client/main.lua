@@ -8,6 +8,9 @@ AddEventHandler('onResourceStop', function(resName)
 end)
 
 RegisterNetEvent(UbEvent('client:forceCleanup'), function()
+  if UbContractClientReset then
+    UbContractClientReset()
+  end
   UbNpcCleanup(true)
   UbRetaliationCleanup()
   UbUiMinigameClose()

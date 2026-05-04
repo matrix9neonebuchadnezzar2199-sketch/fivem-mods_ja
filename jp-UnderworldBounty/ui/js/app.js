@@ -123,6 +123,60 @@
     mgCleanup = () => window.removeEventListener('keydown', onKey);
   }
 
+  function runTimingWheel(payload) {
+    const ms = payload.timingWheelMs || 9000;
+    let done = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      clearMinigame();
+      postMinigame(ok);
+    };
+    const span = 52;
+    const startAngle = Math.random() * (360 - span);
+    let needle = Math.random() * 360;
+    const speed = 125;
+    mgDesc.textContent = payload.descTimingWheel || '';
+    const wrap = document.createElement('div');
+    wrap.className = 'mg-wheel-wrap';
+    const wheel = document.createElement('div');
+    wheel.className = 'mg-wheel';
+    const disk = document.createElement('div');
+    disk.className = 'mg-wheel-disk';
+    disk.style.background = `conic-gradient(from 0deg, #2a2226 0deg, #2a2226 ${startAngle}deg, rgba(40, 180, 90, 0.92) ${startAngle}deg, rgba(40, 180, 90, 0.92) ${startAngle + span}deg, #2a2226 ${startAngle + span}deg, #2a2226 360deg)`;
+    const hub = document.createElement('div');
+    hub.className = 'mg-wheel-hub';
+    const needleEl = document.createElement('div');
+    needleEl.className = 'mg-wheel-needle';
+    wheel.appendChild(disk);
+    wheel.appendChild(needleEl);
+    wheel.appendChild(hub);
+    wrap.appendChild(wheel);
+    mgBody.appendChild(wrap);
+    needleEl.style.transform = `rotate(${needle}deg)`;
+    const inArc = () => {
+      const n = ((needle % 360) + 360) % 360;
+      const s = ((startAngle % 360) + 360) % 360;
+      const rel = (n - s + 360) % 360;
+      return rel >= 0 && rel <= span;
+    };
+    mgStatus.textContent = payload.statusTimingWheel || '';
+    const tick = () => {
+      needle = (((needle + speed * 0.044) % 360) + 360) % 360;
+      needleEl.style.transform = `rotate(${needle}deg)`;
+    };
+    mgTimer = setInterval(tick, 44);
+    const onKey = (e) => {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      window.removeEventListener('keydown', onKey);
+      finish(inArc());
+    };
+    window.addEventListener('keydown', onKey);
+    mgCleanup = () => window.removeEventListener('keydown', onKey);
+    setTimeout(() => finish(false), ms);
+  }
+
   function runBrute(payload) {
     const need = payload.bruteHits || 12;
     let done = false;
@@ -169,6 +223,9 @@
     } else if (kind === 'brute') {
       mgTitle.textContent = payload.titleBrute || 'Force';
       runBrute(payload);
+    } else if (kind === 'timing_wheel') {
+      mgTitle.textContent = payload.titleTimingWheel || 'Timing';
+      runTimingWheel(payload);
     } else {
       postMinigame(true);
     }

@@ -171,3 +171,52 @@ body {
   color: var(--muted);
   min-height: 1.2em;
 }
+
+.mg-wheel-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.mg-wheel {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+
+.mg-wheel-disk {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #4a3d44;
+  box-sizing: border-box;
+}
+
+.mg-wheel-needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 42%;
+  margin-left: -2.5px;
+  margin-top: -42%;
+  background: linear-gradient(180deg, #fff8f0, #c9beb4);
+  transform-origin: 50% 100%;
+  transform: rotate(0deg);
+  border-radius: 2px;
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+}
+
+.mg-wheel-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: #1a1215;
+  border: 2px solid var(--accent-dim);
+  z-index: 3;
+}

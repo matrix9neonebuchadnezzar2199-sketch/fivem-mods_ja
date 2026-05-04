@@ -38,4 +38,23 @@ Config.RetaliationPatterns = {
     neutral_to_cops = true,
     drops = {},
   },
+  -- 情報屋契約の失敗・戦闘敗北時に付与（闇の指名手配）
+  dark = {
+    duration_sec = 3600,
+    max_strikes = 2,
+    strike_interval_min_sec = 90,
+    strike_interval_max_sec = 180,
+    vehicle_model = `baller2`,
+    squad_size = 3,
+    ped_models = {
+      `g_m_m_armboss_01`,
+      `g_m_m_armgoon_01`,
+      `g_m_m_armgoon_02`,
+    },
+    weapon = `WEAPON_SMG`,
+    approach = 'drive',
+    clear_bounty_on_player_death = true,
+    neutral_to_cops = true,
+    drops = {},
+  },
 }

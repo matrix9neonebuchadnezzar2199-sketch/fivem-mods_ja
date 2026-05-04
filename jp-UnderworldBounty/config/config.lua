@@ -55,6 +55,9 @@ Config.MinigameHackSteps = 5
 -- ミニゲーム：力業の連打回数
 Config.MinigameBruteHits = 12
 
+-- ミニゲーム：円タイミング（情報屋契約の現地ギミック）の制限時間（ミリ秒）
+Config.MinigameTimingWheelMs = 9000
+
 -- NUI フォーカス時の入力制御
 Config.NuiDisableIdleCamera = true
 
