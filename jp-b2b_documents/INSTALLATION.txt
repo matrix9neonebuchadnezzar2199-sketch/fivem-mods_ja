@@ -12,9 +12,8 @@ INSTALLATION:
 ---------------------------------------------------------------------------------------------------------------------------------------------
 STEP 1
 
-Import "sql/b2b_documents.sql" into the **same database** oxmysql uses (see mysql_connection_string).
-If you skip this, saves will fail with: Table 'your_db.b2b_documents' doesn't exist.
-The b2b_documents table is not auto-created by the resource; only b2b_documents_links is (ESX path).
+On resource start, **b2b_documents** is auto-created with `CREATE TABLE IF NOT EXISTS` on the oxmysql database (no manual import required).
+Keep `sql/b2b_documents.sql` as a reference for DBAs. If CREATE is denied by your host, run that SQL with an admin account.
 --
 STEP 2
 

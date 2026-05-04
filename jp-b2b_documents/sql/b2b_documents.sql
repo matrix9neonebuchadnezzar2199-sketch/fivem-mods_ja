@@ -1,3 +1,4 @@
+-- 参照用: サーバー起動時に server.lua から同じ DDL を自動実行する（手動インポートは任意）
 CREATE TABLE IF NOT EXISTS `b2b_documents` (
     `id` VARCHAR(60) NOT NULL,
     `content` LONGTEXT NOT NULL,

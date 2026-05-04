@@ -25,46 +25,16 @@
   server.cfg の ensure 名と、ox_inventory の export / nui:// の名前を一致させてください。
 
 ----------------------------------------------------------
-STEP 1：データベース（未実施だと保存・ロックが必ず失敗します）
+STEP 1：データベース（通常は何もしなくてよい）
 ----------------------------------------------------------
-  sql/b2b_documents.sql を、**oxmysql が接続しているのと同じデータベース**（例: fivem_db）
-  にインポートする。下記のどれか **1 つ** で SQL を実行すればよい（全部必須ではない）。
+  **リソース起動時に `b2b_documents` テーブルが無ければ自動で作成**します（oxmysql 接続先 DB 上）。
+  HeidiSQL 等で手動インポートは **不要** です。
 
-  --- 「phpMyAdmin」って何・どこ？（よくある誤解）---
-  FiveM や本 MOD に **付いているツールではありません**。MySQL をブラウザで操作する **別のプログラム**の名前です。
-  - **レンタルサーバ / VPS の管理画面**（例: Plesk、cPanel）に「phpMyAdmin」リンクがある場合 → そこから開く（URL は業者ごとに違う）。
-  - **XAMPP 等**を入れているローカル環境では `http://localhost/phpmyadmin` などであることが多い（入れていなければ存在しない）。
-  - **自分の PC に無いなら無視してよい**。代わりに **HeidiSQL** だけ使えば十分です。
+  `sql/b2b_documents.sql` は、DBA がレビュー用に中身を見る・別手段で流す場合の **参照用** として残しています。
 
-  --- Windows ローカル向けのおすすめ（HeidiSQL）---
-  無料・単体インストール: https://www.heidisql.com/
-  インストール後、新規セッションで **ホスト（多くは 127.0.0.1）・ユーザー・パスワード・ポート** を、
-  `server.cfg` の **mysql_connection_string** と同じ値にして接続 → 下の「HeidiSQL の場合」の手順へ。
-
-  コンソールに次のように出る場合はテーブル未作成のままです:
-    Table 'fivem_db.b2b_documents' doesn't exist
-  → 上記 SQL をその DB 名で実行し直し、`restart jp-b2b_documents` する。
-
-  ESX 標準インベントリを使う場合、b2b_documents_links は初回起動時に自動作成されますが、
-  **b2b_documents 本体のテーブルは本 SQL のみ**（自動では作りません）。
-
-  --- DB 名の確認（どれに入れればいいか）---
-  FiveM の server.cfg にある **set mysql_connection_string**（または oxmysql の接続設定）を開く。
-  文字列の中に **database=...** または **dbname=...** や **/fivem_db** のように「DB 名」が書いてある。
-  エラーが `fivem_db.b2b_documents` なら、その **fivem_db** が正しい入れ先。
-
-  --- phpMyAdmin を「すでに使える環境」にいる場合のみ ---
-  1. ブラウザで phpMyAdmin を開く（上記の管理画面 URL など）。
-  2. 左の縦一覧に **データベース名**（例: fivem_db）が並ぶ。**その名前をクリック**するだけで「その DB を選んだ」状態になる。
-  3. 上メニュー「SQL」を開き、`b2b_documents.sql` の中身をすべてコピーして貼り付け、「実行」を押す。
-     （「インポート」タブから .sql ファイルを選んでもよい）
-
-  --- HeidiSQL の場合 ---
-  1. HeidiSQL でサーバーに接続する。
-  2. 左のツリーで **データベース名**（例: fivem_db）を **1 回クリック**して選択（ハイライト）する。
-  3. メニュー「ファイル」→「SQL ファイルを実行」で `b2b_documents.sql` を選ぶ。または「クエリ」タブに SQL を貼って F9 で実行。
-
-  「選択」とは、**その DB の中にテーブルを作る対象を決める**という意味。左で別の名前（mysql や information_schema など）を選んでいないかだけ確認すればよい。
+  まだ `Table '...b2b_documents' doesn't exist` と出る場合の例:
+  - MySQL ユーザーに **CREATE** 権限がない（ホスティングで DDL 禁止など）→ 権限を付与するか、管理者に sql の実行を依頼
+  - **oxmysql がまだ起動していない / 接続文字列が違う** → server.cfg の mysql 設定を確認し `restart oxmysql` から
 
 ----------------------------------------------------------
 STEP 2：配置

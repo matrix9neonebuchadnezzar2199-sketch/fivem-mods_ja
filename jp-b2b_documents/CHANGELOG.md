@@ -4,6 +4,13 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.1-jp.1] — 2026-05-05
+
+### Changed
+
+- **データベース**: サーバー起動時に `b2b_documents` テーブルを `CREATE TABLE IF NOT EXISTS` で自動作成（手動の SQL インポートは原則不要）。`sql/b2b_documents.sql` は参照用として維持。
+- **ドキュメント**: `INSTALLATION_JP.txt` の STEP 1 を上記に合わせて簡略化。
+
 ## [2.0.0-jp.1] — 2026-05-05
 
 ### Added

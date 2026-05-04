@@ -1,5 +1,25 @@
 local paperCooldowns = {}
 
+-- 初回起動時にテーブルを自動作成（手動で phpMyAdmin / HeidiSQL から流さなくてよい）
+CreateThread(function()
+    Wait(250)
+    local p = promise.new()
+    exports.oxmysql:execute([[
+        CREATE TABLE IF NOT EXISTS `b2b_documents` (
+            `id` VARCHAR(60) NOT NULL,
+            `content` LONGTEXT NOT NULL,
+            `title` VARCHAR(255) NOT NULL DEFAULT 'ドキュメント',
+            `locked` TINYINT(1) NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ]], {}, function()
+        p:resolve(true)
+    end)
+    Citizen.Await(p)
+    print('[jp-b2b_documents] データベース: b2b_documents テーブルを確認しました（無ければ作成済み）')
+end)
+
 local function awaitInvReady()
     local deadline = GetGameTimer() + 12000
     while not INV.name do
