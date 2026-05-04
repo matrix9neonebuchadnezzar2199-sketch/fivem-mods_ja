@@ -276,7 +276,7 @@ PHASE 1a / フォローアップで抽出された Bridge 層改善候補を、�
 - [ ] §6「実機テスト依存項目」が記述されている
 - [ ] `docs/BRIDGE_API.md` §9 冒頭に IMPROVEMENTS.md への参照行が追加されている
 - [ ] `docs/DESIGN.md`、`README.md`、`CHANGELOG.md`、開発日記が更新されている
-- [ ] `git diff --stat` で変更ファイル数が**5ファイル**（IMPROVEMENTS新規+4ファイル更新）であること
+- [ ] `git diff --stat` で変更ファイル数が**6ファイル**（`docs/BRIDGE_API_IMPROVEMENTS.md` 新規 + `docs/BRIDGE_API.md` / `docs/DESIGN.md` / `README.md` / `CHANGELOG.md` / `docs/2026-05-04_開発日記.md` の5ファイル更新）であること
 
 ---
 
@@ -426,6 +426,7 @@ git push origin main
 
 ## 12. 改訂履歴
 
+- 2026-05-04 v1.1: §5 セルフチェックの変更ファイル数を5→6に修正（§6 コミット手順との整合）。
 - 2026-05-04 v1.0: 初版作成。
 
 ---

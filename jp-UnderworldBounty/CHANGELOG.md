@@ -15,6 +15,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `docs/INSTRUCTIONS_PHASE_1B.md`: §5 セルフチェック項目を §6 コミット手順と整合（v1.1）。
 - `docs/DESIGN.md`、`README.md`、`.cursorrules` — PHASE 1b 指示書の相互参照および一時優先指定を追加
 - `docs/BRIDGE_API.md`: 無印「要確認」を解消。Qbox / `qb-core` 依存と `Bridge.AddItem` 戻り値はコード観察ベースで整理し、断定できない点は「要実機確認（v1.1）」に分類。§9.2・§9.4 を整合（§9.4 は「v1.1 再評価対象（保留扱い）」）。
 - `bridge/sv_bridge.lua`: `Bridge.RemoveMoney` / `Bridge.RemoveItem` に保留コメントを追加（ロジック変更なし）。
