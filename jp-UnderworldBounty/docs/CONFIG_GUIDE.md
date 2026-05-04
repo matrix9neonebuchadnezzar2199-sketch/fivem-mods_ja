@@ -20,6 +20,7 @@
 | `Config.LocationCooldownSec` | 同一ロケーションの再プレイ禁止秒 |
 | `Config.MinOnDutyCops` | 開始に必要なオンライン警官の最小人数 |
 | `Config.BountyScanIntervalMs` | 指名手配・襲撃スケジュールのスキャン間隔 |
+| `Config.CombatEntityCleanupDelayMs` | 強盗終了・報復ウェーブ勝利後、戦闘で出た死体・車両を削除するまでの待ち（ミリ秒）。`0` で即時削除。デフォルト `60000`（約1分） |
 
 ## 報酬アイテム名
 

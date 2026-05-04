@@ -6,6 +6,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `Config.CombatEntityCleanupDelayMs`（`config/config.lua`）— 強盗終了・報復勝利後の死体・車両削除を遅延させる（`0` で即時）
 - `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md` — PHASE 1a 実機テスト手順（手動、v1.1。`BRIDGE_API_LIVE_TEST_RESULTS.md` 記録・Cursor 整形の流れ）
 - `docs/BRIDGE_API_IMPROVEMENTS.md`: BRIDGE_API.md §9 改善候補6件の優先度・対応方針・工数評価。v1.1 採用判断の基礎資料。
 - `docs/INSTRUCTIONS_PHASE_1B.md` — PHASE 1b 作業指示（`BRIDGE_API.md` §9 の6件を `BRIDGE_API_IMPROVEMENTS.md` に整理する手順・Cursor 向け）
@@ -24,6 +25,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 強盗終了・報復ウェーブ勝利後の NPC／車両削除を `Config.CombatEntityCleanupDelayMs` に従う遅延に変更（`client/heist.lua` / `client/npc_manager.lua` / `client/retaliation.lua`）。新規報復開始時は遅延中の残骸も含め常に掃除
 - `ui/css/style.css` / `ui/js/app.js`: 鍵開けミニゲームに **緑成功レンジの可視化**、バー高さを約2倍、指名手配 HUD を約2倍の文字サイズに拡大
 - `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`: §4.3・§5.3 の `setjob` 例を server ID 先頭形式に修正、§16 の職業行を整合（v1.3）。
 - `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`: §5.2 手順を実装実態に合わせて修正、§16.4 補足追加（v1.2）。

@@ -1,6 +1,7 @@
 local RetaliationActive = false
 local RetEntities = {}
 local RetGroup = nil
+local retCleanupEpoch = 0
 
 local function ensure_ret_group(neutral_cops)
   if RetGroup then
@@ -24,6 +25,7 @@ local function push_ent(e)
 end
 
 function UbRetaliationCleanup()
+  retCleanupEpoch = retCleanupEpoch + 1
   RetaliationActive = false
   for _, e in ipairs(RetEntities) do
     if DoesEntityExist(e) then
@@ -34,9 +36,8 @@ function UbRetaliationCleanup()
 end
 
 RegisterNetEvent(UbEvent('client:retaliationStart'), function(data)
-  if RetaliationActive then
-    UbRetaliationCleanup()
-  end
+  -- 勝利後の遅延削除待ちで RetaliationActive=false のまま RetEntities に残骸が残ることがあるため、常に掃除する
+  UbRetaliationCleanup()
   local pat = Config.RetaliationPatterns[data.pattern_id]
   if not pat then
     TriggerServerEvent(UbEvent('server:retaliationWaveEnd'), true)
@@ -155,8 +156,21 @@ RegisterNetEvent(UbEvent('client:retaliationStart'), function(data)
       end
       if alive == 0 and #RetEntities > 0 then
         UbNotify(_L('notify_retaliation_end'), 'info')
-        UbRetaliationCleanup()
+        RetaliationActive = false
         TriggerServerEvent(UbEvent('server:retaliationWaveEnd'), true)
+        local epoch = retCleanupEpoch
+        local delay = (Config.CombatEntityCleanupDelayMs or 0)
+        if delay > 0 then
+          CreateThread(function()
+            Wait(math.max(0, math.floor(delay)))
+            if epoch ~= retCleanupEpoch then
+              return
+            end
+            UbRetaliationCleanup()
+          end)
+        else
+          UbRetaliationCleanup()
+        end
         break
       end
     end

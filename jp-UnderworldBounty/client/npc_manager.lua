@@ -1,6 +1,8 @@
 local Managed = {}
 local HeistGroup = nil
 local HeistCombatActive = false
+-- UbNpcCleanup 呼び出しで無効化され、遅延削除スレッドを打ち切る
+local npcCleanupEpoch = 0
 
 local function ensure_heist_group()
   if HeistGroup then
@@ -96,6 +98,7 @@ end
 
 --- @param silent boolean|nil NPC を削除しない（リソース停止時など）
 function UbNpcCleanup(silent)
+  npcCleanupEpoch = npcCleanupEpoch + 1
   HeistCombatActive = false
   for _, p in ipairs(Managed) do
     if DoesEntityExist(p) then
@@ -103,4 +106,18 @@ function UbNpcCleanup(silent)
     end
   end
   Managed = {}
+end
+
+--- 強盗終了後に NPC を遅延削除（新規強盗開始等で UbNpcCleanup が走れば打ち切り）
+--- @param delayMs number
+--- @param silent boolean|nil
+function UbNpcCleanupAfter(delayMs, silent)
+  local epoch = npcCleanupEpoch
+  CreateThread(function()
+    Wait(math.max(0, math.floor(delayMs or 0)))
+    if epoch ~= npcCleanupEpoch then
+      return
+    end
+    UbNpcCleanup(silent)
+  end)
 end

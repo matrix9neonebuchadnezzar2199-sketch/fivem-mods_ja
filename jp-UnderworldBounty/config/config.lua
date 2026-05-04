@@ -4,7 +4,7 @@ Config = {}
 Config.Framework = 'auto'
 
 -- デバッグ（本番では false）
-Config.Debug = false
+Config.Debug = true
 
 -- 開発用: client/_stub.lua を有効化（サーバー↔クライアント契約の検証用。既定 false）
 Config.DebugUseClientStub = false
@@ -29,7 +29,7 @@ Config.PoliceJobs = {
 }
 
 -- ロケーション単位クールダウン（秒）
-Config.LocationCooldownSec = 120
+Config.LocationCooldownSec = 10
 
 -- 強盗中にプレイヤーが死亡したときの挙動: 'fail' | 'cancel'
 Config.OnPlayerDeathDuringHeist = 'fail'
@@ -38,10 +38,13 @@ Config.OnPlayerDeathDuringHeist = 'fail'
 Config.EnableDatabasePersistence = false
 
 -- 指名手配スキャン間隔（ミリ秒）
-Config.BountyScanIntervalMs = 30000
+Config.BountyScanIntervalMs = 1000
 
 -- 強盗：侵入プロンプトの更新間隔（ミリ秒）
 Config.ZonePollIntervalMs = 500
+
+-- 強盗・報復の戦闘終了後、死体・車両などを削除するまでの待ち（ミリ秒）。0 で即時削除。
+Config.CombatEntityCleanupDelayMs = 60000
 
 -- ミニゲーム：鍵開けの許容時間（ミリ秒）
 Config.MinigameLockpickDurationMs = 8000

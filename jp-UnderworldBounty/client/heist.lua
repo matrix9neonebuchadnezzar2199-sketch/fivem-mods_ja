@@ -22,7 +22,12 @@ end)
 
 RegisterNetEvent(UbEvent('client:heistEnded'), function(payload)
   HeistRunning = false
-  UbNpcCleanup(true)
+  local delay = (Config.CombatEntityCleanupDelayMs or 0)
+  if delay > 0 then
+    UbNpcCleanupAfter(delay, true)
+  else
+    UbNpcCleanup(true)
+  end
   UbUiMinigameClose()
   if payload and payload.reason == 'success' then
     UbNotify(_L('notify_heist_success'), 'success')
