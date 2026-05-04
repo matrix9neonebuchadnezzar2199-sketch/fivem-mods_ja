@@ -23,7 +23,8 @@ Add "ensure b2b_documents" to your server.cfg
 STEP 3
 
 Go to "ox_inventory/data/items.lua"
-Scroll to the end of the file and paste the following, respecting the existing syntax, then save:
+Paste the snippet below into the main items table. If another item entry follows (e.g. ['bandage']),
+each block must end with `},` — a bare `}` before the next `['key']` causes a Lua parse error.
 
     ['paper_blank'] = {
         label = 'Blank Sheet',
@@ -45,7 +46,7 @@ Scroll to the end of the file and paste the following, respecting the existing s
             image = 'nui://b2b_documents/web/images/document.png',
             export = 'b2b_documents.usePaper'
         }
-    }
+    },
 
 --
 STEP 4

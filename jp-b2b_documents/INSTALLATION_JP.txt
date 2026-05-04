@@ -39,7 +39,9 @@ STEP 3：アイテム登録
 ----------------------------------------------------------
 
 【ox_inventory】
-  ox_inventory/data/items.lua に追記（末尾カンマに注意）:
+  ox_inventory/data/items.lua に追記する。
+  同一の return { ... } テーブル内で、このあとに別アイテム（例: ['bandage']）が続く場合は、
+  **各ブロックの閉じを必ず `},`（カンマ付き）にする**。`}` だけだと Lua 構文エラーになる。
 
   ['paper_blank'] = {
       label = '白紙の用紙', weight = 10, stack = false, close = true,
@@ -54,7 +56,7 @@ STEP 3：アイテム登録
           image = 'nui://<RESOURCE>/web/images/document.png',
           export = '<RESOURCE>.usePaper'
       }
-  }
+  },
 
 【qb-inventory】
   qb-core/shared/items.lua 等に paper_blank / document を追加し、
