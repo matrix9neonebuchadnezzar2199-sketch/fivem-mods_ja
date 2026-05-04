@@ -40,11 +40,12 @@ Config.RetaliationPatterns = {
     drops = {},
   },
   -- 情報屋契約の失敗・戦闘敗北時に付与（闇の指名手配）
+  -- 想定: 指名後〜10分で期限切れ。初回襲撃は strike_interval 秒後（ランダム）にスケジュール。
   dark = {
-    duration_sec = 3600,
+    duration_sec = 600,
     max_strikes = 1,
-    strike_interval_min_sec = 90,
-    strike_interval_max_sec = 180,
+    strike_interval_min_sec = 30,
+    strike_interval_max_sec = 90,
     vehicle_model = `baller2`,
     squad_size = 3,
     ped_models = {
