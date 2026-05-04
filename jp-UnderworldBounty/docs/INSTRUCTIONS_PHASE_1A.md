@@ -5,7 +5,8 @@
 > **レビュー**: 人間（リポジトリオーナー）  
 > **想定所要時間**: 2〜4時間  
 > **成果物**: `docs/BRIDGE_API.md` v1.0 の新規作成と関連ドキュメント更新  
-> **参照優先順位**: `.cursorrules` の Documentation Hierarchy に従う（PHASE 1a 専用に本書を最優先してよい）
+> **参照優先順位**: `.cursorrules` の Documentation Hierarchy に従う（PHASE 1a 専用に本書を最優先してよい）  
+> **フォローアップ**: スナップショット確定・§9 整理・`sv_bridge.lua` へのコメントのみ追加は `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md`
 
 ---
 

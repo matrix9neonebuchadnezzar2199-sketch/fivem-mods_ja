@@ -56,6 +56,7 @@ jp-UnderworldBounty/
 │   ├── SEQUENCE_DIAGRAMS.md    # サーバー↔クライアントシーケンス・payload
 │   ├── INSTRUCTIONS_PHASE_1A.md # PHASE 1a: Bridge API スナップショット化作業指示（Cursor）
 │   ├── BRIDGE_API.md           # Bridge / ClientBridge API リファレンス（スナップショット）
+│   ├── INSTRUCTIONS_PHASE_1A_FOLLOWUP.md # PHASE 1a フォローアップ（要確認確定・保留コメント）
 │   └── images/                 # ドキュメント用画像
 │
 ├── config/
@@ -355,4 +356,5 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 - **サーバー↔クライアントシーケンス（payload・Mermaid）**: `docs/SEQUENCE_DIAGRAMS.md`  
 - **シナリオ設計テンプレ（運営が空欄埋め）**: `docs/SCENARIO_TEMPLATE.md`  
 - **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`  
-- **PHASE 1a（Bridge API スナップショット・Cursor 向け手順）**: `docs/INSTRUCTIONS_PHASE_1A.md` / 成果物 `docs/BRIDGE_API.md`
+- **PHASE 1a（Bridge API スナップショット・Cursor 向け手順）**: `docs/INSTRUCTIONS_PHASE_1A.md` / 成果物 `docs/BRIDGE_API.md`  
+- **PHASE 1a フォローアップ（要確認確定・保留コメント・§9 整理）**: `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md`

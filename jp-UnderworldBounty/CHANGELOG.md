@@ -6,6 +6,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md` — PHASE 1a フォローアップ作業指示（要確認の確定、`RemoveMoney`/`RemoveItem` 保留コメント、`BRIDGE_API.md` §9 整理）
 - `docs/BRIDGE_API.md` — v1.0.0 時点の Bridge / ClientBridge API スナップショット（呼び出し元マップ・FW マトリクス・改善候補）
 - `docs/INSTRUCTIONS_PHASE_1A.md` — PHASE 1a（Bridge 層 API のスナップショット化）の Cursor 向け作業指示書
 - `fxmanifest.full.lua.template` — greenfield manifest reference（現行 `fxmanifest.lua` とは bridge 構成が異なる旨を記載）
