@@ -6,6 +6,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md` — PHASE 1a 実機テスト手順（手動、v1.1。`BRIDGE_API_LIVE_TEST_RESULTS.md` 記録・Cursor 整形の流れ）
 - `docs/BRIDGE_API_IMPROVEMENTS.md`: BRIDGE_API.md §9 改善候補6件の優先度・対応方針・工数評価。v1.1 採用判断の基礎資料。
 - `docs/INSTRUCTIONS_PHASE_1B.md` — PHASE 1b 作業指示（`BRIDGE_API.md` §9 の6件を `BRIDGE_API_IMPROVEMENTS.md` に整理する手順・Cursor 向け）
 - `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md` — PHASE 1a フォローアップ作業指示（要確認の確定、`RemoveMoney`/`RemoveItem` 保留コメント、`BRIDGE_API.md` §9 整理）
@@ -16,6 +17,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `docs/DESIGN.md`、`README.md`、`.cursorrules` — PHASE 1a 実機テスト指示書の相互参照および一時優先指定を追加
 - `docs/BRIDGE_API.md`: §9 冒頭に `BRIDGE_API_IMPROVEMENTS.md` への参照を追加。
 - `docs/DESIGN.md`、`README.md`: `BRIDGE_API_IMPROVEMENTS.md` をツリー・ドキュメント表に追加。
 - `docs/INSTRUCTIONS_PHASE_1B.md`: メタデータのバージョン表記を v1.1 に更新（改訂履歴と整合）。

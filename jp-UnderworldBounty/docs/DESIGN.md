@@ -59,6 +59,7 @@ jp-UnderworldBounty/
 │   ├── BRIDGE_API_IMPROVEMENTS.md # §9 改善候補の優先度・対応方針・工数（PHASE 1b 成果物）
 │   ├── INSTRUCTIONS_PHASE_1A_FOLLOWUP.md # PHASE 1a フォローアップ（要確認確定・保留コメント）
 │   ├── INSTRUCTIONS_PHASE_1B.md # PHASE 1b: §9 改善候補の優先付け・BRIDGE_API_IMPROVEMENTS 作成（Cursor）
+│   ├── INSTRUCTIONS_PHASE_1A_LIVE_TEST.md # PHASE 1a 実機テスト（手動・結果は BRIDGE_API_LIVE_TEST_RESULTS.md）
 │   └── images/                 # ドキュメント用画像
 │
 ├── config/
@@ -360,4 +361,5 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 - **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`  
 - **PHASE 1a（Bridge API スナップショット・Cursor 向け手順）**: `docs/INSTRUCTIONS_PHASE_1A.md` / 成果物 `docs/BRIDGE_API.md`  
 - **PHASE 1a フォローアップ（要確認確定・保留コメント・§9 整理）**: `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md`  
-- **PHASE 1b（§9 改善候補の優先付け・Issue 化ドキュメント）**: `docs/INSTRUCTIONS_PHASE_1B.md` / 成果物 **`docs/BRIDGE_API_IMPROVEMENTS.md`**
+- **PHASE 1b（§9 改善候補の優先付け・Issue 化ドキュメント）**: `docs/INSTRUCTIONS_PHASE_1B.md` / 成果物 **`docs/BRIDGE_API_IMPROVEMENTS.md`**  
+- **PHASE 1a 実機テスト（手動、結果記録は Cursor）**: `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`（成果物 `docs/BRIDGE_API_LIVE_TEST_RESULTS.md` はテスト完了後）

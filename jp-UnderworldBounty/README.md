@@ -28,6 +28,7 @@
 | [INSTRUCTIONS_PHASE_1A.md](docs/INSTRUCTIONS_PHASE_1A.md) | PHASE 1a 作業指示（Bridge API をドキュメント化する手順・Cursor 向け） |
 | [INSTRUCTIONS_PHASE_1A_FOLLOWUP.md](docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md) | PHASE 1a フォローアップ（要確認の確定・保留コメント・§9 整理） |
 | [INSTRUCTIONS_PHASE_1B.md](docs/INSTRUCTIONS_PHASE_1B.md) | PHASE 1b 作業指示（§9 改善候補の優先度・工数評価、`BRIDGE_API_IMPROVEMENTS.md` 作成手順・Cursor 向け） |
+| [INSTRUCTIONS_PHASE_1A_LIVE_TEST.md](docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md) | PHASE 1a 実機テスト手順（手動・Qbox 観察、結果は `BRIDGE_API_LIVE_TEST_RESULTS.md`） |
 | [BRIDGE_API.md](docs/BRIDGE_API.md) | Bridge 層 API リファレンス（v1.0.0 コードスナップショット） |
 | [BRIDGE_API_IMPROVEMENTS.md](docs/BRIDGE_API_IMPROVEMENTS.md) | Bridge層改善候補の優先度・工数評価 |
 | [CONFIG_GUIDE.md](docs/CONFIG_GUIDE.md) | 運営向け設定 |
