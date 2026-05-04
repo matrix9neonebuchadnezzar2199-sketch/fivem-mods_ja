@@ -2,8 +2,8 @@
 -- 情報屋の座標は運営がゲーム内で調整すること（近接トリガーは coords + radius）。
 
 Config.ContractInformant = {
-  -- 情報屋ペッドのモデル
-  model = `s_m_m_movspace_01`,
+  -- 情報屋ペッドのモデル（s_m_m_movspace_01 は宇宙服のため非推奨。スーツ系など一般用を推奨）
+  model = `a_m_m_business_01`,
   -- 座標と向き（heading は度）
   coords = vector4(-499.56, 181.39, 83.17, 95.0),
   -- 会話・受注・キャンセル用トリガー半径

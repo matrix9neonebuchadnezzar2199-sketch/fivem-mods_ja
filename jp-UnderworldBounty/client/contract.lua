@@ -29,7 +29,7 @@ local function spawn_informant()
   if informantPed and DoesEntityExist(informantPed) then
     return
   end
-  local model = ci.model or joaat('s_m_m_movspace_01')
+  local model = ci.model or joaat('a_m_m_business_01')
   RequestModel(model)
   local t0 = GetGameTimer()
   while not HasModelLoaded(model) do
@@ -42,9 +42,17 @@ local function spawn_informant()
     return
   end
   local c = ci.coords
-  informantPed = CreatePed(4, model, c.x, c.y, c.z, c.w or 0.0, false, false)
+  local hx = c.x
+  local hy = c.y
+  local hz = c.z
+  local ground, gz = GetGroundZFor_3dCoord(hx, hy, hz + 50.0, false)
+  if ground then
+    hz = gz + 0.08
+  end
+  informantPed = CreatePed(4, model, hx, hy, hz, c.w or 0.0, false, false)
   SetEntityAsMissionEntity(informantPed, true, true)
   SetBlockingOfNonTemporaryEvents(informantPed, true)
+  SetEntityHeading(informantPed, c.w or 0.0)
   FreezeEntityPosition(informantPed, true)
   SetPedFleeAttributes(informantPed, 0, false)
   SetPedCombatAttributes(informantPed, 46, true)
