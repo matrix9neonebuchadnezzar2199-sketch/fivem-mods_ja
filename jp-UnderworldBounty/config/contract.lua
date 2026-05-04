@@ -5,7 +5,7 @@ Config.ContractInformant = {
   -- 情報屋ペッドのモデル
   model = `s_m_m_movspace_01`,
   -- 座標と向き（heading は度）
-  coords = vector4(-656.0, -778.0, 25.2, 95.0),
+  coords = vector4(-499.56, 181.39, 83.17, 95.0),
   -- 会話・受注・キャンセル用トリガー半径
   radius = 2.2,
 }
