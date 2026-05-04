@@ -61,4 +61,9 @@ Config.MinigameTimingWheelMs = 9000
 -- NUI フォーカス時の入力制御
 Config.NuiDisableIdleCamera = true
 
+-- 通知表示: true = 本リソースの NUI（右上・文字・余白は従来トースト比で約2倍）のみ。
+-- false = ESX/QB の通知、または Standalone ではゲーム標準フィード。
+-- nil = Standalone のときだけ true 相当（従来の配布挙動）。
+Config.NotifyUseNui = nil
+
 -- ox_lib 等は使用しない（standalone 配布優先）

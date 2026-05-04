@@ -3,7 +3,7 @@
 (function () {
   const hud = document.getElementById('hud-bounty');
   const hudLabel = document.getElementById('hud-bounty-label');
-  const toastEl = document.getElementById('toast');
+  const notifyStack = document.getElementById('notify-stack');
   const mgRoot = document.getElementById('minigame');
   const mgTitle = document.getElementById('mg-title');
   const mgDesc = document.getElementById('mg-desc');
@@ -42,10 +42,19 @@
     mgStatus.textContent = '';
   }
 
-  function showToast(msg) {
-    toastEl.textContent = msg || '';
-    toastEl.classList.remove('toast-hidden');
-    setTimeout(() => toastEl.classList.add('toast-hidden'), 4200);
+  function pushNotify(msg, typ) {
+    if (!notifyStack) return;
+    const t = typ === 'error' || typ === 'success' || typ === 'info' ? typ : 'info';
+    const el = document.createElement('div');
+    el.className = 'notify-item notify-item--' + t;
+    el.textContent = msg || '';
+    notifyStack.appendChild(el);
+    while (notifyStack.children.length > 6) {
+      notifyStack.removeChild(notifyStack.firstChild);
+    }
+    setTimeout(() => {
+      if (el.parentNode === notifyStack) notifyStack.removeChild(el);
+    }, 5200);
   }
 
   function runLockpick(payload) {
@@ -243,7 +252,10 @@
       }
     }
     if (d.action === 'toast') {
-      showToast(d.message);
+      pushNotify(d.message, 'info');
+    }
+    if (d.action === 'notify') {
+      pushNotify(d.message, d.typ || 'info');
     }
     if (d.action === 'openMinigame') {
       openMinigame(d.payload || {});

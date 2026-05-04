@@ -60,21 +60,43 @@ body {
   display: none !important;
 }
 
-.toast {
-  position: absolute;
-  bottom: 22%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 20px;
-  background: var(--bg);
-  border-left: 4px solid var(--accent);
-  border-radius: 4px;
-  max-width: 70%;
-  font-size: 14px;
+/* 右上通知（従来トースト比で文字・余白を約2倍） */
+.notify-stack {
+  position: fixed;
+  top: 5%;
+  right: 2%;
+  max-width: min(640px, 94vw);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  z-index: 60;
+  pointer-events: none;
 }
 
-.toast-hidden {
-  display: none;
+.notify-item {
+  padding: 24px 36px;
+  background: var(--bg);
+  border-radius: 10px;
+  border-left: 8px solid var(--accent);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.55);
+  font-size: 28px;
+  line-height: 1.35;
+  letter-spacing: 0.03em;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.notify-item--success {
+  border-left-color: #3d9e5c;
+}
+
+.notify-item--error {
+  border-left-color: var(--accent);
+}
+
+.notify-item--info {
+  border-left-color: #6a8caf;
 }
 
 .mg-overlay {
