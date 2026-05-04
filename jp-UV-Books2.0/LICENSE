@@ -1,0 +1,13 @@
+MIT License (Japanese localization additions only)
+
+Copyright (c) 2026 matrix9
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this Japanese localization (locales/, fonts/, i18n.js, ESX support patch),
+subject to the original uv-books license bundled as LICENSE-ORIGINAL.
+
+The original uv-books resource by CocoDeee retains its original license terms.
+Do not remove the original author's credit. Do not sell.
+
+Bundled Japanese fonts are licensed under the SIL Open Font License 1.1.
+See html/fonts/OFL.txt for the full license text.
