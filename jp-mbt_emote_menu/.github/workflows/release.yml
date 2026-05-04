@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  create-release:
+    name: Build and Create Tagged release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Install archive tools
+        run: sudo apt install zip
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install web dependencies
+        run: cd web && pnpm install --frozen-lockfile
+
+      - name: Build NUI
+        run: cd web && pnpm run build
+
+      - name: Get variables
+        id: get_vars
+        run: |
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "DATE=$(date +'%D')" >> $GITHUB_OUTPUT
+
+      - name: Bump manifest version
+        run: node .github/actions/bump-manifest-version.js
+        env:
+          TGT_RELEASE_VERSION: ${{ github.ref_name }}
+
+      - name: Push manifest change
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: fxmanifest.lua
+          push: true
+          author_name: Manifest Bumper
+          author_email: 41898282+github-actions[bot]@users.noreply.github.com
+          message: "chore: bump manifest version to ${{ github.ref_name }}"
+
+      - name: Update tag ref
+        uses: EndBug/latest-tag@latest
+        with:
+          tag-name: ${{ github.ref_name }}
+
+      - name: Bundle files
+        run: |
+          mkdir -p ./temp/mbt_emote_menu/web
+          cp ./{README.md,config.lua,fxmanifest.lua,LICENSE.md} ./temp/mbt_emote_menu
+          cp -r ./{modules,core,locales} ./temp/mbt_emote_menu
+          cp -r ./web/dist ./temp/mbt_emote_menu/web/dist
+          cd ./temp && zip -r ../mbt_emote_menu.zip ./mbt_emote_menu
+
+      - name: Create Release
+        uses: "marvinpinto/action-automatic-releases@v1.2.1"
+        id: auto_release
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          title: "${{ github.ref_name }}"
+          prerelease: false
+          files: mbt_emote_menu.zip
+
+        env:
+          CI: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
