@@ -6,7 +6,7 @@ FiveM 向けのドキュメント／メモエディター（**日本語版**）�
 
 ## 概要
 
-日本語 UI・Noto 系フォント（CDN + 任意ローカル）、ESX / QB-Core / Qbox 自動検出、
+日本語 UI・和文 Web フォント同梱（jp-uv-books2 と同系の .woff2 + OFL）、欧文は Inter（Google）、ESX / QB-Core / Qbox 自動検出、
 `ox_inventory` / `qb-inventory` / ESX 標準インベントリ向けの抽象化レイヤーを含みます。
 
 ## 依存関係
