@@ -20,6 +20,10 @@ When implementing or reviewing code, consult in this order:
 
 If a request conflicts with these docs, prefer the docs and state the conflict.
 
+## Cursor task priority (temporary)
+
+- PHASE 1b 作業中: `docs/INSTRUCTIONS_PHASE_1B.md` を最優先で参照する。
+
 ## Core principles
 
 ### No hardcoding
