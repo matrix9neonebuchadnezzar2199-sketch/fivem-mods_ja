@@ -3,7 +3,7 @@
 PHASE 1a 実機テスト手順書（手動実施・完全版）
 
 - 最終更新: 2026-05-04
-- バージョン: v1.2
+- バージョン: v1.3
 - 対象リポジトリ: `fivem-mods_ja/jp-UnderworldBounty/`
 - 想定所要時間: 60〜90分（環境準備込み）
 - 実施者: ユーザー（手動）
@@ -93,13 +93,23 @@ clear_bounty_on_player_death = true    -- テスト容易性のため
 
 ### 4.3 テストキャラクター準備
 
-ゲーム内 F8 コンソールで以下を実行:
+qbx_core の `setjob` は多くの環境で **第1引数がプレイヤーの server ID（数値）**、第2引数が職業名、第3引数がグレードである。次のように **`unemployed` を先に書かない**こと。
+
+誤り（F8 で実行すると `invalid playerId ... received 'unemployed'` になる）:
 
 ```
 /setjob unemployed 0
 ```
 
-または qbx_core の管理コマンドで現在のキャラクターを `unemployed` に設定。`Config.BlacklistedJobs` に該当しないことを確認。
+例（自分の server ID が `5` の場合。ID は txAdmin のプレイヤーリストやサーバログで確認）:
+
+```
+/setjob 5 unemployed 0
+```
+
+自分自身のみを対象にする別コマンド（`job` / `changejob` 等）が入っているサーバでは、そちらのドキュメントに従う。職業変更が不要なら、既に `unemployed` であれば本手順はスキップしてよい。
+
+`Config.BlacklistedJobs` に該当しないことを確認する。
 
 所持金を十分に確保（強盗失敗時の罰金等に備える）。`/giveitem` または `/addmoney` で現金を 100,000 程度。
 
@@ -176,11 +186,13 @@ clear_bounty_on_player_death = true    -- テスト容易性のため
 
 2. テストキャラクターを `unemployed` に設定し、警官数 = 0 を期待。
 3. F8 コンソールまたはサーバコンソールで `Bridge.GetCopCount()` の結果を出力するデバッグコマンドを実行（存在しない場合は強盗トリガーゾーン進入時の `Config.MinOnDutyCops` チェックログから推測）。
-4. キャラクターを警察職に変更:
+4. キャラクターを警察職に変更（§4.3 と同様、**第1引数は自分の server ID**）:
 
    ```
-   /setjob police 0
+   /setjob 5 police 0
    ```
+
+   （`5` は例。実際の ID に読み替える。）
 
 5. 再度 GetCopCount を呼び、値が 1 に増えるか観察。
 6. テスト終了後、`unemployed` に戻す。
@@ -486,6 +498,7 @@ git push origin main
 
 ## 14. 改訂履歴
 
+- 2026-05-04 v1.3: §4.3・§5.3 の `/setjob` 例を修正（第1引数は server ID。`/setjob unemployed 0` は誤り）。§16 の職業行を整合。
 - 2026-05-04 v1.2: §5.2 手順を実装実態（rewards.lua に Debug ログ未実装、SQL手順なし）に合わせて修正。§16.4 補足を追加。
 - 2026-05-04 v1.1: §4.2 の「元」注釈を現行 `config/retaliation.lua`（default 90〜180 秒等）に整合。§16 に v1.0.0 実装メモ（`ub_test`、locations 3 件、`/jpub_*` 未登録）を追加。
 - 2026-05-04 v1.0: 初版作成。
@@ -513,7 +526,7 @@ git push origin main
 |---|---|
 | `/jpub_debug_bridge_check`、`/jpub_test_additem` | **`RegisterCommand` としては未定義**。代替: **サーバコンソール**で `ub_test`（先頭 `/` なし、`src==0`）を実行すると `Framework` と `VERSION` が出力される（`server/main.lua:20-24`）。**ゲーム内**では `/ub_test` で `Bridge.GetPlayerData` と **`Bridge.GetCopCount`** の結果が通知される（LT-3 の観察に利用可能）。 |
 | `config/locations.lua` のエントリ数 | **3 件**（`loc_training_yard` / `loc_docks_gamblers` / `loc_vinewood_backroom`）。LT-4 で別エントリを使う場合は `id` を指定して記録する。 |
-| 職業変更コマンド | `/setjob` は **qbx_core の実コマンド名と異なる場合がある**。運営環境のドキュメントに合わせて読み替えること。 |
+| 職業変更コマンド | `/setjob` は多くの場合 **`/setjob <serverId> <job> <grade>`**（`unemployed` を第1引数にしない）。コマンド名・自キャラ指定の別形は **qbx_core 版で異なる場合がある**。§4.3 を参照。 |
 
 ### §16.4 §5.2 補足
 
