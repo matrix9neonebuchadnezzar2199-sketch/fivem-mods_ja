@@ -19,6 +19,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 強盗侵入ヘルプが高速点滅する問題（`client/heist.lua` で `DisplayHelp` の再描画を間引き）
 - 侵入プロンプトを `~INPUT_CONTEXT~` から **E キー表記**へ（`locales/ja.lua` / `locales/en.lua`）
+- 強盗開始プロンプト文言を実装に合わせる（屋内「侵入」ではなく **屋外トリガーでイベント開始**である旨が伝わる表現に変更）
 
 ### Changed
 

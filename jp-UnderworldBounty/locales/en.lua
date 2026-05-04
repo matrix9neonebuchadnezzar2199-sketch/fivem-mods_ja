@@ -2,7 +2,7 @@ Locales = Locales or {}
 
 Locales['en'] = {
   loaded_console = '[jp-UnderworldBounty] Loaded v%s (framework=%s)',
-  prompt_enter = 'Enter the gambling den (E)',
+  prompt_enter = 'Start the heist here (E)',
   notify_heist_denied = 'Requirements not met.',
   notify_heist_started = 'Heist started.',
   notify_heist_success = 'Heist succeeded.',
