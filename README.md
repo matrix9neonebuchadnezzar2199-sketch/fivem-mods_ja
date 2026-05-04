@@ -11,6 +11,7 @@
 | フォルダ | 概要 |
 |----------|------|
 | [jp-110](jp-110/README.md) | `/110` 警察向け無線風一斉通知 |
+| [jp-blackmarket/matkez_blackmarket_ja](jp-blackmarket/matkez_blackmarket_ja/README.md) | ブラックマーケット（日本語化・QBCore 対応・ox_inventory 前提・原作 GPL-3.0） |
 | [jp-card](jp-card/README.md) | `/card` 3D回転付きトランプ抽選 |
 | [jp-coin](jp-coin/README.md) | `/coin` 3D回転付きコイントス |
 | [jp-ddm](jp-ddm/README.md) | モーション連続再生 + YouTube 音楽同期（クライアント・KVS） |

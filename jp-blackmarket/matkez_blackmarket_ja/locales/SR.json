@@ -1,0 +1,17 @@
+{
+    "openBlackmarket": "Otvori Black Market",
+    "search": "Pretrazi",
+    "order": "Naruci",
+    "cart": "Korpa",
+    "pickupItems": "Pokupi narudzbinu",
+    "hasOrder": "Vec imas narudzbinu koju treba da pokupis",
+    "goPickup": "Dobio si lokaciju, idi i pokupi narudzbinu",
+    "nothingHere": "Ovde nema nicega za tebe",
+    "noMoney": "Nemas dovoljno novca",
+    "droppedItems": "Nemas mesta za sve stvari. Stvari koje ne mozes da poneses su na podu",
+    "removeTip": "Desni klik da uklonis iz korpe",
+    "addTip": "Levi klik da dodas u korpu",
+    "logOrder": "Player identifier: %s (%s) \n Blackmarket: %s \n Items: %s \n Total: %sx %s",
+    "logPickup": "Player identifier: %s (%s) \n Items: %s \n Coords: %s",
+    "restartSuccess": "Uspesno ste restartovali xp igracu"
+}

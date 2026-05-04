@@ -1,0 +1,18 @@
+{
+    "openBlackmarket": "Open Black Market",
+    "search": "Search",
+    "order": "Order",
+    "cart": "Cart",
+    "level": "LEVEL",
+    "pickupItems": "Pick up order",
+    "hasOrder": "You already have an order to pick up",
+    "goPickup": "You received the location, go pick up the order",
+    "nothingHere": "There is nothing here for you",
+    "noMoney": "You don't have enough money",
+    "droppedItems": "You don't have enough space for all items. Items you can't carry are on the ground",
+    "removeTip": "Right click to remove from cart",
+    "addTip": "Left click to add to cart",
+    "logOrder": "Player identifier: %s (%s) \n Blackmarket: %s \n Items: %s \n Total: %sx %s",
+    "logPickup": "Player identifier: %s (%s) \n Items: %s \n Coords: %s",
+    "restartSuccess": "You have successfully restarted the player's XP"
+}
