@@ -5,6 +5,57 @@
 <title>uv-books</title>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Zilla+Slab:wght@400;600&family=Dancing+Script:wght@400;700&family=Caveat:wght@400;700&family=Indie+Flower&family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Special+Elite&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════════════════════════════
+   jp-uv-books · 和文フォント（SIL OFL 1.1, ローカル同梱）
+   ══════════════════════════════════════════════════════════════ */
+@font-face { font-family:'Noto Serif JP';   src:url('fonts/NotoSerifJP-Regular.woff2')    format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Noto Serif JP';   src:url('fonts/NotoSerifJP-Bold.woff2')       format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Noto Sans JP';    src:url('fonts/NotoSansJP-Regular.woff2')     format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Noto Sans JP';    src:url('fonts/NotoSansJP-Bold.woff2')        format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Shippori Mincho'; src:url('fonts/ShipporiMincho-Regular.woff2') format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Shippori Mincho'; src:url('fonts/ShipporiMincho-Bold.woff2')    format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Klee One';        src:url('fonts/KleeOne-Regular.woff2')        format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Klee One';        src:url('fonts/KleeOne-SemiBold.woff2')       format('woff2'); font-weight:600; font-display:swap; }
+@font-face { font-family:'Yuji Syuku';      src:url('fonts/YujiSyuku-Regular.woff2')      format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Yuji Mai';        src:url('fonts/YujiMai-Regular.woff2')        format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Yuji Boku';       src:url('fonts/YujiBoku-Regular.woff2')       format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Hina Mincho';     src:url('fonts/HinaMincho-Regular.woff2')     format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Zen Kurenaido';   src:url('fonts/ZenKurenaido-Regular.woff2')   format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Yusei Magic';     src:url('fonts/YuseiMagic-Regular.woff2')     format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Reggae One';      src:url('fonts/ReggaeOne-Regular.woff2')      format('woff2'); font-weight:400; font-display:swap; }
+
+/* ══════════════════════════════════════════════════════════════
+   フォントクラス（内部キー → font-family チェーン）
+   和文を先頭に置き、欧字混在でも崩れないようにする。
+   段階3で applyFontClass(el, key) によって動的に付与される。
+   ══════════════════════════════════════════════════════════════ */
+/* 既存12欧文ファミリ（和文フォールバック付き） */
+.f-classic-serif    { font-family: 'Noto Serif JP', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif; }
+.f-merriweather     { font-family: 'Shippori Mincho', 'Merriweather', 'Noto Serif JP', serif; }
+.f-cinzel           { font-family: 'Reggae One', 'Cinzel', 'Noto Serif JP', serif; }
+.f-modern-sans      { font-family: 'Noto Sans JP', 'Lato', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif; }
+.f-zilla-slab       { font-family: 'Shippori Mincho', 'Zilla Slab', 'Noto Serif JP', serif; }
+.f-script           { font-family: 'Yuji Mai', 'Great Vibes', cursive; }
+.f-dancing          { font-family: 'Yuji Mai', 'Dancing Script', cursive; }
+.f-handwritten      { font-family: 'Klee One', 'Caveat', 'Noto Serif JP', cursive; }
+.f-indie            { font-family: 'Yusei Magic', 'Indie Flower', 'Noto Sans JP', cursive; }
+.f-typewriter       { font-family: 'Zen Kurenaido', 'Special Elite', 'Noto Sans JP', monospace; }
+.f-futuristic       { font-family: 'Reggae One', 'Orbitron', 'Noto Sans JP', sans-serif; }
+.f-tech             { font-family: 'Noto Sans JP', 'Rajdhani', sans-serif; }
+
+/* 和文専用ファミリ */
+.f-jp-noto-serif    { font-family: 'Noto Serif JP', serif; }
+.f-jp-noto-sans     { font-family: 'Noto Sans JP', sans-serif; }
+.f-jp-shippori      { font-family: 'Shippori Mincho', 'Noto Serif JP', serif; }
+.f-jp-klee          { font-family: 'Klee One', 'Noto Serif JP', cursive; }
+.f-jp-yuji-syuku    { font-family: 'Yuji Syuku', 'Noto Serif JP', serif; }
+.f-jp-yuji-mai      { font-family: 'Yuji Mai', 'Yuji Syuku', cursive; }
+.f-jp-yuji-boku     { font-family: 'Yuji Boku', 'Yuji Syuku', cursive; }
+.f-jp-hina          { font-family: 'Hina Mincho', 'Noto Serif JP', serif; }
+.f-jp-zen-kurenaido { font-family: 'Zen Kurenaido', 'Klee One', cursive; }
+.f-jp-yusei         { font-family: 'Yusei Magic', 'Klee One', cursive; }
+.f-jp-reggae        { font-family: 'Reggae One', 'Noto Sans JP', sans-serif; }
+
 /* ══════════════════════════════════════
    uv-books · Page-Flip UI
    ══════════════════════════════════════ */
@@ -15,7 +66,7 @@ html, body {
   background: none !important;
   width: 100vw; height: 100vh;
   overflow: hidden;
-  font-family: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  font-family: 'Noto Serif JP', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
