@@ -3,7 +3,7 @@
 PHASE 1b 作業指示書（Cursor 自走用・完全版）
 
 - 最終更新: 2026-05-04
-- バージョン: v1.0
+- バージョン: v1.1
 - 対象リポジトリ: `fivem-mods_ja/jp-UnderworldBounty/`
 - 想定所要時間: 1〜2時間
 - 前提指示書: `docs/INSTRUCTIONS_PHASE_1A.md`、`docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md`（共に完了済み）
