@@ -49,14 +49,23 @@ local GetResourceByFindIndex = GetResourceByFindIndex
 local useESXStatus = false
 local radarMode = 'auto' -- 'auto' / 'force_on' / 'force_off'
 
+-- NUI 用スケール（極端な値を防ぐ）
+local function clampHudScale(v)
+    v = tonumber(v)
+    if not v or v ~= v then return 1.0 end
+    return math.max(0.25, math.min(4.0, v))
+end
+
 -- ===========================================================
--- 初回 NUI 送信：UI に辞書と通貨記号を渡す
+-- 初回 NUI 送信：UI に辞書・通貨・HUD 倍率を渡す
 -- ===========================================================
 local function pushI18n()
     SendNUIMessage({
         type = 'setI18n',
         dict = Locale.ui,
         currency = Config.CurrencySymbol or '$',
+        scaleMoney = clampHudScale(Config.HudScaleMoney),
+        scaleStatus = clampHudScale(Config.HudScaleStatus),
     })
 end
 

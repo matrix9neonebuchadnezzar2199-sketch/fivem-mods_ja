@@ -10,12 +10,13 @@
 - `esx_status` と `pma-voice` は任意（`config.lua` で `auto` / 明示 ON/OFF）
 - 解像度・セーフゾーン適応（720p〜4K、16:9 / 16:10 / 4:3 / 5:4 / ウルトラワイド）
 - ユーザーレイアウト（オフセット・スケール）を KVP で永続化（キーは `jp_mch_*`。旧 `munlay_hud_*` からは起動時に読み取り移行）
+- **表示倍率**は `config.lua` の `Config.HudScaleMoney`（右上の金銭・職業）と `Config.HudScaleStatus`（左下の体力・ステータス等）。`1.0` が基準、`2.0` でおよそ2倍（いずれもクライアント側で 0.25〜4.0 にクランプ）
 
 ## インストール
 
 1. 本フォルダを `resources/[jp-mods]/jp-mch` に配置する
 2. `server.cfg` に `ensure jp-mch` を追加する（フレームワーク本体・任意の `esx_status`・`pma-voice` の**後ろ**を推奨）
-3. 必要なら `config.lua` の `Config.Framework` と `Config.CurrencySymbol` を調整する
+3. 必要なら `config.lua` の `Config.Framework`・`Config.CurrencySymbol`・`Config.HudScaleMoney` / `Config.HudScaleStatus` を調整する
 
 ## コマンド
 

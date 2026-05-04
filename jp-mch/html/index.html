@@ -439,11 +439,12 @@
             50% { opacity: 0.3; }
         }
 
-        /* 金銭表示（右上） */
+        /* 金銭表示（右上）— scale は JS で Config.HudScaleMoney を反映 */
         .money-container {
             position: fixed;
             top: 50px;
             right: 20px;
+            transform-origin: top right;
             display: flex;
             flex-direction: column;
             gap: 0;
@@ -515,11 +516,12 @@
         .money-bank i, .money-bank .money-value { color: #3498db; }
         .money-black i, .money-black .money-value { color: #e74c3c; }
 
-        /* 職業表示 */
+        /* 職業表示 — 金銭と同じ倍率（Config.HudScaleMoney） */
         .job-container {
             position: fixed;
             top: 182px;
             right: 20px;
+            transform-origin: top right;
             background: rgba(0, 0, 0, 0.7);
             padding: 6px 10px;
             border-radius: 4px;
@@ -756,6 +758,20 @@
             cruise: 'クルーズコントロール',
         };
 
+        // config.lua の HudScaleMoney / HudScaleStatus（setI18n で上書き）
+        window.__hudScaleMoney = 1;
+        window.__hudScaleStatus = 1;
+
+        function applyMoneyJobPanelTransform() {
+            const s = window.__hudScaleMoney || 1;
+            const moneyOpen = hudState.moneyVisible && !elements.moneyContainer.classList.contains('hidden');
+            const jobOpen = hudState.jobVisible
+                && elements.jobContainer.classList.contains('show')
+                && !elements.jobContainer.classList.contains('hidden');
+            elements.moneyContainer.style.transform = `translateX(${moneyOpen ? 0 : 20}px) scale(${s})`;
+            elements.jobContainer.style.transform = `translateX(${jobOpen ? 0 : 20}px) scale(${s})`;
+        }
+
         // クライアントから渡されるレイアウトオーバーライド
         const hudOverride = { offsetPx: null, scale: null };
 
@@ -806,8 +822,8 @@
                 elements.jobContainer.classList.remove('show');
                 elements.jobContainer.classList.add('hidden');
                 elements.jobContainer.style.opacity = '0';
-                elements.jobContainer.style.transform = 'translateX(20px)';
                 elements.jobContainer.style.pointerEvents = 'none';
+                applyMoneyJobPanelTransform();
                 return;
             }
 
@@ -818,15 +834,14 @@
                 elements.jobContainer.classList.add('show');
                 elements.jobContainer.classList.remove('hidden');
                 elements.jobContainer.style.opacity = '1';
-                elements.jobContainer.style.transform = 'translateX(0)';
                 elements.jobContainer.style.pointerEvents = 'auto';
             } else {
                 elements.jobContainer.classList.remove('show');
                 elements.jobContainer.classList.add('hidden');
                 elements.jobContainer.style.opacity = '0';
-                elements.jobContainer.style.transform = 'translateX(20px)';
                 elements.jobContainer.style.pointerEvents = 'none';
             }
+            applyMoneyJobPanelTransform();
         }
 
         // ============================================================
@@ -959,12 +974,10 @@
             if (show) {
                 elements.moneyContainer.classList.remove('hidden');
                 elements.moneyContainer.style.opacity = '1';
-                elements.moneyContainer.style.transform = 'translateX(0)';
                 elements.moneyContainer.style.pointerEvents = 'auto';
             } else {
                 elements.moneyContainer.classList.add('hidden');
                 elements.moneyContainer.style.opacity = '0';
-                elements.moneyContainer.style.transform = 'translateX(20px)';
                 elements.moneyContainer.style.pointerEvents = 'none';
             }
 
@@ -972,15 +985,14 @@
                 if (elements.jobContainer.classList.contains('show')) {
                     elements.jobContainer.classList.remove('hidden');
                     elements.jobContainer.style.opacity = '1';
-                    elements.jobContainer.style.transform = 'translateX(0)';
                     elements.jobContainer.style.pointerEvents = 'auto';
                 }
             } else {
                 elements.jobContainer.classList.add('hidden');
                 elements.jobContainer.style.opacity = '0';
-                elements.jobContainer.style.transform = 'translateX(20px)';
                 elements.jobContainer.style.pointerEvents = 'none';
             }
+            applyMoneyJobPanelTransform();
         }
 
         function toggleMoneyOnly(show) {
@@ -988,14 +1000,13 @@
             if (show) {
                 elements.moneyContainer.classList.remove('hidden');
                 elements.moneyContainer.style.opacity = '1';
-                elements.moneyContainer.style.transform = 'translateX(0)';
                 elements.moneyContainer.style.pointerEvents = 'auto';
             } else {
                 elements.moneyContainer.classList.add('hidden');
                 elements.moneyContainer.style.opacity = '0';
-                elements.moneyContainer.style.transform = 'translateX(20px)';
                 elements.moneyContainer.style.pointerEvents = 'none';
             }
+            applyMoneyJobPanelTransform();
         }
 
         function toggleJobOnly(show) {
@@ -1003,14 +1014,13 @@
             if (show) {
                 elements.jobContainer.classList.remove('hidden');
                 elements.jobContainer.style.opacity = '1';
-                elements.jobContainer.style.transform = 'translateX(0)';
                 elements.jobContainer.style.pointerEvents = 'auto';
             } else {
                 elements.jobContainer.classList.add('hidden');
                 elements.jobContainer.style.opacity = '0';
-                elements.jobContainer.style.transform = 'translateX(20px)';
                 elements.jobContainer.style.pointerEvents = 'none';
             }
+            applyMoneyJobPanelTransform();
         }
 
         // ============================================================
@@ -1101,6 +1111,14 @@
                     break;
                 case 'setI18n':
                     applyI18n(data.dict, data.currency);
+                    if (typeof data.scaleMoney === 'number') {
+                        window.__hudScaleMoney = Math.max(0.25, Math.min(4, data.scaleMoney));
+                    }
+                    if (typeof data.scaleStatus === 'number') {
+                        window.__hudScaleStatus = Math.max(0.25, Math.min(4, data.scaleStatus));
+                    }
+                    applyMoneyJobPanelTransform();
+                    if (window.computeResponsiveHud) window.computeResponsiveHud();
                     break;
             }
         });
@@ -1151,9 +1169,10 @@
                     scale = hudOverride.scale;
                 }
 
-                // CSS 変数として反映
+                // CSS 変数として反映（左下は Lua レイアウト scale × config の HudScaleStatus）
+                const st = window.__hudScaleStatus || 1;
                 elements.bottomLeftHud.style.setProperty('--minimap-offset', `${offset}px`);
-                elements.bottomLeftHud.style.transform = `scale(${scale})`;
+                elements.bottomLeftHud.style.transform = `scale(${scale * st})`;
 
                 // コンパクト／タイニー判定
                 document.body.classList.remove('hud-compact', 'hud-tiny');
