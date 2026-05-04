@@ -6,11 +6,21 @@
 
 使用する際は、フォロー＆リツイートで応援よろしくお願いします！
 
+## リポジトリ構成とドキュメント
+
+このリポジトリは**複数 MOD を同一ルートに並べるモノレポ型**の開発レイアウトです（各フォルダが独立リソース）。MOD を追加するときは、次を基準にすると見通しが良くなります。
+
+- **翻訳・表記の統一**: [`docs/STYLEGUIDE.md`](docs/STYLEGUIDE.md)（用語・文体・UTF-8 の注意）
+- **各 MOD**: フォルダ直下の `README.md`・必要に応じて `CHANGELOG.md`・インストール手順（例: `INSTALLATION_JP.txt`）
+
+既存のフォルダ名・`ensure` 名・依存関係を変えずにドキュメントだけ足す運用を推奨します。
+
 ## 収録 MOD（各フォルダの README を参照）
 
 | フォルダ | 概要 |
 |----------|------|
 | [jp-110](jp-110/README.md) | `/110` 警察向け無線風一斉通知 |
+| [jp-b2b_documents](jp-b2b_documents/README.md) | Quill ベースのドキュメント／メモエディター（日本語 UI・ESX/QB/Qbox・ox / qb / ESX インベントリ抽象化・原作 alnd029 系） |
 | [jp-blackmarket/matkez_blackmarket_ja](jp-blackmarket/matkez_blackmarket_ja/README.md) | ブラックマーケット（日本語化・QBCore 対応・ox_inventory 前提・原作 GPL-3.0） |
 | [jp-card](jp-card/README.md) | `/card` 3D回転付きトランプ抽選 |
 | [jp-coin](jp-coin/README.md) | `/coin` 3D回転付きコイントス |

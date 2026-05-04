@@ -1,0 +1,34 @@
+# Changelog
+
+All notable changes to **jp-b2b_documents** are documented in this file.
+
+The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
+
+## [2.0.0-jp.1] — 2026-05-05
+
+### Added
+
+- Japanese locale `locales/ja.lua` and expanded keys in `locales/en.lua`, `locales/fr.lua` (UI sizes, untitled copy, signed/editable strings).
+- `modules/framework_bridge.lua`: ESX / QB-Core / Qbox auto-detect, `FW.Notify`, `FW.GetPlayer`, `FW.RegisterUsableItem` (Qbox via `pcall`).
+- `modules/inventory_bridge.lua`: inventory abstraction for `ox_inventory`, `qb-inventory`, and ESX default inventory with `b2b_documents_links` table (auto-created on ESX path).
+- `INSTALLATION_JP.txt` and root-level install notes cross-link; `README.md` for this resource.
+- NUI: Google Fonts (Noto Sans JP / Noto Serif JP / Inter) plus optional local `@font-face` in `ui/fonts/fonts.css`.
+- Client fallbacks: `qb-target` (with `pcall`) and `[E]` distance interaction when ox_target / qb-target are unavailable.
+- `Config.Items`, `Config.Inventory`, `Config.UseOxTarget` in `config.lua` (Japanese comments).
+
+### Changed
+
+- `fxmanifest.lua`: `lua54 'yes'`, modular scripts, `optional_dependencies` for inventories/frameworks; hard dependencies reduced to `ox_lib` and `oxmysql`.
+- `server.lua` / `client.lua`: bridge-based paper grant, document save/lock/duplicate, `currentCtx` (`slot`, `instanceId`, `itemName`), NUI passes `itemName` for server validation.
+- `sql/b2b_documents.sql`: default `title` set to `ドキュメント` (utf8mb4 unchanged).
+- UI: default `lang="ja"`, i18n placeholders/titles, dynamic Quill size picker labels from locale in `script.js`.
+
+### Notes
+
+- ESX default inventory cannot attach per-item metadata; multiple documents per player may not resolve to a specific instance (see `INSTALLATION_JP.txt`). Prefer `ox_inventory` when strict per-item metadata is required.
+- Resource folder name must match `ensure` name and `nui://...` paths in inventory item definitions.
+
+### Credits
+
+- Original: [alnd029/b2b_documents](https://github.com/alnd029/b2b_documents)
+- Japanese localization and extensions: matrix9neonebuchadnezzar2199

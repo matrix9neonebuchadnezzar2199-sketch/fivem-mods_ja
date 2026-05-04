@@ -19,6 +19,10 @@ FiveM 向けのドキュメント／メモエディター（**日本語版**）�
 
 [INSTALLATION_JP.txt](./INSTALLATION_JP.txt) を参照してください。
 
+## 変更履歴
+
+[CHANGELOG.md](./CHANGELOG.md) を参照してください。
+
 ## ライセンス・クレジット
 
 - 原作: [alnd029](https://github.com/alnd029/b2b_documents)
