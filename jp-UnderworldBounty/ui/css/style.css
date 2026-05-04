@@ -60,29 +60,30 @@ body {
   display: none !important;
 }
 
-/* 右上通知（従来トースト比で文字・余白を約2倍） */
+/* 右上通知（サーバー／クライアント共通。視認性のため文字を大きめに） */
 .notify-stack {
   position: fixed;
-  top: 5%;
-  right: 2%;
-  max-width: min(640px, 94vw);
+  top: 4%;
+  right: 1.5%;
+  max-width: min(720px, 96vw);
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 16px;
+  gap: 20px;
   z-index: 60;
   pointer-events: none;
 }
 
 .notify-item {
-  padding: 24px 36px;
+  padding: 32px 44px;
   background: var(--bg);
-  border-radius: 10px;
-  border-left: 8px solid var(--accent);
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.55);
-  font-size: 28px;
-  line-height: 1.35;
-  letter-spacing: 0.03em;
+  border-radius: 12px;
+  border-left: 10px solid var(--accent);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.6);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
   max-width: 100%;
   word-break: break-word;
 }

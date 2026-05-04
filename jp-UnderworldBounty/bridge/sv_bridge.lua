@@ -235,16 +235,8 @@ end
 
 --- @param message string
 --- @param typ string|nil info|success|error
+--- 表示サイズ・位置はクライアントの NUI（Config.NotifyUseNui）に統一するため、常に本リソースのクライアント経由にする。
 function Bridge.Notify(source, message, typ)
   typ = typ or 'info'
-  if Framework == 'esx' then
-    TriggerClientEvent('esx:showNotification', source, message)
-    return
-  end
-  if Framework == 'qbcore' or Framework == 'qbox' then
-    local mapped = typ == 'error' and 'error' or 'primary'
-    TriggerClientEvent('QBCore:Notify', source, message, mapped)
-    return
-  end
   TriggerClientEvent(UbEvent('client:standaloneNotify'), source, message, typ)
 end
