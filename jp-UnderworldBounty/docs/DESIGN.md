@@ -55,6 +55,7 @@ jp-UnderworldBounty/
 │   ├── EVENT_HOOKS.md          # 開発者向けイベントフック仕様
 │   ├── SEQUENCE_DIAGRAMS.md    # サーバー↔クライアントシーケンス・payload
 │   ├── INSTRUCTIONS_PHASE_1A.md # PHASE 1a: Bridge API スナップショット化作業指示（Cursor）
+│   ├── BRIDGE_API.md           # Bridge / ClientBridge API リファレンス（スナップショット）
 │   └── images/                 # ドキュメント用画像
 │
 ├── config/
@@ -175,7 +176,7 @@ ESX/QBCore/Qboxは関数名・データ構造・イベント名がすべて違�
 
 クライアント側コードからはフレームワーク固有のグローバル変数（ESX, QBCore等）を**絶対に直接呼ばない**。全てBridge経由。これでメンテ性が劇的に向上する。
 
-**現行 API のスナップショット**: PHASE 1a 完了後、`docs/BRIDGE_API.md` に実装観察ベースで一覧する（コード変更は伴わない記録作業）。手順は **`docs/INSTRUCTIONS_PHASE_1A.md`** を参照。
+**現行 API のスナップショット**: **`docs/BRIDGE_API.md`** に実装観察ベースで一覧（コード変更なしの記録）。更新手順・再スナップショットは **`docs/INSTRUCTIONS_PHASE_1A.md`** を参照。
 
 ---
 
@@ -354,4 +355,4 @@ PHASE 0〜8を全て完遂すると、ソロ開発で**約6〜10週間**（週10
 - **サーバー↔クライアントシーケンス（payload・Mermaid）**: `docs/SEQUENCE_DIAGRAMS.md`  
 - **シナリオ設計テンプレ（運営が空欄埋め）**: `docs/SCENARIO_TEMPLATE.md`  
 - **設定・シナリオ追加・イベント**: `docs/CONFIG_GUIDE.md`、`docs/SCENARIO_GUIDE.md`、`docs/EVENT_HOOKS.md`  
-- **PHASE 1a（Bridge API スナップショット化・Cursor 向け手順）**: `docs/INSTRUCTIONS_PHASE_1A.md` → 成果物 `docs/BRIDGE_API.md`
+- **PHASE 1a（Bridge API スナップショット・Cursor 向け手順）**: `docs/INSTRUCTIONS_PHASE_1A.md` / 成果物 `docs/BRIDGE_API.md`
