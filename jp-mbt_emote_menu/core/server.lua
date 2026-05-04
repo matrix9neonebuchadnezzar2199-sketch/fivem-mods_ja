@@ -1,4 +1,4 @@
-if not Utils.MbtResourceNameCheck('mbt_emote_menu') then return end
+if not Utils.MbtResourceNameCheck({ 'mbt_emote_menu', 'jp-mbt_emote_menu' }) then return end
 
 local EmoteData = {}
 local rpemotesResource = nil

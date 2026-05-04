@@ -3,15 +3,16 @@ use_experimental_fxv2_oal 'yes'
 lua54 'yes'
 game 'gta5'
 
-name 'mbt_emote_menu'
+name 'jp-mbt_emote_menu'
 author 'Malibù Tech Team (JP localization by matrix9neonebuchadnezzar2199-sketch)'
 version      '1.0.0-ja'
-description '日本語対応 - rpemotes-reborn 用 NUI エモートメニュー（原作: Malibu Tech Team）'
+description '日本語対応 - rpemotes 系（reborn / 旧版等）用 NUI。依存はランタイム検出（原作: Malibu Tech Team）'
 
+-- rpemotes はフォルダ名がサーバーごとに異なるため hard dependency にしない。
+-- 未起動時は core/server.lua の検出ログを参照し、server.cfg で先に ensure すること。
 dependencies {
     '/server:6116',
     '/onesync',
-    'rpemotes-reborn',
 }
 
 shared_scripts {

@@ -6,14 +6,16 @@ function Utils.MbtDebugger(...)
     end
 end
 
----@param expectedName string
+---@param allowed string|string[] 許可するリソース（フォルダ）名。単一文字列または配列。
 ---@return boolean ok
-function Utils.MbtResourceNameCheck(expectedName)
+function Utils.MbtResourceNameCheck(allowed)
     local actual = GetCurrentResourceName()
-    if actual == expectedName then return true end
-
-    print(('^1[%s] ERROR: This resource must be named "%s"!^0'):format(actual, expectedName))
-    print(('^1[%s] Current name: "%s" — please rename the folder and restart.^0'):format(actual, actual))
+    local names = type(allowed) == 'table' and allowed or { allowed }
+    for _, name in ipairs(names) do
+        if actual == name then return true end
+    end
+    local expected = table.concat(names, '", "')
+    print(('^1[%s] ERROR: フォルダ名は "%s" のいずれかにしてください（現在: "%s"）^0'):format(actual, expected, actual))
     return false
 end
 
