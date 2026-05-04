@@ -17,6 +17,10 @@
       var key = el.getAttribute('data-i18n-ph');
       if (window.__i18n[key]) el.placeholder = window.__i18n[key];
     });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-title');
+      if (window.__i18n[key]) el.setAttribute('title', window.__i18n[key]);
+    });
   }
   window.applyI18n = applyI18n;
 
@@ -25,8 +29,8 @@
     window.__cfg = Object.assign(window.__cfg, cfg);
     var t = document.getElementById('coverTitleInput');
     var a = document.getElementById('coverAuthorInput');
-    var g = document.getElementById('genreCustom');
-    var s = document.getElementById('signatureInput');
+    var g = document.getElementById('iGenreCustom');
+    var s = document.getElementById('iSig');
     if (t) t.maxLength = window.__cfg.maxTitleChars;
     if (a) a.maxLength = window.__cfg.maxAuthorChars;
     if (g) g.maxLength = window.__cfg.maxGenreChars;

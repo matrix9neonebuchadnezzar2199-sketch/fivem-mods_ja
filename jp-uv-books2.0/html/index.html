@@ -621,11 +621,12 @@ html, body {
   font-style: italic; margin-top: 10px;
 }
 </style>
+<script src="js/i18n.js"></script>
 </head>
 <body>
 
 <div id="ui" class="hidden">
-  <button id="closeBtn" class="close-btn hidden" onclick="doClose()">&#x2715;</button>
+  <button id="closeBtn" class="close-btn hidden" onclick="doClose()" data-i18n-title="ui_close" title="Close">&#x2715;</button>
 
   <div class="uvbook">
     <div id="pages" class="pages">
@@ -635,53 +636,53 @@ html, body {
 
   <!-- Writer nav bar -->
   <div id="writerNav" class="writer-nav hidden">
-    <button id="navSave" class="nav-save" onclick="saveDraft()">&#128190; Save &amp; Close</button>
-    <button id="navPrev" onclick="writerPrev()">&#8592; Previous</button>
+    <button id="navSave" class="nav-save" onclick="saveDraft()"><span aria-hidden="true">&#128190;</span> <span data-i18n="ui_save_close">Save &amp; Close</span></button>
+    <button id="navPrev" onclick="writerPrev()"><span aria-hidden="true">&#8592;</span> <span data-i18n="ui_prev_page">Previous</span></button>
     <div class="nav-center">
       <div id="navInfo" class="nav-info"></div>
       <div id="dots"></div>
     </div>
-    <button id="navNext" onclick="writerNext()">Next &#8594;</button>
-    <button id="navFinish" class="nav-finish" onclick="writerFinish()">Finish &amp; Publish</button>
+    <button id="navNext" onclick="writerNext()"><span data-i18n="ui_next_page">Next</span> <span aria-hidden="true">&#8594;</span></button>
+    <button id="navFinish" class="nav-finish" onclick="writerFinish()"><span data-i18n="ui_finish_publish">Finish &amp; Publish</span></button>
   </div>
 
   <!-- Sign overlay -->
   <div id="signOverlay" class="overlay hidden">
     <div class="overlay-panel">
-      <h2>Finalize Your Book</h2>
+      <h2 data-i18n="ui_finalize_title">Finalize Your Book</h2>
       
       <div class="genre-section">
-        <label class="genre-label">Genre</label>
+        <label class="genre-label" data-i18n="ui_genre_label">Genre</label>
         <select id="iGenre" class="genre-select">
-          <option value="">— Select a genre —</option>
-          <option value="Fiction">Fiction</option>
-          <option value="Non-Fiction">Non-Fiction</option>
-          <option value="Mystery">Mystery</option>
-          <option value="Horror">Horror</option>
-          <option value="Romance">Romance</option>
-          <option value="Adventure">Adventure</option>
-          <option value="Fantasy">Fantasy</option>
-          <option value="Sci-Fi">Sci-Fi</option>
-          <option value="History">History</option>
-          <option value="Comedy">Comedy</option>
-          <option value="Drama">Drama</option>
-          <option value="Poetry">Poetry</option>
-          <option value="Journal">Journal</option>
-          <option value="Guide">Guide</option>
-          <option value="Other">Other</option>
+          <option value="" data-i18n="ui_genre_select_prompt">— Select a genre —</option>
+          <option value="Fiction" data-i18n="genre_fiction">Fiction</option>
+          <option value="Non-Fiction" data-i18n="genre_nonfiction">Non-Fiction</option>
+          <option value="Mystery" data-i18n="genre_mystery">Mystery</option>
+          <option value="Horror" data-i18n="genre_horror">Horror</option>
+          <option value="Romance" data-i18n="genre_romance">Romance</option>
+          <option value="Adventure" data-i18n="genre_adventure">Adventure</option>
+          <option value="Fantasy" data-i18n="genre_fantasy">Fantasy</option>
+          <option value="Sci-Fi" data-i18n="genre_scifi">Sci-Fi</option>
+          <option value="History" data-i18n="genre_history">History</option>
+          <option value="Comedy" data-i18n="genre_comedy">Comedy</option>
+          <option value="Drama" data-i18n="genre_drama">Drama</option>
+          <option value="Poetry" data-i18n="genre_poetry">Poetry</option>
+          <option value="Journal" data-i18n="genre_journal">Journal</option>
+          <option value="Guide" data-i18n="genre_guide">Guide</option>
+          <option value="Other" data-i18n="genre_other">Other</option>
         </select>
-        <input id="iGenreCustom" class="genre-custom hidden" type="text" placeholder="Enter custom genre..." maxlength="30" autocomplete="off">
+        <input id="iGenreCustom" class="genre-custom hidden" type="text" placeholder="" data-i18n-ph="ui_genre_custom_ph" maxlength="30" autocomplete="off">
       </div>
       
       <div class="sign-divider"></div>
       
-      <button class="sign-opt" onclick="showSignInput()">&#9998;&#xFE0E; &nbsp; Yes &mdash; add my signature</button>
-      <button class="sign-opt" onclick="doPublish(false)">&#128220; &nbsp; No &mdash; publish anonymously</button>
+      <button class="sign-opt" onclick="showSignInput()"><span aria-hidden="true">&#9998;&#xFE0E;</span> <span data-i18n="ui_sign_add">Yes — add my signature</span></button>
+      <button class="sign-opt" onclick="doPublish(false)"><span aria-hidden="true">&#128220;</span> <span data-i18n="ui_sign_no_anon">No — publish anonymously</span></button>
       <div id="signInputWrap" class="hidden">
-        <input id="iSig" type="text" placeholder="Your name or pen name..." maxlength="15" autocomplete="off">
-        <button class="pub-btn" onclick="doPublish(true)">Publish Book &#8594;</button>
+        <input id="iSig" type="text" placeholder="" data-i18n-ph="ui_pen_name_ph" maxlength="15" autocomplete="off">
+        <button class="pub-btn" onclick="doPublish(true)"><span data-i18n="ui_publish_book">Publish Book →</span></button>
       </div>
-      <button class="back-link" onclick="hideSign()">&#8592; Back to writing</button>
+      <button class="back-link" onclick="hideSign()"><span data-i18n="ui_back_writing">← Back to writing</span></button>
     </div>
   </div>
 
@@ -690,7 +691,7 @@ html, body {
     <div class="overlay-panel pub-confirm">
       <div class="pub-icon">&#128214;</div>
       <h2 id="pubTitle"></h2>
-      <p>Your book has been added to your inventory.</p>
+      <p data-i18n="ui_pub_inventory_msg">Your book has been added to your inventory.</p>
     </div>
   </div>
 </div>
@@ -706,6 +707,10 @@ var bk = { title:'', pages:[], images:[], signed:false, signature:'', genre:'', 
 var writerSpread = 0;
 var totalPhysPages = 0;
 var readInfo = null;
+
+function nuiResourceName() {
+  return (typeof GetParentResourceName === 'function') ? GetParentResourceName() : 'jp-uv-books2.0';
+}
 
 function fresh() {
   bk = { title:'', pages:[], images:[], signed:false, signature:'', genre:'', font:'' };
@@ -727,6 +732,12 @@ window.addEventListener('message', function(e) {
 window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') doClose();
 });
+
+fetch('https://' + nuiResourceName() + '/uiReady', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+  body: JSON.stringify({})
+}).catch(function () {});
 
 // ══════════════════════════════════════
 // PAGE FLIP ENGINE
@@ -831,10 +842,10 @@ function buildWriterBook(isDraft) {
     '<div class="cover-content">' +
       '<div class="cover-title-area">' +
         '<input id="coverTitleInput" class="cover-input" type="text" ' +
-          'placeholder="Enter your title..." maxlength="20" autocomplete="off">' +
+          'placeholder="" data-i18n-ph="ui_cover_title_ph" maxlength="20" autocomplete="off">' +
       '</div>' +
       '<div class="font-picker">' +
-        '<div class="font-picker-label">Choose a Font</div>' +
+        '<div class="font-picker-label" data-i18n="ui_font_picker_label">Choose a Font</div>' +
         '<select id="fontSelect" onchange="previewFont()">' +
           '<option value="Palatino Linotype" style="font-family:Palatino Linotype">Classic Serif</option>' +
           '<option value="Merriweather" style="font-family:Merriweather">Merriweather</option>' +
@@ -851,7 +862,7 @@ function buildWriterBook(isDraft) {
         '</select>' +
         '<div class="font-preview" id="fontPreview">The quick brown fox jumps over the lazy dog</div>' +
       '</div>' +
-      '<button class="cover-btn" onclick="doBeginWriting()">Begin Writing &#8594;</button>' +
+      '<button class="cover-btn" onclick="doBeginWriting()"><span data-i18n="ui_begin_writing">Begin Writing →</span></button>' +
     '</div>';
   c.appendChild(p1);
 
@@ -861,9 +872,9 @@ function buildWriterBook(isDraft) {
     '<div class="inside-front">' +
       '<div class="inside-ornament">&#10022;</div>' +
       '<div class="inside-rule"></div>' +
-      '<div class="inside-title" id="insideTitle">A New Story</div>' +
+      '<div class="inside-title" id="insideTitle">' + window._L('ui_inside_new_story') + '</div>' +
       '<div class="inside-rule"></div>' +
-      '<div class="inside-author">Begins Here</div>' +
+      '<div class="inside-author" data-i18n="ui_inside_begins">Begins Here</div>' +
       '<div class="inside-ornament" style="font-size:0.8vw;opacity:0.3;">&#10087;</div>' +
     '</div>';
   c.appendChild(p2);
@@ -873,11 +884,11 @@ function buildWriterBook(isDraft) {
     var p = makePage(i + 3, '');
     p.innerHTML =
       '<div class="page-inner" id="pi' + i + '">' +
-        '<div class="page-num">Page ' + (i + 1) + '</div>' +
-        '<button class="add-img-btn" data-idx="' + i + '" onclick="showImgPopup(' + i + ')" title="Add image">&#x1F5BC;</button>' +
+        '<div class="page-num">' + window._L('ui_content_page_label', i + 1) + '</div>' +
+        '<button class="add-img-btn" data-idx="' + i + '" onclick="showImgPopup(' + i + ')" data-i18n-title="ui_add_image" title="Add image">&#x1F5BC;</button>' +
         '<textarea class="write-area" id="ta' + i + '" data-idx="' + i + '" ' +
-          'placeholder="Write here..." maxlength="' + MAXC + '"></textarea>' +
-        '<div class="char-count" id="cc' + i + '">0 / ' + MAXC + '</div>' +
+          'placeholder="" data-i18n-ph="ui_page_placeholder" maxlength="' + MAXC + '"></textarea>' +
+        '<div class="char-count" id="cc' + i + '">' + window._L('ui_char_count', 0, MAXC) + '</div>' +
       '</div>';
     c.appendChild(p);
   }
@@ -888,7 +899,7 @@ function buildWriterBook(isDraft) {
     '<div class="inside-front">' +
       '<div class="inside-ornament">&#10022;</div>' +
       '<div class="inside-rule"></div>' +
-      '<div class="inside-author" style="font-size:0.6vw;">End of Pages</div>' +
+      '<div class="inside-author" style="font-size:0.6vw;" data-i18n="ui_end_pages">End of Pages</div>' +
     '</div>';
   c.appendChild(p23);
 
@@ -934,6 +945,7 @@ function buildWriterBook(isDraft) {
       }
     }
   }
+  if (typeof window.applyI18n === 'function') window.applyI18n();
 }
 
 // ── Font Picker ──
@@ -1013,11 +1025,11 @@ function updateWriterNav() {
 
   var info = '';
   if (leftContent >= 0 && rightContent >= 0) {
-    info = 'Pages ' + (leftContent + 1) + '–' + (rightContent + 1) + ' of ' + MAX;
+    info = window._L('ui_writer_pages_spread', leftContent + 1, rightContent + 1, MAX);
   } else if (rightContent >= 0) {
-    info = 'Page ' + (rightContent + 1) + ' of ' + MAX;
+    info = window._L('ui_writer_page_of', rightContent + 1, MAX);
   } else if (leftContent >= 0) {
-    info = 'Page ' + (leftContent + 1) + ' of ' + MAX;
+    info = window._L('ui_writer_page_of', leftContent + 1, MAX);
   } else {
     info = '';
   }
@@ -1035,7 +1047,7 @@ function updateCharCount(idx) {
   var cc = document.getElementById('cc' + idx);
   if (!ta || !cc) return;
   var len = ta.value.length;
-  cc.textContent = len + ' / ' + MAXC;
+  cc.textContent = window._L('ui_char_count', len, MAXC);
   cc.className = 'char-count' + (len > MAXC * 0.85 ? ' warn' : '');
 }
 
@@ -1239,7 +1251,7 @@ function buildReaderBook(info) {
     }
   }
   if (contentPages.length === 0) {
-    contentPages.push('(This book is empty.)');
+    contentPages.push(window._L('ui_reader_empty'));
     contentImages.push([]);
   }
   // Build page list
@@ -1274,25 +1286,27 @@ function buildReaderBook(info) {
 
     if (pg.type === 'front-cover') {
       el = makePage(physNum, 'front-cover reader-page');
-      var author = (pg.data.signed && pg.data.signature) ? pg.data.signature : 'Anonymous';
+      var author = (pg.data.signed && pg.data.signature) ? pg.data.signature : window._L('ui_anonymous');
+      var titleDisp = escHtml(pg.data.title || window._L('ui_untitled'));
       el.innerHTML =
         '<div class="cover-content">' +
           '<div class="cover-title-area">' +
-            '<div class="cover-title-display">' + escHtml(pg.data.title || 'Untitled') + '</div>' +
-            '<div class="cover-author-display">by ' + escHtml(author) + '</div>' +
+            '<div class="cover-title-display">' + titleDisp + '</div>' +
+            '<div class="cover-author-display">' + window._L('ui_reader_by', escHtml(author)) + '</div>' +
           '</div>' +
         '</div>';
 
     } else if (pg.type === 'inside-front') {
       el = makePage(physNum, 'reader-page');
-      var author = (pg.data.signed && pg.data.signature) ? pg.data.signature : 'Anonymous';
+      var author2 = (pg.data.signed && pg.data.signature) ? pg.data.signature : window._L('ui_anonymous');
+      var titleIn = escHtml(pg.data.title || window._L('ui_untitled'));
       el.innerHTML =
         '<div class="inside-front">' +
           '<div class="inside-ornament">&#10022;</div>' +
           '<div class="inside-rule"></div>' +
-          '<div class="inside-title">' + escHtml(pg.data.title || 'Untitled') + '</div>' +
+          '<div class="inside-title">' + titleIn + '</div>' +
           '<div class="inside-rule"></div>' +
-          '<div class="inside-author">by ' + escHtml(author) + '</div>' +
+          '<div class="inside-author">' + window._L('ui_reader_by', escHtml(author2)) + '</div>' +
           '<div class="inside-ornament" style="font-size:0.8vw;opacity:0.3;">&#10087;</div>' +
         '</div>';
 
@@ -1310,7 +1324,7 @@ function buildReaderBook(info) {
       }
       el.innerHTML =
         '<div class="page-inner">' +
-          '<div class="page-num">Page ' + pg.num + '</div>' +
+          '<div class="page-num">' + window._L('ui_content_page_label', pg.num) + '</div>' +
           '<div class="read-text">' + escHtml(pg.text) + '</div>' +
           imgHtml +
         '</div>';
@@ -1381,10 +1395,10 @@ function objectToArray(obj) {
 }
 
 function post(name, data) {
-  fetch('https://uv-books/' + name, {
+  fetch('https://' + nuiResourceName() + '/' + name, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify(data || {})
   }).then(function(r) { console.log('[uv-books] ' + name + ' -> ' + r.status); })
    .catch(function(e) { console.log('[uv-books] ' + name + ' ERR: ' + e); });
 }
@@ -1422,13 +1436,14 @@ function showImgPopup(idx) {
   var popup = document.createElement('div');
   popup.className = 'img-url-popup';
   popup.innerHTML =
-    '<input type="text" id="imgUrlInput" placeholder="Paste image URL (Imgur, Discord, etc)..." autocomplete="off">' +
+    '<input type="text" id="imgUrlInput" placeholder="" data-i18n-ph="ui_image_url_prompt" autocomplete="off">' +
     '<div class="popup-row">' +
-      '<button class="popup-cancel" onclick="closeImgPopup()">Cancel</button>' +
-      '<button class="popup-add" onclick="confirmImgUrl(' + idx + ')">Add Image</button>' +
+      '<button class="popup-cancel" onclick="closeImgPopup()"><span data-i18n="ui_cancel">Cancel</span></button>' +
+      '<button class="popup-add" onclick="confirmImgUrl(' + idx + ')"><span data-i18n="ui_add_image">Add Image</span></button>' +
     '</div>';
   pi.appendChild(popup);
   activePopup = popup;
+  if (typeof window.applyI18n === 'function') window.applyI18n();
 
   setTimeout(function() {
     var inp = document.getElementById('imgUrlInput');
@@ -1455,7 +1470,7 @@ function confirmImgUrl(idx) {
   // Validate URL
   if (!/^https?:\/\//i.test(url)) {
     inp.style.borderBottomColor = '#8b2a16';
-    inp.placeholder = 'Must be a full URL (https://...)';
+    inp.placeholder = window._L('ui_url_must_https');
     inp.value = '';
     return;
   }
@@ -1490,7 +1505,7 @@ function placeWriterImage(pageIdx, imgIdx, data) {
     wrap.style.display = 'flex';
     wrap.style.alignItems = 'center';
     wrap.style.justifyContent = 'center';
-    wrap.innerHTML = '<span style="font-size:0.5vw;color:#8b2a16;opacity:0.6;">Image failed</span>';
+    wrap.innerHTML = '<span style="font-size:0.5vw;color:#8b2a16;opacity:0.6;">' + window._L('ui_image_failed') + '</span>';
     addImgControls(wrap, pageIdx, imgIdx);
   };
   wrap.appendChild(img);
