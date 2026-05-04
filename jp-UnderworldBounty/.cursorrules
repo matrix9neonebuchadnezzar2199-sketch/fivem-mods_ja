@@ -24,10 +24,6 @@ If a request conflicts with these docs, prefer the docs and state the conflict.
 
 - ドキュメント改訂時、本文末尾の改訂履歴に新バージョンを追加する場合は、必ず冒頭メタデータの「バージョン:」行も同時に更新する。
 
-## Cursor task priority (temporary)
-
-- PHASE 1b 作業中: `docs/INSTRUCTIONS_PHASE_1B.md` を最優先で参照する。
-
 ## Core principles
 
 ### No hardcoding
