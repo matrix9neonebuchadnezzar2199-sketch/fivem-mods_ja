@@ -49,6 +49,7 @@ Locales['ja'] = {
   prompt_contract_accept = '情報屋から仕事を受ける（E）',
   prompt_contract_cancel = '契約をキャンセルする（E）',
   prompt_contract_site = '現場の手口を試す（E）',
+  notify_contract_cooldown = '情報屋の仕事はクールダウン中（残り %d分%d秒）',
   minigame_timing_wheel_title = '円タイミング',
   minigame_timing_wheel_desc = '針が緑の扇に入った瞬間に SPACE で止める',
   minigame_timing_wheel_status = 'SPACE で停止',

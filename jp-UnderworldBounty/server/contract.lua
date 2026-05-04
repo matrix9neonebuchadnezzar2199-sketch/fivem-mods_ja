@@ -1,6 +1,42 @@
 -- 情報屋契約（受注・現地ギミック・ヤクザ戦闘・成否で報酬／指名手配）
 
 local ContractActive = {}
+local ContractCooldownUntil = {}
+
+local function contract_cooldown_key(src)
+  local ids = GetPlayerIdentifiers(src)
+  for i = 1, #ids do
+    local id = ids[i]
+    if id:sub(1, 9) == 'license2:' or id:sub(1, 8) == 'license:' then
+      return id
+    end
+  end
+  local d = Bridge.GetPlayerData(src)
+  if d and d.identifier and d.identifier ~= '' then
+    return d.identifier
+  end
+  return 'src:' .. tostring(src)
+end
+
+local function contract_begin_cooldown(src)
+  local sec = math.max(0, math.floor(Config.ContractCooldownSec or 0))
+  if sec <= 0 then
+    return
+  end
+  ContractCooldownUntil[contract_cooldown_key(src)] = os.time() + sec
+end
+
+local function contract_cooldown_left_sec(src)
+  local key = contract_cooldown_key(src)
+  local t = ContractCooldownUntil[key]
+  if not t or t <= os.time() then
+    if t then
+      ContractCooldownUntil[key] = nil
+    end
+    return 0
+  end
+  return t - os.time()
+end
 
 --- @param src number
 --- @return boolean
@@ -37,6 +73,7 @@ local function fail_bounty(src, reason)
   TriggerClientEvent(UbEvent('client:contractEnded'), src, { reason = 'bounty', detail = reason })
   Bridge.Notify(src, _L('notify_bounty_set'), 'error')
   UbEmitHook('onContractFail', { target = src, reason = reason or 'bounty' })
+  contract_begin_cooldown(src)
 end
 
 local function succeed_contract(src)
@@ -49,6 +86,7 @@ local function succeed_contract(src)
   if not sc then
     ContractActive[src] = nil
     TriggerClientEvent(UbEvent('client:contractEnded'), src, { reason = 'error' })
+    contract_begin_cooldown(src)
     return
   end
   UbGrantRewards(src, sc.reward_table_id)
@@ -56,10 +94,18 @@ local function succeed_contract(src)
   ContractActive[src] = nil
   TriggerClientEvent(UbEvent('client:contractEnded'), src, { reason = 'success' })
   UbEmitHook('onContractComplete', { target = src, scenarioId = scid })
+  contract_begin_cooldown(src)
 end
 
 RegisterNetEvent(UbEvent('server:contractAccept'), function()
   local src = source
+  local cdLeft = contract_cooldown_left_sec(src)
+  if cdLeft > 0 then
+    local m = math.floor(cdLeft / 60)
+    local s = cdLeft % 60
+    Bridge.Notify(src, _L('notify_contract_cooldown', m, s), 'error')
+    return
+  end
   if ContractActive[src] or UbExportActiveHeist(src) then
     Bridge.Notify(src, _L('notify_heist_denied'), 'error')
     return
@@ -179,6 +225,7 @@ RegisterNetEvent(UbEvent('server:contractCombatComplete'), function()
   local sc = UbFindScenario(Config.ContractScenarioId or 'scenario_yakuza_contract')
   if not sc then
     ContractActive[src] = nil
+    contract_begin_cooldown(src)
     return
   end
   if st.deadline and os.time() > st.deadline then
@@ -196,6 +243,7 @@ RegisterNetEvent(UbEvent('server:contractNpcSpawnFailed'), function()
   ContractActive[src] = nil
   TriggerClientEvent(UbEvent('client:contractEnded'), src, { reason = 'spawn_fail' })
   Bridge.Notify(src, _L('notify_contract_spawn_fail'), 'error')
+  contract_begin_cooldown(src)
 end)
 
 RegisterNetEvent(UbEvent('server:contractPlayerDown'), function()

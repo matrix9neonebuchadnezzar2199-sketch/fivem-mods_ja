@@ -49,6 +49,7 @@ Locales['en'] = {
   prompt_contract_accept = 'Take a job from the fixer (E)',
   prompt_contract_cancel = 'Cancel the contract (E)',
   prompt_contract_site = 'Work the site (E)',
+  notify_contract_cooldown = 'Fixer job on cooldown (%d min %d sec left)',
   minigame_timing_wheel_title = 'Timing wheel',
   minigame_timing_wheel_desc = 'Press SPACE when the needle is in the green arc',
   minigame_timing_wheel_status = 'SPACE to stop',

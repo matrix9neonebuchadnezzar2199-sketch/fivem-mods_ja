@@ -24,7 +24,10 @@ Config.ContractScenarioId = 'scenario_yakuza_contract'
 -- ギミック失敗・戦闘中に倒されたときに付ける闇の指名手配パターン
 Config.ContractBountyPatternId = 'dark'
 
--- 契約現場（jp-slot で測定した5箇所）
+-- 情報屋契約の再受注禁止時間（秒）。成功・失敗（指名付与）・NPC生成失敗で開始。キャンセルのみはカウントしない。
+Config.ContractCooldownSec = 3600
+
+-- 契約現場（測定した5箇所）
 Config.ContractSites = {
   {
     id = 'contract_site_1',
