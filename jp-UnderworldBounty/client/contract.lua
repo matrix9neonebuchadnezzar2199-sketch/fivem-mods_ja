@@ -21,36 +21,20 @@ local function clear_waypoint_nav()
   DeleteWaypoint()
 end
 
---- ベランダ等で GetGroundZ がズレるため、レイで衝突面の Z を優先する
-local function informant_probe_floor_z(x, y, zHint)
-  RequestCollisionAtCoord(x, y, zHint)
-  local tCol = GetGameTimer()
-  while GetGameTimer() - tCol < 150 do
+--- 衝突ロード後に GetGroundZ のみ使用。設定Zと大きくズレる値（下の道路など）は捨てる。
+local function informant_resolve_spawn_z(x, y, zConfig)
+  RequestCollisionAtCoord(x, y, zConfig)
+  for _ = 1, 30 do
     Wait(0)
   end
-  -- 上に伸ばしすぎると手すり上や屋根コリジョンに先に当たるため、足元付近の短いレイにする
-  local zTop = zHint + 4.0
-  local zBot = zHint - 14.0
-  local handle = StartShapeTestLosProbe(x, y, zTop, x, y, zBot, 511, 0, 7)
-  local tRay = GetGameTimer() + 250
-  while GetGameTimer() < tRay do
-    local retval, hit, endCoords = GetShapeTestResult(handle)
-    if retval == 1 then
-      Wait(0)
-    elseif retval == 2 then
-      if hit and endCoords then
-        return endCoords.z - 0.05
-      end
-      break
-    else
-      break
+  local gok, gz = GetGroundZFor_3dCoord(x, y, zConfig + 15.0, false)
+  if gok and gz then
+    local dz = gz - zConfig
+    if dz > -6.0 and dz < 3.5 then
+      return gz + 0.02
     end
   end
-  local gok, gz = GetGroundZFor_3dCoord(x, y, zHint + 80.0, false)
-  if gok then
-    return gz - 0.03
-  end
-  return zHint
+  return zConfig
 end
 
 local function spawn_informant()
@@ -58,7 +42,7 @@ local function spawn_informant()
   if not ci or not ci.coords then
     return
   end
-  if informantPed and DoesEntityExist(informantPed) then
+  if informantPed ~= nil and DoesEntityExist(informantPed) then
     return
   end
   local model = ci.model or joaat('a_m_m_business_01')
@@ -76,9 +60,14 @@ local function spawn_informant()
   local c = ci.coords
   local hx = c.x
   local hy = c.y
-  local hz = informant_probe_floor_z(hx, hy, c.z)
+  local hz = informant_resolve_spawn_z(hx, hy, c.z) + (ci.spawn_z_offset or 0.0)
   local heading = c.w or 0.0
   informantPed = CreatePed(4, model, hx, hy, hz, heading, false, false)
+  if informantPed == 0 or not DoesEntityExist(informantPed) then
+    informantPed = nil
+    SetModelAsNoLongerNeeded(model)
+    return
+  end
   SetEntityAsMissionEntity(informantPed, true, true)
   SetBlockingOfNonTemporaryEvents(informantPed, true)
   SetEntityCoordsNoOffset(informantPed, hx, hy, hz, false, false, false)
@@ -91,7 +80,7 @@ local function spawn_informant()
 end
 
 local function cleanup_informant()
-  if informantPed and DoesEntityExist(informantPed) then
+  if informantPed ~= nil and DoesEntityExist(informantPed) then
     DeleteEntity(informantPed)
   end
   informantPed = nil
@@ -187,7 +176,14 @@ end)
 
 CreateThread(function()
   Wait(800)
-  spawn_informant()
+  local ok, err = pcall(spawn_informant)
+  if not ok then
+    print(('^1[jp-UnderworldBounty] informant spawn error: %s^0'):format(tostring(err)))
+  end
+  Wait(4500)
+  if informantPed == nil or not DoesEntityExist(informantPed) then
+    pcall(spawn_informant)
+  end
 end)
 
 CreateThread(function()
