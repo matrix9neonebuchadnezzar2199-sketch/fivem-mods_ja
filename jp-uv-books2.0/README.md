@@ -57,11 +57,13 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
    ```lua
    ['book'] = {
        label = '本', weight = 200, stack = false, close = true, consume = 0,
+       client = { image = 'book.png' },
        server = { export = 'jp-uv-books2.0.book' }
    },
    ```
 
-   （`export` は **リソース名（フォルダ名）** + `.book`。フォルダ名を変えた場合はそれに合わせて書き換え。）
+   （`export` は **リソース名（フォルダ名）** + `.book`。フォルダ名を変えた場合はそれに合わせて書き換え。）  
+   **`client.image`** は **ox_inventory が参照するファイル名**だけ指定します。実体の PNG は次の手順で **ox 側**に置きます（`jp-uv-books2.0/html/images/` に同梱されていても、ox はそこを見に行きません）。
 
    **ESX**
 
@@ -69,7 +71,7 @@ FiveM 用 本の執筆／閲覧 MOD `uv-books 2.0`（[CocoDeee](https://github.c
    INSERT INTO items (name, label, weight) VALUES ('book', '本', 1);
    ```
 
-4. `images/book.png` を各インベントリの画像フォルダにコピー
+4. **アイコン用 PNG** — 同梱の `html/images/book.png` を、**ox_inventory のアイテム画像フォルダ**（多くは `ox_inventory/web/images/`）へ **`book.png` としてコピー**する。上の例どおり `client.image = 'book.png'` と対応させる（ファイル名を変えたら `image` も合わせる）。
 5. `patches/` の tooltip パッチを使用中のインベントリに適用（任意）
 
 ## 設定
