@@ -112,6 +112,9 @@ function Bridge.AddMoney(source, typ, amount)
   return true
 end
 
+-- [予約 API] v1.0.0 時点では server/*.lua から未参照。
+-- 想定用途: 強盗失敗時の罰金、報復NPCへの賄賂支払い等の将来機能。
+-- v1.1 で再評価予定。それまで実装は維持する。
 --- @return boolean
 function Bridge.RemoveMoney(source, typ, amount)
   amount = math.floor(tonumber(amount) or 0)
@@ -187,6 +190,9 @@ function Bridge.AddItem(source, item, count)
   return true
 end
 
+-- [予約 API] v1.0.0 時点では server/*.lua から未参照。
+-- 想定用途: 強盗失敗時のアイテム没収、報復イベント関連等の将来機能。
+-- v1.1 で再評価予定。それまで実装は維持する。
 --- @return boolean
 function Bridge.RemoveItem(source, item, count)
   count = math.max(1, math.floor(tonumber(count) or 1))

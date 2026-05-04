@@ -4,7 +4,7 @@
 > **対象バージョン**: jp-UnderworldBounty v1.0.0（2026-05-04 時点のコード観察）  
 > **目的**: Bridge 層の現行 API を実装観察ベースで記録し、将来の差分追跡の基盤とする  
 > **関連**: `docs/DESIGN.md` §6、`bridge/_init.lua`、`bridge/sv_bridge.lua`、`bridge/cl_bridge.lua`  
-> **最終更新**: 2026-05-04  
+> **最終更新**: 2026-05-04（PHASE 1a フォローアップ反映）  
 
 ## 1. 本書の目的とスコープ
 
@@ -66,10 +66,15 @@ end
 内部ヘルパー（公開 API ではない）:
 
 - **`ensure_esx()`**: `exports['es_extended']:getSharedObject()` を `pcall` で取得しキャッシュ。
-- **`ensure_qb()`**: `exports['qb-core']:GetCoreObject()` を `pcall` で取得しキャッシュ。
-- **`qb_like_player(src)`**: `QBCore.Functions.GetPlayer(src)` を返す。`qbcore` と `qbox` の両方で利用。
+- **`ensure_qb()`**: リソース名 **`qb-core`** の Export（`exports['qb-core']:GetCoreObject()`）を `pcall` で取得しキャッシュする。`exports['qbx_core']` 等は **本ファイルでは呼ばない**。
+- **`qb_like_player(src)`**: 取得した `QBCore.Functions.GetPlayer(src)` を返す。`Framework == 'qbcore'` と `Framework == 'qbox'` の両方で同一経路。
 
-> **要確認**: `Framework == 'qbox'` でも `qb-core` の `GetCoreObject` に依存している。Qbox 単体（`qb-core` なし）環境での動作はプロジェクト内コメントでも未検証（`docs/2026-05-03_開発日記.md` のつまずきメモと同旨）。
+**コード観察に基づく Qbox 依存の整理（grep: `bridge/` にて `qb-core` が `sv_bridge.lua`、`qbx_core` が `_init.lua` の検出のみ）**:
+
+- **パターン**: `qb-core` のみを実行時依存として参照（パターン A に相当）。`_init.lua` の `auto` 検出では `qbx_core` リソースの started を見て `Framework = 'qbox'` とすることがあるが、`ensure_qb()` は依然として `qb-core` Export に依存する。
+- **純粋 Qbox（`qb-core` リソース不在）**: コード上は **`GetCoreObject` が解決できないと QB/Qbox 分岐が機能しない**。互換レイヤーが別リソース名で提供される場合は本リソースからは断定できない。
+
+> **要実機確認（v1.1）**: 運営環境で `qb-core` が無くとも `qbx_core` 等が同一 Export を提供しているか。提供されない場合は Bridge の QB/Qbox 経路は動作しない可能性がある。
 
 ---
 
@@ -179,9 +184,17 @@ end
 
 **説明**: アイテム付与。`count` は最低 1。
 
-**戻り値**: ESX は `addInventoryItem` 後 `true`。QB は **`Player.Functions.AddItem` の戻り値をそのまま返す**（FW 依存）。
+**戻り値契約（`bridge/sv_bridge.lua` の分岐のみ観察）**:
 
-> **要確認**: QBCore で `AddItem` が `nil` / falsy を返す場合の扱いは呼び出し側で未検証（`rewards.lua` は `pcall` のみ）。
+| 分岐 | `return` の有無 | `Bridge.AddItem` が返す値 |
+|------|----------------|---------------------------|
+| ESX | あり | 常に **`true`**（`addInventoryItem` 後に固定） |
+| QBCore / Qbox | あり | **`Player.Functions.AddItem(item, count)` の戻り値をそのまま返す**（中間変数での正規化なし） |
+| Standalone | あり | 常に **`true`** |
+
+**非対称**: ESX / Standalone は常に boolean の `true`。QB/Qbox 分岐のみ FW 関数の戻り値がそのまま伝播する。
+
+> **要実機確認（v1.1）**: `Player.Functions.AddItem` の戻り値の型・意味（boolean / table / nil 等）はフレームワーク実装依存のため、コードだけでは契約を確定できない。`server/rewards.lua` は `pcall` のみで戻り値は検証していない。
 
 **呼び出し元**: `server/rewards.lua`
 
@@ -324,16 +337,17 @@ end
 
 - `AddMoney` / `RemoveMoney` で QB の `black` が **cash 扱い**になる。
 - `GetPlayerData.money` が **現金のみ**で、銀行・ブラックを統一モデルで返していない。
-- Qbox が `qb-core` Export に依存（要確認どおり）。
+- Qbox 検出後も実行時は `qb-core` Export 依存（`ensure_qb()`）。純粋 Qbox 構成では **要実機確認**（`docs/BRIDGE_API.md` 内部ヘルパー節参照）。
 
 ### 9.3 ドキュメント・契約
 
 - `Bridge.Notify` の `typ` が ESX でクライアントに伝わらない。
 - `AddItem` / `RemoveItem` の QB 戻り値の契約が不明瞭。
 
-### 9.4 未使用 API
+### 9.4 v1.1 再評価対象（保留扱い）
 
-- `RemoveMoney`、`RemoveItem` は現リポジトリの `server/*.lua` から **呼ばれていない**（将来用または dead code 候補）。
+- `Bridge.RemoveMoney` / `Bridge.RemoveItem` は v1.0.0 時点で `server/*.lua` から未参照だが、想定用途（罰金、賄賂、没収等）のため **v1.1 で再評価予定**。それまで実装を維持する。削除予定ではない。
+- 関数定義直前に保留コメントを追加済み（`bridge/sv_bridge.lua`）。
 
 ---
 
@@ -352,4 +366,5 @@ end
 
 | 日付 | バージョン | 変更内容 |
 |------|------------|----------|
+| 2026-05-04 | v1.0.1 | PHASE 1a フォローアップ: Qbox 依存・`AddItem` 戻り値をコード観察ベースで整理、「要実機確認」明示。§9.4 を保留扱いに変更 |
 | 2026-05-04 | v1.0.0 | 初版。v1.0.0 コードの観察スナップショット |

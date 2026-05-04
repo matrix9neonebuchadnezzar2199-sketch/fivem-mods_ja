@@ -14,6 +14,9 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `docs/BRIDGE_API.md`: 無印「要確認」を解消。Qbox / `qb-core` 依存と `Bridge.AddItem` 戻り値はコード観察ベースで整理し、断定できない点は「要実機確認（v1.1）」に分類。§9.2・§9.4 を整合（§9.4 は「v1.1 再評価対象（保留扱い）」）。
+- `bridge/sv_bridge.lua`: `Bridge.RemoveMoney` / `Bridge.RemoveItem` に保留コメントを追加（ロジック変更なし）。
+- `.cursorrules`: PHASE 1a / フォローアップ指示書の優先指定行を削除。
 - `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md` v1.2: §4.1 / §4.2 の反映先を BRIDGE_API 内の全該当「要確認」に拡張し grep 網羅確認を必須化、§5 セルフチェックを grep ベースに変更（v1.1 全文差し替えの続き）
 - `docs/2026-05-04_開発日記.md` を新設し、2026-05-04 以降の作業メモを移設（`docs/2026-05-03_開発日記.md` からリンク）
 - `fxmanifest.lua` — ドキュメント参照コメント、`client/_stub.lua` をクライアント読み込みに追加

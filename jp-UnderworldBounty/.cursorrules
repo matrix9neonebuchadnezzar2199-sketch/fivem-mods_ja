@@ -20,10 +20,6 @@ When implementing or reviewing code, consult in this order:
 
 If a request conflicts with these docs, prefer the docs and state the conflict.
 
-**PHASE 1a**（Bridge API スナップショットのみ・コード変更なし）: follow `docs/INSTRUCTIONS_PHASE_1A.md` first for that task.
-
-**PHASE 1a フォローアップ**（`BRIDGE_API.md` の要確認確定、`RemoveMoney`/`RemoveItem` 保留コメント、`sv_bridge.lua` はコメントのみ）: `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md`.
-
 ## Core principles
 
 ### No hardcoding
