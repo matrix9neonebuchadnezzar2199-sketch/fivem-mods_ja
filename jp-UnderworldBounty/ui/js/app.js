@@ -60,6 +60,14 @@
     mgDesc.textContent = '緑ゾーンで SPACE を押す（英語UIでは同様）';
     const wrap = document.createElement('div');
     wrap.className = 'mg-bar-wrap';
+    const greenW = 28;
+    const greenLo = 4 + Math.random() * Math.max(0, 88 - greenW - 4);
+    const greenHi = greenLo + greenW;
+    const zone = document.createElement('div');
+    zone.className = 'mg-target-zone';
+    zone.style.left = greenLo + '%';
+    zone.style.width = greenW + '%';
+    wrap.appendChild(zone);
     const marker = document.createElement('div');
     marker.className = 'mg-bar';
     wrap.appendChild(marker);
@@ -72,8 +80,6 @@
       if (pos >= 88 || pos <= 0) dir *= -1;
       marker.style.width = pos + '%';
     }, 40);
-    const greenLo = 38 + Math.random() * 22;
-    const greenHi = greenLo + 14;
     mgStatus.textContent = 'タイミングを合わせて SPACE';
     const onKey = (e) => {
       if (e.code !== 'Space') return;

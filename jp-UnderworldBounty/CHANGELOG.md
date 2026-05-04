@@ -24,6 +24,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `ui/css/style.css` / `ui/js/app.js`: 鍵開けミニゲームに **緑成功レンジの可視化**、バー高さを約2倍、指名手配 HUD を約2倍の文字サイズに拡大
 - `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`: §4.3・§5.3 の `setjob` 例を server ID 先頭形式に修正、§16 の職業行を整合（v1.3）。
 - `docs/INSTRUCTIONS_PHASE_1A_LIVE_TEST.md`: §5.2 手順を実装実態に合わせて修正、§16.4 補足追加（v1.2）。
 - `docs/DESIGN.md`、`README.md`、`.cursorrules` — PHASE 1a 実機テスト指示書の相互参照および一時優先指定を追加

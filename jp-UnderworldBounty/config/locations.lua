@@ -1,4 +1,6 @@
 -- 賭場ロケーション（トリガーは coords + radius）。scenario_id で Config.Scenarios と結び付ける。
+-- 運営は雰囲気に合わせて trigger を差し替えてよい。候補座標はゲーム内で測定し vector3 で記載する。
+-- trigger を動かしたら、対応する scenario_id の `config/scenarios.lua` 内 enemies[].coords も同エリアに揃えること（未整合だと敵が離れた位置に出る）。
 
 Config.Locations = {
   {

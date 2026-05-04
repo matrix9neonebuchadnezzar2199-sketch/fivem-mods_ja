@@ -37,6 +37,19 @@ body {
   letter-spacing: 0.04em;
 }
 
+/* 指名手配 HUD：視認性のため約2倍 */
+#hud-bounty.panel {
+  padding: 18px 24px;
+  font-size: 28px;
+  gap: 16px;
+  border-radius: 10px;
+}
+
+#hud-bounty .hud-icon {
+  font-size: 36px;
+  text-shadow: 0 0 12px rgba(196, 30, 58, 0.85);
+}
+
 .hud-icon {
   color: var(--accent);
   font-size: 18px;
@@ -78,7 +91,7 @@ body {
 }
 
 .mg-card {
-  width: min(420px, 92vw);
+  width: min(520px, 94vw);
   padding: 22px;
   border-radius: 8px;
   background: linear-gradient(160deg, #1a1215, #0c090a);
@@ -87,25 +100,41 @@ body {
 
 .mg-card h2 {
   margin: 0 0 8px;
-  font-size: 20px;
+  font-size: 22px;
   color: var(--accent);
 }
 
 .mg-desc {
   margin: 0 0 14px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .mg-bar-wrap {
-  height: 22px;
+  position: relative;
+  height: 44px;
   background: #2a2226;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
-  margin: 10px 0;
+  margin: 12px 0;
+}
+
+/* 鍵開け：成功レンジを緑で可視化（バー下層） */
+.mg-target-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  background: rgba(40, 200, 90, 0.38);
+  border-left: 3px solid rgba(120, 255, 160, 0.95);
+  border-right: 3px solid rgba(120, 255, 160, 0.95);
+  pointer-events: none;
 }
 
 .mg-bar {
+  position: relative;
+  z-index: 2;
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, var(--accent-dim), var(--accent));
