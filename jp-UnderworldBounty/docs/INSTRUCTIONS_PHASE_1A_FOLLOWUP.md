@@ -79,7 +79,13 @@ grep -rn -E "qb-core|qbx_core|qbx-core|GetCoreObject" bridge/
 
 #### 反映先
 
-`docs/BRIDGE_API.md` 第9章（改善候補）の Qbox 依存項目を上記分類に従って書き換える。
+`docs/BRIDGE_API.md` 内の **Qbox 依存に関する「要確認」マーカー全箇所**を上記分類に従って書き換える。第9章だけでなく、API個別セクション（例: `Bridge.GetPlayerData` 付近、フレームワーク対応マトリクス等）にも存在する可能性があるため、以下の grep で全箇所を列挙してから一括対応すること。
+
+```bash
+grep -n "要確認" docs/BRIDGE_API.md
+```
+
+ヒットした行のうち、Qbox 依存に関連するものをすべて対象とする。書き換え後に再度同じ grep を実行し、Qbox 依存関連のヒットが0件であることを確認する（AddItem 戻り値契約のマーカーは §4.2 で別途処理するため残ってよい）。
 
 ### 4.2 AddItem 戻り値契約確認
 
@@ -100,7 +106,15 @@ grep -rn -E "qb-core|qbx_core|qbx-core|GetCoreObject" bridge/
 
 #### 反映先
 
-`docs/BRIDGE_API.md` の `Bridge.AddItem` セクションに「戻り値契約」サブ項目を追加し、上記表を埋める。
+`docs/BRIDGE_API.md` 内の **AddItem 戻り値契約に関する「要確認」マーカー全箇所**に、上記表を反映する。`Bridge.AddItem` セクションだけでなく、§9 改善候補側にも記述がある場合は両方を整合させる。
+
+書き換え後、以下の grep で残存マーカーを確認:
+
+```bash
+grep -n "要確認" docs/BRIDGE_API.md
+```
+
+「要実機確認」へ意図的に倒したマーカー以外のヒットが0件であること。
 
 ### 4.3 未使用関数への保留コメント追加
 
@@ -177,7 +191,7 @@ function Bridge.RemoveMoney(source, typ, amount)
 - [ ] `bridge/sv_bridge.lua` の変更が**コメント追加と空行のみ**である（`git diff bridge/sv_bridge.lua` で確認）
 - [ ] `bridge/sv_bridge.lua` の追加行数が **8行以下**である（`git diff --stat bridge/sv_bridge.lua` で確認。超過したら中断・報告）
 - [ ] `bridge/_init.lua` および `bridge/cl_bridge.lua` を変更していない
-- [ ] `BRIDGE_API.md` の「要確認」マーカーが0件、または明示的に「要実機確認」へ書き換え済み
+- [ ] `grep -n "要確認" docs/BRIDGE_API.md` の結果、残存マーカーは「要実機確認」と明示されたものだけである（無印の「要確認」が0件）
 - [ ] §9.4 が中立文言（「再評価」「保留」）で書かれている。「削除予定」等の確定的表現がない
 - [ ] 環境情報（ox_inventory 等の導入リソース）は**開発日記のみ**に記載され、`BRIDGE_API.md` には記載していない
 - [ ] CHANGELOG `[Unreleased]` の `### Changed` に該当エントリがある
@@ -316,6 +330,7 @@ git push origin main
 
 ## 11. 改訂履歴
 
+- 2026-05-04 v1.2: §4.1 / §4.2 の反映先を「全該当箇所」に拡張し、grep による網羅確認を必須化。§5 セルフチェック項目を grep ベースに変更。
 - 2026-05-04 v1.1: PATCH 指摘をすべて反映（grep パターン拡張、物理フォーマット明示、`git diff --stat` 必須化、環境情報の記載先明確化、`.cursorrules` クリーンアップ追加、PHASE 1b 範囲の明示は INSTRUCTIONS_PHASE_1B 側に委譲）
 - 2026-05-04 v1.0: 初版
 

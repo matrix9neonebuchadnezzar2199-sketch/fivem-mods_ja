@@ -14,7 +14,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md` を v1.1 に全文差し替え（前提確認・grep 拡張・コメント整形規約・`.cursorrules` クリーンアップ手順・セルフチェック強化）
+- `docs/INSTRUCTIONS_PHASE_1A_FOLLOWUP.md` v1.2: §4.1 / §4.2 の反映先を BRIDGE_API 内の全該当「要確認」に拡張し grep 網羅確認を必須化、§5 セルフチェックを grep ベースに変更（v1.1 全文差し替えの続き）
 - `docs/2026-05-04_開発日記.md` を新設し、2026-05-04 以降の作業メモを移設（`docs/2026-05-03_開発日記.md` からリンク）
 - `fxmanifest.lua` — ドキュメント参照コメント、`client/_stub.lua` をクライアント読み込みに追加
 - `.cursorrules` — ドキュメント階層・設計原則・現行 bridge パスを追記
