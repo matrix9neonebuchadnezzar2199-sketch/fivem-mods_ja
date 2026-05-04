@@ -5,7 +5,7 @@ Config.ContractInformant = {
   -- 情報屋ペッドのモデル（s_m_m_movspace_01 は宇宙服のため非推奨。スーツ系など一般用を推奨）
   model = `a_m_m_business_01`,
   -- 座標と向き（heading は度）
-  coords = vector4(-498.99, 181.26, 83.16, 220.5),
+  coords = vector4(399.85, 66.85, 97.98, 163.56),
   -- 会話・受注・キャンセル用トリガー半径
   radius = 2.2,
   -- スポーンZの手動微調整（足が浮く場合は負の小数、沈みすぎる場合は正）
