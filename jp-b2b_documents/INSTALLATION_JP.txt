@@ -54,8 +54,8 @@ STEP 3：アイテム登録
   以下は **フォルダ名が jp-b2b_documents のときの完成例**（コピーするなら <RESOURCE> を自分の名前に読み替え）:
 
   ['paper_blank'] = {
-      -- stack = true: 白紙はメタ無しで付与されるため未使用同士はスタック可能。items を stack=false のままにしていると重ならない。
-      -- degrade / 独自メタは付けないこと（毎回違う durability 等でスタック不一致になる）。
+      -- stack = true でも ox 版差・環境により白紙が別スロットに落ちることはある（本リソースはスタックを保証しない）。
+      -- degrade / 独自メタは付けないこと（毎回違う durability 等で挙動が不安定になる）。
       -- 本リソースは ox_inventory の createItem フックで白紙メタを {} に正規化する（server.lua 起動時登録）。
       label = '白紙の用紙', weight = 10, stack = true, close = true,
       client = {

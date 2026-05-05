@@ -99,45 +99,58 @@ function b2bShrinkImageDataUrl(dataUrl, done) {
     img.src = dataUrl;
 }
 
-function b2bRegisterImageToolbarHandler() {
-    const toolbar = quill.getModule('toolbar');
-    if (!toolbar) return;
-    const handler = function () {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.style.display = 'none';
-        document.body.appendChild(input);
-        input.onchange = function () {
-            const file = input.files && input.files[0];
-            if (file) {
-                if (file.size > B2B_IMAGE_MAX_BYTES) {
-                    console.warn('[jp-b2b_documents] 画像が大きすぎます（約 ' + Math.round(B2B_IMAGE_MAX_BYTES / 1000000) + 'MB 以下）');
-                } else {
-                    const reader = new FileReader();
-                    reader.onload = function (ev) {
-                        const raw = ev.target && ev.target.result;
-                        if (!raw) return;
-                        b2bShrinkImageDataUrl(raw, function (url) {
-                            const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1), length: 0 };
-                            quill.insertEmbed(range.index, 'image', url, 'user');
-                            quill.setSelection(range.index + 1, 0, 'user');
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-            if (input.parentNode) input.parentNode.removeChild(input);
-        };
-        input.click();
-    };
-    if (typeof toolbar.addHandler === 'function') {
-        toolbar.addHandler('image', handler);
-    } else if (toolbar.handlers) {
-        toolbar.handlers.image = handler;
-    }
+function b2bQuillIsEditable() {
+    if (!quill || !quill.root) return false;
+    return quill.root.getAttribute('contenteditable') !== 'false';
 }
-b2bRegisterImageToolbarHandler();
+
+function b2bProcessSelectedImageFile(file) {
+    if (!file) return;
+    if (file.size > B2B_IMAGE_MAX_BYTES) {
+        console.warn('[jp-b2b_documents] 画像が大きすぎます（約 ' + Math.round(B2B_IMAGE_MAX_BYTES / 1000000) + 'MB 以下）');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+        const raw = ev.target && ev.target.result;
+        if (!raw) return;
+        b2bShrinkImageDataUrl(raw, function (url) {
+            const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+            quill.insertEmbed(range.index, 'image', url, 'user');
+            quill.setSelection(range.index + 1, 0, 'user');
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+/**
+ * Quill 2 ツールバーは button の click で先に this.quill.focus() してから handlers.image を呼ぶ。
+ * FiveM NUI（CEF）では focus がユーザー操作トークンを消費し、続く programmatic input.click() が無視されることがある。
+ * ツールバー容器で click をキャプチャし、Quill より先にファイルダイアログを開く。
+ */
+function b2bImageToolbarClickCapture(ev) {
+    const btn = ev.target && ev.target.closest && ev.target.closest('button.ql-image');
+    if (!btn) return;
+    if (!b2bQuillIsEditable()) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    const input = document.getElementById('b2b-doc-image-file');
+    if (!input) return;
+    input.value = '';
+    input.onchange = function () {
+        b2bProcessSelectedImageFile(input.files && input.files[0]);
+        input.value = '';
+    };
+    input.click();
+}
+
+function b2bAttachImageToolbarCaptureOnce() {
+    const toolbar = quill.getModule('toolbar');
+    if (!toolbar || !toolbar.container || toolbar.container.dataset.b2bImageCapture === '1') return;
+    toolbar.container.dataset.b2bImageCapture = '1';
+    toolbar.container.addEventListener('click', b2bImageToolbarClickCapture, true);
+}
+b2bAttachImageToolbarCaptureOnce();
 
 /**
  * Quill 2 は Enter でインライン書式を引き継がない（PR #3428）。
@@ -427,6 +440,11 @@ window.addEventListener('message', (event) => {
 
 function closeUI() {
     document.body.classList.add('hidden');
+    const imgIn = document.getElementById('b2b-doc-image-file');
+    if (imgIn) {
+        imgIn.value = '';
+        imgIn.onchange = null;
+    }
     quill.setText('');
     quill.history.clear();
     window.b2bItemName = null;

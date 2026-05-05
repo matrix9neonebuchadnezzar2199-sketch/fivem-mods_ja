@@ -91,23 +91,6 @@ function INV.CanCarry(src, item, count)
     return false
 end
 
---- ox_inventory: 既存の空メタ白紙スロットがあればそこへ 1 枚足す（Search + AddItem の第5引数 slot）
-function INV.TryStackBlankPaperOx(src)
-    if INV.name ~= 'ox_inventory' then return false end
-    local slots = exports.ox_inventory:Search(src, 'slots', Config.Items.blank)
-    if type(slots) ~= 'table' then return false end
-    for _, s in pairs(slots) do
-        if type(s) == 'table' and s.slot and s.name == Config.Items.blank then
-            local md = s.metadata
-            if md == nil or (type(md) == 'table' and next(md) == nil) then
-                local ok = exports.ox_inventory:AddItem(src, Config.Items.blank, 1, nil, s.slot)
-                if ok then return true end
-            end
-        end
-    end
-    return false
-end
-
 function INV.AddItem(src, item, count, metadata)
     count = count or 1
 

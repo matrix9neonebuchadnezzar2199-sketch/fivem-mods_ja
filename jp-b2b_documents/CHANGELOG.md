@@ -4,6 +4,16 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.11] — 2026-05-05
+
+### Fixed
+
+- **画像ボタンが 2 回目以降無反応（FiveM NUI / CEF）**: Quill ツールバーは `click` で先に **`quill.focus()`** してからカスタム `image` ハンドラが動く。ユーザー操作トークンが消費され **`input.click()` が無視される**ことがあるため、**ツールバー上の `button.ql-image` を `click` キャプチャで先取り**し、その場でファイルダイアログを開く（`ui/script.js`）。常設の **`#b2b-doc-image-file`** を使用。
+
+### Removed
+
+- **白紙の明示スタック配布**（`INV.TryStackBlankPaperOx`）: 版差・運用で安定しないため削除。配布は **`INV.AddItem` のみ**に戻した。`createItem` での `paper_blank` メタ `{}` 正規化は維持。
+
 ## [2.0.3-jp.10] — 2026-05-05
 
 ### Fixed
