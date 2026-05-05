@@ -59,7 +59,11 @@ const quill = new Quill('#editor', {
  * keyboard.addBinding で return false しても「先に動いたバインディング」で処理が止まり当ハンドラが呼ばれないため、
  * capture 段階の keydown で書式を覚え、text-change で改行を検出したら再適用する。
  */
-const B2B_PRESERVE_ON_ENTER = ['font', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'size', 'align'];
+/** ブロック→インラインの順で再適用（見出しだけ落ちる問題の対策で header を含む） */
+const B2B_REAPPLY_AFTER_ENTER_ORDER = [
+    'header', 'align',
+    'font', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'size'
+];
 let b2bEnterPreserveFormats = null;
 
 quill.root.addEventListener('keydown', function (e) {
@@ -93,7 +97,7 @@ quill.on('text-change', function (delta, _old, source) {
     queueMicrotask(function () {
         const sel = quill.getSelection(true);
         if (!sel) return;
-        B2B_PRESERVE_ON_ENTER.forEach(function (key) {
+        B2B_REAPPLY_AFTER_ENTER_ORDER.forEach(function (key) {
             const v = fmt[key];
             if (v === undefined || v === false) return;
             quill.format(key, v, 'user');
@@ -103,7 +107,10 @@ quill.on('text-change', function (delta, _old, source) {
     });
 });
 
-/** DB からの HTML を Quill の Delta 経由で取り込む（innerHTML 直代入だと font 等の属性が落ちやすい） */
+/** v2: 保存は Delta JSON（font 等が HTML 経路で落ちない）。旧データは HTML のまま。 */
+const B2B_DELTA_PREFIX = '__B2B_DOC_QV1__\n';
+
+/** DB からの HTML を Quill の Delta 経由で取り込む（レガシー HTML 用） */
 function b2bLoadEditorHtml(html) {
     const raw = html != null ? String(html) : '';
     const trimmed = raw.trim();
@@ -123,11 +130,39 @@ function b2bLoadEditorHtml(html) {
     }
 }
 
-/**
- * getSemanticHTML() はプレゼンテーション用クラス（ql-font-* 等）を落とし、ロック後の再表示でフォントが消えるため使わない。
- */
-function b2bGetEditorHtml() {
-    return quill.root.innerHTML;
+function b2bLoadDocumentContent(raw) {
+    const str = raw != null ? String(raw) : '';
+    if (!str.trim()) {
+        quill.setContents([], 'silent');
+        if (quill.history && typeof quill.history.clear === 'function') quill.history.clear();
+        return;
+    }
+    if (str.startsWith(B2B_DELTA_PREFIX)) {
+        const json = str.slice(B2B_DELTA_PREFIX.length);
+        try {
+            const parsed = JSON.parse(json);
+            const Delta = Quill.import('delta');
+            const ops = Array.isArray(parsed && parsed.ops)
+                ? parsed.ops
+                : (Array.isArray(parsed) ? parsed : []);
+            quill.setContents(new Delta(ops), 'silent');
+        } catch (e) {
+            console.warn('[jp-b2b_documents] Delta の parse に失敗しました', e);
+            quill.setContents([], 'silent');
+        }
+        if (quill.history && typeof quill.history.clear === 'function') {
+            quill.history.clear();
+        }
+        return;
+    }
+    b2bLoadEditorHtml(str);
+}
+
+/** ロック／保存は Delta JSON で送る（innerHTML + convert では ql-font が失われることがある） */
+function b2bSerializeDocForSave() {
+    const d = quill.getContents();
+    const ops = d && d.ops ? d.ops : [];
+    return B2B_DELTA_PREFIX + JSON.stringify({ ops: ops });
 }
 
 quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
@@ -226,7 +261,7 @@ window.addEventListener('message', (event) => {
     const isLocked = (event.data.locked === true || event.data.locked === 1);
 
     document.getElementById('docTitle').value = title;
-    b2bLoadEditorHtml(content);
+    b2bLoadDocumentContent(content);
 
     if (isLocked) {
         quill.enable(false);
@@ -256,7 +291,7 @@ function closeUI() {
 }
 
 function triggerAction(actionType) {
-    const contentHtml = b2bGetEditorHtml();
+    const contentPayload = b2bSerializeDocForSave();
     const titleInput = document.getElementById('docTitle');
     const docTitle = titleInput.value
         || titleInput.placeholder
@@ -272,7 +307,7 @@ function triggerAction(actionType) {
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
         body: JSON.stringify({
             action: actionType,
-            content: contentHtml,
+            content: contentPayload,
             title: docTitle,
             itemName: window.b2bItemName
         })

@@ -4,6 +4,13 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.4] — 2026-05-05
+
+### Fixed
+
+- **Lock / save / font**: Root cause was **HTML round-trip** — `clipboard.convert` when loading often normalizes away custom `font` (and similar) even when `innerHTML` had `ql-font-*`. **New saves** (save / lock / duplicate) now store **`__B2B_DOC_QV1__\n` + JSON Delta** (`ops` only) in `b2b_documents.content`. **Load** detects the prefix and uses `setContents(new Delta(ops))`; older rows stay **HTML** and still load via `convert`.
+- **Enter / Heading**: The Enter preserve list now includes **`header`** (and still `align` + inline formats), applied in **block-first order**, so **Heading 1** no longer drops to Normal after a line break while Japanese fonts keep working.
+
 ## [2.0.3-jp.3] — 2026-05-05
 
 ### Fixed
