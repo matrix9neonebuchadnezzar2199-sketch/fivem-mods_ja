@@ -313,7 +313,7 @@ let aimTestGame = {
                 $('.aim-test-area').empty();
             });
             
-            $.post('https://glitch-minigames/aimTestResult', JSON.stringify({ 
+            $.post('https://' + GetParentResourceName() + '/aimTestResult', JSON.stringify({ 
                 success: success,
                 targetsHit: self.targetsHit,
                 targetsMissed: self.targetsMissed
@@ -332,7 +332,7 @@ let aimTestGame = {
         }
         $('#aim-test-container').hide();
         $('.aim-test-area').empty();
-        $.post('https://glitch-minigames/aimTestClose', JSON.stringify({}));
+        $.post('https://' + GetParentResourceName() + '/aimTestClose', JSON.stringify({}));
     }
 };
 

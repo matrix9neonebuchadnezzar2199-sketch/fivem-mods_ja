@@ -331,7 +331,7 @@ var Fingerprint = (function() {
         playSound(success ? 'sound-success' : 'sound-failure');
         
         setTimeout(function() {
-            $.post('https://glitch-minigames/fingerprintResult', JSON.stringify({ success: success }));
+            $.post('https://' + GetParentResourceName() + '/fingerprintResult', JSON.stringify({ success: success }));
             close();
         }, 1500);
     }
@@ -350,7 +350,7 @@ var Fingerprint = (function() {
         $('#fingerprint-row-controls').empty();
         
         $('#fingerprint-container').removeClass('active').fadeOut(300, function() {
-            $.post('https://glitch-minigames/fingerprintClose', JSON.stringify({}));
+            $.post('https://' + GetParentResourceName() + '/fingerprintClose', JSON.stringify({}));
         });
     }
 

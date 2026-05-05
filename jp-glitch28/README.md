@@ -8,7 +8,8 @@ FiveM 向けの **28種類以上のミニゲーム集** を日本語化したも
 ## リポジトリ上のパスと本番名
 
 - **開発用フォルダ名**: `jp-glitch28`（本モノレポ内のディレクトリ名）
-- **サーバー配置時**: フォルダ全体を **`glitch-minigames` にリネーム**して `resources/` 配下へ置いてください。他リソースが `exports['glitch-minigames']` で参照するためです。
+- **このリソース単体**: `jp-glitch28` のまま `ensure jp-glitch28` でも **内部のデバッグコマンド・NUI・同一リソース内の export 連携は動作** します（`GetCurrentResourceName()` / `GetParentResourceName()` で実名を解決）。
+- **他リソースから `exports['glitch-minigames']` で呼んでいる場合**: フォルダを **`glitch-minigames` にリネーム**し、`ensure` 名もそれに合わせてください。外部スクリプトは **`exports['server.cfg に書いた名前']`** のリソースを参照するため、名前が一致しないと `No such export` になります。
 
 ## 特徴
 
@@ -35,7 +36,7 @@ FiveM 向けの **28種類以上のミニゲーム集** を日本語化したも
 
 3. （任意）`shared/config.lua` で `config.ActiveTheme` / `config.ActiveVisualTheme` を変更
 
-> **リソース名は `glitch-minigames` のまま使用してください。** フォルダ名を変えると `exports['glitch-minigames']` との整合が取れなくなります。
+> **外部連携**: 既存の強盗スクリプト等が `exports['glitch-minigames']` 固定なら、配置名も `glitch-minigames` にしてください。自作だけなら `exports[GetCurrentResourceName()]` や実際の `ensure` 名（例: `jp-glitch28`）で呼び出せます。
 
 ## 既知の制限
 

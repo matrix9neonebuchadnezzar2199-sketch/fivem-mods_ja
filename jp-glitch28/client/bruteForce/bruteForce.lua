@@ -375,7 +375,7 @@ exports('StartBruteForce', StartHackConnect)
 
 if config.DebugCommands then 
     RegisterCommand('testbruteforce', function()
-        local success = exports['glitch-minigames']:StartBruteForce(3)
+        local success = exports[GetCurrentResourceName()]:StartBruteForce(3)
         
         if success then
             print("[bruteforce] ハッキング成功")

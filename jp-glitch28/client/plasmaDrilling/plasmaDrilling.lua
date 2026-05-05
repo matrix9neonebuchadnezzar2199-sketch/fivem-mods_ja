@@ -283,12 +283,20 @@ function stopDrilling(success)
       if config.usingGlitchNotifications then
         exports['glitch-notifications']:ShowNotification('成功', 'プラズマドリリング完了！', 3000, '#00ff00', false)
       end
-      TriggerEvent("glitch-minigames:plasmaDrillComplete", true)
+      local _gm = GetCurrentResourceName()
+      TriggerEvent(_gm .. ":plasmaDrillComplete", true)
+      if _gm ~= "glitch-minigames" then
+        TriggerEvent("glitch-minigames:plasmaDrillComplete", true)
+      end
   else
       if config.usingGlitchNotifications then
         exports['glitch-notifications']:ShowNotification('失敗', 'プラズマドリリング失敗', 3000, '#ff0000', false)
       end
-      TriggerEvent("glitch-minigames:plasmaDrillComplete", false)
+      local _gm = GetCurrentResourceName()
+      TriggerEvent(_gm .. ":plasmaDrillComplete", false)
+      if _gm ~= "glitch-minigames" then
+        TriggerEvent("glitch-minigames:plasmaDrillComplete", false)
+      end
   end
 end
 
@@ -336,7 +344,7 @@ end)
 
 if config.DebugCommands then 
   RegisterCommand('testplasma', function()
-      local success = exports['glitch-minigames']:StartPlasmaDrilling(5)
+      local success = exports[GetCurrentResourceName()]:StartPlasmaDrilling(5)
       if success then
           print("[plasma] ドリリング成功")
       else

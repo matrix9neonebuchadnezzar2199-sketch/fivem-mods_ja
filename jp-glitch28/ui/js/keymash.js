@@ -136,7 +136,7 @@ function stopKeymash(success) {
         $('#keymash-container').fadeOut(300);
         $('.progress-bar').removeClass('progress-flash failure-flash').css('stroke', '');
         
-        fetch('https://glitch-minigames/keymashResult', {
+        fetch('https://' + GetParentResourceName() + '/keymashResult', {
             method: 'POST',
             body: JSON.stringify({
                 success: success

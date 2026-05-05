@@ -244,7 +244,7 @@ let skillCheckGame = {
             if (self._gen !== gen) return;
             $('#skill-check-container').fadeOut(500, function() {
                 if (self._gen !== gen) return;
-                $.post('https://glitch-minigames/skillCheckResult', JSON.stringify(resultData));
+                $.post('https://' + GetParentResourceName() + '/skillCheckResult', JSON.stringify(resultData));
             });
         }, 700);
     },

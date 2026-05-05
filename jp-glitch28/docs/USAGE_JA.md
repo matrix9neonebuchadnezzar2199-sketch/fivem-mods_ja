@@ -7,7 +7,8 @@
 
 ## 前提条件・連携リソース
 
-- **リソース名**: 配置フォルダは **`glitch-minigames`** にすること（`exports['glitch-minigames']` と一致させる）。
+- **リソース名（内部）**: 日本語版では **実際の `ensure` 名**（例: `jp-glitch28` または `glitch-minigames`）で動くよう、同一リソース内の参照は `GetCurrentResourceName()`、NUI は `GetParentResourceName()` を使っています。
+- **リソース名（外部から export する側）**: 別リソースから呼ぶときは **`exports['あなたの server.cfg で ensure した名前']`** を必ず使う。第三者 MOD が `glitch-minigames` 固定なら、フォルダ名を `glitch-minigames` に合わせるのが無難。
 - **glitch-notifications**（任意）: `shared/config.lua` の `config.usingGlitchNotifications` が `true` のとき、Fleeca／Plasma ドリルの操作説明が通知で表示される。**未導入なら `false`**（表示は出ないが、当該分岐でエラーにはならない想定）。
 - **報酬・ゲーム進行**: 本リソースはミニゲームのみ。インベントリ操作・ドア同期・警察連携は **別リソースのサーバー側** で行うこと。
 
@@ -154,7 +155,7 @@ end
 ## トラブルシューティング
 
 **Q. ミニゲーム画面が出ない**  
-A. リソースフォルダ名が `glitch-minigames` か、`server.cfg` で `ensure glitch-minigames` されているか確認してください。
+A. `server.cfg` の `ensure` 名と、外部スクリプトの `exports['...']` が一致しているか確認してください（`jp-glitch28` のままでも本リソース内部は動作しますが、**他MODが `glitch-minigames` 固定ならフォルダ名を合わせる**必要があります）。
 
 **Q. キー入力が効かない**  
 A. 一部のミニゲームは NUI フォーカス、一部はゲーム側のキー転送を使います。マウスクリック必須のものは `SetNuiFocus` 状態になります。
@@ -171,4 +172,4 @@ A. `shared/config.lua` の `config.ActiveTheme` を `cyan` または `monochrome
 
 公式ドキュメント（英語）に全パラメータ一覧があります: [minigames.glitchstudios.dev](https://minigames.glitchstudios.dev/)
 
-日本語 UI は `ui/index.html` と `ui/js/*.js` の表示文字列を置き換えています。**エクスポート名・`exports['glitch-minigames']`・NUI コールバック URL のリソース名は変更していません。**
+日本語 UI は `ui/index.html` と `ui/js/*.js` の表示文字列を置き換えています。**エクスポート関数名は変更していません。** NUI の `https://リソース名/...` は **`GetParentResourceName()` で実名に解決** するよう日本語版で修正済みです。

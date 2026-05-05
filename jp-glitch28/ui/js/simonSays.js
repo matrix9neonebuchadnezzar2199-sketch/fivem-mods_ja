@@ -216,7 +216,7 @@ window.simonSaysGame = (function () {
             if (_gen !== thisGen) return;
             $c.fadeOut(300, function() {
                 if (_gen !== thisGen) return;
-                $.post('https://glitch-minigames/simonSaysResult', JSON.stringify({ success: success }));
+                $.post('https://' + GetParentResourceName() + '/simonSaysResult', JSON.stringify({ success: success }));
             });
         }, 600);
     }

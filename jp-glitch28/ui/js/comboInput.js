@@ -116,7 +116,7 @@ window.comboInputGame = (function () {
             if (_gen !== thisGen) return;
             $c.fadeOut(300, function() {
                 if (_gen !== thisGen) return;
-                $.post('https://glitch-minigames/comboInputResult', JSON.stringify({ success: success }));
+                $.post('https://' + GetParentResourceName() + '/comboInputResult', JSON.stringify({ success: success }));
             });
         }, success ? 600 : 450);
     }

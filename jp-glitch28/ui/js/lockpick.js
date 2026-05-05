@@ -446,7 +446,7 @@ let lockpickGame = {
         setTimeout(function() {
             $('#lockpick-container').fadeOut(200);
             
-            $.post('https://glitch-minigames/lockpickResult', JSON.stringify({ 
+            $.post('https://' + GetParentResourceName() + '/lockpickResult', JSON.stringify({ 
                 success: success,
                 successes: self.successes,
                 failures: self.failures
@@ -461,7 +461,7 @@ let lockpickGame = {
         $(document).off('keydown.lockpick keyup.lockpick mousemove.lockpick mousedown.lockpick mouseup.lockpick');
         this.lastMouseX = null;
         $('#lockpick-container').hide();
-        $.post('https://glitch-minigames/lockpickClose', JSON.stringify({}));
+        $.post('https://' + GetParentResourceName() + '/lockpickClose', JSON.stringify({}));
     }
 };
 

@@ -386,7 +386,7 @@ function stopRhythmGame(success) {
             accuracy: notesHit > 0 ? Math.round((notesHit / totalNotes) * 100) : 0
         };
         
-        fetch('https://glitch-minigames/rhythmResult', {
+        fetch('https://' + GetParentResourceName() + '/rhythmResult', {
             method: 'POST',
             body: JSON.stringify(result)
         });

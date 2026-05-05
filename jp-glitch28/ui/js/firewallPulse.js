@@ -190,7 +190,7 @@
             $('#message').text('ファイアウォール突破！');
             playSoundSafe('sound-success');
             
-            fetch('https://glitch-minigames/hackSuccess', {
+            fetch('https://' + GetParentResourceName() + '/hackSuccess', {
                 method: 'POST',
                 body: JSON.stringify({})
             });
@@ -217,7 +217,7 @@
         $('#message').text(reason || '突破失敗！セキュリティに検知されました。');
         playSoundSafe('sound-failure');
         
-        fetch('https://glitch-minigames/hackFail', {
+        fetch('https://' + GetParentResourceName() + '/hackFail', {
             method: 'POST',
             body: JSON.stringify({})
         });

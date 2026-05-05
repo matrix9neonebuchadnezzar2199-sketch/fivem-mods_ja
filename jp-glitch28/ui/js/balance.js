@@ -314,7 +314,7 @@ let balanceGame = {
                 $('.balance-danger-fill').css('width', '0%');
             });
             
-            $.post('https://glitch-minigames/balanceResult', JSON.stringify({ success: success }));
+            $.post('https://' + GetParentResourceName() + '/balanceResult', JSON.stringify({ success: success }));
         }, 1500);
     },
     
@@ -325,7 +325,7 @@ let balanceGame = {
         clearInterval(this.gameInterval);
         $(document).off('keydown.balance keyup.balance');
         $('#balance-container').hide();
-        $.post('https://glitch-minigames/balanceClose', JSON.stringify({}));
+        $.post('https://' + GetParentResourceName() + '/balanceClose', JSON.stringify({}));
     }
 };
 

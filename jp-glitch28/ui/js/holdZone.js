@@ -219,7 +219,7 @@ window.holdZoneGame = (function () {
             if (_gen !== thisGen) return;
             $c.fadeOut(300, function() {
                 if (_gen !== thisGen) return;
-                $.post('https://glitch-minigames/holdZoneResult', JSON.stringify({ success: success }));
+                $.post('https://' + GetParentResourceName() + '/holdZoneResult', JSON.stringify({ success: success }));
             });
         }, 400);
     }

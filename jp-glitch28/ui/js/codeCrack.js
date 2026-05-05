@@ -305,7 +305,7 @@ var CodeCrack = (function() {
         playSound(success ? 'sound-success' : 'sound-failure');
         
         setTimeout(function() {
-            $.post('https://glitch-minigames/codeCrackResult', JSON.stringify({ 
+            $.post('https://' + GetParentResourceName() + '/codeCrackResult', JSON.stringify({ 
                 success: success,
                 attempts: attempts
             }));
@@ -328,7 +328,7 @@ var CodeCrack = (function() {
         $('.code-crack-result').remove();
         
         $('#code-crack-container').removeClass('active').fadeOut(300, function() {
-            $.post('https://glitch-minigames/codeCrackClose', JSON.stringify({}));
+            $.post('https://' + GetParentResourceName() + '/codeCrackClose', JSON.stringify({}));
         });
     }
 

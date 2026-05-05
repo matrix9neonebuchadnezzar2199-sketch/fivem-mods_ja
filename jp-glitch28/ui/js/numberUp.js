@@ -144,7 +144,7 @@ let numberUpGame = {
 
         setTimeout(function() {
             $('#number-up-container').fadeOut(500, function() {
-                $.post('https://glitch-minigames/numberUpResult', JSON.stringify(resultData));
+                $.post('https://' + GetParentResourceName() + '/numberUpResult', JSON.stringify(resultData));
             });
         }, 700);
     },

@@ -589,7 +589,7 @@ end)
 
 if config.DebugCommands then 
     RegisterCommand('testdrill', function()
-        local success = exports['glitch-minigames']:StartDrilling()
+        local success = exports[GetCurrentResourceName()]:StartDrilling()
         print("[drill] ドリル完了 結果: " .. tostring(success))
     end)
 end

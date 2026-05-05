@@ -23,6 +23,9 @@ local callback = nil
 
 local deathCheckThreadId = nil
 
+-- モノレポではフォルダ名が jp-glitch28 のまま起動することがある。内部の export 呼び出しは必ず実リソース名を使う。
+local GM_RES = GetCurrentResourceName()
+
 -- set color configuration to NUI on resource start
 Citizen.CreateThread(function()
     Citizen.Wait(500)
@@ -1398,167 +1401,167 @@ end)
 
 if config.DebugCommands then
     RegisterCommand('testsurge', function()
-        local success = exports['glitch-minigames']:StartSurgeOverride({'E', 'F'}, 30, 2)
+        local success = exports[GM_RES]:StartSurgeOverride({'E', 'F'}, 30, 2)
         print("結果: ", success)
     end, false)
 
     RegisterCommand('testfirewall', function()
-        local success = exports['glitch-minigames']:StartFirewallPulse(3, 2, 10, 8, 30, 120, 40)
+        local success = exports[GM_RES]:StartFirewallPulse(3, 2, 10, 8, 30, 120, 40)
         print("結果: ", success)
     end, false)
 
     RegisterCommand('testsequence', function()
-        local success = exports['glitch-minigames']:StartBackdoorSequence(3, 20, 20, 3, 2.0, 3, 6, {'W', 'A', 'S', 'D'}, 'W, A, S, D only')
+        local success = exports[GM_RES]:StartBackdoorSequence(3, 20, 20, 3, 2.0, 3, 6, {'W', 'A', 'S', 'D'}, 'W, A, S, D only')
         print("結果: ", success)
     end, false)
 
     RegisterCommand('testrhythm', function()
-        local result = exports['glitch-minigames']:StartCircuitRhythm(4, {'A','S','D','F'}, 150, 800, 15, "normal", 5, 3)
+        local result = exports[GM_RES]:StartCircuitRhythm(4, {'A','S','D','F'}, 150, 800, 15, "normal", 5, 3)
         print("結果: ", result)
     end, false)    
     
     RegisterCommand('testvarhack', function()
-        local success = exports['glitch-minigames']:StartVarHack(5, 25) -- 5 blocks, speed 25
+        local success = exports[GM_RES]:StartVarHack(5, 25) -- 5 blocks, speed 25
         print("結果: ", success)
     end, false)    
     
     RegisterCommand('testmemory', function()
-        local success = exports['glitch-minigames']:StartMemoryGame(5, 8, 3, 3000) -- 5x5 grid, 8 squares, 3 rounds, 3s show time
+        local success = exports[GM_RES]:StartMemoryGame(5, 8, 3, 3000) -- 5x5 grid, 8 squares, 3 rounds, 3s show time
         print("メモリーゲーム結果: ", success)
     end, false)    
       
     RegisterCommand('testsequencememory', function()
-        local success = exports['glitch-minigames']:StartSequenceMemoryGame(4, 5, 3, 1000, 300) -- 4x4 grid, max 5 rounds, 3 wrong presses, 1s show time, 300ms between
+        local success = exports[GM_RES]:StartSequenceMemoryGame(4, 5, 3, 1000, 300) -- 4x4 grid, max 5 rounds, 3 wrong presses, 1s show time, 300ms between
         print("シーケンスメモリー結果: ", success)
     end, false)
     
     RegisterCommand('testverbalmemory', function()
-        local result = exports['glitch-minigames']:StartVerbalMemoryGame(3, 20, 5000) -- 3 strikes, 20 words, 5s per word
+        local result = exports[GM_RES]:StartVerbalMemoryGame(3, 20, 5000) -- 3 strikes, 20 words, 5s per word
         print("言語記憶結果: 成功:", result.success, "スコア:", result.score, "ストライク:", result.strikes)
     end, false)
 
     RegisterCommand('testnumberedsequence', function()
-        local success = exports['glitch-minigames']:StartNumberedSequenceGame(4, 6, 3, 4000, 10000, 2) -- 4x4 grid, 6 numbers, 3 rounds, 4s show time, 10s answer time, 2 wrong presses allowed
+        local success = exports[GM_RES]:StartNumberedSequenceGame(4, 6, 3, 4000, 10000, 2) -- 4x4 grid, 6 numbers, 3 rounds, 4s show time, 10s answer time, 2 wrong presses allowed
         print("数列記憶結果: ", success)
     end, false)
 
     RegisterCommand('testsymbolsearch_letters', function()
-        local success = exports['glitch-minigames']:StartSymbolSearchGame(8, 1000, 30000, 3, 3, "letters") -- 8x8 grid, shift every 1s, 30s time limit, key length 3-3, letters
+        local success = exports[GM_RES]:StartSymbolSearchGame(8, 1000, 30000, 3, 3, "letters") -- 8x8 grid, shift every 1s, 30s time limit, key length 3-3, letters
         print("シンボルスキャン結果: ", success)
     end, false)
 
     RegisterCommand('testsymbolsearch_symbols', function()
-        local success = exports['glitch-minigames']:StartSymbolSearchGame(8, 1000, 30000, 3, 3, "symbols") -- 8x8 grid, shift every 1s, 30s time limit, key length 3-3, symbols
+        local success = exports[GM_RES]:StartSymbolSearchGame(8, 1000, 30000, 3, 3, "symbols") -- 8x8 grid, shift every 1s, 30s time limit, key length 3-3, symbols
         print("シンボルスキャン（記号）結果: ", success)
     end, false)
 
     RegisterCommand('testsymbolsearch_numbers', function()
-        local success = exports['glitch-minigames']:StartSymbolSearchGame(8, 1000, 30000, 4, 4, "numbers") -- 8x8 grid, shift every 1s, 30s time limit, key length 4-4, numbers
+        local success = exports[GM_RES]:StartSymbolSearchGame(8, 1000, 30000, 4, 4, "numbers") -- 8x8 grid, shift every 1s, 30s time limit, key length 4-4, numbers
         print("シンボルスキャン（数字）結果: ", success)
     end, false)
 
     RegisterCommand('testsymbolsearch_emojis', function()
-        local success = exports['glitch-minigames']:StartSymbolSearchGame(6, 1200, 25000, 3, 3, "emojis") -- 6x6 grid, shift every 1.2s, 25s time limit, key length 3-3, emojis
+        local success = exports[GM_RES]:StartSymbolSearchGame(6, 1200, 25000, 3, 3, "emojis") -- 6x6 grid, shift every 1.2s, 25s time limit, key length 3-3, emojis
         print("シンボルスキャン（絵文字）結果: ", success)
     end, false)
 
     RegisterCommand('testsymbolsearch_dots', function()
-        local success = exports['glitch-minigames']:StartSymbolSearchGame(8, 1000, 30000, 3, 3, "dots") -- 8x8 grid, shift every 1s, 30s time limit, key length 3-3, dots
+        local success = exports[GM_RES]:StartSymbolSearchGame(8, 1000, 30000, 3, 3, "dots") -- 8x8 grid, shift every 1s, 30s time limit, key length 3-3, dots
         print("シンボルスキャン（ドット）結果: ", success)
     end, false)
 
     RegisterCommand('testpipepressure', function()
-        local success = exports['glitch-minigames']:StartPipePressureGame(6, 30000) -- 6x6 grid, 30 seconds
+        local success = exports[GM_RES]:StartPipePressureGame(6, 30000) -- 6x6 grid, 30 seconds
         print("パイプ圧結果: ", success)
     end, false)
 
     RegisterCommand('testpairs', function()
-        local success = exports['glitch-minigames']:StartPairsGame(4, nil, 0) -- 4x4 grid, 2min default time, no attempt limit
+        local success = exports[GM_RES]:StartPairsGame(4, nil, 0) -- 4x4 grid, 2min default time, no attempt limit
         print("ペアマッチ結果: ", success)
     end, false)
 
     RegisterCommand('testmemorycolors', function()
-        local success = exports['glitch-minigames']:StartMemoryColorsGame(5, 5000, 10000, 3) -- 5x5 grid, 5s memorize, 10s answer, 3 rounds
+        local success = exports[GM_RES]:StartMemoryColorsGame(5, 5000, 10000, 3) -- 5x5 grid, 5s memorize, 10s answer, 3 rounds
         print("カラーメモリ結果: ", success)
     end, false)
 
     RegisterCommand('testuntangle', function()
-        local success = exports['glitch-minigames']:StartUntangleGame(8, 60000) -- 8 nodes, 60 seconds
+        local success = exports[GM_RES]:StartUntangleGame(8, 60000) -- 8 nodes, 60 seconds
         print("線ほどき結果: ", success)
     end, false)
 
     RegisterCommand('testfingerprint', function()
-        local success = exports['glitch-minigames']:StartFingerprintGame(30000, true, true) -- 30 seconds, show aligned count, show correct indicator
+        local success = exports[GM_RES]:StartFingerprintGame(30000, true, true) -- 30 seconds, show aligned count, show correct indicator
         print("指紋スキャナ結果: ", success)
     end, false)
 
     RegisterCommand('testfingerprinthard', function()
-        local success = exports['glitch-minigames']:StartFingerprintGame(30000, false, false) -- 30 seconds, no hints
+        local success = exports[GM_RES]:StartFingerprintGame(30000, false, false) -- 30 seconds, no hints
         print("指紋スキャナ結果: ", success)
     end, false)
 
     RegisterCommand('testcodecrack', function()
-        local success = exports['glitch-minigames']:StartCodeCrackGame(60000, 4, 6) -- 60 seconds, 4 digits, 6 attempts
+        local success = exports[GM_RES]:StartCodeCrackGame(60000, 4, 6) -- 60 seconds, 4 digits, 6 attempts
         print("コード解析結果: ", success)
     end, false)
 
     RegisterCommand('testwordcrack', function()
-        local success = exports['glitch-minigames']:StartWordCrackGame(120000, 5, 6) -- 120 seconds, 5 letters, 6 attempts
+        local success = exports[GM_RES]:StartWordCrackGame(120000, 5, 6) -- 120 seconds, 5 letters, 6 attempts
         print("単語解析結果: ", success)
     end, false)
 
     RegisterCommand('testbalance', function()
-        local success = exports['glitch-minigames']:StartBalanceGame(10000, 3, 8, 30, 25, 2, 1000) -- 10s, driftSpeed 3, sensitivity 8, greenZoneWidth 30, yellowZoneWidth 25, driftRandomness 2, maxDangerTime 1s
+        local success = exports[GM_RES]:StartBalanceGame(10000, 3, 8, 30, 25, 2, 1000) -- 10s, driftSpeed 3, sensitivity 8, greenZoneWidth 30, yellowZoneWidth 25, driftRandomness 2, maxDangerTime 1s
         print("バランス結果: ", success)
     end, false)
 
     RegisterCommand('testaimtest', function()
-        local success = exports['glitch-minigames']:StartAimTestGame(30000, 10, 1500, 60, true, 5, 0) -- 30s, 10 targets, 1.5s lifetime, 60px size, shrink, 5 max misses, no time penalty
+        local success = exports[GM_RES]:StartAimTestGame(30000, 10, 1500, 60, true, 5, 0) -- 30s, 10 targets, 1.5s lifetime, 60px size, shrink, 5 max misses, no time penalty
         print("エイムテスト結果: ", success)
     end, false)
 
     RegisterCommand('testcircleclick', function()
-        local success = exports['glitch-minigames']:StartCircleClickGame(5, 1, 45, 3, 0.15, true, {'W', 'A', 'S', 'D'}) -- 5 rounds, speed 1, 45 degree zone, 3 max failures, 0.15 speed increase, randomize direction, keys W,A,S,D
+        local success = exports[GM_RES]:StartCircleClickGame(5, 1, 45, 3, 0.15, true, {'W', 'A', 'S', 'D'}) -- 5 rounds, speed 1, 45 degree zone, 3 max failures, 0.15 speed increase, randomize direction, keys W,A,S,D
         print("サークルクリック結果: ", success)
     end, false)
 
     RegisterCommand('testlockpick', function()
-        local success = exports['glitch-minigames']:StartLockpickGame(3, 30, 2, 40, 500) -- 3 rounds, 30 degree sweet spot, 2 max failures, 40 degree shake range, 500ms hold time
+        local success = exports[GM_RES]:StartLockpickGame(3, 30, 2, 40, 500) -- 3 rounds, 30 degree sweet spot, 2 max failures, 40 degree shake range, 500ms hold time
         print("ロックピック結果: ", success)
     end, false)
 
     RegisterCommand('testbarhit', function()
-        local success = exports['glitch-minigames']:StartBarHitGame('E', 3, 55, 20, nil, 3, 30000) -- key E, 3 rounds, speed 55, zone 20%, random zone, 3 max failures, 30s
+        local success = exports[GM_RES]:StartBarHitGame('E', 3, 55, 20, nil, 3, 30000) -- key E, 3 rounds, speed 55, zone 20%, random zone, 3 max failures, 30s
         print("バーヒット結果: ", success)
     end, false)
 
     RegisterCommand('testskillcheck', function()
-        local success = exports['glitch-minigames']:StartSkillCheckGame({'E','F','R','D'}, 65, 15000, 18, 5, 1, true) -- 4 rounds, speed 65, 15s, normal zone 18%, perfect 5%, 1 max failure
+        local success = exports[GM_RES]:StartSkillCheckGame({'E','F','R','D'}, 65, 15000, 18, 5, 1, true) -- 4 rounds, speed 65, 15s, normal zone 18%, perfect 5%, 1 max failure
         print("スキルチェック結果: ", success)
     end, false)
 
     RegisterCommand('testnumberup', function()
-        local success = exports['glitch-minigames']:StartNumberUpGame(20, 30000, 4, 3) -- 20 numbers, 30s, 4 columns, 3 max mistakes
+        local success = exports[GM_RES]:StartNumberUpGame(20, 30000, 4, 3) -- 20 numbers, 30s, 4 columns, 3 max mistakes
         print("ナンバーアップ結果: ", success)
     end, false)
 
     RegisterCommand('testcomboinput', function()
-        local success = exports['glitch-minigames']:StartComboInputGame(3, 4, 6, 2, 1) -- 3 rounds, 4 arrows (grows by 1), 6s per combo, 2 failures
+        local success = exports[GM_RES]:StartComboInputGame(3, 4, 6, 2, 1) -- 3 rounds, 4 arrows (grows by 1), 6s per combo, 2 failures
         print("コンボ入力結果: ", success)
     end, false)
 
     RegisterCommand('testholdzone', function()
-        local success = exports['glitch-minigames']:StartHoldZoneGame('E', 3, 18, 18, 5, 2) -- key E, 3 rounds, speed 18, zone 18%, perfect 5%, 2 failures
+        local success = exports[GM_RES]:StartHoldZoneGame('E', 3, 18, 18, 5, 2) -- key E, 3 rounds, speed 18, zone 18%, perfect 5%, 2 failures
         print("ホールドゾーン結果: ", success)
     end, false)
 
     RegisterCommand('testwireconnect', function()
-        local success = exports['glitch-minigames']:StartWireConnectGame(4, 0) -- 4 wires, no time limit
+        local success = exports[GM_RES]:StartWireConnectGame(4, 0) -- 4 wires, no time limit
         print("ワイヤー接続結果: ", success)
     end, false)
 
     RegisterCommand('testsimonsays', function()
-        local success = exports['glitch-minigames']:StartSimonSaysGame(5, 550, 0, 1) -- 5 rounds, 550ms flash, no limit, 1 mistake
+        local success = exports[GM_RES]:StartSimonSaysGame(5, 550, 0, 1) -- 5 rounds, 550ms flash, no limit, 1 mistake
         print("シグナル同期結果: ", success)
     end, false)
 end

@@ -234,7 +234,7 @@ end)
 if config.DebugCommands then 
     RegisterCommand("testdatacrack", function(source, args, rawCommand)
         local difficulty = tonumber(args[1]) or 3
-        local success = exports['glitch-minigames']:StartDataCrack(difficulty)
+        local success = exports[GetCurrentResourceName()]:StartDataCrack(difficulty)
         
         if success then
             print("[datacrack] ハッキング成功")

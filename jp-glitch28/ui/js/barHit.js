@@ -243,7 +243,7 @@ let barHitGame = {
             if (self._gen !== gen) return;
             $('#bar-hit-container').fadeOut(500, function() {
                 if (self._gen !== gen) return;
-                $.post('https://glitch-minigames/barHitResult', JSON.stringify(resultData));
+                $.post('https://' + GetParentResourceName() + '/barHitResult', JSON.stringify(resultData));
             });
         }, 700);
     },

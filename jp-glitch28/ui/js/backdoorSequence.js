@@ -199,7 +199,7 @@
         
         updateSequenceProgress();
         
-        fetch('https://glitch-minigames/sequenceResult', {
+        fetch('https://' + GetParentResourceName() + '/sequenceResult', {
             method: 'POST',
             body: JSON.stringify({ success: true })
         });
@@ -217,7 +217,7 @@
         
         $('.sequence-attempt[data-attempt="' + (currentStage + 1) + '"] .attempt-indicator').addClass('failure');
         
-        fetch('https://glitch-minigames/sequenceResult', {
+        fetch('https://' + GetParentResourceName() + '/sequenceResult', {
             method: 'POST',
             body: JSON.stringify({ success: false })
         });

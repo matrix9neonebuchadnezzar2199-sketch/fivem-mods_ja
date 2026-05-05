@@ -375,7 +375,7 @@ var WordCrack = (function() {
         playSound(success ? 'sound-success' : 'sound-failure');
         
         setTimeout(function() {
-            $.post('https://glitch-minigames/wordCrackResult', JSON.stringify({ 
+            $.post('https://' + GetParentResourceName() + '/wordCrackResult', JSON.stringify({ 
                 success: success,
                 attempts: attempts
             }));
@@ -398,7 +398,7 @@ var WordCrack = (function() {
         $('.word-crack-result').remove();
         
         $('#word-crack-container').removeClass('active').fadeOut(300, function() {
-            $.post('https://glitch-minigames/wordCrackClose', JSON.stringify({}));
+            $.post('https://' + GetParentResourceName() + '/wordCrackClose', JSON.stringify({}));
         });
     }
 
