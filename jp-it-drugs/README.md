@@ -55,14 +55,20 @@ ensure jp-it-drugs
 
 `it_bridge` 側でさらに `ox_lib` 等が必要な場合は、F8 コンソールに `Could not find dependency ... for resource it_bridge` と出ます。その依存も同様に **より前の行**に `ensure` してください。
 
+### データベース（自動作成）
+
+**既定では手動インポートは不要です。** リソース起動時に `server/sv_setupdatabase.lua` が `it-drugs.sql` と同じ `CREATE TABLE IF NOT EXISTS` を oxmysql 経由で実行し、`drug_plants` と `drug_processing` を用意します。コンソールに `[jp-it-drugs] データベーステーブルを確認しました` と出れば成功です。
+
+- **手動で流したい場合**（バックアップ復元・DDL をサーバーから禁止しているホスト等）: `it-drugs.sql` をインポートし、`shared/config.lua` の **`Config.ManualDatabaseSetup = true`** にすると自動作成をスキップします。
+- **自動作成が繰り返し失敗する場合**: `ensure oxmysql` が先であること、DB ユーザーに CREATE 権限があること、F8 / サーバーログのエラーを確認してください。
+
 ### 手順（チェックリスト）
 
 1. 本フォルダ `jp-it-drugs/` を `resources/[jp-mods]/` に配置します。
 2. 上記どおり **`it_bridge` を Tebex から入手し、同名フォルダで配置**します。
-3. `it-drugs.sql` をデータベースにインポートします（未実行だと起動は通ってもプレイ時に DB エラーになります）。
-4. `server.cfg` に依存どおりの順で `ensure` を追加します（**`it_bridge` は `jp-it-drugs` より前**）。
-5. `items/items.lua` を参考に、使用しているインベントリへアイテム定義（種・ドラッグ・肥料など）を追加します。画像は `items/img/` のものを利用してください。
-6. `shared/config.lua` で挙動を調整します。
+3. `server.cfg` に依存どおりの順で `ensure` を追加します（**`oxmysql` → `it_bridge` → `jp-it-drugs`** など。`it_bridge` は `jp-it-drugs` より前）。
+4. `items/items.lua` を参考に、使用しているインベントリへアイテム定義（種・ドラッグ・肥料など）を追加します。画像は `items/img/` のものを利用してください。
+5. `shared/config.lua` で挙動を調整します（DB を手動のみにする場合はここで `ManualDatabaseSetup` を変更）。
 
 txAdmin 等で反映後、`refresh` → `restart jp-it-drugs`（またはサーバー再起動）で確認してください。
 
@@ -77,6 +83,7 @@ txAdmin 等で反映後、`refresh` → `restart jp-it-drugs`（またはサー�
 - `locales/ja.lua` を新規追加（全UI文字列の日本語訳）
 - `shared/config.lua` の `Config.Language` を `'ja'` に変更
 - `README.md` を日本語版に差し替え（原文は `README.en.md` として保持）
+- DB: `sv_setupdatabase.lua` を `MySQL.query.await` で同期実行し、テーブル未作成のまま `DatabaseSetuped` が立つ競合を解消。`fxmanifest` で DB セットアップを先に読み込み
 
 イベント名（`it-drugs:client:〜` など）はオリジナルを維持しています。サーバー上で原作 `it-drugs` と同時起動すると衝突するため、**どちらか一方のみを `ensure` してください**。
 

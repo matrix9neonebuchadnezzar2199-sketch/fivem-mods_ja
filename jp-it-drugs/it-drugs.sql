@@ -1,3 +1,4 @@
+-- 手動インポート用（phpMyAdmin 等）。通常はサーバー起動時に sv_setupdatabase.lua が同じ定義で自動作成します。
 -- テーブル drug_plants（栽培データ）
 CREATE TABLE IF NOT EXISTS drug_plants (
     id VARCHAR(11) NOT NULL, PRIMARY KEY(id),

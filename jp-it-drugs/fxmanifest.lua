@@ -40,6 +40,7 @@ client_scripts {
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
 
+    'server/sv_setupdatabase.lua',
     'server/sv_admin.lua',
     'server/sv_dealer.lua',
     'server/sv_planting.lua',
@@ -48,7 +49,6 @@ server_scripts {
     'server/sv_usableitems.lua',
     'server/sv_webhooks.lua',
     'server/sv_versioncheck.lua',
-    'server/sv_setupdatabase.lua'
 }
 
 files = {

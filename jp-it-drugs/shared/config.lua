@@ -568,7 +568,8 @@ Config.BlacklistPeds = {
     デバッグ用。開発時のみ true にするとログが増える。
 ]]
 Config.ManualZoneChecker = false -- true にすると自動ゾーンチェッカーを有効（原作のコメント表記どおり）
-Config.ManualDatabaseSetup = false -- true で DB の自動セットアップ・チェックを無効化
+-- false: 起動時に it-drugs.sql 相当の CREATE TABLE を自動実行（推奨）。true: 自動作成しない（手動インポートのみ・DDL 禁止ホスト向け）
+Config.ManualDatabaseSetup = false
 
 Config.EnableVersionCheck = true -- バージョンチェックを有効にするか
 Config.Branch = 'main' -- 参照ブランチ: 'master' または 'development' など
