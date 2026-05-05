@@ -12,10 +12,11 @@
 
 ## ステップ1: ファイルの配置
 
-このリポジトリを `H:\CURSOR\Dev\fivem-mods_ja` などに置いている場合、サーバーへコピーするのは **`jp-deliveryjobv2/nek_deliveryjobV2`** フォルダ全体です。
+このリポジトリを `H:\CURSOR\Dev\fivem-mods_ja` などに置いている場合、サーバーへコピーするのは **`nek_deliveryjobV2` フォルダ**（`jp-deliveryjobv2` の**内側**）です。
 
-- コピー先例: `server-data/resources/[jobs]/nek_deliveryjobV2/`
-- フォルダ名を変える場合は `server.cfg` の `ensure` 名も合わせて変更してください。
+- 正しい配置例: `server-data/resources/[jobs]/nek_deliveryjobV2/fxmanifest.lua` が存在する
+- **誤り**: `resources/jp-deliveryjobv2/nek_deliveryjobV2/...` のまま `ensure jp-deliveryjobv2` と書く → 親フォルダに `fxmanifest.lua` がないためリソースとして認識されない。`ensure nek_deliveryjobV2` と書くか、`nek_deliveryjobV2` を `resources` の直下（または1段だけのサブフォルダ）に置く
+- フォルダ名をリネームする場合は `server.cfg` の `ensure` 名も同じ名前に合わせる
 
 ## ステップ2: データベース（ESX のみ）
 
@@ -48,6 +49,8 @@ ensure es_extended
 # または ensure qb-core
 ensure nek_deliveryjobV2
 ```
+
+（リソース名は **`nek_deliveryjobV2`**。`jp-deliveryjobv2` ではありません。）
 
 `es_extended` / `qb-core` は環境に合わせて一方だけでよいです。`nek_deliveryjobV2` は依存リソースより後に置いてください。
 

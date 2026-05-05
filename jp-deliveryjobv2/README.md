@@ -25,9 +25,11 @@ FiveM向け配達ジョブスクリプト「nek_deliveryjobV2」の **日本語�
 
 詳細は [INSTALL.md](INSTALL.md) を参照してください。
 
+**よくある間違い**: リポジトリの親フォルダ名は `jp-deliveryjobv2` ですが、サーバーで `ensure` するのは **`nek_deliveryjobV2`** です（`fxmanifest.lua` があるのは内側のフォルダのみ）。`ensure jp-deliveryjobV2` ではリソースが見つかりません。
+
 手順の概要:
 
-1. `nek_deliveryjobV2` フォルダをサーバーの `resources` 配下に配置する
+1. **`nek_deliveryjobV2` フォルダだけ**をサーバーの `resources` 配下に置く（例: `resources/[jobs]/nek_deliveryjobV2/`）。親の `jp-deliveryjobv2` ごとコピーした場合も、中の `nek_deliveryjobV2` がリソースのルートになるようにパスを確認する
 2. ESX の場合: `Data.sql` をデータベースに実行する
 3. `server.cfg` に `ensure ox_lib` / `ensure ox_target` / フレームワーク / `ensure nek_deliveryjobV2` を追加する
 4. サーバー再起動
