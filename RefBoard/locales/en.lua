@@ -1,5 +1,6 @@
 Locales = Locales or {}
 Locales['en'] = {
+  lock_timeout = 'Edit lock released (heartbeat timeout)',
   no_permission = 'You do not have referee permission',
   lock_acquired = 'Edit mode acquired',
   lock_denied = '%s is editing. Ask them to release the lock',

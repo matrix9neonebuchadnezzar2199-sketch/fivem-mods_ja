@@ -1,9 +1,5 @@
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
 local function requireReferee(src)
-  if not canRefer(src) then
+  if not IsPlayerAceAllowed(src, Config.RefereePermission) then
     TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
     return false
   end
@@ -41,47 +37,6 @@ RegisterNetEvent('refboard:session:leave', function()
   local src = source
   TriggerEvent('refboard:presence:remove', src)
   TriggerClientEvent('refboard:session:left', src, { ok = true })
-end)
-
-RegisterNetEvent('refboard:lock:acquire', function(payload)
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-  TriggerEvent('refboard:presence:setMode', src, 'edit')
-  TriggerClientEvent('refboard:lock:ack', src, { ok = true, holder = nil })
-end)
-
-RegisterNetEvent('refboard:lock:release', function()
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-  TriggerEvent('refboard:presence:setMode', src, 'view')
-  TriggerClientEvent('refboard:lock:ack', src, { ok = true })
-end)
-
-RegisterNetEvent('refboard:lock:heartbeat', function()
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-end)
-
-RegisterNetEvent('refboard:team:list', function()
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-  TriggerClientEvent('refboard:team:list:ack', src, { teams = {} })
-end)
-
-RegisterNetEvent('refboard:match:list', function(payload)
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-  TriggerClientEvent('refboard:match:list:ack', src, { matches = {} })
 end)
 
 RegisterNetEvent('refboard:match:get', function(payload)

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
@@ -7,14 +8,36 @@ const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 
+const showLockDialog = ref(false)
+const lockPeerName = ref('')
+
 async function goEdit() {
-  await session.enterEdit()
-  await router.push({ name: 'main' })
+  const r = await session.enterEdit()
+  if (r.ok) {
+    await router.push({ name: 'matches' })
+    return
+  }
+  if (r.holder?.name) {
+    lockPeerName.value = r.holder.name
+  } else {
+    lockPeerName.value = t('launcher.unknown_editor')
+  }
+  showLockDialog.value = true
 }
 
 async function goView() {
   await session.enterView()
-  await router.push({ name: 'main' })
+  await router.push({ name: 'matches' })
+}
+
+async function openAsViewFromDialog() {
+  showLockDialog.value = false
+  await session.enterView()
+  await router.push({ name: 'matches' })
+}
+
+function closeDialog() {
+  showLockDialog.value = false
 }
 </script>
 
@@ -22,7 +45,7 @@ async function goView() {
   <div class="flex min-h-full flex-col items-center justify-center gap-6 p-8">
     <div class="text-center">
       <h1 class="text-2xl font-bold text-slate-50">{{ t('app.title') }}</h1>
-      <p class="mt-2 text-sm text-slate-400">RefBoard v0.1.1</p>
+      <p class="mt-2 text-sm text-slate-400">RefBoard v0.2.0</p>
     </div>
     <div class="flex w-full max-w-md flex-col gap-3">
       <button
@@ -39,6 +62,25 @@ async function goView() {
       >
         {{ t('launcher.view_mode') }}
       </button>
+    </div>
+
+    <div
+      v-if="showLockDialog"
+      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
+      @click.self="closeDialog"
+    >
+      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('launcher.lock_title') }}</h2>
+        <p class="mb-4 text-sm text-slate-400">{{ t('launcher.lock_body', { name: lockPeerName }) }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300" @click="closeDialog">
+            {{ t('launcher.lock_back') }}
+          </button>
+          <button type="button" class="rounded-lg bg-warning/90 px-3 py-2 text-sm font-semibold text-slate-900" @click="openAsViewFromDialog">
+            {{ t('launcher.lock_open_view') }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

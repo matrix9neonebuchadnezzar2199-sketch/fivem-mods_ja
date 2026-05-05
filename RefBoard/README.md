@@ -25,7 +25,7 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
 ## インストール
 
 1. 本フォルダを `resources/[local]/RefBoard` などに配置。
-2. MySQL で `sql/install.sql` を実行。
+2. MySQL で `sql/install.sql` を実行（開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チームを投入推奨）。
 3. `server.cfg` に `ensure oxmysql` のあと `ensure RefBoard`。
 4. 審判用プレイヤーに `add_ace identifier.license:xxxxxxxx refboard.referee allow` 等を付与。
 
@@ -53,7 +53,9 @@ npm run dev
 
 ## ステータス
 
-**v0.1.1** — プレゼンス（ツール接続人数・A 案）と設計書 `docs/04_design_mockup.md`、試合メタ列（`match_name` / `venue` / `kickoff_time`）。既存 DB は `sql/migration_001_match_meta.sql` を参照。
+**v0.2.0** — 試合一覧・作成、`MatchDetail` モック画面、編集ロック本番配線、オートセーブ表示・`match_drafts` 保存。スプリント記録: `docs/sprints/sprint_02.md`。
+
+**v0.1.1** — プレゼンス（A 案）、設計書 04、試合メタ列。
 
 **v0.1.0** — 初回スキャフォールド。
 

@@ -12,7 +12,12 @@
   "launcher": {
     "edit_mode": "Match control (edit)",
     "view_mode": "View only",
-    "currently_editing": "{name} is editing"
+    "currently_editing": "{name} is editing",
+    "lock_title": "Could not acquire edit lock",
+    "lock_body": "{name} is editing. Open in view-only mode?",
+    "lock_open_view": "Open as view-only",
+    "lock_back": "Back",
+    "unknown_editor": "Another user"
   },
   "sidebar": {
     "team_manage": "Teams",
@@ -66,5 +71,43 @@
     "edit_reason": "Reason (optional)",
     "edited_by": "Editor: {name}",
     "history": "Score history"
+  },
+  "autosave": {
+    "saving": "Saving...",
+    "saved_seconds": "Auto-saved {n}s ago",
+    "saved_minutes": "Auto-saved {n}m ago",
+    "error": "Save failed",
+    "retry": "Retry"
+  },
+  "match_list": {
+    "title": "Matches",
+    "new": "+ New match",
+    "filter": "Status",
+    "all": "All",
+    "draft": "Draft",
+    "finished": "Finished",
+    "cancelled": "Cancelled",
+    "col_date": "Date",
+    "col_teams": "Fixture",
+    "col_score": "Score",
+    "col_status": "Status",
+    "col_actions": "Actions",
+    "edit": "Edit",
+    "detail": "Details",
+    "empty": "No matches yet. Seed teams in MySQL, then create a match."
+  },
+  "create_match": {
+    "title": "New match",
+    "team1": "Home team",
+    "team2": "Away team",
+    "select": "Select…",
+    "match_name": "Match name (optional)",
+    "venue": "Venue (optional)",
+    "date": "Date",
+    "kickoff": "Kickoff (optional)",
+    "submit": "Create"
+  },
+  "shell": {
+    "online": "Online"
   }
 }

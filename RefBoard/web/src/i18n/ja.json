@@ -12,7 +12,12 @@
   "launcher": {
     "edit_mode": "試合管理（編集）",
     "view_mode": "閲覧モード",
-    "currently_editing": "{name} さんが編集中"
+    "currently_editing": "{name} さんが編集中",
+    "lock_title": "編集ロックを取得できませんでした",
+    "lock_body": "{name} さんが編集中です。閲覧モードで開きますか？",
+    "lock_open_view": "閲覧モードで開く",
+    "lock_back": "戻る",
+    "unknown_editor": "他のユーザー"
   },
   "sidebar": {
     "team_manage": "チーム管理",
@@ -66,5 +71,43 @@
     "edit_reason": "変更理由（任意）",
     "edited_by": "編集者: {name}",
     "history": "編集履歴"
+  },
+  "autosave": {
+    "saving": "保存中...",
+    "saved_seconds": "自動保存: {n}秒前",
+    "saved_minutes": "自動保存: {n}分前",
+    "error": "保存に失敗しました",
+    "retry": "再試行"
+  },
+  "match_list": {
+    "title": "試合一覧",
+    "new": "+ 新しい試合を作成",
+    "filter": "ステータス",
+    "all": "すべて",
+    "draft": "編集中",
+    "finished": "終了",
+    "cancelled": "キャンセル",
+    "col_date": "日付",
+    "col_teams": "対戦",
+    "col_score": "スコア",
+    "col_status": "状態",
+    "col_actions": "操作",
+    "edit": "編集",
+    "detail": "詳細",
+    "empty": "試合がありません。チームを登録してから作成してください。"
+  },
+  "create_match": {
+    "title": "新しい試合",
+    "team1": "ホームチーム",
+    "team2": "アウェイチーム",
+    "select": "選択してください",
+    "match_name": "試合名（任意）",
+    "venue": "会場（任意）",
+    "date": "日付",
+    "kickoff": "開始時刻（任意）",
+    "submit": "作成"
+  },
+  "shell": {
+    "online": "接続中"
   }
 }

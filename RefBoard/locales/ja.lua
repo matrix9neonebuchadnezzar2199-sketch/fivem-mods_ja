@@ -1,5 +1,6 @@
 Locales = Locales or {}
 Locales['ja'] = {
+  lock_timeout = '編集ロックがタイムアウトで解放されました',
   no_permission = '審判権限がありません',
   lock_acquired = '編集モードを取得しました',
   lock_denied = '%s さんが編集中です。連絡して終了してもらってください',

@@ -42,6 +42,26 @@ RegisterNetEvent('refboard:match:checkResume:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:checkResume:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:team:list:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:list:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:match:list:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:list:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:match:create:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:create:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:lock:acquire:result', function(payload)
+  SendNUIMessage({ type = 'refboard:lock:acquire:result', payload = payload })
+end)
+
+RegisterNetEvent('refboard:autosave:saved', function(payload)
+  SendNUIMessage({ type = 'refboard:autosave:saved', payload = payload })
+end)
+
 RegisterNetEvent('refboard:presence:update', function(payload)
   SendNUIMessage({ type = 'refboard:presence:update', payload = payload })
 end)
