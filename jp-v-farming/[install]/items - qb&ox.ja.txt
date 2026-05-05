@@ -1,0 +1,184 @@
+=========================================================
+jp-v-farming アイテム定義（日本語版）
+原作: Virgildev/v-farming (MIT)
+=========================================================
+
+【インストール手順】
+
+■ ox_inventory を使う場合
+  1) 以下「Ox:」ブロックの 14 アイテムを
+     ox_inventory/data/items.lua に追記してください。
+  2) [install]/item imgs/*.png を ox_inventory/web/images/ にコピー。
+  3) ox_inventory を refresh; restart。
+
+■ qb-inventory を使う場合
+  1) 以下「qb_inventory:」ブロックを
+     qb-core/shared/items.lua の return { ... } 内に追記。
+  2) item imgs/*.png を qb-inventory/html/images/ にコピー。
+  3) qb-core を refresh; restart。
+
+注意: 14 番目の milk の行末はカンマなしで終わる必要があります
+（テーブル末尾のため）。コピー後の構文に注意してください。
+
+=========================================================
+
+Ox:
+
+        ["apple"] = {
+                label = "リンゴ",
+                weight = 500,
+                stack = true,
+                close = true,
+                description = "シャキッとした食感の瑞々しい赤いリンゴ。",
+                client = {
+                        image = "apple.png",
+                }
+        },
+        ["pear"] = {
+                label = "洋ナシ",
+                weight = 400,
+                stack = true,
+                close = true,
+                description = "ほんのり粒状感のある甘い洋ナシ。",
+                client = {
+                        image = "pear.png",
+                }
+        },
+        ["cherry"] = {
+                label = "サクランボ",
+                weight = 30,
+                stack = true,
+                close = true,
+                description = "小ぶりで丸く、果汁たっぷり。",
+                client = {
+                        image = "cherry.png",
+                }
+        },
+        ["peach"] = {
+                label = "桃",
+                weight = 300,
+                stack = true,
+                close = true,
+                description = "柔らかくジューシーで甘い桃。",
+                client = {
+                        image = "peach.png",
+                }
+        },
+        ["banana"] = {
+                label = "バナナ",
+                weight = 200,
+                stack = true,
+                close = true,
+                description = "甘くてクリーミーな黄色い果実。",
+                client = {
+                        image = "banana.png",
+                }
+        },
+        ["orange"] = {
+                label = "オレンジ",
+                weight = 300,
+                stack = true,
+                close = true,
+                description = "甘酸っぱい柑橘の代表格。",
+                client = {
+                        image = "orange.png",
+                }
+        },
+        ["strawberry"] = {
+                label = "イチゴ",
+                weight = 50,
+                stack = true,
+                close = true,
+                description = "甘くて瑞々しい真っ赤な果実。",
+                client = {
+                        image = "strawberry.png",
+                }
+        },
+        ["blueberry"] = {
+                label = "ブルーベリー",
+                weight = 40,
+                stack = true,
+                close = true,
+                description = "小粒で丸く、ほのかな甘さの青い果実。",
+                client = {
+                        image = "blueberry.png",
+                }
+        },
+        ["grape"] = {
+                label = "ブドウ",
+                weight = 50,
+                stack = true,
+                close = true,
+                description = "甘くてジューシーな房成りの果実。",
+                client = {
+                        image = "grape.png",
+                }
+        },
+        ["kiwi"] = {
+                label = "キウイ",
+                weight = 100,
+                stack = true,
+                close = true,
+                description = "甘酸っぱい緑色のトロピカルフルーツ。",
+                client = {
+                        image = "kiwi.png",
+                }
+        },
+        ["lemon"] = {
+                label = "レモン",
+                weight = 80,
+                stack = true,
+                close = true,
+                description = "酸味の強い爽やかな黄色い柑橘。",
+                client = {
+                        image = "lemon.png",
+                }
+        },
+        ["mango"] = {
+                label = "マンゴー",
+                weight = 600,
+                stack = true,
+                close = true,
+                description = "濃厚な甘さの南国フルーツ。",
+                client = {
+                        image = "mango.png",
+                }
+        },
+        ["watermelon"] = {
+                label = "スイカ",
+                weight = 1000,
+                stack = true,
+                close = true,
+                description = "果汁たっぷりで爽やかな夏の果実。",
+                client = {
+                        image = "watermelon.png",
+                }
+        },
+        ["milk"] = {
+                label = "牛乳",
+                weight = 1000,
+                stack = true,
+                close = true,
+                description = "搾りたての新鮮な牛乳。",
+                client = {
+                        image = "milk.png",
+                }
+        },
+
+qb_inventory:
+
+-- 果物・乳製品（jp-v-farming）
+apple = { name = 'apple', label = 'リンゴ', weight = 500, type = 'item', image = 'apple.png', unique = false, useable = false, shouldClose = true, description = 'シャキッとした食感の瑞々しい赤いリンゴ。' },
+pear = { name = 'pear', label = '洋ナシ', weight = 400, type = 'item', image = 'pear.png', unique = false, useable = false, shouldClose = true, description = 'ほんのり粒状感のある甘い洋ナシ。' },
+cherry = { name = 'cherry', label = 'サクランボ', weight = 30, type = 'item', image = 'cherry.png', unique = false, useable = false, shouldClose = true, description = '小ぶりで丸く、果汁たっぷり。' },
+peach = { name = 'peach', label = '桃', weight = 300, type = 'item', image = 'peach.png', unique = false, useable = false, shouldClose = true, description = '柔らかくジューシーで甘い桃。' },
+banana = { name = 'banana', label = 'バナナ', weight = 200, type = 'item', image = 'banana.png', unique = false, useable = false, shouldClose = true, description = '甘くてクリーミーな黄色い果実。' },
+orange = { name = 'orange', label = 'オレンジ', weight = 300, type = 'item', image = 'orange.png', unique = false, useable = false, shouldClose = true, description = '甘酸っぱい柑橘の代表格。' },
+strawberry = { name = 'strawberry', label = 'イチゴ', weight = 50, type = 'item', image = 'strawberry.png', unique = false, useable = false, shouldClose = true, description = '甘くて瑞々しい真っ赤な果実。' },
+blueberry = { name = 'blueberry', label = 'ブルーベリー', weight = 40, type = 'item', image = 'blueberry.png', unique = false, useable = false, shouldClose = true, description = '小粒で丸く、ほのかな甘さの青い果実。' },
+grape = { name = 'grape', label = 'ブドウ', weight = 50, type = 'item', image = 'grape.png', unique = false, useable = false, shouldClose = true, description = '甘くてジューシーな房成りの果実。' },
+kiwi = { name = 'kiwi', label = 'キウイ', weight = 100, type = 'item', image = 'kiwi.png', unique = false, useable = false, shouldClose = true, description = '甘酸っぱい緑色のトロピカルフルーツ。' },
+lemon = { name = 'lemon', label = 'レモン', weight = 80, type = 'item', image = 'lemon.png', unique = false, useable = false, shouldClose = true, description = '酸味の強い爽やかな黄色い柑橘。' },
+mango = { name = 'mango', label = 'マンゴー', weight = 600, type = 'item', image = 'mango.png', unique = false, useable = false, shouldClose = true, description = '濃厚な甘さの南国フルーツ。' },
+watermelon = { name = 'watermelon', label = 'スイカ', weight = 1000, type = 'item', image = 'watermelon.png', unique = false, useable = false, shouldClose = true, description = '果汁たっぷりで爽やかな夏の果実。' },
+milk = { name = 'milk', label = '牛乳', weight = 1000, type = 'item', image = 'milk.png', unique = false, useable = false, shouldClose = true, description = '搾りたての新鮮な牛乳。' }

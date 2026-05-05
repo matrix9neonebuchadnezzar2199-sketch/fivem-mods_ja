@@ -23,8 +23,12 @@
 
 1. 本フォルダ `jp-v-farming` をサーバーの `resources` 配下に配置する。
 2. `server.cfg` に `ensure jp-v-farming`（またはフォルダ名に合わせる）を追加する。
-3. `[install]` 以下の物品定義・画像を、利用中のインベントリに合わせて登録する（`items - qb&ox.txt` 参照）。
+3. `[install]` 以下の物品定義・画像を、利用中のインベントリに合わせて登録する（`items - qb&ox.txt` または `items - qb&ox.ja.txt` 参照）。
 4. `config.lua` で座標・価格・農場を調整する。
+
+### アイテム定義（日本語版）
+
+`[install]/items - qb&ox.ja.txt` に日本語ラベル・説明文付きのアイテム定義テンプレートを同梱しています。原本（`items - qb&ox.txt`）の代わりにこちらを使用すると、インベントリ表示が日本語になります。
 
 ## 設定ガイド
 
