@@ -24,7 +24,8 @@ BRIDGE.Framework = "ESX" -- ESX / QB / OX
 
 BRIDGE.Inventory = "ox_inventory" -- ox_inventory, qb_inventory, quasar_inventory
 
-BRIDGE.ESXOld = false -- Change on true when you use old version of ESX
+-- true: 常に esx:getSharedObject（1.1 系）。false: 先に export getSharedObject を試し、無ければイベントで取得（export 無しの ESX でも起動可）
+BRIDGE.ESXOld = false
 
 BRIDGE.Target = "ox_target"  -- ox_target / qb_target
 BRIDGE.UseMarkers = false -- This is for some script where u dont want use target! But not all scripts supports this.

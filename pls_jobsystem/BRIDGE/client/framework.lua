@@ -12,8 +12,16 @@ Framework = {}
 if BRIDGE.Framework == "ESX" then
    if BRIDGE.ESXOld then
       TriggerEvent('esx:getSharedObject', function(obj) Framework = obj end)
-   else 
-      Framework = exports["es_extended"]:getSharedObject()
+   else
+      local ok, obj = pcall(function()
+         return exports["es_extended"]:getSharedObject()
+      end)
+      if ok and obj ~= nil then
+         Framework = obj
+      else
+         print("^3[pls_jobsystem] ESX: exports['es_extended']:getSharedObject が無いため esx:getSharedObject で取得します。^7")
+         TriggerEvent('esx:getSharedObject', function(o) Framework = o end)
+      end
    end
 elseif BRIDGE.Framework == "QB" then
    Framework = exports['qb-core']:GetCoreObject()
