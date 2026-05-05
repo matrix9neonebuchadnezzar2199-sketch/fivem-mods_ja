@@ -37,6 +37,8 @@ phpMyAdmin 等で `nek_deliveryjobV2/Data.sql` を実行する。
 }
 ```
 
+※上記の `payment` は QBCore のジョブグレード給与です。本スクリプトの配達完了報酬は別で、`nek_deliveryjobV2/config/config.lua` の `Config['Delivery']['FinalPayout']`（最小〜最大の乱数）により支給されます。
+
 ## ステップ3: server.cfg
 
 ```cfg
@@ -87,9 +89,9 @@ Config['JobName']   = false    -- 全員OK。配達員ジョブのみなら 'del
 - `Config['EnableWebhook'] = true` と `Config['Webhook']` の URL を確認
 - 本パッケージでは `server/bridge.lua` に `getIdentifiers` を実装済みです（追加作業は通常不要）
 
-### 「車両をスポーンするスペースがありません」
+### スポーン地点の通知（他車が塞いでいる等）
 
-- スポーン地点に他車がいる可能性があります。`Config['Delivery']['Vehicles']['Spawner']['coords']` を調整してください。
+- スポーン地点に他車がいると、通知後に開始に失敗することがあります。`Config['Delivery']['Vehicles']['Spawner']['coords']` を調整するか、付近の車両を移動してください。
 
 ## アップデート
 

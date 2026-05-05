@@ -48,7 +48,7 @@ FiveM向け配達ジョブスクリプト「nek_deliveryjobV2」の **日本語�
 - `Config['JobName']` … `false` で誰でも / `'delivery'` などでジョブ限定
 - `Config['Delivery']['FinalPayout']` … 報酬の最小・最大
 - `Config['Delivery']['Vehicles']['Cars']` … 使用車両
-- `Config['Delivery']['Routes']` … 配達ルート
+- `Config['Delivery']['Routes']` … 配達ルート（推奨: `{ name = "表示名", stops = { vec3(...), ... } }`。旧来の `vec3` 配列のみでも可で、自動的に `ルート N` と化けます）
 - `Config['Locales']` … 表示文言
 
 ## 他リソースからの利用（exports）

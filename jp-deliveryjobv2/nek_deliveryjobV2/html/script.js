@@ -4,6 +4,12 @@ window.addEventListener('message', function (event) {
 
     // ルート開始時：配達リストを生成
     if (data.action === 'START_ROUTE') {
+        const titleEl = document.getElementById('route-header-title');
+        if (titleEl) {
+            const name = data.routeName || '';
+            titleEl.textContent = name ? `配達ルート: ${name}` : '配達ルート';
+        }
+
         const list = document.getElementById('delivery-list');
         list.innerHTML = ''; // 前回のリストをクリア
 
@@ -44,6 +50,10 @@ window.addEventListener('message', function (event) {
     }
     // UI閉鎖
     else if (data.action === 'CLOSE_UI') {
+        const titleEl = document.getElementById('route-header-title');
+        if (titleEl) {
+            titleEl.textContent = '配達ルート';
+        }
         document.getElementById('container').style.display = 'none';
         document.getElementById('delivery-list').innerHTML = '';
     }

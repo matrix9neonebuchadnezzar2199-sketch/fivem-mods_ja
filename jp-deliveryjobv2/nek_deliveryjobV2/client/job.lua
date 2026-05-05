@@ -8,6 +8,18 @@
 --   5. 全配達完了後、本部に帰還 → 車両返却 → 報酬受領
 -- ============================================================
 
+-- ルート構造の正規化（旧形式: vec3 の配列のみ / 新形式: { name, stops } 両対応）
+local function NormalizeDeliveryRoutes()
+    for i, route in ipairs(Config['Delivery']['Routes']) do
+        if route.stops == nil then
+            Config['Delivery']['Routes'][i] = {
+                name = string.format("ルート %d", i),
+                stops = route
+            }
+        end
+    end
+end
+
 Delivery.Functions.StopJob = function()
     -- 業務終了をログに記録し、後片付けを行う
     Bridge.TriggerCallback('nek_delivery:wb', function() end, Config['Locales']['job_finished'],
@@ -106,7 +118,8 @@ Delivery.Functions.NextStop = function()
         Delivery.State.deliveryZoneId = nil
     end
 
-    if Delivery.State.currentStop > #Config['Delivery']['Routes'][Delivery.State.currentRoute] then
+    local routeData = Config['Delivery']['Routes'][Delivery.State.currentRoute]
+    if Delivery.State.currentStop > #routeData.stops then
         Delivery.Functions.ShowNotification(Config.Locales['route_finished'])
         Bridge.TriggerCallback('nek_delivery:wb', function() end, Config.Locales['route_finished_log'],
             Config.Locales['route_completed'], 3447003)
@@ -117,7 +130,7 @@ Delivery.Functions.NextStop = function()
         return
     end
 
-    local destination = Config['Delivery']['Routes'][Delivery.State.currentRoute][Delivery.State.currentStop]
+    local destination = routeData.stops[Delivery.State.currentStop]
     Delivery.Functions.SetBlipRoutes(destination.x, destination.y, destination.z, 1, 27)
     Delivery.Functions.ShowNotification(Config.Locales['next_point'])
 
@@ -278,6 +291,8 @@ Delivery.Functions.StartJob = function()
         return
     end
 
+    NormalizeDeliveryRoutes()
+
     local random = math.random(1, #Config['Delivery']['Vehicles']['Cars'])
 
     -- 荷物運搬アニメーション辞書を読み込み
@@ -323,9 +338,11 @@ Delivery.Functions.StartJob = function()
             Delivery.State.inAnim = true
             Delivery.State.currentRoute = math.random(1, #Config['Delivery']['Routes'])
             Delivery.State.currentStop = 1
+            local routeData = Config['Delivery']['Routes'][Delivery.State.currentRoute]
             SendNUIMessage({
                 action = 'START_ROUTE',
-                amount = #Config['Delivery']['Routes'][Delivery.State.currentRoute]
+                amount = #routeData.stops,
+                routeName = routeData.name or ("ルート " .. tostring(Delivery.State.currentRoute))
             })
             Delivery.Functions.NextStop()
         else
