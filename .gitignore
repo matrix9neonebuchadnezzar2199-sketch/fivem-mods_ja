@@ -14,6 +14,9 @@ desktop.ini
 
 # GitHub 公開リポには含めない（ローカル開発用のみ）
 .cursor/
+# Cursor ルール（.mdc）はリポジトリで共有する
+!.cursor/rules/
+!.cursor/rules/**
 # 各所の docs/ 配下は原則無視（ルート docs/STYLEGUIDE.md と jp-tcgbook/docs は例外）
 docs/*
 !docs/STYLEGUIDE.md
