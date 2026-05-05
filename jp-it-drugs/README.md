@@ -25,17 +25,46 @@ FiveM 向けの本格派ドラッグ経済スクリプトです。植物の栽�
 ## 依存関係
 
 - [ox_lib](https://github.com/overextended/ox_lib)
-- [it_bridge](https://it-scripts.tebex.io/package/6706602)
+- **[it_bridge](https://it-scripts.tebex.io/package/6706602)**（it-scripts 公式。**GitHub では配布されていません**。Tebex で無料ダウンロード可・要アカウント。Discord 参加が求められる場合があります）
 - [oxmysql](https://github.com/overextended/oxmysql)
 - [ox_target](https://github.com/overextended/ox_target) または [qb-target](https://github.com/qbcore-framework/qb-target)（任意）
 
+`it_bridge` は ESX / QBCore / QBox / ND_Core やインベントリの差分を吸収する公式ブリッジです。**フォルダ名を `it_bridge` のままにする必要**があり、他リソースからこの名前で参照されます（`jp-` 接頭辞は付けません）。
+
 ## インストール
 
+### 重要: it_bridge の入手と配置
+
+`jp-it-drugs` を起動するには **`it_bridge` が必須**です。未配置のままだと FiveM が依存解決に失敗し、リソースがロードされません。
+
+1. [it-scripts Tebex（it_bridge）](https://it-scripts.tebex.io/package/6706602) から **無料でダウンロード**します。
+2. 展開したフォルダを **`it_bridge`** という名前のまま `resources/[jp-mods]/it_bridge/`（または運用ポリシーに合わせた `resources/` 配下）に置きます。  
+   **リネーム禁止**（`jp-it-bridge` などにすると `fxmanifest` の依存名と一致しません）。
+
+### server.cfg の `ensure` 順序
+
+依存リソースは **必ず `jp-it-drugs` より前**に起動してください。例:
+
+```
+ensure oxmysql
+ensure ox_lib
+ensure ox_target
+ensure it_bridge
+ensure jp-it-drugs
+```
+
+`it_bridge` 側でさらに `ox_lib` 等が必要な場合は、F8 コンソールに `Could not find dependency ... for resource it_bridge` と出ます。その依存も同様に **より前の行**に `ensure` してください。
+
+### 手順（チェックリスト）
+
 1. 本フォルダ `jp-it-drugs/` を `resources/[jp-mods]/` に配置します。
-2. `it-drugs.sql` をデータベースにインポートします。
-3. `server.cfg` に `ensure jp-it-drugs` を追加します（依存関係 `ox_lib`, `oxmysql`, `it_bridge` の後ろに置いてください）。
-4. `items/items.lua` を参考に、使用しているインベントリへアイテム定義（種・ドラッグ・肥料など）を追加します。画像は `items/img/` のものを利用してください。
-5. `shared/config.lua` で挙動を調整します。
+2. 上記どおり **`it_bridge` を Tebex から入手し、同名フォルダで配置**します。
+3. `it-drugs.sql` をデータベースにインポートします（未実行だと起動は通ってもプレイ時に DB エラーになります）。
+4. `server.cfg` に依存どおりの順で `ensure` を追加します（**`it_bridge` は `jp-it-drugs` より前**）。
+5. `items/items.lua` を参考に、使用しているインベントリへアイテム定義（種・ドラッグ・肥料など）を追加します。画像は `items/img/` のものを利用してください。
+6. `shared/config.lua` で挙動を調整します。
+
+txAdmin 等で反映後、`refresh` → `restart jp-it-drugs`（またはサーバー再起動）で確認してください。
 
 ## 日本語化について
 
