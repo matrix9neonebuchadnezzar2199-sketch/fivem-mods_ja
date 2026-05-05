@@ -54,6 +54,55 @@ const quill = new Quill('#editor', {
     }
 });
 
+/**
+ * Quill 2 は Enter でインライン書式を引き継がない（PR #3428）。
+ * keyboard.addBinding で return false しても「先に動いたバインディング」で処理が止まり当ハンドラが呼ばれないため、
+ * capture 段階の keydown で書式を覚え、text-change で改行を検出したら再適用する。
+ */
+const B2B_PRESERVE_ON_ENTER = ['font', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'size', 'align'];
+let b2bEnterPreserveFormats = null;
+
+quill.root.addEventListener('keydown', function (e) {
+    if (e.isComposing) return;
+    if (e.key === 'Enter') {
+        const range = quill.getSelection();
+        b2bEnterPreserveFormats = range ? quill.getFormat(range) : null;
+    } else {
+        b2bEnterPreserveFormats = null;
+    }
+}, true);
+
+function b2bDeltaLooksLikeEnterOnly(delta) {
+    const ops = delta.ops || [];
+    for (let i = 0; i < ops.length; i++) {
+        const ins = ops[i].insert;
+        if (typeof ins === 'string' && ins.length > 0 && ins !== '\n') {
+            return false;
+        }
+    }
+    return ops.some(function (op) {
+        return op.insert === '\n';
+    });
+}
+
+quill.on('text-change', function (delta, _old, source) {
+    if (source !== 'user' || !b2bEnterPreserveFormats) return;
+    if (!b2bDeltaLooksLikeEnterOnly(delta)) return;
+    const fmt = b2bEnterPreserveFormats;
+    b2bEnterPreserveFormats = null;
+    queueMicrotask(function () {
+        const sel = quill.getSelection(true);
+        if (!sel) return;
+        B2B_PRESERVE_ON_ENTER.forEach(function (key) {
+            const v = fmt[key];
+            if (v === undefined || v === false) return;
+            quill.format(key, v, 'user');
+        });
+        const tb = quill.getModule('toolbar');
+        if (tb && typeof tb.update === 'function') tb.update(sel);
+    });
+});
+
 /** DB からの HTML を Quill の Delta 経由で取り込む（innerHTML 直代入だと font 等の属性が落ちやすい） */
 function b2bLoadEditorHtml(html) {
     const raw = html != null ? String(html) : '';
@@ -74,10 +123,10 @@ function b2bLoadEditorHtml(html) {
     }
 }
 
+/**
+ * getSemanticHTML() はプレゼンテーション用クラス（ql-font-* 等）を落とし、ロック後の再表示でフォントが消えるため使わない。
+ */
 function b2bGetEditorHtml() {
-    if (typeof quill.getSemanticHTML === 'function') {
-        return quill.getSemanticHTML();
-    }
     return quill.root.innerHTML;
 }
 

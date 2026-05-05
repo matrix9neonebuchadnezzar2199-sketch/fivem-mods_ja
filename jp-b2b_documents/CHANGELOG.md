@@ -4,11 +4,18 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.3] — 2026-05-05
+
+### Fixed
+
+- **Save / lock reopen**: `getSemanticHTML()` dropped presentation classes (`ql-font-*`), so fonts still vanished after lock. Save again uses `quill.root.innerHTML` only.
+- **Enter / 改行**: Quill 2 does not carry inline formats across newlines (PR #3428). `keyboard.addBinding` with `return false` never ran (first matching handler stops the chain). Implemented **capture `keydown` on Enter** + **`text-change`** with a strict check that the delta is **Enter-only** (`insert` strings are only `'\n'`), then reapply font/size/color/etc. so paste with newlines does not reuse stale formats.
+
 ## [2.0.3-jp.2] — 2026-05-05
 
 ### Fixed
 
-- Opening a document (including **locked** read-only) now loads HTML with `clipboard.convert({ html })` + `setContents`, so **font** (and other inline formats) round-trip from the DB. Previously `quill.root.innerHTML = …` did not sync Quill’s Delta, so fonts often reverted to default on reopen. Save uses `getSemanticHTML()` when available for consistent output.
+- Opening a document (including **locked** read-only) now loads HTML with `clipboard.convert({ html })` + `setContents`, so **font** (and other inline formats) round-trip from the DB. Previously `quill.root.innerHTML = …` did not sync Quill’s Delta, so fonts often reverted to default on reopen. (Save briefly used `getSemanticHTML`; removed in 2.0.3-jp.3 because it stripped `ql-font-*`.)
 
 ## [2.0.3-jp.1] — 2026-05-05
 
