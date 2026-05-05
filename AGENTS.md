@@ -39,3 +39,6 @@ jp-<mod名>/ ├── fxmanifest.lua ├── config.lua ├── locales/ �
 ## イベント命名規則
 すべてのイベント名は `jp-<mod名>:アクション名` とする。
 例: `jp-taxi:startShift`, `jp-gps-tracker:throwDevice`
+
+## 関連ドキュメント
+- 外部 MOD の日本語化・フォーク配布の判断・作業の型: [CONTRIBUTING_JP.md](CONTRIBUTING_JP.md)
