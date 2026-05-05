@@ -56,7 +56,13 @@ function Bridge.GetPlayer(source)
             return xPlayer.PlayerData.charinfo.firstname ..
                 ' ' .. xPlayer.PlayerData.charinfo.lastname
         end
-        self.addMoney = function(amount) xPlayer.Functions.AddMoney('cash', amount) end
+        local qbAccount = Config['QBPayoutAccount'] or 'cash'
+        if qbAccount ~= 'cash' and qbAccount ~= 'bank' then
+            qbAccount = 'cash'
+        end
+        self.addMoney = function(amount)
+            xPlayer.Functions.AddMoney(qbAccount, amount)
+        end
     end
 
     return self

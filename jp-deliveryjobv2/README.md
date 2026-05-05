@@ -38,6 +38,12 @@ ensure jp-deliveryjobv2
 3. `server.cfg` に `ensure ox_lib` / `ensure ox_target` / フレームワーク / `ensure jp-deliveryjobv2` を追加する
 4. `refresh` のあと `ensure jp-deliveryjobv2`、またはサーバー再起動
 
+## 報酬について（よくある誤解）
+
+- **報酬が入るのは**、全配達後に本部へ戻り、返却地点で **「車両を返却する」** を実行したときだけです。
+- NPC メニューの **「業務を終了」** は途中中断用で、**このときは報酬は出ません**（オリジナル仕様どおり）。
+- **QBCore** では既定で **現金（`cash`）** に加算されます。HUD が銀行だけのサーバーでは増えたように見えないことがあるので、`config/config.lua` の **`Config['QBPayoutAccount']`** を **`'bank'`** に変えて試してください。
+
 ## ゲーム内の流れ
 
 1. マップの **配達センター** ブリップへ向かう

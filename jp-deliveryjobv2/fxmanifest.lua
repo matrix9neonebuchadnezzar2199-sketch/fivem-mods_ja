@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Nekix (日本語化: matrix9neonebuchadnezzar2199)'
 description '高度な配達ジョブスクリプト（日本語版）'
-version '2.1.2-jp'
+version '2.1.3-jp'
 
 dependencies {
     'ox_lib',

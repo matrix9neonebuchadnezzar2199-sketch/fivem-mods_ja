@@ -101,6 +101,11 @@ Config['JobName']   = false    -- 全員OK。配達員ジョブのみなら 'del
 
 - スポーン地点に他車がいると、通知後に開始に失敗することがあります。`Config['Delivery']['Vehicles']['Spawner']['coords']` を調整するか、付近の車両を移動してください。
 
+### 報酬がもらえない（QBCore）
+
+- **車両返却ターゲット**まで完了しているか確認する（メニュー「業務を終了」だけでは支払いなし）。
+- 通知「$○○ を受け取りました」は出たが金が見えない → `config/config.lua` で `Config['QBPayoutAccount'] = 'bank'` にし、銀行残高を確認する。
+
 ## アップデート
 
 `jp-deliveryjobv2` フォルダを差し替えたあと、サーバーで `refresh` / `ensure jp-deliveryjobv2` または再起動してください。
