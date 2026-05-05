@@ -56,6 +56,9 @@ Locales['ja'] = {
     ['FARM_MANGO'] = 'マンゴー農園',
     ['FARM_WATERMELON'] = 'スイカ畑',
     ['FARM_MILK'] = '牧場（搾乳）',
+    -- [E] キー操作 UI
+    ['KEY_HINT_PICK'] = '[E] %s を収穫する',
+    ['KEY_HINT_SELL'] = '[E] 果物を売る',
 }
 
 function _U(key, ...)

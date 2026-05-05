@@ -56,4 +56,6 @@ Locales['en'] = {
     ['FARM_MANGO'] = 'Mango Farm',
     ['FARM_WATERMELON'] = 'Watermelon Farm',
     ['FARM_MILK'] = 'Dairy Farm',
+    ['KEY_HINT_PICK'] = '[E] Pick %s',
+    ['KEY_HINT_SELL'] = '[E] Sell Fruits',
 }

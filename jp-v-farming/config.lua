@@ -49,6 +49,17 @@ Config.SellProgress = 10000
 -- 収穫プログレス時間（ミリ秒）
 Config.PickingProgress = 8000
 
+-- 操作方式
+--   'target' = ox_target のみ（マウス照準）
+--   'key'    = [E] キーのみ
+--   'both'   = ox_target と [E] キーの両方を有効
+Config.InteractionMode = 'both'
+
+-- [E] キー操作の検知範囲（メートル）
+Config.KeyInteractDistance = 3.0
+-- 売却 NPC との [E] 検知範囲（メートル）
+Config.KeySellDistance = 2.5
+
 -- 買取価格（アイテム名 → label は英語のままでも可、表示は labelKey で解決）
 Config.ItemsFarming = {
     ['apple'] = { label = 'Apple', labelKey = 'ITEM_APPLE', price = 4 },
