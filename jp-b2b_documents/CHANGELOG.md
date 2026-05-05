@@ -4,6 +4,13 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.10] — 2026-05-05
+
+### Fixed
+
+- **白紙スタック**: `createItem` フックに加え、配布時 **`Search(..., 'slots', paper_blank)`** で空メタの既存スロットを見つけたら **`AddItem(src, name, 1, nil, slot)`** で枚数を足す（`INV.TryStackBlankPaperOx` / `server.lua`）。
+- **画像ありでロック失敗**: 挿入画像を **最大辺 1280px・JPEG 品質 0.82** に縮小してから埋め込み、NUI の `doAction` JSON が肥大化しすぎないようにした（`ui/script.js`）。
+
 ## [2.0.3-jp.9] — 2026-05-05
 
 ### Fixed

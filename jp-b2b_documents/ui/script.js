@@ -58,6 +58,47 @@ const quill = new Quill('#editor', {
 
 /** FiveM NUI では prompt が効かない／blob URL は保存不能のため、ファイル→data URL で挿入 */
 const B2B_IMAGE_MAX_BYTES = 1800000;
+const B2B_IMAGE_MAX_SIDE = 1280;
+const B2B_IMAGE_JPEG_QUALITY = 0.82;
+
+/** ロック時の doAction JSON が巨大になりすぎて失敗しないよう、挿入前に JPEG 化して縮小 */
+function b2bShrinkImageDataUrl(dataUrl, done) {
+    if (!dataUrl || typeof dataUrl !== 'string' || dataUrl.indexOf('data:') !== 0) {
+        done(dataUrl);
+        return;
+    }
+    const img = new Image();
+    img.onload = function () {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (!w || !h) {
+            done(dataUrl);
+            return;
+        }
+        const scale = Math.min(1, B2B_IMAGE_MAX_SIDE / Math.max(w, h));
+        w = Math.max(1, Math.round(w * scale));
+        h = Math.max(1, Math.round(h * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let out;
+        try {
+            out = canvas.toDataURL('image/jpeg', B2B_IMAGE_JPEG_QUALITY);
+        } catch (e) {
+            out = dataUrl;
+        }
+        done(out || dataUrl);
+    };
+    img.onerror = function () {
+        done(dataUrl);
+    };
+    img.src = dataUrl;
+}
+
 function b2bRegisterImageToolbarHandler() {
     const toolbar = quill.getModule('toolbar');
     if (!toolbar) return;
@@ -75,11 +116,13 @@ function b2bRegisterImageToolbarHandler() {
                 } else {
                     const reader = new FileReader();
                     reader.onload = function (ev) {
-                        const url = ev.target && ev.target.result;
-                        if (!url) return;
-                        const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1), length: 0 };
-                        quill.insertEmbed(range.index, 'image', url, 'user');
-                        quill.setSelection(range.index + 1, 0, 'user');
+                        const raw = ev.target && ev.target.result;
+                        if (!raw) return;
+                        b2bShrinkImageDataUrl(raw, function (url) {
+                            const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+                            quill.insertEmbed(range.index, 'image', url, 'user');
+                            quill.setSelection(range.index + 1, 0, 'user');
+                        });
                     };
                     reader.readAsDataURL(file);
                 }
