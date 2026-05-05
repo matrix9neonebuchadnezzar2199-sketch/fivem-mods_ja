@@ -28,6 +28,7 @@
 | [jp-gacha](jp-gacha/README.md) | ガチャ（NUI・1連/10連・現金支払い） |
 | [jp-gacha2](jp-gacha2/README.md) | ガチャ v2（ox_inventory・管理・NUI カプセル） |
 | [jp-hospital](jp-hospital/README.md) | 病院カルテ整理・薬梱包（NUI 内職・Qbox） |
+| [jp-it-drugs](jp-it-drugs/README.md) | `it-drugs` 日本語化フォーク（栽培・精製・売却・管理者メニュー・GPL-3.0） |
 | [jp-koban](jp-koban/README.md) | 警察向け住宅地巡回パトロール（Qbox・完遂ボーナス） |
 | [jp-LetterCarrier](jp-LetterCarrier/README.md) | 配達ジョブ（NUI・配送車・報酬） |
 | [jp-losmon](jp-losmon/README.md) | 育成型 Los-Mon（クライアント完結・サーバー負荷ほぼなし） |

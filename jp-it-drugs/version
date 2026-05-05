@@ -1,0 +1,4 @@
+{
+    "version": "v1.4.4",
+    "message": "Fix the player job getter for selling (You also have to update the bridge)"
+}
