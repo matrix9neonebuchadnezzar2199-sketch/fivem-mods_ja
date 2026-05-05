@@ -20,6 +20,8 @@ Config.PaperCooldown = 30
 Config.UseOxTarget = true
 
 -- ox_inventory / qb / ESX 側で登録するアイテム名（定義と一致させる）
+-- 白紙は本 MOD が常に空メタ {} で配るため、ox_inventory の items.lua では **stack = true** 推奨（未使用同士がスタックする）。
+-- document は docId 等でメタが個別のため **stack = false** のまま。
 Config.Items = {
     blank = "paper_blank",
     document = "document",

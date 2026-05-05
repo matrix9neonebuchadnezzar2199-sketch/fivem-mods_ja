@@ -4,6 +4,12 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.7] — 2026-05-05
+
+### Changed
+
+- **ドキュメント**: ox_inventory の `paper_blank` 例を **`stack = true`** に変更（本 MOD は白紙を空メタ `{}` のみで付与するため未使用同士がスタック可能）。`document` はメタ個別のため **`stack = false` のまま**。[`config.lua`](./config.lua) に注意書きを追加。
+
 ## [2.0.3-jp.6] — 2026-05-05
 
 ### Fixed

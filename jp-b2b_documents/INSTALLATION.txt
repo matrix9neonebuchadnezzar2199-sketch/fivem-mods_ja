@@ -30,7 +30,8 @@ each block must end with `},` — a bare `}` before the next `['key']` causes a 
     ['paper_blank'] = {
         label = 'Blank Sheet',
         weight = 10,
-        stack = false,
+        -- stack = true: this resource adds blank paper with empty metadata {}, so unused sheets stack.
+        stack = true,
         close = true,
         client = {
             image = 'nui://jp-b2b_documents/web/images/paper.png',
