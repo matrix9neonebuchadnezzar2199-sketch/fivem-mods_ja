@@ -27,6 +27,7 @@
 | [jp-ddm](jp-ddm/README.md) | モーション連続再生 + YouTube 音楽同期（クライアント・KVS） |
 | [jp-gacha](jp-gacha/README.md) | ガチャ（NUI・1連/10連・現金支払い） |
 | [jp-gacha2](jp-gacha2/README.md) | ガチャ v2（ox_inventory・管理・NUI カプセル） |
+| [jp-glitch28](jp-glitch28/README.md) | Glitch Minigames 日本語 UI（28+ ミニゲーム・`glitch-minigames` 名で配置・GPL-3.0） |
 | [jp-hospital](jp-hospital/README.md) | 病院カルテ整理・薬梱包（NUI 内職・Qbox） |
 | [jp-v-farming](jp-v-farming/README.md) | 農業・青果売却（ox_target / ox_lib / ox_inventory・日本語 i18n・原作 MIT） |
 | [jp-koban](jp-koban/README.md) | 警察向け住宅地巡回パトロール（Qbox・完遂ボーナス） |
