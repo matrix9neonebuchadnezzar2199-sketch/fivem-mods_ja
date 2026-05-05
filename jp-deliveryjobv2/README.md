@@ -51,6 +51,17 @@ FiveM向け配達ジョブスクリプト「nek_deliveryjobV2」の **日本語�
 - `Config['Delivery']['Routes']` … 配達ルート（推奨: `{ name = "表示名", stops = { vec3(...), ... } }`。旧来の `vec3` 配列のみでも可で、自動的に `ルート N` と化けます）
 - `Config['Locales']` … 表示文言
 
+和製地名にしたい場合は、`name` だけ差し替えれば NUI ヘッダ（`配達ルート: …`）にそのまま反映されます。`stops` 内の座標は現行 `config.lua` からコピーして流用してください。
+
+```lua
+-- 和製地名にしたい場合の例（stops は実際の vec3 列に置き換え）
+['Routes'] = {
+    { name = "下町ルート",   stops = { vec3(...), vec3(...) } },
+    { name = "山の手ルート", stops = { vec3(...), vec3(...) } },
+    { name = "湾岸ルート",   stops = { vec3(...), vec3(...) } },
+}
+```
+
 ## 他リソースからの利用（exports）
 
 リソース名はフォルダ名（既定: `nek_deliveryjobV2`）です。
