@@ -12,15 +12,15 @@
 
 ## ステップ1: ファイルの配置
 
-このリポジトリを `H:\CURSOR\Dev\fivem-mods_ja` などに置いている場合、サーバーへコピーするのは **`nek_deliveryjobV2` フォルダ**（`jp-deliveryjobv2` の**内側**）です。
+GitHub から clone した場合、**`jp-deliveryjobv2` フォルダ全体**（この README や `fxmanifest.lua` が同じ階層にあるフォルダ）を、サーバーの `resources` 配下に置きます。
 
-- 正しい配置例: `server-data/resources/[jobs]/nek_deliveryjobV2/fxmanifest.lua` が存在する
-- **誤り**: `resources/jp-deliveryjobv2/nek_deliveryjobV2/...` のまま `ensure jp-deliveryjobv2` と書く → 親フォルダに `fxmanifest.lua` がないためリソースとして認識されない。`ensure nek_deliveryjobV2` と書くか、`nek_deliveryjobV2` を `resources` の直下（または1段だけのサブフォルダ）に置く
-- フォルダ名をリネームする場合は `server.cfg` の `ensure` 名も同じ名前に合わせる
+- **正しい例**: `server-data/resources/[jobs]/jp-deliveryjobv2/fxmanifest.lua` が存在する
+- **リソース名**はフォルダ名と一致します。既定では **`ensure jp-deliveryjobv2`**
+- フォルダ名を変えた場合（例: `jp-delivery`）は、`server.cfg` の `ensure` も同じ名前に合わせる
 
 ## ステップ2: データベース（ESX のみ）
 
-phpMyAdmin 等で `nek_deliveryjobV2/Data.sql` を実行する。
+phpMyAdmin 等で `Data.sql` を実行する（リソースルート直下のファイル）。
 
 中身は `jobs` / `job_grades` に `delivery` ジョブを追加する INSERT です。
 
@@ -38,7 +38,7 @@ phpMyAdmin 等で `nek_deliveryjobV2/Data.sql` を実行する。
 }
 ```
 
-※上記の `payment` は QBCore のジョブグレード給与です。本スクリプトの配達完了報酬は別で、`nek_deliveryjobV2/config/config.lua` の `Config['Delivery']['FinalPayout']`（最小〜最大の乱数）により支給されます。
+※上記の `payment` は QBCore のジョブグレード給与です。本スクリプトの配達完了報酬は別で、`config/config.lua` の `Config['Delivery']['FinalPayout']`（最小〜最大の乱数）により支給されます。
 
 ## ステップ3: server.cfg
 
@@ -47,16 +47,14 @@ ensure ox_lib
 ensure ox_target
 ensure es_extended
 # または ensure qb-core
-ensure nek_deliveryjobV2
+ensure jp-deliveryjobv2
 ```
 
-（リソース名は **`nek_deliveryjobV2`**。`jp-deliveryjobv2` ではありません。）
-
-`es_extended` / `qb-core` は環境に合わせて一方だけでよいです。`nek_deliveryjobV2` は依存リソースより後に置いてください。
+`es_extended` / `qb-core` は環境に合わせて一方だけでよいです。`jp-deliveryjobv2` は依存リソースより後に置いてください。
 
 ## ステップ4: 設定確認
 
-`nek_deliveryjobV2/config/config.lua`:
+`config/config.lua`:
 
 ```lua
 Config['Framework'] = 'auto'   -- 自動検出でよければこのまま
@@ -70,6 +68,8 @@ Config['JobName']   = false    -- 全員OK。配達員ジョブのみなら 'del
 - `nek_delivery: ESXフレームワークを使用します` または QBCore 版
 - `nek_deliveryV2_jp` のバージョンチェックメッセージ
 
+`refresh` 後に `jp-deliveryjobv2 does not have a resource manifest` と出る場合は、`fxmanifest.lua` が **`jp-deliveryjobv2` フォルダの直下**にない配置になっています。パスを確認してください。
+
 ## ステップ6: ゲーム内テスト
 
 1. 座標 `(-1177.998, -892.051, 13.757)` 付近（設定どおりの場合）へ移動
@@ -77,6 +77,11 @@ Config['JobName']   = false    -- 全員OK。配達員ジョブのみなら 'del
 3. NPC に ox_target で **配達メニューを開く** が出るか
 
 ## トラブルシューティング
+
+### `Couldn't find resource jp-deliveryjobv2`
+
+- `resources` 以下に **`jp-deliveryjobv2` という名前のフォルダ**があり、その直下に `fxmanifest.lua` があるか確認する
+- `refresh` を実行してから `ensure jp-deliveryjobv2` を試す
 
 ### NPC が出ない / メニューが出ない
 
@@ -98,4 +103,4 @@ Config['JobName']   = false    -- 全員OK。配達員ジョブのみなら 'del
 
 ## アップデート
 
-`nek_deliveryjobV2` フォルダを差し替えたあと、サーバーで `refresh` / `ensure nek_deliveryjobV2` または再起動してください。
+`jp-deliveryjobv2` フォルダを差し替えたあと、サーバーで `refresh` / `ensure jp-deliveryjobv2` または再起動してください。

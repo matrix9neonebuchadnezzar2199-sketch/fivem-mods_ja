@@ -25,14 +25,18 @@ FiveM向け配達ジョブスクリプト「nek_deliveryjobV2」の **日本語�
 
 詳細は [INSTALL.md](INSTALL.md) を参照してください。
 
-**よくある間違い**: リポジトリの親フォルダ名は `jp-deliveryjobv2` ですが、サーバーで `ensure` するのは **`nek_deliveryjobV2`** です（`fxmanifest.lua` があるのは内側のフォルダのみ）。`ensure jp-deliveryjobV2` ではリソースが見つかりません。
+**リソース名（フォルダ名）** は **`jp-deliveryjobv2`** です。このフォルダ直下に `fxmanifest.lua` があります。`server.cfg` では次のようにします。
+
+```cfg
+ensure jp-deliveryjobv2
+```
 
 手順の概要:
 
-1. **`nek_deliveryjobV2` フォルダだけ**をサーバーの `resources` 配下に置く（例: `resources/[jobs]/nek_deliveryjobV2/`）。親の `jp-deliveryjobv2` ごとコピーした場合も、中の `nek_deliveryjobV2` がリソースのルートになるようにパスを確認する
+1. リポジトリの **`jp-deliveryjobv2` フォルダ一式**をサーバーの `resources` 配下に置く（例: `resources/[jobs]/jp-deliveryjobv2/fxmanifest.lua` が存在する状態）
 2. ESX の場合: `Data.sql` をデータベースに実行する
-3. `server.cfg` に `ensure ox_lib` / `ensure ox_target` / フレームワーク / `ensure nek_deliveryjobV2` を追加する
-4. サーバー再起動
+3. `server.cfg` に `ensure ox_lib` / `ensure ox_target` / フレームワーク / `ensure jp-deliveryjobv2` を追加する
+4. `refresh` のあと `ensure jp-deliveryjobv2`、またはサーバー再起動
 
 ## ゲーム内の流れ
 
@@ -45,7 +49,7 @@ FiveM向け配達ジョブスクリプト「nek_deliveryjobV2」の **日本語�
 
 ## カスタマイズ
 
-`nek_deliveryjobV2/config/config.lua` で変更できます。
+`config/config.lua` で変更できます。
 
 - `Config['JobName']` … `false` で誰でも / `'delivery'` などでジョブ限定
 - `Config['Delivery']['FinalPayout']` … 報酬の最小・最大
@@ -66,11 +70,11 @@ FiveM向け配達ジョブスクリプト「nek_deliveryjobV2」の **日本語�
 
 ## 他リソースからの利用（exports）
 
-リソース名はフォルダ名（既定: `nek_deliveryjobV2`）です。
+リソース名は **フォルダ名**（既定: **`jp-deliveryjobv2`**）です。
 
 ```lua
-local workers = exports['nek_deliveryjobV2']:GetActiveWorkers()
-local isWorking = exports['nek_deliveryjobV2']:IsPlayerWorking(source)
+local workers = exports['jp-deliveryjobv2']:GetActiveWorkers()
+local isWorking = exports['jp-deliveryjobv2']:IsPlayerWorking(source)
 ```
 
 ## Discord Webhook

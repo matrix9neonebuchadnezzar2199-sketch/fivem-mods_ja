@@ -1,5 +1,14 @@
 # 日本語化版 変更履歴
 
+## [2.1.2-jp] - 2026-05-05
+
+### 配布構成（重要）
+
+- **`jp-deliveryjobv2` をリソースのルートにフラット化**（`nek_deliveryjobV2/` サブフォルダを廃止）
+- サーバーでは **`ensure jp-deliveryjobv2`**（フォルダ名＝リソース名）。`fxmanifest.lua` は `jp-deliveryjobv2/fxmanifest.lua`
+- `exports['jp-deliveryjobv2']` に変更（旧: `exports['nek_deliveryjobV2']`）
+- README / INSTALL を上記に合わせて全面更新
+
 ## [2.1.1-jp] - 2026-05-05
 
 ### ルート名・UI
