@@ -4,6 +4,12 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.2] — 2026-05-05
+
+### Fixed
+
+- Opening a document (including **locked** read-only) now loads HTML with `clipboard.convert({ html })` + `setContents`, so **font** (and other inline formats) round-trip from the DB. Previously `quill.root.innerHTML = …` did not sync Quill’s Delta, so fonts often reverted to default on reopen. Save uses `getSemanticHTML()` when available for consistent output.
+
 ## [2.0.3-jp.1] — 2026-05-05
 
 ### Added

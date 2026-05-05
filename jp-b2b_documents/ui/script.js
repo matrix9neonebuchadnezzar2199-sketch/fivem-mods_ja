@@ -50,12 +50,36 @@ toolbarRows.push(
 const quill = new Quill('#editor', {
     theme: 'snow',
     modules: {
-        toolbar: toolbarRows,
-        clipboard: {
-            matchVisual: false
-        }
+        toolbar: toolbarRows
     }
 });
+
+/** DB からの HTML を Quill の Delta 経由で取り込む（innerHTML 直代入だと font 等の属性が落ちやすい） */
+function b2bLoadEditorHtml(html) {
+    const raw = html != null ? String(html) : '';
+    const trimmed = raw.trim();
+    if (!trimmed) {
+        quill.setContents([], 'silent');
+        return;
+    }
+    try {
+        const delta = quill.clipboard.convert({ html: trimmed });
+        quill.setContents(delta, 'silent');
+    } catch (e) {
+        console.warn('[jp-b2b_documents] clipboard.convert に失敗、innerHTML で表示します', e);
+        quill.root.innerHTML = trimmed;
+    }
+    if (quill.history && typeof quill.history.clear === 'function') {
+        quill.history.clear();
+    }
+}
+
+function b2bGetEditorHtml() {
+    if (typeof quill.getSemanticHTML === 'function') {
+        return quill.getSemanticHTML();
+    }
+    return quill.root.innerHTML;
+}
 
 quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
     delta.ops.forEach(op => {
@@ -153,7 +177,7 @@ window.addEventListener('message', (event) => {
     const isLocked = (event.data.locked === true || event.data.locked === 1);
 
     document.getElementById('docTitle').value = title;
-    quill.root.innerHTML = content;
+    b2bLoadEditorHtml(content);
 
     if (isLocked) {
         quill.enable(false);
@@ -183,7 +207,7 @@ function closeUI() {
 }
 
 function triggerAction(actionType) {
-    const contentHtml = quill.root.innerHTML;
+    const contentHtml = b2bGetEditorHtml();
     const titleInput = document.getElementById('docTitle');
     const docTitle = titleInput.value
         || titleInput.placeholder
