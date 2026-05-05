@@ -113,6 +113,34 @@ quill.on('text-change', function (delta, _old, source) {
 
 /** v2: 保存は Delta JSON（font 等が HTML 経路で落ちない）。旧データは HTML のまま。 */
 const B2B_DELTA_PREFIX = '__B2B_DOC_QV1__\n';
+/** Delta 化に失敗したときや ops が空のときのフォールバック（ロック事故防止） */
+const B2B_HTML_PREFIX = '__B2B_DOC_HTML_V1__\n';
+
+function b2bStripBom(s) {
+    return s != null ? String(s).replace(/^\uFEFF/, '') : '';
+}
+
+function b2bEditorHasMeaningfulContent() {
+    const root = quill && quill.root;
+    if (!root) return false;
+    const t = (root.innerText || '').replace(/\u00a0/g, ' ').trim();
+    if (t.length > 0) return true;
+    return !!root.querySelector('img');
+}
+
+function b2bCollectOpsFromEditor() {
+    const d = quill.getContents();
+    if (!d) return [];
+    if (typeof d.toJSON === 'function') {
+        try {
+            const j = d.toJSON();
+            if (j && Array.isArray(j.ops)) return j.ops;
+        } catch (e) {
+            console.warn('[jp-b2b_documents] Delta.toJSON 失敗', e);
+        }
+    }
+    return Array.isArray(d.ops) ? d.ops : [];
+}
 
 /** DB からの HTML を Quill の Delta 経由で取り込む（レガシー HTML 用） */
 function b2bLoadEditorHtml(html) {
@@ -135,10 +163,14 @@ function b2bLoadEditorHtml(html) {
 }
 
 function b2bLoadDocumentContent(raw) {
-    const str = raw != null ? String(raw) : '';
+    const str = b2bStripBom(raw);
     if (!str.trim()) {
         quill.setContents([], 'silent');
         if (quill.history && typeof quill.history.clear === 'function') quill.history.clear();
+        return;
+    }
+    if (str.startsWith(B2B_HTML_PREFIX)) {
+        b2bLoadEditorHtml(str.slice(B2B_HTML_PREFIX.length));
         return;
     }
     if (str.startsWith(B2B_DELTA_PREFIX)) {
@@ -148,11 +180,14 @@ function b2bLoadDocumentContent(raw) {
             const Delta = Quill.import('delta');
             const ops = Array.isArray(parsed && parsed.ops)
                 ? parsed.ops
-                : (Array.isArray(parsed) ? parsed : []);
+                : (Array.isArray(parsed) ? parsed : null);
+            if (!ops) {
+                throw new Error('Delta に ops がありません');
+            }
             quill.setContents(new Delta(ops), 'silent');
         } catch (e) {
-            console.warn('[jp-b2b_documents] Delta の parse に失敗しました', e);
-            quill.setContents([], 'silent');
+            console.warn('[jp-b2b_documents] Delta の parse に失敗 — 全体を clipboard 経由で読み込みます（復旧用）', e);
+            b2bLoadEditorHtml(str);
         }
         if (quill.history && typeof quill.history.clear === 'function') {
             quill.history.clear();
@@ -162,11 +197,28 @@ function b2bLoadDocumentContent(raw) {
     b2bLoadEditorHtml(str);
 }
 
-/** ロック／保存は Delta JSON で送る（innerHTML + convert では ql-font が失われることがある） */
+/**
+ * 原則 Delta JSON。本文があるのに ops が空・stringify 失敗時は innerHTML プレフィックスで保存（消え事故防止）。
+ */
 function b2bSerializeDocForSave() {
-    const d = quill.getContents();
-    const ops = d && d.ops ? d.ops : [];
-    return B2B_DELTA_PREFIX + JSON.stringify({ ops: ops });
+    let ops = [];
+    try {
+        ops = b2bCollectOpsFromEditor();
+    } catch (e) {
+        console.warn('[jp-b2b_documents] getContents 失敗', e);
+    }
+    const hasMeaning = b2bEditorHasMeaningfulContent();
+    const opsEmpty = !ops || ops.length === 0;
+    try {
+        if (hasMeaning && opsEmpty) {
+            console.warn('[jp-b2b_documents] 本文があるのに Delta ops が空 — innerHTML で保存します');
+            return B2B_HTML_PREFIX + quill.root.innerHTML;
+        }
+        return B2B_DELTA_PREFIX + JSON.stringify({ ops: ops || [] });
+    } catch (e) {
+        console.warn('[jp-b2b_documents] Delta の stringify 失敗 — innerHTML で保存します', e);
+        return B2B_HTML_PREFIX + quill.root.innerHTML;
+    }
 }
 
 quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {

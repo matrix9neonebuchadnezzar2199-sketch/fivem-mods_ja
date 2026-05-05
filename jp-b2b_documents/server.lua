@@ -96,10 +96,15 @@ lib.callback.register('b2b_documents:handleAction', function(source, data, ctx)
     end
 
     if data.action == 'save' or data.action == 'lock' then
+        local content = data.content
+        if type(content) ~= 'string' then
+            print(('[jp-b2b_documents] handleAction: content が string ではないため保存しません (%s)'):format(type(content)))
+            return false
+        end
         local shouldLock = (data.action == 'lock' or metadata.locked)
         local okDb = awaitDocExecute(
             'INSERT INTO b2b_documents (id, content, title, locked) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content), title = VALUES(title), locked = VALUES(locked)',
-            { metadata.docId, data.content, data.title or T('ui_untitled'), shouldLock and 1 or 0 }
+            { metadata.docId, content, data.title or T('ui_untitled'), shouldLock and 1 or 0 }
         )
         if not okDb then return false end
 
@@ -140,9 +145,14 @@ lib.callback.register('b2b_documents:handleAction', function(source, data, ctx)
 
         local newDocId = "DOC_" .. os.time() .. "_" .. math.random(100, 999)
         local copyTitle = (data.title or T('ui_untitled')) .. T('ui_copy_suffix')
+        local dupContent = data.content
+        if type(dupContent) ~= 'string' then
+            print(('[jp-b2b_documents] duplicate: content が string ではない (%s)'):format(type(dupContent)))
+            return false
+        end
         local okDb = awaitDocExecute(
             'INSERT INTO b2b_documents (id, content, title, locked) VALUES (?, ?, ?, ?)',
-            { newDocId, data.content, copyTitle, 0 }
+            { newDocId, dupContent, copyTitle, 0 }
         )
         if not okDb then return false end
 

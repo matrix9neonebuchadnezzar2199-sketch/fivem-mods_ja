@@ -4,6 +4,13 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.6] — 2026-05-05
+
+### Fixed
+
+- **Critical — ロック後に本文が消える**: Delta の `JSON.parse` 失敗時に **`setContents([])` でエディタを空にしていた**のをやめ、残り文字列を **HTML として再読込**するように変更。保存は **Delta 優先**のまま、**本文があるのに `ops` が空**・**`JSON.stringify` 例外**のときは **`__B2B_DOC_HTML_V1__` + `innerHTML`** に自動フォールバック。読込は BOM 除去、`HTML_V1` 分岐を追加。
+- **Server**: `save` / `lock` / `duplicate` で **`content` が string でなければ保存しない**（nil や誤型で DB を壊さない）。
+
 ## [2.0.3-jp.5] — 2026-05-05
 
 ### Added
