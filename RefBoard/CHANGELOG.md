@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.3.0 — 2026-05-05
+
+- **NUI 開発モック**: `useNui.ts`（`import.meta.env.DEV` かつ FiveM 外で `mocks/nuiMock.ts` 分岐）、ロック ACK などを `postMessage` で再現。
+- **試合データ**: `refboard:match:get` 本実装、`mapMatchFromServer.ts` で UI モデルへマップ。`refboard:match:state` ブロードキャスト（スコア・イベント・選手・履歴）。
+- **ゴール記録**: `GoalRecordWizard.vue` / `PlayerSelectGrid.vue`、`refboard:score:goal` + `server/score.lua` トランザクション（`match_events` + `match_score_history` + `matches` 更新）。
+- **選手追加**: `AddPlayerDialog.vue`、`refboard:player:resolve` / `player:add` / `player:online_list`、`server/player.lua`（重複ライセンスは `force` で続行可）。
+- **スコア手動編集**: `ScoreEditDialog.vue`（理由5文字以上）、`ScoreHistoryDialog.vue`、`refboard:score:manual_edit`。
+- **試合終了・再編集**: `Match.finish` / `Match.reopen`、`refboard:match:finish` / `finished` / `reopen`、一覧の `[再編集]`。`sql/migration_002_match_reopen.sql` + `install.sql` に `reopened_*` / `position` / `yellow_cards`。
+- **ドキュメント**: `docs/sprints/sprint_03.md`。
+
 ## v0.2.0 — 2026-05-05
 
 - **Match UI**: `MatchDetail.vue` フルモック（ヒーロー・上段3カラム・下段65/35・静的「編集中」バッジ）、`MatchList.vue`、`CreateMatchDialog.vue`。

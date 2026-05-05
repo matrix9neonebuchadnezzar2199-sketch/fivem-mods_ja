@@ -10,6 +10,17 @@ export type MatchUiStatus =
 
 export type MatchDbStatus = 'draft' | 'finished' | 'cancelled'
 
+/** match_score_history 1行（編集履歴ダイアログ用） */
+export type ScoreHistoryRow = {
+  id: number
+  team1_score: number
+  team2_score: number
+  action: string
+  reason: string | null
+  changed_by_name: string
+  created_at: string
+}
+
 export type PlayerRowStatus = 'playing' | 'warning' | 'sent_off' | 'bench'
 
 export type MatchPlayer = {
@@ -37,6 +48,10 @@ export type HalfScoreBreakdown = {
 
 export type MatchDetailModel = {
   id: number
+  /** DB の team1_id（左＝ホーム想定） */
+  team1Id: number
+  /** DB の team2_id */
+  team2Id: number
   matchName: string
   venue: string
   matchDate: string
@@ -51,6 +66,8 @@ export type MatchDetailModel = {
   homePlayers: MatchPlayer[]
   awayPlayers: MatchPlayer[]
   events: MatchEvent[]
+  /** DB の matches.status */
+  dbStatus: MatchDbStatus
 }
 
 export type MatchListRow = {

@@ -54,6 +54,46 @@ RegisterNetEvent('refboard:match:create:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:create:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:match:get:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:get:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:match:state', function(payload)
+  SendNUIMessage({ type = 'refboard:match:state', payload = payload })
+end)
+
+RegisterNetEvent('refboard:match:finished', function(payload)
+  SendNUIMessage({ type = 'refboard:match:finished', payload = payload })
+end)
+
+RegisterNetEvent('refboard:match:finish:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:finish:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:match:reopen:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:reopen:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:score:goal:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:score:goal:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:score:manual_edit:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:score:manual_edit:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:player:resolve:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:player:resolve:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:player:add:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:player:add:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:player:online_list:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:player:online_list:ack', payload = payload })
+end)
+
 RegisterNetEvent('refboard:lock:acquire:result', function(payload)
   SendNUIMessage({ type = 'refboard:lock:acquire:result', payload = payload })
 end)

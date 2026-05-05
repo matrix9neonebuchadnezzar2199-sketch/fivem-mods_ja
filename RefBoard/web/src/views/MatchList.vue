@@ -3,17 +3,24 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../composables/useNui'
+import { useSessionStore } from '../stores/session'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 
 const { t } = useI18n()
 const router = useRouter()
+const session = useSessionStore()
 const { send, on } = useNui()
 
 const rows = ref<MatchListRow[]>([])
 const teams = ref<TeamRow[]>([])
 const filter = ref<'all' | 'draft' | 'finished' | 'cancelled'>('all')
 const showCreate = ref(false)
+const showLock = ref(false)
+const lockPeer = ref('')
+const pendingOpenId = ref<number | null>(null)
+const showReopen = ref(false)
+const reopenId = ref<number | null>(null)
 
 let offMatch: (() => void) | null = null
 let offTeam: (() => void) | null = null
@@ -44,6 +51,55 @@ watch(filter, () => {
 
 function openDetail(id: number) {
   void router.push({ name: 'match-detail', params: { id: String(id) } })
+}
+
+async function openEdit(id: number) {
+  const r = await session.enterEdit(id)
+  if (r.ok) {
+    void router.push({ name: 'match-detail', params: { id: String(id) } })
+    return
+  }
+  lockPeer.value = r.holder?.name || t('launcher.unknown_editor')
+  pendingOpenId.value = id
+  showLock.value = true
+}
+
+async function openPendingAsView() {
+  showLock.value = false
+  const id = pendingOpenId.value
+  pendingOpenId.value = null
+  if (id) {
+    void router.push({ name: 'match-detail', params: { id: String(id) } })
+  }
+}
+
+function askReopen(id: number) {
+  reopenId.value = id
+  showReopen.value = true
+}
+
+async function confirmReopen() {
+  const id = reopenId.value
+  if (!id) return
+  const er = await session.enterEdit(id)
+  if (!er.ok) {
+    showReopen.value = false
+    reopenId.value = null
+    lockPeer.value = er.holder?.name || t('launcher.unknown_editor')
+    pendingOpenId.value = id
+    showLock.value = true
+    return
+  }
+  const un = on('refboard:match:reopen:ack', (r: { ok?: boolean }) => {
+    un()
+    if (r?.ok) {
+      showReopen.value = false
+      reopenId.value = null
+      loadMatches()
+      void router.push({ name: 'match-detail', params: { id: String(id) } })
+    }
+  })
+  await send('match_reopen', { matchId: id })
 }
 
 function onCreated(id: number) {
@@ -96,8 +152,16 @@ function onCreated(id: number) {
             <td class="px-3 py-2 font-mono text-slate-200">{{ m.team1_score }} - {{ m.team2_score }}</td>
             <td class="px-3 py-2 text-slate-400">{{ m.status }}</td>
             <td class="px-3 py-2">
-              <button type="button" class="mr-2 text-primary hover:underline" @click="openDetail(m.id)">{{ t('match_list.edit') }}</button>
+              <button type="button" class="mr-2 text-primary hover:underline" @click="openEdit(m.id)">{{ t('match_list.edit') }}</button>
               <button type="button" class="text-slate-400 hover:underline" @click="openDetail(m.id)">{{ t('match_list.detail') }}</button>
+              <button
+                v-if="m.status === 'finished'"
+                type="button"
+                class="ml-2 text-amber-400 hover:underline"
+                @click="askReopen(m.id)"
+              >
+                {{ t('match_list.reopen') }}
+              </button>
             </td>
           </tr>
           <tr v-if="!rows.length">
@@ -108,5 +172,43 @@ function onCreated(id: number) {
     </div>
 
     <CreateMatchDialog v-model:open="showCreate" :teams="teams" @created="onCreated" />
+
+    <div
+      v-if="showLock"
+      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
+      @click.self="showLock = false"
+    >
+      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('launcher.lock_title') }}</h2>
+        <p class="mb-4 text-sm text-slate-400">{{ t('launcher.lock_body', { name: lockPeer }) }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="showLock = false">
+            {{ t('launcher.lock_back') }}
+          </button>
+          <button type="button" class="rounded-lg bg-warning/90 px-3 py-2 text-sm font-semibold text-slate-900" @click="openPendingAsView">
+            {{ t('launcher.lock_open_view') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showReopen"
+      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
+      @click.self="showReopen = false"
+    >
+      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_list.reopen_title') }}</h2>
+        <p class="mb-4 text-sm text-slate-400">{{ t('match_list.reopen_body') }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="showReopen = false">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmReopen">
+            {{ t('match_list.reopen_confirm') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

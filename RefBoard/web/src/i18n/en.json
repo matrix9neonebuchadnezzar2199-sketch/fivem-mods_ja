@@ -64,8 +64,62 @@
     "color": "Color"
   },
   "player": {
-    "enter_server_id": "Enter server ID",
-    "resolve_fail": "No player for server id {id}"
+    "enter_server_id": "Server ID (today's number)",
+    "resolve_fail": "No player for server id {id}",
+    "server_id_ph": "e.g. 15",
+    "pick_online": "[Pick from online players]",
+    "license_warn": "Could not read license (NPC edge case)",
+    "add_title": "Add player",
+    "add_need_resolve": "Resolve the ID first to load the name",
+    "jersey_optional": "Jersey number (optional)",
+    "position": "Position",
+    "starter": "Starter",
+    "add_submit": "Add",
+    "duplicate_body": "This license is already on the roster. Continue anyway?",
+    "duplicate_continue": "Continue and add",
+    "list_history_link": "[Edit history]",
+    "list_add": "+ Add player"
+  },
+  "goal_wizard": {
+    "breadcrumb": "EFmktg > Shot > Pick player",
+    "pick_team": "Which team scored?",
+    "pick_scorer": "Pick the scorer",
+    "pick_assist": "Assist (optional)",
+    "no_assist": "[No assist]",
+    "confirm": "Confirm",
+    "submit": "[Record]",
+    "summary_goal": "15' {team}: {scorer}",
+    "summary_with_assist": "15' {team}: {scorer} (assist: {assist})",
+    "esc_confirm": "Discard this goal entry?"
+  },
+  "score_board": {
+    "title": "Score",
+    "goal": "[Goal]",
+    "manual_edit": "[Edit score directly]"
+  },
+  "score_manual": {
+    "title": "Edit score directly",
+    "current": "Current score",
+    "reason": "Reason (required, min 5 characters)",
+    "reason_ph": "e.g. Reverting mistaken goal",
+    "warn": "⚠ This change is stored forever with your name and reason",
+    "confirm": "[Apply change]"
+  },
+  "score_history": {
+    "title": "Score history",
+    "empty": "No history yet",
+    "line_first": "{time}  {name}  {score}  Reason: {reason}",
+    "line_change": "{time}  {name}  {from} → {to}  Reason: {reason}"
+  },
+  "match_finish": {
+    "title": "End this match?",
+    "score_line": "Score: {home} {s1} - {s2} {away}",
+    "time": "Elapsed: {time}",
+    "note": "You can still edit scores after finish; changes stay in history",
+    "confirm": "[End match]"
+  },
+  "match_detail": {
+    "finish": "[End match]"
   },
   "score": {
     "edit_reason": "Reason (optional)",
@@ -94,6 +148,10 @@
     "col_actions": "Actions",
     "edit": "Edit",
     "detail": "Details",
+    "reopen": "[Re-edit]",
+    "reopen_title": "Re-open finished match",
+    "reopen_body": "This will set the match back to draft for editing. Continue?",
+    "reopen_confirm": "Continue",
     "empty": "No matches yet. Seed teams in MySQL, then create a match."
   },
   "create_match": {

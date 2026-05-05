@@ -1,3 +1,5 @@
+import { mockResponse, queueMockSideEffects } from '../mocks/nuiMock'
+
 export function getResourceName(): string {
   const w = window as unknown as { GetParentResourceName?: () => string }
   if (typeof w.GetParentResourceName === 'function') {
@@ -6,10 +8,24 @@ export function getResourceName(): string {
   return 'RefBoard'
 }
 
+function isInFiveM(): boolean {
+  const w = window as unknown as { invokeNative?: unknown; GetParentResourceName?: () => string }
+  return typeof w.invokeNative !== 'undefined' || typeof w.GetParentResourceName === 'function'
+}
+
+function useBrowserMock(): boolean {
+  return Boolean(import.meta.env.DEV) && !isInFiveM()
+}
+
 export function useNui() {
   async function send<TRes>(path: string, data?: unknown): Promise<TRes> {
+    if (useBrowserMock()) {
+      const res = mockResponse(path, data) as TRes
+      queueMockSideEffects(path, data)
+      return res
+    }
     if (typeof (window as unknown as { GetParentResourceName?: () => string }).GetParentResourceName !== 'function') {
-      return { ok: true, mock: true } as TRes
+      return { ok: false, error: 'no_nui' } as TRes
     }
     const res = await fetch(`https://${getResourceName()}/${path}`, {
       method: 'POST',

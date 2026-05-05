@@ -10,6 +10,156 @@ local function requireReferee(src)
   return true
 end
 
+local function assertEditorLock(src, matchId)
+  local r = MySQL.single.await(
+    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
+  )
+  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
+    return false
+  end
+  local mid = r.match_id and tonumber(r.match_id)
+  if not mid or mid ~= tonumber(matchId) then
+    return false
+  end
+  return true
+end
+
+local function kickoffToUi(v)
+  if type(v) ~= 'string' or v == '' then
+    return ''
+  end
+  return string.sub(v, 1, 5)
+end
+
+local function fmtMinute(ms)
+  local m = math.floor((tonumber(ms) or 0) / 60000)
+  return string.format("%d'", m)
+end
+
+local function mapPlayerUiStatus(p)
+  if tonumber(p.is_active) == 0 then
+    return 'sent_off'
+  end
+  if tonumber(p.is_starter) == 0 then
+    return 'bench'
+  end
+  if (tonumber(p.yellow_cards) or 0) >= 1 then
+    return 'warning'
+  end
+  return 'playing'
+end
+
+local function buildMatchSnapshot(matchId)
+  matchId = tonumber(matchId)
+  if not matchId then
+    return nil
+  end
+  local m = MySQL.single.await(
+    [[SELECT m.*, t1.name AS team1_name, t2.name AS team2_name
+      FROM matches m
+      INNER JOIN teams t1 ON t1.id = m.team1_id
+      INNER JOIN teams t2 ON t2.id = m.team2_id
+      WHERE m.id = ?]],
+    { matchId }
+  )
+  if not m then
+    return nil
+  end
+  local pRows = MySQL.query.await(
+    [[SELECT id, match_id, team_id, server_id, license, player_name, jersey_number,
+             position, is_starter, is_active, yellow_cards
+      FROM match_players WHERE match_id = ? ORDER BY team_id, jersey_number, id]],
+    { matchId }
+  ) or {}
+  local eRows = MySQL.query.await(
+    [[SELECT e.id, e.event_type, e.half, e.match_time_ms, e.player_id, e.assist_player_id,
+             p.player_name AS scorer_name, p.jersey_number AS scorer_no,
+             ap.player_name AS assist_name, ap.jersey_number AS assist_no
+      FROM match_events e
+      LEFT JOIN match_players p ON p.id = e.player_id
+      LEFT JOIN match_players ap ON ap.id = e.assist_player_id
+      WHERE e.match_id = ? AND e.voided_at IS NULL
+      ORDER BY e.id DESC]],
+    { matchId }
+  ) or {}
+  local hRows = MySQL.query.await(
+    [[SELECT id, team1_score, team2_score, action, reason, changed_by_name, created_at
+      FROM match_score_history WHERE match_id = ? ORDER BY id ASC]],
+    { matchId }
+  ) or {}
+
+  local playersOut = {}
+  for _, p in ipairs(pRows) do
+    table.insert(playersOut, {
+      id = tonumber(p.id),
+      team_id = tonumber(p.team_id),
+      server_id = tonumber(p.server_id),
+      license = p.license,
+      player_name = p.player_name,
+      jersey_number = p.jersey_number ~= nil and tonumber(p.jersey_number) or nil,
+      position = p.position or '',
+      is_starter = tonumber(p.is_starter) or 0,
+      is_active = tonumber(p.is_active) or 0,
+      yellow_cards = tonumber(p.yellow_cards) or 0,
+      ui_status = mapPlayerUiStatus(p),
+    })
+  end
+
+  local eventsOut = {}
+  for _, e in ipairs(eRows) do
+    local kind = 'other'
+    if e.event_type == 'goal' or e.event_type == 'own_goal' then
+      kind = 'goal'
+    elseif e.event_type == 'yellow_card' then
+      kind = 'yellow'
+    elseif e.event_type == 'red_card' then
+      kind = 'red'
+    elseif e.event_type == 'substitution' then
+      kind = 'sub'
+    end
+    local text = ''
+    if e.event_type == 'goal' then
+      local sn = tonumber(e.scorer_no) or 0
+      text = string.format('⚽ %d %s', sn, tostring(e.scorer_name or ''))
+      if e.assist_name and e.assist_name ~= '' then
+        local an = tonumber(e.assist_no) or 0
+        text = text .. string.format(' (assist: %d %s)', an, e.assist_name)
+      end
+    else
+      text = tostring(e.event_type or '')
+    end
+    table.insert(eventsOut, {
+      id = tonumber(e.id),
+      match_time_ms = tonumber(e.match_time_ms) or 0,
+      event_type = e.event_type,
+      half = e.half,
+      minute = fmtMinute(e.match_time_ms),
+      kind = kind,
+      text = text,
+    })
+  end
+
+  local historyOut = {}
+  for _, h in ipairs(hRows) do
+    table.insert(historyOut, {
+      id = tonumber(h.id),
+      team1_score = tonumber(h.team1_score) or 0,
+      team2_score = tonumber(h.team2_score) or 0,
+      action = h.action,
+      reason = h.reason,
+      changed_by_name = h.changed_by_name,
+      created_at = h.created_at,
+    })
+  end
+
+  return {
+    match = m,
+    players = playersOut,
+    events = eventsOut,
+    history = historyOut,
+  }
+end
+
 RegisterNetEvent('refboard:match:list', function(payload)
   local src = source
   if not requireReferee(src) then
@@ -144,4 +294,111 @@ RegisterNetEvent('refboard:match:create', function(payload)
   )
 
   TriggerClientEvent('refboard:match:create:ack', src, { ok = true, matchId = matchId })
+end)
+
+RegisterNetEvent('refboard:match:get', function(payload)
+  local src = source
+  if not requireReferee(src) then
+    return
+  end
+  local matchId = payload and tonumber(payload.matchId)
+  if not matchId then
+    TriggerClientEvent('refboard:match:get:ack', src, { match = nil, players = {}, events = {}, history = {} })
+    return
+  end
+  local snap = buildMatchSnapshot(matchId)
+  if not snap then
+    TriggerClientEvent('refboard:match:get:ack', src, { match = nil, players = {}, events = {}, history = {} })
+    return
+  end
+  TriggerClientEvent('refboard:match:get:ack', src, snap)
+end)
+
+RegisterNetEvent('refboard:match:finish', function(payload)
+  local src = source
+  if not requireReferee(src) then
+    return
+  end
+  local matchId = payload and tonumber(payload.matchId)
+  if not matchId or not assertEditorLock(src, matchId) then
+    TriggerClientEvent('refboard:match:finish:ack', src, { ok = false, error = 'no_lock' })
+    return
+  end
+  local m = MySQL.single.await('SELECT id, status FROM matches WHERE id = ?', { matchId })
+  if not m or m.status ~= 'draft' then
+    TriggerClientEvent('refboard:match:finish:ack', src, { ok = false, error = 'bad_status' })
+    return
+  end
+  MySQL.update.await(
+    [[UPDATE matches SET status = 'finished', finished_at = NOW(),
+        clock_running = 0, clock_started_at = NULL
+      WHERE id = ?]],
+    { matchId }
+  )
+  MySQL.update.await('DELETE FROM match_drafts WHERE match_id = ?', { matchId })
+  TriggerClientEvent('refboard:match:finish:ack', src, { ok = true })
+  TriggerClientEvent('refboard:match:finished', -1, { matchId = matchId })
+end)
+
+RegisterNetEvent('refboard:match:reopen', function(payload)
+  local src = source
+  if not requireReferee(src) then
+    return
+  end
+  local matchId = payload and tonumber(payload.matchId)
+  if not matchId or not assertEditorLock(src, matchId) then
+    TriggerClientEvent('refboard:match:reopen:ack', src, { ok = false, error = 'no_lock' })
+    return
+  end
+  local m = MySQL.single.await('SELECT id, status FROM matches WHERE id = ?', { matchId })
+  if not m or m.status ~= 'finished' then
+    TriggerClientEvent('refboard:match:reopen:ack', src, { ok = false, error = 'bad_status' })
+    return
+  end
+  local license = GetPlayerIdentifierByType(src, 'license') or ''
+  local name = GetPlayerName(src) or ('ID %s'):format(src)
+  MySQL.update.await(
+    [[UPDATE matches SET status = 'draft', finished_at = NULL,
+        reopened_at = NOW(), reopened_by_license = ?, reopened_by_name = ?
+      WHERE id = ?]],
+    { license, name, matchId }
+  )
+  local cur = MySQL.single.await(
+    'SELECT team1_score, team2_score, current_half, clock_accumulated_ms FROM matches WHERE id = ?',
+    { matchId }
+  )
+  MySQL.insert.await(
+    [[INSERT INTO match_score_history
+        (match_id, team1_score, team2_score, half, match_time_ms, action, related_event_id,
+         changed_by_license, changed_by_name, reason)
+      VALUES (?, ?, ?, ?, ?, 'reset', NULL, ?, ?, ?)]],
+    {
+      matchId,
+      tonumber(cur and cur.team1_score) or 0,
+      tonumber(cur and cur.team2_score) or 0,
+      (cur and cur.current_half) or '1st',
+      tonumber(cur and cur.clock_accumulated_ms) or 0,
+      license,
+      name,
+      'match_reopened_for_edit',
+    }
+  )
+  TriggerClientEvent('refboard:match:reopen:ack', src, { ok = true })
+  TriggerEvent('refboard:internal:broadcastState', matchId)
+end)
+
+AddEventHandler('refboard:internal:broadcastState', function(matchId)
+  local snap = buildMatchSnapshot(matchId)
+  if not snap or not snap.match then
+    return
+  end
+  TriggerClientEvent('refboard:match:state', -1, {
+    matchId = tonumber(matchId),
+    team1_score = tonumber(snap.match.team1_score) or 0,
+    team2_score = tonumber(snap.match.team2_score) or 0,
+    status = snap.match.status,
+    events = snap.events,
+    players = snap.players,
+    history = snap.history,
+  })
 end)

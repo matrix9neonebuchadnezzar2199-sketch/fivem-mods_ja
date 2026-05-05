@@ -39,19 +39,6 @@ RegisterNetEvent('refboard:session:leave', function()
   TriggerClientEvent('refboard:session:left', src, { ok = true })
 end)
 
-RegisterNetEvent('refboard:match:get', function(payload)
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-  TriggerClientEvent('refboard:match:get:ack', src, {
-    match = nil,
-    players = {},
-    events = {},
-    history = {},
-  })
-end)
-
 RegisterNetEvent('refboard:match:checkResume', function()
   local src = source
   if not requireReferee(src) then
@@ -60,10 +47,3 @@ RegisterNetEvent('refboard:match:checkResume', function()
   TriggerClientEvent('refboard:match:checkResume:ack', src, { hasResume = false, match = nil })
 end)
 
-RegisterNetEvent('refboard:score:goal', function(payload)
-  local src = source
-  if not requireReferee(src) then
-    return
-  end
-  TriggerClientEvent('refboard:notify', src, { type = 'info', key = 'stub', detail = 'score:goal' })
-end)

@@ -2,6 +2,8 @@ import type { MatchDetailModel } from '../types/match'
 
 export const mockMatchDetail: MatchDetailModel = {
   id: 1,
+  team1Id: 1,
+  team2Id: 2,
   matchName: 'リーグ戦 第7節',
   venue: 'Maze Bank Arena',
   matchDate: '2026-05-05',
@@ -28,6 +30,7 @@ export const mockMatchDetail: MatchDetailModel = {
     { id: 'a2', number: 6, name: 'Daniel White', position: 'MF', status: 'playing' },
     { id: 'a3', number: 3, name: 'Ryan Scott', position: 'DF', status: 'bench' },
   ],
+  dbStatus: 'draft',
   events: [
     { id: 'e1', minute: "15'", kind: 'goal', text: '⚽ 10 James Brown' },
     { id: 'e2', minute: "32'", kind: 'yellow', text: '🟨 7 Matthew Jackson' },

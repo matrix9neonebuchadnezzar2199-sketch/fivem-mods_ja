@@ -64,8 +64,62 @@
     "color": "カラー"
   },
   "player": {
-    "enter_server_id": "今日の番号を入力",
-    "resolve_fail": "サーバーID {id} のプレイヤーが見つかりません"
+    "enter_server_id": "今日の番号（サーバーID）",
+    "resolve_fail": "サーバーID {id} のプレイヤーが見つかりません",
+    "server_id_ph": "例: 15",
+    "pick_online": "[現在オンラインのプレイヤーから選ぶ]",
+    "license_warn": "※ライセンスを取得できませんでした（NPC等の可能性）",
+    "add_title": "選手を追加",
+    "add_need_resolve": "先に番号を入力して名前を解決してください",
+    "jersey_optional": "背番号（任意）",
+    "position": "ポジション",
+    "starter": "スタメン",
+    "add_submit": "追加",
+    "duplicate_body": "同じライセンスの選手が既に登録されています。続行しますか？",
+    "duplicate_continue": "続行して追加",
+    "list_history_link": "[編集履歴]",
+    "list_add": "+ 選手を追加"
+  },
+  "goal_wizard": {
+    "breadcrumb": "EFmktg > シュート > 選手選択",
+    "pick_team": "得点したチームを選んでください",
+    "pick_scorer": "得点者を選んでください",
+    "pick_assist": "アシスト（任意）",
+    "no_assist": "[アシストなし]",
+    "confirm": "確認",
+    "submit": "[記録]",
+    "summary_goal": "15' {team}: {scorer}",
+    "summary_with_assist": "15' {team}: {scorer} (assist: {assist})",
+    "esc_confirm": "ゴール記録を中断しますか？"
+  },
+  "score_board": {
+    "title": "スコア",
+    "goal": "[ゴール]",
+    "manual_edit": "[スコアを直接編集]"
+  },
+  "score_manual": {
+    "title": "スコアを直接編集",
+    "current": "現在のスコア",
+    "reason": "変更理由（必須・5文字以上）",
+    "reason_ph": "例: ゴール記録の取り消し（誤判定のため）",
+    "warn": "⚠ この変更は履歴に永久保存され、あなたの名前と理由が記録されます",
+    "confirm": "[変更を確定]"
+  },
+  "score_history": {
+    "title": "編集履歴",
+    "empty": "履歴はまだありません",
+    "line_first": "{time}  {name}  {score}  理由: {reason}",
+    "line_change": "{time}  {name}  {from} → {to}  理由: {reason}"
+  },
+  "match_finish": {
+    "title": "試合を終了しますか？",
+    "score_line": "スコア: {home} {s1} - {s2} {away}",
+    "time": "経過時間: {time}",
+    "note": "終了後もスコア編集は可能ですが、履歴に残ります",
+    "confirm": "[試合を終了]"
+  },
+  "match_detail": {
+    "finish": "[試合終了]"
   },
   "score": {
     "edit_reason": "変更理由（任意）",
@@ -94,6 +148,10 @@
     "col_actions": "操作",
     "edit": "編集",
     "detail": "詳細",
+    "reopen": "[再編集]",
+    "reopen_title": "終了済みの試合を再編集",
+    "reopen_body": "終了済みの試合を再編集モードに戻します。続行しますか？",
+    "reopen_confirm": "続行",
     "empty": "試合がありません。チームを登録してから作成してください。"
   },
   "create_match": {
