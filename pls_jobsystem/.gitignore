@@ -1,0 +1,6 @@
+node_modules/
+
+# 日本語化作業のバックアップ
+*.orig
+web/dist.orig/
+
