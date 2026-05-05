@@ -8,6 +8,8 @@ desktop.ini
 *.bak
 *.tmp
 *.orig
+# NUI i18n: whole web/dist backup dir (optional tooling)
+**/web/dist.orig/
 *~
 .vscode/
 .idea/

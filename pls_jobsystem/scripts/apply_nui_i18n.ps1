@@ -1,3 +1,4 @@
+# NOTE: 汎用版が tools/apply_nui_i18n.ps1 にあります。新規 MOD ではそちらを推奨。
 <#
 .SYNOPSIS
   pls_jobsystem の NUI バンドル(web/dist/assets/index.js) を、

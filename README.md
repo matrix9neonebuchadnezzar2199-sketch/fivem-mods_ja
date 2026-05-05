@@ -44,4 +44,16 @@
 | [jp-UnderworldBounty](jp-UnderworldBounty/README.md) | 闇の指名手配（裏賭場シナリオ・報復ウェーブ・設定駆動・ESX/QB/Standalone） |
 | [qb-storerobbery-ja](qb-storerobbery-ja/README.md) | `qb-storerobbery` 日本語化フォーク（コンビニ強盗・KVP クールダウン・ox_inventory ブリッジ） |
 
+## ツール
+
+| ツール | パス | 説明 |
+|---|---|---|
+| 汎用 NUI 日本語化適用ツール | [`tools/apply_nui_i18n.ps1`](./tools/apply_nui_i18n.ps1) | 各 MOD の `web/dist/assets/index.js` を翻訳マップに従って日本語化します。詳細は [`tools/README_JA.md`](./tools/README_JA.md)。 |
+
+クイック実行例:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\apply_nui_i18n.ps1 -ModName pls_jobsystem -Mode preview
+```
+
 [ライセンス（MIT）](LICENSE)
