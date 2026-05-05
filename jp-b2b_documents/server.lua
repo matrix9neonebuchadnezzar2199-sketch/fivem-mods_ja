@@ -232,3 +232,25 @@ CreateThread(function()
     FW.RegisterUsableItem(Config.Items.blank, openFromUse)
     FW.RegisterUsableItem(Config.Items.document, openFromUse)
 end)
+
+-- ox_inventory: Items.Metadata が白紙に durability 等を付けるとスロット間でメタが一致せずスタックしない。
+-- createItem で {} に寄せる（items.lua は stack = true かつ degrade 無し推奨）。
+CreateThread(function()
+    Wait(4000)
+    if GetResourceState('ox_inventory') ~= 'started' then return end
+    local reg = exports.ox_inventory and exports.ox_inventory.registerHook
+    if not reg then return end
+    local ok, err = pcall(function()
+        reg('createItem', function(payload)
+            local it = payload.item
+            local n = (type(it) == 'table' and it.name) or (type(it) == 'string' and it) or nil
+            if n ~= Config.Items.blank then return end
+            return {}
+        end, { itemFilter = { [Config.Items.blank] = true } })
+    end)
+    if ok then
+        print('[jp-b2b_documents] ox_inventory: 白紙 createItem メタを {} に正規化（スタック用フック登録済み）')
+    else
+        print(('[jp-b2b_documents] ox_inventory createItem フック登録失敗: %s'):format(tostring(err)))
+    end
+end)

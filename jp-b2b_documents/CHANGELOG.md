@@ -4,6 +4,14 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.9] — 2026-05-05
+
+### Fixed
+
+- **白紙スタック（ox_inventory）**: `Items.Metadata` が durability 等を付与するとスロット間でメタが一致しないことがあるため、**`registerHook('createItem')`** で `paper_blank` のメタを **`{}` に正規化**（`server.lua`）。
+- **画像ボタンが無反応**: FiveM NUI では **`prompt` が使えない**ことが多い。ツールバー **画像**を **ファイル選択 → `readAsDataURL` → `insertEmbed`** に差し替え（`ui/script.js`）。
+- **画像入りでロック保存が落ちる**: base64 等で **Delta JSON が巨大**になり NUI / DB で欠けることがあるため、**`JSON.stringify` 結果が約 900KB 超なら `__B2B_DOC_HTML_V1__` + innerHTML** で保存するフォールバックを追加。
+
 ## [2.0.3-jp.8] — 2026-05-05
 
 ### Fixed

@@ -56,6 +56,46 @@ const quill = new Quill('#editor', {
     }
 });
 
+/** FiveM NUI では prompt が効かない／blob URL は保存不能のため、ファイル→data URL で挿入 */
+const B2B_IMAGE_MAX_BYTES = 1800000;
+function b2bRegisterImageToolbarHandler() {
+    const toolbar = quill.getModule('toolbar');
+    if (!toolbar) return;
+    const handler = function () {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        input.onchange = function () {
+            const file = input.files && input.files[0];
+            if (file) {
+                if (file.size > B2B_IMAGE_MAX_BYTES) {
+                    console.warn('[jp-b2b_documents] 画像が大きすぎます（約 ' + Math.round(B2B_IMAGE_MAX_BYTES / 1000000) + 'MB 以下）');
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function (ev) {
+                        const url = ev.target && ev.target.result;
+                        if (!url) return;
+                        const range = quill.getSelection(true) || { index: Math.max(0, quill.getLength() - 1), length: 0 };
+                        quill.insertEmbed(range.index, 'image', url, 'user');
+                        quill.setSelection(range.index + 1, 0, 'user');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            if (input.parentNode) input.parentNode.removeChild(input);
+        };
+        input.click();
+    };
+    if (typeof toolbar.addHandler === 'function') {
+        toolbar.addHandler('image', handler);
+    } else if (toolbar.handlers) {
+        toolbar.handlers.image = handler;
+    }
+}
+b2bRegisterImageToolbarHandler();
+
 /**
  * Quill 2 は Enter でインライン書式を引き継がない（PR #3428）。
  * keyboard.addBinding で return false しても「先に動いたバインディング」で処理が止まり当ハンドラが呼ばれないため、
@@ -200,6 +240,9 @@ function b2bLoadDocumentContent(raw) {
 /**
  * 原則 Delta JSON。本文があるのに ops が空・stringify 失敗時は innerHTML プレフィックスで保存（消え事故防止）。
  */
+/** NUI / MySQL の都合で巨大 JSON が切れたり失敗するため、超長は HTML 保存（base64 画像は長くなりがち） */
+const B2B_DELTA_JSON_MAX = 900000;
+
 function b2bSerializeDocForSave() {
     let ops = [];
     try {
@@ -214,7 +257,12 @@ function b2bSerializeDocForSave() {
             console.warn('[jp-b2b_documents] 本文があるのに Delta ops が空 — innerHTML で保存します');
             return B2B_HTML_PREFIX + quill.root.innerHTML;
         }
-        return B2B_DELTA_PREFIX + JSON.stringify({ ops: ops || [] });
+        const json = JSON.stringify({ ops: ops || [] });
+        if (json.length > B2B_DELTA_JSON_MAX) {
+            console.warn('[jp-b2b_documents] Delta が長すぎるため HTML で保存します');
+            return B2B_HTML_PREFIX + quill.root.innerHTML;
+        }
+        return B2B_DELTA_PREFIX + json;
     } catch (e) {
         console.warn('[jp-b2b_documents] Delta の stringify 失敗 — innerHTML で保存します', e);
         return B2B_HTML_PREFIX + quill.root.innerHTML;
