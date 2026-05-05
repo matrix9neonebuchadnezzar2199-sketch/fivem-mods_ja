@@ -347,7 +347,7 @@ function StartHackConnect(numLives)
                 
                 TriggerEvent('bruteforce:uiSequenceComplete')
 
-                print("Hack cancelled - player died")
+                print("[bruteforce] プレイヤー死亡によりハッキング中止")
 
                 p:resolve(minigameResult)
             end
@@ -378,9 +378,9 @@ if config.DebugCommands then
         local success = exports['glitch-minigames']:StartBruteForce(3)
         
         if success then
-            print("Hacking successful!")
+            print("[bruteforce] ハッキング成功")
         else 
-            print("Hacking failed!")
+            print("[bruteforce] ハッキング失敗")
         end
     end, false)
 end

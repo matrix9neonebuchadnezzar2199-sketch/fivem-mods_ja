@@ -53,7 +53,7 @@ local function requestModel(modelName)
     while not HasModelLoaded(modelHash) do
         Citizen.Wait(0)
         if GetGameTimer() - startTime > 5000 then
-            print("Failed to load model: " .. modelName)
+            print("[drill] モデル読込失敗: " .. modelName)
             break
         end
     end
@@ -142,7 +142,7 @@ end
 Drilling.Init = function()
     local prop = createAndAttachDrill()
     if not prop then
-        print("Failed to create drill prop")
+        print("[drill] ドリルプロップ生成失敗")
         return false
     end
     DrillPropHandle = prop
@@ -170,7 +170,7 @@ Drilling.Init = function()
         if HasScaleformMovieLoaded(scaleform) then
             break
         else
-            print(string.format("Attempt %d/%d: Failed to load DRILLING scaleform", attempts + 1, maxAttempts))
+            print(string.format("[drill] 試行 %d/%d: DRILLINGスケールフォーム読込失敗", attempts + 1, maxAttempts))
             if scaleform then
                 SetScaleformMovieAsNoLongerNeeded(scaleform)
             end
@@ -180,7 +180,7 @@ Drilling.Init = function()
     end
     
     if not scaleform or not HasScaleformMovieLoaded(scaleform) then
-        print("Failed to load DRILLING scaleform after " .. maxAttempts .. " attempts")
+        print("[drill] DRILLINGスケールフォーム読込失敗 試行回数: " .. maxAttempts)
         Drilling.ClearDrillProp()
         return false
     end
@@ -208,7 +208,7 @@ Drilling.LoadAnimations = function()
     while not HasAnimDictLoaded("anim@heists@fleeca_bank@drilling") do
         Wait(10)
         if GetGameTimer() - startTime > 5000 then
-            print("Failed to load animation: anim@heists@fleeca_bank@drilling")
+            print("[drill] アニメ読込失敗: anim@heists@fleeca_bank@drilling")
             break
         end
     end
@@ -265,8 +265,8 @@ Drilling.Start = function(callback)
         
         if config.usingGlitchNotifications then 
             DrillingControls = exports['glitch-notifications']:ShowNotification(
-                'Drilling Controls',
-                'W/S - Move Drill Up/Down\nQ - Slow Down\nE - Speed Up\nESC - Cancel',
+                'ドリル操作',
+                'W/S - ドリル上下移動\nQ - 減速\nE - 加速\nESC - キャンセル',
                 0,
                 '#ff9f1c',
                 false
@@ -292,7 +292,7 @@ Drilling.Update = function(callback)
         Drilling.HandleControls()
         
         if IsEntityDead(PlayerPedId()) then
-            print("Drilling cancelled - player died")
+            print("[drill] プレイヤー死亡により中止")
             Drilling.Active = false
             Drilling.Result = false
             
@@ -323,7 +323,7 @@ Drilling.Update = function(callback)
             Drilling.Result = false
             
             if config.usingGlitchNotifications then
-                exports['glitch-notifications']:ShowNotification('Cancelled', 'Drilling cancelled', 3000, '#ffaa00', false)
+                exports['glitch-notifications']:ShowNotification('キャンセル', 'ドリル作業を中止しました', 3000, '#ffaa00', false)
                 exports['glitch-notifications']:RemoveNotification(DrillingControls)
             end
             
@@ -483,10 +483,10 @@ Drilling.HandleControls = function()
             triggeredPinBreaks[i] = true
             
             if config.usingGlitchNotifications then
-                exports['glitch-notifications']:ShowNotification('Warning', 'Pin break detected!', 2000, '#ffaa00', false)
+                exports['glitch-notifications']:ShowNotification('警告', 'ピン破損を検知！', 2000, '#ffaa00', false)
             end
             
-            print("Pin " .. i .. " break triggered at depth: " .. Drilling.DrillPos)
+            print("[drill] ピン" .. i .. "破損 深さ: " .. Drilling.DrillPos)
         end
     end
     
@@ -525,7 +525,7 @@ Drilling.HandleControls = function()
         Drilling.ClearDrillProp()
         
         if config.usingGlitchNotifications then
-            exports['glitch-notifications']:ShowNotification('Failed', 'Drill overheated!', 3000, '#ff0000', false)
+            exports['glitch-notifications']:ShowNotification('失敗', 'ドリルが過熱しました！', 3000, '#ff0000', false)
             exports['glitch-notifications']:RemoveNotification(DrillingControls)
         end
 
@@ -551,7 +551,7 @@ Drilling.HandleControls = function()
         Drilling.ClearDrillProp()
         
         if config.usingGlitchNotifications then
-            exports['glitch-notifications']:ShowNotification('Success', 'Successfully drilled!', 3000, '#00ff00', false)
+            exports['glitch-notifications']:ShowNotification('成功', 'ドリリング完了！', 3000, '#00ff00', false)
             exports['glitch-notifications']:RemoveNotification(DrillingControls)
         end
 
@@ -590,6 +590,6 @@ end)
 if config.DebugCommands then 
     RegisterCommand('testdrill', function()
         local success = exports['glitch-minigames']:StartDrilling()
-        print("Drilling complete! Result: " .. tostring(success))
+        print("[drill] ドリル完了 結果: " .. tostring(success))
     end)
 end

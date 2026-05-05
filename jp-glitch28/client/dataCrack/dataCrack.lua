@@ -29,7 +29,7 @@ function F_02668(arg1)
         Dat_2[current].val0 = 0
         while true do
             F_02539()
-            F_02536("Press ~INPUT_FRONTEND_CANCEL~ to abort hack")
+            F_02536("~INPUT_FRONTEND_CANCEL~ でハックを中止")
             if IsControlJustReleased(2, 237) then
                 if F_02540(current) then
                     PlaySoundFrontend(-1, "Pin_Good", "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", true)
@@ -168,7 +168,7 @@ function F_02668(arg1)
     Citizen.CreateThread(function()
         while not stophack do
             if IsEntityDead(PlayerPedId()) then
-                print("DataCrack hack cancelled - player died")
+                print("[datacrack] プレイヤー死亡により中止")
                 PlaySoundFrontend(-1, "HACKING_FAILURE", "", true)
                 Abort()
                 break
@@ -237,9 +237,9 @@ if config.DebugCommands then
         local success = exports['glitch-minigames']:StartDataCrack(difficulty)
         
         if success then
-            print("Hacking successful!")
+            print("[datacrack] ハッキング成功")
         else
-            print("Hacking failed!")
+            print("[datacrack] ハッキング失敗")
         end
     end, false)
 end

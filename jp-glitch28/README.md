@@ -37,6 +37,21 @@ FiveM 向けの **28種類以上のミニゲーム集** を日本語化したも
 
 > **リソース名は `glitch-minigames` のまま使用してください。** フォルダ名を変えると `exports['glitch-minigames']` との整合が取れなくなります。
 
+## 既知の制限
+
+一部のミニゲームは GTA V 純正のスケールフォーム（HUD 描画）を使用しており、**エンジンのフォント仕様により日本語非対応の画面**があります。次の **HACKING_PC 系** のラベルやメッセージは **英語のまま** 残しています（空白・豆腐になる事例を避けるため）。
+
+| 表示例 | 意味（参考） |
+|---|---|
+| `My Computer` / `Power Off` | マイコンピュータ／電源オフ |
+| `Local Disk (C:)` 等 | ローカルディスク |
+| `BRUTEFORCE SUCCESSFUL!` / `BRUTEFORCE FAILED!` | ブルートフォース成功／失敗 |
+| `MEMORY LEAK DETECTED, DEVICE SHUTTING DOWN` 等 | メモリリーク検知・デバイス停止 |
+
+**Circuit Breaker**（`client/circuitBreaker/circuit.lua`）の結果表示は `HACKING_MESSAGE` 系で **日本語化済み** ですが、環境によっては CJK が表示されない場合があります。その場合は当該 `showDisplayScaleform` の引数を英語に戻すか、短いローマ字表記に差し替えてください。
+
+**Data Crack / Brute Force** の PC 画面ラベルは上記のとおり英語据え置きです。Fleeca／Plasma ドリルの操作説明は `glitch-notifications` 経由のため日本語表示が期待できます（当リソース側の `ShowNotification` 文言は日本語化済み）。
+
 ## 使い方（基本）
 
 ```lua

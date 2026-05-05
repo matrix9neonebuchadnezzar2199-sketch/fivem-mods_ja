@@ -60,7 +60,7 @@ PlasmaDrilling.Update = function(callback)
     PlasmaDrilling.DisableControls()
     
     if IsEntityDead(PlayerPedId()) then
-      print("Plasma drilling cancelled - player died")
+      print("[plasma] プレイヤー死亡により中止")
       PlasmaDrilling.Result = false
       PlasmaDrilling.Active = false
       
@@ -220,8 +220,8 @@ function beginnDrilling(callback)
 
   if config.usingGlitchNotifications then
     PlasmaDrilling.ControlsNotificationId = exports['glitch-notifications']:ShowNotification(
-        'Plasma Drilling Controls',
-        'Up/Down Arrow - Move Drill\n‎ ‎ ‎ ‎ ‎ Left/Right Arrow - Speed Up\nESC - Cancel',
+        'プラズマドリル操作',
+        '上下矢印 - ドリル移動\n     左右矢印 - 速度調整\nESC - キャンセル',
         0,
         '#ff9f1c',
         false
@@ -281,12 +281,12 @@ function stopDrilling(success)
 
   if success then
       if config.usingGlitchNotifications then
-        exports['glitch-notifications']:ShowNotification('Success', 'Plasma drilling complete!', 3000, '#00ff00', false)
+        exports['glitch-notifications']:ShowNotification('成功', 'プラズマドリリング完了！', 3000, '#00ff00', false)
       end
       TriggerEvent("glitch-minigames:plasmaDrillComplete", true)
   else
       if config.usingGlitchNotifications then
-        exports['glitch-notifications']:ShowNotification('Failed', 'Plasma drilling failed!', 3000, '#ff0000', false)
+        exports['glitch-notifications']:ShowNotification('失敗', 'プラズマドリリング失敗', 3000, '#ff0000', false)
       end
       TriggerEvent("glitch-minigames:plasmaDrillComplete", false)
   end
@@ -338,9 +338,9 @@ if config.DebugCommands then
   RegisterCommand('testplasma', function()
       local success = exports['glitch-minigames']:StartPlasmaDrilling(5)
       if success then
-          print("Drilling successful!")
+          print("[plasma] ドリリング成功")
       else
-          print("Drilling failed!")
+          print("[plasma] ドリリング失敗")
       end
   end, false)
 end

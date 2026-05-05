@@ -365,7 +365,7 @@ local function startReconnection(minReconnectTimeMs, maxReconnectTimeMs)
 
     PlaySoundFrontend(-1, 'Power_Down', 'DLC_HEIST_HACKING_SNAKE_SOUNDS', true)
 
-    showDisplayScaleform('CONNECTION LOST', 'Reconnecting...', 188, 49, 43, false)
+    showDisplayScaleform('接続ロスト', '再接続中...', 188, 49, 43, false)
 
     local reconnectTime = math.random(minReconnectTimeMs, maxReconnectTimeMs) + applyHackingKitBonusToReconnectTime()
     reconnectingTime = GetGameTimer() + math.clamp(reconnectTime, 0, reconnectTime)
@@ -388,13 +388,13 @@ end
 local function showFailureScreenAndPlaySound()
     PlaySoundFrontend(-1, 'Crash', 'DLC_HEIST_HACKING_SNAKE_SOUNDS', true)
     StopSound(trailSoundId)
-    showDisplayScaleform('CIRCUIT FAILED', 'Security Tunnel Detected', 188, 49, 43, false)
+    showDisplayScaleform('回路失敗', 'セキュリティ検知', 188, 49, 43, false)
 end
 
 local function showSuccessScreenAndPlaySound()
     PlaySoundFrontend(-1, 'Goal', 'DLC_HEIST_HACKING_SNAKE_SOUNDS', true)
     StopSound(trailSoundId)
-    showDisplayScaleform('CIRCUIT COMPLETE', 'Decryption Execution x86 Tunneling', 45, 203, 134, true)
+    showDisplayScaleform('回路接続完了', '復号実行 x86 トンネリング', 45, 203, 134, true)
 end
 
 ---@param cursorSpeed number
@@ -472,7 +472,7 @@ local function runMinigameTask(levelNumber, difficultyLevel, cursorSpeed, delayS
         DisableAllControlActions(0)
         
         if IsEntityDead(PlayerPedId()) then
-            print("Circuit breaker cancelled - player died")
+            print("[circuit] プレイヤー死亡により中止")
             -- Stop sounds explicitly before ending game
             StopSound(backgroundSoundId)
             StopSound(trailSoundId)
@@ -647,9 +647,9 @@ if config.DebugCommands then
 
         local success = runDefaultMiniGameFromDifficulty(levelNumber, difficultyLevel)
         if success then
-            print('Minigame completed successfully!')
+            print('[circuit] ミニゲーム成功')
         else
-            print('Minigame failed.')
+            print('[circuit] ミニゲーム失敗')
         end
     end, false)
 end
