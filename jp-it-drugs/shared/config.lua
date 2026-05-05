@@ -10,23 +10,21 @@ Locales = Locales or {}
 -- └───────────────────────────────────┘
 
 --[[
-    Here you can set the language for the script, you can choose between 'en', 'es', 'de'
-    If you want to add more languages, you can do this in the server/locales folder. 
-    Feel free to share them with us so we can add them to the script for everyone to use.
+    スクリプトの言語コード。'en', 'es', 'de' など locales フォルダにあるものから選べます。
+    追加言語は locales にファイルを足して定義してください。
 ]]
 
 Config.Language = 'ja' -- 日本語版デフォルト（locales/ja.lua を参照）
 
 
 --[[
-    Here you can set some generale settings regarding to the some features of the script.
-    You can set the distance for the raycasting, the time a fire will burn and if the script should clear dead plants on start-up.
-    You can also set the player plant limit, this is the maximum amount of plants a player can have simultaneously.
+    全般設定。レイキャスト距離、炎の持続時間、起動時に枯れた植物を掃除するか、
+    プレイヤーが同時に持てる植物の上限などを指定します。
 ]]
-Config.rayCastingDistance = 7.0 -- distance in meters
-Config.FireTime = 10000 -- in ms
-Config.ClearOnStartup = true -- Clear dead plants on script start-up
-Config.PlayerPlantLimit = 10 -- Max amount of plants a player can have simultaneously
+Config.rayCastingDistance = 7.0 -- レイキャスト距離（メートル）
+Config.FireTime = 10000 -- 炎の時間（ミリ秒）
+Config.ClearOnStartup = true -- true ならスクリプト起動時に枯れた植物を削除
+Config.PlayerPlantLimit = 10 -- プレイヤーが同時に持てる植物の最大数
 
 -- ┌───────────────────────────┐
 -- │ _____                     │
@@ -36,10 +34,10 @@ Config.PlayerPlantLimit = 10 -- Max amount of plants a player can have simultane
 -- │/____\___/|_| |_|\___||___/│
 -- └───────────────────────────┘
 
-Config.GlobalGrowTime = 30 -- Time in minutes for a plant to grow
+Config.GlobalGrowTime = 30 -- 植物が成長完了するまでの基準時間（分）
 
 Config.Zones = {
-    ['weed_zone_one'] = { -- Zone id (Musst be unique)
+    ['weed_zone_one'] = { -- ゾーンID（一意であること）
         points = {
             vec3(2031.0, 4853.0, 43.0),
             vec3(2007.0, 4877.0, 43.0),
@@ -49,16 +47,16 @@ Config.Zones = {
             vec3(2057.0, 4878.0, 43.0),
         },
         thickness = 4.0,
-        growMultiplier = 2, -- GlobalGrowTime / growMultiplier = Time in minutes for a plant to grow in this zone
-        
+        growMultiplier = 2, -- このゾーン内の成長時間（分）= GlobalGrowTime / growMultiplier
+
         blip = {
-            display = true, -- Display blip on map
-            sprite = 469, -- Select blip from (https://docs.fivem.net/docs/game-references/blips/)
-            displayColor = 2, -- Select blip color from (https://docs.fivem.net/docs/game-references/blips/)
+            display = true, -- マップにブリップを表示するか
+            sprite = 469, -- スプライトID（https://docs.fivem.net/docs/game-references/blips/）
+            displayColor = 2, -- 色ID（https://docs.fivem.net/docs/game-references/blips/）
             displayText = 'Weed Zone',
         },
     },
-    ['weed_zone_two'] = { -- Zone id (Musst be unique)
+    ['weed_zone_two'] = { -- ゾーンID（一意であること）
         points = {
             vec3(2067.0, 4890.0, 41.0),
             vec3(2043.0, 4914.0, 41.0),
@@ -68,11 +66,11 @@ Config.Zones = {
             vec3(2097.0, 4918.0, 41.0),
         },
         thickness = 4.0,
-        growMultiplier = 2, -- GlobalGrowTime / growMultiplier = Time in minutes for a plant to grow in this zone
+        growMultiplier = 2, -- このゾーン内の成長時間（分）= GlobalGrowTime / growMultiplier
         blip = {
-            display = true, -- Display blip on map
-            sprite = 469, -- Select blip from (https://docs.fivem.net/docs/game-references/blips/)
-            displayColor = 2, -- Select blip color from (https://docs.fivem.net/docs/game-references/blips/)
+            display = true, -- マップにブリップを表示するか
+            sprite = 469, -- スプライトID（https://docs.fivem.net/docs/game-references/blips/）
+            displayColor = 2, -- 色ID（https://docs.fivem.net/docs/game-references/blips/）
             displayText = 'Weed Zone',
         },
     },
@@ -87,13 +85,13 @@ Config.Zones = {
 -- │|_|   |_|\__,_|_| |_|\__|___/│
 -- └─────────────────────────────┘
 
-Config.PlantDistance = 1.5 -- minimum Distance between two plants
+Config.PlantDistance = 1.5 -- 植物同士の最小間隔（メートル）
 
-Config.OnlyAllowedGrounds = false -- Allow drug growth only on allowed grounds
-Config.AllowedGrounds = {   -- Allowed ground types for planting
-    1109728704, -- fields
-    -1942898710, -- grass/dirt
-    510490462, -- dirt path
+Config.OnlyAllowedGrounds = false -- true なら許可した地面タイプでのみ栽培可能
+Config.AllowedGrounds = {   -- 植え付けを許可する地面マテリアル（ハッシュ）
+    1109728704, -- 畑
+    -1942898710, -- 草地・土
+    510490462, -- 土の道
     -1286696947,
     -1885547121,
     223086562,
@@ -102,14 +100,14 @@ Config.AllowedGrounds = {   -- Allowed ground types for planting
     -1907520769,
 }
 
-Config.WaterDecay = 1 -- Percent of water that decays every minute
-Config.FertilizerDecay = 0.7 -- Percent of fertilizers that decays every minute
+Config.WaterDecay = 1 -- 水分が毎分減る割合（%）
+Config.FertilizerDecay = 0.7 -- 肥料が毎分減る割合（%）
 
 Config.FertilizerThreshold = 10
 Config.WaterThreshold = 10
-Config.HealthBaseDecay = {7, 10} -- Min/Max Amount of health decay when the plant is below the above thresholds for water and nutrition
+Config.HealthBaseDecay = {7, 10} -- 水分・肥料が閾値未満のとき、体力が毎分減る量の最小〜最大
 
-Config.ItemToDestroyPlant = false -- true to need an item to destroy a plant
+Config.ItemToDestroyPlant = false -- true なら植物破棄にアイテムが必要
 Config.DestroyItemName = "lighter"
 
 
@@ -117,7 +115,7 @@ Config.Items = {
     ['watering_can'] = {
         water = 25,
         fertilizer = 0,
-        itemBack = nil, -- Example itemBack = 'watering_can' if you want to get the watering can back after used
+        itemBack = nil, -- 使用後に戻すアイテム名。例: itemBack = 'watering_can'
     },
     ['liquid_fertilizer'] = {
         water = 15,
@@ -137,14 +135,14 @@ Config.Items = {
 }
 
 Config.PlantTypes = {
-    -- small is growth 0-30%, medium is 30-80%, large is 80-100%
+    -- small=成長0〜30%、medium=30〜80%、large=80〜100%
     ["plantLemon"] = {
-        [1] = {"an_weed_yellow_01_small_01b", -0.5}, -- Set to -0.5 to make the plant grow in the ground
+        [1] = {"an_weed_yellow_01_small_01b", -0.5}, -- -0.5 で地面にめり込ませて表示
         [2] = {"an_weed_yellow_med_01b", -0.5},
         [3] = {"an_weed_yellow_lrg_01b", -0.5},
     },
     ["plantOg"] = {
-        [1] = {"bkr_prop_weed_01_small_01a", -0.5}, -- Set to -0.5 to make the plant grow in the ground
+        [1] = {"bkr_prop_weed_01_small_01a", -0.5}, -- -0.5 で地面にめり込ませて表示
         [2] = {"bkr_prop_weed_med_01a", -0.5},
         [3] = {"bkr_prop_weed_lrg_01a", -0.5},
     },
@@ -170,107 +168,107 @@ Config.PlantTypes = {
     },
 }
 
-Config.Plants = { -- Create seeds for drugs
+Config.Plants = { -- 種から育てる植物の定義
     ['weed_lemonhaze_seed'] = {
-        label = 'Lemon Haze', -- Label for the plant
-        plantType = 'plantLemon', -- Choose plant types from (plant1, plant2, small_plant)
-        growthTime = false, -- Custom growth time in minutes false if you want to use the global growth time
-        onlyZone = false, -- Set to zone id if you want to plant this seed only in a specific zone 
-        zones = {'weed_zone_one', 'weed_zone_two'}, -- Zones where the seed can be planted
-        products = { -- Item the plant is going to produce when harvested with the max amount
-            ['weed_lemonhaze'] = {min = 1, max = 4},  
+        label = 'Lemon Haze', -- メニュー等に出る植物名
+        plantType = 'plantLemon', -- Config.PlantTypes のキー
+        growthTime = false, -- 成長時間（分）。false で Config.GlobalGrowTime（とゾーン倍率）を使用
+        onlyZone = false, -- 特定ゾーンのみならゾーンIDの文字列を指定
+        zones = {'weed_zone_one', 'weed_zone_two'}, -- 植え付けを許可するゾーンIDのリスト
+        products = { -- 収穫時に得るアイテムと数量範囲
+            ['weed_lemonhaze'] = {min = 1, max = 4},
             --['other_item'] = {min = 1, max = 2}
         },
         seed = {
-            chance = 50, -- Percent of getting back the seed
-            min = 1, -- Min amount of seeds
-            max = 2 -- Max amount of seeds
+            chance = 50, -- 種が返ってくる確率（%）
+            min = 1, -- 返る種の最小個数
+            max = 2 -- 返る種の最大個数
         },
-        time = 3000, -- Time it takes to plant/harvest in miliseconds
+        time = 3000, -- 植え付け・収穫の所要時間（ミリ秒）
     },
     ['weed_og_seed'] = {
-        label = 'Og Kush', -- Label for the plant
-        plantType = 'plantOg', -- Choose plant types from (plant1, plant2, small_plant)
-        growthTime = false, -- Custom growth time in minutes false if you want to use the global growth time
-        onlyZone = false, -- Set to zone id if you want to plant this seed only in a specific zone 
-        zones = {'weed_zone_one', 'weed_zone_two'}, -- Zones where the seed can be planted
-        products = { -- Item the plant is going to produce when harvested with the max amount
-            ['weed_Og'] = {min = 1, max = 4},  
+        label = 'Og Kush', -- メニュー等に出る植物名
+        plantType = 'plantOg', -- Config.PlantTypes のキー
+        growthTime = false, -- 成長時間（分）。false でグローバル設定を使用
+        onlyZone = false, -- 特定ゾーンのみならゾーンID
+        zones = {'weed_zone_one', 'weed_zone_two'}, -- 植え付け可能ゾーン
+        products = { -- 収穫アイテム
+            ['weed_Og'] = {min = 1, max = 4},
             --['other_item'] = {min = 1, max = 2}
         },
         seed = {
-            chance = 50, -- Percent of getting back the seed
-            min = 1, -- Min amount of seeds
-            max = 2 -- Max amount of seeds
+            chance = 50, -- 種が返る確率（%）
+            min = 1,
+            max = 2
         },
-        time = 3000, -- Time it takes to plant/harvest in miliseconds
+        time = 3000, -- 植え付け・収穫（ミリ秒）
     },
     ['weed_purple_haze_seed'] = {
-        label = 'Purple Haze', -- Label for the plant
-        plantType = 'plantPurple', -- Choose plant types from (plant1, plant2, small_plant)
-        growthTime = false, -- Custom growth time in minutes false if you want to use the global growth time
-        onlyZone = false, -- Set to zone id if you want to plant this seed only in a specific zone 
-        zones = {'weed_zone_one', 'weed_zone_two'}, -- Zones where the seed can be planted
-        products = { -- Item the plant is going to produce when harvested with the max amount
-            ['weed_purple_haze'] = {min = 1, max = 4},  
+        label = 'Purple Haze', -- メニュー等に出る植物名
+        plantType = 'plantPurple', -- Config.PlantTypes のキー
+        growthTime = false,
+        onlyZone = false,
+        zones = {'weed_zone_one', 'weed_zone_two'},
+        products = {
+            ['weed_purple_haze'] = {min = 1, max = 4},
             --['other_item'] = {min = 1, max = 2}
         },
         seed = {
-            chance = 50, -- Percent of getting back the seed
-            min = 1, -- Min amount of seeds
-            max = 2 -- Max amount of seeds
+            chance = 50,
+            min = 1,
+            max = 2
         },
-        time = 3000, -- Time it takes to plant/harvest in miliseconds
+        time = 3000,
     },
     ['weed_white_widow_seed'] = {
-        label = 'White Widow', -- Label for the plant
-        plantType = 'plantWhite', -- Choose plant types from (plant1, plant2, small_plant)
-        growthTime = false, -- Custom growth time in minutes false if you want to use the global growth time
-        onlyZone = false, -- Set to zone id if you want to plant this seed only in a specific zone 
-        zones = {'weed_zone_one', 'weed_zone_two'}, -- Zones where the seed can be planted
-        products = { -- Item the plant is going to produce when harvested with the max amount
-            ['weed_white_widow'] = {min = 1, max = 4},  
+        label = 'White Widow', -- メニュー等に出る植物名
+        plantType = 'plantWhite', -- Config.PlantTypes のキー
+        growthTime = false,
+        onlyZone = false,
+        zones = {'weed_zone_one', 'weed_zone_two'},
+        products = {
+            ['weed_white_widow'] = {min = 1, max = 4},
             --['other_item'] = {min = 1, max = 2}
         },
         seed = {
-            chance = 50, -- Percent of getting back the seed
-            min = 1, -- Min amount of seeds
-            max = 2 -- Max amount of seeds
+            chance = 50,
+            min = 1,
+            max = 2
         },
-        time = 3000, -- Time it takes to plant/harvest in miliseconds
+        time = 3000,
     },
     ['weed_blueberry_seed'] = {
-        label = 'Blueberry', -- Label for the plant
-        plantType = 'plantBlue', -- Choose plant types from (plant1, plant2, small_plant)
-        growthTime = false, -- Custom growth time in minutes false if you want to use the global growth time
-        onlyZone = false, -- Set to zone id if you want to plant this seed only in a specific zone 
-        zones = {'weed_zone_one', 'weed_zone_two'}, -- Zones where the seed can be planted
-        products = { -- Item the plant is going to produce when harvested with the max amount
-            ['weed_blueberry'] = {min = 1, max = 4},  
+        label = 'Blueberry', -- メニュー等に出る植物名
+        plantType = 'plantBlue', -- Config.PlantTypes のキー
+        growthTime = false,
+        onlyZone = false,
+        zones = {'weed_zone_one', 'weed_zone_two'},
+        products = {
+            ['weed_blueberry'] = {min = 1, max = 4},
             --['other_item'] = {min = 1, max = 2}
         },
         seed = {
-            chance = 50, -- Percent of getting back the seed
-            min = 1, -- Min amount of seeds
-            max = 2 -- Max amount of seeds
+            chance = 50,
+            min = 1,
+            max = 2
         },
-        time = 3000, -- Time it takes to plant/harvest in miliseconds
+        time = 3000,
     },
     ['coca_seed'] = {
-        growthTime = 45, -- Custom growth time in minutes false if you want to use the global growth time
-        onlyZone = false, -- Set to zone id if you want to plant this seed only in a specific zone 
-        label = 'Coca Plant', -- Label for the plant
-        zones = {}, -- Zones where the seed can be planted
-        plantType = 'small_plant', -- Choose plant types from (plant1, plant2, small_plant) also you can change plants yourself in main/client.lua line: 2
-        products = { -- Item the plant is going to produce when harvested with the max amount
+        growthTime = 45, -- 成長時間（分）。false でグローバル設定
+        onlyZone = false,
+        label = 'Coca Plant', -- メニュー等に出る植物名
+        zones = {}, -- 空ならゾーン制限なし（マップ全域の扱いはスクリプト仕様に依存）
+        plantType = 'small_plant', -- Config.PlantTypes のキー（モデル変更は client 側も参照）
+        products = {
             ['coca']= {min = 1, max = 2}
         },
         seed = {
-            chance = 50, -- Percent of getting back the seed
-            min = 1, -- Min amount of seeds
-            max = 2 -- Max amount of seeds
+            chance = 50,
+            min = 1,
+            max = 2
         },
-        time = 3000 -- Time it takes to harvest in miliseconds
+        time = 3000 -- 収穫などの所要時間（ミリ秒）
     },
 }
 
@@ -284,24 +282,22 @@ Config.Plants = { -- Create seeds for drugs
 -- └─────────────────────────────────────────────────┘
 
 --[[
-    Next you have to prepeare the Processing settings. You can create as many processing tables as you want.
-    You can create use as many ingrediants as you want. You can also change the processing table models to your liking.
-    Each table is for proccessing a specific drug type. You can also create to tables for the same drug type.
-
+    精製（加工）テーブルの設定。テーブルはいくつでも追加可能。
+    レシピの材料・個数・加工時間などを定義する。同じドラッグ用に複数テーブルを置いてもよい。
 ]]
 
-Config.EnableProcessing = true -- Enable crafting system
+Config.EnableProcessing = true -- 精製クラフトを有効にするか
 
-Config.ProcessingSkillCheck = false -- Enable skill check for processingTables (Replaces the progressbar)
+Config.ProcessingSkillCheck = false -- true ならプログレスバーの代わりにスキルチェック
 Config.SkillCheck = {
     difficulty = {'easy', 'easy', 'medium', 'easy'},
     keys = {'w', 'a', 's', 'd'}
 }
 
-Config.ProcessingTables = { -- Create processing table
+Config.ProcessingTables = { -- 設置型の加工テーブル定義
     ['weed_processing_table'] = {
-        label = 'Weed Processing Table', -- Label for the table
-        model = 'freeze_it-scripts_weed_table', -- Exanples: freeze_it-scripts_empty_table, freeze_it-scripts_weed_table, freeze_it-scripts_coke_table, freeze_it-scripts_meth_table
+        label = 'Weed Processing Table', -- 表示名
+        model = 'freeze_it-scripts_weed_table', -- 例: freeze_it-scripts_empty_table, freeze_it-scripts_weed_table, freeze_it-scripts_coke_table, freeze_it-scripts_meth_table
         recipes = {
             ['joint_lemon_haze'] = {
                 label = 'Joint lemon haze',
@@ -339,10 +335,10 @@ Config.ProcessingTables = { -- Create processing table
             },
         }
     },
-    
+
     ['cocaine_processing_table'] = {
-        label = 'Cocaine Processing Table', -- Label for the table
-        model = 'freeze_it-scripts_coke_table', -- Exanples: freeze_it-scripts_empty_table, freeze_it-scripts_weed_table, freeze_it-scripts_coke_table, freeze_it-scripts_meth_table
+        label = 'Cocaine Processing Table', -- 表示名
+        model = 'freeze_it-scripts_coke_table', -- 上記と同様にモデル名を指定
         recipes = {
             ['cocaine'] = {
                 label = 'Cocaine',
@@ -374,40 +370,40 @@ Config.ProcessingTables = { -- Create processing table
 -- │                  |___/     │
 -- └────────────────────────────┘
 
--- Possible Drug Effects: https://help.it-scripts.com/scripts/it-drugs/adjustments/drugs#all-possible-drug-effects
+-- 利用可能なドラッグ効果一覧: https://help.it-scripts.com/scripts/it-drugs/adjustments/drugs#all-possible-drug-effects
 
-Config.EnableDrugs = true -- Enable drug effects
-Config.Drugs = { -- Create you own drugs
+Config.EnableDrugs = true -- 使用時のドラッグ効果を有効にするか
+Config.Drugs = { -- 使用可能なドラッグと効果の定義
 
     ['joint'] = {
         label = 'Joint',
-        animation = 'smoke', -- Animations: blunt, sniff, pill
-        time = 80, -- Time in seconds of the Effects
-        effects = { -- Effects: runningSpeedIncrease, infinateStamina, moreStrength, healthRegen, foodRegen, drunkWalk, psycoWalk, outOfBody, cameraShake, fogEffect, confusionEffect, whiteoutEffect, intenseEffect, focusEffect
+        animation = 'smoke', -- 使用アニメ: blunt, sniff, pill
+        time = 80, -- 効果の持続時間（秒）
+        effects = { -- 効果キー: runningSpeedIncrease, infinateStamina, moreStrength, healthRegen, foodRegen, drunkWalk, psycoWalk, outOfBody, cameraShake, fogEffect, confusionEffect, whiteoutEffect, intenseEffect, focusEffect など
             'intenseEffect',
             'healthRegen',
             'moreStrength',
             'drunkWalk'
         },
-        cooldown = 360, -- Cooldown in seconds until you can use this drug again
+        cooldown = 360, -- 再使用までのクールダウン（秒）
     },
     ['cocaine'] = {
         label = 'Cocaine',
-        animation = 'sniff', -- Animations: blunt, sniff, pill
-        time = 60, -- Time in seconds of the Effects
-        effects = { -- Effects: runningSpeedIncrease, infinateStamina, moreStrength, healthRegen, foodRegen, drunkWalk, psycoWalk, outOfBody, cameraShake, fogEffect, confusionEffect, whiteoutEffect, intenseEffect, focusEffect
+        animation = 'sniff', -- 使用アニメ: blunt, sniff, pill
+        time = 60, -- 効果の持続時間（秒）
+        effects = {
             'runningSpeedIncrease',
             'infinateStamina',
             'fogEffect',
             'psycoWalk'
         },
-        cooldown = 480, -- Cooldown in seconds until you can use this drug again
+        cooldown = 480, -- 再使用までのクールダウン（秒）
     },
 }
 
 --[[
-    You also can sell the drugs you created. You can create as many sell zones as you want.
-    You can also change the sell zone models to your liking. You can change the price of each drug in each zone.
+    NPC への売却設定。売却ゾーンはいくつでも追加可能。
+    ゾーンごとにドラッグ単価や支払いタイプ（現金/銀行）を変えられる。
 ]]
 
 -- ┌──────────────────────────────┐
@@ -419,10 +415,10 @@ Config.Drugs = { -- Create you own drugs
 -- │                        |___/ │
 -- └──────────────────────────────┘
 
-Config.EnableSelling = true -- Enable selling system
+Config.EnableSelling = true -- NPC 売却システムを有効にするか
 
-Config.MinimumCops = 0 -- Minimum cops required to sell drugs
-Config.OnlyCopsOnDuty = true -- Check if cops are on-duty (Only QBCore).
+Config.MinimumCops = 0 -- 売却に必要な警察の最低人数
+Config.OnlyCopsOnDuty = true -- オン勤務のみカウント（QBCore 向け）
 Config.PoliceJobs = {
     'police',
     'offpolice',
@@ -431,19 +427,19 @@ Config.PoliceJobs = {
 }
 
 Config.SellSettings = {
-    ['onlyAvailableItems'] = true, -- Only offers with drugs the player has in his inventory
-    ['sellChance'] = 70, -- Chance to sell drug (in %)
-    ['stealChance'] = 20, -- Chance that the ped dont give you money (in %)
-    ['sellAmount'] = { -- Amount of drugs you can sell
+    ['onlyAvailableItems'] = true, -- true なら所持しているドラッグだけオファーに出る
+    ['sellChance'] = 70, -- 売却が成立する確率（%）
+    ['stealChance'] = 20, -- 代金を払わずに逃げられる確率（%）
+    ['sellAmount'] = { -- 一度に売れる個数の範囲
         min = 1,
         max = 6,
     },
-    ['sellTimeout'] = 20, -- Max time you get to choose your option (secs)
-    ['giveBonusOnPolice'] = true, -- Give bonus money if there is police online | 1-2 Cops : x1.2 | 3-6 Cops : x1.5 | 7-10 Cops : x1.7 | +10 Cops : x2.0
+    ['sellTimeout'] = 20, -- メニューで選べる最大時間（秒）
+    ['giveBonusOnPolice'] = true, -- 警察オンライン時にボーナス倍率 | 1〜2人:x1.2 | 3〜6:x1.5 | 7〜10:x1.7 | 11人以上:x2.0
 }
 
 Config.SellEverywhere = {
-    ['enabled'] = false, -- Allow selling drugs everywhere
+    ['enabled'] = false, -- true ならゾーン外でも売却可能
     drugs = {
         ['cocaine'] = {price = math.random(100, 200), moneyType = 'bank'},
         ['joint'] = {price = math.random(50, 100), moneyType = 'cash'},
@@ -518,34 +514,34 @@ Config.SellZones = {
 -- │|____/ \___|\__,_|_|\___|_|  |___/│
 -- └──────────────────────────────────┘
 
--- The Drug Dealer system is a system that allows you to buy seed from a dealer
-Config.EnableDealers = true -- Enable drug dealer system
+-- 売人（ディーラー）: 種などの売買 NPC をスポーンさせる
+Config.EnableDealers = true -- 売人システムを有効にするか
 
 Config.DrugDealers = {
-    ['seed_dealer'] = { -- Dealer id (Musst be unique)
-        label = 'Seed Dealer', -- Dealer name
-        locations = { -- Dealer will spawn at one of these locations
+    ['seed_dealer'] = { -- 売人ID（一意であること）
+        label = 'Seed Dealer', -- 表示名
+        locations = { -- このいずれかの座標にスポーン
             vector4(-462.8489, 1101.5592, 326.6819, 166.9773),
             vector4(-49.4244, 1903.6714, 194.3613, 95.7213),
             vector4(2414.2463, 5003.8462, 45.6655, 40.8932),
         },
-        ped = 's_m_y_dealer_01', -- Ped model
+        ped = 's_m_y_dealer_01', -- Ped モデル名
         blip = {
-            display = false, -- Display blip on map
-            sprite = 140, -- Select blip from (https://docs.fivem.net/docs/game-references/blips/)
-            displayColor = 2, -- Select blip color from (https://docs.fivem.net/docs/game-references/blips/)
+            display = false, -- マップにブリップを出すか
+            sprite = 140, -- スプライトID
+            displayColor = 2, -- 色ID
             displayText = 'Seed Dealer',
         },
         items = {
-            ['buying'] = { -- Items the dealer buys from you
-                ['weed_og'] = {min = 100, max = 200, moneyType = 'cash'}, -- min/max price
-                ['weed_lemonhaze'] = {min = 200, max = 300, moneyType = 'cash'}, -- min/max price
-                ['weed_purple_haze'] = {min = 300, max = 400, moneyType = 'cash'}, -- min/max price
-                ['weed_white_widow'] = {min = 400, max = 500, moneyType = 'cash'}, -- min/max price
-                ['weed_blueberry'] = {min = 500, max = 600, moneyType = 'cash'}, -- min/max price
+            ['buying'] = { -- プレイヤーが売人に「売る」アイテム
+                ['weed_og'] = {min = 100, max = 200, moneyType = 'cash'}, -- 価格の最小〜最大
+                ['weed_lemonhaze'] = {min = 200, max = 300, moneyType = 'cash'},
+                ['weed_purple_haze'] = {min = 300, max = 400, moneyType = 'cash'},
+                ['weed_white_widow'] = {min = 400, max = 500, moneyType = 'cash'},
+                ['weed_blueberry'] = {min = 500, max = 600, moneyType = 'cash'},
             },
-            ['selling'] = { -- Items the dealer sells to you
-                ['weed_og_seed'] = {min = 100, max = 200, moneyType = 'bank'}, -- min/max price
+            ['selling'] = { -- プレイヤーが売人から「買う」アイテム
+                ['weed_og_seed'] = {min = 100, max = 200, moneyType = 'bank'},
                 ['weed_lemonhaze_seed'] = {min = 300, max = 400, moneyType = 'cash'},
                 ['weed_purple_haze_seed'] = {min = 400, max = 500, moneyType = 'cash'},
                 ['weed_white_widow_seed'] = {min = 500, max = 600, moneyType = 'cash'},
@@ -557,7 +553,7 @@ Config.DrugDealers = {
 }
 
 Config.BlacklistPeds = {
-    -- Peds you cant sell drugs to
+    -- ドラッグを売れない Ped モデル
     "mp_m_shopkeep_01",
     "s_m_y_ammucity_01",
     "s_m_m_lathandy_01",
@@ -569,13 +565,12 @@ Config.BlacklistPeds = {
 }
 
 --[[
-    Debug mode, you can see all kinds of prints/logs using debug,
-    but it's only for development.
+    デバッグ用。開発時のみ true にするとログが増える。
 ]]
-Config.ManualZoneChecker = false -- Set to true to enable the automatic zone checker
-Config.ManualDatabaseSetup = false -- Set to true to disable the automatic database setup and check
+Config.ManualZoneChecker = false -- true にすると自動ゾーンチェッカーを有効（原作のコメント表記どおり）
+Config.ManualDatabaseSetup = false -- true で DB の自動セットアップ・チェックを無効化
 
-Config.EnableVersionCheck = true -- Enable version check
-Config.Branch = 'main' -- Set to 'master' to use the master branch, set to 'development' to use the dev branch
-Config.Debug = false -- Set to true to enable debug mode
-Config.DebugPoly = false -- Set to true to enable debug mode for PolyZone
+Config.EnableVersionCheck = true -- バージョンチェックを有効にするか
+Config.Branch = 'main' -- 参照ブランチ: 'master' または 'development' など
+Config.Debug = false -- true でデバッグログ
+Config.DebugPoly = false -- true で PolyZone のデバッグ表示
