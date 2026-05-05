@@ -56,7 +56,7 @@ RegisterNetEvent('b2b_documents:server:requestPaper', function()
 
     if INV.CanCarry(src, Config.Items.blank, 1) then
         paperCooldowns[src] = now
-        local ok = select(1, INV.AddItem(src, Config.Items.blank, 1, {}))
+        local ok = select(1, INV.AddItem(src, Config.Items.blank, 1, nil))
         if ok then
             FW.Notify(src, T('paper_taken'), 'success')
         else

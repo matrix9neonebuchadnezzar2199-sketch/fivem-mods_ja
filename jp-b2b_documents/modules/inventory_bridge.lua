@@ -93,15 +93,20 @@ end
 
 function INV.AddItem(src, item, count, metadata)
     count = count or 1
-    metadata = metadata or {}
 
     if INV.name == 'ox_inventory' then
-        local ok = exports.ox_inventory:AddItem(src, item, count, metadata)
+        -- 空の {} を渡すと「メタあり」とみなされ、stack=true でも既存スロットと合流しないことがある（nil に正規化）
+        local meta = metadata
+        if type(meta) == 'table' and next(meta) == nil then
+            meta = nil
+        end
+        local ok = exports.ox_inventory:AddItem(src, item, count, meta)
         return ok and true or false, nil
 
     elseif INV.name == 'qb-inventory' then
+        local qbMeta = metadata or {}
         local ok, res = pcall(function()
-            return exports['qb-inventory']:AddItem(src, item, count, false, metadata, 'jp-b2b_documents:add')
+            return exports['qb-inventory']:AddItem(src, item, count, false, qbMeta, 'jp-b2b_documents:add')
         end)
         if ok and res and FW.name == 'qbcore' and FW.object then
             local sharedItem = FW.object.Shared.Items[item]

@@ -54,7 +54,7 @@ STEP 3：アイテム登録
   以下は **フォルダ名が jp-b2b_documents のときの完成例**（コピーするなら <RESOURCE> を自分の名前に読み替え）:
 
   ['paper_blank'] = {
-      -- stack = true: 本 MOD は白紙を常に空メタ {} で付与するため、未使用同士はスタック可能（インベント節約）。
+      -- stack = true: 白紙はメタ無しで付与されるため未使用同士はスタック可能。items を stack=false のままにしていると重ならない。
       label = '白紙の用紙', weight = 10, stack = true, close = true,
       client = {
           image = 'nui://jp-b2b_documents/web/images/paper.png',

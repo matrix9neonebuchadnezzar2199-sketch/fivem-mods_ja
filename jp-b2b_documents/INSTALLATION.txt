@@ -30,7 +30,7 @@ each block must end with `},` — a bare `}` before the next `['key']` causes a 
     ['paper_blank'] = {
         label = 'Blank Sheet',
         weight = 10,
-        -- stack = true: this resource adds blank paper with empty metadata {}, so unused sheets stack.
+        -- stack = true: blank paper is added with no metadata (nil), so stacks merge in ox_inventory.
         stack = true,
         close = true,
         client = {

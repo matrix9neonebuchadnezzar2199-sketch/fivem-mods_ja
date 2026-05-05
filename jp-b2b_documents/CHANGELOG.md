@@ -4,11 +4,17 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.8] — 2026-05-05
+
+### Fixed
+
+- **ox_inventory 白紙がスタックしない**: `AddItem` に **`{}`（空テーブル）**を渡すと、一部環境で「メタあり」と扱われ **`stack = true` でも既存スロットに合流しない**。`INV.AddItem` で空テーブルを **`nil` に正規化**し、配布は **`nil` メタ**で付与するように変更（`inventory_bridge.lua` / `server.lua`）。
+
 ## [2.0.3-jp.7] — 2026-05-05
 
 ### Changed
 
-- **ドキュメント**: ox_inventory の `paper_blank` 例を **`stack = true`** に変更（本 MOD は白紙を空メタ `{}` のみで付与するため未使用同士がスタック可能）。`document` はメタ個別のため **`stack = false` のまま**。[`config.lua`](./config.lua) に注意書きを追加。
+- **ドキュメント**: ox_inventory の `paper_blank` 例を **`stack = true`** に変更（未使用同士がスタック可能）。`document` は **`stack = false` のまま**。[`config.lua`](./config.lua) に注意書きを追加。
 
 ## [2.0.3-jp.6] — 2026-05-05
 
