@@ -1,5 +1,6 @@
 const SizeStyle = Quill.import('attributors/style/size');
-SizeStyle.whitelist = null;
+/** ツールバー・i18n（applyQuillSizeLabels）と一致 */
+SizeStyle.whitelist = [false, '14px', '24px', '32px'];
 Quill.register(SizeStyle, true);
 
 const ColorStyle = Quill.import('attributors/style/color');
@@ -41,6 +42,7 @@ if (b2bFontToolbarRow) {
     toolbarRows.push(b2bFontToolbarRow);
 }
 toolbarRows.push(
+    [{ size: [false, '14px', '24px', '32px'] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'color': [] }, { 'background': [] }],
     [{ 'align': [] }],
@@ -59,10 +61,12 @@ const quill = new Quill('#editor', {
  * keyboard.addBinding で return false しても「先に動いたバインディング」で処理が止まり当ハンドラが呼ばれないため、
  * capture 段階の keydown で書式を覚え、text-change で改行を検出したら再適用する。
  */
-/** ブロック→インラインの順で再適用（見出しだけ落ちる問題の対策で header を含む） */
+/**
+ * 改行後の再適用。header は含めない（見出しはブロック単位の意味なので Normal へ戻るのは許容。
+ * header を先に付けると font が消えることがあるため、インライン→align の順。
+ */
 const B2B_REAPPLY_AFTER_ENTER_ORDER = [
-    'header', 'align',
-    'font', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'size'
+    'font', 'bold', 'italic', 'underline', 'strike', 'color', 'background', 'size', 'align'
 ];
 let b2bEnterPreserveFormats = null;
 
