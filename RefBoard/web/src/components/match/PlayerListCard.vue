@@ -7,6 +7,7 @@ defineProps<{
   players: MatchPlayer[]
   readonly: boolean
   teamId: number
+  editorHere: boolean
 }>()
 
 const emit = defineEmits<{ 'history': []; 'add': [teamId: number] }>()
@@ -16,15 +17,24 @@ const { t } = useI18n()
 function statusClass(s: MatchPlayer['status']) {
   if (s === 'playing') return 'text-emerald-400'
   if (s === 'warning') return 'text-amber-400'
+  if (s === 'warning_double') return 'text-amber-300'
   if (s === 'sent_off') return 'text-red-400'
+  if (s === 'subbed_out') return 'text-slate-500 line-through decoration-slate-500'
   return 'text-slate-500'
 }
 
 function statusLabel(s: MatchPlayer['status']) {
-  if (s === 'playing') return '●出場'
-  if (s === 'warning') return '●警告'
-  if (s === 'sent_off') return '●退場'
-  return '●控え'
+  if (s === 'playing') return t('player_status.playing')
+  if (s === 'warning') return t('player_status.warning')
+  if (s === 'warning_double') return t('player_status.warning_double')
+  if (s === 'sent_off') return t('player_status.sent_off')
+  if (s === 'subbed_out') return t('player_status.subbed_out')
+  return t('player_status.bench')
+}
+
+function rowClass(s: MatchPlayer['status']) {
+  if (s === 'subbed_out') return 'opacity-60'
+  return ''
 }
 </script>
 
@@ -36,7 +46,12 @@ function statusLabel(s: MatchPlayer['status']) {
         <button type="button" class="text-[10px] text-primary hover:underline" @click="emit('history')">
           {{ t('player.list_history_link') }}
         </button>
-        <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">編集中</span>
+        <span
+          v-if="editorHere"
+          class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+        >
+          {{ t('match_status.editing_here') }}
+        </span>
       </div>
     </div>
     <div class="overflow-x-auto">
@@ -50,7 +65,7 @@ function statusLabel(s: MatchPlayer['status']) {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="p in players" :key="p.id" class="border-b border-slate-700/80">
+          <tr v-for="p in players" :key="p.id" class="border-b border-slate-700/80" :class="rowClass(p.status)">
             <td class="py-2 pr-2 font-mono text-slate-300">{{ p.number }}</td>
             <td class="py-2 pr-2 text-slate-100">{{ p.name }}</td>
             <td class="py-2 pr-2 text-slate-400">{{ p.position }}</td>

@@ -1,17 +1,26 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel } from '../../types/match'
 
 defineProps<{
   model: MatchDetailModel
   readonly: boolean
+  editorHere: boolean
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <div class="rounded-lg border border-slate-700 bg-slate-800/80 p-4 shadow-sm backdrop-blur">
     <div class="mb-2 flex items-center justify-between gap-2">
       <h3 class="text-sm font-semibold text-slate-200">基本情報</h3>
-      <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">編集中</span>
+      <span
+        v-if="editorHere"
+        class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+      >
+        {{ t('match_status.editing_here') }}
+      </span>
     </div>
     <div class="space-y-3">
       <label class="block text-xs text-slate-400">

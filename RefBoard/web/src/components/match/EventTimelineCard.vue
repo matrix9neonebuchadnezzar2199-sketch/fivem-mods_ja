@@ -1,17 +1,40 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { MatchEvent } from '../../types/match'
 
 defineProps<{
   events: MatchEvent[]
   readonly: boolean
+  editorHere: boolean
 }>()
+
+const emit = defineEmits<{ substitute: []; issueCard: [kind: 'yellow' | 'red'] }>()
+
+const { t } = useI18n()
+const menuOpen = ref(false)
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+
+function pick(kind: 'sub' | 'yellow' | 'red') {
+  menuOpen.value = false
+  if (kind === 'sub') emit('substitute')
+  else emit('issueCard', kind)
+}
 </script>
 
 <template>
   <div class="rounded-lg border border-slate-700 bg-slate-800/80 p-4 shadow-sm backdrop-blur">
     <div class="mb-2 flex items-center justify-between gap-2">
-      <h3 class="text-sm font-semibold text-slate-200">試合イベント</h3>
-      <span class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">編集中</span>
+      <h3 class="text-sm font-semibold text-slate-200">{{ t('events.title') }}</h3>
+      <span
+        v-if="editorHere"
+        class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+      >
+        {{ t('match_status.editing_here') }}
+      </span>
     </div>
     <ul class="max-h-64 space-y-2 overflow-y-auto pr-1 text-sm">
       <li v-for="e in events" :key="e.id" class="flex gap-2 rounded bg-slate-900/50 px-2 py-1.5 font-mono text-slate-200">
@@ -19,12 +42,29 @@ defineProps<{
         <span>{{ e.text }}</span>
       </li>
     </ul>
-    <button
-      type="button"
-      class="mt-3 w-full rounded-lg border border-dashed border-slate-500 py-2 text-xs font-medium text-slate-300 hover:border-primary hover:text-primary"
-      :disabled="readonly"
-    >
-      + イベントを追加
-    </button>
+    <div class="relative mt-3">
+      <button
+        type="button"
+        class="w-full rounded-lg border border-dashed border-slate-500 py-2 text-xs font-medium text-slate-300 hover:border-primary hover:text-primary disabled:opacity-40"
+        :disabled="readonly"
+        @click="toggleMenu"
+      >
+        {{ t('events.add') }}
+      </button>
+      <div
+        v-if="menuOpen && !readonly"
+        class="absolute bottom-full left-0 z-30 mb-1 w-full rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
+      >
+        <button type="button" class="block w-full px-3 py-2 text-left text-xs hover:bg-slate-800" @click="pick('sub')">
+          {{ t('match.substitute') }}
+        </button>
+        <button type="button" class="block w-full px-3 py-2 text-left text-xs hover:bg-slate-800" @click="pick('yellow')">
+          {{ t('events.add_yellow') }}
+        </button>
+        <button type="button" class="block w-full px-3 py-2 text-left text-xs hover:bg-slate-800" @click="pick('red')">
+          {{ t('events.add_red') }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>

@@ -7,12 +7,16 @@ export type PresenceUser = {
   name: string
   mode: 'edit' | 'view'
   since: number
+  /** 編集者が操作中の UI セクション */
+  focus?: string | null
 }
 
 export const usePresenceStore = defineStore('presence', () => {
   const users = ref<PresenceUser[]>([])
 
   const editorUser = computed(() => users.value.find((u) => u.mode === 'edit') ?? null)
+  /** 編集ロック保持者が見ている UI セクション（閲覧者のバッジ表示用） */
+  const editorFocus = computed(() => editorUser.value?.focus ?? null)
   const totalCount = computed(() => users.value.length)
 
   function applyUpdate(payload: { users?: PresenceUser[] }) {
@@ -25,8 +29,9 @@ export const usePresenceStore = defineStore('presence', () => {
       name: String(u.name ?? ''),
       mode: u.mode === 'edit' ? 'edit' : 'view',
       since: Number(u.since ?? 0),
+      focus: u.focus != null && u.focus !== '' ? String(u.focus) : undefined,
     }))
   }
 
-  return { users, editorUser, totalCount, applyUpdate }
+  return { users, editorUser, editorFocus, totalCount, applyUpdate }
 })

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.4.0 — 2026-05-05
+
+- **ハーフ別スコア内訳**: `Match.getScoreBreakdown` 集計を `refboard:match:get` / `refboard:match:state` の `breakdown` で配信。`MatchStatusCard` で前半・後半・延長（`et` 時）・PK（`pk` 時）を表示。
+- **選手交代**: `SubstitutionDialog.vue`、`refboard:event:substitute` / `Event.substitute`（トランザクション）。タイムライン・選手一覧の表示更新。
+- **カード**: `CardIssueDialog.vue`、`refboard:event:issue_card`（黄 / 赤、2 枚目黄は確認のうえ赤扱い）。`PlayerListCard` の状態表示拡充。
+- **PK 戦**: `MatchStatusCard` から `current_half=pk` へ遷移（確認ダイアログ・先攻選択）、`PenaltyShootoutPanel.vue`、`refboard:event:record_penalty`（`penalty_success`、内訳 `pk` のみ加算）。
+- **編集フォーカス**: `useFocusTracker`（1 秒デバウンス）、`refboard:presence:focus`、`presence.editorFocus` と各カードの「編集中」バッジ連動。
+- **DB**: `sql/migration_003_sprint4.sql` / `install.sql` 更新（`pk_first_team_id`、`ejected_*`、`penalty_success` 等）。トランザクション検証手順 `docs/testing/transaction_test.md`、テストコマンド `refboard_test_transaction`（`Config.EnableTestCommands`）。
+- **NUI モック**: 交代・カード・PK・`match_set_half`・`breakdown` を `nuiMock.ts` で再現。
+- **ドキュメント**: `docs/sprints/sprint_04.md`。
+
 ## v0.3.0 — 2026-05-05
 
 - **NUI 開発モック**: `useNui.ts`（`import.meta.env.DEV` かつ FiveM 外で `mocks/nuiMock.ts` 分岐）、ロック ACK などを `postMessage` で再現。

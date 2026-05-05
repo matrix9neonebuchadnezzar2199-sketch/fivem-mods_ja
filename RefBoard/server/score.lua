@@ -90,6 +90,9 @@ RegisterNetEvent('refboard:score:goal', function(payload)
     if not m then
       error('no_match')
     end
+    if m.current_half == 'pk' then
+      error('pk_use_penalty_flow')
+    end
     local t1 = tonumber(m.team1_id)
     local t2 = tonumber(m.team2_id)
     if teamId ~= t1 and teamId ~= t2 then

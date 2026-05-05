@@ -10,6 +10,13 @@ import type {
   ScoreHistoryRow,
 } from '../types/match'
 
+export type ServerBreakdown = {
+  firstHalf: { home: number; away: number }
+  secondHalf: { home: number; away: number }
+  extra: { home: number; away: number }
+  pk: { home: number; away: number }
+}
+
 export type ServerMatchRow = {
   id: number
   team1_id: number
@@ -18,6 +25,7 @@ export type ServerMatchRow = {
   team2_score: number
   status: string
   current_half: string
+  pk_first_team_id?: number | null
   match_date: string
   match_name?: string | null
   venue?: string | null
@@ -49,6 +57,7 @@ export type ServerEventRow = {
   minute?: string
   text?: string
   kind?: string
+  penalty_success?: number | boolean | null
 }
 
 export type ServerHistoryRow = {
@@ -66,6 +75,7 @@ export type MatchGetAck = {
   players?: ServerPlayerRow[]
   events?: ServerEventRow[]
   history?: ServerHistoryRow[]
+  breakdown?: ServerBreakdown
 }
 
 function kickoffUi(v: string | null | undefined): string {
@@ -80,7 +90,7 @@ function clockMmSs(ms: number): string {
   return `${mm}:${String(ss).padStart(2, '0')}`
 }
 
-function mapUiStatus(status: string, half: string): MatchUiStatus {
+export function mapUiStatusFromHalf(status: string, half: string): MatchUiStatus {
   if (status === 'finished' || status === 'cancelled') return 'full_time'
   if (half === 'halftime') return 'halftime'
   if (half === '2nd') return 'second_half'
@@ -94,19 +104,37 @@ function defaultBreakdown(home: number, away: number): HalfScoreBreakdown {
     firstHalf: { home: 0, away: 0 },
     secondHalf: { home, away },
     extra: { home: 0, away: 0 },
+    pk: { home: 0, away: 0 },
+  }
+}
+
+export function mapBreakdown(b: ServerBreakdown | undefined, fallback: HalfScoreBreakdown): HalfScoreBreakdown {
+  if (!b) return fallback
+  return {
+    firstHalf: { home: b.firstHalf?.home ?? 0, away: b.firstHalf?.away ?? 0 },
+    secondHalf: { home: b.secondHalf?.home ?? 0, away: b.secondHalf?.away ?? 0 },
+    extra: { home: b.extra?.home ?? 0, away: b.extra?.away ?? 0 },
+    pk: { home: b.pk?.home ?? 0, away: b.pk?.away ?? 0 },
   }
 }
 
 function mapPlayerStatus(p: ServerPlayerRow): PlayerRowStatus {
   const s = p.ui_status
-  if (s === 'sent_off' || s === 'bench' || s === 'warning' || s === 'playing') {
+  if (
+    s === 'sent_off' ||
+    s === 'bench' ||
+    s === 'warning' ||
+    s === 'warning_double' ||
+    s === 'playing' ||
+    s === 'subbed_out'
+  ) {
     return s
   }
   return 'playing'
 }
 
 function mapEventKind(k?: string): MatchEventKind {
-  if (k === 'goal' || k === 'yellow' || k === 'red' || k === 'sub' || k === 'other') {
+  if (k === 'goal' || k === 'yellow' || k === 'red' || k === 'sub' || k === 'penalty' || k === 'other') {
     return k
   }
   return 'other'
@@ -122,17 +150,29 @@ export function mapPlayersForTeam(rows: ServerPlayerRow[] | undefined, teamId: n
       name: p.player_name,
       position: (p.position && p.position.trim()) || '—',
       status: mapPlayerStatus(p),
+      yellowCards: p.yellow_cards ?? 0,
     }))
 }
 
 export function mapEventsFromServer(events: ServerEventRow[] | undefined): MatchEvent[] {
   if (!events) return []
-  return events.map((e) => ({
-    id: String(e.id),
-    minute: e.minute ?? "0'",
-    kind: mapEventKind(e.kind),
-    text: e.text ?? '',
-  }))
+  return events.map((e) => {
+    const pe =
+      e.penalty_success === true ||
+      e.penalty_success === 1 ||
+      (typeof e.penalty_success === 'string' && e.penalty_success === '1')
+    const miss =
+      e.penalty_success === false ||
+      e.penalty_success === 0 ||
+      (typeof e.penalty_success === 'string' && e.penalty_success === '0')
+    return {
+      id: String(e.id),
+      minute: e.minute ?? "0'",
+      kind: mapEventKind(e.kind),
+      text: e.text ?? '',
+      penaltySuccess: mapEventKind(e.kind) === 'penalty' ? (miss ? false : pe ? true : undefined) : undefined,
+    }
+  })
 }
 
 export function mapHistoryRows(rows: ServerHistoryRow[] | undefined): ScoreHistoryRow[] {
@@ -169,13 +209,15 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
     venue: m.venue || '',
     matchDate: m.match_date || '',
     kickoffTime: kickoffUi(m.kickoff_time),
-    uiStatus: mapUiStatus(status, half),
+    uiStatus: mapUiStatusFromHalf(status, half),
     home: { name: m.team1_name || 'Team 1', short: (m.team1_name || 'T1').slice(0, 2).toUpperCase(), isHome: true },
     away: { name: m.team2_name || 'Team 2', short: (m.team2_name || 'T2').slice(0, 2).toUpperCase(), isHome: false },
     score: { home: homeScore, away: awayScore },
     clockLabel: status === 'finished' ? '試合終了' : status === 'cancelled' ? 'キャンセル' : '進行中',
     clockMmSs: clockMmSs(acc),
-    breakdown: defaultBreakdown(homeScore, awayScore),
+    breakdown: mapBreakdown(ack.breakdown, defaultBreakdown(homeScore, awayScore)),
+    serverHalf: half,
+    pkFirstTeamId: m.pk_first_team_id != null ? Number(m.pk_first_team_id) : null,
     homePlayers: mapPlayersForTeam(players, m.team1_id),
     awayPlayers: mapPlayersForTeam(players, m.team2_id),
     events: mapEventsFromServer(ack.events),

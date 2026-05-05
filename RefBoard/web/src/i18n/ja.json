@@ -167,5 +167,67 @@
   },
   "shell": {
     "online": "接続中"
+  },
+  "match_status": {
+    "title": "試合ステータス",
+    "editing_here": "編集中",
+    "pre_match": "試合前",
+    "first_half": "前半",
+    "halftime": "ハーフタイム",
+    "second_half": "後半",
+    "extra_time": "延長",
+    "penalties": "PK戦",
+    "full_time": "試合終了",
+    "half1": "前半",
+    "half2": "後半",
+    "et": "延長",
+    "pk": "PK",
+    "pk_confirm_title": "PK戦に移行しますか？",
+    "pk_confirm_score": "現在のスコア: {h} - {a}",
+    "pk_confirm_note": "PK戦中の得点は本戦スコアとは別カウント（内訳の PK）に記録されます。",
+    "pk_first": "先攻チーム",
+    "pk_start": "PK戦開始"
+  },
+  "player_status": {
+    "playing": "🟢 出場",
+    "warning": "🟡 警告中",
+    "warning_double": "🟡🟡 警告2枚",
+    "sent_off": "🔴 退場",
+    "subbed_out": "⚫ 交代済み",
+    "bench": "控え"
+  },
+  "substitution": {
+    "title": "選手交代",
+    "pick_team": "交代するチームを選んでください",
+    "pick_out": "退場（OUT）する選手",
+    "pick_in": "入場（IN）する選手（ベンチ）",
+    "summary": "{time} {team}: OUT {outNo} {outName} → IN {inNo} {inName}",
+    "submit": "記録する"
+  },
+  "card": {
+    "title": "カード",
+    "pick_team": "チームを選択",
+    "pick_player": "出場中の選手を選択",
+    "yellow": "🟨 警告（イエロー）",
+    "red": "🟥 退場（レッド）",
+    "confirm_yellow": "イエローカードを記録しますか？ — {name}",
+    "confirm_red": "レッドカード（退場）を記録しますか？ — {name}",
+    "submit": "記録",
+    "second_yellow_body": "2枚目の警告のため、退場（レッド）として記録します。よろしいですか？",
+    "second_yellow_ok": "レッドで記録"
+  },
+  "penalty": {
+    "title": "PK戦",
+    "next_kicker": "次のキッカー: {team}",
+    "pick_player": "選手を選択",
+    "success": "⚽ 成功",
+    "miss": "❌ 失敗",
+    "decided": "決着"
+  },
+  "events": {
+    "title": "試合イベント",
+    "add": "+ イベントを追加",
+    "add_yellow": "🟨 警告",
+    "add_red": "🟥 退場"
   }
 }

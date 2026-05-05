@@ -167,5 +167,67 @@
   },
   "shell": {
     "online": "Online"
+  },
+  "match_status": {
+    "title": "Match status",
+    "editing_here": "Editing",
+    "pre_match": "Pre-match",
+    "first_half": "1st half",
+    "halftime": "Half-time",
+    "second_half": "2nd half",
+    "extra_time": "Extra time",
+    "penalties": "Penalties",
+    "full_time": "Full time",
+    "half1": "1st half",
+    "half2": "2nd half",
+    "et": "ET",
+    "pk": "PK",
+    "pk_confirm_title": "Start penalty shootout?",
+    "pk_confirm_score": "Current score: {h} - {a}",
+    "pk_confirm_note": "PK goals are tracked separately (PK row in breakdown), not added to full-time score.",
+    "pk_first": "First team to shoot",
+    "pk_start": "Start PK"
+  },
+  "player_status": {
+    "playing": "🟢 On pitch",
+    "warning": "🟡 Booked",
+    "warning_double": "🟡🟡 Two cautions",
+    "sent_off": "🔴 Sent off",
+    "subbed_out": "⚫ Subbed off",
+    "bench": "Bench"
+  },
+  "substitution": {
+    "title": "Substitution",
+    "pick_team": "Which team?",
+    "pick_out": "Player going off (OUT)",
+    "pick_in": "Player coming on (IN, from bench)",
+    "summary": "{time} {team}: OUT {outNo} {outName} → IN {inNo} {inName}",
+    "submit": "Record"
+  },
+  "card": {
+    "title": "Card",
+    "pick_team": "Pick team",
+    "pick_player": "Pick an on-pitch player",
+    "yellow": "🟨 Yellow card",
+    "red": "🟥 Red card",
+    "confirm_yellow": "Record a yellow card? — {name}",
+    "confirm_red": "Record a red card (send-off)? — {name}",
+    "submit": "Record",
+    "second_yellow_body": "Second caution — record as red card (send-off). Continue?",
+    "second_yellow_ok": "Record as red"
+  },
+  "penalty": {
+    "title": "Penalty shootout",
+    "next_kicker": "Next kick: {team}",
+    "pick_player": "Select player",
+    "success": "⚽ Scored",
+    "miss": "❌ Missed",
+    "decided": "Decided"
+  },
+  "events": {
+    "title": "Match events",
+    "add": "+ Add event",
+    "add_yellow": "🟨 Caution",
+    "add_red": "🟥 Send-off"
   }
 }

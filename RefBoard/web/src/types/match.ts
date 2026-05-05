@@ -21,7 +21,13 @@ export type ScoreHistoryRow = {
   created_at: string
 }
 
-export type PlayerRowStatus = 'playing' | 'warning' | 'sent_off' | 'bench'
+export type PlayerRowStatus =
+  | 'playing'
+  | 'warning'
+  | 'warning_double'
+  | 'sent_off'
+  | 'bench'
+  | 'subbed_out'
 
 export type MatchPlayer = {
   id: string
@@ -29,21 +35,26 @@ export type MatchPlayer = {
   name: string
   position: string
   status: PlayerRowStatus
+  /** サーバー由来（カード2枚目確認用） */
+  yellowCards?: number
 }
 
-export type MatchEventKind = 'goal' | 'yellow' | 'red' | 'sub' | 'other'
+export type MatchEventKind = 'goal' | 'yellow' | 'red' | 'sub' | 'penalty' | 'other'
 
 export type MatchEvent = {
   id: string
   minute: string
   kind: MatchEventKind
   text: string
+  /** PK 記録時のみ */
+  penaltySuccess?: boolean
 }
 
 export type HalfScoreBreakdown = {
   firstHalf: { home: number; away: number }
   secondHalf: { home: number; away: number }
   extra: { home: number; away: number }
+  pk: { home: number; away: number }
 }
 
 export type MatchDetailModel = {
@@ -63,6 +74,9 @@ export type MatchDetailModel = {
   clockLabel: string
   clockMmSs: string
   breakdown: HalfScoreBreakdown
+  /** DB matches.current_half */
+  serverHalf: string
+  pkFirstTeamId: number | null
   homePlayers: MatchPlayer[]
   awayPlayers: MatchPlayer[]
   events: MatchEvent[]

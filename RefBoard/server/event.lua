@@ -1,1 +1,260 @@
--- server/event.lua — match_events 登録・void（設計書 2.4.5）
+--[[
+  交代・カード・PK（match_events + match_players 更新）
+]]
+
+local function canRefer(src)
+  return IsPlayerAceAllowed(src, Config.RefereePermission)
+end
+
+local function requireReferee(src)
+  if not canRefer(src) then
+    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
+    return false
+  end
+  return true
+end
+
+local function assertEditorLock(src, matchId)
+  local r = MySQL.single.await(
+    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
+  )
+  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
+    return false
+  end
+  local mid = r.match_id and tonumber(r.match_id)
+  if not mid or mid ~= tonumber(matchId) then
+    return false
+  end
+  return true
+end
+
+local function eventHalfFromMatch(h)
+  if h == 'halftime' then
+    return '1st'
+  end
+  if h == '1st' or h == '2nd' or h == 'et' or h == 'pk' then
+    return h
+  end
+  return '1st'
+end
+
+local function matchTimeMs(m)
+  local acc = tonumber(m.clock_accumulated_ms) or 0
+  if tonumber(m.clock_running) == 1 and m.clock_started_at then
+    local st = tonumber(m.clock_started_at)
+    if st then
+      return acc + (os.time() * 1000 - st)
+    end
+  end
+  return acc
+end
+
+local function withTransaction(fn)
+  MySQL.query.await('START TRANSACTION')
+  local ok, err = pcall(fn)
+  if ok then
+    MySQL.query.await('COMMIT')
+    return true, nil
+  end
+  MySQL.query.await('ROLLBACK')
+  return false, err
+end
+
+RegisterNetEvent('refboard:event:substitute', function(payload)
+  local src = source
+  if not requireReferee(src) then
+    return
+  end
+  if type(payload) ~= 'table' then
+    TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'bad_payload' })
+    return
+  end
+  local matchId = tonumber(payload.matchId)
+  local teamId = tonumber(payload.teamId)
+  local outId = tonumber(payload.outPlayerId)
+  local inId = tonumber(payload.inPlayerId)
+  if not matchId or not teamId or not outId or not inId or outId == inId then
+    TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'bad_args' })
+    return
+  end
+  if not assertEditorLock(src, matchId) then
+    TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'no_lock' })
+    return
+  end
+  local license = GetPlayerIdentifierByType(src, 'license') or ''
+  local name = GetPlayerName(src) or ('ID %s'):format(src)
+
+  local okTx, txErr = withTransaction(function()
+    local m = MySQL.single.await('SELECT * FROM matches WHERE id = ? FOR UPDATE', { matchId })
+    if not m or m.current_half == 'pk' then
+      error('bad_phase')
+    end
+    local outP = MySQL.single.await(
+      'SELECT * FROM match_players WHERE id = ? AND match_id = ? AND team_id = ? FOR UPDATE',
+      { outId, matchId, teamId }
+    )
+    local inP = MySQL.single.await(
+      'SELECT * FROM match_players WHERE id = ? AND match_id = ? AND team_id = ? FOR UPDATE',
+      { inId, matchId, teamId }
+    )
+    if not outP or tonumber(outP.is_active) ~= 1 then
+      error('bad_out')
+    end
+    if not inP or tonumber(inP.is_starter) ~= 0 or tonumber(inP.is_active) ~= 1 then
+      error('bad_in')
+    end
+    local half = eventHalfFromMatch(m.current_half)
+    local mt = matchTimeMs(m)
+    MySQL.insert.await(
+      [[INSERT INTO match_events
+          (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
+           penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
+        VALUES (?, 'substitution', ?, NULL, NULL, ?, ?, NULL, ?, ?, ?, ?)]],
+      { matchId, teamId, inId, outId, half, mt, license, name }
+    )
+    MySQL.update.await('UPDATE match_players SET is_active = 0 WHERE id = ?', { outId })
+    MySQL.update.await('UPDATE match_players SET is_active = 1 WHERE id = ?', { inId })
+  end)
+
+  if not okTx then
+    TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'tx_failed', detail = tostring(txErr) })
+    return
+  end
+  TriggerClientEvent('refboard:event:substitute:ack', src, { ok = true })
+  TriggerEvent('refboard:internal:broadcastState', matchId)
+end)
+
+RegisterNetEvent('refboard:event:issue_card', function(payload)
+  local src = source
+  if not requireReferee(src) then
+    return
+  end
+  if type(payload) ~= 'table' then
+    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_payload' })
+    return
+  end
+  local matchId = tonumber(payload.matchId)
+  local teamId = tonumber(payload.teamId)
+  local playerId = tonumber(payload.playerId)
+  local cardType = payload.cardType
+  if not matchId or not teamId or not playerId or (cardType ~= 'yellow_card' and cardType ~= 'red_card') then
+    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_args' })
+    return
+  end
+  if not assertEditorLock(src, matchId) then
+    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'no_lock' })
+    return
+  end
+  local license = GetPlayerIdentifierByType(src, 'license') or ''
+  local name = GetPlayerName(src) or ('ID %s'):format(src)
+
+  local okTx, txErr = withTransaction(function()
+    local m = MySQL.single.await('SELECT * FROM matches WHERE id = ? FOR UPDATE', { matchId })
+    if not m or m.current_half == 'pk' then
+      error('bad_phase')
+    end
+    local pl = MySQL.single.await(
+      'SELECT * FROM match_players WHERE id = ? AND match_id = ? AND team_id = ? FOR UPDATE',
+      { playerId, matchId, teamId }
+    )
+    if not pl or tonumber(pl.is_active) ~= 1 then
+      error('bad_player')
+    end
+    local half = eventHalfFromMatch(m.current_half)
+    local mt = matchTimeMs(m)
+
+    if cardType == 'yellow_card' then
+      local yc = tonumber(pl.yellow_cards) or 0
+      if yc >= 1 then
+        error('second_yellow_confirm')
+      end
+      MySQL.insert.await(
+        [[INSERT INTO match_events
+            (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
+             penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
+          VALUES (?, 'yellow_card', ?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?)]],
+        { matchId, teamId, playerId, half, mt, license, name }
+      )
+      MySQL.update.await('UPDATE match_players SET yellow_cards = yellow_cards + 1 WHERE id = ?', { playerId })
+    else
+      local reason = type(payload.ejectionReason) == 'string' and payload.ejectionReason or 'red_card'
+      MySQL.insert.await(
+        [[INSERT INTO match_events
+            (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
+             penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
+          VALUES (?, 'red_card', ?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?)]],
+        { matchId, teamId, playerId, half, mt, license, name }
+      )
+      MySQL.update.await(
+        [[UPDATE match_players SET is_active = 0, ejected_at_ms = ?, ejection_reason = ? WHERE id = ?]],
+        { os.time() * 1000, reason, playerId }
+      )
+    end
+  end)
+
+  if not okTx then
+    if txErr and tostring(txErr):find('second_yellow_confirm', 1, true) then
+      TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'second_yellow_confirm' })
+      return
+    end
+    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'tx_failed', detail = tostring(txErr) })
+    return
+  end
+
+  TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = true })
+  TriggerEvent('refboard:internal:broadcastState', matchId)
+end)
+
+RegisterNetEvent('refboard:event:record_penalty', function(payload)
+  local src = source
+  if not requireReferee(src) then
+    return
+  end
+  if type(payload) ~= 'table' then
+    TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'bad_payload' })
+    return
+  end
+  local matchId = tonumber(payload.matchId)
+  local teamId = tonumber(payload.teamId)
+  local playerId = tonumber(payload.playerId)
+  local success = payload.success == true
+  if not matchId or not teamId or not playerId then
+    TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'bad_args' })
+    return
+  end
+  if not assertEditorLock(src, matchId) then
+    TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'no_lock' })
+    return
+  end
+  local license = GetPlayerIdentifierByType(src, 'license') or ''
+  local name = GetPlayerName(src) or ('ID %s'):format(src)
+
+  local okTx, txErr = withTransaction(function()
+    local m = MySQL.single.await('SELECT * FROM matches WHERE id = ? FOR UPDATE', { matchId })
+    if not m or m.current_half ~= 'pk' then
+      error('not_pk')
+    end
+    local pl = MySQL.single.await(
+      'SELECT * FROM match_players WHERE id = ? AND match_id = ? AND team_id = ? FOR UPDATE',
+      { playerId, matchId, teamId }
+    )
+    if not pl then
+      error('bad_player')
+    end
+    local mt = matchTimeMs(m)
+    MySQL.insert.await(
+      [[INSERT INTO match_events
+          (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
+           penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
+        VALUES (?, 'penalty', ?, ?, NULL, NULL, NULL, ?, 'pk', ?, ?, ?)]],
+      { matchId, teamId, playerId, success and 1 or 0, mt, license, name }
+    )
+  end)
+
+  if not okTx then
+    TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'tx_failed', detail = tostring(txErr) })
+    return
+  end
+  TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = true })
+  TriggerEvent('refboard:internal:broadcastState', matchId)
+end)

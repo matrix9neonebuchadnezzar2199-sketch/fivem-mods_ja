@@ -74,6 +74,22 @@ RegisterNetEvent('refboard:match:reopen:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:reopen:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:match:set_half:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:set_half:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:event:substitute:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:event:substitute:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:event:issue_card:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:event:issue_card:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:event:record_penalty:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:event:record_penalty:ack', payload = payload })
+end)
+
 RegisterNetEvent('refboard:score:goal:ack', function(payload)
   SendNUIMessage({ type = 'refboard:score:goal:ack', payload = payload })
 end)

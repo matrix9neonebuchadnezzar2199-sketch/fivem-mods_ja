@@ -3,17 +3,22 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useAutosaveStore } from '../stores/autosave'
+import { usePresenceStore } from '../stores/presence'
 import { useNui } from '../composables/useNui'
 import { useHeartbeat } from '../composables/useHeartbeat'
+import { useFocusTracker } from '../composables/useFocusTracker'
 import { mockMatchDetail } from '../mocks/matchDetail'
 import type { MatchDetailModel } from '../types/match'
 import type { ScoreHistoryRow } from '../types/match'
 import {
+  mapBreakdown,
   mapEventsFromServer,
   mapHistoryRows,
   mapMatchGetAckToDetail,
   mapPlayersForTeam,
+  mapUiStatusFromHalf,
   type MatchGetAck,
+  type ServerBreakdown,
   type ServerEventRow,
   type ServerHistoryRow,
   type ServerPlayerRow,
@@ -23,6 +28,9 @@ import ScoreBoardCard from '../components/match/ScoreBoardCard.vue'
 import MatchStatusCard from '../components/match/MatchStatusCard.vue'
 import PlayerListCard from '../components/match/PlayerListCard.vue'
 import EventTimelineCard from '../components/match/EventTimelineCard.vue'
+import PenaltyShootoutPanel from '../components/match/PenaltyShootoutPanel.vue'
+import SubstitutionDialog from '../components/match/SubstitutionDialog.vue'
+import CardIssueDialog from '../components/match/CardIssueDialog.vue'
 import AutosaveIndicator from '../components/AutosaveIndicator.vue'
 import GoalRecordWizard from '../components/match/GoalRecordWizard.vue'
 import AddPlayerDialog from '../components/match/AddPlayerDialog.vue'
@@ -38,7 +46,9 @@ const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
 const autosave = useAutosaveStore()
+const presence = usePresenceStore()
 const { send, on } = useNui()
+const { setFocus } = useFocusTracker()
 const { t } = useI18n()
 
 const readonly = computed(() => !session.isEditor)
@@ -52,6 +62,17 @@ const addTeamId = ref(0)
 const showScoreEdit = ref(false)
 const showHistory = ref(false)
 const showFinish = ref(false)
+const showSub = ref(false)
+const showCard = ref(false)
+const cardPreset = ref<'yellow' | 'red' | null>(null)
+
+const editorFocus = computed(() => presence.editorFocus)
+const editorHereBasic = computed(() => editorFocus.value === 'basic_info')
+const editorHereScore = computed(() => editorFocus.value === 'score')
+const editorHereStatus = computed(() => editorFocus.value === 'status')
+const editorHereT1 = computed(() => editorFocus.value === 'team1_players')
+const editorHereT2 = computed(() => editorFocus.value === 'team2_players')
+const editorHereEvents = computed(() => editorFocus.value === 'events')
 
 let offState: (() => void) | null = null
 let offFinished: (() => void) | null = null
@@ -61,6 +82,9 @@ function applyState(p: {
   team1_score: number
   team2_score: number
   status?: string
+  current_half?: string
+  pk_first_team_id?: number | null
+  breakdown?: ServerBreakdown
   events?: ServerEventRow[]
   players?: ServerPlayerRow[] | null
   history?: ServerHistoryRow[]
@@ -70,6 +94,16 @@ function applyState(p: {
   detail.score.away = p.team2_score
   if (p.status === 'finished' || p.status === 'draft' || p.status === 'cancelled') {
     detail.dbStatus = p.status
+  }
+  if (p.breakdown) {
+    detail.breakdown = mapBreakdown(p.breakdown, detail.breakdown)
+  }
+  if (p.current_half) {
+    detail.serverHalf = p.current_half
+    detail.uiStatus = mapUiStatusFromHalf(detail.dbStatus, p.current_half)
+  }
+  if (p.pk_first_team_id !== undefined && p.pk_first_team_id !== null) {
+    detail.pkFirstTeamId = Number(p.pk_first_team_id)
   }
   if (p.events) {
     detail.events = mapEventsFromServer(p.events)
@@ -82,6 +116,17 @@ function applyState(p: {
     historyRows.value = mapHistoryRows(p.history)
   }
 }
+
+function openCard(kind: 'yellow' | 'red') {
+  cardPreset.value = kind
+  showCard.value = true
+}
+
+watch(showCard, (v) => {
+  if (!v) {
+    cardPreset.value = null
+  }
+})
 
 async function loadMatch() {
   const id = Number(route.params.id)
@@ -193,6 +238,12 @@ function reloadMatch() {
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <PenaltyShootoutPanel
+        v-if="detail.serverHalf === 'pk'"
+        :model="detail"
+        :readonly="readonly"
+        @recorded="reloadMatch"
+      />
       <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
         <div class="flex flex-1 flex-wrap items-center gap-2 text-sm text-slate-200">
           <span class="font-semibold">試合詳細の編集</span>
@@ -228,35 +279,63 @@ function reloadMatch() {
       </header>
 
       <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[30%_40%_30%]">
-        <BasicInfoCard :model="detail" :readonly="readonly" />
-        <ScoreBoardCard :model="detail" :readonly="readonly" @goal="showGoal = true" @manual-score="showScoreEdit = true" />
-        <MatchStatusCard :model="detail" :readonly="readonly" />
+        <div @pointerenter="setFocus('basic_info')" @pointerleave="setFocus(null)">
+          <BasicInfoCard :model="detail" :readonly="readonly" :editor-here="editorHereBasic" />
+        </div>
+        <div @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
+          <ScoreBoardCard
+            :model="detail"
+            :readonly="readonly"
+            :editor-here="editorHereScore"
+            @goal="showGoal = true"
+            @manual-score="showScoreEdit = true"
+          />
+        </div>
+        <div @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
+          <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" />
+        </div>
       </div>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-[65%_35%]">
         <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <PlayerListCard
-            :title="`${detail.home.name} — 選手`"
-            :players="detail.homePlayers"
-            :team-id="detail.team1Id"
+          <div @pointerenter="setFocus('team1_players')" @pointerleave="setFocus(null)">
+            <PlayerListCard
+              :title="`${detail.home.name} — 選手`"
+              :players="detail.homePlayers"
+              :team-id="detail.team1Id"
+              :readonly="readonly"
+              :editor-here="editorHereT1"
+              @history="showHistory = true"
+              @add="openAdd"
+            />
+          </div>
+          <div @pointerenter="setFocus('team2_players')" @pointerleave="setFocus(null)">
+            <PlayerListCard
+              :title="`${detail.away.name} — 選手`"
+              :players="detail.awayPlayers"
+              :team-id="detail.team2Id"
+              :readonly="readonly"
+              :editor-here="editorHereT2"
+              @history="showHistory = true"
+              @add="openAdd"
+            />
+          </div>
+        </div>
+        <div @pointerenter="setFocus('events')" @pointerleave="setFocus(null)">
+          <EventTimelineCard
+            :events="detail.events"
             :readonly="readonly"
-            @history="showHistory = true"
-            @add="openAdd"
-          />
-          <PlayerListCard
-            :title="`${detail.away.name} — 選手`"
-            :players="detail.awayPlayers"
-            :team-id="detail.team2Id"
-            :readonly="readonly"
-            @history="showHistory = true"
-            @add="openAdd"
+            :editor-here="editorHereEvents"
+            @substitute="showSub = true"
+            @issue-card="openCard"
           />
         </div>
-        <EventTimelineCard :events="detail.events" :readonly="readonly" />
       </div>
     </div>
 
     <GoalRecordWizard v-model:open="showGoal" :model="detail" @recorded="reloadMatch" />
+    <SubstitutionDialog v-model:open="showSub" :model="detail" @done="reloadMatch" />
+    <CardIssueDialog v-model:open="showCard" :model="detail" :preset-kind="cardPreset" @done="reloadMatch" />
     <AddPlayerDialog v-model:open="showAdd" :match-id="detail.id" :team-id="addTeamId" @added="reloadMatch" />
     <ScoreEditDialog v-model:open="showScoreEdit" :model="detail" @saved="reloadMatch" />
     <ScoreHistoryDialog v-model:open="showHistory" :rows="historyRows" />

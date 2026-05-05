@@ -14,6 +14,7 @@ local function toList()
       name = s.name,
       mode = s.mode,
       since = s.since,
+      focus = s.focus,
     }
   end
   table.sort(list, function(a, b)
@@ -33,6 +34,7 @@ local function addSession(src, license, name, mode)
     name = name or ('Player %s'):format(src),
     mode = m,
     since = os.time(),
+    focus = nil,
   }
   broadcast()
 end
@@ -84,4 +86,25 @@ RegisterNetEvent('refboard:presence:list', function()
     return
   end
   TriggerClientEvent('refboard:presence:list:ack', src, { users = toList() })
+end)
+
+RegisterNetEvent('refboard:presence:focus', function(payload)
+  local src = source
+  if not IsPlayerAceAllowed(src, Config.RefereePermission) then
+    return
+  end
+  local s = sessions[src]
+  if not s then
+    return
+  end
+  if type(payload) ~= 'table' then
+    return
+  end
+  local f = payload.focus
+  if type(f) == 'string' then
+    s.focus = (f ~= '' and f) or nil
+  else
+    s.focus = nil
+  end
+  broadcast()
 end)

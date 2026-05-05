@@ -21,5 +21,8 @@ Config.OpenKey = 'F6'
 -- 既定ロケール（クライアントで上書き可）
 Config.DefaultLocale = 'ja'
 
+-- サーバー上のトランザクション検証コマンド（本番では false 推奨）
+Config.EnableTestCommands = false
+
 -- 前半の目安時間（ミリ秒）— UI 表示用。実際の試合時間は運用で操作
 Config.HalfDurationMs = 45 * 60 * 1000
