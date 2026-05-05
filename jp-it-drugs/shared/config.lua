@@ -520,10 +520,8 @@ Config.EnableDealers = true -- 売人システムを有効にするか
 Config.DrugDealers = {
     ['seed_dealer'] = { -- 売人ID（一意であること）
         label = 'Seed Dealer', -- 表示名
-        locations = { -- このいずれかの座標にスポーン
-            vector4(-462.8489, 1101.5592, 326.6819, 166.9773),
-            vector4(-49.4244, 1903.6714, 194.3613, 95.7213),
-            vector4(2414.2463, 5003.8462, 45.6655, 40.8932),
+        locations = { -- 固定スポーン（Tongva Hills 〜 Banham Canyon 付近の山中）
+            vector4(-49.42, 1903.67, 194.36, 95.72),
         },
         ped = 's_m_y_dealer_01', -- Ped モデル名
         blip = {
