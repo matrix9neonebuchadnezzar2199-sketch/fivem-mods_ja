@@ -12,11 +12,8 @@ desktop.ini
 .vscode/
 .idea/
 
-# GitHub 公開リポには含めない（ローカル開発用のみ）
-# ※ `.cursor/` だと子の例外が効かないため `/*` で中身のみ無視し、rules は共有する
-.cursor/*
-!.cursor/rules/
-!.cursor/rules/**
+# GitHub 公開リポには含めない（ローカル開発用のみ。`.cursor/rules` も含めてコミットしない）
+.cursor/
 # 各所の docs/ 配下は原則無視（ルート docs/STYLEGUIDE.md と jp-tcgbook/docs は例外）
 docs/*
 !docs/STYLEGUIDE.md

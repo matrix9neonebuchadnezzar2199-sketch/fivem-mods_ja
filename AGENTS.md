@@ -10,7 +10,7 @@
 - 他のMODフォルダのファイルを参照しない
 - UIテキスト・コメントは日本語をデフォルトにする
 - config.lua はサーバー運営者が読めるよう全項目に日本語コメントを書く
-- **文字コード: 全テキストは UTF-8。UTF-8 with BOM（先頭 EF BB BF）は付けない**（`.cursor/rules/utf8-text-encoding.mdc` 参照。Lua では BOM が `\<239\>` 等のパース失敗原因になる）
+- **文字コード: 全テキストは UTF-8。UTF-8 with BOM（先頭 EF BB BF）は付けない**（Lua では BOM がパース失敗の原因になり得る）
 
 ## 言語（jp-tcgbook BOOK / NUI）
 
@@ -41,5 +41,4 @@ jp-<mod名>/ ├── fxmanifest.lua ├── config.lua ├── locales/ �
 例: `jp-taxi:startShift`, `jp-gps-tracker:throwDevice`
 
 ## 関連ドキュメント
-- 外部 MOD の日本語化・フォーク配布の判断・作業の型: [CONTRIBUTING_JP.md](CONTRIBUTING_JP.md)（ルートの正本）
-- Cursor で `jp-*/` を触るときの短いルール: [.cursor/rules/jp-localization-workflow.mdc](.cursor/rules/jp-localization-workflow.mdc)
+- 外部 MOD の日本語化・フォーク配布の判断・作業の型: [CONTRIBUTING_JP.md](CONTRIBUTING_JP.md)

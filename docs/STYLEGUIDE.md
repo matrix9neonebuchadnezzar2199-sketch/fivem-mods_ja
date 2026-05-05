@@ -28,5 +28,5 @@
 
 ## 技術メモ
 
-- テキストは **UTF-8（BOM なし）**（`.cursor/rules/utf8-text-encoding.mdc` に準拠）。
+- テキストは **UTF-8（BOM なし）**（[AGENTS.md](../AGENTS.md) の文字コード方針に準拠）。
 - 各 MOD はフォルダ単位で独立。他 MOD のファイルを参照しない方針（プロジェクトルールに従う）。

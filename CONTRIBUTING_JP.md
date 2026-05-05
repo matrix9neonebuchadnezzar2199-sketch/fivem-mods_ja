@@ -3,13 +3,13 @@
 本リポジトリで **複数 MOD を継続的に日本語化・配布する** ときの判断基準と作業の型をまとめる。  
 個別 MOD の経緯は各フォルダの `README.md` / `CHANGELOG_JP.md` / `*_開発日記.md` に残す。
 
-**Cursor 利用時**: `jp-*/` 配下を編集するとき、エージェント向けに `.cursor/rules/jp-localization-workflow.mdc`（要約＋本書へのリンク）が参照される。本文の正本はこのファイル（ルートの `CONTRIBUTING_JP.md`）である。
+**注意**: `.cursor/rules` は **GitHub には載せない**（ローカル開発用）。作業の正本は本ファイルおよび各 MOD の README / 日記である。
 
 ## 前提（必読）
 
 - プロジェクト全体方針: [AGENTS.md](AGENTS.md)
-- 文字コード: **UTF-8（BOM なし）** — `.cursor/rules/utf8-text-encoding.mdc`
-- 新規 **jp-\* 単体 MOD** の Lua 規約: `.cursor/rules/fivem-lua.mdc`
+- 文字コード: **UTF-8（BOM なし）** — [AGENTS.md](AGENTS.md) の「絶対に守ること」
+- 新規 **jp-\* 単体 MOD** の Lua: [AGENTS.md](AGENTS.md) のフォルダ構造・イベント命名に沿う（細目はローカルのエディタ設定で補う）
 
 ## 1. ロケール抽出の優先度（作業量の見積り）
 
@@ -53,7 +53,7 @@
 | 開発者・運営向けコメント | 日本語化してよい。仕様の意図が伝わるように。 |
 | `fxmanifest` の `description` | 日本語化してよい（`author` はオリジナルクレジットを残す運用が無難）。 |
 | CSS / アセット | **見た目を変えない限り触らない**（文言は HTML/JS/Lua 側）。 |
-| `config.lua` の数値・座標 | **依頼がない限り変更しない**（`.cursor/rules/fivem-config-preservation.mdc`）。 |
+| `config.lua` の数値・座標 | **依頼がない限り変更しない**（運営者設定の保全）。 |
 
 バグ修正が本体に必要になった場合は、**オリジナルへのフィードバック可否**と **配布物としての差分説明**を CHANGELOG に書く。
 
