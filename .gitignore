@@ -30,3 +30,6 @@ nul
 # UP品: GitHub 非公開。ローカルまたは ZIP 配布のみ
 jp-taxijob/
 jp-lation_mining/
+
+# it-drugs 系: it_bridge 等の配布制約のため GitHub から除外。ノウハウ用にローカルのみ保管
+jp-it-drugs/
