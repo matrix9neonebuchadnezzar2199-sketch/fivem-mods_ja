@@ -41,4 +41,5 @@ jp-<mod名>/ ├── fxmanifest.lua ├── config.lua ├── locales/ �
 例: `jp-taxi:startShift`, `jp-gps-tracker:throwDevice`
 
 ## 関連ドキュメント
-- 外部 MOD の日本語化・フォーク配布の判断・作業の型: [CONTRIBUTING_JP.md](CONTRIBUTING_JP.md)
+- 外部 MOD の日本語化・フォーク配布の判断・作業の型: [CONTRIBUTING_JP.md](CONTRIBUTING_JP.md)（ルートの正本）
+- Cursor で `jp-*/` を触るときの短いルール: [.cursor/rules/jp-localization-workflow.mdc](.cursor/rules/jp-localization-workflow.mdc)

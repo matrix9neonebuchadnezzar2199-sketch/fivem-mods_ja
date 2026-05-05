@@ -3,6 +3,8 @@
 本リポジトリで **複数 MOD を継続的に日本語化・配布する** ときの判断基準と作業の型をまとめる。  
 個別 MOD の経緯は各フォルダの `README.md` / `CHANGELOG_JP.md` / `*_開発日記.md` に残す。
 
+**Cursor 利用時**: `jp-*/` 配下を編集するとき、エージェント向けに `.cursor/rules/jp-localization-workflow.mdc`（要約＋本書へのリンク）が参照される。本文の正本はこのファイル（ルートの `CONTRIBUTING_JP.md`）である。
+
 ## 前提（必読）
 
 - プロジェクト全体方針: [AGENTS.md](AGENTS.md)
