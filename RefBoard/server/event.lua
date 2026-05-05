@@ -60,6 +60,76 @@ local function withTransaction(fn)
   return false, err
 end
 
+--- PK 戦の決着判定（先攻は matches.pk_first_team_id、なければ team1）
+local function evaluatePenaltyShootout(matchId)
+  matchId = tonumber(matchId)
+  if not matchId then
+    return { decided = false }
+  end
+  local m = MySQL.single.await(
+    [[SELECT id, team1_id, team2_id, pk_first_team_id, current_half FROM matches WHERE id = ?]],
+    { matchId }
+  )
+  if not m or m.current_half ~= 'pk' then
+    return { decided = false }
+  end
+  local team1Id = tonumber(m.team1_id)
+  local team2Id = tonumber(m.team2_id)
+  local first = tonumber(m.pk_first_team_id) or team1Id
+  local second = (first == team1Id) and team2Id or team1Id
+  local rows = MySQL.query.await(
+    [[SELECT team_id, penalty_success FROM match_events
+      WHERE match_id = ? AND half = 'pk' AND event_type = 'penalty' AND voided_at IS NULL
+      ORDER BY id ASC]],
+    { matchId }
+  ) or {}
+  local n = #rows
+  if n == 0 then
+    return { decided = false, score = { team1 = 0, team2 = 0 }, kicksRemaining = 10 }
+  end
+  local tf, ts = 0, 0
+  local g1, g2 = 0, 0
+  for i, row in ipairs(rows) do
+    local okp = tonumber(row.penalty_success) == 1
+    if okp then
+      if (i - 1) % 2 == 0 then
+        tf = tf + 1
+      else
+        ts = ts + 1
+      end
+      local tid = tonumber(row.team_id)
+      if tid == team1Id then
+        g1 = g1 + 1
+      elseif tid == team2Id then
+        g2 = g2 + 1
+      end
+    end
+  end
+  local shotsFirst = math.ceil(n / 2)
+  local shotsSecond = math.floor(n / 2)
+  local decided = false
+  local winnerTeamId = nil
+  if n < 10 then
+    local remFirst = 5 - shotsFirst
+    local remSecond = 5 - shotsSecond
+    if tf > ts + remSecond or ts > tf + remFirst then
+      decided = true
+      winnerTeamId = (tf > ts) and first or second
+    end
+  else
+    if n % 2 == 0 and tf ~= ts then
+      decided = true
+      winnerTeamId = (tf > ts) and first or second
+    end
+  end
+  return {
+    decided = decided,
+    winnerTeamId = winnerTeamId,
+    score = { team1 = g1, team2 = g2 },
+    kicksRemaining = math.max(0, 10 - n),
+  }
+end
+
 RegisterNetEvent('refboard:event:substitute', function(payload)
   local src = source
   if not requireReferee(src) then
@@ -257,4 +327,13 @@ RegisterNetEvent('refboard:event:record_penalty', function(payload)
   end
   TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+
+  local pkResult = evaluatePenaltyShootout(matchId)
+  if pkResult.decided then
+    TriggerClientEvent('refboard:event:pk_decided', -1, {
+      matchId = matchId,
+      winnerTeamId = pkResult.winnerTeamId,
+      finalPkScore = pkResult.score,
+    })
+  end
 end)

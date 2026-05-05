@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel } from '../../types/match'
 
@@ -13,6 +14,10 @@ const emit = defineEmits<{ goal: []; manualScore: [] }>()
 
 const { t } = useI18n()
 const menuOpen = ref(false)
+const menuRef = ref<HTMLElement | null>(null)
+onClickOutside(menuRef, () => {
+  menuOpen.value = false
+})
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -62,7 +67,7 @@ function openManual() {
           >
             {{ t('score_board.goal') }}
           </button>
-          <div class="relative">
+          <div ref="menuRef" class="relative">
             <button
               type="button"
               class="rounded border border-slate-600 px-2 py-1.5 text-xs text-slate-300 disabled:opacity-40"

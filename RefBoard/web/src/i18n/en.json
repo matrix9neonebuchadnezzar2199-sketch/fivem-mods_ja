@@ -1,5 +1,8 @@
 {
   "app": { "title": "Soccer match control" },
+  "toast": {
+    "match_finished": "Match finished"
+  },
   "presence": {
     "online": "Online",
     "users_online": "{count} users have the tool open",
@@ -23,6 +26,7 @@
     "team_manage": "Teams",
     "match_manage": "Matches",
     "data_manage": "Data",
+    "settings": "Settings",
     "ranking": "Ranking",
     "tournament": "Tournament"
   },
@@ -64,6 +68,9 @@
     "color": "Color"
   },
   "player": {
+    "add_mode_server": "Add by server ID (live lookup)",
+    "add_mode_roster": "Pick from team roster",
+    "add_from_roster": "Add from roster",
     "enter_server_id": "Server ID (today's number)",
     "resolve_fail": "No player for server id {id}",
     "server_id_ph": "e.g. 15",
@@ -119,7 +126,9 @@
     "confirm": "[End match]"
   },
   "match_detail": {
-    "finish": "[End match]"
+    "finish": "[End match]",
+    "export_json": "Export match as JSON",
+    "export_events_csv": "Export events as CSV"
   },
   "score": {
     "edit_reason": "Reason (optional)",
@@ -222,12 +231,98 @@
     "pick_player": "Select player",
     "success": "⚽ Scored",
     "miss": "❌ Missed",
-    "decided": "Decided"
+    "decided": "Decided",
+    "winner_title": "Shootout winner",
+    "winner_line": "{team}",
+    "finish_title": "Finish the match now?",
+    "finish_later": "Later"
   },
   "events": {
     "title": "Match events",
     "add": "+ Add event",
     "add_yellow": "🟨 Caution",
     "add_red": "🟥 Send-off"
+  },
+  "team_manage": {
+    "list_title": "Teams",
+    "new_team": "+ Register team",
+    "search_ph": "Filter by name",
+    "col_logo": "Logo",
+    "col_roster": "Roster",
+    "col_last": "Last match",
+    "col_matches": "Matches",
+    "col_actions": "Actions",
+    "detail_title": "Team details",
+    "stats_title": "Stats (finished matches)",
+    "stat_matches": "Matches",
+    "stat_winrate": "Win rate",
+    "stat_wdl": "W-D-L",
+    "stat_goals": "GF / GA",
+    "btn_update": "Save",
+    "btn_delete": "Soft delete",
+    "pick_team": "Select a team from the list",
+    "delete_confirm": "Soft-delete this team?",
+    "create_title": "New team",
+    "create_submit": "Create",
+    "emblem_emoji": "Emblem (emoji)",
+    "roster_title": "Roster",
+    "roster_add": "+ Add player",
+    "roster_edit": "Edit roster member",
+    "roster_name": "Player name",
+    "roster_remove": "Remove",
+    "roster_remove_confirm": "Remove “{name}” from roster?",
+    "license_optional": "license (optional)"
+  },
+  "data": {
+    "tabs": {
+      "matches": "Match history",
+      "teams": "Team stats",
+      "players": "Player stats",
+      "log": "Edit log"
+    },
+    "period": "Period",
+    "period_this_month": "This month",
+    "period_last_month": "Last month",
+    "period_3m": "Last 3 months",
+    "period_all": "All time",
+    "period_custom": "Custom",
+    "team_filter": "Team",
+    "all_teams": "All teams",
+    "sort": "Sort",
+    "sort_date": "Date",
+    "sort_spread": "Goal diff",
+    "sort_goals": "Total goals",
+    "apply": "Apply",
+    "reload": "Reload",
+    "export_csv": "Export CSV",
+    "col_result": "Result",
+    "col_player": "Player",
+    "col_guest": "Guest",
+    "guest": "Guest",
+    "col_time": "Time",
+    "col_editor": "Editor",
+    "col_match": "Match",
+    "col_change": "Change",
+    "log_editor": "Editor license"
+  },
+  "settings": {
+    "title": "Settings",
+    "section_general": "General",
+    "section_match": "Match",
+    "section_display": "Display",
+    "section_dev": "Developer",
+    "locale": "Language",
+    "time_format": "Clock display",
+    "timezone": "Timezone (display)",
+    "default_half_min": "Default half length (minutes)",
+    "show_stoppage": "Stoppage hint",
+    "goal_confirm": "Confirm dialog on goal",
+    "score_edit_min": "Min chars for manual edit reason",
+    "show_hero": "Show hero header",
+    "card_opacity": "Card opacity",
+    "avatar_hue": "Avatar hue",
+    "nui_mock": "Enable NUI mock",
+    "nui_mock_note": "Browser dev uses mock automatically.",
+    "show_test_commands": "Show test commands hint (Config.EnableTestCommands)"
   }
 }

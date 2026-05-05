@@ -1,5 +1,9 @@
 <div align="center">
 
+<img src="./docs/screenshots/03_match_detail.png" width="100%" alt="RefBoard Match Detail Screen" />
+
+<p><em>サッカー試合管理を、シンプルに、安全に。</em></p>
+
 <img src="./docs/logo.svg" width="120" alt="RefBoard logo" />
 
 # RefBoard
@@ -25,7 +29,7 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
 ## インストール
 
 1. 本フォルダを `resources/[local]/RefBoard` などに配置。
-2. MySQL で `sql/install.sql` を実行（開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チームを投入推奨）。**既存 DB** は v0.3.0 以降 `sql/migration_002_match_reopen.sql` を一度適用してください。
+2. MySQL で `sql/install.sql` を実行（開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チームを投入推奨）。**既存 DB** はこれまでのマイグレーションに続けて `sql/migration_004_team_roster.sql`（ロスター・エンブレム列）を適用してください。
 3. `server.cfg` に `ensure oxmysql` のあと `ensure RefBoard`。
 4. 審判用プレイヤーに `add_ace identifier.license:xxxxxxxx refboard.referee allow` 等を付与。
 
@@ -51,7 +55,14 @@ npm run dev
 
 本番ビルド: `npm run build` → `web/dist` を FiveM が読み込みます。
 
+## エンドユーザー向けガイド
+
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md)（日本語）
+- [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md)（English）
+
 ## ステータス
+
+**v0.5.0** — チーム管理（ロスター）、データ管理・CSV、設定画面、PK 決着後フロー、UX ポリッシュ、スクリーンショット・ユーザーガイド。`docs/sprints/sprint_05.md`。
 
 **v0.3.0** — ゴール記録ウィザード、選手追加、スコア手動編集・履歴、試合終了／再編集、`match:get` / `match:state` 本番配線、Vite 単体用 NUI モック。`docs/sprints/sprint_03.md`。
 

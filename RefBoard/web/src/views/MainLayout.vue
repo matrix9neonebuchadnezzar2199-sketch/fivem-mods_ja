@@ -3,15 +3,19 @@ import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter, RouterLink, RouterView } from 'vue-router'
 import { useSessionStore } from '../stores/session'
+import { useSettingsStore } from '../stores/settings'
 import { getResourceName, useNui } from '../composables/useNui'
 import PresenceBadge from '../components/PresenceBadge.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
+const settingsStore = useSettingsStore()
 const { send } = useNui()
 
 onMounted(() => {
+  settingsStore.load()
+  locale.value = settingsStore.settings.locale
   void send('presence_list', {})
 })
 
@@ -26,8 +30,10 @@ async function closeApp() {
 }
 
 function toggleLocale() {
-  locale.value = locale.value === 'ja' ? 'en' : 'ja'
-  localStorage.setItem('refboard-locale', locale.value)
+  const next = locale.value === 'ja' ? 'en' : 'ja'
+  locale.value = next
+  settingsStore.patch({ locale: next })
+  localStorage.setItem('refboard-locale', next)
 }
 </script>
 
@@ -36,7 +42,13 @@ function toggleLocale() {
     <aside class="sidebar flex flex-col border-r border-slate-700/80 bg-slate-900/90 p-3 text-sm">
       <div class="mb-3 font-semibold text-primary">RefBoard</div>
       <nav class="flex flex-1 flex-col gap-1">
-        <span class="rounded-lg px-2 py-2 text-slate-500">{{ t('sidebar.team_manage') }}</span>
+        <RouterLink
+          :to="{ name: 'teams' }"
+          class="rounded-lg px-2 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+          active-class="!bg-slate-800 !text-slate-100"
+        >
+          {{ t('sidebar.team_manage') }}
+        </RouterLink>
         <RouterLink
           :to="{ name: 'matches' }"
           class="rounded-lg px-2 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
@@ -44,14 +56,27 @@ function toggleLocale() {
         >
           {{ t('sidebar.match_manage') }}
         </RouterLink>
-        <span class="rounded-lg px-2 py-2 text-slate-500">{{ t('sidebar.data_manage') }}</span>
+        <RouterLink
+          :to="{ name: 'data' }"
+          class="rounded-lg px-2 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+          active-class="!bg-slate-800 !text-slate-100"
+        >
+          {{ t('sidebar.data_manage') }}
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'settings' }"
+          class="rounded-lg px-2 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+          active-class="!bg-slate-800 !text-slate-100"
+        >
+          {{ t('sidebar.settings') }}
+        </RouterLink>
       </nav>
       <div class="mt-auto space-y-2 border-t border-slate-700/80 pt-3 text-xs text-slate-400">
         <div class="flex items-center gap-1.5 text-emerald-400">
           <span class="h-2 w-2 rounded-full bg-emerald-400" />
           {{ t('shell.online') }}
         </div>
-        <div>v0.2.0</div>
+        <div>v0.5.0</div>
       </div>
       <button type="button" class="mt-2 rounded-lg border border-slate-600 px-2 py-1 text-xs" @click="toggleLocale">
         {{ locale === 'ja' ? 'EN' : 'JA' }}

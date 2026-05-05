@@ -46,6 +46,70 @@ RegisterNetEvent('refboard:team:list:ack', function(payload)
   SendNUIMessage({ type = 'refboard:team:list:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:team:manage_list:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:manage_list:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:detail:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:detail:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:create:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:create:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:update:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:update:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:delete:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:delete:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:roster:list:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:roster:list:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:roster:add:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:roster:add:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:roster:update:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:roster:update:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:team:roster:remove:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:team:roster:remove:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:data:team_stats:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:data:team_stats:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:data:player_stats:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:data:player_stats:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:data:score_edit_log:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:data:score_edit_log:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:data:match_history:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:data:match_history:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:data:db_meta:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:data:db_meta:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:player:add_from_roster:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:player:add_from_roster:ack', payload = payload })
+end)
+
+RegisterNetEvent('refboard:event:pk_decided', function(payload)
+  SendNUIMessage({ type = 'refboard:event:pk_decided', payload = payload })
+end)
+
 RegisterNetEvent('refboard:match:list:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:list:ack', payload = payload })
 end)

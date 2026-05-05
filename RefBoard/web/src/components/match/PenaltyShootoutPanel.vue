@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
@@ -9,12 +9,19 @@ const props = defineProps<{
   readonly: boolean
 }>()
 
-const emit = defineEmits<{ recorded: [] }>()
+const emit = defineEmits<{ recorded: []; finished: [] }>()
 
 const { t } = useI18n()
 const { send, on } = useNui()
 
 const playerId = ref<string | null>(null)
+
+const showWinnerOverlay = ref(false)
+const showFinishAsk = ref(false)
+const winnerName = ref('')
+
+let offPk: (() => void) | null = null
+let winTimer: number | null = null
 
 const pkEvents = computed(() =>
   [...props.model.events]
@@ -44,7 +51,6 @@ const roster = computed((): MatchPlayer[] => {
 const pkHome = computed(() => props.model.breakdown.pk.home)
 const pkAway = computed(() => props.model.breakdown.pk.away)
 
-/** 先攻チーム基準で 5 本ずつ＋サドンデスの勝敗確定を推定 */
 const pkDecided = computed(() => {
   const ev = pkEvents.value
   const n = ev.length
@@ -67,6 +73,36 @@ const pkDecided = computed(() => {
   return n % 2 === 0 && tFirst !== tSecond
 })
 
+function winnerLabelForTeam(teamId: number) {
+  if (teamId === props.model.team1Id) return props.model.home.name
+  if (teamId === props.model.team2Id) return props.model.away.name
+  return ''
+}
+
+onMounted(() => {
+  offPk = on(
+    'refboard:event:pk_decided',
+    (p: { matchId?: number; winnerTeamId?: number; finalPkScore?: { team1: number; team2: number } }) => {
+      if (!p?.matchId || p.matchId !== props.model.id) return
+      const wid = p.winnerTeamId
+      if (!wid) return
+      winnerName.value = winnerLabelForTeam(wid)
+      showWinnerOverlay.value = true
+      if (winTimer) window.clearTimeout(winTimer)
+      winTimer = window.setTimeout(() => {
+        showWinnerOverlay.value = false
+        showFinishAsk.value = true
+        winTimer = null
+      }, 3000)
+    },
+  )
+})
+
+onUnmounted(() => {
+  offPk?.()
+  if (winTimer) window.clearTimeout(winTimer)
+})
+
 async function record(success: boolean) {
   const tid = nextTeamId.value
   const pid = playerId.value
@@ -84,6 +120,21 @@ async function record(success: boolean) {
     playerId: Number(pid),
     success,
   })
+}
+
+async function confirmFinishMatch() {
+  const un = on('refboard:match:finish:ack', (r: { ok?: boolean }) => {
+    un()
+    if (r?.ok) {
+      showFinishAsk.value = false
+      emit('finished')
+    }
+  })
+  await send('match_finish', { matchId: props.model.id })
+}
+
+function laterFinish() {
+  showFinishAsk.value = false
 }
 </script>
 
@@ -129,6 +180,33 @@ async function record(success: boolean) {
         >
           {{ t('penalty.miss') }}
         </button>
+      </div>
+    </div>
+
+    <div
+      v-if="showWinnerOverlay"
+      class="fixed inset-0 z-[400] flex flex-col items-center justify-center bg-black/80 p-6 text-center"
+    >
+      <div class="text-sm font-semibold text-violet-200">{{ t('penalty.winner_title') }}</div>
+      <div class="mt-2 text-3xl font-black text-white">{{ t('penalty.winner_line', { team: winnerName }) }}</div>
+    </div>
+
+    <div
+      v-if="showFinishAsk && !readonly"
+      class="fixed inset-0 z-[410] flex items-center justify-center bg-black/60 p-4"
+      @click.self="laterFinish"
+    >
+      <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-6 shadow-2xl">
+        <h3 class="mb-2 text-lg font-semibold text-slate-50">{{ t('penalty.finish_title') }}</h3>
+        <p class="mb-4 text-sm text-slate-400">{{ t('match_finish.note') }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="laterFinish">
+            {{ t('penalty.finish_later') }}
+          </button>
+          <button type="button" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmFinishMatch">
+            {{ t('dialog.yes') }}
+          </button>
+        </div>
       </div>
     </div>
   </div>

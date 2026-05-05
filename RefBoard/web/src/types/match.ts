@@ -104,4 +104,5 @@ export type TeamRow = {
   name: string
   short_name?: string | null
   color?: string | null
+  emblem_emoji?: string | null
 }

@@ -1,5 +1,8 @@
 {
   "app": { "title": "サッカー試合管理" },
+  "toast": {
+    "match_finished": "試合を終了しました"
+  },
   "presence": {
     "online": "接続中",
     "users_online": "{count}人がツールを開いています",
@@ -23,6 +26,7 @@
     "team_manage": "チーム管理",
     "match_manage": "試合管理",
     "data_manage": "データ管理",
+    "settings": "設定",
     "ranking": "ランキング",
     "tournament": "大会"
   },
@@ -64,6 +68,9 @@
     "color": "カラー"
   },
   "player": {
+    "add_mode_server": "サーバーIDから追加（その場で）",
+    "add_mode_roster": "チームのロスターから選ぶ",
+    "add_from_roster": "ロスターから追加",
     "enter_server_id": "今日の番号（サーバーID）",
     "resolve_fail": "サーバーID {id} のプレイヤーが見つかりません",
     "server_id_ph": "例: 15",
@@ -119,7 +126,9 @@
     "confirm": "[試合を終了]"
   },
   "match_detail": {
-    "finish": "[試合終了]"
+    "finish": "[試合終了]",
+    "export_json": "試合データを JSON でエクスポート",
+    "export_events_csv": "イベント一覧を CSV でエクスポート"
   },
   "score": {
     "edit_reason": "変更理由（任意）",
@@ -222,12 +231,98 @@
     "pick_player": "選手を選択",
     "success": "⚽ 成功",
     "miss": "❌ 失敗",
-    "decided": "決着"
+    "decided": "決着",
+    "winner_title": "PK戦の勝者",
+    "winner_line": "{team}",
+    "finish_title": "試合を終了しますか？",
+    "finish_later": "後で"
   },
   "events": {
     "title": "試合イベント",
     "add": "+ イベントを追加",
     "add_yellow": "🟨 警告",
     "add_red": "🟥 退場"
+  },
+  "team_manage": {
+    "list_title": "チーム一覧",
+    "new_team": "+ 新しいチームを登録",
+    "search_ph": "チーム名で検索",
+    "col_logo": "ロゴ",
+    "col_roster": "選手",
+    "col_last": "最終試合日",
+    "col_matches": "試合",
+    "col_actions": "操作",
+    "detail_title": "チーム詳細",
+    "stats_title": "統計（終了試合のみ）",
+    "stat_matches": "試合数",
+    "stat_winrate": "勝率",
+    "stat_wdl": "勝-分-負",
+    "stat_goals": "得点 / 失点",
+    "btn_update": "更新",
+    "btn_delete": "論理削除",
+    "pick_team": "左の一覧からチームを選択",
+    "delete_confirm": "このチームを論理削除しますか？",
+    "create_title": "新しいチーム",
+    "create_submit": "登録",
+    "emblem_emoji": "エンブレム（絵文字）",
+    "roster_title": "ロスター",
+    "roster_add": "+ 選手を追加",
+    "roster_edit": "ロスター編集",
+    "roster_name": "選手名",
+    "roster_remove": "削除",
+    "roster_remove_confirm": "ロスターから「{name}」を外しますか？",
+    "license_optional": "license（任意）"
+  },
+  "data": {
+    "tabs": {
+      "matches": "試合履歴",
+      "teams": "チーム統計",
+      "players": "選手統計",
+      "log": "編集ログ"
+    },
+    "period": "期間",
+    "period_this_month": "今月",
+    "period_last_month": "先月",
+    "period_3m": "過去3ヶ月",
+    "period_all": "全期間",
+    "period_custom": "カスタム",
+    "team_filter": "チーム",
+    "all_teams": "すべて",
+    "sort": "ソート",
+    "sort_date": "日付",
+    "sort_spread": "スコア差",
+    "sort_goals": "総得点",
+    "apply": "適用",
+    "reload": "再読込",
+    "export_csv": "CSVエクスポート",
+    "col_result": "結果",
+    "col_player": "選手",
+    "col_guest": "ゲスト",
+    "guest": "ゲスト",
+    "col_time": "日時",
+    "col_editor": "編集者",
+    "col_match": "対象試合",
+    "col_change": "変更",
+    "log_editor": "編集者license"
+  },
+  "settings": {
+    "title": "設定",
+    "section_general": "一般",
+    "section_match": "試合管理",
+    "section_display": "表示",
+    "section_dev": "開発者向け",
+    "locale": "言語",
+    "time_format": "ハーフ時間表示",
+    "timezone": "タイムゾーン（表示用）",
+    "default_half_min": "デフォルト前半・後半（分）",
+    "show_stoppage": "ロスタイム自動表示のヒント",
+    "goal_confirm": "ゴール記録時の確認ダイアログ",
+    "score_edit_min": "手動編集の理由 最小文字数",
+    "show_hero": "ヒーローエリアを表示",
+    "card_opacity": "カードの不透明度",
+    "avatar_hue": "アバター色（色相）",
+    "nui_mock": "NUIモック有効化",
+    "nui_mock_note": "ブラウザ開発時は自動でモックが有効です。",
+    "show_test_commands": "テストコマンド表示（Config.EnableTestCommands）"
   }
 }

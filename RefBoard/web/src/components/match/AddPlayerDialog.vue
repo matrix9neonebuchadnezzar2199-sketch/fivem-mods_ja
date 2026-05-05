@@ -3,6 +3,14 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
 
+type RosterRow = {
+  id: number
+  player_name: string
+  jersey_number: number | null
+  position: string | null
+  license: string | null
+}
+
 const props = defineProps<{
   open: boolean
   matchId: number
@@ -14,6 +22,7 @@ const emit = defineEmits<{ 'update:open': [boolean]; added: [] }>()
 const { t } = useI18n()
 const { send, on } = useNui()
 
+const mode = ref<'server' | 'roster'>('server')
 const serverId = ref('')
 const previewName = ref('')
 const previewLicense = ref<string | null>(null)
@@ -24,6 +33,9 @@ const error = ref('')
 const licenseWarn = ref(false)
 const showDup = ref(false)
 
+const rosterRows = ref<RosterRow[]>([])
+const rosterPickId = ref<number | null>(null)
+
 let deb: ReturnType<typeof setTimeout> | null = null
 
 function close() {
@@ -31,6 +43,7 @@ function close() {
 }
 
 function reset() {
+  mode.value = 'server'
   serverId.value = ''
   previewName.value = ''
   previewLicense.value = null
@@ -40,6 +53,8 @@ function reset() {
   error.value = ''
   licenseWarn.value = false
   showDup.value = false
+  rosterRows.value = []
+  rosterPickId.value = null
 }
 
 watch(
@@ -48,6 +63,21 @@ watch(
     if (v) reset()
   },
 )
+
+watch(mode, (m) => {
+  error.value = ''
+  if (m === 'roster' && props.open && props.teamId) {
+    void loadRoster()
+  }
+})
+
+async function loadRoster() {
+  const un = on('refboard:team:roster:list:ack', (r: { rows?: RosterRow[] }) => {
+    un()
+    rosterRows.value = r.rows ?? []
+  })
+  await send('team_roster_list', { teamId: props.teamId })
+}
 
 watch(serverId, () => {
   error.value = ''
@@ -84,7 +114,7 @@ async function loadOnline() {
   await send('player_online_list', {})
 }
 
-async function submit(force: boolean) {
+async function submitServer(force: boolean) {
   const sid = Number(serverId.value)
   if (!sid || !previewName.value) {
     error.value = t('player.add_need_resolve')
@@ -115,6 +145,41 @@ async function submit(force: boolean) {
     force,
   })
 }
+
+async function submitRoster(force: boolean) {
+  if (!rosterPickId.value) {
+    error.value = t('player.add_need_resolve')
+    return
+  }
+  const un = on('refboard:player:add_from_roster:ack', (r: { ok?: boolean; error?: string }) => {
+    un()
+    if (r?.ok) {
+      emit('added')
+      close()
+      return
+    }
+    if (r?.error === 'duplicate_license' && !force) {
+      showDup.value = true
+      return
+    }
+    error.value = r?.error || 'error'
+  })
+  await send('player_add_from_roster', {
+    matchId: props.matchId,
+    teamId: props.teamId,
+    rosterId: rosterPickId.value,
+    isStarter: isStarter.value,
+    force,
+  })
+}
+
+async function submit(force: boolean) {
+  if (mode.value === 'server') {
+    await submitServer(force)
+  } else {
+    await submitRoster(force)
+  }
+}
 </script>
 
 <template>
@@ -125,7 +190,27 @@ async function submit(force: boolean) {
   >
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">{{ t('player.add_title') }}</h2>
-      <div class="space-y-3 text-sm">
+
+      <div class="mb-3 flex gap-1 rounded-lg border border-slate-700 p-1 text-xs">
+        <button
+          type="button"
+          class="flex-1 rounded-md px-2 py-2 font-semibold"
+          :class="mode === 'server' ? 'bg-primary text-white' : 'text-slate-400'"
+          @click="mode = 'server'"
+        >
+          {{ t('player.add_mode_server') }}
+        </button>
+        <button
+          type="button"
+          class="flex-1 rounded-md px-2 py-2 font-semibold"
+          :class="mode === 'roster' ? 'bg-primary text-white' : 'text-slate-400'"
+          @click="mode = 'roster'"
+        >
+          {{ t('player.add_mode_roster') }}
+        </button>
+      </div>
+
+      <div v-if="mode === 'server'" class="space-y-3 text-sm">
         <label class="block text-slate-400">
           {{ t('player.enter_server_id') }}
           <input
@@ -141,38 +226,62 @@ async function submit(force: boolean) {
           {{ previewName }}
           <span v-if="licenseWarn" class="ml-2 text-amber-400">{{ t('player.license_warn') }}</span>
         </div>
-        <p v-if="error" class="text-sm text-red-400">{{ error }}</p>
-        <div v-if="showDup" class="rounded border border-amber-600/50 bg-amber-500/10 p-2 text-amber-200">
-          {{ t('player.duplicate_body') }}
-          <div class="mt-2 flex gap-2">
-            <button type="button" class="rounded border border-slate-500 px-2 py-1 text-xs" @click="showDup = false">{{ t('dialog.no') }}</button>
-            <button type="button" class="rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-slate-900" @click="submit(true)">
-              {{ t('player.duplicate_continue') }}
-            </button>
-          </div>
-        </div>
-        <label class="block text-slate-400">
-          {{ t('player.jersey_optional') }}
-          <input v-model.number="jerseyNumber" type="number" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
-        </label>
-        <div class="text-slate-400">{{ t('player.position') }}</div>
-        <div class="flex flex-wrap gap-1">
-          <button
-            v-for="p in ['GK', 'DF', 'MF', 'FW'] as const"
-            :key="p"
-            type="button"
-            class="rounded px-3 py-1 text-xs font-semibold"
-            :class="position === p ? 'bg-primary text-white' : 'border border-slate-600 bg-slate-800 text-slate-300'"
-            @click="position = p"
-          >
-            {{ p }}
+      </div>
+
+      <div v-else class="max-h-48 space-y-2 overflow-y-auto text-sm">
+        <p class="text-xs text-slate-500">{{ t('player.add_from_roster') }}</p>
+        <button
+          v-for="row in rosterRows"
+          :key="row.id"
+          type="button"
+          class="block w-full rounded border px-2 py-2 text-left"
+          :class="rosterPickId === row.id ? 'border-primary bg-primary/10 text-slate-50' : 'border-slate-600 bg-slate-950 text-slate-200'"
+          @click="rosterPickId = row.id"
+        >
+          <span class="font-mono text-primary">{{ row.jersey_number ?? '—' }}</span>
+          {{ row.player_name }}
+          <span class="text-xs text-slate-500">{{ row.position || '' }}</span>
+        </button>
+        <p v-if="!rosterRows.length" class="text-xs text-slate-500">{{ t('team_manage.pick_team') }}</p>
+      </div>
+
+      <p v-if="error" class="mt-2 text-sm text-red-400">{{ error }}</p>
+      <div v-if="showDup" class="mt-2 rounded border border-amber-600/50 bg-amber-500/10 p-2 text-amber-200">
+        {{ t('player.duplicate_body') }}
+        <div class="mt-2 flex gap-2">
+          <button type="button" class="rounded border border-slate-500 px-2 py-1 text-xs" @click="showDup = false">{{ t('dialog.no') }}</button>
+          <button type="button" class="rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-slate-900" @click="submit(true)">
+            {{ t('player.duplicate_continue') }}
           </button>
         </div>
+      </div>
+
+      <div class="mt-3 space-y-2 border-t border-slate-700 pt-3 text-sm">
+        <template v-if="mode === 'server'">
+          <label class="block text-slate-400">
+            {{ t('player.jersey_optional') }}
+            <input v-model.number="jerseyNumber" type="number" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
+          </label>
+          <div class="text-slate-400">{{ t('player.position') }}</div>
+          <div class="flex flex-wrap gap-1">
+            <button
+              v-for="p in ['GK', 'DF', 'MF', 'FW'] as const"
+              :key="p"
+              type="button"
+              class="rounded px-3 py-1 text-xs font-semibold"
+              :class="position === p ? 'bg-primary text-white' : 'border border-slate-600 bg-slate-800 text-slate-300'"
+              @click="position = p"
+            >
+              {{ p }}
+            </button>
+          </div>
+        </template>
         <label class="flex items-center gap-2 text-slate-300">
           <input v-model="isStarter" type="checkbox" class="rounded border-slate-500" />
           {{ t('player.starter') }}
         </label>
       </div>
+
       <div class="mt-5 flex justify-end gap-2">
         <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="close">{{ t('dialog.no') }}</button>
         <button type="button" class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white" @click="submit(false)">

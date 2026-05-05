@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'RefBoard'
 author 'matrix9neonebuchadnezzar2199-sketch'
-version '0.4.0'
+version '0.5.0'
 description 'RefBoard — FiveM 向けサッカー試合管理（改ざん防止履歴・編集ロック・i18n）'
 
 dependencies {
@@ -26,6 +26,7 @@ server_scripts {
   'server/lock.lua',
   'server/autosave.lua',
   'server/team.lua',
+  'server/data.lua',
   'server/match.lua',
   'server/player.lua',
   'server/score.lua',

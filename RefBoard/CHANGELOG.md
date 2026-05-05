@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.0 — 2026-05-06
+
+- **チーム管理**: `TeamManage.vue`、ロスター API（`team_roster` / `server/team.lua`）、`AddPlayerDialog` に「ロスターから選ぶ」モード。
+- **データ管理**: `DataManage.vue`（試合履歴・チーム統計・選手統計・編集ログ）、`server/data.lua` 集計、`CSV` エクスポート（`utils/exporters.ts`、BOM 付き）。
+- **設定**: `Settings.vue`、`stores/settings.ts`（`localStorage`）、サイドバーから遷移。
+- **PK 決着**: `server/event.lua` の `evaluatePenaltyShootout`、`refboard:event:pk_decided`、`PenaltyShootoutPanel.vue` で勝者表示→試合終了確認。
+- **UX**: `onClickOutside`（イベントメニュー・スコアボード）、キーボードショートカット、`Toast`、`main.ts` の `errorHandler`、ヒーロー表示/カード不透明度の設定連動。
+- **DB**: `sql/migration_004_team_roster.sql` / `install.sql`（`team_roster`、`teams.emblem_emoji`）。
+- **ドキュメント**: `docs/screenshots/`（01〜10 プレースホルダ）、`docs/USER_GUIDE.md` / `docs/USER_GUIDE.en.md`、`docs/sprints/sprint_05.md`、`README` 更新。
+
 ## v0.4.0 — 2026-05-05
 
 - **ハーフ別スコア内訳**: `Match.getScoreBreakdown` 集計を `refboard:match:get` / `refboard:match:state` の `breakdown` で配信。`MatchStatusCard` で前半・後半・延長（`et` 時）・PK（`pk` 時）を表示。

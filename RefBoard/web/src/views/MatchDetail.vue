@@ -23,6 +23,7 @@ import {
   type ServerHistoryRow,
   type ServerPlayerRow,
 } from '../utils/mapMatchFromServer'
+import { downloadFile, exportMatchEventsToCSV, exportMatchToJSON, refboardFilename } from '../utils/exporters'
 import BasicInfoCard from '../components/match/BasicInfoCard.vue'
 import ScoreBoardCard from '../components/match/ScoreBoardCard.vue'
 import MatchStatusCard from '../components/match/MatchStatusCard.vue'
@@ -37,6 +38,9 @@ import AddPlayerDialog from '../components/match/AddPlayerDialog.vue'
 import ScoreEditDialog from '../components/match/ScoreEditDialog.vue'
 import ScoreHistoryDialog from '../components/match/ScoreHistoryDialog.vue'
 import { useI18n } from 'vue-i18n'
+import { useSettingsStore } from '../stores/settings'
+import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
+import { useToast } from '../composables/useToast'
 
 defineProps<{
   id?: string
@@ -50,6 +54,32 @@ const presence = usePresenceStore()
 const { send, on } = useNui()
 const { setFocus } = useFocusTracker()
 const { t } = useI18n()
+const settings = useSettingsStore()
+const { push: toast } = useToast()
+
+function closeAllModals() {
+  showGoal.value = false
+  showAdd.value = false
+  showScoreEdit.value = false
+  showHistory.value = false
+  showFinish.value = false
+  showSub.value = false
+  showCard.value = false
+}
+
+useKeyboardShortcuts({
+  enabled: () => session.isEditor && detail.dbStatus === 'draft',
+  onGoal: () => {
+    showGoal.value = true
+  },
+  onSub: () => {
+    showSub.value = true
+  },
+  onSave: () => {
+    void onSave()
+  },
+  onCloseModals: () => closeAllModals(),
+})
 
 const readonly = computed(() => !session.isEditor)
 
@@ -173,6 +203,7 @@ watch(
 )
 
 onMounted(() => {
+  settings.load()
   if (session.isEditor) {
     void send('lock_acquire', { matchId: detail.id })
   }
@@ -214,19 +245,42 @@ async function onFinishConfirm() {
     if (r?.ok) {
       detail.dbStatus = 'finished'
       showFinish.value = false
+      toast(t('toast.match_finished'), 'success')
     }
   })
   await send('match_finish', { matchId: detail.id })
 }
 
+function onPkFinished() {
+  detail.dbStatus = 'finished'
+  toast(t('toast.match_finished'), 'success')
+}
+
 function reloadMatch() {
   void loadMatch()
+}
+
+function exportMatchJson() {
+  downloadFile(
+    exportMatchToJSON(detail, historyRows.value),
+    refboardFilename('refboard_match', 'json'),
+    'application/json;charset=utf-8',
+  )
+}
+
+function exportMatchEventsCsv() {
+  downloadFile(
+    exportMatchEventsToCSV(detail.events),
+    refboardFilename('refboard_match_events', 'csv'),
+    'text/csv;charset=utf-8',
+  )
 }
 </script>
 
 <template>
   <div class="flex h-full min-h-0 flex-col overflow-hidden bg-bg">
     <div
+      v-if="settings.settings.showHero"
       class="relative shrink-0 border-b border-slate-700 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 px-6 py-10 text-center"
     >
       <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_55%)]" />
@@ -243,7 +297,9 @@ function reloadMatch() {
         :model="detail"
         :readonly="readonly"
         @recorded="reloadMatch"
+        @finished="onPkFinished"
       />
+      <div :style="{ opacity: settings.settings.cardOpacity / 100 }">
       <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
         <div class="flex flex-1 flex-wrap items-center gap-2 text-sm text-slate-200">
           <span class="font-semibold">試合詳細の編集</span>
@@ -274,6 +330,22 @@ function reloadMatch() {
           </button>
           <button type="button" class="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110" @click="onSave">
             [保存する]
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-slate-600 px-2 py-1.5 text-xs text-slate-200"
+            :title="t('match_detail.export_json')"
+            @click="exportMatchJson"
+          >
+            JSON
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-slate-600 px-2 py-1.5 text-xs text-slate-200"
+            :title="t('match_detail.export_events_csv')"
+            @click="exportMatchEventsCsv"
+          >
+            CSV
           </button>
         </div>
       </header>
@@ -330,6 +402,7 @@ function reloadMatch() {
             @issue-card="openCard"
           />
         </div>
+      </div>
       </div>
     </div>
 

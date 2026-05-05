@@ -4,6 +4,7 @@ import { useSessionStore } from './stores/session'
 import { usePresenceStore, type PresenceUser } from './stores/presence'
 import { useAutosaveStore } from './stores/autosave'
 import { useNui } from './composables/useNui'
+import Toast from './components/Toast.vue'
 
 const session = useSessionStore()
 const presence = usePresenceStore()
@@ -30,4 +31,5 @@ onMounted(() => {
 
 <template>
   <router-view />
+  <Toast />
 </template>

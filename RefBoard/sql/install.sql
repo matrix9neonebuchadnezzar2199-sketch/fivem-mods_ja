@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS teams (
   name VARCHAR(64) NOT NULL,
   short_name VARCHAR(8),
   color VARCHAR(16),
+  emblem_emoji VARCHAR(16) NULL,
   created_by_license VARCHAR(64) NOT NULL,
   created_by_name VARCHAR(64) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -63,6 +64,20 @@ CREATE TABLE IF NOT EXISTS match_players (
   FOREIGN KEY (team_id) REFERENCES teams(id),
   INDEX idx_match_players_mt (match_id, team_id),
   INDEX idx_match_players_lic (license)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS team_roster (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  team_id BIGINT NOT NULL,
+  player_name VARCHAR(64) NOT NULL,
+  jersey_number INT NULL,
+  position ENUM('GK','DF','MF','FW') NULL,
+  license VARCHAR(64) NULL,
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  left_at TIMESTAMP NULL,
+  FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+  INDEX idx_team_roster_team (team_id, left_at),
+  INDEX idx_team_roster_license (license)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS match_events (

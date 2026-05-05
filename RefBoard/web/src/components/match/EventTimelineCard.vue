@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import type { MatchEvent } from '../../types/match'
 
@@ -13,6 +14,10 @@ const emit = defineEmits<{ substitute: []; issueCard: [kind: 'yellow' | 'red'] }
 
 const { t } = useI18n()
 const menuOpen = ref(false)
+const menuRef = ref<HTMLElement | null>(null)
+onClickOutside(menuRef, () => {
+  menuOpen.value = false
+})
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -42,7 +47,7 @@ function pick(kind: 'sub' | 'yellow' | 'red') {
         <span>{{ e.text }}</span>
       </li>
     </ul>
-    <div class="relative mt-3">
+    <div ref="menuRef" class="relative mt-3">
       <button
         type="button"
         class="w-full rounded-lg border border-dashed border-slate-500 py-2 text-xs font-medium text-slate-300 hover:border-primary hover:text-primary disabled:opacity-40"
