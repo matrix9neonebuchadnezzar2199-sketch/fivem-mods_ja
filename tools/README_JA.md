@@ -68,3 +68,41 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\apply_nui_i18n.ps1 -
 3. `tools/apply_nui_i18n.ps1 -ModName <MOD> -Mode preview` でヒット数を確認
 4. ヒットが妥当なら `-Mode apply`
 5. 残った英文は `_replacements.json` に追記して再実行
+
+## FAQ
+
+### Q. apply 後に preview を実行するとヒット数がほぼ 0 になります
+
+A. 正常です。`apply` 後の `index.js` は英語リテラルが日本語に置換済みのため、同じマップで再度 preview しても英語キーは見つかりません。これはツールが冪等に動作している証拠です。
+
+英語バンドルに戻して検証したい場合は `restore` を実行してください。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\apply_nui_i18n.ps1 -ModName pls_jobsystem -Mode restore
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\apply_nui_i18n.ps1 -ModName pls_jobsystem -Mode preview
+```
+
+### Q. preview で少数のヒットが残るのはなぜですか
+
+A. 次のいずれかが原因です。
+
+1. **意図的に英語のまま残しているキー**（クレジット表記 `by PLS SCRIPTS` 等）。マップの値が英語のままなら置換しても見た目が変わらず、ヒットが残り続けます。問題ありません。
+2. **minify 後の重複参照**。同じ文字列がコードパス上で複数箇所から参照されているケース。これも問題ありません。
+3. **未訳のキーが追加されている**。マップの値が日本語訳になっているのに残っているなら、`apply` を実行し忘れている可能性があります。
+
+### Q. 新しい MOD を追加するときの最短手順は
+
+A. 次の3ステップです。
+
+1. `<MOD>/web/dist/` を配置
+2. `<MOD>/docs/i18n/<MOD>_replacements.json` を作成
+3. `tools\apply_nui_i18n.ps1 -ModName <MOD> -Mode preview` → 妥当なら `-Mode apply`
+
+### Q. 翻訳マップを編集してもUIに反映されません
+
+A. `apply` を再実行する必要があります。マップの編集は自動反映ではありません。
+また、FiveM サーバー側で `restart <MOD>` (またはクライアント再接続) が必要です。
+
+### Q. 置換先の日本語に "$" や "\" を含めても大丈夫ですか
+
+A. 大丈夫です。本ツールは正規表現置換ではなく `.Replace()` によるリテラル置換を採用しているため、置換先の文字列に正規表現メタ文字や後方参照記号が含まれても安全に動作します。
