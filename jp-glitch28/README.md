@@ -75,6 +75,73 @@ end
 
 詳細は [`docs/USAGE_JA.md`](docs/USAGE_JA.md) を参照してください。
 
+## 運営向け: 犯罪・強盗RPへの組み込み方
+
+このリソースは **ミニゲームの表示と成否（boolean）だけ** を提供します。金庫が開く・現金が入る・警察に通報される、といった **RP上の結果は、必ず別の自作リソース（強盗スクリプト・ジョブ・ターゲット連携など）側で処理** してください。`exports['glitch-minigames']` の戻り値を **そのまま信用してサーバーで報酬を出すとチートに弱い** ので、クライアントは「プレイした」事実の通知に留め、**報酬・ドア状態・アイテム削除はサーバーで権威を持たせる** 設計を推奨します。
+
+### 典型的な流れ
+
+1. プレイヤーがドア・PC・金庫などに相互作用（`ox_target` / `qb-target` / `E` キー等は運営の既存スクリプトに依存）。
+2. **クライアント**で `local ok = exports['glitch-minigames']:Start○○Game(...)` を実行（同期で完了までブロックする動きが基本）。
+3. `if ok then` のときだけ `TriggerServerEvent('あなたのリソース:heistMinigamePassed', 金庫ID, 'lockpick')` のように **サーバーへ通知**（イベント名は自分で定義）。
+4. **サーバー**で「そのプレイヤーは今その金庫のそばにいるか」「クールダウン中か」「必要アイテムを持っているか」を検証したうえで、ドア開放・ルート状態更新・報酬付与を実行。
+
+ミニゲーム中は NUI やカメラが使われるため、**同時に別のフルスクリーン UI を出さない**・**死亡・リログでキャンセル** される前提でシナリオを組むと安全です。
+
+### 設定・ファイルの見どころ（運営が触る場所）
+
+| 場所 | 何をするか |
+|------|------------|
+| **`shared/config.lua`** | 全サーバー共通の見た目・挙動。`config.DebugCommands`（本番は `false`）、`config.usingGlitchNotifications`（後述）、テーマ・背景の不透明度。 |
+| **`server.cfg`** | `ensure glitch-minigames` と、あなたの強盗リソースの `ensure`。**先に `glitch-minigames` を起動**しておくと export が安定しやすいです。 |
+| **自作リソース（推奨）** | 座標・段階・難易度・報酬テーブル。ここで「どの段階でどの `Start...` を呼ぶか」を決める。**難易度の数値は export の引数で調整**（[`docs/USAGE_JA.md`](docs/USAGE_JA.md)・[公式ドキュメント](https://minigames.glitchstudios.dev/)参照）。 |
+| **`client/` 配下の直接編集** | 上級者向け。演出文・色の微調整は可能だが、**`exports` 名とリソース名は変えないこと**（他MOD・既存連携が壊れるため）。 |
+
+### シナリオ例とミニゲームの対応（目安）
+
+| RPシチュエーション | 使いやすい export（例） | メモ |
+|-------------------|-------------------------|------|
+| 扉・手錠・簡易錠前 | `StartLockpickGame` / `StartSkillCheckGame` / `StartBarHitGame` | 短時間で区切りやすい |
+| PC・サーバーハッキング（多段階） | `StartFirewallPulse` → `StartBackdoorSequence` → `StartDataCrack` など | 段階を分けるとドラマチック |
+| ターミナル風・総当たり | `StartBruteForce` | スケールフォーム内ラベルは英語据え置き（README「既知の制限」） |
+| 回路・ブレーカー | `StartCircuitBreaker` | CJK 表示は環境要確認 |
+| 金庫ドリル（ Fleeca 系アニメ） | `StartDrilling` | 操作説明は `glitch-notifications` 利用時のみ表示 |
+| プラズマ／レーザー風ドリル | `StartPlasmaDrilling` | 同上 |
+| 指紋・身分認証 | `StartFingerprintGame` | |
+| PIN・暗証 | `StartCodeCrackGame` | |
+| 軽い「作業」チェック | `StartWireConnectGame` / `StartPipePressureGame` / `StartHoldZoneGame` | 工場・整備風にも流用可 |
+
+公式のパラメータ一覧・ブラウザ試用は [Glitch Minigames ドキュメント](https://minigames.glitchstudios.dev/) が便利です（英語）。日本語版の引数サンプルは [`docs/USAGE_JA.md`](docs/USAGE_JA.md) にあります。
+
+### コード例（クライアント → サーバー）
+
+```lua
+-- 例: 自作リソース client.lua（リソース名は仮）
+RegisterNetEvent('my-heist:client:tryVaultLockpick', function(vaultId)
+    local ok = exports['glitch-minigames']:StartLockpickGame(3, 28, 2, 40, 500)
+    if ok then
+        TriggerServerEvent('my-heist:server:vaultLockpickSuccess', vaultId)
+    else
+        -- 失敗時は通知のみ、報酬はサーバーでは一切触らない
+        TriggerServerEvent('my-heist:server:vaultLockpickFailed', vaultId)
+    end
+end)
+```
+
+```lua
+-- 例: 自作リソース server.lua（必ず検証すること）
+RegisterNetEvent('my-heist:server:vaultLockpickSuccess', function(vaultId)
+    local src = source
+    if type(vaultId) ~= 'string' then return end
+    -- 距離・状態・クールダウン・アイテムの検証をここに書く
+    -- 問題なければドア開放や次フェーズへ
+end)
+```
+
+### glitch-notifications について
+
+Fleeca ドリル・プラズマドリルの **操作説明テキスト** は、`config.usingGlitchNotifications = true` のとき **`glitch-notifications`** の `ShowNotification` で出します。**未導入のサーバーでは `false` にしてください**（エラー回避。ただし操作説明は表示されません）。導入する場合は `server.cfg` で当該リソースを `ensure` し、`glitch-minigames` より前に起動できるようにしておくと安心です。
+
 ## デバッグコマンド
 
 `shared/config.lua` で `config.DebugCommands = true` にすると、以下のテストコマンドが有効になります（`/testskillcheck` など、各ミニゲームに対応）。

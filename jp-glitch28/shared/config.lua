@@ -30,7 +30,9 @@
 config = {}
 
 config.DebugCommands = true -- true: /testskillcheck 等のデバッグコマンドを有効（本番は false 推奨）
-config.usingGlitchNotifications = true -- true: Glitch 通知リソース連携（未使用なら false 可）
+-- true: Fleeca/Plasma ドリル等の操作説明を glitch-notifications で表示。
+-- 当リソースを入れていないサーバーでは false にすること（false 時は説明なしだが落ちない）。
+config.usingGlitchNotifications = true
 
 -- 配色テーマ
 config.ActiveTheme = 'cyan' -- 'cyan'（青系・原作） / 'monochrome'（モノクロ）

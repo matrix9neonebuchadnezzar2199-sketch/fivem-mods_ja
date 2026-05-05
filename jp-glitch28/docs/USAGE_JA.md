@@ -5,6 +5,14 @@
 
 ---
 
+## 前提条件・連携リソース
+
+- **リソース名**: 配置フォルダは **`glitch-minigames`** にすること（`exports['glitch-minigames']` と一致させる）。
+- **glitch-notifications**（任意）: `shared/config.lua` の `config.usingGlitchNotifications` が `true` のとき、Fleeca／Plasma ドリルの操作説明が通知で表示される。**未導入なら `false`**（表示は出ないが、当該分岐でエラーにはならない想定）。
+- **報酬・ゲーム進行**: 本リソースはミニゲームのみ。インベントリ操作・ドア同期・警察連携は **別リソースのサーバー側** で行うこと。
+
+---
+
 ## スキルチェック (Skill Check)
 
 ```lua
