@@ -1,0 +1,1 @@
+-- server/team.lua — チーム CRUD（設計書 2.4.2）

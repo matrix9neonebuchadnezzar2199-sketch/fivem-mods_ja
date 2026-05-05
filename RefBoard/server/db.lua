@@ -1,0 +1,1 @@
+-- server/db.lua — oxmysql ラッパー（MySQL.query.await / transaction は実装フェーズで追加）

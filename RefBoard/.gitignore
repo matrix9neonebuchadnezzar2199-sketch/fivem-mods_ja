@@ -1,0 +1,12 @@
+node_modules/
+.vite/
+*.log
+npm-debug.log*
+.env
+.env.local
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tsbuildinfo
+.idea/
+.vscode/

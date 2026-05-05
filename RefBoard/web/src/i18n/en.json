@@ -1,0 +1,61 @@
+{
+  "app": { "title": "Soccer match control" },
+  "launcher": {
+    "edit_mode": "Match control (edit)",
+    "view_mode": "View only",
+    "currently_editing": "{name} is editing"
+  },
+  "sidebar": {
+    "team_manage": "Teams",
+    "match_manage": "Matches",
+    "data_manage": "Data",
+    "ranking": "Ranking",
+    "tournament": "Tournament"
+  },
+  "match": {
+    "score_record": "Score",
+    "first_half": "1st",
+    "second_half": "2nd",
+    "halftime_end": "End 1st half",
+    "substitute": "Substitution",
+    "undo": "Undo",
+    "select_player": "Select player",
+    "back": "Back",
+    "next": "Next"
+  },
+  "tabs": {
+    "score_record": "Score",
+    "match_progress": "Timeline",
+    "results": "Results",
+    "match_info": "Info",
+    "members": "Roster"
+  },
+  "badge": {
+    "editing_by_you": "You are editing",
+    "editing_by": "{name} is editing",
+    "contact_to_release": "Ask them to release the lock",
+    "viewing": "View only"
+  },
+  "dialog": {
+    "resume_title": "Draft match found",
+    "resume_body": "Last edit: {name} ({time}). Resume?",
+    "yes": "Yes",
+    "no": "No",
+    "unsaved_warning": "You may have unsaved changes. Close anyway?"
+  },
+  "team": {
+    "create": "Create team",
+    "name": "Team name",
+    "short_name": "Short",
+    "color": "Color"
+  },
+  "player": {
+    "enter_server_id": "Enter server ID",
+    "resolve_fail": "No player for server id {id}"
+  },
+  "score": {
+    "edit_reason": "Reason (optional)",
+    "edited_by": "Editor: {name}",
+    "history": "Score history"
+  }
+}

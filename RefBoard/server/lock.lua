@@ -1,0 +1,1 @@
+-- server/lock.lua — editor_locks・ハートビート（設計書 2.5.1、実装予定）

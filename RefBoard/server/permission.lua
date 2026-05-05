@@ -1,0 +1,1 @@
+-- server/permission.lua — 権限ヘルパは server/main.lua に集約（設計書 2.5.5）

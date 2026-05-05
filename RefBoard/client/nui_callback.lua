@@ -1,0 +1,17 @@
+local function register(name, serverEvent)
+  RegisterNUICallback(name, function(body, cb)
+    TriggerServerEvent(serverEvent, body or {})
+    cb({ ok = true, forwarded = true })
+  end)
+end
+
+register('session_enter', 'refboard:session:enter')
+register('session_leave', 'refboard:session:leave')
+register('lock_acquire', 'refboard:lock:acquire')
+register('lock_release', 'refboard:lock:release')
+register('lock_heartbeat', 'refboard:lock:heartbeat')
+register('team_list', 'refboard:team:list')
+register('match_list', 'refboard:match:list')
+register('match_get', 'refboard:match:get')
+register('match_checkResume', 'refboard:match:checkResume')
+register('score_goal', 'refboard:score:goal')

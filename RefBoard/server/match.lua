@@ -1,0 +1,1 @@
+-- server/match.lua — 試合 CRUD・state 組み立て（設計書 2.4.3）

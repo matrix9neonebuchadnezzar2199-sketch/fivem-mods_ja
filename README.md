@@ -19,6 +19,7 @@
 
 | フォルダ | 概要 |
 |----------|------|
+| [RefBoard](RefBoard/README.md) | サッカー試合管理（oxmysql・編集ロック・スコア履歴・Vue NUI・JA/EN・MIT） |
 | [jp-110](jp-110/README.md) | `/110` 警察向け無線風一斉通知 |
 | [jp-b2b_documents](jp-b2b_documents/README.md) | Quill ベースのドキュメント／メモエディター（日本語 UI・ESX/QB/Qbox・ox / qb / ESX インベントリ抽象化・原作 alnd029 系） |
 | [jp-blackmarket/matkez_blackmarket_ja](jp-blackmarket/matkez_blackmarket_ja/README.md) | ブラックマーケット（日本語化・QBCore 対応・ox_inventory 前提・原作 GPL-3.0） |

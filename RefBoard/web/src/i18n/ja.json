@@ -1,0 +1,61 @@
+{
+  "app": { "title": "サッカー試合管理" },
+  "launcher": {
+    "edit_mode": "試合管理（編集）",
+    "view_mode": "閲覧モード",
+    "currently_editing": "{name} さんが編集中"
+  },
+  "sidebar": {
+    "team_manage": "チーム管理",
+    "match_manage": "試合管理",
+    "data_manage": "データ管理",
+    "ranking": "ランキング",
+    "tournament": "大会"
+  },
+  "match": {
+    "score_record": "スコア記録",
+    "first_half": "1st",
+    "second_half": "2nd",
+    "halftime_end": "前半終了",
+    "substitute": "選手交代",
+    "undo": "もどす",
+    "select_player": "選手を選択",
+    "back": "戻る",
+    "next": "次へ"
+  },
+  "tabs": {
+    "score_record": "スコア記録",
+    "match_progress": "試合経過",
+    "results": "成績",
+    "match_info": "試合情報",
+    "members": "メンバー"
+  },
+  "badge": {
+    "editing_by_you": "あなたが編集中",
+    "editing_by": "{name} さんが編集中",
+    "contact_to_release": "連絡して終了してもらってください",
+    "viewing": "閲覧モード"
+  },
+  "dialog": {
+    "resume_title": "編集途中の試合があります",
+    "resume_body": "最終編集: {name}（{time}）。再開しますか？",
+    "yes": "はい",
+    "no": "いいえ",
+    "unsaved_warning": "保存していない変更があります。本当に閉じますか？"
+  },
+  "team": {
+    "create": "チームを登録",
+    "name": "チーム名",
+    "short_name": "略称",
+    "color": "カラー"
+  },
+  "player": {
+    "enter_server_id": "今日の番号を入力",
+    "resolve_fail": "サーバーID {id} のプレイヤーが見つかりません"
+  },
+  "score": {
+    "edit_reason": "変更理由（任意）",
+    "edited_by": "編集者: {name}",
+    "history": "編集履歴"
+  }
+}

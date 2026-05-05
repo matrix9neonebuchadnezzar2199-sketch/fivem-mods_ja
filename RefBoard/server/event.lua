@@ -1,0 +1,1 @@
+-- server/event.lua — match_events 登録・void（設計書 2.4.5）

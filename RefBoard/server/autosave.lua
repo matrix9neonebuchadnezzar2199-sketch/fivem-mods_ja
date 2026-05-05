@@ -1,0 +1,1 @@
+-- server/autosave.lua — match_drafts デバウンス・checkResume（設計書 2.5.2）
