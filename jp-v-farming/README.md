@@ -11,7 +11,7 @@
 
 ## 依存関係
 
-- **QBCore**（クライアントで `qb-core` を参照。プログレスや `qb-input` / 通知を `qb` モードで使う場合に必要）
+- **QBCore / qb-core**（`Config.Progress` / `Config.Menu` / `Config.Notify` のいずれかを `'qb'` にする場合のみ。クライアントは `GetResourceState('qb-core') == 'started'` のときだけ `GetCoreObject()` を呼ぶため、**QBox（qb-core なし）＋ 上記をすべて `'ox'` の構成では不要**）
 - **ox_lib**（`shared_script` で `@ox_lib/init.lua` を読み込み）
 - **ox_target**（クライアントの収穫ゾーン・売却 NPC）
 - **ox_inventory**（サーバー側の付与・削除・現金）
