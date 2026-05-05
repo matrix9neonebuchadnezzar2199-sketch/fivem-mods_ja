@@ -2,7 +2,7 @@ if not Config.EnableDealers then return end
 
 local dealerPeds = {}
 
---- Spawn a ped at the given position
+--- 指定座標に Ped をスポーンする
 --- @param model string
 --- @param position vector4
 local function spawnDealerPed(model, position)

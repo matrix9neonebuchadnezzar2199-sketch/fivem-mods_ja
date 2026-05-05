@@ -56,26 +56,26 @@ files = {
     'stream/freeze_it-scripts_coke_table.ydr',
     'stream/freeze_it-scripts_meth_table.ytyp',
     'stream/freeze_it-scripts_weed_table.ydr',
-    --------------Lemon Haze-------------------
+    --------------レモンヘイズ（モデル）-------------------
     'stream/an_weed_yellow.ytd',
     'stream/an_weed_yellow_01_small_01b.ydr',
     'stream/an_weed_yellow_lrg_01b.ydr',
     'stream/an_weed_yellow_med_01b.ydr',
     'stream/an_weed_yellow+hi.ytd',
     'stream/an_weed.ytyp',
-    ---------------Purple haze------------------
+    ---------------パープルヘイズ（モデル）------------------
     'stream/an_weed_purple.ytd',
     'stream/an_weed_purple_01_small_01b.ydr',
     'stream/an_weed_purple_lrg_01b.ydr',
     'stream/an_weed_purple_med_01b.ydr',
     'stream/an_weed_purple+hi.ytd',
-    ---------------White Widow------------------
+    ---------------ホワイトウィドウ（モデル）------------------
     'stream/an_weed_white.ytd',
     'stream/an_weed_white_01_small_01b.ydr',
     'stream/an_weed_white_lrg_01b.ydr',
     'stream/an_weed_white_med_01b.ydr',
     'stream/an_weed_white+hi.ytd',
-    ---------------blue berry------------------------
+    ---------------ブルーベリー（モデル）------------------------
     'stream/an_weed_blue.ytd',
     'stream/an_weed_blue_01_small_01b.ydr',
     'stream/an_weed_blue_lrg_01b.ydr',
@@ -87,26 +87,26 @@ data_file 'DLC_ITYP_REQUEST' 'stream/freeze_it-drugs_table.ytyp'
 data_file 'DLC_ITYP_REQUEST' 'stream/freeze_it-scripts_coke_table.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/freeze_it-scripts_meth_table.ytyp'
 data_file 'DLC_ITYP_REQUEST' 'stream/freeze_it-scripts_weed_table.ydr'
-------------------------Lemon haze-------------------------------
+------------------------レモンヘイズ（ITYP）-------------------------------
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_yellow.ytd'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_yellow_01_small_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_yellow_lrg_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_yellow_med_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_yellow+hi.ytd'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed.ytyp'
--------------------------Purple haze-------------------------------
+-------------------------パープルヘイズ（ITYP）-------------------------------
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_purple.ytd'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_purple_01_small_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_purple_lrg_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_purple_med_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_purple+hi.ytd'
--------------------------White Widow-------------------------------
+-------------------------ホワイトウィドウ（ITYP）-------------------------------
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_white.ytd'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_white_01_small_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_white_lrg_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_white_med_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_white+hi.ytd'
--------------------------Blue berry--------------------------------
+-------------------------ブルーベリー（ITYP）--------------------------------
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_blue.ytd'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_blue_01_small_01b.ydr'
 data_file 'DLC_ITYP_REQUEST' 'stream/an_weed_blue_lrg_01b.ydr'

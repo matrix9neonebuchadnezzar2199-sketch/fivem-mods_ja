@@ -1,46 +1,46 @@
 math = lib.math
----@type table: List of all the plants
+---@type table 登録済み植物の一覧
 local plants = {}
 
----@section Plant Class
--- Class to handle the plant object and its methods
+---@section Plant クラス
+-- 植物オブジェクトとマップ上プロップ・DB を扱う
 
 --- @class Plant : OxClass
 --- @field id string
 Plant = lib.class('Plant')
 
---- Plant constructor
+--- コンストラクタ
 ---@param id string
 ---@param plantData table
 function Plant:constructor(id, plantData)
 
     if Config.Debug then lib.print.info('[Plant:constructor] - Start constructing plant with ID:', id) end
 
-    ---@type string: the plant ID
+    ---@type string 植物ID
     self.id = id
-    ---@type number | nil: the plant entity
+    ---@type number | nil 植物エンティティ
     self.entity = nil
-    ---@type number | nil: the plant Network ID
+    ---@type number | nil ネットワークID
     self.netId = nil
-    ---@type vector3: the plant coords
+    ---@type vector3 座標
     self.coords = plantData.coords
-    ---@type number:
+    ---@type number ルーティングバケット（dimension）
     self.dimension = nil
-    ---@type string: the plant owner
+    ---@type string 所有者
     self.owner = plantData.owner
-    ---@type number: the plant time
+    ---@type number 植えた時刻（unix）
     self.plantTime = plantData.plantTime
-    ---@type string: the plant type
+    ---@type string 植物タイプ（モデル段階用）
     self.plantType = plantData.plantType
-    ---@type string: the plant seed
+    ---@type string 種アイテム名
     self.seed = plantData.seed
-    ---@type number: the plant fertilizer
+    ---@type number 肥料（%）
     self.fertilizer = plantData.fertilizer
-    ---@type number: the plant water
+    ---@type number 水分（%）
     self.water = plantData.water
-    ---@type number: the plant health
+    ---@type number 体力
     self.health = plantData.health
-    ---@type number: the plant growth
+    ---@type number 成長率（%）
     self.growth = self:calcGrowth()
 
     self.growtime = plantData.growtime
@@ -48,37 +48,37 @@ function Plant:constructor(id, plantData)
 
     plants[self.id] = self
 
-    --self.metadata = plantData.metadata -- Experimental feature / can only used with ox_inventory
+    --self.metadata = plantData.metadata -- 実験機能（主に ox_inventory）
 
     if Config.Debug then lib.print.info('[Plant:constructor] - Plant constructed with ID:', id) end
 end
 
---- Method to delete the plant object
+--- 植物を削除（テーブル・マップから）
 ---@return nil
 function Plant:delete()
     self:destroyProp()
     plants[self.id] = nil
 end
 
---- Method to update the plant prop on the map
+--- マップ上の植物プロップを更新／スポーン
 ---@return nil
 function Plant:spawn()
 
     if Config.Debug then lib.print.info('[Plant:spawn] - Try to spawning plant with ID:', self.id) end
 
-    ---@type number: the plant stage
+    ---@type number 成長段階（1〜3）
     local stage = self:calcStage()
 
-    ---@type string: the plant type
+    ---@type string 植物タイプ（モデル段階用）
     local plantType = self.plantType
 
-    ---@type string: the plant model hash
+    ---@type string モデルハッシュ名
     local modelHash = Config.PlantTypes[plantType][stage][1]
 
-    ---@type number: the plant z offset
+    ---@type number Zオフセット
     local zOffest = Config.PlantTypes[plantType][stage][2]
 
-    ---@type number: the plant entity
+    ---@type number エンティティハンドル
     local plantEntity = CreateObjectNoOffset(modelHash, self.coords.x, self.coords.y, self.coords.z + zOffest, true, true, false)
     SetEntityRoutingBucket(plantEntity, self.dimension)
     FreezeEntityPosition(plantEntity, true)
@@ -90,7 +90,7 @@ function Plant:spawn()
     if Config.Debug then lib.print.info('[Plant:spawn] - Plant spawned with ID:', self.id) end
 end
 
---- Method to destroy the plant prop on the map
+--- マップ上のプロップのみ削除
 ---@return nil
 function Plant:destroyProp()
     if not DoesEntityExist(self.entity) then return end
@@ -102,21 +102,21 @@ function Plant:destroyProp()
     plants[self.id] = self
 end
 
---- Method to update the plant prop on the map
+--- マップ上の植物プロップを更新／スポーン
 ---@return nil
 function Plant:updateProps()
     local stage = self:calcStage()
     local plantType = self.plantType
 
-    ---@type string: the plant model hash
+    ---@type string モデルハッシュ名
     local modelHash = Config.PlantTypes[plantType][stage][1]
 
-    ---@type number: the plant z offset
+    ---@type number Zオフセット
     local zOffest = Config.PlantTypes[plantType][stage][2]
 
     DeleteEntity(self.entity)
 
-    ---@type number: the plant entity
+    ---@type number エンティティハンドル
     local plantEntity = CreateObjectNoOffset(modelHash, self.coords.x, self.coords.y, self.coords.z + zOffest, true, true, false)
     FreezeEntityPosition(plantEntity, true)
 
@@ -126,43 +126,43 @@ function Plant:updateProps()
     plants[self.id] = self
 end
 
---- Method to update the plant fertilizer
+--- 肥料値を更新
 ---@param fertilizer number
 ---@return nil
 function Plant:updateFertilizer(fertilizer)
     self.fertilizer = fertilizer
 
-    -- Update the plant fertilizer in the plants table
+    -- メモリ上の plants テーブルも同期
     plants[self.id].fertilizer = fertilizer
 end
 
---- Method to update the plant water
+--- 水分を更新
 ---@param water number
 ---@return nil
 function Plant:updateWater(water)
     self.water = water
 
-    -- Update the plant water in the plants table
+    -- メモリ上の plants テーブルも同期
     plants[self.id].water = water
 end
 
---- Method to update the plant health
+--- 体力を更新
 ---@param health number
 ---@return nil
 function Plant:updateHealth(health)
     self.health = health
 
-    -- Update the plant health in the plants table
+    -- メモリ上の plants テーブルも同期
     plants[self.id].health = health
 
-    -- Send data to database
+    -- DB に反映
     MySQL.update('UPDATE drug_plants SET health = (:health) WHERE id = (:id)', {
         ['health'] = health,
         ['id'] = self.id,
     })
 end
 
---- Method to get the plant data
+--- クライアント送信用データを取得
 ---@return table
 function Plant:getData()
     return {
@@ -184,13 +184,13 @@ function Plant:getData()
     }
 end
 
--- Method to calculate the health percentage for a given WeedPlants index
----@return integer: health percentage
+-- 体力を計算（閾値・減衰）
+---@return integer 体力
 function Plant:calcHealth()
 
     if not plants[self.id] then return 0 end
 
-    -- Getting plant data to calculate current plant health
+    -- 現在値から減算
     ---@type number
     local health = self.health
     ---@type number
@@ -198,7 +198,7 @@ function Plant:calcHealth()
     ---@type number
     local water_amount = self.water
 
-    -- If the plant has no fertilizer and water, decrease the health
+    -- 肥料または水分が0なら減少
     if fertilizer_amount == 0 or water_amount == 0 then
         health = health - math.random(Config.HealthBaseDecay[1], Config.HealthBaseDecay[2])
     elseif fertilizer_amount < Config.FertilizerThreshold or water_amount < Config.WaterThreshold then
@@ -208,32 +208,32 @@ function Plant:calcHealth()
     health = math.max(health, 0.0)
 
     self.health = health
-    -- Return the health value with a minimum of 0
+    -- 下限0
     return math.max(health, 0.0)
 end
 
---- Method to calculate the growth percentage for a given WeedPlants index
----@return integer: growth percentage
+-- 成長率（%）を算出
+---@return integer 成長率
 function Plant:calcGrowth()
     if not plants[self.id] then return 0 end
-    -- If the plant is dead the growth doesnt change anymore
+    -- 枯れている場合は成長固定
     if self.health <= 0 then return self.growth end
-    ---@type number: the current time
+    ---@type number 現在時刻（unix）
     local current_time = os.time()
-    ---@type number: the grow time
+    ---@type number 成長に要する秒数
     local growTime = self.growtime * 60
-    ---@type number: the progress
+    ---@type number 経過秒
     local progress = os.difftime(current_time, self.plantTime)
-    ---@type number: the local growth
+    ---@type number 計算中の成長率
     local growth = math.round(progress * 100 / growTime, 2)
-    ---@type number: the return value
+    ---@type number 戻り値（0〜100）
     local retval = math.min(growth, 100.00)
     self.growth = retval
     return retval
 end
 
---- Method to calculate the growth stage for a given WeedPlants index
----@return integer: growth stage
+-- モデル段階 1〜3
+---@return integer 段階
 function Plant:calcStage()
     local growth = self:calcGrowth()
     local stage = math.floor(growth / 33) + 1
@@ -242,10 +242,10 @@ function Plant:calcStage()
 end
 
 
---- Callback to get the plant data by ID
----@param source number | nil: the source player
----@param plantId string: the plant ID
----@return Plant | nil: the plant object
+--- コールバック: ID で植物取得
+---@param source number | nil 呼び出し元
+---@param plantId string 植物ID
+---@return Plant | nil
 lib.callback.register('it-drugs:server:getPlantById', function(source, plantId)
 
     if Config.Debug then lib.print.info('[getPlantById] - Try to get plant with ID:', plantId) end
@@ -259,10 +259,10 @@ lib.callback.register('it-drugs:server:getPlantById', function(source, plantId)
     return plants[plantId]:getData()
 end)
 
---- Callback to get the plant data by entity
----@param source number | nil: the source player
----@param netId number: the net ID of the plant
----@return Plant | nil: the plant object
+--- コールバック: ネットIDで植物取得
+---@param source number | nil 呼び出し元
+---@param netId number
+---@return Plant | nil
 lib.callback.register('it-drugs:server:getPlantByNetId', function(source, netId)
 
     if Config.Debug then lib.print.info('[getPlantByNetId] - Try to get plant with netId:', netId) end
@@ -278,28 +278,28 @@ lib.callback.register('it-drugs:server:getPlantByNetId', function(source, netId)
     return nil
 end)
 
---- Callback to get all plants owned by a player
----@param source number: the source player
----@return table | nil: the list of plants
+--- コールバック: 所有者の植物一覧
+---@param source number
+---@return table | nil
 lib.callback.register('it-drugs:server:getPlantByOwner', function(source)
 
     if Config.Debug then lib.print.info('[getPlantByOwner] - Try to get all plants owned by player:', source) end
 
-    ---@type number: the player citizen ID
+    ---@type number source（プレイヤー番号）
     local src = source
-    ---@type number: the player citizen ID 
+    ---@type string 市民ID（it_bridge）
     local citId = exports.it_bridge:GetCitizenId(src)
-    ---@type table: the temporary table to store the plants
+    ---@type table 一時テーブル
     local temp = {}
 
-    -- Loop through all the plants and check if the player owns them
+    -- 全植物から所有者一致を抽出
     for k, v in pairs(plants) do
         if v.owner == citId then
             temp[k] = v:getData()
         end
     end
     
-    -- If the player does not own any plants, return nil
+    -- 0件なら nil
     if next(temp) == nil then
         if Config.Debug then lib.print.info('[getPlantsOwned] - Player:', src, 'does not own any plants') end
         return nil
@@ -310,17 +310,17 @@ lib.callback.register('it-drugs:server:getPlantByOwner', function(source)
 
 end)
 
---- Callback to get all plants
----@param source number: the source player
----@return table | nil: the list of plants
+--- コールバック: 全植物
+---@param source number
+---@return table | nil
 lib.callback.register('it-drugs:server:getPlants', function(source)
 
     if Config.Debug then lib.print.info('[getPlants] - Try to get all plants') end
 
-    ---@type table: the temporary table to store the plants
+    ---@type table 一時テーブル
     local temp = {}
 
-    -- Loop through all the plants and add them to the temporary table
+    -- 全件をコピー
     for k, v in pairs(plants) do
         temp[k] = v:getData()
     end
@@ -329,7 +329,7 @@ lib.callback.register('it-drugs:server:getPlants', function(source)
     return temp
 end)
 
---- Method to setup all the weedplants, fetched from the database
+--- DB から植物を読み込みスポーン
 --- @return boolean
 local setupPlants = function()
     local result = MySQL.query.await('SELECT * FROM `drug_plants`')
@@ -402,7 +402,7 @@ local setupPlants = function()
     return true
 end
 
---- Function to update the plant stats (fertilizer, water, health) every minute
+--- 毎分、肥料・水分・体力を更新
 updatePlantNeeds = function ()
     for plantId, plant in pairs(plants) do
         local plantData = plant:getData()
@@ -415,7 +415,7 @@ updatePlantNeeds = function ()
         if Config.Debug then lib.print.info('[updatePlantNeeds] - Plant with ID:', plantId, 'Time:', time, 'Planted:', planted) end
 
         local elapsed = os.difftime(time, planted)
-        -- if elapsed is < 1 minute, skip this plant
+        -- 植えてから1分未満はスキップ
         if elapsed >= 60 then
             if Config.Debug then lib.print.info('[updatePlantNeeds] - Plant with ID:', plantId, 'is ready to be updated') end
             if fertilizer - Config.FertilizerDecay >= 0 then
@@ -442,7 +442,7 @@ updatePlantNeeds = function ()
 
         if not DoesEntityExist(entity) then
             if Config.Debug then lib.print.info('[updatePlantNeeds] - Plant with ID:', plantId, 'does not exist try to respawn the plant') end
-            -- Respawn the plant
+            -- エンティティ欠落時は再スポーン
             plant:spawn()
         end
 
@@ -493,24 +493,24 @@ AddEventHandler('onResourceStop', function(resource)
     end
 end)
 
---- Events
+--- イベント
 
---- Event to create a new plant
----@param coords vector3: the plant coords
----@param plantItem string: name of the plant item
----@param zone string | nil: the plant zone
----@param metadata table | nil: the plant metadata
+--- 新規植物作成
+---@param coords vector3
+---@param plantItem string 種アイテム
+---@param zone string | nil 栽培ゾーンID
+---@param metadata table | nil
 RegisterNetEvent('it-drugs:server:createNewPlant', function(coords, plantItem, zone, metadata)
     local src = source
     local plantInfos = Config.Plants[plantItem]
     if #(GetEntityCoords(GetPlayerPed(src)) - coords) > Config.rayCastingDistance + 10 then return end
 
 
-    -- Remove reqItems on the server side instead of client side
+    -- 必要アイテムの消費はサーバーで検証
     if plantInfos.reqItems and plantInfos.reqItems['planting'] ~= nil then
         local givenItems = {}
         for item, itemData in pairs(plantInfos.reqItems["planting"]) do
-            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- DEBUG
+            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- デバッグ
             if not exports.it_bridge:HasItem(source, item, itemData.amount or 1) then
                 ShowNotification(nil, _U('NOTIFICATION__NO__ITEMS'), "Error")
 
@@ -581,9 +581,9 @@ RegisterNetEvent('it-drugs:server:createNewPlant', function(coords, plantItem, z
     end
 end)
 
---- Event to take care of a plant (Gets triggered when the player uses a item on the plant)
----@param plantId string: the plant Id
----@param item string: name of the item used
+--- 世話（水やり・肥料）アイテム使用時
+---@param plantId string
+---@param item string 使用アイテム
 RegisterNetEvent('it-drugs:server:plantTakeCare', function(plantId, item)
 
     if not plants[plantId] then return end
@@ -636,8 +636,8 @@ RegisterNetEvent('it-drugs:server:plantTakeCare', function(plantId, item)
     end
 end)
 
---- Event to harvest a plant
----@param plantId string: the plant Id
+--- 収穫
+---@param plantId string
 RegisterNetEvent('it-drugs:server:harvestPlant', function(plantId)
 
     if not plants[plantId] then return end
@@ -653,7 +653,7 @@ RegisterNetEvent('it-drugs:server:harvestPlant', function(plantId)
     if extendedPlantData.reqItems and extendedPlantData.reqItems["harvesting"] ~= nil then
         local givenItems = {}
         for item, itemData in pairs(extendedPlantData.reqItems["harvesting"]) do
-            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- DEBUG
+            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- デバッグ
             if not exports.it_bridge:HasItem(source, item, itemData.amount or 1) then
                 ShowNotification(nil, _U('NOTIFICATION__NO__ITEMS'), "Error")
 
@@ -700,8 +700,8 @@ RegisterNetEvent('it-drugs:server:harvestPlant', function(plantId)
     end
 end)
 
---- Event to destroy a plant
----@param args table: the event arguments
+--- 破棄
+---@param args table
 RegisterNetEvent('it-drugs:server:destroyPlant', function(args)
     local plant = plants[args.plantId]
     if not plant then return end

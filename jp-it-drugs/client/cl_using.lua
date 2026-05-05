@@ -34,8 +34,8 @@ local setDrugEffects = function(effects)
     local ped = PlayerPedId()
     for _, effect in pairs(effects) do
 
-        -- regex 'armor-([0-9]+)' to get the armor value
-        local armor = effect:match('armor%-([0-9]+)') -- armor-99
+        -- 'armor-99' 形式から数値を抽出
+        local armor = effect:match('armor%-([0-9]+)')
         if armor then effect = 'armor' end
 
         if drugEffects[effect] == nil then if Config.Debug then lib.print.error('[setDrugEffects] | unable to find effect', effect) end return end
@@ -89,7 +89,7 @@ local setDrugEffects = function(effects)
                 AnimpostfxPlay("FocusIn", 100000, true)
             end)
         elseif effect == "armor" then
-            -- get armor value from the effect
+            -- 上で取り出した値を適用
             local armorValue = tonumber(armor)
             SetPedArmour(ped, GetPedArmour(ped) + armorValue)
         end
@@ -151,7 +151,7 @@ local clearDrugEffects = function()
         end
         drugEffects[effect] = false
     end
-    -- Reset player screen effects
+    -- 画面エフェクトをリセット
     currentDrug = nil
 end
 

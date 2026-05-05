@@ -84,7 +84,7 @@ RegisterNetEvent('it-drugs:client:placeProcessingTable', function(tableItem, met
     })
     
 
-    -- Placing Table allways on the ground
+    -- 作業台は常に地面に沿わせる
     local hit, dest, _, _ = RayCastCamera(Config.rayCastingDistance)
     local coords = GetEntityCoords(ped)
     local _, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, true)
@@ -137,7 +137,7 @@ RegisterNetEvent('it-drugs:client:placeProcessingTable', function(tableItem, met
         else
             coords = GetEntityCoords(ped)
             local heading = GetEntityHeading(ped)
-            rotation = heading -- Update the rotation to the player heading when not hitting anything
+            rotation = heading -- レイが当たらないときはプレイヤー向きに合わせる
             local forardVector = GetEntityForwardVector(ped)
             _, groundZ = GetGroundZFor_3dCoord(coords.x + (forardVector.x * .5), coords.y + (forardVector.y * .5), coords.z + (forardVector.z * .5), true)
 
@@ -202,7 +202,7 @@ RegisterNetEvent('it-drugs:client:processDrugs', function(args)
     TaskPlayAnim(ped, recipe.animation.dict, recipe.animation.anim, 8.0, 8.0, -1, 1, 0, false, false, false)
 
     if recipe.particlefx then
-        if Config.Debug then lib.print.info('Calling ParticleFX Sync [start]') end
+        if Config.Debug then lib.print.info('Calling ParticleFX Sync [start]') end -- パーティクル同期開始
         TriggerServerEvent("it-drugs:server:syncparticlefx", true, tableData.id, tableData.netId, recipe.particlefx)
     end
 
@@ -252,7 +252,7 @@ RegisterNetEvent('it-drugs:client:processDrugs', function(args)
         RemoveAnimDict(recipe.animation.dict)
     end
     if recipe.particlefx then
-        if Config.Debug then lib.print.info('Calling ParticleFX Sync [stop]') end
+        if Config.Debug then lib.print.info('Calling ParticleFX Sync [stop]') end -- パーティクル同期停止
         TriggerServerEvent("it-drugs:server:syncparticlefx", false, tableData.id, nil, nil)
     end
     TriggerEvent('it-drugs:client:syncRestLoop', false)
@@ -305,21 +305,21 @@ RegisterNetEvent('it-drugs:client:removeTable', function(args)
 end)
 
 local getTableCenter = function(tableEntity)
-    -- Get the table's position
+    -- テーブル位置
     local tablePos = GetEntityCoords(tableEntity)
     
-    -- Get the table's dimensions
+    -- モデル境界ボックス
     local min, max = GetModelDimensions(GetEntityModel(tableEntity))
     
-    -- Calculate the center of the table
+    -- ローカル中心オフセット
     local centerX = (min.x + max.x) / 2
     local centerY = (min.y + max.y) / 2
     local centerZ = (min.z + max.z) / 2
     
-    -- Calculate the world coordinates of the center
+    -- ワールド座標の中心
     local centerPos = vector3(tablePos.x + centerX, tablePos.y + centerY, tablePos.z + centerZ)
     
-    -- Get the table's rotation
+    -- テーブル回転
     local tableRot = GetEntityRotation(tableEntity)
     
     return centerPos, tableRot
@@ -340,7 +340,7 @@ local function CreateSmokeEffect(status, tableId, netId, particleFx)
         local offsetX = 0.0
         local offsetY = -0.5
 
-        -- Adjust the offset based on the table's rotation
+        -- テーブル向きに応じてオフセットを入れ替え
         if math.abs(entityRotation.z) > 45 and math.abs(entityRotation.z) < 135 then
             offsetX = -0.5
             offsetY = 0.0
@@ -351,7 +351,7 @@ local function CreateSmokeEffect(status, tableId, netId, particleFx)
         SetParticleFxLoopedColour(processingFx[tableId], particleFx.color.r, particleFx.color.g, particleFx.color.b, 0)
     else
         if processingFx[tableId] ~= nil then
-            if Config.Debug then print('Stopping ParticleFX') end
+            if Config.Debug then print('Stopping ParticleFX') end -- デバッグ
             StopParticleFxLooped(processingFx[tableId], 0)
             processingFx[tableId] = nil
         end

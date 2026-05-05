@@ -1,6 +1,6 @@
---== VERSION CHECK ==--
+--== バージョンチェック ==--
 
--- pars the jason code to a table
+-- JSON 文字列をテーブルへ
 local function parseJson(data)
     local decodedData = json.decode(data)
     return decodedData

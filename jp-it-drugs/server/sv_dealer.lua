@@ -9,9 +9,9 @@ local Dealer = lib.class('Dealer')
 function Dealer:constructor(id)
     self.id = id
     self.position = nil
-    ---@type table: List of items the dealer is buying
+    ---@type table 売人が買い取るアイテム
     self.buyItems = {}
-    ---@type table: List of items the dealer is selling
+    ---@type table 売人が販売するアイテム
     self.sellItems = {}
 
     self:generatePosition()
@@ -31,7 +31,7 @@ function Dealer:generateSellItemData(item)
     self.sellItems[item] = {
         price = math.random(priceData.min, priceData.max),
         moneyType = priceData.moneyType,
-        --amount = math.random(priceData.amount.min, priceData.amount.max)
+        --amount = math.random(priceData.amount.min, priceData.amount.max)  -- 未使用例
     }
 end
 
@@ -42,7 +42,7 @@ function Dealer:generateBuyItemData(item)
     self.buyItems[item] = {
         price = math.random(priceData.min, priceData.max),
         moneyType = priceData.moneyType,
-        --amount = math.random(priceData.amount.min, priceData.amount.max)
+        --amount = math.random(priceData.amount.min, priceData.amount.max)  -- 未使用例
     }
 end
 
@@ -143,7 +143,7 @@ end)
 
 RegisterNetEvent('it-drugs:server:buyItemsFromDealer', function(dealerID, item, amount, total)
     local src = source
-    -- check if data is valid
+    -- 売人データの妥当性
     if not dealers[dealerID] then
         if Config.Debug then lib.print.error("Dealer not found", dealerID) end
         return
@@ -190,7 +190,7 @@ CreateThread(function()
             end
         end
 
-        -- Append the dealer id and position to the webhook string
+        -- Webhook 用に座標文字列を連結
         local dealerPosition = dealers[dealerId]:getPosition()
         local positionString = '{x : ' .. string.format("%.2f", dealerPosition.x) .. ', y : ' .. string.format("%.2f", dealerPosition.y) .. ', z : ' .. string.format("%.2f", dealerPosition.z) .. '}'
         webhookString = webhookString .. '**'..dealerId .. '** - `' .. positionString .. '`\n'

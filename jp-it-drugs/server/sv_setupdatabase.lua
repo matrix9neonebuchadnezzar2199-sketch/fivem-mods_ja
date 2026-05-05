@@ -1,4 +1,4 @@
--- Setup the Database from the it_drugs.sql file
+-- it-drugs.sql に相当するテーブルを自動作成
 DatabaseSetuped = false
 
 local plantSetupStatment = 'CREATE TABLE IF NOT EXISTS drug_plants ('..

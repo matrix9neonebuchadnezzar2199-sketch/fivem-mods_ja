@@ -1,18 +1,16 @@
 --[[
-    Here you set up the discord webhook, you can find more information about
-    this in the server/webhook.lua file.
-    If you dont know what a webhook is, you can read more about it here:
+    Discord Webhook の設定。Webhook とは: 
     https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
 ]]
 local webhookSettings = {
-    ['active'] = false, -- Set to true to enable the webhook
-    ['name'] = 'it-drugs', -- Name for the webhook
-    ['avatar'] = 'https://i.imgur.com/mbM87BJ.png', -- Avatar for the webhook
+    ['active'] = false, -- true で Webhook 送信を有効化
+    ['name'] = 'it-drugs', -- 表示名
+    ['avatar'] = 'https://i.imgur.com/mbM87BJ.png', -- アイコンURL
     ['urls'] = {
-        ['plant'] = nil, --'', -- Webhook URL for plant actions
-        ['table'] = nil, --'', -- Webhook URL for table actions
-        ['sell'] = nil, --'', -- Webhook URL for sell actions
-        ['message'] = nil, -- Webhook URL for messages
+        ['plant'] = nil, -- 植物関連ログ用 URL
+        ['table'] = nil, -- 加工台ログ用 URL
+        ['sell'] = nil, -- 売却ログ用 URL
+        ['message'] = nil, -- 汎用メッセージ用 URL
     }
 }
 
@@ -188,7 +186,7 @@ end
 CreateThread(function()
     if not webhookSettings['active'] then return end
     while true do
-        Wait(1000 * 60) -- Wait 1 minute
+        Wait(1000 * 60) -- 1分ごとにバッファ送信
         if messagesToSend == nil then return end
         for webhookType, messageList in pairs(messagesToSend) do
             for messageId, messages in pairs(messageList) do

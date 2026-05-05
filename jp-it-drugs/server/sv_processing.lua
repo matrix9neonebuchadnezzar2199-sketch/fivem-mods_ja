@@ -1,8 +1,8 @@
 if not Config.EnableProcessing then return end
 local processingTables = {}
 
----@section Process Tables Class
---- Class to handle the processing table object and its methods
+---@section 加工テーブルクラス
+--- 加工台エンティティとレシピを扱う
 
 
 ---@class Recipe : OxClass
@@ -65,24 +65,24 @@ function ProcessingTable:constructor(id, tableData)
 
     if Config.Debug then lib.print.info('[ProcessingTable:constructor] - Start constructing ProcessingTable with ID:', id) end
 
-    ---@type string: The ID of the processing table
+    ---@type string テーブルID
     self.id = id
-    ---@type number: The entity of the processing table
+    ---@type number エンティティ
     self.entity = nil
-    ---@type string: The netId of the processing table
+    ---@type string ネットワークID
     self.netId = nil
-    ---@type vector3: The coords of the processing table
+    ---@type vector3 座標
     self.coords = tableData.coords
-    ---@type number: The rotation of the processing table
+    ---@type number 向き
     self.rotation = tableData.rotation
-    ---@type number: The dimension of the processing table
+    ---@type number ディメンション
     self.dimension = tableData.dimension
-    ---@type string: The owner of the processing table
+    ---@type string 所有者
     self.owner = tableData.owner
-    ---@type string: The type of the processing table
+    ---@type string Config のテーブル種別
     self.tableType = tableData.tableType
 
-    ---@type table: The recipe of the processing table
+    ---@type table レシピ辞書
     self.recipes = {}
 
     processingTables[self.id] = self
@@ -140,23 +140,23 @@ function ProcessingTable:getData()
     }
 end
 
---- Method to add a recipe to the processing table
----@param recipeid string: The ID of the recipe
----@param recipe Recipe: The recipe object
+--- レシピを追加
+---@param recipeid string
+---@param recipe Recipe
 function ProcessingTable:addRecipe(recipeid, recipe)
     self.recipes[recipeid] = recipe
     processingTables[self.id] = self
 end
 
---- Method to remove a recipe from the processing table
---- @param recipeid string: The ID of the recipe
+--- レシピを削除
+--- @param recipeid string
 function ProcessingTable:removeRecipe(recipeid)
     self.recipes[recipeid] = nil
     processingTables[self.id] = self
 end
 
---- Method to get the recipe data from the processing table
---- @param recipeid string: The ID of the recipe
+--- レシピデータ取得
+--- @param recipeid string
 function ProcessingTable:getRecipeData(recipeid)
     local recipe = self.recipes[recipeid]
     if not recipe then return nil end
@@ -247,7 +247,7 @@ lib.callback.register('it-drugs:server:getTables', function(source)
     return temp
 end)
 
---- Method to setup all the weedplants, fetched from the database
+--- DB から加工台を読み込み
 --- @return nil
 local setupTables = function()
     local result = MySQL.query.await('SELECT * FROM drug_processing')
@@ -313,11 +313,11 @@ AddEventHandler('onResourceStart', function(resource)
     updateThread()
 end)
 
---- Thread to check if the entities are still valid
+--- エンティティ生存チェックスレッド
 function updateThread()
     for _, processingTable in pairs(processingTables) do
         if processingTable.entity then
-            -- Check if entity is still valid
+            -- 無効なら再スポーン
             if not DoesEntityExist(processingTable.entity) then
                 if Config.Debug then lib.print.warn('[updateThread] - Table with ID:', table.id, 'entity does not exist. Try to respawn') end
                 processingTable:destroyProp()

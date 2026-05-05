@@ -1,8 +1,8 @@
 -- ============================================================
--- it-drugs Japanese Localization (jp-it-drugs)
--- Encoding: UTF-8 (no BOM)
--- Original: it-scripts/it-drugs (GPL-3.0)
--- Japanese: eiho_tsukuyomi
+-- it-drugs 日本語ローカライズ (jp-it-drugs)
+-- 文字コード: UTF-8（BOM なし）
+-- 原作: it-scripts/it-drugs（GPL-3.0）
+-- 日本語化: eiho_tsukuyomi
 -- ============================================================
 
 Locales['ja'] = {

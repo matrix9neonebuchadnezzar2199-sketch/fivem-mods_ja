@@ -3,22 +3,22 @@ local dealerBlips = {}
 local adminBlips = {}
 
 local function calculateCenterPoint(coords)
-    -- Initialize variables
+    -- 変数の初期化
     local avgX = 0
     local avgY = 0
     local numCoords = #coords
 
-    -- Iterate through coordinates and accumulate sums
+    -- 座標を走査して合計を累積
     for i = 1, numCoords do
         avgX = avgX + coords[i].x
         avgY = avgY + coords[i].y
     end
 
-    -- Calculate averages
+    -- 平均を算出
     avgX = avgX / numCoords
     avgY = avgY / numCoords
 
-    -- Create and return center point vector2
+    -- 中心点 vector2 を返す
     return vector2(avgX, avgY)
 end
 
@@ -104,7 +104,7 @@ CreateThread(function()
 end)
 
 
--- Remove Blips on Resource Stop
+-- リソース停止時にブリップを削除
 AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then
         for _, v in pairs(blips) do

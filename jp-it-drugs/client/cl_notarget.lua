@@ -3,9 +3,9 @@ local processingTables = {}
 local dealers = {}
 local restLoop = false
 
---- Get the closest plant to the given coords
----@param coords vector3: The coords to check from
----@return table | nil, integer: The closest plant and the distance to it
+--- 基準座標に最も近い植物を取得
+---@param coords vector3 基準座標
+---@return table | nil, integer 最寄りの植物と距離
 local function getClosestPlant(coords)
 
     local closestPlant = nil
@@ -111,7 +111,7 @@ end)
 
 CreateThread(function()
     while true do
-        Wait(10000)  -- Wait 10 Seconds for refresh Press E and refresh info
+        Wait(10000)  -- 10秒ごとにサーバーから再取得（E 操作後の同期用）
 
         local newPlants = lib.callback.await('it-drugs:server:getPlants', false)
         if newPlants then

@@ -1,6 +1,6 @@
 local growZones = {}
 
---- Create the zones for the plants 
+--- 栽培ゾーン（PolyZone）を生成
 for k, v in pairs(Config.Zones) do
     local coords = {}
     for _, point in ipairs(v.points) do
@@ -14,7 +14,7 @@ for k, v in pairs(Config.Zones) do
     })
 end
 
---- Math function to convert rotation to direction
+--- カメラ／エンティティ回転から方向ベクトルへ変換
 ---@param rot vector3
 ---@return vector3
 local RotationToDirection = function(rot)
@@ -24,12 +24,12 @@ local RotationToDirection = function(rot)
     return vector3(-math.sin(rotZ) * cosOfRotX, math.cos(rotZ) * cosOfRotX, math.sin(rotX))
 end
 
---- Create a new raycast camera
----@param dist number
----@return boolean|integer: 0 = hit, 1 = no hit
----@return vector3: end position
----@return integer: entity hit
----@return vector3: surface normal
+--- カメラからのレイキャスト
+---@param dist number 距離
+---@return boolean|integer ヒット有無（0=ヒット等、GetShapeTestResult の仕様に従う）
+---@return vector3 終端座標
+---@return integer ヒットしたエンティティ
+---@return vector3 表面法線
 local RayCastCamera = function(dist)
     local camRot = GetGameplayCamRot()
     local camPos = GetGameplayCamCoord()
@@ -41,7 +41,7 @@ local RayCastCamera = function(dist)
     return hit, endPos, entityHit, surfaceNormal
 end
 
---- Get the ground hash for a location
+--- 地面マテリアルハッシュを取得
 ---@param coords vector3
 ---@return integer
 local GetGroundHash = function(coords)
@@ -65,19 +65,19 @@ local function checkforZones(coords, targetZones)
     return nil
 end
 
---- Plant a new seed
----@param ped number: Current player ped
----@param plant number: Current plant object
----@param plantInfos table: Plant infos
----@param plantItem string: Plant item
----@param coords vector3: Plant coords
----@param metadata table|nil: Plant metadata
+--- 種を植える処理
+---@param ped number プレイヤー Ped
+---@param plant number プレビュー用オブジェクト
+---@param plantInfos table Config.Plants の定義
+---@param plantItem string 種アイテム名
+---@param coords vector3 植え付け座標
+---@param metadata table|nil インベントリメタデータ
 local function plantSeed(ped, plant, plantInfos, plantItem, coords, metadata)
 
-    -- check for near plants
+    -- 近くに他の植物がないか
     local plants = lib.callback.await('it-drugs:server:getPlants', false)
 
-    -- Check if the current plant is near another plant
+    -- 他植物との距離判定
     if plants ~= nil then
         for _, v in pairs(plants) do
             local distance = #(vector3(coords.x, coords.y, coords.z) - vector3(v.coords.x, v.coords.y, v.coords.z))
@@ -92,7 +92,7 @@ local function plantSeed(ped, plant, plantInfos, plantItem, coords, metadata)
     if Config.OnlyAllowedGrounds then
         local groundHash = GetGroundHash(coords)
         local canplant = false
-        if Config.Debug then lib.print.info('Current Ground Hash: ' .. groundHash) end -- DEBUG 
+        if Config.Debug then lib.print.info('Current Ground Hash: ' .. groundHash) end -- デバッグ
         for _, ground in pairs(Config.AllowedGrounds) do
             if groundHash == ground then
                 canplant = true
@@ -107,7 +107,7 @@ local function plantSeed(ped, plant, plantInfos, plantItem, coords, metadata)
     end
 
     local zone = checkforZones(coords, plantInfos.zones)
-    if Config.Debug then lib.print.info('[plantSeed] - current Zone:', zone) end -- DEBUG
+    if Config.Debug then lib.print.info('[plantSeed] - current Zone:', zone) end -- デバッグ
     if plantInfos.onlyZone then
         if zone == nil then
             ShowNotification(nil, _U('NOTIFICATION__CANT__PLACE'), "Error")
@@ -118,7 +118,7 @@ local function plantSeed(ped, plant, plantInfos, plantItem, coords, metadata)
 
     if plantInfos.reqItems and plantInfos.reqItems["planting"] ~= nil then
         for item, itemData in pairs(plantInfos.reqItems["planting"]) do
-            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- DEBUG
+            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- デバッグ
             if not exports.it_bridge:HasItem(item, itemData.amount or 1) then
                 ShowNotification(nil, _U('NOTIFICATION__NO__ITEMS'), "Error")
                 DeleteObject(plant)
@@ -168,25 +168,25 @@ local function plantSeed(ped, plant, plantInfos, plantItem, coords, metadata)
     TriggerEvent('it-drugs:client:syncRestLoop', false)
 end
 
--- Events
+-- イベント
 RegisterNetEvent('it-drugs:client:useSeed', function(plantItem, metadata)
 
-    --TODO: Edit debug log
-    if Config.Debug then lib.print.info('Planting: ', plantItem) end -- DEBUG 
+    --TODO: デバッグログを整理
+    if Config.Debug then lib.print.info('Planting: ', plantItem) end -- デバッグ
 
     local ped = PlayerPedId()
     local plantInfos = Config.Plants[plantItem]
 
-    -- Check if the player is in a vehicle
+    -- 車両内は不可
     if GetVehiclePedIsIn(PlayerPedId(), false) ~= 0 then
         ShowNotification(nil, _U('NOTIFICATION__IN__VEHICLE'), "Error")
         return
     end
 
-    -- Get the player's owned plants
+    -- 自分が所有する植物数を確認
     local ownedPlants = lib.callback.await('it-drugs:server:getPlantByOwner', false)
 
-    if Config.Debug then lib.print.info('Owned Plants: ', ownedPlants) end-- DEBUG
+    if Config.Debug then lib.print.info('Owned Plants: ', ownedPlants) end -- デバッグ
 
     if ownedPlants ~= nil then
 
@@ -215,7 +215,7 @@ RegisterNetEvent('it-drugs:client:useSeed', function(plantItem, metadata)
         playSound = false,
     })
 
-    -- Placing the plant on the ground and waiting for the player to press [E] to plant it
+    -- 地面プレビュー表示中、[E] で確定
     local hit, dest, _, _ = RayCastCamera(Config.rayCastingDistance)
     local coords = GetEntityCoords(ped)
     local _, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, true)
@@ -231,9 +231,9 @@ RegisterNetEvent('it-drugs:client:useSeed', function(plantItem, metadata)
         if hit == 1 then
             SetEntityCoords(plant, dest.x, dest.y, dest.z + customOffset)
         
-        -- [E] To spawn plant
+        -- [E] で植え付け確定
             if IsControlJustPressed(0, 38) then
-                if Config.Debug then lib.print.info('Control 38 pressed') end -- DEBUG 
+                if Config.Debug then lib.print.info('Control 38 pressed') end -- デバッグ
                 planted = true
                 exports.it_bridge:CloseTextUI(_U('INTERACTION__PLACING__TEXT'))
 
@@ -241,9 +241,9 @@ RegisterNetEvent('it-drugs:client:useSeed', function(plantItem, metadata)
                 return
             end
 
-            -- [G] To destroy plant
+            -- [G] でキャンセル・破棄プレビュー
             if IsControlJustPressed(0, 47) then
-                if Config.Debug then lib.print.info('Control 47 pressed') end -- DEBUG
+                if Config.Debug then lib.print.info('Control 47 pressed') end -- デバッグ
                 exports.it_bridge:CloseTextUI(_U('INTERACTION__PLACING__TEXT'))
                 planted = true
                 DeleteObject(plant)
@@ -264,7 +264,7 @@ RegisterNetEvent('it-drugs:client:useSeed', function(plantItem, metadata)
                 return
             end
             if IsControlJustPressed(0, 47) then
-                if Config.Debug then lib.print.info('Control 47 pressed') end -- DEBUG
+                if Config.Debug then lib.print.info('Control 47 pressed') end -- デバッグ
                 planted = true
                 exports.it_bridge:CloseTextUI(_U('INTERACTION__PLACING__TEXT'))
                 DeleteObject(plant)
@@ -284,7 +284,7 @@ RegisterNetEvent('it-drugs:client:harvestPlant', function(args)
 
     if plantData.reqItems and plantData.reqItems["harvesting"] ~= nil then
         for item, itemData in pairs(plantData.reqItems["harvesting"]) do
-            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- DEBUG
+            if Config.Debug then lib.print.info('Checking for item: ' .. item) end -- デバッグ
             if not exports.it_bridge:HasItem(item, itemData.amount or 1) then
                 ShowNotification(nil, _U('NOTIFICATION__NO__ITEMS'), "Error")
                 TriggerEvent('it-drugs:client:syncRestLoop', false)

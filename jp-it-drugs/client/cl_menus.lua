@@ -104,10 +104,10 @@ end)
 -- │|  __/| | (_| | | | | |_  | |  | |  __/ | | | |_| |│
 -- │|_|   |_|\__,_|_| |_|\__| |_|  |_|\___|_| |_|\__,_|│
 -- └───────────────────────────────────────────────────┘
--- Plant Menu
+-- 植物メニュー
 
 --[[
-Plant Data:
+植物データ例:
 {
         id = self.id,
         entity = self.entity,
@@ -126,7 +126,7 @@ Plant Data:
 RegisterNetEvent("it-drugs:client:showPlantMenu", function(plantData)
     local plantName = Config.Plants[plantData.seed].label
 
-    --TODO: Update the metadata to show the correct values
+    --TODO: メタデータを正しい値表示に更新する
     if plantData.health == 0 then
         lib.registerContext({
             id = "it-drugs-dead-plant-menu",
@@ -391,7 +391,7 @@ end)
 -- │|_|   |_|  \___/ \___\___||___/___/_|_| |_|\__, | |_|  |_|\___|_| |_|\__,_|│
 -- │                                           |___/                           │
 -- └───────────────────────────────────────────────────────────────────────────┘
--- Processing Menu
+-- 精製（加工）メニュー
 RegisterNetEvent('it-drugs:client:showRecipesMenu', function(data)
 
     local tableId = data.tableId
@@ -445,7 +445,7 @@ RegisterNetEvent("it-drugs:client:showProcessingMenu", function(data)
     local options = {}
     if not recipe.showIngrediants then
         for _, v in pairs(recipe.ingrediants) do
-            -- Menu only shows the amount not the name of the item
+            -- メニューには個数のみ表示（アイテム名は出さない）
             table.insert(options, {
                 title = _U('MENU__UNKNOWN__INGREDIANT'),
                 description = _U('MENU__INGREDIANT__DESC'):format(v.amount),
@@ -456,7 +456,7 @@ RegisterNetEvent("it-drugs:client:showProcessingMenu", function(data)
         for k, v in pairs(recipe.ingrediants) do
             table.insert(options, {
                 title = exports.it_bridge:GetItemLabel(k),
-                description = _U('MENU__INGREDIANT__DESC'):format(v.amount), --:replace("{amount}", v),
+                description = _U('MENU__INGREDIANT__DESC'):format(v.amount), -- 旧 replace プレースホルダ案
                 icon = "flask",
             })
         end
@@ -494,7 +494,7 @@ end)
 -- │ ___) |  __/ | | | |  | |  __/ | | | |_| |│
 -- │|____/ \___|_|_| |_|  |_|\___|_| |_|\__,_|│
 -- └──────────────────────────────────────────┘
--- Sell Menu
+-- NPC 売却メニュー
 
 RegisterNetEvent("it-drugs:client:showSellMenu", function(data)
     local item = data.item

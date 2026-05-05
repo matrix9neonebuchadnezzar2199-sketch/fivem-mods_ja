@@ -24,7 +24,7 @@ lib.addCommand(_U('COMMAND__ADMINMENU'), {
             ShowNotification(src, _U('NOTIFICATION__ADMINMENU__USAGE'):format(_U('COMMAND__ADMINMENU')), "info")
         end
     else
-        -- get user license
+        -- 識別子を取得して権限案内
         local userLicense = GetPlayerIdentifiers(src)[1]
         local username = GetPlayerName(src)
 
@@ -39,7 +39,7 @@ lib.addCommand(_U('COMMAND__GROUNDHASH'), {
     if IsPlayerAceAllowed(src, 'it-drugs') then
         TriggerClientEvent('it-drugs:client:showGroundHash', src)
     else
-        -- get user license
+        -- 識別子を取得して権限案内
         local userLicense = GetPlayerIdentifiers(src)[1]
         local username = GetPlayerName(src)
 

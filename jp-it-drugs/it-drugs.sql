@@ -1,4 +1,4 @@
--- Install the drug_plants table
+-- テーブル drug_plants（栽培データ）
 CREATE TABLE IF NOT EXISTS drug_plants (
     id VARCHAR(11) NOT NULL, PRIMARY KEY(id),
     owner LONGTEXT DEFAULT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS drug_plants (
     growtime INT(11) NOT NULL
 );
 
--- Install the drug_processing table
+-- テーブル drug_processing（加工台データ）
 CREATE TABLE IF NOT EXISTS drug_processing (
     id VARCHAR(11) NOT NULL, PRIMARY KEY(id),
     coords LONGTEXT NOT NULL,

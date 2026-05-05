@@ -72,7 +72,7 @@ end
 -- │|_|   |_|  \___/ \___\___\___||___/___/_|_| |_|\__, |   |_|\__,_|_|  \__, |\___|\__|│
 -- │                                               |___/                 |___/          │
 -- └────────────────────────────────────────────────────────────────────────────────────┘
--- Proccesing Target
+-- 加工台ターゲット
 local function createProccessingTargets()
     for _, v in pairs(Config.ProcessingTables) do
         if v.model ~= nil then
@@ -163,7 +163,7 @@ RemoveSellTarget = function()
     exports.it_bridge:RemoveGlobalPed(sellOptions)
 end
 
--- Remove all Targets
+-- リソース停止時にターゲットを解除
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     for _, v in pairs(Config.PlantTypes) do

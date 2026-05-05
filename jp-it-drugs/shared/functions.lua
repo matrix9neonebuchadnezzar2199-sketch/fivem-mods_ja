@@ -7,7 +7,7 @@
 -- └─────────────────────────────────────────────┘
 
 function SendPoliceAlert(coords)
-    -- Add You own police alert system here
+    -- ここに独自の警察通報処理を追加
     local message = 'Drug Dealer spotted at '..coords
     TriggerEvent('chat:addMessage', {
         args = {message}
@@ -15,9 +15,8 @@ function SendPoliceAlert(coords)
 end
 
 function ShowNotification(source, message, type)
-    -- Bridge.Functions.Notify(message, type) are the default Framework notifications
-    -- You can change this to your own notification systems
-    if source ~= nil then -- Server Messages
+    -- Bridge.Functions.Notify はフレームワーク標準の通知。別システムに差し替え可
+    if source ~= nil then -- サーバーからプレイヤーへ
         if type == 'Error' then
             exports.it_bridge:SendNotification(source, 'it-drugs', message, 5000, "Error", true)
         elseif type == 'Success' then
@@ -25,7 +24,7 @@ function ShowNotification(source, message, type)
         else
             exports.it_bridge:SendNotification(source, 'it-drugs', message, 5000, "Info", false)
         end
-    else -- Client Messages
+    else -- クライアント自身へ
         if type == 'Error' then
             exports.it_bridge:SendNotification('it-drugs', message, 5000, "Error", true)
         elseif type == 'Success' then
@@ -60,7 +59,7 @@ function DrawText3D(x, y, z, text)
 end
 
 
---- Show a progress bar
+--- プログレスバーを表示する
 ---@param progressBarData table
 ---@return boolean success
 function ShowProgressBar(progressBarData)
@@ -80,13 +79,13 @@ function ShowProgressBar(progressBarData)
     end
 end
 
---- Regenerates player food
+--- プレイヤーの食料メタを回復（フレームワーク別に実装）
 function FoodRegen()
-    -- QBCore Example
+    -- QBCore 例
     -- TriggerEvent("QBCore:Server:SetMetaData", "hunger", 40000)
     --TriggerEvent("QBCore:Server:SetMetaData", "thirst", 20000)
 
-    -- ESX Example
+    -- ESX 例
     -- TriggerEvent('esx_status:set', 'hunger', 1000000)
     -- TriggerEvent('esx_status:set', 'thirst', 1000000)
 end

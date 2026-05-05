@@ -1,11 +1,11 @@
 
--- \ Locals and tables
+-- ローカル変数
 local SoldPeds = {}
 local SellZone = {}
 local currentZone = nil
 local sellZones = {}
 
--- \ Create Zones for the drug sales
+-- 売却ゾーン（PolyZone）を生成
 if not Config.SellEverywhere['enabled'] then
 	for k, v in pairs(Config.SellZones) do
 		local coords = {}
@@ -58,7 +58,7 @@ CreateThread(function()
 	end
 end)
 
--- \ Play five animation for both player and ped
+-- プレイヤーと相手 Ped に受け渡しアニメ
 local function PlayGiveAnim(tped)
 	local pid = PlayerPedId()
 	FreezeEntityPosition(pid, true)
@@ -67,12 +67,12 @@ local function PlayGiveAnim(tped)
 	FreezeEntityPosition(pid, false)
 end
 
--- \ Add Old Ped to table
+-- 会話済み Ped を記録
 local function AddSoldPed(entity)
     SoldPeds[entity] = true
 end
 
---\ Check if ped is in table
+-- 既に取引済みか
 local function HasSoldPed(entity)
     return SoldPeds[entity] ~= nil
 end
@@ -96,7 +96,7 @@ RegisterNetEvent('it-drugs:client:checkSellOffer', function(entity)
 	TaskTurnPedToFaceEntity(entity, PlayerPedId(), -1)
 	Wait(500)
 
-	-- seed math random
+	-- 乱数シード
 	math.randomseed(GetGameTimer())
 	local sellChance = math.random(0, 100)
 
@@ -138,12 +138,12 @@ RegisterNetEvent('it-drugs:client:checkSellOffer', function(entity)
 			return
 		end
 
-		-- seed math random
+		-- 乱数シード
 		math.randomseed(GetGameTimer())
 		sellItemData = availabeItems[math.random(1, #availabeItems)]
 		playerItems = exports.it_bridge:GetItemCount(sellItemData.item)
 	else
-		-- Function to get a random key from a table
+		-- テーブルからランダムキー
 		local function getRandomTableKey(tbl)
 			local keys = {}
 			for k in pairs(tbl) do
@@ -151,7 +151,7 @@ RegisterNetEvent('it-drugs:client:checkSellOffer', function(entity)
 			end
 			return keys[math.random(1, #keys)]
 		end
-		-- Select a random drug from the zone's available drugs
+		-- ゾーン定義からランダム選択
 		local randomDrugKey = getRandomTableKey(zoneConfig.drugs)
 		sellItemData = {
 			item = randomDrugKey,
@@ -185,7 +185,7 @@ RegisterNetEvent('it-drugs:client:checkSellOffer', function(entity)
 	end)
 end) 
 
--- \ event handler to server (execute server side)
+-- サーバーへ売却確定を送る
 RegisterNetEvent('it-drugs:client:salesInitiate', function(cad)
 	cad.zone = currentZone
 	AddSoldPed(cad.tped)

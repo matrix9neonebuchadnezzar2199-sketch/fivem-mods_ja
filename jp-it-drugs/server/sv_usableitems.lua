@@ -53,7 +53,7 @@ if serverInventory == 'ox_inventory' then
             if Config.Debug then lib.print.info('takeDrug', item) end
 
             local drug = item.name
-            if event == 'usingItem' then -- EVENT MIGHT BE usingItem
+            if event == 'usingItem' then -- イベント名は usingItem 想定
                 local src = inventory.id
                 local currentDrug = lib.callback.await('it-drugs:client:getCurrentDrugEffect', src)
                 if Config.Debug then lib.print.info('currentDrug', currentDrug) end
@@ -66,7 +66,7 @@ if serverInventory == 'ox_inventory' then
                     end
 
                     TriggerClientEvent('it-drugs:client:takeDrug', src, drug)
-                    exports.ox_inventory:RemoveItem(src, item, 1, nil, slot) -- ADDED THIS ONE TO REMOVE ITEM, on ox_inventory consume = 0
+                    exports.ox_inventory:RemoveItem(src, item, 1, nil, slot) -- consume=0 対策で手動削除
                 
                 else
                     ShowNotification(src, _U('NOTIFICATION__DRUG__ALREADY'), "info")

@@ -203,6 +203,7 @@ Locales['en'] = {
     ['3DTEXT__DEALER__LABLE'] = 'Press ~g~E~w~ to interact with dealer',
 }
 
+--- Config.Language に対応する Locales エントリを返す（定義は各 locales/*.lua）
 function _U(string)
 	if Locales[Config.Language] == nil then
 		return "Language not found"

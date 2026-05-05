@@ -15,7 +15,7 @@ RegisterNetEvent('it-drugs:client:showAdminAlertBox', function(args)
     })
 
     if alert == 'confirm' then
-        -- copy content to clipboard
+        -- クリップボードにコピー
         lib.setClipboard('add_ace identifier.'..userLicense..' it-drugs allow #'..username..' License')
         ShowNotification(nil, _U('NOTIFICATION__COPY__CLIPBOARD'):format('User License'), "Success")
     end
@@ -76,12 +76,12 @@ RegisterNetEvent('it-drugs:client:generatePlantListMenu', function()
     local currentCoords = GetEntityCoords(PlayerPedId())
     local allPlants = lib.callback.await('it-drugs:server:getPlants', false)
 
-    -- check if there are any plants
+    -- 植物が1件以上あるか
     if not allPlants then return end
 
     local plantList = {}
 
-    -- Sort plants by distance To player
+    -- プレイヤーからの距離でソート
     for _, data in pairs(allPlants) do
         local distance = #(currentCoords - data.coords)
         local temp = {
@@ -104,12 +104,12 @@ RegisterNetEvent('it-drugs:client:generateTableListMenu', function()
     local currentCoords = GetEntityCoords(PlayerPedId())
     local allTables = lib.callback.await('it-drugs:server:getTables', false)
 
-    -- check if there are any tables
+    -- 作業台が1件以上あるか
     if not allTables then return end
 
     local tableList = {}
 
-    -- Sort tables by distance To player
+    -- プレイヤーからの距離でソート
     for _, data in pairs(allTables) do
         local distance = #(currentCoords - data.coords)
         local temp = {
@@ -146,7 +146,7 @@ RegisterNetEvent('it-drugs:client:showGroundHash', function()
     })
 
     if alert == 'confirm' then
-        -- copy content to clipboard
+        -- クリップボードにコピー
         lib.setClipboard(arg5)
         ShowNotification(nil, _U('NOTIFICATION__COPY__CLIPBOARD'):format(arg5), "Success")
     end
