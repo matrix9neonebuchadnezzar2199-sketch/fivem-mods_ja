@@ -1,5 +1,14 @@
 {
   "app": { "title": "Soccer match control" },
+  "presence": {
+    "online": "Online",
+    "users_online": "{count} users have the tool open",
+    "you_are_editing": "You are editing",
+    "editor_is": "{name} is editing",
+    "viewing": "Viewing",
+    "editing": "Editing",
+    "all_users": "Connected users"
+  },
   "launcher": {
     "edit_mode": "Match control (edit)",
     "view_mode": "View only",

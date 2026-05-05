@@ -53,7 +53,9 @@ Production: `npm run build` outputs to `web/dist`.
 
 ## Status
 
-**v0.1.0** — scaffolding (schema, event stubs, minimal NUI). Full match editing comes in later sprints.
+**v0.1.1** — Presence (connected tool users, option A), design doc `docs/04_design_mockup.md`, and match meta columns (`match_name` / `venue` / `kickoff_time`). Existing databases: see `sql/migration_001_match_meta.sql`.
+
+**v0.1.0** — Initial scaffolding.
 
 ## License
 

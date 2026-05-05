@@ -1,17 +1,24 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useMatchStore } from '../stores/match'
 import { useHeartbeat } from '../composables/useHeartbeat'
-import { getResourceName } from '../composables/useNui'
+import { getResourceName, useNui } from '../composables/useNui'
+import PresenceBadge from '../components/PresenceBadge.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 const match = useMatchStore()
+const { send } = useNui()
 
 useHeartbeat()
+
+onMounted(() => {
+  void send('presence_list', {})
+})
 
 async function closeApp() {
   await session.leave()
@@ -43,9 +50,12 @@ function toggleLocale() {
       </button>
     </aside>
     <main class="main flex flex-col border-r border-slate-700/80 bg-slate-900/90 p-4">
-      <header class="mb-3 flex items-center justify-between gap-2">
+      <header class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-lg font-semibold text-slate-50">{{ t('match.score_record') }}</h2>
-        <button type="button" class="rounded-lg bg-slate-800 px-2 py-1 text-xs" @click="closeApp">Close</button>
+        <div class="flex flex-wrap items-center gap-2">
+          <PresenceBadge />
+          <button type="button" class="rounded-lg bg-slate-800 px-2 py-1 text-xs" @click="closeApp">Close</button>
+        </div>
       </header>
       <div class="flex flex-1 flex-col gap-4">
         <div class="rounded-xl border border-slate-700 bg-slate-950/60 p-4">

@@ -25,20 +25,21 @@ AddEventHandler('onResourceStart', function(resName)
   resetEditorLocks()
 end)
 
-AddEventHandler('playerDropped', function()
-  -- TODO: Lock.release(source) — lock.lua 実装時に接続
-end)
-
 RegisterNetEvent('refboard:session:enter', function(payload)
   local src = source
   if not requireReferee(src) then
     return
   end
-  TriggerClientEvent('refboard:session:ack', src, { ok = true, mode = payload and payload.mode or 'view' })
+  local license = GetPlayerIdentifierByType(src, 'license') or ''
+  local name = GetPlayerName(src) or ('ID %s'):format(src)
+  local mode = (payload and payload.mode == 'edit') and 'edit' or 'view'
+  TriggerEvent('refboard:presence:add', src, license, name, mode)
+  TriggerClientEvent('refboard:session:ack', src, { ok = true, mode = mode })
 end)
 
 RegisterNetEvent('refboard:session:leave', function()
   local src = source
+  TriggerEvent('refboard:presence:remove', src)
   TriggerClientEvent('refboard:session:left', src, { ok = true })
 end)
 
@@ -47,6 +48,7 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
   if not requireReferee(src) then
     return
   end
+  TriggerEvent('refboard:presence:setMode', src, 'edit')
   TriggerClientEvent('refboard:lock:ack', src, { ok = true, holder = nil })
 end)
 
@@ -55,6 +57,7 @@ RegisterNetEvent('refboard:lock:release', function()
   if not requireReferee(src) then
     return
   end
+  TriggerEvent('refboard:presence:setMode', src, 'view')
   TriggerClientEvent('refboard:lock:ack', src, { ok = true })
 end)
 

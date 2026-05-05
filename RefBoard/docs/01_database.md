@@ -38,3 +38,15 @@ SOURCE sql/install.sql;
 ## 1.5 スコア整合
 
 `matches.team1_score` / `team2_score` は表示用キャッシュ。真の系列は `match_score_history` で再現。アプリ層でトランザクション整合を担保する。
+
+## 1.6 試合メタ（UI 基本情報パネル用）
+
+`matches` に以下を保持する（`sql/install.sql` に含む。既存 DB は `sql/migration_001_match_meta.sql` を一度だけ適用）。
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| `match_name` | `VARCHAR(128) NULL` | 試合名（自由入力） |
+| `venue` | `VARCHAR(128) NULL` | 会場名 |
+| `kickoff_time` | `TIME NULL` | 開始時刻（日付は `match_date`） |
+
+ハーフ別スコア内訳は `match_score_history` から集計可能（`half` + スコア列）。

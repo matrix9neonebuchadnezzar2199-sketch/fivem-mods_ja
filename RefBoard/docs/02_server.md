@@ -12,6 +12,7 @@ RefBoard/
 │   ├── db.lua
 │   ├── lock.lua
 │   ├── autosave.lua
+│   ├── presence.lua
 │   ├── match.lua
 │   ├── team.lua
 │   ├── player.lua
@@ -53,6 +54,18 @@ RefBoard/
 | C2S | `refboard:lock:heartbeat` | 定期 |
 | S2C | `refboard:lock:update` | broadcast |
 
+### プレゼンス（ツール接続一覧・A 案）
+
+表示は **「ツールを開いている人数」**（閲覧含む）。編集権限そのものは `lock` と設計書どおり **単一編集者**。
+
+| 方向 | イベント名 | 説明 |
+|------|-------------|------|
+| C2S | `refboard:presence:list` | 現在の接続一覧を取得 |
+| S2C | `refboard:presence:list:ack` | `{ users: [{ serverId, license, name, mode, since }] }` を要求元へ |
+| S2C | `refboard:presence:update` | 入退室・`mode` 変更時に `-1` broadcast |
+
+サーバー内部: `main.lua` が `session:enter` / `session:leave` / `lock:acquire` / `lock:release` で `TriggerEvent('refboard:presence:add'|'remove'|'setMode', ...)` を発行し、`presence.lua` が `sessions[src]` を維持する。
+
 ### チーム / 試合 / 選手 / スコア / 時計
 
 | C2S | 概要 |
@@ -68,7 +81,8 @@ RefBoard/
 
 ## 2.5 モジュール責務
 
-- **lock.lua**: `editor_locks` 単一行、ハートビート超過で解放、`playerDropped` / `onResourceStart` でリセット。
+- **presence.lua**: ツール接続セッションのメモリ管理（`sessions[src]`）、`playerDropped` で除去、`refboard:presence:list` と broadcast。
+- **lock.lua**: `editor_locks` 単一行、ハートビート超過で解放、`onResourceStart` でリセット。
 - **autosave.lua**: `match_drafts` デバウンス、`checkResume`。
 - **score.lua**: `MySQL.transaction` で履歴 + `matches` 更新、broadcast。
 - **clock.lua**: `clock_started_at` / `clock_accumulated_ms` / `clock_running`。

@@ -1,5 +1,14 @@
 {
   "app": { "title": "サッカー試合管理" },
+  "presence": {
+    "online": "接続中",
+    "users_online": "{count}人がツールを開いています",
+    "you_are_editing": "あなたが編集中",
+    "editor_is": "{name} さんが編集中",
+    "viewing": "閲覧中",
+    "editing": "編集中",
+    "all_users": "接続中のユーザー"
+  },
   "launcher": {
     "edit_mode": "試合管理（編集）",
     "view_mode": "閲覧モード",

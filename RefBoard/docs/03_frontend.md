@@ -7,10 +7,11 @@ Vue 3（Composition API + `<script setup>`）、TypeScript、Vite、Vue Router�
 ## 3.2 ディレクトリ（`web/src`）
 
 - `router/index.ts`
-- `stores/session.ts`, `match.ts`, …
-- `views/Launcher.vue`, `MainLayout.vue`, `tabs/*`
+- `stores/session.ts`, `match.ts`, `presence.ts`
+- `views/Launcher.vue`, `MainLayout.vue`, `MatchDetail.vue`（今後）, `tabs/*`
+- `components/PresenceBadge.vue`, `components/UserAvatar.vue`
 - `composables/useNui.ts`, `useHeartbeat.ts`, `useAutosave.ts`, `useLockGuard.ts`
-- `i18n/index.ts`, `ja.json`, `en.json`
+- `i18n/index.ts`, `ja.json`, `en.json`（`presence.*` キー）
 
 ## 3.3 レイアウト
 
@@ -35,3 +36,15 @@ Vue 3（Composition API + `<script setup>`）、TypeScript、Vite、Vue Router�
 ## 3.7 i18n
 
 `ja.json` / `en.json` 同一キー構造。`localStorage` キー例: `refboard-locale`。
+
+### 3.7.1 プレゼンス文言（A 案）
+
+`presence.online`, `presence.users_online`（`{count}`）, `presence.you_are_editing`, `presence.editor_is`, `presence.viewing`, `presence.editing` — 実ファイル参照。
+
+## 3.8 プレゼンス（NUI）
+
+- `stores/presence.ts`: `users` を `refboard:presence:update` / `refboard:presence:list:ack` で更新。
+- `PresenceBadge.vue`: 緑ドット + 文言 + アバター最大 3 + `+N`。
+- `UserAvatar.vue`: イニシャル 2 文字、`mode === 'edit'` で `ring-emerald-400`、閲覧は `ring-slate-500`。`title` に名前とモード。
+
+詳細レイアウトは `docs/04_design_mockup.md`。

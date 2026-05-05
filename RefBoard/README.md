@@ -53,7 +53,9 @@ npm run dev
 
 ## ステータス
 
-**v0.1.0** — スキャフォールド（DB・イベント骨格・NUI 最小画面）。試合編集の本実装は今後のスプリントで追加予定。
+**v0.1.1** — プレゼンス（ツール接続人数・A 案）と設計書 `docs/04_design_mockup.md`、試合メタ列（`match_name` / `venue` / `kickoff_time`）。既存 DB は `sql/migration_001_match_meta.sql` を参照。
+
+**v0.1.0** — 初回スキャフォールド。
 
 ## ライセンス
 

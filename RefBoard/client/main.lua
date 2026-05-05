@@ -41,3 +41,11 @@ end)
 RegisterNetEvent('refboard:match:checkResume:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:checkResume:ack', payload = payload })
 end)
+
+RegisterNetEvent('refboard:presence:update', function(payload)
+  SendNUIMessage({ type = 'refboard:presence:update', payload = payload })
+end)
+
+RegisterNetEvent('refboard:presence:list:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:presence:list:ack', payload = payload })
+end)
