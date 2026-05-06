@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { onClickOutside } from '@vueuse/core'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MarqueeText from '../common/MarqueeText.vue'
 import type { MatchDetailModel } from '../../types/match'
@@ -36,10 +35,68 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const goalMenuOpen = ref(false)
+/** ラッパー（ボタン）。インライン／Teleport どちらでも外側クリック判定に使う */
 const goalMenuRef = ref<HTMLElement | null>(null)
-onClickOutside(goalMenuRef, () => {
+const goalButtonRef = ref<HTMLButtonElement | null>(null)
+/** embed 時のみ body へ Teleport したパネル */
+const goalMenuPanelRef = ref<HTMLElement | null>(null)
+const goalMenuPanelStyle = ref<Record<string, string>>({})
+
+function onGlobalPointerDown(ev: PointerEvent) {
+  if (!goalMenuOpen.value) return
+  const t = ev.target as Node | null
+  if (!t) return
+  if (goalMenuRef.value?.contains(t)) return
+  if (goalMenuPanelRef.value?.contains(t)) return
   goalMenuOpen.value = false
+}
+
+function onWindowResizeForGoalMenu() {
+  if (goalMenuOpen.value && props.embed) {
+    void updateGoalMenuPanelPosition()
+  }
+}
+
+watch(goalMenuOpen, async (open) => {
+  if (open) {
+    await nextTick()
+    if (props.embed) {
+      await nextTick()
+      await updateGoalMenuPanelPosition()
+      requestAnimationFrame(() => {
+        void updateGoalMenuPanelPosition()
+      })
+      window.addEventListener('resize', onWindowResizeForGoalMenu)
+    }
+    requestAnimationFrame(() => {
+      document.addEventListener('pointerdown', onGlobalPointerDown, true)
+    })
+  } else {
+    document.removeEventListener('pointerdown', onGlobalPointerDown, true)
+    window.removeEventListener('resize', onWindowResizeForGoalMenu)
+  }
 })
+
+async function updateGoalMenuPanelPosition() {
+  const btn = goalButtonRef.value
+  if (!btn) return
+  const r = btn.getBoundingClientRect()
+  const panel = goalMenuPanelRef.value
+  const menuH = panel?.offsetHeight ?? 96
+  const gap = 8
+  let top = r.top - menuH - gap
+  if (top < gap) {
+    top = r.bottom + gap
+  }
+  const w = Math.max(224, Math.min(280, r.width + 160))
+  let left = r.left + r.width / 2 - w / 2
+  left = Math.max(gap, Math.min(left, window.innerWidth - w - gap))
+  goalMenuPanelStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+    width: `${w}px`,
+  }
+}
 
 function toggleGoalMenu() {
   goalMenuOpen.value = !goalMenuOpen.value
@@ -81,6 +138,11 @@ onMounted(() => {
     syncScoreFlashBaseline()
     scoreFlashReady.value = true
   })
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', onGlobalPointerDown, true)
+  window.removeEventListener('resize', onWindowResizeForGoalMenu)
 })
 
 watch(
@@ -156,6 +218,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
       <div class="relative flex shrink-0 flex-col items-center justify-center px-2">
         <div ref="goalMenuRef" class="relative mb-2 flex flex-wrap items-center justify-center">
           <button
+            ref="goalButtonRef"
             type="button"
             class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
             :disabled="readonly"
@@ -167,10 +230,9 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
             {{ t('score_board.goal') }}
           </button>
           <div
-            v-if="goalMenuOpen"
+            v-if="goalMenuOpen && !embed"
             role="menu"
-            class="absolute left-1/2 z-20 min-w-[14rem] -translate-x-1/2 rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
-            :class="embed ? 'bottom-full z-[85] mb-1' : 'top-full mt-1'"
+            class="absolute left-1/2 z-20 mt-1 min-w-[14rem] -translate-x-1/2 rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
           >
             <button
               type="button"
@@ -275,6 +337,34 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         <span class="rounded bg-slate-600/50 px-2 py-0.5 text-[10px] font-bold text-slate-400">AWAY</span>
       </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="goalMenuOpen && embed"
+        ref="goalMenuPanelRef"
+        role="menu"
+        class="fixed z-[200] rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
+        :style="goalMenuPanelStyle"
+      >
+        <button
+          type="button"
+          role="menuitem"
+          class="block w-full px-3 py-2 text-left hover:bg-slate-800"
+          @click="openGoalWizard"
+        >
+          <span class="block text-xs font-medium text-slate-200">{{ t('score_board.goal_menu_record') }}</span>
+          <span class="mt-0.5 block text-[10px] leading-snug text-slate-500">{{ t('score_board.goal_menu_record_hint') }}</span>
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="block w-full px-3 py-2 text-left text-xs text-slate-200 hover:bg-slate-800"
+          @click="openManualFromGoalMenu"
+        >
+          {{ t('score_board.goal_menu_manual') }}
+        </button>
+      </div>
+    </Teleport>
 
     <Teleport to="body">
       <div
