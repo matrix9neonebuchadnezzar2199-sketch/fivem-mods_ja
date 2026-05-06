@@ -6,6 +6,7 @@ import { useNui } from '../composables/useNui'
 import { useSessionStore } from '../stores/session'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
+import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -157,7 +158,9 @@ function onCreated(id: number) {
               {{ m.team1_name || m.team1_id }} vs {{ m.team2_name || m.team2_id }}
             </td>
             <td class="px-3 py-2 font-mono text-slate-200">{{ m.team1_score }} - {{ m.team2_score }}</td>
-            <td class="px-3 py-2 text-slate-400">{{ m.status }}</td>
+            <td class="px-3 py-2">
+              <MatchStatusBadge :status="m.status" />
+            </td>
             <td class="px-3 py-2">
               <button type="button" class="mr-2 text-primary hover:underline" @click="openEdit(m.id)">{{ t('match_list.edit') }}</button>
               <button type="button" class="text-slate-400 hover:underline" @click="openDetail(m.id)">{{ t('match_list.detail') }}</button>

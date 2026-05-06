@@ -44,7 +44,12 @@
     "undo": "もどす",
     "select_player": "選手を選択",
     "back": "戻る",
-    "next": "次へ"
+    "next": "次へ",
+    "status": {
+      "draft": "予約・進行中",
+      "finished": "試合終了",
+      "cancelled": "中止"
+    }
   },
   "tabs": {
     "score_record": "スコア記録",

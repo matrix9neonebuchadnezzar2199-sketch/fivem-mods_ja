@@ -44,7 +44,12 @@
     "undo": "Undo",
     "select_player": "Select player",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "status": {
+      "draft": "Scheduled / Live",
+      "finished": "Finished",
+      "cancelled": "Cancelled"
+    }
   },
   "tabs": {
     "score_record": "Score",

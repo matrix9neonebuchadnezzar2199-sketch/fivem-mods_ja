@@ -2,6 +2,8 @@
 
 ## v0.6.1 — Unreleased
 
+- **sprint_08 設計書**: `docs/sprints/sprint_08_marquee.md` に複数行同時マーキー方針の確定文言と、フェーズ 2b 着手前の flex/grid レイアウトチェックリスト（`c172c9e` の教訓）を追記。
+- **MatchList**: 試合ステータス列を `MatchStatusBadge`（日英 `match.status.*`・状態別色）に変更。
 - **モック**: ブラウザ開発用 `nuiMock` に `localStorage` 永続化レイヤ（`mockPersistence.ts`）を追加。`team_create` ほか CRUD がリロード後も保持され、`window.__refboardMock`（DEV のみ）でリセット・ダンプ可能。
 - **設計**: スコアボード方針（案 A）・`MarqueeText` の `variant` プリセット仕様を `docs/sprints/sprint_08_marquee.md` に確定記録。
 - **マーキー基盤（フェーズ1）**: `MarqueeText.vue`（`contentRef` 計測・`VARIANTS` プリセット・`prefers-reduced-motion`）と `v-marquee` ディレクティブ（`createElement` / `textContent` で DOM 構築）。
