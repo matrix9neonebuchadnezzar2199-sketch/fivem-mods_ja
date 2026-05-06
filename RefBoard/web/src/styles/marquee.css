@@ -88,12 +88,11 @@
   padding-right: 0;
 }
 
-/* 非オーバーフロー時: 親の幅に合わせ、はみ出しは親の overflow でクリップ（flex 誤判定時の保険） */
+/* 非オーバーフロー時: 親の幅に合わせる。クリップは親 .rb-marquee の overflow のみ（子で overflow:hidden を重ねると先頭がサブピクセルで欠ける） */
 .rb-marquee-plain {
   display: block;
   min-width: 0;
   width: 100%;
-  overflow: hidden;
 }
 
 @keyframes rb-marquee-scroll {
