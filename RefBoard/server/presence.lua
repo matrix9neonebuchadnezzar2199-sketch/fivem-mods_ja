@@ -55,6 +55,11 @@ local function setSessionMode(src, mode)
   broadcast()
 end
 
+--- ヘルスチェック等用: このプレイヤーが presence に登録済みか
+function RefboardPresenceHasSession(src)
+  return type(src) == 'number' and sessions[src] ~= nil
+end
+
 AddEventHandler('refboard:presence:add', function(src, license, name, mode)
   if type(src) ~= 'number' then
     return

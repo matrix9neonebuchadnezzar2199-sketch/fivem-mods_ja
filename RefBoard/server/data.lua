@@ -227,7 +227,7 @@ RegisterNetEvent('refboard:data:db_meta', function()
     return
   end
   TriggerClientEvent('refboard:data:db_meta:ack', src, {
-    schemaVersion = '0.5.0-migration_004',
+    schemaVersion = '0.5.1-migration_004',
     resourceVersion = GetResourceMetadata(GetCurrentResourceName(), 'version', 0) or '',
   })
 end)

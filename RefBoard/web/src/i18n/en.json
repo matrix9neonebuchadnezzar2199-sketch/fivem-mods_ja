@@ -20,7 +20,8 @@
     "lock_body": "{name} is editing. Open in view-only mode?",
     "lock_open_view": "Open as view-only",
     "lock_back": "Back",
-    "unknown_editor": "Another user"
+    "unknown_editor": "Another user",
+    "debug_trace": "🐛 Enable debug NUI trace (reload)"
   },
   "sidebar": {
     "team_manage": "Teams",
@@ -323,6 +324,73 @@
     "avatar_hue": "Avatar hue",
     "nui_mock": "Enable NUI mock",
     "nui_mock_note": "Browser dev uses mock automatically.",
-    "show_test_commands": "Show test commands hint (Config.EnableTestCommands)"
+    "show_test_commands": "Show test commands hint (Config.EnableTestCommands)",
+    "health_link": "Health check (pre-flight)"
+  },
+  "health": {
+    "title": "Health check",
+    "subtitle": "Server, DB, permissions, and lock status at a glance.",
+    "recheck": "Run again",
+    "copy_markdown": "Copy report (Markdown)",
+    "checking": "Checking…",
+    "copied": "Copied to clipboard",
+    "copy_failed": "Copy failed",
+    "categories": {
+      "server": "Server",
+      "db": "Database",
+      "auth": "Auth",
+      "presence": "Presence",
+      "lock": "Lock",
+      "config": "Config"
+    },
+    "rows": {
+      "server": {
+        "ping": "Connectivity",
+        "version": "Version"
+      },
+      "db": {
+        "connection": "DB connection",
+        "schema": "Schema (table count)",
+        "migration_roster": "Migration (team_roster)"
+      },
+      "auth": {
+        "license": "License",
+        "referee_permission": "Referee ACE"
+      },
+      "presence": {
+        "self_registration": "Your session"
+      },
+      "lock": {
+        "current_editor": "Current editor"
+      },
+      "config": {
+        "log_level": "Log level",
+        "test_commands": "Test commands"
+      }
+    }
+  },
+  "errors": {
+    "E1001": "You do not have permission for this action",
+    "E1002": "You are not the active editor",
+    "E1003": "{name} is currently editing",
+    "E1004": "Your session has expired",
+    "E1005": "Could not acquire the edit lock",
+    "E2001": "Invalid payload",
+    "E2002": "Missing required field",
+    "E2003": "Invalid team ID",
+    "E2004": "Invalid score",
+    "E2005": "Reason must be at least 5 characters",
+    "E2006": "A player with this license is already on the match roster",
+    "E2007": "Invalid arguments",
+    "E3001": "Match not found (ID: {matchId})",
+    "E3002": "Not found",
+    "E3003": "Team not found",
+    "E3004": "Match status does not allow this operation",
+    "E3005": "Player is not in an active state",
+    "E4001": "Database connection lost",
+    "E4002": "Database operation failed",
+    "E4003": "Transaction failed",
+    "E5001": "Internal error (code: {code})",
+    "E5002": "Unhandled exception ({detail})"
   }
 }

@@ -132,6 +132,7 @@ end
 
 RegisterNetEvent('refboard:event:substitute', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:event:substitute:ack', 'net:event:substitute', function()
   if not requireReferee(src) then
     return
   end
@@ -192,10 +193,12 @@ RegisterNetEvent('refboard:event:substitute', function(payload)
   end
   TriggerClientEvent('refboard:event:substitute:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
 end)
 
 RegisterNetEvent('refboard:event:issue_card', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:event:issue_card:ack', 'net:event:issue_card', function()
   if not requireReferee(src) then
     return
   end
@@ -273,10 +276,12 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
 
   TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
 end)
 
 RegisterNetEvent('refboard:event:record_penalty', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:event:record_penalty:ack', 'net:event:record_penalty', function()
   if not requireReferee(src) then
     return
   end
@@ -336,4 +341,5 @@ RegisterNetEvent('refboard:event:record_penalty', function(payload)
       finalPkScore = pkResult.score,
     })
   end
+  end)
 end)

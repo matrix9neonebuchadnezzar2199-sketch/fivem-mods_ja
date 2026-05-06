@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.1 — 2026-05-06 (Pre-test triage tooling)
+
+- **観測可能性**: `shared/error_codes.lua`（`MakeError` / `ErrorCodes`）、`server/util.lua` の `Logger`（`Config.LogLevel`）と `RefboardGuard`（`xpcall` + スタックログ + 任意 ACK）。
+- **SafeCall 相当**: 主要 NetEvent（スコア・イベント・試合 create/finish/reopen/set_half・選手 add / roster・ロック acquire/release・autosave・session enter）を `RefboardGuard` で保護。
+- **NUI**: `useNui.ts` のリクエストトレース（`DEV` または `localStorage.refboard_trace=1`）、`Launcher.vue` のトレース有効化リンク、グローバル `error` / `unhandledrejection` でトースト。
+- **ヘルスチェック**: `server/health.lua` + `refboard:health:check` / `:ack`、`HealthCheck.vue`、設定からの導線、`nuiMock` 対応。
+- **型**: `web/src/types/error.ts`、`REFBOARD_UI_VERSION` 定数。`ja.json` / `en.json` に `errors.*` と `health.*` を追加。
+- **ドキュメント**: `docs/sprints/sprint_06_pretriage.md`（前夜版スプリント指示の保存）。
+
 ## v0.5.0 — 2026-05-06
 
 - **チーム管理**: `TeamManage.vue`、ロスター API（`team_roster` / `server/team.lua`）、`AddPlayerDialog` に「ロスターから選ぶ」モード。

@@ -296,6 +296,7 @@ end)
 
 RegisterNetEvent('refboard:match:create', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:match:create:ack', 'net:match:create', function()
   if not requireReferee(src) then
     return
   end
@@ -375,7 +376,9 @@ RegisterNetEvent('refboard:match:create', function(payload)
     { matchId, license, name, 'match_created' }
   )
 
+  Logger.info('net:match:create', 'done', { matchId = matchId })
   TriggerClientEvent('refboard:match:create:ack', src, { ok = true, matchId = matchId })
+  end)
 end)
 
 RegisterNetEvent('refboard:match:get', function(payload)
@@ -398,6 +401,7 @@ end)
 
 RegisterNetEvent('refboard:match:finish', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:match:finish:ack', 'net:match:finish', function()
   if not requireReferee(src) then
     return
   end
@@ -420,10 +424,12 @@ RegisterNetEvent('refboard:match:finish', function(payload)
   MySQL.update.await('DELETE FROM match_drafts WHERE match_id = ?', { matchId })
   TriggerClientEvent('refboard:match:finish:ack', src, { ok = true })
   TriggerClientEvent('refboard:match:finished', -1, { matchId = matchId })
+  end)
 end)
 
 RegisterNetEvent('refboard:match:reopen', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:match:reopen:ack', 'net:match:reopen', function()
   if not requireReferee(src) then
     return
   end
@@ -467,10 +473,12 @@ RegisterNetEvent('refboard:match:reopen', function(payload)
   )
   TriggerClientEvent('refboard:match:reopen:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
 end)
 
 RegisterNetEvent('refboard:match:set_half', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:match:set_half:ack', 'net:match:set_half', function()
   if not requireReferee(src) then
     return
   end
@@ -516,6 +524,7 @@ RegisterNetEvent('refboard:match:set_half', function(payload)
   end
   TriggerClientEvent('refboard:match:set_half:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
 end)
 
 AddEventHandler('refboard:internal:broadcastState', function(matchId)

@@ -38,6 +38,7 @@ end
 
 RegisterNetEvent('refboard:autosave:draft', function(payload)
   local src = source
+  RefboardGuard(src, nil, 'net:autosave:draft', function()
   if not canRefer(src) then
     return
   end
@@ -68,5 +69,6 @@ RegisterNetEvent('refboard:autosave:draft', function(payload)
       return
     end
     flush(matchId, stateJson, ed.src, ed.license, ed.name)
+  end)
   end)
 end)

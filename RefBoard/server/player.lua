@@ -80,6 +80,7 @@ end)
 
 RegisterNetEvent('refboard:player:add', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:player:add:ack', 'net:player:add', function()
   if not requireReferee(src) then
     return
   end
@@ -120,7 +121,7 @@ RegisterNetEvent('refboard:player:add', function(payload)
       { matchId, license }
     )
     if dup then
-      TriggerClientEvent('refboard:player:add:ack', src, { ok = false, error = 'duplicate_license' })
+      TriggerClientEvent('refboard:player:add:ack', src, MakeError(ErrorCodes.DUPLICATE_LICENSE))
       return
     end
   end
@@ -151,10 +152,12 @@ RegisterNetEvent('refboard:player:add', function(payload)
 
   TriggerClientEvent('refboard:player:add:ack', src, { ok = true, playerId = ins })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
 end)
 
 RegisterNetEvent('refboard:player:add_from_roster', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:player:add_from_roster:ack', 'net:player:add_from_roster', function()
   if not requireReferee(src) then
     return
   end
@@ -217,7 +220,7 @@ RegisterNetEvent('refboard:player:add_from_roster', function(payload)
       { matchId, license }
     )
     if dup then
-      TriggerClientEvent('refboard:player:add_from_roster:ack', src, { ok = false, error = 'duplicate_license' })
+      TriggerClientEvent('refboard:player:add_from_roster:ack', src, MakeError(ErrorCodes.DUPLICATE_LICENSE))
       return
     end
   end
@@ -251,4 +254,5 @@ RegisterNetEvent('refboard:player:add_from_roster', function(payload)
 
   TriggerClientEvent('refboard:player:add_from_roster:ack', src, { ok = true, playerId = ins })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
 end)

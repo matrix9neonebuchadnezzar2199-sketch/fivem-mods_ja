@@ -20,7 +20,8 @@
     "lock_body": "{name} さんが編集中です。閲覧モードで開きますか？",
     "lock_open_view": "閲覧モードで開く",
     "lock_back": "戻る",
-    "unknown_editor": "他のユーザー"
+    "unknown_editor": "他のユーザー",
+    "debug_trace": "🐛 デバッグログを有効化（再読込）"
   },
   "sidebar": {
     "team_manage": "チーム管理",
@@ -323,6 +324,73 @@
     "avatar_hue": "アバター色（色相）",
     "nui_mock": "NUIモック有効化",
     "nui_mock_note": "ブラウザ開発時は自動でモックが有効です。",
-    "show_test_commands": "テストコマンド表示（Config.EnableTestCommands）"
+    "show_test_commands": "テストコマンド表示（Config.EnableTestCommands）",
+    "health_link": "ヘルスチェック（実機テスト前）"
+  },
+  "health": {
+    "title": "ヘルスチェック",
+    "subtitle": "サーバー・DB・権限・ロックの状態を一覧します。",
+    "recheck": "再チェック",
+    "copy_markdown": "レポートをコピー（Markdown）",
+    "checking": "確認中…",
+    "copied": "クリップボードにコピーしました",
+    "copy_failed": "コピーに失敗しました",
+    "categories": {
+      "server": "サーバー",
+      "db": "データベース",
+      "auth": "認証",
+      "presence": "プレゼンス",
+      "lock": "ロック",
+      "config": "設定"
+    },
+    "rows": {
+      "server": {
+        "ping": "接続",
+        "version": "バージョン"
+      },
+      "db": {
+        "connection": "DB接続",
+        "schema": "スキーマ（テーブル数）",
+        "migration_roster": "マイグレーション（team_roster）"
+      },
+      "auth": {
+        "license": "ライセンス",
+        "referee_permission": "審判権限（ACE）"
+      },
+      "presence": {
+        "self_registration": "自分の登録"
+      },
+      "lock": {
+        "current_editor": "現在の編集者"
+      },
+      "config": {
+        "log_level": "ログレベル",
+        "test_commands": "テストコマンド"
+      }
+    }
+  },
+  "errors": {
+    "E1001": "操作権限がありません",
+    "E1002": "あなたは編集者ではありません",
+    "E1003": "{name} さんが編集中です",
+    "E1004": "セッションの有効期限が切れています",
+    "E1005": "編集ロックが取得できません",
+    "E2001": "送信データが不正です",
+    "E2002": "必須項目がありません",
+    "E2003": "チームIDが不正です",
+    "E2004": "スコアが不正です",
+    "E2005": "理由は5文字以上で入力してください",
+    "E2006": "同じ試合に同じライセンスの選手が既にいます",
+    "E2007": "引数が不正です",
+    "E3001": "試合が見つかりません（ID: {matchId}）",
+    "E3002": "対象が見つかりません",
+    "E3003": "チームが見つかりません",
+    "E3004": "試合の状態がこの操作に合いません",
+    "E3005": "選手が出場可能な状態ではありません",
+    "E4001": "データベース接続が切断されました",
+    "E4002": "データベース処理に失敗しました",
+    "E4003": "トランザクションに失敗しました",
+    "E5001": "内部エラーが発生しました（コード: {code}）",
+    "E5002": "想定外の例外が発生しました（{detail}）"
   }
 }

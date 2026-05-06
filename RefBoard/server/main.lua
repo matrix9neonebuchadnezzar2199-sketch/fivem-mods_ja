@@ -23,6 +23,7 @@ end)
 
 RegisterNetEvent('refboard:session:enter', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:session:ack', 'net:session:enter', function()
   if not requireReferee(src) then
     return
   end
@@ -31,12 +32,15 @@ RegisterNetEvent('refboard:session:enter', function(payload)
   local mode = (payload and payload.mode == 'edit') and 'edit' or 'view'
   TriggerEvent('refboard:presence:add', src, license, name, mode)
   TriggerClientEvent('refboard:session:ack', src, { ok = true, mode = mode })
+  end)
 end)
 
 RegisterNetEvent('refboard:session:leave', function()
   local src = source
+  RefboardGuard(src, nil, 'net:session:leave', function()
   TriggerEvent('refboard:presence:remove', src)
   TriggerClientEvent('refboard:session:left', src, { ok = true })
+  end)
 end)
 
 RegisterNetEvent('refboard:match:checkResume', function()

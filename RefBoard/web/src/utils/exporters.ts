@@ -59,7 +59,7 @@ export function exportMatchToJSON(match: MatchDetailModel, history: ScoreHistory
       events: match.events,
       score_history: history,
       exported_at: new Date().toISOString(),
-      exporter_version: '0.5.0',
+      exporter_version: '0.5.1',
     },
     null,
     2,

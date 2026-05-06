@@ -253,6 +253,7 @@ export function mockResponse(path: string, data: unknown): unknown {
     case 'data_match_history':
     case 'data_db_meta':
     case 'player_add_from_roster':
+    case 'health_check':
       return { ok: true, forwarded: true }
     default:
       // eslint-disable-next-line no-console
@@ -264,6 +265,29 @@ export function mockResponse(path: string, data: unknown): unknown {
 /** fetch の戻りのあと、本番と同様に遅延で postMessage するイベント */
 export function queueMockSideEffects(path: string, data: unknown): void {
   queueMicrotask(() => {
+    if (path === 'health_check') {
+      const cv = (data as { clientVersion?: string })?.clientVersion ?? ''
+      const ts = Date.now()
+      postNui('refboard:health:check:ack', {
+        results: [
+          { category: 'server', name: 'ping', status: 'ok', detail: 'pong', timestamp: ts },
+          { category: 'server', name: 'version', status: 'ok', detail: `server=0.5.1 client=${cv || '(n/a)'}`, timestamp: ts },
+          { category: 'db', name: 'connection', status: 'ok', detail: 'mock', timestamp: ts },
+          { category: 'db', name: 'schema', status: 'warning', detail: 'mock (browser)', timestamp: ts },
+          { category: 'db', name: 'migration_roster', status: 'warning', detail: 'mock', timestamp: ts },
+          { category: 'auth', name: 'license', status: 'warning', detail: 'mock', timestamp: ts },
+          { category: 'auth', name: 'referee_permission', status: 'ok', detail: 'mock', timestamp: ts },
+          { category: 'presence', name: 'self_registration', status: 'warning', detail: 'mock', timestamp: ts },
+          { category: 'lock', name: 'current_editor', status: 'ok', detail: 'none', timestamp: ts },
+          { category: 'config', name: 'log_level', status: 'ok', detail: 'INFO', timestamp: ts },
+          { category: 'config', name: 'test_commands', status: 'ok', detail: 'false', timestamp: ts },
+        ],
+        serverVersion: '0.5.1',
+        clientVersion: cv,
+        logLevel: 'INFO',
+        enableTestCommands: false,
+      })
+    }
     if (path === 'lock_acquire') {
       postNui('refboard:lock:acquire:result', { ok: true })
     }
@@ -384,7 +408,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       postNui('refboard:data:match_history:ack', { rows: mockListRows })
     }
     if (path === 'data_db_meta') {
-      postNui('refboard:data:db_meta:ack', { schemaVersion: '0.5.0-mock', resourceVersion: '0.5.0' })
+      postNui('refboard:data:db_meta:ack', { schemaVersion: '0.5.1-mock', resourceVersion: '0.5.1' })
     }
     if (path === 'match_list') {
       const st = (data as { status?: string })?.status

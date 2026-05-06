@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'RefBoard'
 author 'matrix9neonebuchadnezzar2199-sketch'
-version '0.5.0'
+version '0.5.1'
 description 'RefBoard — FiveM 向けサッカー試合管理（改ざん防止履歴・編集ロック・i18n）'
 
 dependencies {
@@ -13,9 +13,10 @@ dependencies {
 }
 
 shared_scripts {
-  'config.lua',
-  'shared/constants.lua',
-  'locales/*.lua',
+    'config.lua',
+    'shared/constants.lua',
+    'shared/error_codes.lua',
+    'locales/*.lua',
 }
 
 server_scripts {
@@ -33,6 +34,7 @@ server_scripts {
   'server/clock.lua',
   'server/event.lua',
   'server/presence.lua',
+  'server/health.lua',
   'server/test/transaction_test.lua',
   'server/main.lua',
 }

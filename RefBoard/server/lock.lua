@@ -51,8 +51,9 @@ end
 
 RegisterNetEvent('refboard:lock:acquire', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:lock:acquire:result', 'net:lock:acquire', function()
   if not canRefer(src) then
-    TriggerClientEvent('refboard:lock:acquire:result', src, { ok = false, error = 'no_permission' })
+    TriggerClientEvent('refboard:lock:acquire:result', src, MakeError(ErrorCodes.NO_PERMISSION))
     return
   end
   local license = GetPlayerIdentifierByType(src, 'license') or ''
@@ -65,18 +66,21 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
   local r = readRow()
   local heldBy = r and r.holder_server_id
   if heldBy and heldBy ~= src and not isStale(r) then
-    TriggerClientEvent('refboard:lock:acquire:result', src, {
-      ok = false,
-      error = 'lock_held',
-      holder = {
-        license = r.holder_license,
-        name = r.holder_name,
-        serverId = r.holder_server_id,
-        since = (r.last_hb_unix or os.time()) * 1000,
-      },
+    local err = MakeError(ErrorCodes.LOCK_HELD_BY_OTHER, nil, {
+      holderLicense = r.holder_license,
+      holderServerId = r.holder_server_id,
     })
+    err.holder = {
+      license = r.holder_license,
+      name = r.holder_name,
+      serverId = r.holder_server_id,
+      since = (r.last_hb_unix or os.time()) * 1000,
+    }
+    TriggerClientEvent('refboard:lock:acquire:result', src, err)
     return
   end
+
+  Logger.info('net:lock:acquire', 'granted', { src = src, matchId = matchId })
 
   writeRow(matchId, license, name, src)
   TriggerEvent('refboard:presence:setMode', src, 'edit')
@@ -87,12 +91,14 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
     serverId = src,
     since = os.time() * 1000,
   })
+  end)
 end)
 
 RegisterNetEvent('refboard:lock:release', function()
   local src = source
+  RefboardGuard(src, 'refboard:lock:ack', 'net:lock:release', function()
   if not canRefer(src) then
-    TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'no_permission' })
+    TriggerClientEvent('refboard:lock:ack', src, MakeError(ErrorCodes.NO_PERMISSION))
     return
   end
   local r = readRow()
@@ -104,6 +110,7 @@ RegisterNetEvent('refboard:lock:release', function()
   TriggerEvent('refboard:presence:setMode', src, 'view')
   TriggerClientEvent('refboard:lock:ack', src, { ok = true })
   broadcastLock(nil)
+  end)
 end)
 
 RegisterNetEvent('refboard:lock:heartbeat', function()

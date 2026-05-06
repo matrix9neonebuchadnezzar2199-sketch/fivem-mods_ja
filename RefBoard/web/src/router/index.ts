@@ -6,6 +6,7 @@ import MatchDetail from '../views/MatchDetail.vue'
 import TeamManage from '../views/TeamManage.vue'
 import DataManage from '../views/DataManage.vue'
 import Settings from '../views/Settings.vue'
+import HealthCheck from '../views/HealthCheck.vue'
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -21,6 +22,7 @@ export const router = createRouter({
         { path: 'teams', name: 'teams', component: TeamManage },
         { path: 'data', name: 'data', component: DataManage },
         { path: 'settings', name: 'settings', component: Settings },
+        { path: 'health', name: 'health', component: HealthCheck },
       ],
     },
   ],

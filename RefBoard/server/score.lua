@@ -62,11 +62,12 @@ end
 
 RegisterNetEvent('refboard:score:goal', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:score:goal:ack', 'net:score:goal', function()
   if not requireReferee(src) then
     return
   end
   if type(payload) ~= 'table' then
-    TriggerClientEvent('refboard:score:goal:ack', src, { ok = false, error = 'bad_payload' })
+    TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.INVALID_PAYLOAD))
     return
   end
   local matchId = tonumber(payload.matchId)
@@ -74,16 +75,18 @@ RegisterNetEvent('refboard:score:goal', function(payload)
   local scorerPlayerId = tonumber(payload.scorerPlayerId)
   local assistPlayerId = payload.assistPlayerId ~= nil and tonumber(payload.assistPlayerId) or nil
   if not matchId or not teamId or not scorerPlayerId then
-    TriggerClientEvent('refboard:score:goal:ack', src, { ok = false, error = 'bad_args' })
+    TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.BAD_ARGS))
     return
   end
   if not assertEditorLock(src, matchId) then
-    TriggerClientEvent('refboard:score:goal:ack', src, { ok = false, error = 'no_lock' })
+    TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.NO_LOCK))
     return
   end
 
   local license = GetPlayerIdentifierByType(src, 'license') or ''
   local name = GetPlayerName(src) or ('ID %s'):format(src)
+
+  Logger.info('net:score:goal', 'start', { matchId = matchId, teamId = teamId, scorer = scorerPlayerId })
 
   local okTx = withTransaction(function()
     local m = MySQL.single.await('SELECT * FROM matches WHERE id = ? FOR UPDATE', { matchId })
@@ -162,42 +165,50 @@ RegisterNetEvent('refboard:score:goal', function(payload)
   end)
 
   if not okTx then
-    TriggerClientEvent('refboard:score:goal:ack', src, { ok = false, error = 'tx_failed' })
+    Logger.warn('net:score:goal', 'tx_failed', { matchId = matchId })
+    TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.DB_TRANSACTION_FAILED))
     return
   end
 
+  Logger.info('net:score:goal', 'done', { matchId = matchId })
   TriggerClientEvent('refboard:score:goal:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
   TriggerClientEvent('refboard:autosave:saved', src, {
     matchId = matchId,
     savedAt = os.time() * 1000,
   })
+  end)
 end)
 
 RegisterNetEvent('refboard:score:manual_edit', function(payload)
   local src = source
+  RefboardGuard(src, 'refboard:score:manual_edit:ack', 'net:score:manual_edit', function()
   if not requireReferee(src) then
     return
   end
   if type(payload) ~= 'table' then
-    TriggerClientEvent('refboard:score:manual_edit:ack', src, { ok = false, error = 'bad_payload' })
+    TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(ErrorCodes.INVALID_PAYLOAD))
     return
   end
   local matchId = tonumber(payload.matchId)
   local s1 = tonumber(payload.team1Score)
   local s2 = tonumber(payload.team2Score)
   local reason = payload.reason
-  if not matchId or s1 == nil or s2 == nil or type(reason) ~= 'string' or #reason < 5 then
-    TriggerClientEvent('refboard:score:manual_edit:ack', src, { ok = false, error = 'bad_args' })
+  local reasonOk = type(reason) == 'string' and #reason >= 5
+  if not matchId or s1 == nil or s2 == nil or not reasonOk then
+    local errEntry = (type(reason) == 'string' and #reason < 5) and ErrorCodes.REASON_TOO_SHORT or ErrorCodes.BAD_ARGS
+    TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(errEntry))
     return
   end
   if not assertEditorLock(src, matchId) then
-    TriggerClientEvent('refboard:score:manual_edit:ack', src, { ok = false, error = 'no_lock' })
+    TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(ErrorCodes.NO_LOCK))
     return
   end
 
   local license = GetPlayerIdentifierByType(src, 'license') or ''
   local name = GetPlayerName(src) or ('ID %s'):format(src)
+
+  Logger.info('net:score:manual_edit', 'start', { matchId = matchId, s1 = s1, s2 = s2 })
 
   local okTx = withTransaction(function()
     local m = MySQL.single.await('SELECT * FROM matches WHERE id = ? FOR UPDATE', { matchId })
@@ -222,14 +233,17 @@ RegisterNetEvent('refboard:score:manual_edit', function(payload)
   end)
 
   if not okTx then
-    TriggerClientEvent('refboard:score:manual_edit:ack', src, { ok = false, error = 'tx_failed' })
+    Logger.warn('net:score:manual_edit', 'tx_failed', { matchId = matchId })
+    TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(ErrorCodes.DB_TRANSACTION_FAILED))
     return
   end
 
+  Logger.info('net:score:manual_edit', 'done', { matchId = matchId })
   TriggerClientEvent('refboard:score:manual_edit:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
   TriggerClientEvent('refboard:autosave:saved', src, {
     matchId = matchId,
     savedAt = os.time() * 1000,
   })
+  end)
 end)

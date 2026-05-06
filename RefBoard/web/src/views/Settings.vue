@@ -112,6 +112,12 @@ function syncLocale() {
         <div>Resource: {{ dbMeta?.resourceVersion || '—' }}</div>
         <div>getResourceName: {{ getResourceName() }}</div>
       </div>
+      <router-link
+        :to="{ name: 'health' }"
+        class="mt-3 inline-block text-xs font-medium text-primary underline decoration-primary/40 hover:decoration-primary"
+      >
+        {{ t('settings.health_link') }} →
+      </router-link>
     </section>
   </div>
 </template>

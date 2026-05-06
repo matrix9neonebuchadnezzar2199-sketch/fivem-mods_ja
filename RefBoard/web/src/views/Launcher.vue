@@ -39,13 +39,22 @@ async function openAsViewFromDialog() {
 function closeDialog() {
   showLockDialog.value = false
 }
+
+function enableDebugTrace() {
+  try {
+    localStorage.setItem('refboard_trace', '1')
+    window.location.reload()
+  } catch {
+    /* ignore */
+  }
+}
 </script>
 
 <template>
   <div class="flex min-h-full flex-col items-center justify-center gap-6 p-8">
     <div class="text-center">
       <h1 class="text-2xl font-bold text-slate-50">{{ t('app.title') }}</h1>
-      <p class="mt-2 text-sm text-slate-400">RefBoard v0.5.0</p>
+      <p class="mt-2 text-sm text-slate-400">RefBoard v0.5.1</p>
     </div>
     <div class="flex w-full max-w-md flex-col gap-3">
       <button
@@ -82,5 +91,9 @@ function closeDialog() {
         </div>
       </div>
     </div>
+
+    <button type="button" class="text-xs text-slate-500 underline decoration-dotted hover:text-slate-400" @click="enableDebugTrace">
+      {{ t('launcher.debug_trace') }}
+    </button>
   </div>
 </template>
