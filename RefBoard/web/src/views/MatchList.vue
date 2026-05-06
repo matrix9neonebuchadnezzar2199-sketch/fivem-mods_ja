@@ -24,6 +24,7 @@ const reopenId = ref<number | null>(null)
 
 let offMatch: (() => void) | null = null
 let offTeam: (() => void) | null = null
+let stopAfterEach: (() => void) | undefined
 
 function loadMatches() {
   void send('match_list', { status: filter.value })
@@ -38,11 +39,17 @@ onMounted(() => {
   })
   void send('team_list', {})
   loadMatches()
+  stopAfterEach = router.afterEach((to, from) => {
+    if (to.name === 'matches' && from.name === 'match-detail') {
+      loadMatches()
+    }
+  })
 })
 
 onUnmounted(() => {
   offMatch?.()
   offTeam?.()
+  stopAfterEach?.()
 })
 
 watch(filter, () => {

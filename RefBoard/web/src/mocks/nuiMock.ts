@@ -36,6 +36,14 @@ const mockTeams = [
 
 let liveDetail: MatchDetailModel = clone(mockMatchDetail)
 
+/** 試合一覧 `mockListRows` の score を `liveDetail` に合わせる（ゴール後に一覧へ戻ったときのズレ防止） */
+function syncMockListRowScoresFromLive() {
+  const row = mockListRows.find((r) => r.id === liveDetail.id)
+  if (!row) return
+  row.team1_score = liveDetail.score.home
+  row.team2_score = liveDetail.score.away
+}
+
 function postNui(type: string, payload: unknown) {
   window.postMessage({ type, payload }, '*')
 }
@@ -598,6 +606,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         events: liveDetail.events,
         players: null,
       })
+      syncMockListRowScoresFromLive()
       postNui('refboard:autosave:saved', { matchId: liveDetail.id, savedAt: Date.now() })
     }
     if (path === 'score_manual_edit') {
@@ -612,6 +621,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         events: liveDetail.events,
         players: null,
       })
+      syncMockListRowScoresFromLive()
     }
     if (path === 'match_finish') {
       const row = mockListRows.find((r) => r.id === liveDetail.id)
