@@ -40,6 +40,13 @@ const useMarqueeMotion = computed(
 )
 const useEllipsis = computed(() => textOverflows.value && marqueeMode.value === 'off')
 
+/** レイアウト確定・フォント後までずらして再計測（flex 初回幅が過大になるのを避ける） */
+function scheduleMeasure() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => measure())
+  })
+}
+
 function measure() {
   const c = containerRef.value
   const span = measureRef.value
@@ -67,15 +74,25 @@ let ro: ResizeObserver | undefined
 
 function setupRo() {
   ro?.disconnect()
-  ro = new ResizeObserver(() => measure())
+  // コンテナ幅だけ追えばよい。measure（トラック内 span）を observe すると max-content 周りでノイズになりやすい
+  ro = new ResizeObserver(() => scheduleMeasure())
   if (containerRef.value) ro.observe(containerRef.value)
-  if (measureRef.value) ro.observe(measureRef.value)
+}
+
+async function runInitialMeasures() {
+  scheduleMeasure()
+  try {
+    await document.fonts?.ready
+  } catch {
+    /* document.fonts 非対応環境 */
+  }
+  scheduleMeasure()
 }
 
 onMounted(async () => {
   await nextTick()
-  measure()
   setupRo()
+  await runInitialMeasures()
 })
 
 onUnmounted(() => {
@@ -87,10 +104,16 @@ watch(
     [props.text, props.variant, props.speed, props.gap, props.delay, marqueeMode.value] as const,
   async () => {
     await nextTick()
-    measure()
+    scheduleMeasure()
     setupRo()
   },
 )
+
+/** plain / track の切替後に measureRef が差し替わるため再計測 */
+watch(textOverflows, async () => {
+  await nextTick()
+  scheduleMeasure()
+})
 </script>
 
 <template>

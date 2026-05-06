@@ -430,11 +430,11 @@ function exportMatchEventsCsv() {
           </div>
         </header>
 
-        <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[30%_40%_30%]">
-          <div @pointerenter="setFocus('basic_info')" @pointerleave="setFocus(null)">
+        <div class="mb-4 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[30%_40%_30%]">
+          <div class="min-w-0" @pointerenter="setFocus('basic_info')" @pointerleave="setFocus(null)">
             <BasicInfoCard :model="detail" :readonly="readonly" :editor-here="editorHereBasic" />
           </div>
-          <div @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
+          <div class="min-w-0" @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
             <ScoreBoardCard
               :model="detail"
               :readonly="readonly"
@@ -443,12 +443,12 @@ function exportMatchEventsCsv() {
               @manual-score="showScoreEdit = true"
             />
           </div>
-          <div @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
+          <div class="min-w-0" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
             <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" />
           </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[65%_35%]">
+        <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[65%_35%]">
           <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <div @pointerenter="setFocus('team1_players')" @pointerleave="setFocus(null)">
               <PlayerListCard

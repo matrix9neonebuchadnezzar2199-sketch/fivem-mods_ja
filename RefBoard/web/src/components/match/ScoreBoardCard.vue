@@ -51,9 +51,10 @@ function openManual() {
         {{ t('match_status.editing_here') }}
       </span>
     </div>
-    <div class="flex items-stretch justify-between gap-4">
-      <div class="flex flex-1 flex-col items-center gap-2 text-center">
-        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary">
+    <!-- flex 子の既定 min-width:auto を潰すため列ラッパーに min-w-0。中央は shrink-0 でスコア列を守る -->
+    <div class="flex min-w-0 items-stretch justify-between gap-4 overflow-hidden">
+      <div class="flex min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden text-center">
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary">
           {{ model.home.short }}
         </div>
         <div class="w-full min-w-0 max-w-full text-center text-xs font-medium text-slate-300">
@@ -61,7 +62,7 @@ function openManual() {
         </div>
         <span class="rounded bg-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">HOME</span>
       </div>
-      <div class="relative flex flex-col items-center justify-center px-2">
+      <div class="relative flex shrink-0 flex-col items-center justify-center px-2">
         <div class="text-7xl font-bold leading-none tracking-tight text-slate-50">
           {{ model.score.home }} - {{ model.score.away }}
         </div>
@@ -101,8 +102,8 @@ function openManual() {
           </div>
         </div>
       </div>
-      <div class="flex flex-1 flex-col items-center gap-2 text-center">
-        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-600/60 text-lg font-bold text-slate-200">
+      <div class="flex min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden text-center">
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-600/60 text-lg font-bold text-slate-200">
           {{ model.away.short }}
         </div>
         <div class="w-full min-w-0 max-w-full text-center text-xs font-medium text-slate-300">

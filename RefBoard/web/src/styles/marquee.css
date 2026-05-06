@@ -1,6 +1,9 @@
 /* Sprint 08: マーキー共通。MarqueeText / v-marquee 双方でクラス名を揃える。 */
 
 .rb-marquee {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
   position: relative;
@@ -72,6 +75,14 @@
 
 .rb-marquee.rb-marquee--ellipsis .rb-marquee-track-ellipsis .rb-marquee-content {
   padding-right: 0;
+}
+
+/* 非オーバーフロー時: 親の幅に合わせ、はみ出しは親の overflow でクリップ（flex 誤判定時の保険） */
+.rb-marquee-plain {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 @keyframes rb-marquee-scroll {
