@@ -1,0 +1,31 @@
+{
+  "tree": [
+    {
+      "id": "trouble",
+      "icon": "🔧",
+      "title": "トラブルシューティング",
+      "children": [
+        {
+          "id": "trouble_e1003",
+          "title": "他の審判が編集中（E1003）",
+          "article": "trouble_e1003_lock_held.md"
+        },
+        {
+          "id": "trouble_undo_goal",
+          "title": "間違えてゴールを記録してしまった",
+          "article": "trouble_undo_goal.md"
+        },
+        {
+          "id": "trouble_connection",
+          "title": "接続が切れた、データは大丈夫？",
+          "article": "trouble_connection_lost.md"
+        },
+        {
+          "id": "trouble_autosave",
+          "title": "オートセーブが失敗した時",
+          "article": "trouble_autosave_failed.md"
+        }
+      ]
+    }
+  ]
+}

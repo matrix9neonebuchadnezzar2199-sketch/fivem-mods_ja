@@ -54,7 +54,7 @@ function enableDebugTrace() {
   <div class="flex min-h-full flex-col items-center justify-center gap-6 p-8">
     <div class="text-center">
       <h1 class="text-2xl font-bold text-slate-50">{{ t('app.title') }}</h1>
-      <p class="mt-2 text-sm text-slate-400">RefBoard v0.5.1</p>
+      <p class="mt-2 text-sm text-slate-400">RefBoard v0.6.0</p>
     </div>
     <div class="flex w-full max-w-md flex-col gap-3">
       <button

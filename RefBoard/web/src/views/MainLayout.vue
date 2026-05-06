@@ -64,6 +64,13 @@ function toggleLocale() {
           {{ t('sidebar.data_manage') }}
         </RouterLink>
         <RouterLink
+          :to="{ name: 'help' }"
+          class="rounded-lg px-2 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+          active-class="!bg-slate-800 !text-slate-100"
+        >
+          {{ t('sidebar.help') }}
+        </RouterLink>
+        <RouterLink
           :to="{ name: 'settings' }"
           class="rounded-lg px-2 py-2 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
           active-class="!bg-slate-800 !text-slate-100"
@@ -76,7 +83,7 @@ function toggleLocale() {
           <span class="h-2 w-2 rounded-full bg-emerald-400" />
           {{ t('shell.online') }}
         </div>
-        <div>v0.5.1</div>
+        <div>v0.6.0</div>
       </div>
       <button type="button" class="mt-2 rounded-lg border border-slate-600 px-2 py-1 text-xs" @click="toggleLocale">
         {{ locale === 'ja' ? 'EN' : 'JA' }}

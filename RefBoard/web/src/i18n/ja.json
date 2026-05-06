@@ -27,6 +27,7 @@
     "team_manage": "チーム管理",
     "match_manage": "試合管理",
     "data_manage": "データ管理",
+    "help": "ヘルプ",
     "settings": "設定",
     "ranking": "ランキング",
     "tournament": "大会"
@@ -326,6 +327,15 @@
     "nui_mock_note": "ブラウザ開発時は自動でモックが有効です。",
     "show_test_commands": "テストコマンド表示（Config.EnableTestCommands）",
     "health_link": "ヘルスチェック（実機テスト前）"
+  },
+  "help": {
+    "title": "ヘルプ ＆ ガイド",
+    "subtitle": "緊急時の対処とよくある操作をまとめています（v0.6 拡張中）。",
+    "reverse_tab": "やりたいことから",
+    "pick_article": "左の一覧から記事を選んでください。",
+    "error_article_missing": "エラー {code} 用のヘルプ記事はまだありません。一覧から近い項目を選ぶか、設定のヘルスチェックを確認してください。",
+    "article_missing": "記事ファイルが見つかりません。",
+    "toast_open_solution": "解決方法を見る"
   },
   "health": {
     "title": "ヘルスチェック",

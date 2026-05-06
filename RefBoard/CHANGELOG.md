@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.0 — 2026-05-06（アプリ内ヘルプ Phase 1）
+
+- **ヘルプ**: サイドバー「ヘルプ」から `HelpView`（`/workspace/help`、記事 `/workspace/help/article/:slug`、エラー `/workspace/help/error/:code`）。`reverse_index.json` による逆引き一覧、Markdown 記事を `marked` + `dompurify` で表示。
+- **記事（日本語・4 本）**: `trouble_e1003_lock_held`、`trouble_undo_goal`、`trouble_connection_lost`、`trouble_autosave_failed`（`web/src/help/ja/articles/`）。
+- **エラー → ヘルプ**: `errorCodeMapper.ts`（`error` キーと `code` の両方を `shared/error_codes.lua` に揃えて解決）。`Toast` に「解決方法を見る」（専用記事があるコードのみ `help-error` へ）。オートセーブ失敗トーストに `E4003` / `tx_failed` を付与。
+- **i18n**: `help.*`、`sidebar.help`。
+- **依存**: `marked`、`dompurify`、`@types/dompurify`。
+
+**未完了（v0.6.x で継続）**: 記事 16 本、英語版記事、`Fuse.js` 検索、主要 4 画面のコンテキスト `?` パネル等は [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md) の受け入れ基準に照らして残タスク。
+
 ## v0.5.1 — 2026-05-06 (Pre-test triage tooling)
 
 - **観測可能性**: `shared/error_codes.lua`（`MakeError` / `ErrorCodes`）、`server/util.lua` の `Logger`（`Config.LogLevel`）と `RefboardGuard`（`xpcall` + スタックログ + 任意 ACK）。

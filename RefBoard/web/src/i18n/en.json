@@ -27,6 +27,7 @@
     "team_manage": "Teams",
     "match_manage": "Matches",
     "data_manage": "Data",
+    "help": "Help",
     "settings": "Settings",
     "ranking": "Ranking",
     "tournament": "Tournament"
@@ -326,6 +327,15 @@
     "nui_mock_note": "Browser dev uses mock automatically.",
     "show_test_commands": "Show test commands hint (Config.EnableTestCommands)",
     "health_link": "Health check (pre-flight)"
+  },
+  "help": {
+    "title": "Help & guide",
+    "subtitle": "Emergency fixes and common tasks (expanding in v0.6).",
+    "reverse_tab": "Task index",
+    "pick_article": "Choose an article from the list on the left.",
+    "error_article_missing": "No help article for {code} yet. Pick a related topic or run Health check in Settings.",
+    "article_missing": "Article file not found.",
+    "toast_open_solution": "How to fix"
   },
   "health": {
     "title": "Health check",

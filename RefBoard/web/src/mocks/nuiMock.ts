@@ -271,7 +271,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       postNui('refboard:health:check:ack', {
         results: [
           { category: 'server', name: 'ping', status: 'ok', detail: 'pong', timestamp: ts },
-          { category: 'server', name: 'version', status: 'ok', detail: `server=0.5.1 client=${cv || '(n/a)'}`, timestamp: ts },
+          { category: 'server', name: 'version', status: 'ok', detail: `server=0.6.0 client=${cv || '(n/a)'}`, timestamp: ts },
           { category: 'db', name: 'connection', status: 'ok', detail: 'mock', timestamp: ts },
           { category: 'db', name: 'schema', status: 'warning', detail: 'mock (browser)', timestamp: ts },
           { category: 'db', name: 'migration_roster', status: 'warning', detail: 'mock', timestamp: ts },
@@ -282,7 +282,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
           { category: 'config', name: 'log_level', status: 'ok', detail: 'INFO', timestamp: ts },
           { category: 'config', name: 'test_commands', status: 'ok', detail: 'false', timestamp: ts },
         ],
-        serverVersion: '0.5.1',
+        serverVersion: '0.6.0',
         clientVersion: cv,
         logLevel: 'INFO',
         enableTestCommands: false,
@@ -408,7 +408,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       postNui('refboard:data:match_history:ack', { rows: mockListRows })
     }
     if (path === 'data_db_meta') {
-      postNui('refboard:data:db_meta:ack', { schemaVersion: '0.5.1-mock', resourceVersion: '0.5.1' })
+      postNui('refboard:data:db_meta:ack', { schemaVersion: '0.5.1-mock', resourceVersion: '0.6.0' })
     }
     if (path === 'match_list') {
       const st = (data as { status?: string })?.status

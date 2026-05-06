@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSessionStore } from './stores/session'
 import { usePresenceStore, type PresenceUser } from './stores/presence'
 import { useAutosaveStore } from './stores/autosave'
 import { useNui } from './composables/useNui'
+import { useToast } from './composables/useToast'
 import Toast from './components/Toast.vue'
 
 const session = useSessionStore()
 const presence = usePresenceStore()
 const autosave = useAutosaveStore()
 const { on } = useNui()
+const { t } = useI18n()
+const { push: toastPush } = useToast()
 
 onMounted(() => {
   session.bindServerMessages()
@@ -22,6 +26,11 @@ onMounted(() => {
   on('refboard:autosave:saved', (p: { savedAt?: number; error?: string }) => {
     if (p?.error) {
       autosave.markError()
+      toastPush(t('autosave.error'), 'error', {
+        ms: 8000,
+        errorCode: 'E4003',
+        errorKey: 'tx_failed',
+      })
     } else if (p?.savedAt) {
       autosave.markSaved(p.savedAt)
     }

@@ -1,0 +1,35 @@
+{
+  "categories": [
+    {
+      "id": "urgent",
+      "icon": "🆘",
+      "title": "緊急度高",
+      "items": [
+        {
+          "id": "undo_goal",
+          "title": "間違えてゴールを記録してしまった",
+          "article": "trouble_undo_goal.md",
+          "tags": ["ゴール", "取消", "Undo", "ミス"]
+        },
+        {
+          "id": "e1003",
+          "title": "他の審判が編集中（E1003）",
+          "article": "trouble_e1003_lock_held.md",
+          "tags": ["ロック", "編集権限", "E1003", "lock_held"]
+        },
+        {
+          "id": "connection",
+          "title": "接続が切れた、データは大丈夫？",
+          "article": "trouble_connection_lost.md",
+          "tags": ["接続", "切断", "オートセーブ"]
+        },
+        {
+          "id": "autosave_fail",
+          "title": "オートセーブが失敗した時",
+          "article": "trouble_autosave_failed.md",
+          "tags": ["オートセーブ", "保存", "E4003", "tx_failed"]
+        }
+      ]
+    }
+  ]
+}
