@@ -112,7 +112,12 @@
   "score_board": {
     "title": "Score",
     "goal": "[Goal]",
-    "manual_edit": "[Edit score directly]"
+    "manual_edit": "[Edit score directly]",
+    "clock_start_aria": "Start match clock",
+    "clock_stop_aria": "Stop match clock",
+    "clock_clear": "Clear",
+    "clock_clear_confirm_title": "Clear the clock?",
+    "clock_clear_confirm_body": "The displayed elapsed time will reset. When server sync is wired, this will also update the database."
   },
   "score_manual": {
     "title": "Edit score directly",

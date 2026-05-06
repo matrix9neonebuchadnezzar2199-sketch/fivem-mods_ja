@@ -15,7 +15,14 @@ const props = withDefaults(
   { embed: false },
 )
 
-const emit = defineEmits<{ goal: []; manualScore: [] }>()
+const emit = defineEmits<{
+  goal: []
+  manualScore: []
+  /** 時計 UI（サーバー連携は親・NUI 側で後付け可） */
+  clockStart: []
+  clockStop: []
+  clockClear: []
+}>()
 
 const { t } = useI18n()
 const menuOpen = ref(false)
@@ -31,6 +38,17 @@ function toggleMenu() {
 function openManual() {
   menuOpen.value = false
   emit('manualScore')
+}
+
+const showClearConfirm = ref(false)
+
+function confirmClockClear() {
+  showClearConfirm.value = false
+  emit('clockClear')
+}
+
+function cancelClockClear() {
+  showClearConfirm.value = false
 }
 
 /** 初回 props 反映後のみ増分ゴールでフラッシュ（0→読込は nextTick で同期し、減算は対象外） */
@@ -95,8 +113,8 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
   <div
     :class="
       embed
-        ? ''
-        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+        ? 'relative'
+        : 'relative rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
     "
   >
     <div v-if="!embed" class="mb-2 flex items-center justify-between gap-2">
@@ -121,28 +139,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         <span class="rounded bg-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">HOME</span>
       </div>
       <div class="relative flex shrink-0 flex-col items-center justify-center px-2">
-        <div
-          class="flex items-baseline justify-center gap-1 text-7xl font-bold tabular-nums leading-none tracking-tight text-slate-50"
-        >
-          <span
-            class="inline-block min-w-[0.6ch] transform-gpu motion-reduce:transform-none"
-            :class="{ 'rb-score-flash': flashHomeScore }"
-            @animationend="onScoreFlashAnimEnd('home', $event)"
-          >{{ model.score.home }}</span>
-          <span class="shrink-0">-</span>
-          <span
-            class="inline-block min-w-[0.6ch] transform-gpu motion-reduce:transform-none"
-            :class="{ 'rb-score-flash': flashAwayScore }"
-            @animationend="onScoreFlashAnimEnd('away', $event)"
-          >{{ model.score.away }}</span>
-        </div>
-        <div class="mt-3 flex items-center gap-2 text-sm text-slate-400">
-          <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>−</button>
-          <span class="font-mono text-lg text-slate-200">{{ model.clockMmSs }}</span>
-          <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>+</button>
-        </div>
-        <div class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
-        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+        <div class="mb-2 flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
             class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
@@ -171,6 +168,60 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
             </div>
           </div>
         </div>
+        <div
+          class="flex items-baseline justify-center gap-1 text-7xl font-bold tabular-nums leading-none tracking-tight text-slate-50"
+        >
+          <span
+            class="inline-block min-w-[0.6ch] transform-gpu motion-reduce:transform-none"
+            :class="{ 'rb-score-flash': flashHomeScore }"
+            @animationend="onScoreFlashAnimEnd('home', $event)"
+          >{{ model.score.home }}</span>
+          <span class="shrink-0">-</span>
+          <span
+            class="inline-block min-w-[0.6ch] transform-gpu motion-reduce:transform-none"
+            :class="{ 'rb-score-flash': flashAwayScore }"
+            @animationend="onScoreFlashAnimEnd('away', $event)"
+          >{{ model.score.away }}</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2 text-sm text-slate-400">
+          <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>−</button>
+          <span class="font-mono text-lg text-slate-200">{{ model.clockMmSs }}</span>
+          <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>+</button>
+        </div>
+        <div class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
+        <div class="mt-3 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-blue-400 bg-slate-900 text-blue-400 shadow-sm hover:bg-slate-800 disabled:opacity-40"
+            :disabled="readonly"
+            :aria-label="t('score_board.clock_start_aria')"
+            :title="t('score_board.clock_start_aria')"
+            @click="emit('clockStart')"
+          >
+            <svg class="ml-0.5 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-red-500 bg-slate-900 shadow-sm hover:bg-slate-800 disabled:opacity-40"
+            :disabled="readonly"
+            :aria-label="t('score_board.clock_stop_aria')"
+            :title="t('score_board.clock_stop_aria')"
+            @click="emit('clockStop')"
+          >
+            <span class="block h-3 w-3 rounded-[2px] bg-red-500" aria-hidden="true" />
+          </button>
+          <span class="h-9 w-9 shrink-0" aria-hidden="true" />
+          <button
+            type="button"
+            class="rounded border border-amber-500/70 bg-amber-500/10 px-2.5 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/20 disabled:opacity-40"
+            :disabled="readonly"
+            @click="showClearConfirm = true"
+          >
+            {{ t('score_board.clock_clear') }}
+          </button>
+        </div>
       </div>
       <div class="flex min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden text-center">
         <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-600/60 text-lg font-bold text-slate-200">
@@ -180,6 +231,30 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
           <MarqueeText :text="model.away.name ?? ''" variant="scoreboard" />
         </div>
         <span class="rounded bg-slate-600/50 px-2 py-0.5 text-[10px] font-bold text-slate-400">AWAY</span>
+      </div>
+    </div>
+
+    <div
+      v-if="showClearConfirm"
+      class="fixed inset-0 z-[190] flex items-center justify-center bg-black/55 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="score-clock-clear-title"
+      @click.self="cancelClockClear"
+    >
+      <div class="max-w-sm rounded-xl border border-amber-600/50 bg-slate-900 p-5 shadow-2xl">
+        <h2 id="score-clock-clear-title" class="mb-2 text-base font-semibold text-amber-100">
+          {{ t('score_board.clock_clear_confirm_title') }}
+        </h2>
+        <p class="mb-4 text-sm text-slate-400">{{ t('score_board.clock_clear_confirm_body') }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200" @click="cancelClockClear">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmClockClear">
+            {{ t('dialog.yes') }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
