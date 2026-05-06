@@ -9,6 +9,7 @@ import { useAutosaveStore } from './stores/autosave'
 import { useNui } from './composables/useNui'
 import { useToast } from './composables/useToast'
 import Toast from './components/Toast.vue'
+import appBackgroundUrl from '../image/back.jpg'
 
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
@@ -47,10 +48,17 @@ onMounted(() => {
 
 <template>
   <div
-    class="flex h-full min-h-0 flex-col bg-[rgb(15_23_42/0.88)] backdrop-blur-[1px]"
+    class="relative flex h-full min-h-0 flex-col bg-cover bg-center bg-no-repeat"
+    :style="{ backgroundImage: `url(${appBackgroundUrl})` }"
     :data-marquee-mode="marqueeMode"
   >
-    <router-view />
+    <div
+      class="pointer-events-none absolute inset-0 bg-slate-950/78 backdrop-blur-[1px]"
+      aria-hidden="true"
+    />
+    <div class="relative z-0 flex min-h-0 flex-1 flex-col">
+      <router-view />
+    </div>
     <Toast />
   </div>
 </template>
