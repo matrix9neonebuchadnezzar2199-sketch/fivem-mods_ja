@@ -482,7 +482,7 @@ function exportMatchEventsCsv() {
 
     <div
       v-if="compactDock && detail.serverHalf !== 'pk'"
-      class="pointer-events-auto fixed bottom-0 left-0 right-0 z-[100] border-t border-slate-600/80 bg-slate-950/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2 shadow-[0_-8px_40px_rgba(0,0,0,0.55)] backdrop-blur-md"
+      class="pointer-events-auto fixed bottom-4 left-2 right-2 z-[100] border-t border-slate-600/80 bg-slate-950/90 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md sm:bottom-5"
       :style="{ opacity: settings.settings.cardOpacity / 100 }"
     >
       <div

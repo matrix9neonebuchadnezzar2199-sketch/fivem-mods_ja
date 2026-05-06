@@ -91,7 +91,8 @@ function openManual() {
             </button>
             <div
               v-if="menuOpen"
-              class="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
+              class="absolute right-0 w-48 rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
+              :class="embed ? 'bottom-full z-[85] mb-1' : 'top-full z-20 mt-1'"
             >
               <button type="button" class="block w-full px-3 py-2 text-left text-xs hover:bg-slate-800" @click="openManual">
                 {{ t('score_board.manual_edit') }}
