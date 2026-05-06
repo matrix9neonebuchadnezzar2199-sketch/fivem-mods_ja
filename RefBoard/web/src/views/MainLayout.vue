@@ -98,19 +98,16 @@ function toggleLocale() {
         <RouterView />
       </div>
     </div>
-    <section class="viewport-spacer" aria-hidden="true" />
   </div>
 </template>
 
 <style scoped>
+/* 以前は 20% | 30% | 50% の空スペーサーで「ゲーム内パネル幅」を真似ていたが、
+   ブラウザ（localhost）では編集領域が狭すぎるため、サイドバー固定 + メイン全幅に変更 */
 .layout {
   display: grid;
-  grid-template-columns: 20% 30% 50%;
+  grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
   height: 100vh;
   width: 100vw;
-}
-.viewport-spacer {
-  background: transparent;
-  pointer-events: none;
 }
 </style>
