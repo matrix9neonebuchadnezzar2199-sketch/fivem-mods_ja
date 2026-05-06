@@ -25,5 +25,9 @@ body,
     opacity: 0.95;
     filter: invert(58%) sepia(56%) saturate(600%) hue-rotate(109deg) brightness(98%) contrast(94%);
   }
+
+  input.refboard-input-pickers:read-only:not(:disabled) {
+    cursor: pointer;
+  }
 }
 

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { openNativeDateTimePicker } from '../composables/openNativeDateTimePicker'
 import { useNui } from '../composables/useNui'
 import { downloadFile, refboardFilename, toCSV } from '../utils/exporters'
 
@@ -201,7 +202,10 @@ function openMatch(id: number) {
           <input
             v-model="customFrom"
             type="date"
+            readonly
             class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+            @click="openNativeDateTimePicker"
+            @keydown.enter.prevent="openNativeDateTimePicker"
           />
         </label>
         <label v-if="period === 'custom'" class="text-slate-400">
@@ -209,7 +213,10 @@ function openMatch(id: number) {
           <input
             v-model="customTo"
             type="date"
+            readonly
             class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+            @click="openNativeDateTimePicker"
+            @keydown.enter.prevent="openNativeDateTimePicker"
           />
         </label>
         <label class="text-slate-400">
@@ -344,7 +351,10 @@ function openMatch(id: number) {
           <input
             v-model="logFrom"
             type="datetime-local"
+            readonly
             class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+            @click="openNativeDateTimePicker"
+            @keydown.enter.prevent="openNativeDateTimePicker"
           />
         </label>
         <label class="text-slate-400">
@@ -352,7 +362,10 @@ function openMatch(id: number) {
           <input
             v-model="logTo"
             type="datetime-local"
+            readonly
             class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+            @click="openNativeDateTimePicker"
+            @keydown.enter.prevent="openNativeDateTimePicker"
           />
         </label>
         <label class="text-slate-400">
