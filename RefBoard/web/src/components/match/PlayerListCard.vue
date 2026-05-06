@@ -9,7 +9,7 @@ withDefaults(
     readonly: boolean
     teamId: number
     editorHere: boolean
-    /** MatchDetailSection の見出し＋ツールバーに任せる */
+    /** 枠なし（下部ドック等で外側に枠があるとき） */
     embed?: boolean
   }>(),
   { embed: false },

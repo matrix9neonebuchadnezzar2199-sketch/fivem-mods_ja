@@ -131,10 +131,10 @@
     "finish": "[End match]",
     "export_json": "Export match as JSON",
     "export_events_csv": "Export events as CSV",
-    "section_basic": "Match info",
     "section_roster_suffix": "Roster",
-    "section_expand": "Expand section",
-    "section_collapse": "Collapse section"
+    "compact_mode": "Compact view",
+    "restore_ui_hint": "Restore full UI: Ctrl+V",
+    "restore_full_click": "Tap here to restore full view"
   },
   "score": {
     "edit_reason": "Reason (optional)",

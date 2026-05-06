@@ -7,7 +7,7 @@ withDefaults(
     model: MatchDetailModel
     readonly: boolean
     editorHere: boolean
-    /** MatchDetailSection 内では枠・見出しを外側に任せる */
+    /** 枠・見出しを外側に任せる埋め込み用 */
     embed?: boolean
   }>(),
   { embed: false },
