@@ -145,7 +145,7 @@ async function onCreatedTeam(id: number) {
           }
         "
         @select="selectTeam"
-        @create="showCreate = true"
+        @open-create="showCreate = true"
       />
       <div class="grid min-h-0 grid-rows-1 gap-2 lg:grid-rows-2">
         <TeamDetail :team="team" :stats="stats" @update="onUpdate" @delete="onDelete" />

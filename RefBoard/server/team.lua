@@ -17,6 +17,7 @@ end
 RegisterNetEvent('refboard:team:list', function()
   local src = source
   if not canRefer(src) then
+    TriggerClientEvent('refboard:team:list:ack', src, { teams = {} })
     return
   end
   local rows = MySQL.query.await(
@@ -29,6 +30,7 @@ end)
 RegisterNetEvent('refboard:team:manage_list', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:manage_list:ack', src, { teams = {} })
     return
   end
   local q = (payload and payload.q) or ''
@@ -67,6 +69,7 @@ end)
 RegisterNetEvent('refboard:team:detail', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:detail:ack', src, { team = nil, stats = nil })
     return
   end
   local id = payload and tonumber(payload.teamId)
@@ -105,6 +108,7 @@ end)
 RegisterNetEvent('refboard:team:create', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:create:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -139,6 +143,7 @@ end)
 RegisterNetEvent('refboard:team:update', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:update:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -172,6 +177,7 @@ end)
 RegisterNetEvent('refboard:team:delete', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:delete:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   local id = payload and tonumber(payload.teamId)
@@ -190,6 +196,7 @@ end)
 RegisterNetEvent('refboard:team:roster:list', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:roster:list:ack', src, { rows = {} })
     return
   end
   local teamId = payload and tonumber(payload.teamId)
@@ -229,6 +236,7 @@ end)
 RegisterNetEvent('refboard:team:roster:add', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:roster:add:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -273,6 +281,7 @@ end)
 RegisterNetEvent('refboard:team:roster:update', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:roster:update:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -313,6 +322,7 @@ end)
 RegisterNetEvent('refboard:team:roster:remove', function(payload)
   local src = source
   if not requireReferee(src) then
+    TriggerClientEvent('refboard:team:roster:remove:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   local id = payload and tonumber(payload.rosterId)

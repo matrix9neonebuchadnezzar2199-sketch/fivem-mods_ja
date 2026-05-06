@@ -270,6 +270,8 @@
     "delete_confirm": "このチームを論理削除しますか？",
     "create_title": "新しいチーム",
     "create_submit": "登録",
+    "create_error_name": "チーム名を入力してください。",
+    "create_failed": "チームの登録に失敗しました（{reason}）",
     "emblem_emoji": "エンブレム（絵文字）",
     "roster_title": "ロスター",
     "roster_add": "+ 選手を追加",

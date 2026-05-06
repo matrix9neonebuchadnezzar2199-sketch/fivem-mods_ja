@@ -270,6 +270,8 @@
     "delete_confirm": "Soft-delete this team?",
     "create_title": "New team",
     "create_submit": "Create",
+    "create_error_name": "Enter a team name.",
+    "create_failed": "Could not create team ({reason})",
     "emblem_emoji": "Emblem (emoji)",
     "roster_title": "Roster",
     "roster_add": "+ Add player",

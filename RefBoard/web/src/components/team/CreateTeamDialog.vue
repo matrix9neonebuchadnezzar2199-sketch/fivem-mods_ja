@@ -2,12 +2,14 @@
 import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
+import { useToast } from '../../composables/useToast'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ 'update:open': [boolean]; created: [number] }>()
 
 const { t } = useI18n()
 const { send, on } = useNui()
+const { push: toastPush } = useToast()
 
 const form = reactive({
   name: '',
@@ -33,13 +35,30 @@ function close() {
 }
 
 async function submit() {
-  if (!form.name.trim()) return
+  if (!form.name.trim()) {
+    toastPush(t('team_manage.create_error_name'), 'error')
+    return
+  }
   const un = on('refboard:team:create:ack', (p: { ok?: boolean; teamId?: number; error?: string }) => {
     un()
     if (p?.ok && p.teamId) {
       emit('created', p.teamId)
       close()
+      return
     }
+    if (p?.error === 'no_permission') {
+      toastPush(t('errors.E1001'), 'error', { ms: 6000, errorCode: 'E1001', errorKey: 'no_permission' })
+      return
+    }
+    if (p?.error === 'bad_name') {
+      toastPush(t('team_manage.create_error_name'), 'error')
+      return
+    }
+    toastPush(
+      t('team_manage.create_failed', { reason: p?.error ? String(p.error) : 'unknown' }),
+      'error',
+      { ms: 6000 },
+    )
   })
   await send('team_create', {
     name: form.name.trim(),

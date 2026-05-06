@@ -17,10 +17,10 @@ defineProps<{
   search: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'update:search': [string]
   select: [id: number]
-  create: []
+  openCreate: []
 }>()
 
 const { t } = useI18n()
@@ -30,7 +30,7 @@ const { t } = useI18n()
   <div class="flex h-full min-h-0 flex-col rounded-lg border border-slate-700 bg-slate-900/80 p-3">
     <div class="mb-2 flex items-center justify-between gap-2">
       <h2 class="text-sm font-semibold text-slate-200">{{ t('team_manage.list_title') }}</h2>
-      <button type="button" class="rounded bg-primary px-2 py-1 text-xs font-semibold text-white" @click="$emit('create')">
+      <button type="button" class="rounded bg-primary px-2 py-1 text-xs font-semibold text-white" @click="emit('openCreate')">
         {{ t('team_manage.new_team') }}
       </button>
     </div>
