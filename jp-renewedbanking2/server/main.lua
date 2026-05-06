@@ -152,7 +152,7 @@ local function genTransactionID()
 end
 
 --[[ メッセージを SQL 文字列として安全に埋め込めるようエスケープする
-    - 单引用符 ' → ''（SQL のエスケープ規則）
+    - 単引用符 ' → ''（SQL のエスケープ規則）
     - バックスラッシュ \ → \\
     Intention (English): mitigate breaking out of quoted SQL / basic injection-style abuse in logged messages.
     原文意図は上記のとおり。ロジックは原作どおり変更しない。]]
