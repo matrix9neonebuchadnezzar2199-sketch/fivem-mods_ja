@@ -86,6 +86,75 @@ const readonly = computed(() => !session.isEditor)
 /** カード不透明度（設定）。スコアボードは opacity 親を持たない（CEF で blur と合成すると霞み・クリック不能になり得る） */
 const cardDimStyle = computed(() => ({ opacity: settings.settings.cardOpacity / 100 }))
 
+// --- 試合時計（NUI ローカル。サーバー clock API 未接続時もスタート/ストップで UI 更新） ---
+function parseClockMmSsToMs(s: string): number {
+  const m = /^(\d+):(\d{2})$/.exec(String(s ?? '').trim())
+  if (!m) return 0
+  const mm = Number(m[1]) || 0
+  const sec = Number(m[2]) || 0
+  return (mm * 60 + sec) * 1000
+}
+
+function formatClockMs(ms: number): string {
+  const totalSec = Math.floor(Math.max(0, ms) / 1000)
+  const mm = Math.floor(totalSec / 60)
+  const ss = totalSec % 60
+  return `${mm}:${String(ss).padStart(2, '0')}`
+}
+
+const clockAccumMs = ref(0)
+const clockRunStartedAt = ref<number | null>(null)
+const clockLiveDisplay = ref('0:00')
+let clockTickInterval: ReturnType<typeof setInterval> | null = null
+
+function stopClockTickInterval() {
+  if (clockTickInterval != null) {
+    clearInterval(clockTickInterval)
+    clockTickInterval = null
+  }
+}
+
+function bumpClockLiveDisplay() {
+  if (clockRunStartedAt.value == null) return
+  const extra = Math.floor(performance.now() - clockRunStartedAt.value)
+  clockLiveDisplay.value = formatClockMs(clockAccumMs.value + extra)
+}
+
+function syncClockFromDetail() {
+  stopClockTickInterval()
+  clockRunStartedAt.value = null
+  clockAccumMs.value = parseClockMmSsToMs(detail.clockMmSs)
+  clockLiveDisplay.value = formatClockMs(clockAccumMs.value)
+}
+
+function onClockStart() {
+  if (readonly.value) return
+  if (clockRunStartedAt.value != null) return
+  clockRunStartedAt.value = performance.now()
+  bumpClockLiveDisplay()
+  stopClockTickInterval()
+  clockTickInterval = setInterval(bumpClockLiveDisplay, 250)
+}
+
+function onClockStop() {
+  if (readonly.value) return
+  if (clockRunStartedAt.value == null) return
+  stopClockTickInterval()
+  const extra = Math.floor(performance.now() - clockRunStartedAt.value)
+  clockAccumMs.value += extra
+  clockRunStartedAt.value = null
+  detail.clockMmSs = formatClockMs(clockAccumMs.value)
+}
+
+function onClockClear() {
+  if (readonly.value) return
+  stopClockTickInterval()
+  clockRunStartedAt.value = null
+  clockAccumMs.value = 0
+  detail.clockMmSs = formatClockMs(0)
+  clockLiveDisplay.value = '0:00'
+}
+
 const detail = reactive<MatchDetailModel>(JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel)
 const historyRows = ref<ScoreHistoryRow[]>([])
 
@@ -233,6 +302,7 @@ async function loadMatch() {
     const mapped = mapMatchGetAckToDetail(ack)
     if (mapped) {
       Object.assign(detail, mapped)
+      syncClockFromDetail()
     }
     historyRows.value = mapHistoryRows(ack.history)
   })
@@ -270,6 +340,7 @@ watch(
 
 onMounted(() => {
   settings.load()
+  syncClockFromDetail()
   if (session.isEditor) {
     void send('lock_acquire', { matchId: detail.id })
   }
@@ -283,6 +354,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  stopClockTickInterval()
   offState?.()
   offFinished?.()
   window.removeEventListener('keydown', onDockKeydown, true)
@@ -442,8 +514,12 @@ function exportMatchEventsCsv() {
               :model="detail"
               :readonly="readonly"
               :editor-here="editorHereScore"
+              :clock-mm-ss-override="clockRunStartedAt !== null ? clockLiveDisplay : undefined"
               @goal="showGoal = true"
               @manual-score="showScoreEdit = true"
+              @clock-start="onClockStart"
+              @clock-stop="onClockStop"
+              @clock-clear="onClockClear"
             />
           </div>
           <div class="min-w-0" :style="cardDimStyle" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
@@ -513,8 +589,12 @@ function exportMatchEventsCsv() {
               :model="detail"
               :readonly="readonly"
               :editor-here="editorHereScore"
+              :clock-mm-ss-override="clockRunStartedAt !== null ? clockLiveDisplay : undefined"
               @goal="showGoal = true"
               @manual-score="showScoreEdit = true"
+              @clock-start="onClockStart"
+              @clock-stop="onClockStop"
+              @clock-clear="onClockClear"
             />
           </div>
           <div

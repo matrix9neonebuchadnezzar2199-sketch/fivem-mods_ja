@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import MarqueeText from '../common/MarqueeText.vue'
@@ -11,8 +11,14 @@ const props = withDefaults(
     readonly: boolean
     editorHere: boolean
     embed?: boolean
+    /** 親がローカル走時計中に毎ティック更新する表示用（未指定なら model.clockMmSs） */
+    clockMmSsOverride?: string | null
   }>(),
-  { embed: false },
+  { embed: false, clockMmSsOverride: undefined },
+)
+
+const displayClockMmSs = computed(() =>
+  props.clockMmSsOverride != null && props.clockMmSsOverride !== '' ? props.clockMmSsOverride : props.model.clockMmSs,
 )
 
 const emit = defineEmits<{
@@ -185,7 +191,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         </div>
         <div class="mt-3 flex items-center gap-2 text-sm text-slate-400">
           <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>−</button>
-          <span class="font-mono text-lg text-slate-200">{{ model.clockMmSs }}</span>
+          <span class="font-mono text-lg text-slate-200">{{ displayClockMmSs }}</span>
           <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>+</button>
         </div>
         <div class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
