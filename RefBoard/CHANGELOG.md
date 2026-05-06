@@ -2,6 +2,7 @@
 
 ## v0.6.1 — Unreleased
 
+- **マーキー**: `marquee.css` の両端フェード `mask-image` を **`.rb-marquee.is-overflowing` のみ**に限定（短文時の先頭文字欠け対策）。`prefers-reduced-motion` 時は `-webkit-mask-image` も解除。
 - **開発支援**: DEV 専用 `window.__refboardToastPush` を `main.ts` に追加（フェーズ2b 目視・Toast 長文の手動発火用。`import.meta.env.DEV` のみ）。
 - **sprint_08 フェーズ2b**: 6箇所にマーキー適用（`MainLayout` サイドバー5リンク `v-marquee` subtle、`Toast` 本文 ticker、`HelpView` 逆引き `item.title` subtle、`PlayerListCard` 見出し default＋選手名 subtle、`EventTimelineCard` 本文 default）。`table-fixed`＋`min-w-0` で表組みを圧縮。
 - **sprint_08 設計書**: `docs/sprints/sprint_08_marquee.md` に複数行同時マーキー方針の確定文言と、フェーズ 2b 着手前の flex/grid レイアウトチェックリスト（`c172c9e` の教訓）を追記。

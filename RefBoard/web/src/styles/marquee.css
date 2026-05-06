@@ -8,7 +8,18 @@
   white-space: nowrap;
   position: relative;
   min-width: 0;
+}
+
+/* フェードマスクはオーバーフロー時のみ。非オーバーフローで先頭1文字が食われるのを防ぐ */
+.rb-marquee.is-overflowing {
   mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 12px,
+    black calc(100% - 12px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
     to right,
     transparent 0,
     black 12px,
@@ -99,7 +110,9 @@
     animation: none !important;
   }
 
-  .rb-marquee {
+  .rb-marquee,
+  .rb-marquee.is-overflowing {
     mask-image: none;
+    -webkit-mask-image: none;
   }
 }
