@@ -46,3 +46,13 @@ window.addEventListener('unhandledrejection', (event) => {
     /* ignore */
   }
 })
+
+/** DEV のみ: フェーズ2b 目視（Toast 長文・ticker）用。本番ビルドでは import.meta.env.DEV が false のためバンドルから除去される想定 */
+if (import.meta.env.DEV) {
+  const w = window as unknown as {
+    __refboardToastPush?: (msg: string, kind?: 'error' | 'success' | 'info', durationMs?: number) => void
+  }
+  w.__refboardToastPush = (msg, kind = 'error', durationMs = 30000) => {
+    useToast().push(msg, kind, durationMs)
+  }
+}
