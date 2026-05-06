@@ -2,6 +2,7 @@
 
 ## v0.6.1 — Unreleased
 
+- **モック**: ブラウザ開発用 `nuiMock` に `localStorage` 永続化レイヤ（`mockPersistence.ts`）を追加。`team_create` ほか CRUD がリロード後も保持され、`window.__refboardMock`（DEV のみ）でリセット・ダンプ可能。
 - **設計**: スコアボード方針（案 A）・`MarqueeText` の `variant` プリセット仕様を `docs/sprints/sprint_08_marquee.md` に確定記録。
 - **マーキー基盤（フェーズ1）**: `MarqueeText.vue`（`contentRef` 計測・`VARIANTS` プリセット・`prefers-reduced-motion`）と `v-marquee` ディレクティブ（`createElement` / `textContent` で DOM 構築）。
 - **`marquee.css`**: `rb-marquee` 共通スタイル、`data-marquee-mode`（`always` / `hover-only` / `off`）別の挙動、`@keyframes rb-marquee-scroll`。

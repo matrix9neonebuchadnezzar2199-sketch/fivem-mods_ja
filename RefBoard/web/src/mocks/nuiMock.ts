@@ -1,40 +1,69 @@
 /**
  * Vite 開発時（FiveM 外）の NUI 応答モック。console に [NUI MOCK] を出す。
+ *
+ * 永続化: `mockPersistence.ts` の localStorage レイヤ（`refboard:mock:state`）。
+ * 開発時のみ `window.__refboardMock` を公開（`import.meta.env.DEV`）。
  */
 import { mockMatchDetail } from './matchDetail'
 import type { MatchDetailModel, MatchPlayer } from '../types/match'
+import {
+  MOCK_AUDIT,
+  clearMockStorage,
+  loadMockState,
+  type MockPersistenceState,
+  type PersistedListRow,
+  type PersistedTeam,
+  type RosterRow,
+  saveMockState,
+} from './mockPersistence'
 
 function clone<T>(x: T): T {
   return JSON.parse(JSON.stringify(x)) as T
 }
 
-let mockMatchSeq = 100
+let mockDb: MockPersistenceState = loadMockState()
 
-/** モック内の試合一覧（match_list 用） */
-const mockListRows = [
-  {
-    id: 1,
-    team1_id: 1,
-    team2_id: 2,
-    team1_name: 'Los Santos FC',
-    team2_name: 'Vinewood United',
-    team1_score: 2,
-    team2_score: 1,
-    status: 'draft' as 'draft' | 'finished',
-    current_half: '2nd',
-    match_date: '2026-05-05',
-    match_name: 'リーグ戦 第7節',
-    venue: 'Maze Bank Arena',
-    kickoff_time: '20:00:00',
-  },
-]
+function activeTeams(): PersistedTeam[] {
+  return mockDb.teams.filter((t) => !t.deleted_at)
+}
 
-const mockTeams = [
-  { id: 1, name: 'Los Santos FC', short_name: 'LS', color: '#3b82f6' },
-  { id: 2, name: 'Vinewood United', short_name: 'VW', color: '#64748b' },
-]
+/** match_list 用（メモリ上で編集し flush で mockDb に書き戻す） */
+const mockListRows: PersistedListRow[] = []
+const mockRosterByTeam: Record<number, RosterRow[]> = {}
+
+function rebuildLocalViews() {
+  mockListRows.length = 0
+  mockListRows.push(...mockDb.listRows.map((r) => ({ ...r })))
+  Object.keys(mockRosterByTeam).forEach((k) => delete mockRosterByTeam[Number(k)])
+  for (const [k, rows] of Object.entries(mockDb.rosterByTeam)) {
+    mockRosterByTeam[Number(k)] = rows.map((x) => ({ ...x }))
+  }
+}
 
 let liveDetail: MatchDetailModel = clone(mockMatchDetail)
+
+function hydrateFromDisk() {
+  mockDb = loadMockState()
+  rebuildLocalViews()
+  const fid = mockDb.focusedMatchId
+  const snap = mockDb.matchDetails[String(fid)] || mockDb.matchDetails['1'] || clone(mockMatchDetail)
+  liveDetail = clone(snap)
+  mockDb.focusedMatchId = liveDetail.id
+}
+
+hydrateFromDisk()
+
+function flushPersistence() {
+  mockDb.matchDetails[String(liveDetail.id)] = clone(liveDetail)
+  mockDb.listRows = mockListRows.map((r) => ({ ...r }))
+  mockDb.rosterByTeam = {}
+  for (const k of Object.keys(mockRosterByTeam)) {
+    mockDb.rosterByTeam[k] = mockRosterByTeam[Number(k)].map((x) => ({ ...x }))
+  }
+  mockDb.focusedMatchId = liveDetail.id
+  saveMockState(mockDb)
+  rebuildLocalViews()
+}
 
 /** 試合一覧 `mockListRows` の score を `liveDetail` に合わせる（ゴール後に一覧へ戻ったときのズレ防止） */
 function syncMockListRowScoresFromLive() {
@@ -93,63 +122,13 @@ function findPlayerByNumericId(id: number): { side: 'home' | 'away'; idx: number
   return null
 }
 
-const mockRosterByTeam: Record<
-  number,
-  Array<{
-    id: number
-    player_name: string
-    jersey_number: number | null
-    position: string | null
-    license: string | null
-    matches_played?: number
-    goals?: number
-    yellows?: number
-    reds?: number
-  }>
-> = {
-  1: [
-    {
-      id: 9001,
-      player_name: 'LS Keeper',
-      jersey_number: 1,
-      position: 'GK',
-      license: 'mock:ls:1',
-      matches_played: 2,
-      goals: 0,
-      yellows: 0,
-      reds: 0,
-    },
-    {
-      id: 9002,
-      player_name: 'LS Striker',
-      jersey_number: 9,
-      position: 'FW',
-      license: 'mock:ls:9',
-      matches_played: 2,
-      goals: 5,
-      yellows: 1,
-      reds: 0,
-    },
-  ],
-  2: [
-    {
-      id: 9101,
-      player_name: 'VW Mid',
-      jersey_number: 10,
-      position: 'MF',
-      license: null,
-      matches_played: 1,
-      goals: 1,
-      yellows: 0,
-      reds: 0,
-    },
-  ],
-}
-
 function mockManageTeamsPayload() {
-  return mockTeams.map((t) => ({
-    ...t,
-    emblem_emoji: t.id === 1 ? '🔵' : '⚪',
+  return activeTeams().map((t) => ({
+    id: t.id,
+    name: t.name,
+    short_name: t.short_name,
+    color: t.color,
+    emblem_emoji: t.emblem_emoji ?? (t.id === 1 ? '🔵' : '⚪'),
     roster_count: mockRosterByTeam[t.id]?.length ?? 0,
     last_match_date: '2026-05-05',
   }))
@@ -186,6 +165,52 @@ function maybeEmitPkDecided() {
     winnerTeamId,
     finalPkScore: { team1: liveDetail.breakdown.pk.home, team2: liveDetail.breakdown.pk.away },
   })
+}
+
+function teamNameById(id: number): string {
+  const t = mockDb.teams.find((x) => x.id === id && !x.deleted_at)
+  return t?.name ?? `Team ${id}`
+}
+
+function newEmptyMatchDetail(
+  id: number,
+  team1Id: number,
+  team2Id: number,
+  matchDate: string,
+  matchName: string,
+  venue: string,
+  kickoffTime: string,
+): MatchDetailModel {
+  const n1 = teamNameById(team1Id)
+  const n2 = teamNameById(team2Id)
+  return {
+    ...clone(mockMatchDetail),
+    id,
+    team1Id,
+    team2Id,
+    matchName,
+    venue,
+    matchDate,
+    kickoffTime: kickoffTime ? kickoffTime.slice(0, 5) : '',
+    home: { name: n1, short: mockDb.teams.find((x) => x.id === team1Id)?.short_name ?? 'T1', isHome: true },
+    away: { name: n2, short: mockDb.teams.find((x) => x.id === team2Id)?.short_name ?? 'T2', isHome: false },
+    score: { home: 0, away: 0 },
+    clockLabel: '0:00',
+    clockMmSs: '00:00',
+    breakdown: {
+      firstHalf: { home: 0, away: 0 },
+      secondHalf: { home: 0, away: 0 },
+      extra: { home: 0, away: 0 },
+      pk: { home: 0, away: 0 },
+    },
+    serverHalf: '1st',
+    pkFirstTeamId: team1Id,
+    uiStatus: 'first_half',
+    homePlayers: [],
+    awayPlayers: [],
+    events: [],
+    dbStatus: 'draft',
+  }
 }
 
 export function mockResponse(path: string, data: unknown): unknown {
@@ -296,7 +321,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
           { category: 'db', name: 'connection', status: 'ok', detail: 'mock', timestamp: ts },
           { category: 'db', name: 'schema', status: 'warning', detail: 'mock (browser)', timestamp: ts },
           { category: 'db', name: 'migration_roster', status: 'warning', detail: 'mock', timestamp: ts },
-          { category: 'auth', name: 'license', status: 'warning', detail: 'mock', timestamp: ts },
+          { category: 'auth', name: 'license', status: 'warning', detail: 'mock (browser)', timestamp: ts },
           { category: 'auth', name: 'edit_password', status: 'ok', detail: 'mock (browser)', timestamp: ts },
           { category: 'presence', name: 'self_registration', status: 'warning', detail: 'mock', timestamp: ts },
           { category: 'lock', name: 'current_editor', status: 'ok', detail: 'none', timestamp: ts },
@@ -313,17 +338,42 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       postNui('refboard:lock:acquire:result', { ok: true })
     }
     if (path === 'team_list') {
-      postNui('refboard:team:list:ack', { teams: mockTeams })
+      postNui(
+        'refboard:team:list:ack',
+        {
+          teams: activeTeams().map((t) => ({
+            id: t.id,
+            name: t.name,
+            short_name: t.short_name,
+            color: t.color,
+            emblem_emoji: t.emblem_emoji ?? null,
+          })),
+        },
+      )
     }
     if (path === 'team_manage_list') {
-      postNui('refboard:team:manage_list:ack', { teams: mockManageTeamsPayload() })
+      const q = String((data as { q?: string })?.q ?? '')
+        .trim()
+        .toLowerCase()
+      const base = mockManageTeamsPayload().filter((x) => {
+        if (!q) return true
+        return (x.name ?? '').toLowerCase().includes(q) || (x.short_name ?? '').toLowerCase().includes(q)
+      })
+      postNui('refboard:team:manage_list:ack', { teams: base })
     }
     if (path === 'team_detail') {
       const tid = Number((data as { teamId?: number })?.teamId) || 1
-      const tm = mockTeams.find((x) => x.id === tid)
+      const tm = mockDb.teams.find((x) => x.id === tid && !x.deleted_at)
       postNui('refboard:team:detail:ack', {
         team: tm
-          ? { id: tm.id, name: tm.name, short_name: tm.short_name, color: tm.color, emblem_emoji: tid === 1 ? '🔵' : '⚪', created_at: '2026-05-01' }
+          ? {
+              id: tm.id,
+              name: tm.name,
+              short_name: tm.short_name,
+              color: tm.color,
+              emblem_emoji: tm.emblem_emoji ?? (tid === 1 ? '🔵' : '⚪'),
+              created_at: '2026-05-01',
+            }
           : null,
         stats: {
           matches_played: 10,
@@ -336,35 +386,149 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       })
     }
     if (path === 'team_create') {
-      postNui('refboard:team:create:ack', { ok: true, teamId: 99 })
+      const p = data as {
+        name?: string
+        shortName?: string | null
+        color?: string | null
+        emblemEmoji?: string | null
+      }
+      const name = typeof p.name === 'string' ? p.name.trim() : ''
+      if (!name) {
+        postNui('refboard:team:create:ack', { ok: false, error: 'bad_name' })
+        return
+      }
+      const dup = activeTeams().some((t) => t.name.trim().toLowerCase() === name.toLowerCase())
+      if (dup) {
+        postNui('refboard:team:create:ack', { ok: false, error: 'duplicate_name' })
+        return
+      }
+      const id = mockDb.nextIds.team++
+      const row: PersistedTeam = {
+        id,
+        name,
+        short_name: typeof p.shortName === 'string' ? p.shortName : '',
+        color: typeof p.color === 'string' && p.color ? p.color : '#3b82f6',
+        emblem_emoji: typeof p.emblemEmoji === 'string' ? p.emblemEmoji : '⚽',
+        deleted_at: null,
+      }
+      mockDb.teams.push(row)
+      mockDb.rosterByTeam[String(id)] = []
+      flushPersistence()
+      postNui('refboard:team:create:ack', { ok: true, teamId: id })
     }
     if (path === 'team_update') {
-      postNui('refboard:team:update:ack', { ok: true })
+      const p = data as {
+        teamId?: number
+        name?: string
+        shortName?: string | null
+        color?: string | null
+        emblemEmoji?: string | null
+      }
+      const id = Number(p.teamId)
+      const t = id ? mockDb.teams.find((x) => x.id === id) : undefined
+      if (!t || t.deleted_at) {
+        postNui('refboard:team:update:ack', { ok: false, error: 'not_found' })
+      } else {
+        if (typeof p.name === 'string' && p.name.trim()) t.name = p.name.trim()
+        if (p.shortName !== undefined) t.short_name = typeof p.shortName === 'string' ? p.shortName : ''
+        if (p.color !== undefined && typeof p.color === 'string') t.color = p.color
+        if (p.emblemEmoji !== undefined) t.emblem_emoji = typeof p.emblemEmoji === 'string' ? p.emblemEmoji : null
+        flushPersistence()
+        postNui('refboard:team:update:ack', { ok: true })
+      }
     }
     if (path === 'team_delete') {
-      postNui('refboard:team:delete:ack', { ok: true })
+      const id = Number((data as { teamId?: number })?.teamId)
+      const t = id ? mockDb.teams.find((x) => x.id === id) : undefined
+      if (!t || t.deleted_at) {
+        postNui('refboard:team:delete:ack', { ok: false, error: 'not_found' })
+      } else {
+        t.deleted_at = new Date().toISOString()
+        flushPersistence()
+        postNui('refboard:team:delete:ack', { ok: true })
+      }
     }
     if (path === 'team_roster_list') {
       const tid = Number((data as { teamId?: number })?.teamId) || 1
       postNui('refboard:team:roster:list:ack', { rows: mockRosterByTeam[tid] ?? [] })
     }
     if (path === 'team_roster_add') {
-      postNui('refboard:team:roster:add:ack', { ok: true, rosterId: 999 })
+      const p = data as {
+        teamId?: number
+        playerName?: string
+        jerseyNumber?: number | null
+        position?: string | null
+        license?: string | null
+      }
+      const teamId = Number(p.teamId)
+      const nm = typeof p.playerName === 'string' ? p.playerName.trim() : ''
+      if (!teamId || !nm) {
+        postNui('refboard:team:roster:add:ack', { ok: false, error: 'bad_args' })
+      } else {
+        const rid = mockDb.nextIds.roster++
+        const row: RosterRow = {
+          id: rid,
+          player_name: nm,
+          jersey_number: p.jerseyNumber ?? null,
+          position: typeof p.position === 'string' ? p.position : null,
+          license: typeof p.license === 'string' ? p.license : null,
+        }
+        if (!mockRosterByTeam[teamId]) mockRosterByTeam[teamId] = []
+        mockRosterByTeam[teamId].push(row)
+        flushPersistence()
+        postNui('refboard:team:roster:add:ack', { ok: true, rosterId: rid })
+      }
     }
     if (path === 'team_roster_update') {
-      postNui('refboard:team:roster:update:ack', { ok: true })
+      const p = data as {
+        teamId?: number
+        rosterId?: number
+        playerName?: string
+        jerseyNumber?: number | null
+        position?: string | null
+        license?: string | null
+      }
+      const teamId = Number(p.teamId)
+      const rid = Number(p.rosterId)
+      const list = mockRosterByTeam[teamId]
+      const row = list?.find((x) => x.id === rid)
+      if (!row) {
+        postNui('refboard:team:roster:update:ack', { ok: false, error: 'not_found' })
+      } else {
+        if (typeof p.playerName === 'string' && p.playerName.trim()) row.player_name = p.playerName.trim()
+        if (p.jerseyNumber !== undefined) row.jersey_number = p.jerseyNumber ?? null
+        if (p.position !== undefined) row.position = typeof p.position === 'string' ? p.position : null
+        if (p.license !== undefined) row.license = typeof p.license === 'string' ? p.license : null
+        flushPersistence()
+        postNui('refboard:team:roster:update:ack', { ok: true })
+      }
     }
     if (path === 'team_roster_remove') {
-      postNui('refboard:team:roster:remove:ack', { ok: true })
+      const p = data as { teamId?: number; rosterId?: number }
+      const teamId = Number(p.teamId)
+      const rid = Number(p.rosterId)
+      const list = mockRosterByTeam[teamId]
+      if (!list) {
+        postNui('refboard:team:roster:remove:ack', { ok: false, error: 'not_found' })
+      } else {
+        const idx = list.findIndex((x) => x.id === rid)
+        if (idx < 0) {
+          postNui('refboard:team:roster:remove:ack', { ok: false, error: 'not_found' })
+        } else {
+          list.splice(idx, 1)
+          flushPersistence()
+          postNui('refboard:team:roster:remove:ack', { ok: true })
+        }
+      }
     }
     if (path === 'data_team_stats') {
       postNui('refboard:data:team_stats:ack', {
-        rows: mockTeams.map((t) => ({
+        rows: activeTeams().map((t) => ({
           id: t.id,
           name: t.name,
           short_name: t.short_name,
           color: t.color,
-          emblem_emoji: t.id === 1 ? '🔵' : '⚪',
+          emblem_emoji: t.emblem_emoji ?? (t.id === 1 ? '🔵' : '⚪'),
           matches_played: 8,
           wins: 5,
           draws: 1,
@@ -403,30 +567,13 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       })
     }
     if (path === 'data_score_edit_log') {
-      postNui('refboard:data:score_edit_log:ack', {
-        rows: [
-          {
-            id: 1,
-            match_id: 1,
-            team1_score: 1,
-            team2_score: 1,
-            half: '2nd',
-            match_time_ms: 0,
-            action: 'manual_edit',
-            reason: '訂正',
-            changed_by_license: 'lic',
-            changed_by_name: '審判A',
-            created_at: '2026-05-05T12:00:00',
-            match_date: '2026-05-05',
-            match_name: 'テスト',
-            team1_name: 'Los Santos FC',
-            team2_name: 'Vinewood United',
-          },
-        ],
-      })
+      postNui('refboard:data:score_edit_log:ack', { rows: [...mockDb.scoreHistory].reverse().slice(0, 1000) })
     }
     if (path === 'data_match_history') {
-      postNui('refboard:data:match_history:ack', { rows: mockListRows })
+      const st = (data as { status?: string })?.status
+      const rows =
+        st && st !== 'all' ? mockListRows.filter((r) => r.status === st) : mockListRows
+      postNui('refboard:data:match_history:ack', { rows })
     }
     if (path === 'data_db_meta') {
       postNui('refboard:data:db_meta:ack', { schemaVersion: '0.5.1-mock', resourceVersion: '0.6.0' })
@@ -434,57 +581,75 @@ export function queueMockSideEffects(path: string, data: unknown): void {
     if (path === 'match_list') {
       const st = (data as { status?: string })?.status
       const rows =
-        st && st !== 'all'
-          ? mockListRows.filter((r) => r.status === st)
-          : mockListRows
+        st && st !== 'all' ? mockListRows.filter((r) => r.status === st) : mockListRows
       postNui('refboard:match:list:ack', { matches: rows })
     }
+    if (path === 'match_checkResume') {
+      const draftIds = Object.keys(mockDb.matchDrafts).map(Number).filter(Boolean)
+      if (draftIds.length > 0) {
+        const mid = draftIds[draftIds.length - 1]
+        postNui('refboard:match:checkResume:ack', {
+          hasResume: true,
+          match: { id: mid, lastEditor: MOCK_AUDIT.refereeName },
+        })
+      } else {
+        postNui('refboard:match:checkResume:ack', { hasResume: false, match: null })
+      }
+    }
     if (path === 'match_create') {
-      const id = ++mockMatchSeq
-      mockListRows.unshift({
-        id,
-        team1_id: Number((data as { team1Id?: number })?.team1Id) || 1,
-        team2_id: Number((data as { team2Id?: number })?.team2Id) || 2,
-        team1_name: 'Los Santos FC',
-        team2_name: 'Vinewood United',
-        team1_score: 0,
-        team2_score: 0,
-        status: 'draft',
-        current_half: '1st',
-        match_date: String((data as { matchDate?: string })?.matchDate || '2026-05-05'),
-        match_name: String((data as { matchName?: string | null })?.matchName ?? ''),
-        venue: String((data as { venue?: string | null })?.venue ?? ''),
-        kickoff_time: String((data as { kickoffTime?: string | null })?.kickoffTime ?? ''),
-      })
-      liveDetail = clone({
-        ...mockMatchDetail,
-        id,
-        team1Id: Number((data as { team1Id?: number })?.team1Id) || 1,
-        team2Id: Number((data as { team2Id?: number })?.team2Id) || 2,
-        matchName: String((data as { matchName?: string })?.matchName || ''),
-        venue: String((data as { venue?: string })?.venue || ''),
-        matchDate: String((data as { matchDate?: string })?.matchDate || '2026-05-05'),
-        kickoffTime: String((data as { kickoffTime?: string })?.kickoffTime || '').slice(0, 5),
-        score: { home: 0, away: 0 },
-        breakdown: {
-          firstHalf: { home: 0, away: 0 },
-          secondHalf: { home: 0, away: 0 },
-          extra: { home: 0, away: 0 },
-          pk: { home: 0, away: 0 },
-        },
-        serverHalf: '1st',
-        pkFirstTeamId: Number((data as { team1Id?: number })?.team1Id) || 1,
-        uiStatus: 'first_half',
-        events: [],
-        homePlayers: [],
-        awayPlayers: [],
-        dbStatus: 'draft',
-      })
-      postNui('refboard:match:create:ack', { ok: true, matchId: id })
+      const d = data as {
+        team1Id?: number
+        team2Id?: number
+        matchDate?: string
+        matchName?: string | null
+        venue?: string | null
+        kickoffTime?: string | null
+      }
+      const t1 = Number(d.team1Id) || 1
+      const t2 = Number(d.team2Id) || 2
+      const okTeams =
+        activeTeams().some((x) => x.id === t1) &&
+        activeTeams().some((x) => x.id === t2) &&
+        t1 !== t2
+      if (!okTeams) {
+        postNui('refboard:match:create:ack', { ok: false, error: 'bad_teams' })
+      } else {
+        const id = mockDb.nextIds.match++
+        const matchDate = String(d.matchDate || '2026-05-05')
+        const matchName = String(d.matchName ?? '')
+        const venue = String(d.venue ?? '')
+        const kickoffTime = String(d.kickoffTime ?? '')
+        mockListRows.unshift({
+          id,
+          team1_id: t1,
+          team2_id: t2,
+          team1_name: teamNameById(t1),
+          team2_name: teamNameById(t2),
+          team1_score: 0,
+          team2_score: 0,
+          status: 'draft',
+          current_half: '1st',
+          match_date: matchDate,
+          match_name: matchName,
+          venue,
+          kickoff_time: kickoffTime.length >= 5 ? `${kickoffTime.slice(0, 5)}:00` : '',
+        })
+        const detail = newEmptyMatchDetail(id, t1, t2, matchDate, matchName, venue, kickoffTime)
+        mockDb.matchDetails[String(id)] = detail
+        liveDetail = clone(detail)
+        mockDb.focusedMatchId = id
+        flushPersistence()
+        postNui('refboard:match:create:ack', { ok: true, matchId: id })
+      }
     }
     if (path === 'match_get') {
-      const mid = Number((data as { matchId?: number })?.matchId) || liveDetail.id
-      if (mid === liveDetail.id) {
+      const mid = Number((data as { matchId?: number })?.matchId) || mockDb.focusedMatchId
+      mockDb.matchDetails[String(liveDetail.id)] = clone(liveDetail)
+      const snap = mockDb.matchDetails[String(mid)]
+      if (snap) {
+        liveDetail = clone(snap)
+        mockDb.focusedMatchId = mid
+        flushPersistence()
         postNui('refboard:match:get:ack', {
           match: {
             id: liveDetail.id,
@@ -524,15 +689,32 @@ export function queueMockSideEffects(path: string, data: unknown): void {
                 : null,
           })),
           breakdown: liveDetail.breakdown,
-          history: [],
+          history: mockDb.scoreHistory
+            .filter((h) => h.match_id === liveDetail.id)
+            .sort((a, b) => b.id - a.id)
+            .map((h) => ({
+              id: h.id,
+              team1_score: h.team1_score,
+              team2_score: h.team2_score,
+              action: h.action,
+              reason: h.reason,
+              changed_by_name: h.changed_by_name,
+              created_at: h.created_at,
+            })),
         })
       } else {
         postNui('refboard:match:get:ack', { match: null, players: [], events: [], history: [] })
       }
     }
     if (path === 'autosave_draft') {
+      const p = data as { matchId?: number; state?: unknown }
+      const mid = Number(p.matchId) || liveDetail.id
+      if (p.state !== undefined) {
+        mockDb.matchDrafts[String(mid)] = p.state
+        flushPersistence()
+      }
       postNui('refboard:autosave:saved', {
-        matchId: (data as { matchId?: number })?.matchId,
+        matchId: mid,
         savedAt: Date.now(),
       })
     }
@@ -581,6 +763,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       } else {
         liveDetail.awayPlayers = [...liveDetail.awayPlayers, row]
       }
+      flushPersistence()
       postNui('refboard:player:add:ack', { ok: true, playerId: pid })
       postNui('refboard:match:state', {
         matchId: d.matchId,
@@ -611,6 +794,26 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         },
         ...liveDetail.events,
       ]
+      const hid = mockDb.nextIds.history++
+      mockDb.scoreHistory.push({
+        id: hid,
+        match_id: liveDetail.id,
+        team1_score: liveDetail.score.home,
+        team2_score: liveDetail.score.away,
+        half: liveDetail.serverHalf,
+        match_time_ms: 0,
+        action: 'goal',
+        reason: null,
+        changed_by_license: MOCK_AUDIT.license,
+        changed_by_name: MOCK_AUDIT.refereeName,
+        created_at: new Date().toISOString(),
+        match_date: liveDetail.matchDate,
+        match_name: liveDetail.matchName,
+        team1_name: liveDetail.home.name,
+        team2_name: liveDetail.away.name,
+      })
+      syncMockListRowScoresFromLive()
+      flushPersistence()
       postNui('refboard:score:goal:ack', { ok: true })
       postNui('refboard:match:state', {
         matchId: liveDetail.id,
@@ -619,13 +822,33 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         events: liveDetail.events,
         players: null,
       })
-      syncMockListRowScoresFromLive()
       postNui('refboard:autosave:saved', { matchId: liveDetail.id, savedAt: Date.now() })
     }
     if (path === 'score_manual_edit') {
-      const d = data as { team1Score?: number; team2Score?: number }
+      const d = data as { team1Score?: number; team2Score?: number; reason?: string; matchId?: number }
       liveDetail.score.home = Number(d.team1Score) ?? liveDetail.score.home
       liveDetail.score.away = Number(d.team2Score) ?? liveDetail.score.away
+      const reason = typeof d.reason === 'string' && d.reason.length >= 5 ? d.reason : 'manual_edit'
+      const hid = mockDb.nextIds.history++
+      mockDb.scoreHistory.push({
+        id: hid,
+        match_id: liveDetail.id,
+        team1_score: liveDetail.score.home,
+        team2_score: liveDetail.score.away,
+        half: liveDetail.serverHalf,
+        match_time_ms: 0,
+        action: 'manual_edit',
+        reason,
+        changed_by_license: MOCK_AUDIT.license,
+        changed_by_name: MOCK_AUDIT.refereeName,
+        created_at: new Date().toISOString(),
+        match_date: liveDetail.matchDate,
+        match_name: liveDetail.matchName,
+        team1_name: liveDetail.home.name,
+        team2_name: liveDetail.away.name,
+      })
+      syncMockListRowScoresFromLive()
+      flushPersistence()
       postNui('refboard:score:manual_edit:ack', { ok: true })
       postNui('refboard:match:state', {
         matchId: liveDetail.id,
@@ -634,12 +857,12 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         events: liveDetail.events,
         players: null,
       })
-      syncMockListRowScoresFromLive()
     }
     if (path === 'match_finish') {
       const row = mockListRows.find((r) => r.id === liveDetail.id)
       if (row) row.status = 'finished'
       liveDetail.dbStatus = 'finished'
+      flushPersistence()
       postNui('refboard:match:finish:ack', { ok: true })
       postNui('refboard:match:finished', { matchId: liveDetail.id })
     }
@@ -648,6 +871,11 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const row = mockListRows.find((r) => r.id === mid)
       if (row) row.status = 'draft'
       if (mid === liveDetail.id) liveDetail.dbStatus = 'draft'
+      const snap = mid ? mockDb.matchDetails[String(mid)] : undefined
+      if (snap && mid === liveDetail.id) {
+        snap.dbStatus = 'draft'
+      }
+      flushPersistence()
       postNui('refboard:match:reopen:ack', { ok: true })
     }
     if (path === 'match_set_half') {
@@ -658,6 +886,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         if (row) {
           ;(row as { current_half?: string }).current_half = liveDetail.serverHalf
         }
+        flushPersistence()
         postNui('refboard:match:set_half:ack', { ok: true })
         postNui('refboard:match:state', {
           matchId: liveDetail.id,
@@ -696,6 +925,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         },
         ...liveDetail.events,
       ]
+      flushPersistence()
       postNui('refboard:event:substitute:ack', { ok: true })
       postNui('refboard:match:state', {
         matchId: liveDetail.id,
@@ -754,6 +984,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
           ...liveDetail.events,
         ]
       }
+      flushPersistence()
       postNui('refboard:event:issue_card:ack', { ok: true })
       postNui('refboard:match:state', {
         matchId: liveDetail.id,
@@ -777,21 +1008,22 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       if (!hit) return
       const pl =
         hit.side === 'home' ? liveDetail.homePlayers[hit.idx] : liveDetail.awayPlayers[hit.idx]
-      const ok = d.success === true
+      const okp = d.success === true
       liveDetail.events = [
         {
           id: `e${Date.now()}`,
           minute: 'PK',
           kind: 'penalty',
-          text: ok ? `⚽ PK 成功 ${pl.number} ${pl.name}` : `❌ PK 失敗 ${pl.number} ${pl.name}`,
-          penaltySuccess: ok,
+          text: okp ? `⚽ PK 成功 ${pl.number} ${pl.name}` : `❌ PK 失敗 ${pl.number} ${pl.name}`,
+          penaltySuccess: okp,
         },
         ...liveDetail.events,
       ]
-      if (ok) {
+      if (okp) {
         if (d.teamId === liveDetail.team1Id) liveDetail.breakdown.pk.home += 1
         else liveDetail.breakdown.pk.away += 1
       }
+      flushPersistence()
       postNui('refboard:event:record_penalty:ack', { ok: true })
       postNui('refboard:match:state', {
         matchId: liveDetail.id,
@@ -823,6 +1055,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       } else if (d.teamId === liveDetail.team2Id) {
         liveDetail.awayPlayers = [...liveDetail.awayPlayers, mp]
       }
+      flushPersistence()
       postNui('refboard:player:add_from_roster:ack', { ok: true, playerId: pid })
       postNui('refboard:match:state', {
         matchId: d.matchId,
@@ -833,4 +1066,22 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       })
     }
   })
+}
+
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  ;(window as unknown as { __refboardMock?: unknown }).__refboardMock = {
+    reset: () => {
+      clearMockStorage()
+      location.reload()
+    },
+    dump: () => {
+      // eslint-disable-next-line no-console
+      console.log(loadMockState())
+    },
+    setState: (partial: Partial<MockPersistenceState>) => {
+      const cur = loadMockState()
+      saveMockState({ ...cur, ...partial, version: cur.version })
+      location.reload()
+    },
+  }
 }
