@@ -4,7 +4,9 @@
     "match_finished": "試合を終了しました",
     "match_clock_failed": "試合時計の更新に失敗しました。",
     "match_clock_timeout": "試合時計の応答がタイムアウトしました。再読込してください。",
-    "match_clock_error": "試合時計を更新できませんでした（{code}）。"
+    "match_clock_error": "試合時計を更新できませんでした（{code}）。",
+    "match_delete_failed": "試合の削除に失敗しました。",
+    "match_delete_locked": "他のユーザーがこの試合を編集中のため削除できません。"
   },
   "presence": {
     "online": "接続中",
@@ -190,6 +192,10 @@
     "reopen_title": "終了済みの試合を再編集",
     "reopen_body": "終了済みの試合を再編集モードに戻します。続行しますか？",
     "reopen_confirm": "続行",
+    "delete": "削除",
+    "delete_title": "試合を削除",
+    "delete_body": "この試合と関連データ（選手・イベント・スコア履歴など）をすべて削除します。元に戻せません。続行しますか？",
+    "delete_confirm": "削除する",
     "empty": "試合がありません。チームを登録してから作成してください。"
   },
   "create_match": {

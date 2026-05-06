@@ -280,6 +280,8 @@ export function mockResponse(path: string, data: unknown): unknown {
       return { ok: true, forwarded: true }
     case 'match_reopen':
       return { ok: true, forwarded: true }
+    case 'match_delete':
+      return { ok: true, forwarded: true }
     case 'autosave_draft':
       return { ok: true, forwarded: true }
     case 'presence_list':
@@ -679,6 +681,48 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         mockDb.focusedMatchId = id
         flushPersistence()
         postNui('refboard:match:create:ack', { ok: true, matchId: id })
+      }
+    }
+    if (path === 'match_delete') {
+      const mid = Number((data as { matchId?: number })?.matchId)
+      const idx = mockListRows.findIndex((r) => r.id === mid)
+      if (!mid || idx < 0) {
+        postNui('refboard:match:delete:ack', { ok: false, error: 'not_found' })
+      } else {
+        mockListRows.splice(idx, 1)
+        delete mockDb.matchDetails[String(mid)]
+        delete mockDb.matchDrafts[String(mid)]
+        mockDb.scoreHistory = mockDb.scoreHistory.filter((h) => h.match_id !== mid)
+        if (liveDetail.id === mid) {
+          const next = mockListRows[0]
+          if (next) {
+            const snap = mockDb.matchDetails[String(next.id)]
+            liveDetail = snap
+              ? clone(snap)
+              : newEmptyMatchDetail(
+                  next.id,
+                  next.team1_id,
+                  next.team2_id,
+                  next.match_date,
+                  next.match_name,
+                  next.venue,
+                  next.kickoff_time,
+                )
+            if (!snap) {
+              mockDb.matchDetails[String(next.id)] = clone(liveDetail)
+            }
+            mockDb.focusedMatchId = next.id
+          } else {
+            liveDetail = clone(mockMatchDetail)
+            mockDb.focusedMatchId = liveDetail.id
+            if (!mockDb.matchDetails[String(liveDetail.id)]) {
+              mockDb.matchDetails[String(liveDetail.id)] = clone(liveDetail)
+            }
+          }
+          ensureLiveDetailClockFields()
+        }
+        flushPersistence()
+        postNui('refboard:match:delete:ack', { ok: true, matchId: mid })
       }
     }
     if (path === 'match_get') {

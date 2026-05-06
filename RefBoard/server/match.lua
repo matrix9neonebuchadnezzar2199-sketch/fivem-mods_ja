@@ -1,3 +1,15 @@
+local function lockRowStale(row)
+  if not row or not row.holder_server_id then
+    return true
+  end
+  local lh = tonumber(row.last_hb_unix)
+  if not lh then
+    return true
+  end
+  local timeout = Config.LockTimeoutSec or 30
+  return (os.time() - lh) > timeout
+end
+
 local function assertEditorLock(src, matchId)
   local r = MySQL.single.await(
     'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
@@ -466,6 +478,51 @@ RegisterNetEvent('refboard:match:reopen', function(payload)
   )
   TriggerClientEvent('refboard:match:reopen:ack', src, { ok = true })
   TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
+end)
+
+RegisterNetEvent('refboard:match:delete', function(payload)
+  local src = source
+  RefboardGuard(src, 'refboard:match:delete:ack', 'net:match:delete', function()
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:match:delete:ack', src, { ok = false, error = 'no_permission' })
+    return
+  end
+  local matchId = payload and tonumber(payload.matchId)
+  if not matchId then
+    TriggerClientEvent('refboard:match:delete:ack', src, { ok = false, error = 'bad_payload' })
+    return
+  end
+  local m = MySQL.single.await('SELECT id FROM matches WHERE id = ?', { matchId })
+  if not m then
+    TriggerClientEvent('refboard:match:delete:ack', src, { ok = false, error = 'not_found' })
+    return
+  end
+  local lockRow = MySQL.single.await(
+    [[SELECT match_id, holder_server_id,
+             UNIX_TIMESTAMP(last_heartbeat) AS last_hb_unix
+      FROM editor_locks WHERE id = 1]]
+  )
+  local lockMid = lockRow and tonumber(lockRow.match_id)
+  if lockMid == matchId then
+    local heldBy = lockRow.holder_server_id and tonumber(lockRow.holder_server_id)
+    if heldBy and heldBy ~= tonumber(src) and not lockRowStale(lockRow) then
+      TriggerClientEvent('refboard:match:delete:ack', src, { ok = false, error = 'locked_by_other' })
+      return
+    end
+    local prevHolder = heldBy
+    MySQL.update.await(
+      [[UPDATE editor_locks SET match_id = NULL, holder_license = NULL, holder_name = NULL,
+            holder_server_id = NULL, acquired_at = NULL, last_heartbeat = NULL WHERE id = 1]]
+    )
+    TriggerClientEvent('refboard:lock:update', -1, { holder = nil })
+    if prevHolder then
+      TriggerEvent('refboard:presence:setMode', prevHolder, 'view')
+    end
+  end
+  MySQL.update.await('DELETE FROM matches WHERE id = ?', { matchId })
+  Logger.info('net:match:delete', 'done', { matchId = matchId })
+  TriggerClientEvent('refboard:match:delete:ack', src, { ok = true, matchId = matchId })
   end)
 end)
 

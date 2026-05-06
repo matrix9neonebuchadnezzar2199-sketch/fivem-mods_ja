@@ -151,6 +151,10 @@ RegisterNetEvent('refboard:match:reopen:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:reopen:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:match:delete:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:delete:ack', payload = payload })
+end)
+
 RegisterNetEvent('refboard:match:set_half:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:set_half:ack', payload = payload })
 end)
@@ -189,6 +193,10 @@ end)
 
 RegisterNetEvent('refboard:lock:acquire:result', function(payload)
   SendNUIMessage({ type = 'refboard:lock:acquire:result', payload = payload })
+end)
+
+RegisterNetEvent('refboard:lock:update', function(payload)
+  SendNUIMessage({ type = 'refboard:lock:update', payload = payload })
 end)
 
 RegisterNetEvent('refboard:autosave:saved', function(payload)

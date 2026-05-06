@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../composables/useNui'
+import { useToast } from '../composables/useToast'
 import { useSessionStore } from '../stores/session'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
@@ -12,6 +13,7 @@ import MarqueeText from '../components/common/MarqueeText.vue'
 const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
+const { push: toast } = useToast()
 const { send, on } = useNui()
 
 const rows = ref<MatchListRow[]>([])
@@ -23,6 +25,8 @@ const lockPeer = ref('')
 const pendingOpenId = ref<number | null>(null)
 const showReopen = ref(false)
 const reopenId = ref<number | null>(null)
+const showDeleteConfirm = ref(false)
+const deleteId = ref<number | null>(null)
 
 let offMatch: (() => void) | null = null
 let offTeam: (() => void) | null = null
@@ -85,6 +89,35 @@ async function openPendingAsView() {
 function askReopen(id: number) {
   reopenId.value = id
   showReopen.value = true
+}
+
+function askDelete(id: number) {
+  deleteId.value = id
+  showDeleteConfirm.value = true
+}
+
+async function confirmDelete() {
+  const id = deleteId.value
+  if (!id) return
+  const un = on('refboard:match:delete:ack', (r: { ok?: boolean; error?: string }) => {
+    un()
+    showDeleteConfirm.value = false
+    deleteId.value = null
+    if (r?.ok) {
+      loadMatches()
+      return
+    }
+    if (r?.error === 'no_permission') {
+      toast(t('errors.E1001'), 'error', { ms: 6000, errorCode: 'E1001', errorKey: 'no_permission' })
+      return
+    }
+    if (r?.error === 'locked_by_other') {
+      toast(t('toast.match_delete_locked'), 'error')
+      return
+    }
+    toast(t('toast.match_delete_failed'), 'error')
+  })
+  await send('match_delete', { matchId: id })
 }
 
 async function confirmReopen() {
@@ -150,7 +183,7 @@ function onCreated(id: number) {
             <th class="min-w-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_teams') }}</th>
             <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_score') }}</th>
             <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_status') }}</th>
-            <th class="w-44 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_actions') }}</th>
+            <th class="w-56 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -185,6 +218,14 @@ function onCreated(id: number) {
               >
                 {{ t('match_list.reopen') }}
               </button>
+              <button
+                v-if="session.isEditor"
+                type="button"
+                class="ml-2 text-rose-400 hover:underline"
+                @click="askDelete(m.id)"
+              >
+                {{ t('match_list.delete') }}
+              </button>
             </td>
           </tr>
           <tr v-if="!rows.length">
@@ -210,6 +251,25 @@ function onCreated(id: number) {
           </button>
           <button type="button" class="rounded-lg bg-warning/90 px-3 py-2 text-sm font-semibold text-white drop-shadow-sm" @click="openPendingAsView">
             {{ t('launcher.lock_open_view') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showDeleteConfirm"
+      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
+      @click.self="showDeleteConfirm = false"
+    >
+      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_list.delete_title') }}</h2>
+        <p class="mb-4 text-sm text-slate-400">{{ t('match_list.delete_body') }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="showDeleteConfirm = false">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmDelete">
+            {{ t('match_list.delete_confirm') }}
           </button>
         </div>
       </div>

@@ -4,7 +4,9 @@
     "match_finished": "Match finished",
     "match_clock_failed": "Could not update the match clock.",
     "match_clock_timeout": "Match clock request timed out. Please reload.",
-    "match_clock_error": "Could not update the match clock ({code})."
+    "match_clock_error": "Could not update the match clock ({code}).",
+    "match_delete_failed": "Could not delete the match.",
+    "match_delete_locked": "Another user is editing this match; delete is blocked."
   },
   "presence": {
     "online": "Online",
@@ -190,6 +192,10 @@
     "reopen_title": "Re-open finished match",
     "reopen_body": "This will set the match back to draft for editing. Continue?",
     "reopen_confirm": "Continue",
+    "delete": "Delete",
+    "delete_title": "Delete match",
+    "delete_body": "This will permanently remove the match and related data (players, events, score history, etc.). This cannot be undone. Continue?",
+    "delete_confirm": "Delete",
     "empty": "No matches yet. Seed teams in MySQL, then create a match."
   },
   "create_match": {
