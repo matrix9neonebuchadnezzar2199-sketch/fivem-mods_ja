@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.1 — Unreleased
+
+- **設計**: スコアボード方針（案 A）・`MarqueeText` の `variant` プリセット仕様を `docs/sprints/sprint_08_marquee.md` に確定記録。
+
 ## v0.6.0 — 2026-05-06（アプリ内ヘルプ Phase 1）
 
 - **ヘルプ**: サイドバー「ヘルプ」から `HelpView`（`/workspace/help`、記事 `/workspace/help/article/:slug`、エラー `/workspace/help/error/:code`）。`reverse_index.json` による逆引き一覧、Markdown 記事を `marked` + `dompurify` で表示。
