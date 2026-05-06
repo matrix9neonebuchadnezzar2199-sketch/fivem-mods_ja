@@ -20,7 +20,7 @@ const mockListRows = [
     team2_name: 'Vinewood United',
     team1_score: 2,
     team2_score: 1,
-    status: 'draft' as const,
+    status: 'draft' as 'draft' | 'finished',
     current_half: '2nd',
     match_date: '2026-05-05',
     match_name: 'リーグ戦 第7節',
@@ -431,9 +431,9 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         status: 'draft',
         current_half: '1st',
         match_date: String((data as { matchDate?: string })?.matchDate || '2026-05-05'),
-        match_name: (data as { matchName?: string | null })?.matchName ?? null,
-        venue: (data as { venue?: string | null })?.venue ?? null,
-        kickoff_time: (data as { kickoffTime?: string | null })?.kickoffTime ?? null,
+        match_name: String((data as { matchName?: string | null })?.matchName ?? ''),
+        venue: String((data as { venue?: string | null })?.venue ?? ''),
+        kickoff_time: String((data as { kickoffTime?: string | null })?.kickoffTime ?? ''),
       })
       liveDetail = clone({
         ...mockMatchDetail,

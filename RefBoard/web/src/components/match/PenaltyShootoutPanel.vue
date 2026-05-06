@@ -55,7 +55,6 @@ const pkDecided = computed(() => {
   const ev = pkEvents.value
   const n = ev.length
   if (n === 0) return false
-  const first = props.model.pkFirstTeamId ?? props.model.team1Id
   let tFirst = 0
   let tSecond = 0
   for (let i = 0; i < n; i++) {
