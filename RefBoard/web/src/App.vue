@@ -53,10 +53,10 @@ onMounted(() => {
     :data-marquee-mode="marqueeMode"
   >
     <div
-      class="pointer-events-none absolute inset-0 bg-slate-950/65 backdrop-blur-[1px]"
+      class="pointer-events-none absolute inset-0 z-0 bg-slate-950/78 backdrop-blur-[1px]"
       aria-hidden="true"
     />
-    <div class="relative z-0 flex min-h-0 flex-1 flex-col">
+    <div class="relative z-10 flex min-h-0 flex-1 flex-col">
       <router-view />
     </div>
     <Toast />
