@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { openNativeDateTimePicker } from '../../composables/openNativeDateTimePicker'
+import { blockDateTimeFieldKeydown, openNativeDateTimePicker } from '../../composables/openNativeDateTimePicker'
 import type { MatchDetailModel } from '../../types/match'
 
 withDefaults(
@@ -59,11 +59,13 @@ const { t } = useI18n()
           <input
             v-model="model.matchDate"
             type="date"
-            class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
+            class="refboard-input-pickers mt-1 w-full cursor-pointer rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
             :disabled="readonly"
-            :readonly="!readonly"
             @click="openNativeDateTimePicker"
+            @keydown="blockDateTimeFieldKeydown"
             @keydown.enter.prevent="openNativeDateTimePicker"
+            @paste.prevent
+            @drop.prevent
           />
         </label>
         <label class="block text-xs text-slate-400">
@@ -71,11 +73,13 @@ const { t } = useI18n()
           <input
             v-model="model.kickoffTime"
             type="time"
-            class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
+            class="refboard-input-pickers mt-1 w-full cursor-pointer rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
             :disabled="readonly"
-            :readonly="!readonly"
             @click="openNativeDateTimePicker"
+            @keydown="blockDateTimeFieldKeydown"
             @keydown.enter.prevent="openNativeDateTimePicker"
+            @paste.prevent
+            @drop.prevent
           />
         </label>
       </div>

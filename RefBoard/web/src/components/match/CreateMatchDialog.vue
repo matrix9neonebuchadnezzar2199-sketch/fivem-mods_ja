@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { openNativeDateTimePicker } from '../../composables/openNativeDateTimePicker'
+import { blockDateTimeFieldKeydown, openNativeDateTimePicker } from '../../composables/openNativeDateTimePicker'
 import { useNui } from '../../composables/useNui'
 import type { TeamRow } from '../../types/match'
 
@@ -94,10 +94,12 @@ async function submit() {
             <input
               v-model="form.matchDate"
               type="date"
-              readonly
-              class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+              class="refboard-input-pickers mt-1 w-full cursor-pointer rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
               @click="openNativeDateTimePicker"
+              @keydown="blockDateTimeFieldKeydown"
               @keydown.enter.prevent="openNativeDateTimePicker"
+              @paste.prevent
+              @drop.prevent
             />
           </label>
           <label class="block text-slate-400">
@@ -105,10 +107,12 @@ async function submit() {
             <input
               v-model="form.kickoffTime"
               type="time"
-              readonly
-              class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+              class="refboard-input-pickers mt-1 w-full cursor-pointer rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
               @click="openNativeDateTimePicker"
+              @keydown="blockDateTimeFieldKeydown"
               @keydown.enter.prevent="openNativeDateTimePicker"
+              @paste.prevent
+              @drop.prevent
             />
           </label>
         </div>
