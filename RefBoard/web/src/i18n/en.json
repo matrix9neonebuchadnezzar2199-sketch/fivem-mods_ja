@@ -325,6 +325,8 @@
     "goal_confirm": "Confirm dialog on goal",
     "score_edit_min": "Min chars for manual edit reason",
     "show_hero": "Show hero header",
+    "show_background_image": "Background image",
+    "show_background_image_note": "When off, a flat tinted background is used (readability / GPU). When on, the stadium photo plus a dim overlay is shown.",
     "card_opacity": "Card opacity",
     "avatar_hue": "Avatar hue",
     "nui_mock": "Enable NUI mock",

@@ -12,6 +12,8 @@ export type RefboardSettings = {
   goalConfirmDialog: boolean
   scoreEditReasonMin: number
   showHero: boolean
+  /** 全体背景にスタジアム写真を敷く（既定 OFF・負荷と視認性のため） */
+  showBackgroundImage: boolean
   cardOpacity: number
   avatarHue: number
   nuiMock: boolean
@@ -38,6 +40,7 @@ const defaults: RefboardSettings = {
   goalConfirmDialog: true,
   scoreEditReasonMin: 5,
   showHero: true,
+  showBackgroundImage: false,
   cardOpacity: 80,
   avatarHue: 210,
   nuiMock: false,

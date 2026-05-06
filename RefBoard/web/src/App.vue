@@ -14,6 +14,7 @@ import appBackgroundUrl from '../image/back.jpg'
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
 const marqueeMode = computed(() => settings.value.marqueeMode)
+const showBackgroundImage = computed(() => settings.value.showBackgroundImage)
 provide('marqueeMode', marqueeMode)
 
 const session = useSessionStore()
@@ -48,11 +49,17 @@ onMounted(() => {
 
 <template>
   <div
-    class="relative flex h-full min-h-0 flex-col bg-cover bg-center bg-no-repeat"
-    :style="{ backgroundImage: `url(${appBackgroundUrl})` }"
+    class="relative flex h-full min-h-0 flex-col"
+    :class="
+      showBackgroundImage
+        ? 'bg-cover bg-center bg-no-repeat'
+        : 'bg-[rgb(15_23_42/0.88)] backdrop-blur-[1px]'
+    "
+    :style="showBackgroundImage ? { backgroundImage: `url(${appBackgroundUrl})` } : {}"
     :data-marquee-mode="marqueeMode"
   >
     <div
+      v-if="showBackgroundImage"
       class="pointer-events-none absolute inset-0 z-0 bg-slate-950/78 backdrop-blur-[1px]"
       aria-hidden="true"
     />

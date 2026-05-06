@@ -325,6 +325,8 @@
     "goal_confirm": "ゴール記録時の確認ダイアログ",
     "score_edit_min": "手動編集の理由 最小文字数",
     "show_hero": "ヒーローエリアを表示",
+    "show_background_image": "背景画像を表示",
+    "show_background_image_note": "オフのときは単色背景のみ（読みやすさ・描画負荷向け）。オンにするとスタジアム写真＋暗幕が重なります。",
     "card_opacity": "カードの不透明度",
     "avatar_hue": "アバター色（色相）",
     "nui_mock": "NUIモック有効化",

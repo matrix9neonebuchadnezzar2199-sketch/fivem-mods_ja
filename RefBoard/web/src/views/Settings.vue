@@ -111,6 +111,11 @@ function syncLocale() {
         <input v-model="settings.settings.showHero" type="checkbox" class="rounded border-slate-500" />
         {{ t('settings.show_hero') }}
       </label>
+      <label class="mt-3 flex items-center gap-2 text-slate-300">
+        <input v-model="settings.settings.showBackgroundImage" type="checkbox" class="rounded border-slate-500" />
+        {{ t('settings.show_background_image') }}
+      </label>
+      <p class="mt-1 text-xs text-slate-500">{{ t('settings.show_background_image_note') }}</p>
       <label class="mt-3 block text-slate-400">
         {{ t('settings.card_opacity') }} ({{ settings.settings.cardOpacity }}%)
         <input v-model.number="settings.settings.cardOpacity" type="range" min="70" max="100" class="mt-1 w-full" />
