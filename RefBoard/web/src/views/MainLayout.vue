@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRouter, RouterLink, RouterView } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useSettingsStore } from '../stores/settings'
+import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { getResourceName, useNui } from '../composables/useNui'
 import PresenceBadge from '../components/PresenceBadge.vue'
 
@@ -12,6 +14,7 @@ const router = useRouter()
 const session = useSessionStore()
 const settingsStore = useSettingsStore()
 const { send } = useNui()
+const { transparentChrome } = storeToRefs(useMatchCompactDockStore())
 
 onMounted(() => {
   settingsStore.load()
@@ -38,7 +41,7 @@ function toggleLocale() {
 </script>
 
 <template>
-  <div class="layout grid h-full w-full">
+  <div class="layout grid h-full w-full" :class="{ 'layout--stadium-compact': transparentChrome }">
     <aside class="sidebar flex min-w-0 flex-col overflow-hidden border-r border-slate-700/80 bg-slate-900/90 p-3 text-sm">
       <div class="mb-3 shrink-0 font-semibold text-primary">RefBoard</div>
       <nav class="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
@@ -105,7 +108,7 @@ function toggleLocale() {
       </button>
     </aside>
     <div class="main flex min-h-0 min-w-0 flex-col border-r border-slate-700/80 bg-slate-900/90">
-      <header class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 px-4 py-2">
+      <header class="main-header flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 px-4 py-2">
         <PresenceBadge />
         <button type="button" class="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-200" @click="closeApp">Close</button>
       </header>
@@ -124,5 +127,17 @@ function toggleLocale() {
   grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
   height: 100vh;
   width: 100vw;
+}
+
+/* 試合詳細「小窓モード」: シェルを透過し背面ゲームを見る。本文はクリック透過、ヘッダのみ操作可 */
+.layout--stadium-compact .sidebar,
+.layout--stadium-compact .main {
+  background-color: transparent;
+  border-color: rgb(51 65 85 / 0.2);
+  pointer-events: none;
+}
+.layout--stadium-compact .main-header {
+  pointer-events: auto;
+  background-color: rgb(15 23 42 / 0.45);
 }
 </style>

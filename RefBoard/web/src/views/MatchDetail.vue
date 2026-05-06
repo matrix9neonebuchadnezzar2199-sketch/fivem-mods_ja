@@ -39,6 +39,7 @@ import ScoreEditDialog from '../components/match/ScoreEditDialog.vue'
 import ScoreHistoryDialog from '../components/match/ScoreHistoryDialog.vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
+import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
 import { useToast } from '../composables/useToast'
 
@@ -55,6 +56,7 @@ const { send, on } = useNui()
 const { setFocus } = useFocusTracker()
 const { t } = useI18n()
 const settings = useSettingsStore()
+const matchCompactDock = useMatchCompactDockStore()
 const { push: toast } = useToast()
 
 function closeAllModals() {
@@ -397,6 +399,14 @@ watch(
   },
 )
 
+watch(
+  () => compactDock.value && detail.serverHalf !== 'pk',
+  (v) => {
+    matchCompactDock.setTransparentChrome(v)
+  },
+  { immediate: true },
+)
+
 async function loadMatch() {
   const id = Number(route.params.id)
   if (!id) return
@@ -458,6 +468,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  matchCompactDock.setTransparentChrome(false)
   stopClockTickInterval()
   offState?.()
   offFinished?.()

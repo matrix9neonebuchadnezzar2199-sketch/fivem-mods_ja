@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, provide } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useMatchCompactDockStore } from './stores/matchCompactDock'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from './stores/settings'
 import { useSessionStore } from './stores/session'
@@ -13,8 +14,16 @@ import appBackgroundUrl from '../image/back.jpg'
 
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
+const { transparentChrome } = storeToRefs(useMatchCompactDockStore())
 const marqueeMode = computed(() => settings.value.marqueeMode)
 const showBackgroundImage = computed(() => settings.value.showBackgroundImage)
+
+const appRootBgClass = computed(() => {
+  if (transparentChrome.value) return 'bg-transparent'
+  if (showBackgroundImage.value) return 'bg-cover bg-center bg-no-repeat'
+  return 'bg-[rgb(15_23_42/0.88)] backdrop-blur-[1px]'
+})
+
 provide('marqueeMode', marqueeMode)
 
 const session = useSessionStore()
@@ -50,20 +59,19 @@ onMounted(() => {
 <template>
   <div
     class="relative flex h-full min-h-0 flex-col"
-    :class="
-      showBackgroundImage
-        ? 'bg-cover bg-center bg-no-repeat'
-        : 'bg-[rgb(15_23_42/0.88)] backdrop-blur-[1px]'
-    "
-    :style="showBackgroundImage ? { backgroundImage: `url(${appBackgroundUrl})` } : {}"
+    :class="appRootBgClass"
+    :style="showBackgroundImage && !transparentChrome ? { backgroundImage: `url(${appBackgroundUrl})` } : {}"
     :data-marquee-mode="marqueeMode"
   >
     <div
-      v-if="showBackgroundImage"
+      v-if="showBackgroundImage && !transparentChrome"
       class="pointer-events-none absolute inset-0 z-0 bg-slate-950/78 backdrop-blur-[1px]"
       aria-hidden="true"
     />
-    <div class="relative z-10 flex min-h-0 flex-1 flex-col">
+    <div
+      class="relative z-10 flex min-h-0 flex-1 flex-col"
+      :class="{ 'pointer-events-none': transparentChrome }"
+    >
       <router-view />
     </div>
     <Toast />
