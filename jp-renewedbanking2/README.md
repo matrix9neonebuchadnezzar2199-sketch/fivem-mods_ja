@@ -9,6 +9,8 @@ FiveM 用バンキングリソース **[Renewed-Banking](https://github.com/Rene
 
 本フォルダは **uShifty 氏 / Renewed-Scripts による原作の派生物**です。**CC BY-NC-SA 4.0** を継承しています。不具合のうち原作由来のものは本家へ、本派生版固有（翻訳・ヘルプ UI）のものは本リポジトリへ報告いただけると助かります。
 
+**原作作者への事前連絡**: 未実施の場合は運用ポリシーに従い追記します（現状: 本 README および `CHANGELOG.ja.md` に記載のとおり派生版として公開）。
+
 ## クレジット
 
 - **原作者**: uShifty（[Renewed-Scripts](https://github.com/Renewed-Scripts)）
