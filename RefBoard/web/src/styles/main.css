@@ -8,3 +8,22 @@ body,
   height: 100%;
   margin: 0;
 }
+
+/* 日付・時刻のネイティブアイコン（カレンダー／時計）を緑系に（暗い UI・背景写真上でも視認しやすく） */
+@layer components {
+  input[type='date'].refboard-input-pickers,
+  input[type='time'].refboard-input-pickers,
+  input[type='datetime-local'].refboard-input-pickers {
+    color-scheme: dark;
+    accent-color: #34d399;
+  }
+
+  input[type='date'].refboard-input-pickers::-webkit-calendar-picker-indicator,
+  input[type='time'].refboard-input-pickers::-webkit-calendar-picker-indicator,
+  input[type='datetime-local'].refboard-input-pickers::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.95;
+    filter: invert(58%) sepia(56%) saturate(600%) hue-rotate(109deg) brightness(98%) contrast(94%);
+  }
+}
+

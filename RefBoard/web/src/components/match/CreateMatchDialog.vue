@@ -90,11 +90,19 @@ async function submit() {
         <div class="grid grid-cols-2 gap-2">
           <label class="block text-slate-400">
             {{ t('create_match.date') }}
-            <input v-model="form.matchDate" type="date" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
+            <input
+              v-model="form.matchDate"
+              type="date"
+              class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+            />
           </label>
           <label class="block text-slate-400">
             {{ t('create_match.kickoff') }}
-            <input v-model="form.kickoffTime" type="time" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
+            <input
+              v-model="form.kickoffTime"
+              type="time"
+              class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+            />
           </label>
         </div>
       </div>

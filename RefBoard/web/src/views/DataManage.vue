@@ -198,11 +198,19 @@ function openMatch(id: number) {
         </label>
         <label v-if="period === 'custom'" class="text-slate-400">
           from
-          <input v-model="customFrom" type="date" class="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1" />
+          <input
+            v-model="customFrom"
+            type="date"
+            class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+          />
         </label>
         <label v-if="period === 'custom'" class="text-slate-400">
           to
-          <input v-model="customTo" type="date" class="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1" />
+          <input
+            v-model="customTo"
+            type="date"
+            class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+          />
         </label>
         <label class="text-slate-400">
           {{ t('data.team_filter') }}
@@ -333,11 +341,19 @@ function openMatch(id: number) {
       <div class="flex flex-wrap items-end gap-2 text-xs">
         <label class="text-slate-400">
           from
-          <input v-model="logFrom" type="datetime-local" class="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1" />
+          <input
+            v-model="logFrom"
+            type="datetime-local"
+            class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+          />
         </label>
         <label class="text-slate-400">
           to
-          <input v-model="logTo" type="datetime-local" class="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1" />
+          <input
+            v-model="logTo"
+            type="datetime-local"
+            class="refboard-input-pickers mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-slate-100"
+          />
         </label>
         <label class="text-slate-400">
           {{ t('data.log_editor') }}

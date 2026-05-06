@@ -85,7 +85,7 @@ function enableDebugTrace() {
           <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300" @click="closeDialog">
             {{ t('launcher.lock_back') }}
           </button>
-          <button type="button" class="rounded-lg bg-warning/90 px-3 py-2 text-sm font-semibold text-slate-900" @click="openAsViewFromDialog">
+          <button type="button" class="rounded-lg bg-warning/90 px-3 py-2 text-sm font-semibold text-white drop-shadow-sm" @click="openAsViewFromDialog">
             {{ t('launcher.lock_open_view') }}
           </button>
         </div>

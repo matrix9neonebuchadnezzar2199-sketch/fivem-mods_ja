@@ -174,7 +174,7 @@ async function record() {
         <p class="text-sm text-slate-300">{{ sel?.name }}</p>
         <button
           type="button"
-          class="w-full rounded-lg bg-amber-600/80 py-3 font-semibold text-slate-900"
+          class="w-full rounded-lg bg-amber-600/80 py-3 font-semibold text-white drop-shadow-sm"
           @click="pickYellow"
         >
           {{ t('card.yellow') }}

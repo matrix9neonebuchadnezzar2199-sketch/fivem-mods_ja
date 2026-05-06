@@ -58,7 +58,7 @@ const { t } = useI18n()
           <input
             v-model="model.matchDate"
             type="date"
-            class="mt-1 w-full rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
+            class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
             :disabled="readonly"
           />
         </label>
@@ -67,7 +67,7 @@ const { t } = useI18n()
           <input
             v-model="model.kickoffTime"
             type="time"
-            class="mt-1 w-full rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
+            class="refboard-input-pickers mt-1 w-full rounded border border-slate-600 bg-slate-900/80 px-2 py-1.5 text-sm text-slate-100"
             :disabled="readonly"
           />
         </label>

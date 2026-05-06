@@ -250,7 +250,7 @@ async function submit(force: boolean) {
         {{ t('player.duplicate_body') }}
         <div class="mt-2 flex gap-2">
           <button type="button" class="rounded border border-slate-500 px-2 py-1 text-xs" @click="showDup = false">{{ t('dialog.no') }}</button>
-          <button type="button" class="rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-slate-900" @click="submit(true)">
+          <button type="button" class="rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-white drop-shadow-sm" @click="submit(true)">
             {{ t('player.duplicate_continue') }}
           </button>
         </div>
