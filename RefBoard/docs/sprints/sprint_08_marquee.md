@@ -15,12 +15,32 @@
 - **gap** は先頭コンテンツの `padding-right` で表現し、`distance = contentWidth + gap` をアニメーション移動量に使う。
 - **ResizeObserver** はコンテナとコンテンツ（先頭 span）の両方に張り、フォント読み込み後に再計測する。
 
+## 表示方針（案 A 確定）
+
+- **方針**: オーバーフロー時は **常時マーキーで全文表示**（`ellipsis` は使わない）。RefBoard のスポーツ／LED ボード感とブランドを優先する。
+- **短い文字列**: `isOverflowing === false` のときは **静止**（マーキーアニメなし）。計測ロジックで担保。
+- **ホバー一時停止**: `animation-play-state: paused` は **各クライアントの NUI ローカルのみ**。他の審判画面やサーバーには影響しない（ブロードキャストしない）。設計上の安心用の明記。
+
+## MarqueeText `variant` プリセット（フェーズ 1 で実装）
+
+フェーズ 2 以降の置換で速度判断を散らさないため、`MarqueeText` に **`variant?: 'default' | 'scoreboard' | 'ticker' | 'subtle'`** を持たせ、既定値は定数 1 箇所で調整する。
+
+| `variant` | speed (px/s) | gap (px) | delay (ms) | 想定用途 |
+|-----------|-------------:|---------:|-----------:|----------|
+| `default` | 40 | 48 | 1000 | 汎用 |
+| `scoreboard` | 28 | 64 | 2200 | スコアボード（凝視が長いので遅め・初回読了の猶予） |
+| `ticker` | 60 | 32 | 500 | トースト・短い通知 |
+| `subtle` | 35 | 40 | 1500 | サイドバー・メニュー |
+
+- `speed` / `gap` / `delay` を props で渡した場合は **variant 値を上書き**（`props.speed ?? VARIANTS[variant].speed` の形）。
+- 微調整は **`VARIANTS` 定数のみ**を触れば全画面に反映される想定。
+
 ## 3 フェーズ（PR 分割案）
 
 ### フェーズ 1 — 基盤のみ（PR1）
 
-- `web/src/components/common/MarqueeText.vue`
-- `web/src/directives/marquee.ts`（ディレクティブ版も上記と同順: **単体計測 → 必要時のみ複製**）
+- `web/src/components/common/MarqueeText.vue`（**`variant` プリセット込み**、上表）
+- `web/src/directives/marquee.ts`（ディレクティブ版も上記と同順: **単体計測 → 必要時のみ複製**。`binding.value` で `variant` / `speed` 等を渡せるようにしてもよい）
 - `web/src/main.ts` でディレクティブ登録
 - `web/src/styles/marquee.css`（`data-marquee-mode` 別の挙動を CSS で切替）
 - `stores/settings.ts`: `marqueeMode: 'always' | 'hover-only' | 'off'`
@@ -34,6 +54,15 @@
 ### フェーズ 2 — 高視認エリア（PR2）
 
 優先: サイドバー、ヘッダー（試合名・編集者名）、ヘルプ（タイトル・逆引きラベル・パンくず相当）、トースト、スコアボード（チーム名・得点者名）。
+
+#### スコアボード適用方針（案 A 確定）
+
+- **方針**: オーバーフロー時は常時マーキーで **チーム正式名を全文表示**（省略しない）。LED ボード演出の主役。
+- **MarqueeText**: `variant="scoreboard"` を使用（フェーズ 1 のプリセット: speed **28** px/s、delay **2200** ms、gap **64** px）。必要なら個別 props で上書き。
+- **適用箇所**: `ScoreBoardCard.vue` のホームチーム名・アウェイチーム名（およびフェーズ 3 で得点者名と連動スタイル）。
+- **ホバー挙動**: 一時停止は **ローカルのみ**（他クライアントに影響しない）。上記「表示方針」と同じ。
+- **演出連動**: スコア変動時の `score-flash` と組み合わせ、**フラッシュ後にマーキーが続く**リズムでドラマ性を出す（フェーズ 3 で詳細実装可）。
+- **得点者名**: `scorer-name-marquee` クラス（LED 風境界線・背景）で表示（フェーズ 3 と併せてもよいが、フェーズ 2 で枠だけ入れてもよい）。
 
 ### フェーズ 3 — 全域＋演出（PR3）
 
@@ -66,3 +95,4 @@
 **改版履歴**
 
 - 2026-05-06: 初版（Sprint 07 から v0.6.1 マーキーを切り出し、3 フェーズ PR 案を記載）。
+- 2026-05-06: 案 A（常時マーキー全文）確定、`variant` プリセット、スコアボード方針・ホバー注記を追記。
