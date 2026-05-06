@@ -49,6 +49,7 @@ function hydrateFromDisk() {
   const snap = mockDb.matchDetails[String(fid)] || mockDb.matchDetails['1'] || clone(mockMatchDetail)
   liveDetail = clone(snap)
   mockDb.focusedMatchId = liveDetail.id
+  ensureLiveDetailClockFields()
 }
 
 hydrateFromDisk()
@@ -71,6 +72,38 @@ function syncMockListRowScoresFromLive() {
   if (!row) return
   row.team1_score = liveDetail.score.home
   row.team2_score = liveDetail.score.away
+}
+
+function formatElapsedClock(ms: number): string {
+  const s = Math.floor(Math.max(0, ms) / 1000)
+  const mm = Math.floor(s / 60)
+  const ss = s % 60
+  return `${mm}:${String(ss).padStart(2, '0')}`
+}
+
+function liveElapsedMs(): number {
+  const acc = Number(liveDetail.clockAccumulatedMs) || 0
+  if (liveDetail.clockRunning && liveDetail.clockStartedAtMs != null) {
+    return acc + (Date.now() - Number(liveDetail.clockStartedAtMs))
+  }
+  return acc
+}
+
+function syncLiveDetailClockMmSs() {
+  liveDetail.clockMmSs = formatElapsedClock(liveElapsedMs())
+}
+
+function ensureLiveDetailClockFields() {
+  if (typeof liveDetail.clockAccumulatedMs !== 'number') {
+    liveDetail.clockAccumulatedMs = 0
+  }
+  if (typeof liveDetail.clockRunning !== 'boolean') {
+    liveDetail.clockRunning = false
+  }
+  if (liveDetail.clockStartedAtMs === undefined) {
+    liveDetail.clockStartedAtMs = null
+  }
+  syncLiveDetailClockMmSs()
 }
 
 function postNui(type: string, payload: unknown) {
@@ -210,6 +243,9 @@ function newEmptyMatchDetail(
     awayPlayers: [],
     events: [],
     dbStatus: 'draft',
+    clockAccumulatedMs: 0,
+    clockRunning: false,
+    clockStartedAtMs: null,
   }
 }
 
@@ -235,6 +271,8 @@ export function mockResponse(path: string, data: unknown): unknown {
     case 'match_create':
       return { ok: true, forwarded: true }
     case 'match_get':
+      return { ok: true, forwarded: true }
+    case 'match_clock':
       return { ok: true, forwarded: true }
     case 'match_checkResume':
       return { ok: true, forwarded: true }
@@ -637,6 +675,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         const detail = newEmptyMatchDetail(id, t1, t2, matchDate, matchName, venue, kickoffTime)
         mockDb.matchDetails[String(id)] = detail
         liveDetail = clone(detail)
+        ensureLiveDetailClockFields()
         mockDb.focusedMatchId = id
         flushPersistence()
         postNui('refboard:match:create:ack', { ok: true, matchId: id })
@@ -648,6 +687,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const snap = mockDb.matchDetails[String(mid)]
       if (snap) {
         liveDetail = clone(snap)
+        ensureLiveDetailClockFields()
         mockDb.focusedMatchId = mid
         flushPersistence()
         postNui('refboard:match:get:ack', {
@@ -664,8 +704,9 @@ export function queueMockSideEffects(path: string, data: unknown): void {
             match_name: liveDetail.matchName,
             venue: liveDetail.venue,
             kickoff_time: liveDetail.kickoffTime ? `${liveDetail.kickoffTime}:00` : null,
-            clock_running: 0,
-            clock_accumulated_ms: 5400000,
+            clock_running: liveDetail.clockRunning ? 1 : 0,
+            clock_started_at: liveDetail.clockStartedAtMs,
+            clock_accumulated_ms: liveDetail.clockAccumulatedMs,
             team1_name: liveDetail.home.name,
             team2_name: liveDetail.away.name,
           },
@@ -704,6 +745,59 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         })
       } else {
         postNui('refboard:match:get:ack', { match: null, players: [], events: [], history: [] })
+      }
+    }
+    if (path === 'match_clock') {
+      const d = data as { matchId?: number; action?: string; deltaRemainingMs?: number }
+      const mid = Number(d.matchId) || liveDetail.id
+      if (mid === liveDetail.id) {
+        const action = d.action
+        if (action === 'start') {
+          if (!liveDetail.clockRunning) {
+            liveDetail.clockRunning = true
+            liveDetail.clockStartedAtMs = Date.now()
+          }
+        } else if (action === 'stop') {
+          if (liveDetail.clockRunning) {
+            liveDetail.clockAccumulatedMs = liveElapsedMs()
+            liveDetail.clockRunning = false
+            liveDetail.clockStartedAtMs = null
+          }
+        } else if (action === 'clear') {
+          liveDetail.clockRunning = false
+          liveDetail.clockStartedAtMs = null
+          liveDetail.clockAccumulatedMs = 0
+        } else if (action === 'adjust') {
+          const delta = Number(d.deltaRemainingMs) || 0
+          const cur = liveElapsedMs()
+          const newElapsed = Math.max(0, cur - delta)
+          liveDetail.clockAccumulatedMs = newElapsed
+          if (liveDetail.clockRunning) {
+            liveDetail.clockStartedAtMs = Date.now()
+          }
+        }
+        syncLiveDetailClockMmSs()
+        flushPersistence()
+        postNui('refboard:match:clock:ack', {
+          ok: true,
+          matchId: liveDetail.id,
+          clock_running: liveDetail.clockRunning ? 1 : 0,
+          clock_started_at: liveDetail.clockStartedAtMs,
+          clock_accumulated_ms: liveDetail.clockAccumulatedMs,
+        })
+        postNui('refboard:match:state', {
+          matchId: liveDetail.id,
+          team1_score: liveDetail.score.home,
+          team2_score: liveDetail.score.away,
+          status: liveDetail.dbStatus,
+          current_half: liveDetail.serverHalf,
+          pk_first_team_id: liveDetail.pkFirstTeamId,
+          clock_running: liveDetail.clockRunning ? 1 : 0,
+          clock_started_at: liveDetail.clockStartedAtMs,
+          clock_accumulated_ms: liveDetail.clockAccumulatedMs,
+          events: liveDetail.events,
+          players: null,
+        })
       }
     }
     if (path === 'autosave_draft') {
@@ -862,6 +956,12 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const row = mockListRows.find((r) => r.id === liveDetail.id)
       if (row) row.status = 'finished'
       liveDetail.dbStatus = 'finished'
+      if (liveDetail.clockRunning) {
+        liveDetail.clockAccumulatedMs = liveElapsedMs()
+        liveDetail.clockRunning = false
+        liveDetail.clockStartedAtMs = null
+      }
+      syncLiveDetailClockMmSs()
       flushPersistence()
       postNui('refboard:match:finish:ack', { ok: true })
       postNui('refboard:match:finished', { matchId: liveDetail.id })

@@ -7,6 +7,8 @@ import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 const props = defineProps<{
   open: boolean
   model: MatchDetailModel
+  /** 未指定なら model.clockMmSs（進行中は親から経過のライブ文字列を渡す） */
+  matchTimeMmSs?: string
 }>()
 
 const emit = defineEmits<{ 'update:open': [boolean]; done: [] }>()
@@ -39,7 +41,7 @@ const teamName = computed(() => {
 const summary = computed(() => {
   if (!outP.value || !inP.value || !teamName.value) return ''
   return t('substitution.summary', {
-    time: `${props.model.clockMmSs}`,
+    time: `${props.matchTimeMmSs ?? props.model.clockMmSs}`,
     team: teamName.value,
     outNo: outP.value.number,
     outName: outP.value.name,

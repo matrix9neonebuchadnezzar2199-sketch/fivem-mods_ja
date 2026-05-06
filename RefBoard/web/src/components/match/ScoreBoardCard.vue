@@ -11,10 +11,12 @@ const props = withDefaults(
     readonly: boolean
     editorHere: boolean
     embed?: boolean
-    /** 親がローカル走時計中に毎ティック更新する表示用（未指定なら model.clockMmSs） */
+    /** 親が残り時間など毎ティック更新する表示用（未指定なら model.clockMmSs） */
     clockMmSsOverride?: string | null
+    /** 時計の進行状態（試合時計の下に表示） */
+    clockPhaseLabel?: string
   }>(),
-  { embed: false, clockMmSsOverride: undefined },
+  { embed: false, clockMmSsOverride: undefined, clockPhaseLabel: '' },
 )
 
 const displayClockMmSs = computed(() =>
@@ -28,6 +30,8 @@ const emit = defineEmits<{
   clockStart: []
   clockStop: []
   clockClear: []
+  /** 残り時間の手動補正（ms。±60*1000） */
+  clockAdjust: [deltaMs: number]
 }>()
 
 const { t } = useI18n()
@@ -190,9 +194,28 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
           >{{ model.score.away }}</span>
         </div>
         <div class="mt-3 flex items-center gap-2 text-sm text-slate-400">
-          <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>−</button>
+          <button
+            type="button"
+            class="rounded border border-slate-600 px-2 py-0.5 hover:bg-slate-700 disabled:opacity-40"
+            :disabled="readonly"
+            title="−1分（残り時間を減らす）"
+            @click="emit('clockAdjust', -60 * 1000)"
+          >
+            −
+          </button>
           <span class="font-mono text-lg text-slate-200">{{ displayClockMmSs }}</span>
-          <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>+</button>
+          <button
+            type="button"
+            class="rounded border border-slate-600 px-2 py-0.5 hover:bg-slate-700 disabled:opacity-40"
+            :disabled="readonly"
+            title="+1分（残り時間を増やす）"
+            @click="emit('clockAdjust', 60 * 1000)"
+          >
+            +
+          </button>
+        </div>
+        <div v-if="clockPhaseLabel" class="mt-0.5 text-center text-[11px] font-medium text-slate-400">
+          {{ clockPhaseLabel }}
         </div>
         <div class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
         <div class="mt-3 flex items-center justify-center gap-2">

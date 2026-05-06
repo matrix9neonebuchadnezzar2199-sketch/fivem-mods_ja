@@ -31,6 +31,7 @@ export type ServerMatchRow = {
   venue?: string | null
   kickoff_time?: string | null
   clock_running?: number
+  clock_started_at?: number | null
   clock_accumulated_ms?: number
   team1_name?: string
   team2_name?: string
@@ -194,6 +195,13 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
   const homeScore = Number(m.team1_score) || 0
   const awayScore = Number(m.team2_score) || 0
   const acc = Number(m.clock_accumulated_ms) || 0
+  const running = Number(m.clock_running) === 1
+  const startedAt =
+    m.clock_started_at != null && String(m.clock_started_at).length > 0 ? Number(m.clock_started_at) : null
+  const elapsedNow =
+    running && startedAt != null && Number.isFinite(startedAt)
+      ? acc + Math.max(0, Date.now() - startedAt)
+      : acc
   const players = ack.players || []
   const status = m.status || 'draft'
   const half = m.current_half || '1st'
@@ -214,7 +222,10 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
     away: { name: m.team2_name || 'Team 2', short: (m.team2_name || 'T2').slice(0, 2).toUpperCase(), isHome: false },
     score: { home: homeScore, away: awayScore },
     clockLabel: status === 'finished' ? '試合終了' : status === 'cancelled' ? 'キャンセル' : '進行中',
-    clockMmSs: clockMmSs(acc),
+    clockMmSs: clockMmSs(elapsedNow),
+    clockAccumulatedMs: acc,
+    clockRunning: running,
+    clockStartedAtMs: startedAt != null && Number.isFinite(startedAt) ? startedAt : null,
     breakdown: mapBreakdown(ack.breakdown, defaultBreakdown(homeScore, awayScore)),
     serverHalf: half,
     pkFirstTeamId: m.pk_first_team_id != null ? Number(m.pk_first_team_id) : null,

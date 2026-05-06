@@ -8,7 +8,7 @@ import { refboardRecaptureNuiFocus, useNui } from '../composables/useNui'
 import { useHeartbeat } from '../composables/useHeartbeat'
 import { useFocusTracker } from '../composables/useFocusTracker'
 import { mockMatchDetail } from '../mocks/matchDetail'
-import type { MatchDetailModel } from '../types/match'
+import type { MatchClockAck, MatchDetailModel } from '../types/match'
 import type { ScoreHistoryRow } from '../types/match'
 import {
   mapBreakdown,
@@ -86,7 +86,20 @@ const readonly = computed(() => !session.isEditor)
 /** カード不透明度（設定）。スコアボードは opacity 親を持たない（CEF で blur と合成すると霞み・クリック不能になり得る） */
 const cardDimStyle = computed(() => ({ opacity: settings.settings.cardOpacity / 100 }))
 
-// --- 試合時計（NUI ローカル。サーバー clock API 未接続時もスタート/ストップで UI 更新） ---
+const detail = reactive<MatchDetailModel>(JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel)
+const historyRows = ref<ScoreHistoryRow[]>([])
+
+const showGoal = ref(false)
+const showAdd = ref(false)
+const addTeamId = ref(0)
+const showScoreEdit = ref(false)
+const showHistory = ref(false)
+const showFinish = ref(false)
+const showSub = ref(false)
+const showCard = ref(false)
+const cardPreset = ref<'yellow' | 'red' | null>(null)
+
+// --- 試合時計: DB の clock_* を正とする残りカウントダウン。ティックでは clockMmSs を書き換えない（自動保存のノイズ防止） ---
 function parseClockMmSsToMs(s: string): number {
   const m = /^(\d+):(\d{2})$/.exec(String(s ?? '').trim())
   if (!m) return 0
@@ -102,10 +115,37 @@ function formatClockMs(ms: number): string {
   return `${mm}:${String(ss).padStart(2, '0')}`
 }
 
-const clockAccumMs = ref(0)
-const clockRunStartedAt = ref<number | null>(null)
+/** 試合全体の定尺（前半×2、分→ms）。クリア時の残り 90:00 等はここから */
+const fullMatchDurationMs = computed(
+  () => Math.max(60_000, settings.settings.defaultHalfMinutes * 2 * 60 * 1000),
+)
+
+const clockUiTick = ref(0)
 const clockLiveDisplay = ref('0:00')
 let clockTickInterval: ReturnType<typeof setInterval> | null = null
+
+function getElapsedMsFromDetail(): number {
+  const acc =
+    typeof detail.clockAccumulatedMs === 'number'
+      ? detail.clockAccumulatedMs
+      : parseClockMmSsToMs(detail.clockMmSs)
+  if (detail.clockRunning === true && detail.clockStartedAtMs != null) {
+    const st = Number(detail.clockStartedAtMs)
+    if (Number.isFinite(st)) {
+      return acc + Math.max(0, Date.now() - st)
+    }
+  }
+  return acc
+}
+
+const elapsedMmSsLive = computed(() => {
+  void clockUiTick.value
+  return formatClockMs(getElapsedMsFromDetail())
+})
+
+const clockPhaseLabel = computed(() =>
+  detail.clockRunning ? t('score_board.clock_state_running') : t('score_board.clock_state_stopped'),
+)
 
 function stopClockTickInterval() {
   if (clockTickInterval != null) {
@@ -114,59 +154,102 @@ function stopClockTickInterval() {
   }
 }
 
-function bumpClockLiveDisplay() {
-  if (clockRunStartedAt.value == null) return
-  const extra = Math.floor(performance.now() - clockRunStartedAt.value)
-  clockLiveDisplay.value = formatClockMs(clockAccumMs.value + extra)
+function refreshClockLiveDisplay() {
+  const full = fullMatchDurationMs.value
+  const elapsed = getElapsedMsFromDetail()
+  const rem = Math.max(0, Math.min(full, full - elapsed))
+  clockLiveDisplay.value = formatClockMs(rem)
+  clockUiTick.value++
 }
 
 function syncClockFromDetail() {
   stopClockTickInterval()
-  clockRunStartedAt.value = null
-  clockAccumMs.value = parseClockMmSsToMs(detail.clockMmSs)
-  clockLiveDisplay.value = formatClockMs(clockAccumMs.value)
+  refreshClockLiveDisplay()
+  if (detail.clockRunning) {
+    clockTickInterval = setInterval(refreshClockLiveDisplay, 250)
+  }
 }
 
-function onClockStart() {
+function applyClockAck(r: MatchClockAck) {
+  if (r.clock_accumulated_ms !== undefined) {
+    detail.clockAccumulatedMs = Number(r.clock_accumulated_ms) || 0
+  }
+  if (r.clock_running !== undefined) {
+    detail.clockRunning = Number(r.clock_running) === 1
+  }
+  if (r.clock_started_at !== undefined) {
+    const v = r.clock_started_at
+    detail.clockStartedAtMs = v != null && String(v) !== '' ? Number(v) : null
+  }
+  detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
+}
+
+function callMatchClock(
+  action: 'start' | 'stop' | 'clear' | 'adjust',
+  deltaRemainingMs?: number,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    let settled = false
+    const un = on('refboard:match:clock:ack', (r: MatchClockAck) => {
+      if (r?.matchId != null && r.matchId !== detail.id) {
+        return
+      }
+      settled = true
+      un()
+      if (r?.ok) {
+        applyClockAck(r)
+        syncClockFromDetail()
+        resolve(true)
+      } else {
+        const msg = r?.error
+          ? t('toast.match_clock_error', { code: String(r.error) })
+          : t('toast.match_clock_failed')
+        toast(msg, 'error')
+        resolve(false)
+      }
+    })
+    void send('match_clock', { matchId: detail.id, action, deltaRemainingMs }).catch(() => {
+      if (!settled) {
+        settled = true
+        un()
+        toast(t('toast.match_clock_failed'), 'error')
+        resolve(false)
+      }
+    })
+    setTimeout(() => {
+      if (!settled) {
+        settled = true
+        un()
+        toast(t('toast.match_clock_timeout'), 'error')
+        resolve(false)
+      }
+    }, 8000)
+  })
+}
+
+async function onClockStart() {
   if (readonly.value) return
-  if (clockRunStartedAt.value != null) return
-  clockRunStartedAt.value = performance.now()
-  bumpClockLiveDisplay()
-  stopClockTickInterval()
-  clockTickInterval = setInterval(bumpClockLiveDisplay, 250)
+  if (detail.clockRunning) return
+  await callMatchClock('start')
 }
 
-function onClockStop() {
+async function onClockStop() {
   if (readonly.value) return
-  if (clockRunStartedAt.value == null) return
-  stopClockTickInterval()
-  const extra = Math.floor(performance.now() - clockRunStartedAt.value)
-  clockAccumMs.value += extra
-  clockRunStartedAt.value = null
-  detail.clockMmSs = formatClockMs(clockAccumMs.value)
+  if (!detail.clockRunning) return
+  await callMatchClock('stop')
 }
 
-function onClockClear() {
+async function onClockClear() {
   if (readonly.value) return
-  stopClockTickInterval()
-  clockRunStartedAt.value = null
-  clockAccumMs.value = 0
-  detail.clockMmSs = formatClockMs(0)
-  clockLiveDisplay.value = '0:00'
+  await callMatchClock('clear')
 }
 
-const detail = reactive<MatchDetailModel>(JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel)
-const historyRows = ref<ScoreHistoryRow[]>([])
+async function onClockAdjust(deltaMs: number) {
+  if (readonly.value) return
+  await callMatchClock('adjust', deltaMs)
+}
 
-const showGoal = ref(false)
-const showAdd = ref(false)
-const addTeamId = ref(0)
-const showScoreEdit = ref(false)
-const showHistory = ref(false)
-const showFinish = ref(false)
-const showSub = ref(false)
-const showCard = ref(false)
-const cardPreset = ref<'yellow' | 'red' | null>(null)
+syncClockFromDetail()
 
 /** 下部固定の小窓（スコア＋試合ステータスのみ）。PK 中は全画面を優先 */
 const compactDock = ref(false)
@@ -193,6 +276,9 @@ function applyState(p: {
   status?: string
   current_half?: string
   pk_first_team_id?: number | null
+  clock_running?: number
+  clock_started_at?: number | null
+  clock_accumulated_ms?: number
   breakdown?: ServerBreakdown
   events?: ServerEventRow[]
   players?: ServerPlayerRow[] | null
@@ -223,6 +309,24 @@ function applyState(p: {
   }
   if (p.history) {
     historyRows.value = mapHistoryRows(p.history)
+  }
+  const clockPatch =
+    p.clock_accumulated_ms !== undefined ||
+    p.clock_running !== undefined ||
+    p.clock_started_at !== undefined
+  if (clockPatch) {
+    if (p.clock_accumulated_ms !== undefined) {
+      detail.clockAccumulatedMs = Number(p.clock_accumulated_ms) || 0
+    }
+    if (p.clock_running !== undefined) {
+      detail.clockRunning = Number(p.clock_running) === 1
+    }
+    if (p.clock_started_at !== undefined) {
+      const v = p.clock_started_at
+      detail.clockStartedAtMs = v != null && String(v) !== '' ? Number(v) : null
+    }
+    detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
+    syncClockFromDetail()
   }
 }
 
@@ -514,12 +618,14 @@ function exportMatchEventsCsv() {
               :model="detail"
               :readonly="readonly"
               :editor-here="editorHereScore"
-              :clock-mm-ss-override="clockRunStartedAt !== null ? clockLiveDisplay : undefined"
+              :clock-mm-ss-override="clockLiveDisplay"
+              :clock-phase-label="clockPhaseLabel"
               @goal="showGoal = true"
               @manual-score="showScoreEdit = true"
               @clock-start="onClockStart"
               @clock-stop="onClockStop"
               @clock-clear="onClockClear"
+              @clock-adjust="onClockAdjust"
             />
           </div>
           <div class="min-w-0" :style="cardDimStyle" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
@@ -589,12 +695,14 @@ function exportMatchEventsCsv() {
               :model="detail"
               :readonly="readonly"
               :editor-here="editorHereScore"
-              :clock-mm-ss-override="clockRunStartedAt !== null ? clockLiveDisplay : undefined"
+              :clock-mm-ss-override="clockLiveDisplay"
+              :clock-phase-label="clockPhaseLabel"
               @goal="showGoal = true"
               @manual-score="showScoreEdit = true"
               @clock-start="onClockStart"
               @clock-stop="onClockStop"
               @clock-clear="onClockClear"
+              @clock-adjust="onClockAdjust"
             />
           </div>
           <div
@@ -611,7 +719,7 @@ function exportMatchEventsCsv() {
 
     <div class="pointer-events-auto">
       <GoalRecordWizard v-model:open="showGoal" :model="detail" @recorded="reloadMatch" />
-      <SubstitutionDialog v-model:open="showSub" :model="detail" @done="reloadMatch" />
+      <SubstitutionDialog v-model:open="showSub" :model="detail" :match-time-mm-ss="elapsedMmSsLive" @done="reloadMatch" />
       <CardIssueDialog v-model:open="showCard" :model="detail" :preset-kind="cardPreset" @done="reloadMatch" />
       <AddPlayerDialog v-model:open="showAdd" :match-id="detail.id" :team-id="addTeamId" @added="reloadMatch" />
       <ScoreEditDialog v-model:open="showScoreEdit" :model="detail" @saved="reloadMatch" />
@@ -627,7 +735,7 @@ function exportMatchEventsCsv() {
           <p class="mb-1 text-sm text-slate-300">
             {{ t('match_finish.score_line', { home: detail.home.name, away: detail.away.name, s1: detail.score.home, s2: detail.score.away }) }}
           </p>
-          <p class="mb-1 text-sm text-slate-400">{{ t('match_finish.time', { time: detail.clockMmSs }) }}</p>
+          <p class="mb-1 text-sm text-slate-400">{{ t('match_finish.time', { time: elapsedMmSsLive }) }}</p>
           <p class="mb-4 text-xs text-slate-500">{{ t('match_finish.note') }}</p>
           <div class="flex justify-end gap-2">
             <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="showFinish = false">

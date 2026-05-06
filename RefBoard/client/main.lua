@@ -131,6 +131,10 @@ RegisterNetEvent('refboard:match:get:ack', function(payload)
   SendNUIMessage({ type = 'refboard:match:get:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:match:clock:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:match:clock:ack', payload = payload })
+end)
+
 RegisterNetEvent('refboard:match:state', function(payload)
   SendNUIMessage({ type = 'refboard:match:state', payload = payload })
 end)

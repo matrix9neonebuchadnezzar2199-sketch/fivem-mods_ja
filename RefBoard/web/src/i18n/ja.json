@@ -1,7 +1,10 @@
 {
   "app": { "title": "サッカー試合管理" },
   "toast": {
-    "match_finished": "試合を終了しました"
+    "match_finished": "試合を終了しました",
+    "match_clock_failed": "試合時計の更新に失敗しました。",
+    "match_clock_timeout": "試合時計の応答がタイムアウトしました。再読込してください。",
+    "match_clock_error": "試合時計を更新できませんでした（{code}）。"
   },
   "presence": {
     "online": "接続中",
@@ -117,7 +120,9 @@
     "clock_stop_aria": "試合時計を停止",
     "clock_clear": "クリア",
     "clock_clear_confirm_title": "時計をクリアしますか？",
-    "clock_clear_confirm_body": "表示中の累積時間がリセットされます。サーバー連携後は DB にも反映されます。"
+    "clock_clear_confirm_body": "経過時間を 0 に戻し、残りを定尺いっぱいにします。DB にも反映されます。",
+    "clock_state_running": "時計: 進行中",
+    "clock_state_stopped": "時計: 停止中"
   },
   "score_manual": {
     "title": "スコアを直接編集",

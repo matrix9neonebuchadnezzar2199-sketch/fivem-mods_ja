@@ -72,7 +72,14 @@ export type MatchDetailModel = {
   away: { name: string; short: string; isHome: boolean }
   score: { home: number; away: number }
   clockLabel: string
+  /** 表示用スナップショット（経過 mm:ss）。進行中はティックで再計算し detail は頻繁に書き換えない */
   clockMmSs: string
+  /** DB matches.clock_accumulated_ms（停止時点までの累積経過 ms） */
+  clockAccumulatedMs: number
+  /** DB matches.clock_running */
+  clockRunning: boolean
+  /** DB matches.clock_started_at（Unix epoch ms）。進行中のみ */
+  clockStartedAtMs: number | null
   breakdown: HalfScoreBreakdown
   /** DB matches.current_half */
   serverHalf: string
@@ -82,6 +89,16 @@ export type MatchDetailModel = {
   events: MatchEvent[]
   /** DB の matches.status */
   dbStatus: MatchDbStatus
+}
+
+/** refboard:match:clock:ack */
+export type MatchClockAck = {
+  ok?: boolean
+  error?: string
+  matchId?: number
+  clock_running?: number
+  clock_started_at?: number | null
+  clock_accumulated_ms?: number
 }
 
 export type MatchListRow = {

@@ -1,7 +1,10 @@
 {
   "app": { "title": "Soccer match control" },
   "toast": {
-    "match_finished": "Match finished"
+    "match_finished": "Match finished",
+    "match_clock_failed": "Could not update the match clock.",
+    "match_clock_timeout": "Match clock request timed out. Please reload.",
+    "match_clock_error": "Could not update the match clock ({code})."
   },
   "presence": {
     "online": "Online",
@@ -117,7 +120,9 @@
     "clock_stop_aria": "Stop match clock",
     "clock_clear": "Clear",
     "clock_clear_confirm_title": "Clear the clock?",
-    "clock_clear_confirm_body": "The displayed elapsed time will reset. When server sync is wired, this will also update the database."
+    "clock_clear_confirm_body": "Resets elapsed to 0 and sets remaining to the full match length. This updates the database.",
+    "clock_state_running": "Clock: running",
+    "clock_state_stopped": "Clock: stopped"
   },
   "score_manual": {
     "title": "Edit score directly",
