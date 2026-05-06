@@ -46,7 +46,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col" :data-marquee-mode="marqueeMode">
+  <div
+    class="flex h-full min-h-0 flex-col bg-[rgb(15_23_42/0.88)] backdrop-blur-[1px]"
+    :data-marquee-mode="marqueeMode"
+  >
     <router-view />
     <Toast />
   </div>

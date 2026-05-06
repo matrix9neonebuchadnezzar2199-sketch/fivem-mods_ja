@@ -4,12 +4,16 @@ import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel, MatchUiStatus } from '../../types/match'
 
-const props = defineProps<{
-  model: MatchDetailModel
-  readonly: boolean
-  /** 編集者フォーカスがこのカード上にある（閲覧者向けバッジ） */
-  editorHere: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    model: MatchDetailModel
+    readonly: boolean
+    /** 編集者フォーカスがこのカード上にある（閲覧者向けバッジ） */
+    editorHere: boolean
+    embed?: boolean
+  }>(),
+  { embed: false },
+)
 
 const { t } = useI18n()
 const { send } = useNui()
@@ -91,8 +95,14 @@ function confirmPk() {
 </script>
 
 <template>
-  <div class="rounded-lg border border-slate-700 bg-slate-800/80 p-4 shadow-sm backdrop-blur">
-    <div class="mb-2 flex items-center justify-between gap-2">
+  <div
+    :class="
+      props.embed
+        ? ''
+        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+    "
+  >
+    <div v-if="!props.embed" class="mb-2 flex items-center justify-between gap-2">
       <h3 class="text-sm font-semibold text-slate-200">{{ t('match_status.title') }}</h3>
       <span
         v-if="editorHere"

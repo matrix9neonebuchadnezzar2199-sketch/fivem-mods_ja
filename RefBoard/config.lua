@@ -16,6 +16,7 @@ Config.AutosaveDebounceMs = 500
 Config.ClockSyncIntervalMs = 1000
 
 -- NUI を開くキー（キーマッピング名と一致）
+-- チャットで /refboard でも同じトグル（client/main.lua の RegisterCommand と同名）
 Config.OpenKey = 'F6'
 
 -- 既定ロケール（クライアントで上書き可）

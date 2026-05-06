@@ -130,7 +130,11 @@
   "match_detail": {
     "finish": "[試合終了]",
     "export_json": "試合データを JSON でエクスポート",
-    "export_events_csv": "イベント一覧を CSV でエクスポート"
+    "export_events_csv": "イベント一覧を CSV でエクスポート",
+    "section_basic": "基本情報",
+    "section_roster_suffix": "選手",
+    "section_expand": "セクションを開く",
+    "section_collapse": "セクションを閉じる"
   },
   "score": {
     "edit_reason": "変更理由（任意）",

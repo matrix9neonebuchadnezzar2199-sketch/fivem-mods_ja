@@ -130,7 +130,11 @@
   "match_detail": {
     "finish": "[End match]",
     "export_json": "Export match as JSON",
-    "export_events_csv": "Export events as CSV"
+    "export_events_csv": "Export events as CSV",
+    "section_basic": "Match info",
+    "section_roster_suffix": "Roster",
+    "section_expand": "Expand section",
+    "section_collapse": "Collapse section"
   },
   "score": {
     "edit_reason": "Reason (optional)",

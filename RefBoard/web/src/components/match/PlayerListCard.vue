@@ -2,13 +2,18 @@
 import { useI18n } from 'vue-i18n'
 import type { MatchPlayer } from '../../types/match'
 
-defineProps<{
-  title: string
-  players: MatchPlayer[]
-  readonly: boolean
-  teamId: number
-  editorHere: boolean
-}>()
+withDefaults(
+  defineProps<{
+    title: string
+    players: MatchPlayer[]
+    readonly: boolean
+    teamId: number
+    editorHere: boolean
+    /** MatchDetailSection の見出し＋ツールバーに任せる */
+    embed?: boolean
+  }>(),
+  { embed: false },
+)
 
 const emit = defineEmits<{ 'history': []; 'add': [teamId: number] }>()
 
@@ -39,8 +44,14 @@ function rowClass(s: MatchPlayer['status']) {
 </script>
 
 <template>
-  <div class="rounded-lg border border-slate-700 bg-slate-800/80 p-4 shadow-sm backdrop-blur">
-    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+  <div
+    :class="
+      embed
+        ? ''
+        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+    "
+  >
+    <div v-if="!embed" class="mb-2 flex flex-wrap items-center justify-between gap-2">
       <h3 class="text-sm font-semibold text-slate-200">{{ title }}</h3>
       <div class="flex items-center gap-2">
         <button type="button" class="text-[10px] text-primary hover:underline" @click="emit('history')">

@@ -2,18 +2,29 @@
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel } from '../../types/match'
 
-defineProps<{
-  model: MatchDetailModel
-  readonly: boolean
-  editorHere: boolean
-}>()
+withDefaults(
+  defineProps<{
+    model: MatchDetailModel
+    readonly: boolean
+    editorHere: boolean
+    /** MatchDetailSection 内では枠・見出しを外側に任せる */
+    embed?: boolean
+  }>(),
+  { embed: false },
+)
 
 const { t } = useI18n()
 </script>
 
 <template>
-  <div class="rounded-lg border border-slate-700 bg-slate-800/80 p-4 shadow-sm backdrop-blur">
-    <div class="mb-2 flex items-center justify-between gap-2">
+  <div
+    :class="
+      embed
+        ? 'space-y-3'
+        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+    "
+  >
+    <div v-if="!embed" class="mb-2 flex items-center justify-between gap-2">
       <h3 class="text-sm font-semibold text-slate-200">基本情報</h3>
       <span
         v-if="editorHere"

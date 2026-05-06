@@ -5,11 +5,15 @@ import { useI18n } from 'vue-i18n'
 import MarqueeText from '../common/MarqueeText.vue'
 import type { MatchDetailModel } from '../../types/match'
 
-defineProps<{
-  model: MatchDetailModel
-  readonly: boolean
-  editorHere: boolean
-}>()
+withDefaults(
+  defineProps<{
+    model: MatchDetailModel
+    readonly: boolean
+    editorHere: boolean
+    embed?: boolean
+  }>(),
+  { embed: false },
+)
 
 const emit = defineEmits<{ goal: []; manualScore: [] }>()
 
@@ -31,8 +35,14 @@ function openManual() {
 </script>
 
 <template>
-  <div class="rounded-lg border border-slate-700 bg-slate-800/80 p-4 shadow-sm backdrop-blur">
-    <div class="mb-2 flex items-center justify-between gap-2">
+  <div
+    :class="
+      embed
+        ? ''
+        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+    "
+  >
+    <div v-if="!embed" class="mb-2 flex items-center justify-between gap-2">
       <h3 class="text-sm font-semibold text-slate-200">{{ t('score_board.title') }}</h3>
       <span
         v-if="editorHere"

@@ -25,6 +25,7 @@ import {
 } from '../utils/mapMatchFromServer'
 import { downloadFile, exportMatchEventsToCSV, exportMatchToJSON, refboardFilename } from '../utils/exporters'
 import BasicInfoCard from '../components/match/BasicInfoCard.vue'
+import MatchDetailSection from '../components/match/MatchDetailSection.vue'
 import ScoreBoardCard from '../components/match/ScoreBoardCard.vue'
 import MatchStatusCard from '../components/match/MatchStatusCard.vue'
 import PlayerListCard from '../components/match/PlayerListCard.vue'
@@ -278,10 +279,10 @@ function exportMatchEventsCsv() {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-hidden bg-bg">
+  <div class="flex h-full min-h-0 flex-col overflow-hidden bg-transparent">
     <div
       v-if="settings.settings.showHero"
-      class="relative shrink-0 border-b border-slate-700 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 px-6 py-10 text-center"
+      class="relative shrink-0 border-b border-slate-700/80 bg-gradient-to-b from-slate-900/92 via-slate-900/88 to-slate-950/90 px-6 py-10 text-center backdrop-blur-sm"
     >
       <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_55%)]" />
       <div class="relative mx-auto flex max-w-xl flex-col items-center gap-3">
@@ -352,55 +353,97 @@ function exportMatchEventsCsv() {
 
       <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[30%_40%_30%]">
         <div @pointerenter="setFocus('basic_info')" @pointerleave="setFocus(null)">
-          <BasicInfoCard :model="detail" :readonly="readonly" :editor-here="editorHereBasic" />
+          <MatchDetailSection storage-key="md-basic" :title="t('match_detail.section_basic')" :editor-here="editorHereBasic">
+            <BasicInfoCard :model="detail" :readonly="readonly" :editor-here="false" embed />
+          </MatchDetailSection>
         </div>
         <div @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
-          <ScoreBoardCard
-            :model="detail"
-            :readonly="readonly"
-            :editor-here="editorHereScore"
-            @goal="showGoal = true"
-            @manual-score="showScoreEdit = true"
-          />
+          <MatchDetailSection storage-key="md-score" :title="t('score_board.title')" :editor-here="editorHereScore">
+            <ScoreBoardCard
+              :model="detail"
+              :readonly="readonly"
+              :editor-here="false"
+              embed
+              @goal="showGoal = true"
+              @manual-score="showScoreEdit = true"
+            />
+          </MatchDetailSection>
         </div>
         <div @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
-          <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" />
+          <MatchDetailSection storage-key="md-status" :title="t('match_status.title')" :editor-here="editorHereStatus">
+            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="false" embed />
+          </MatchDetailSection>
         </div>
       </div>
 
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-[65%_35%]">
         <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <div @pointerenter="setFocus('team1_players')" @pointerleave="setFocus(null)">
-            <PlayerListCard
-              :title="`${detail.home.name} — 選手`"
-              :players="detail.homePlayers"
-              :team-id="detail.team1Id"
-              :readonly="readonly"
+            <MatchDetailSection
+              storage-key="md-t1"
+              :title="`${detail.home.name} — ${t('match_detail.section_roster_suffix')}`"
               :editor-here="editorHereT1"
-              @history="showHistory = true"
-              @add="openAdd"
-            />
+            >
+              <template #toolbar>
+                <button
+                  type="button"
+                  class="text-[10px] text-primary hover:underline"
+                  @click="showHistory = true"
+                >
+                  {{ t('player.list_history_link') }}
+                </button>
+              </template>
+              <PlayerListCard
+                :title="`${detail.home.name} — ${t('match_detail.section_roster_suffix')}`"
+                :players="detail.homePlayers"
+                :team-id="detail.team1Id"
+                :readonly="readonly"
+                :editor-here="false"
+                embed
+                @history="showHistory = true"
+                @add="openAdd"
+              />
+            </MatchDetailSection>
           </div>
           <div @pointerenter="setFocus('team2_players')" @pointerleave="setFocus(null)">
-            <PlayerListCard
-              :title="`${detail.away.name} — 選手`"
-              :players="detail.awayPlayers"
-              :team-id="detail.team2Id"
-              :readonly="readonly"
+            <MatchDetailSection
+              storage-key="md-t2"
+              :title="`${detail.away.name} — ${t('match_detail.section_roster_suffix')}`"
               :editor-here="editorHereT2"
-              @history="showHistory = true"
-              @add="openAdd"
-            />
+            >
+              <template #toolbar>
+                <button
+                  type="button"
+                  class="text-[10px] text-primary hover:underline"
+                  @click="showHistory = true"
+                >
+                  {{ t('player.list_history_link') }}
+                </button>
+              </template>
+              <PlayerListCard
+                :title="`${detail.away.name} — ${t('match_detail.section_roster_suffix')}`"
+                :players="detail.awayPlayers"
+                :team-id="detail.team2Id"
+                :readonly="readonly"
+                :editor-here="false"
+                embed
+                @history="showHistory = true"
+                @add="openAdd"
+              />
+            </MatchDetailSection>
           </div>
         </div>
         <div @pointerenter="setFocus('events')" @pointerleave="setFocus(null)">
-          <EventTimelineCard
-            :events="detail.events"
-            :readonly="readonly"
-            :editor-here="editorHereEvents"
-            @substitute="showSub = true"
-            @issue-card="openCard"
-          />
+          <MatchDetailSection storage-key="md-events" :title="t('events.title')" :editor-here="editorHereEvents">
+            <EventTimelineCard
+              :events="detail.events"
+              :readonly="readonly"
+              :editor-here="false"
+              embed
+              @substitute="showSub = true"
+              @issue-card="openCard"
+            />
+          </MatchDetailSection>
         </div>
       </div>
       </div>
