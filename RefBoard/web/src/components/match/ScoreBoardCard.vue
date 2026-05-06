@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
+import MarqueeText from '../common/MarqueeText.vue'
 import type { MatchDetailModel } from '../../types/match'
 
 defineProps<{
@@ -45,7 +46,9 @@ function openManual() {
         <div class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary">
           {{ model.home.short }}
         </div>
-        <div class="text-xs font-medium text-slate-300">{{ model.home.name }}</div>
+        <div class="w-full min-w-0 max-w-full text-center text-xs font-medium text-slate-300">
+          <MarqueeText :text="model.home.name ?? ''" variant="scoreboard" />
+        </div>
         <span class="rounded bg-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">HOME</span>
       </div>
       <div class="relative flex flex-col items-center justify-center px-2">
@@ -91,7 +94,9 @@ function openManual() {
         <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-600/60 text-lg font-bold text-slate-200">
           {{ model.away.short }}
         </div>
-        <div class="text-xs font-medium text-slate-300">{{ model.away.name }}</div>
+        <div class="w-full min-w-0 max-w-full text-center text-xs font-medium text-slate-300">
+          <MarqueeText :text="model.away.name ?? ''" variant="scoreboard" />
+        </div>
         <span class="rounded bg-slate-600/50 px-2 py-0.5 text-[10px] font-bold text-slate-400">AWAY</span>
       </div>
     </div>
