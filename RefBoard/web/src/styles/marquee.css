@@ -1,0 +1,94 @@
+/* Sprint 08: マーキー共通。MarqueeText / v-marquee 双方でクラス名を揃える。 */
+
+.rb-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  min-width: 0;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 12px,
+    black calc(100% - 12px),
+    transparent 100%
+  );
+}
+
+.rb-marquee-track {
+  display: inline-flex;
+  width: max-content;
+  max-width: none;
+}
+
+.rb-marquee-content {
+  padding-right: var(--marquee-gap, 48px);
+}
+
+.rb-marquee.is-overflowing .rb-marquee-track {
+  animation: rb-marquee-scroll linear infinite;
+}
+
+/* 常時: ホバーで一時停止（各クライアントローカルのみ） */
+[data-marquee-mode='always'] .rb-marquee.is-overflowing:hover .rb-marquee-track,
+:not([data-marquee-mode]) .rb-marquee.is-overflowing:hover .rb-marquee-track {
+  animation-play-state: paused;
+}
+
+/* ホバー時のみスクロール */
+[data-marquee-mode='hover-only'] .rb-marquee.is-overflowing:not(:hover) .rb-marquee-track {
+  animation-play-state: paused;
+}
+
+[data-marquee-mode='hover-only'] .rb-marquee.is-overflowing:hover .rb-marquee-track {
+  animation-play-state: running;
+}
+
+/* 停止: 省略表示（Settings 文言に合わせる） */
+[data-marquee-mode='off'] .rb-marquee.is-overflowing .rb-marquee-track {
+  animation: none !important;
+}
+
+[data-marquee-mode='off'] .rb-marquee.rb-marquee--ellipsis {
+  text-overflow: ellipsis;
+}
+
+[data-marquee-mode='off'] .rb-marquee.rb-marquee--ellipsis .rb-marquee-off-text,
+.rb-marquee.rb-marquee--ellipsis .rb-marquee-off-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* v-marquee: 停止モード時はトラックを 1 行省略に切り替え */
+.rb-marquee.rb-marquee--ellipsis .rb-marquee-track.rb-marquee-track-ellipsis {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: none !important;
+}
+
+.rb-marquee.rb-marquee--ellipsis .rb-marquee-track-ellipsis .rb-marquee-content {
+  padding-right: 0;
+}
+
+@keyframes rb-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--marquee-distance, 0px)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-marquee .rb-marquee-track {
+    animation: none !important;
+  }
+
+  .rb-marquee {
+    mask-image: none;
+  }
+}

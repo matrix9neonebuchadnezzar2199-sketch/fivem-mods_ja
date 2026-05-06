@@ -326,7 +326,17 @@
     "nui_mock": "Enable NUI mock",
     "nui_mock_note": "Browser dev uses mock automatically.",
     "show_test_commands": "Show test commands hint (Config.EnableTestCommands)",
-    "health_link": "Health check (pre-flight)"
+    "health_link": "Health check (pre-flight)",
+    "marquee_mode": {
+      "label": "Text scroll",
+      "description": "Choose how overflowing one-line text behaves.",
+      "always": "Always scroll",
+      "always_desc": "Keep long text scrolling when it overflows (recommended).",
+      "hover_only": "On hover only",
+      "hover_only_desc": "Scroll only while the pointer is over the text.",
+      "off": "Off",
+      "off_desc": "Disable scrolling; use ellipsis for overflow."
+    }
   },
   "help": {
     "title": "Help & guide",

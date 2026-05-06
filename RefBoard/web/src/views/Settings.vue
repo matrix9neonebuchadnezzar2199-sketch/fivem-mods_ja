@@ -82,6 +82,31 @@ function syncLocale() {
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
       <h2 class="mb-3 text-sm font-semibold text-primary">{{ t('settings.section_display') }}</h2>
+      <fieldset class="mb-4 space-y-2 border-0 p-0">
+        <legend class="mb-1 block text-slate-400">{{ t('settings.marquee_mode.label') }}</legend>
+        <p class="mb-2 text-xs text-slate-500">{{ t('settings.marquee_mode.description') }}</p>
+        <label class="flex cursor-pointer items-start gap-2 rounded border border-transparent px-1 py-1 hover:border-slate-600">
+          <input v-model="settings.settings.marqueeMode" type="radio" value="always" class="mt-1 shrink-0 rounded border-slate-500" />
+          <span>
+            <span class="block text-slate-200">{{ t('settings.marquee_mode.always') }}</span>
+            <span class="block text-xs text-slate-500">{{ t('settings.marquee_mode.always_desc') }}</span>
+          </span>
+        </label>
+        <label class="flex cursor-pointer items-start gap-2 rounded border border-transparent px-1 py-1 hover:border-slate-600">
+          <input v-model="settings.settings.marqueeMode" type="radio" value="hover-only" class="mt-1 shrink-0 rounded border-slate-500" />
+          <span>
+            <span class="block text-slate-200">{{ t('settings.marquee_mode.hover_only') }}</span>
+            <span class="block text-xs text-slate-500">{{ t('settings.marquee_mode.hover_only_desc') }}</span>
+          </span>
+        </label>
+        <label class="flex cursor-pointer items-start gap-2 rounded border border-transparent px-1 py-1 hover:border-slate-600">
+          <input v-model="settings.settings.marqueeMode" type="radio" value="off" class="mt-1 shrink-0 rounded border-slate-500" />
+          <span>
+            <span class="block text-slate-200">{{ t('settings.marquee_mode.off') }}</span>
+            <span class="block text-xs text-slate-500">{{ t('settings.marquee_mode.off_desc') }}</span>
+          </span>
+        </label>
+      </fieldset>
       <label class="flex items-center gap-2 text-slate-300">
         <input v-model="settings.settings.showHero" type="checkbox" class="rounded border-slate-500" />
         {{ t('settings.show_hero') }}

@@ -3,6 +3,9 @@
 ## v0.6.1 — Unreleased
 
 - **設計**: スコアボード方針（案 A）・`MarqueeText` の `variant` プリセット仕様を `docs/sprints/sprint_08_marquee.md` に確定記録。
+- **マーキー基盤（フェーズ1）**: `MarqueeText.vue`（`contentRef` 計測・`VARIANTS` プリセット・`prefers-reduced-motion`）と `v-marquee` ディレクティブ（`createElement` / `textContent` で DOM 構築）。
+- **`marquee.css`**: `rb-marquee` 共通スタイル、`data-marquee-mode`（`always` / `hover-only` / `off`）別の挙動、`@keyframes rb-marquee-scroll`。
+- **設定**: `stores/settings.ts` に `marqueeMode`（永続化・`prefers-reduced-motion` 時は保存に `marqueeMode` が無い場合のみ初期 `off`）、`Settings.vue` ラジオ UI、日英 i18n。`App.vue` ルートに `:data-marquee-mode` と `provide('marqueeMode')`。
 
 ## v0.6.0 — 2026-05-06（アプリ内ヘルプ Phase 1）
 

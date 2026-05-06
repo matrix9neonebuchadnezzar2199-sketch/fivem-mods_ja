@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
+export type MarqueeMode = 'always' | 'hover-only' | 'off'
+
 export type RefboardSettings = {
   locale: 'ja' | 'en'
   timeFormat: 'mm:ss' | 'mm.ss'
@@ -14,9 +16,18 @@ export type RefboardSettings = {
   avatarHue: number
   nuiMock: boolean
   showTestCommandsHint: boolean
+  marqueeMode: MarqueeMode
 }
 
 const STORAGE_KEY = 'refboard_settings'
+
+function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  } catch {
+    return false
+  }
+}
 
 const defaults: RefboardSettings = {
   locale: 'ja',
@@ -31,6 +42,7 @@ const defaults: RefboardSettings = {
   avatarHue: 210,
   nuiMock: false,
   showTestCommandsHint: false,
+  marqueeMode: 'always',
 }
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -39,12 +51,24 @@ export const useSettingsStore = defineStore('settings', () => {
   function load() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
+      const pr = prefersReducedMotion()
       if (saved) {
         const parsed = JSON.parse(saved) as Partial<RefboardSettings>
         settings.value = { ...defaults, ...parsed }
+        if (pr && !Object.prototype.hasOwnProperty.call(parsed, 'marqueeMode')) {
+          settings.value.marqueeMode = 'off'
+        }
+      } else {
+        settings.value = {
+          ...defaults,
+          ...(pr ? { marqueeMode: 'off' as const } : {}),
+        }
       }
     } catch {
-      settings.value = { ...defaults }
+      settings.value = {
+        ...defaults,
+        ...(prefersReducedMotion() ? { marqueeMode: 'off' as const } : {}),
+      }
     }
   }
 

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, provide } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import { useSettingsStore } from './stores/settings'
 import { useSessionStore } from './stores/session'
 import { usePresenceStore, type PresenceUser } from './stores/presence'
 import { useAutosaveStore } from './stores/autosave'
 import { useNui } from './composables/useNui'
 import { useToast } from './composables/useToast'
 import Toast from './components/Toast.vue'
+
+const settingsStore = useSettingsStore()
+const { settings } = storeToRefs(settingsStore)
+const marqueeMode = computed(() => settings.value.marqueeMode)
+provide('marqueeMode', marqueeMode)
 
 const session = useSessionStore()
 const presence = usePresenceStore()
@@ -39,6 +46,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <router-view />
-  <Toast />
+  <div class="flex h-full min-h-0 flex-col" :data-marquee-mode="marqueeMode">
+    <router-view />
+    <Toast />
+  </div>
 </template>

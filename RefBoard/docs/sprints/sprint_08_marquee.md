@@ -62,6 +62,11 @@ const VARIANTS = {
 
 完了確認: `npm run build`、CHANGELOG v0.6.1（フェーズ1）追記。
 
+### フェーズ 1 進捗
+
+- **2026-05-06: フェーズ1完了（実装マージ）**。`MarqueeText.vue`、`directives/marquee.ts`、`styles/marquee.css`、`utils/marqueeVariants.ts`（`VARIANTS` 共有）、`main.ts` 登録、`settings.marqueeMode`、`App.vue` の `data-marquee-mode` + `provide('marqueeMode')`、`Settings.vue` ラジオ、日英 i18n。`vue-tsc` / `npm run build` 成功。既存の試合一覧・スコアボード等には **未適用**（フェーズ2）。
+- **設計書との差分**: `VARIANTS` をコンポーネント内ではなく **`web/src/utils/marqueeVariants.ts`** に切り出し、`MarqueeText` と `v-marquee` で共有（数値の単一ソース化）。`off` 時の省略は **`rb-marquee--ellipsis`** と（ディレクティブ向け）**`rb-marquee-track-ellipsis`** で CSS 実装。
+
 ### フェーズ 2 — 高視認エリア（PR2）
 
 優先: サイドバー、ヘッダー（試合名・編集者名）、ヘルプ（タイトル・逆引きラベル・パンくず相当）、トースト、スコアボード（チーム名・得点者名）。
@@ -115,6 +120,7 @@ const VARIANTS = {
 | コンポーネント | `web/src/components/common/MarqueeText.vue` |
 | ディレクティブ | `web/src/directives/marquee.ts` |
 | スタイル | `web/src/styles/marquee.css` |
+| プリセット定数 | `web/src/utils/marqueeVariants.ts` |
 | 設定 | `web/src/stores/settings.ts`, `web/src/views/Settings.vue` |
 
 ## フェーズ 1 着手前チェックリスト
@@ -126,6 +132,8 @@ const VARIANTS = {
 3. **`directives/marquee.ts` も variant 相当の引数**（例: `binding.value` に `variant` / `speed` 等）を受け取れるようにすること。
 4. **`styles/marquee.css` で `data-marquee-mode` 別の挙動**を **CSS のみ**で切り替えること（設定ストアとルート属性の連携はフェーズ 1 の範囲）。
 
+**チェックリスト反映（2026-05-06）**: 上記 1〜4 はフェーズ1完了時点で満たした（vue-tsc 緑化は先行コミット `5287770`）。
+
 ---
 
 **改版履歴**
@@ -133,3 +141,4 @@ const VARIANTS = {
 - 2026-05-06: 初版（Sprint 07 から v0.6.1 マーキーを切り出し、3 フェーズ PR 案を記載）。
 - 2026-05-06: 案 A（常時マーキー全文）確定、`variant` プリセット、スコアボード方針・ホバー注記を追記。
 - 2026-05-06: TypeScript `VARIANTS` 表現・用途指針・フェーズ 2 の variant 割り当て表・数値は初期値（実機後に調整可）の注記・フェーズ 1 着手前チェックリストを追記（設計固定用）。
+- 2026-05-06: フェーズ1実装完了（進捗節・関連ファイル表に `marqueeVariants.ts` 追記、チェックリスト消化を明記）。

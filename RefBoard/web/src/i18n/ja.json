@@ -326,7 +326,17 @@
     "nui_mock": "NUIモック有効化",
     "nui_mock_note": "ブラウザ開発時は自動でモックが有効です。",
     "show_test_commands": "テストコマンド表示（Config.EnableTestCommands）",
-    "health_link": "ヘルスチェック（実機テスト前）"
+    "health_link": "ヘルスチェック（実機テスト前）",
+    "marquee_mode": {
+      "label": "テキストスクロール",
+      "description": "表示しきれないテキストの動作を選択します",
+      "always": "常にスクロール",
+      "always_desc": "オーバーフローしたテキストを常に流します（推奨）",
+      "hover_only": "ホバー時のみ",
+      "hover_only_desc": "マウスを乗せた時だけスクロールします",
+      "off": "停止",
+      "off_desc": "スクロールを無効化し、省略表示します"
+    }
   },
   "help": {
     "title": "ヘルプ ＆ ガイド",

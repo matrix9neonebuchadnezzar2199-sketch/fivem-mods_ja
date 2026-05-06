@@ -5,12 +5,15 @@ import { router } from './router'
 import { i18n } from './i18n'
 import { useSettingsStore } from './stores/settings'
 import { useToast } from './composables/useToast'
+import { vMarquee } from './directives/marquee'
 import './styles/main.css'
+import './styles/marquee.css'
 
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 useSettingsStore().load()
+app.directive('marquee', vMarquee)
 app.use(router)
 app.use(i18n)
 app.config.errorHandler = (err, _instance, info) => {
