@@ -70,6 +70,7 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
 | [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | v0.9.0 方面：実機検証・堅牢性などの計画 |
 | [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1：実機前夜のトリアージ強化（観測・ガード・ヘルス等） |
 | [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md) | **v0.6.0 予定**: アプリ内ヘルプ実装スプリント（受け入れ基準・B 案ロードマップ） |
+| [docs/sprints/sprint_08_marquee.md](docs/sprints/sprint_08_marquee.md) | **v0.6.1**: マーキー基盤〜全域適用（Sprint 07 と別ノート・3 フェーズ PR 案） |
 | [docs/sprints/sprint_07_uiux_findings.md](docs/sprints/sprint_07_uiux_findings.md) | ヘルプ執筆中の UI/UX 気づき（v0.9.1 改善のタスク元） |
 
 ### 変更履歴・ユーザー向け

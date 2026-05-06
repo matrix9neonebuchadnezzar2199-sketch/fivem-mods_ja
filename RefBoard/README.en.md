@@ -70,6 +70,7 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
 | [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | Toward v0.9.0: hardening, on-device QA plan |
 | [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1: pre-test triage (observability, guards, health) |
 | [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md) | **Planned v0.6.0**: In-app help sprint (acceptance criteria, roadmap plan B) |
+| [docs/sprints/sprint_08_marquee.md](docs/sprints/sprint_08_marquee.md) | **v0.6.1**: Marquee typography rollout (separate from Sprint 07; 3-phase PR plan) |
 | [docs/sprints/sprint_07_uiux_findings.md](docs/sprints/sprint_07_uiux_findings.md) | UX notes while writing help (input for v0.9.1 fixes) |
 
 ### Changelog & user-facing
