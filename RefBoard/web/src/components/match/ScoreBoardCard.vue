@@ -217,7 +217,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         <div v-if="clockPhaseLabel" class="mt-0.5 text-center text-[11px] font-medium text-slate-400">
           {{ clockPhaseLabel }}
         </div>
-        <div class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
+        <div v-if="model.dbStatus !== 'draft'" class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
         <div class="mt-3 flex items-center justify-center gap-2">
           <button
             type="button"
