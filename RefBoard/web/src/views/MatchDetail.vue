@@ -83,6 +83,9 @@ useKeyboardShortcuts({
 
 const readonly = computed(() => !session.isEditor)
 
+/** カード不透明度（設定）。スコアボードは opacity 親を持たない（CEF で blur と合成すると霞み・クリック不能になり得る） */
+const cardDimStyle = computed(() => ({ opacity: settings.settings.cardOpacity / 100 }))
+
 const detail = reactive<MatchDetailModel>(JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel)
 const historyRows = ref<ScoreHistoryRow[]>([])
 
@@ -372,7 +375,7 @@ function exportMatchEventsCsv() {
         @recorded="reloadMatch"
         @finished="onPkFinished"
       />
-      <div v-if="detail.serverHalf !== 'pk'" :style="{ opacity: settings.settings.cardOpacity / 100 }">
+      <div v-if="detail.serverHalf !== 'pk'">
         <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
           <div class="flex flex-1 flex-wrap items-center gap-2 text-sm text-slate-200">
             <span class="font-semibold">試合詳細の編集</span>
@@ -431,7 +434,7 @@ function exportMatchEventsCsv() {
         </header>
 
         <div class="mb-4 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[30%_40%_30%]">
-          <div class="min-w-0" @pointerenter="setFocus('basic_info')" @pointerleave="setFocus(null)">
+          <div class="min-w-0" :style="cardDimStyle" @pointerenter="setFocus('basic_info')" @pointerleave="setFocus(null)">
             <BasicInfoCard :model="detail" :readonly="readonly" :editor-here="editorHereBasic" />
           </div>
           <div class="min-w-0" @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
@@ -443,12 +446,12 @@ function exportMatchEventsCsv() {
               @manual-score="showScoreEdit = true"
             />
           </div>
-          <div class="min-w-0" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
+          <div class="min-w-0" :style="cardDimStyle" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
             <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" />
           </div>
         </div>
 
-        <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[65%_35%]">
+        <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[65%_35%]" :style="cardDimStyle">
           <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <div @pointerenter="setFocus('team1_players')" @pointerleave="setFocus(null)">
               <PlayerListCard
@@ -499,7 +502,6 @@ function exportMatchEventsCsv() {
     <div
       v-if="compactDock && detail.serverHalf !== 'pk'"
       class="pointer-events-auto fixed bottom-4 left-2 right-2 z-[100] border-t border-slate-600/80 bg-slate-950/90 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md sm:bottom-5"
-      :style="{ opacity: settings.settings.cardOpacity / 100 }"
     >
       <div
         class="mx-auto max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/55 p-2 shadow-inner md:max-h-[min(46vh,26rem)]"
@@ -515,7 +517,12 @@ function exportMatchEventsCsv() {
               @manual-score="showScoreEdit = true"
             />
           </div>
-          <div class="min-h-0 min-w-0 flex-1" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
+          <div
+            class="min-h-0 min-w-0 flex-1"
+            :style="cardDimStyle"
+            @pointerenter="setFocus('status')"
+            @pointerleave="setFocus(null)"
+          >
             <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed />
           </div>
         </div>

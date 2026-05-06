@@ -114,7 +114,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
     :class="
       embed
         ? 'relative'
-        : 'relative rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+        : 'relative rounded-lg border border-slate-700/60 bg-slate-800/92 p-4 shadow-sm'
     "
   >
     <div v-if="!embed" class="mb-2 flex items-center justify-between gap-2">
@@ -234,28 +234,30 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
       </div>
     </div>
 
-    <div
-      v-if="showClearConfirm"
-      class="fixed inset-0 z-[190] flex items-center justify-center bg-black/55 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="score-clock-clear-title"
-      @click.self="cancelClockClear"
-    >
-      <div class="max-w-sm rounded-xl border border-amber-600/50 bg-slate-900 p-5 shadow-2xl">
-        <h2 id="score-clock-clear-title" class="mb-2 text-base font-semibold text-amber-100">
-          {{ t('score_board.clock_clear_confirm_title') }}
-        </h2>
-        <p class="mb-4 text-sm text-slate-400">{{ t('score_board.clock_clear_confirm_body') }}</p>
-        <div class="flex justify-end gap-2">
-          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200" @click="cancelClockClear">
-            {{ t('dialog.no') }}
-          </button>
-          <button type="button" class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmClockClear">
-            {{ t('dialog.yes') }}
-          </button>
+    <Teleport to="body">
+      <div
+        v-if="showClearConfirm"
+        class="fixed inset-0 z-[210] flex items-center justify-center bg-black/55 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="score-clock-clear-title"
+        @click.self="cancelClockClear"
+      >
+        <div class="max-w-sm rounded-xl border border-amber-600/50 bg-slate-900 p-5 shadow-2xl">
+          <h2 id="score-clock-clear-title" class="mb-2 text-base font-semibold text-amber-100">
+            {{ t('score_board.clock_clear_confirm_title') }}
+          </h2>
+          <p class="mb-4 text-sm text-slate-400">{{ t('score_board.clock_clear_confirm_body') }}</p>
+          <div class="flex justify-end gap-2">
+            <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200" @click="cancelClockClear">
+              {{ t('dialog.no') }}
+            </button>
+            <button type="button" class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmClockClear">
+              {{ t('dialog.yes') }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
