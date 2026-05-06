@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useAutosaveStore } from '../stores/autosave'
 import { usePresenceStore } from '../stores/presence'
-import { useNui } from '../composables/useNui'
+import { refboardRecaptureNuiFocus, useNui } from '../composables/useNui'
 import { useHeartbeat } from '../composables/useHeartbeat'
 import { useFocusTracker } from '../composables/useFocusTracker'
 import { mockMatchDetail } from '../mocks/matchDetail'
@@ -98,6 +98,8 @@ const cardPreset = ref<'yellow' | 'red' | null>(null)
 
 /** 下部固定の小窓（スコア＋試合ステータスのみ）。PK 中は全画面を優先 */
 const compactDock = ref(false)
+/** 小窓解除後にフォーカスを移す（キーボード／スクリーンリーダー用） */
+const fullEditorAnchorRef = ref<HTMLElement | null>(null)
 
 const showFullEditor = computed(() => !compactDock.value || detail.serverHalf === 'pk')
 
@@ -199,8 +201,17 @@ watch(
   },
 )
 
-watch(compactDock, (v) => {
-  if (v) closeAllModals()
+watch(compactDock, async (v, prev) => {
+  if (v) {
+    closeAllModals()
+    return
+  }
+  if (prev !== true) return
+  await nextTick()
+  await refboardRecaptureNuiFocus()
+  requestAnimationFrame(() => {
+    fullEditorAnchorRef.value?.focus({ preventScroll: true })
+  })
 })
 
 watch(
@@ -348,7 +359,12 @@ function exportMatchEventsCsv() {
       </div>
     </div>
 
-    <div v-if="showFullEditor" class="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+    <div
+      v-if="showFullEditor"
+      ref="fullEditorAnchorRef"
+      tabindex="-1"
+      class="min-h-0 flex-1 overflow-y-auto px-4 py-4 outline-none focus:outline-none"
+    >
       <PenaltyShootoutPanel
         v-if="detail.serverHalf === 'pk'"
         :model="detail"

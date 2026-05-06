@@ -26,6 +26,15 @@ RegisterNUICallback('refboard:close', function(_, cb)
   cb({ ok = true })
 end)
 
+-- 小窓解除後など、マウスを再び NUI に乗せる（pointer-events 切替後の取りこぼし対策）
+RegisterNUICallback('refboard:nui_focus_cursor', function(_, cb)
+  if isOpen then
+    SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(false)
+  end
+  cb({ ok = true })
+end)
+
 RegisterNetEvent('refboard:notify', function(payload)
   SendNUIMessage({ type = 'refboard:notify', payload = payload })
 end)

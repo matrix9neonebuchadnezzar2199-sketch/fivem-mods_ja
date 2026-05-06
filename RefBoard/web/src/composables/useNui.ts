@@ -13,6 +13,22 @@ export function getResourceName(): string {
   return 'RefBoard'
 }
 
+/** 小窓→全画面復帰時など、クライアントで NUI マウス／キーボードフォーカスを取り直す */
+export async function refboardRecaptureNuiFocus(): Promise<void> {
+  if (typeof (window as unknown as { GetParentResourceName?: () => string }).GetParentResourceName !== 'function') {
+    return
+  }
+  try {
+    await fetch(`https://${getResourceName()}/refboard:nui_focus_cursor`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: '{}',
+    })
+  } catch {
+    /* ブラウザ単体開発時の 404 等 */
+  }
+}
+
 function isInFiveM(): boolean {
   const w = window as unknown as { invokeNative?: unknown; GetParentResourceName?: () => string }
   return typeof w.invokeNative !== 'undefined' || typeof w.GetParentResourceName === 'function'
