@@ -2,21 +2,10 @@
   集計・データ管理 API（v0.5.0）
 ]]
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
-local function requireReferee(src)
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
-    return false
-  end
-  return true
-end
-
 RegisterNetEvent('refboard:data:team_stats', function()
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:data:team_stats:ack', src, { rows = {} })
     return
   end
   local rows = MySQL.query.await(
@@ -44,7 +33,8 @@ end)
 
 RegisterNetEvent('refboard:data:player_stats', function()
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:data:player_stats:ack', src, { rows = {} })
     return
   end
   local rows = MySQL.query.await(
@@ -88,7 +78,8 @@ end)
 
 RegisterNetEvent('refboard:data:score_edit_log', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:data:score_edit_log:ack', src, { rows = {} })
     return
   end
   local from = payload and payload.from
@@ -152,7 +143,8 @@ end)
 
 RegisterNetEvent('refboard:data:match_history', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:data:match_history:ack', src, { rows = {} })
     return
   end
   local status = payload and payload.status
@@ -223,7 +215,11 @@ end)
 
 RegisterNetEvent('refboard:data:db_meta', function()
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:data:db_meta:ack', src, {
+      schemaVersion = '',
+      resourceVersion = GetResourceMetadata(GetCurrentResourceName(), 'version', 0) or '',
+    })
     return
   end
   TriggerClientEvent('refboard:data:db_meta:ack', src, {

@@ -24,7 +24,7 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
 
 - **リソースフォルダ名**: `RefBoard`（`ensure RefBoard`）
 - **依存**: [oxmysql](https://github.com/overextended/oxmysql)
-- **権限**: ACE `refboard.referee`（`config.lua` の `Config.RefereePermission`）
+- **編集モード**: `config.lua` の `Config.EditPassword`（既定 `ref`）をランチャーで入力して入室。閲覧モードはパスワード不要。
 
 ## インストール
 

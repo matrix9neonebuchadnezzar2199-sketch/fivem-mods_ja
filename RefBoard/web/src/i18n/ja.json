@@ -13,6 +13,9 @@
     "all_users": "接続中のユーザー"
   },
   "launcher": {
+    "edit_password_hint": "編集モード用パスワード（config.lua の EditPassword と一致）",
+    "bad_password": "パスワードが違います。",
+    "session_failed": "セッション開始に失敗しました。もう一度お試しください。",
     "edit_mode": "試合管理（編集）",
     "view_mode": "閲覧モード",
     "currently_editing": "{name} さんが編集中",

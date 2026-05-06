@@ -24,7 +24,7 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
 
 - **Resource folder**: `RefBoard` (`ensure RefBoard`)
 - **Dependency**: [oxmysql](https://github.com/overextended/oxmysql)
-- **Permission**: ACE `refboard.referee` (`Config.RefereePermission` in `config.lua`)
+- **Edit mode**: enter the password from `Config.EditPassword` in `config.lua` (default `ref`) on the launcher. View mode needs no password.
 
 ## Install
 

@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
+import { useToast } from '../composables/useToast'
 
 const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
+const { editPassword } = storeToRefs(session)
+const { push: toastPush } = useToast()
 
 const showLockDialog = ref(false)
 const lockPeerName = ref('')
@@ -15,6 +19,14 @@ async function goEdit() {
   const r = await session.enterEdit()
   if (r.ok) {
     await router.push({ name: 'matches' })
+    return
+  }
+  if (r.error === 'bad_password') {
+    toastPush(t('launcher.bad_password'), 'error', 4000)
+    return
+  }
+  if (r.error === 'session_timeout' || r.error === 'session_failed') {
+    toastPush(t('launcher.session_failed'), 'error', 4000)
     return
   }
   if (r.holder?.name) {
@@ -57,6 +69,15 @@ function enableDebugTrace() {
       <p class="mt-2 text-sm text-slate-400">RefBoard v0.6.0</p>
     </div>
     <div class="flex w-full max-w-md flex-col gap-3">
+      <label class="block w-full text-left text-xs text-slate-400">
+        {{ t('launcher.edit_password_hint') }}
+        <input
+          v-model="editPassword"
+          type="password"
+          autocomplete="off"
+          class="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+        />
+      </label>
       <button
         type="button"
         class="rounded-xl bg-primary px-4 py-3 text-left text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110"

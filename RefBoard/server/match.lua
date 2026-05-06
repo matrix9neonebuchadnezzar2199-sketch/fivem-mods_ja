@@ -1,15 +1,3 @@
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
-local function requireReferee(src)
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
-    return false
-  end
-  return true
-end
-
 local function assertEditorLock(src, matchId)
   local r = MySQL.single.await(
     'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
@@ -244,7 +232,8 @@ end
 
 RegisterNetEvent('refboard:match:list', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardCanRead(src) then
+    TriggerClientEvent('refboard:match:list:ack', src, { matches = {} })
     return
   end
   local status = payload and payload.status or nil
@@ -297,7 +286,8 @@ end)
 RegisterNetEvent('refboard:match:create', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:match:create:ack', 'net:match:create', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:match:create:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -383,7 +373,8 @@ end)
 
 RegisterNetEvent('refboard:match:get', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardCanRead(src) then
+    TriggerClientEvent('refboard:match:get:ack', src, { match = nil, players = {}, events = {}, history = {} })
     return
   end
   local matchId = payload and tonumber(payload.matchId)
@@ -402,7 +393,8 @@ end)
 RegisterNetEvent('refboard:match:finish', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:match:finish:ack', 'net:match:finish', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:match:finish:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   local matchId = payload and tonumber(payload.matchId)
@@ -430,7 +422,8 @@ end)
 RegisterNetEvent('refboard:match:reopen', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:match:reopen:ack', 'net:match:reopen', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:match:reopen:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   local matchId = payload and tonumber(payload.matchId)
@@ -479,7 +472,8 @@ end)
 RegisterNetEvent('refboard:match:set_half', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:match:set_half:ack', 'net:match:set_half', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:match:set_half:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   local matchId = payload and tonumber(payload.matchId)

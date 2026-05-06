@@ -5,10 +5,6 @@
 local debounceGen = {}
 local pendingEditor = {}
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
 local function flush(matchId, stateJson, editorSrc, license, name)
   local ok, err = pcall(function()
     MySQL.update.await(
@@ -39,7 +35,7 @@ end
 RegisterNetEvent('refboard:autosave:draft', function(payload)
   local src = source
   RefboardGuard(src, nil, 'net:autosave:draft', function()
-  if not canRefer(src) then
+  if not RefboardRequireEdit(src) then
     return
   end
   if type(payload) ~= 'table' or not payload.matchId then

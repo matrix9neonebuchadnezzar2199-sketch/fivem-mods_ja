@@ -273,6 +273,19 @@ export function mockResponse(path: string, data: unknown): unknown {
 /** fetch の戻りのあと、本番と同様に遅延で postMessage するイベント */
 export function queueMockSideEffects(path: string, data: unknown): void {
   queueMicrotask(() => {
+    if (path === 'session_enter') {
+      const d = data as { mode?: string; editPassword?: string }
+      if (d.mode === 'edit') {
+        const ok = (d.editPassword ?? '').trim() === 'ref'
+        if (ok) {
+          postNui('refboard:session:ack', { ok: true, mode: 'edit' })
+        } else {
+          postNui('refboard:session:ack', { ok: false, error: 'bad_password' })
+        }
+      } else {
+        postNui('refboard:session:ack', { ok: true, mode: 'view' })
+      }
+    }
     if (path === 'health_check') {
       const cv = (data as { clientVersion?: string })?.clientVersion ?? ''
       const ts = Date.now()
@@ -284,7 +297,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
           { category: 'db', name: 'schema', status: 'warning', detail: 'mock (browser)', timestamp: ts },
           { category: 'db', name: 'migration_roster', status: 'warning', detail: 'mock', timestamp: ts },
           { category: 'auth', name: 'license', status: 'warning', detail: 'mock', timestamp: ts },
-          { category: 'auth', name: 'referee_permission', status: 'ok', detail: 'mock', timestamp: ts },
+          { category: 'auth', name: 'edit_password', status: 'ok', detail: 'mock (browser)', timestamp: ts },
           { category: 'presence', name: 'self_registration', status: 'warning', detail: 'mock', timestamp: ts },
           { category: 'lock', name: 'current_editor', status: 'ok', detail: 'none', timestamp: ts },
           { category: 'config', name: 'log_level', status: 'ok', detail: 'INFO', timestamp: ts },

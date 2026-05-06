@@ -87,7 +87,8 @@ end)
 
 RegisterNetEvent('refboard:presence:list', function()
   local src = source
-  if not IsPlayerAceAllowed(src, Config.RefereePermission) then
+  if not RefboardCanRead(src) then
+    TriggerClientEvent('refboard:presence:list:ack', src, { users = {} })
     return
   end
   TriggerClientEvent('refboard:presence:list:ack', src, { users = toList() })
@@ -95,7 +96,7 @@ end)
 
 RegisterNetEvent('refboard:presence:focus', function(payload)
   local src = source
-  if not IsPlayerAceAllowed(src, Config.RefereePermission) then
+  if not RefboardCanRead(src) then
     return
   end
   local s = sessions[src]

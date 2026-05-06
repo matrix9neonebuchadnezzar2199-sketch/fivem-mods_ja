@@ -2,18 +2,6 @@
   スコア更新 + match_score_history（設計書 2.5.3）
 ]]
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
-local function requireReferee(src)
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
-    return false
-  end
-  return true
-end
-
 local function assertEditorLock(src, matchId)
   local r = MySQL.single.await(
     'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
@@ -63,7 +51,8 @@ end
 RegisterNetEvent('refboard:score:goal', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:score:goal:ack', 'net:score:goal', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.NO_PERMISSION))
     return
   end
   if type(payload) ~= 'table' then
@@ -183,7 +172,8 @@ end)
 RegisterNetEvent('refboard:score:manual_edit', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:score:manual_edit:ack', 'net:score:manual_edit', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(ErrorCodes.NO_PERMISSION))
     return
   end
   if type(payload) ~= 'table' then

@@ -13,6 +13,9 @@
     "all_users": "Connected users"
   },
   "launcher": {
+    "edit_password_hint": "Edit mode password (must match Config.EditPassword on server)",
+    "bad_password": "Incorrect password.",
+    "session_failed": "Could not start session. Please try again.",
     "edit_mode": "Match control (edit)",
     "view_mode": "View only",
     "currently_editing": "{name} is editing",

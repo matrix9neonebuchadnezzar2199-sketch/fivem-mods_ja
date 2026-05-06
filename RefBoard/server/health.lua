@@ -94,11 +94,11 @@ local function runChecks(src, payload)
     push(results, 'auth', 'license', 'error', 'license not found')
   end
 
-  local hasPerm = IsPlayerAceAllowed(src, Config.RefereePermission)
-  if hasPerm then
-    push(results, 'auth', 'referee_permission', 'ok', 'granted')
+  local editOk = RefboardIsEditApproved and RefboardIsEditApproved(src)
+  if editOk then
+    push(results, 'auth', 'edit_password', 'ok', 'edit mode (password verified)')
   else
-    push(results, 'auth', 'referee_permission', 'warning', 'not granted (view-only)')
+    push(results, 'auth', 'edit_password', 'warning', 'view or edit password not verified')
   end
 
   local inPresence = RefboardPresenceHasSession and RefboardPresenceHasSession(src)

@@ -2,18 +2,6 @@
   交代・カード・PK（match_events + match_players 更新）
 ]]
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
-local function requireReferee(src)
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
-    return false
-  end
-  return true
-end
-
 local function assertEditorLock(src, matchId)
   local r = MySQL.single.await(
     'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
@@ -133,7 +121,8 @@ end
 RegisterNetEvent('refboard:event:substitute', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:event:substitute:ack', 'net:event:substitute', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -199,7 +188,8 @@ end)
 RegisterNetEvent('refboard:event:issue_card', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:event:issue_card:ack', 'net:event:issue_card', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -282,7 +272,8 @@ end)
 RegisterNetEvent('refboard:event:record_penalty', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:event:record_penalty:ack', 'net:event:record_penalty', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then

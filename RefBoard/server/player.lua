@@ -2,18 +2,6 @@
   選手解決・追加・オンライン一覧（設計書 2.4.4）
 ]]
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
-local function requireReferee(src)
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
-    return false
-  end
-  return true
-end
-
 local function assertEditorLock(src, matchId)
   local r = MySQL.single.await(
     'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
@@ -30,7 +18,8 @@ end
 
 RegisterNetEvent('refboard:player:online_list', function()
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:player:online_list:ack', src, { players = {} })
     return
   end
   local players = {}
@@ -50,7 +39,8 @@ end)
 
 RegisterNetEvent('refboard:player:resolve', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:player:resolve:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   local serverId = payload and tonumber(payload.serverId)
@@ -81,7 +71,8 @@ end)
 RegisterNetEvent('refboard:player:add', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:player:add:ack', 'net:player:add', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:player:add:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then
@@ -158,7 +149,8 @@ end)
 RegisterNetEvent('refboard:player:add_from_roster', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:player:add_from_roster:ack', 'net:player:add_from_roster', function()
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
+    TriggerClientEvent('refboard:player:add_from_roster:ack', src, { ok = false, error = 'no_permission' })
     return
   end
   if type(payload) ~= 'table' then

@@ -2,21 +2,9 @@
   チーム一覧（試合作成用）＋チーム管理（v0.5.0）＋ロスター
 ]]
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
-local function requireReferee(src)
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:notify', src, { type = 'error', key = 'no_permission' })
-    return false
-  end
-  return true
-end
-
 RegisterNetEvent('refboard:team:list', function()
   local src = source
-  if not canRefer(src) then
+  if not RefboardCanRead(src) then
     TriggerClientEvent('refboard:team:list:ack', src, { teams = {} })
     return
   end
@@ -29,7 +17,7 @@ end)
 --- チーム管理画面用（ロスター人数・最終試合日）
 RegisterNetEvent('refboard:team:manage_list', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:manage_list:ack', src, { teams = {} })
     return
   end
@@ -68,7 +56,7 @@ end)
 
 RegisterNetEvent('refboard:team:detail', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:detail:ack', src, { team = nil, stats = nil })
     return
   end
@@ -107,7 +95,7 @@ end)
 
 RegisterNetEvent('refboard:team:create', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:create:ack', src, { ok = false, error = 'no_permission' })
     return
   end
@@ -142,7 +130,7 @@ end)
 
 RegisterNetEvent('refboard:team:update', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:update:ack', src, { ok = false, error = 'no_permission' })
     return
   end
@@ -176,7 +164,7 @@ end)
 
 RegisterNetEvent('refboard:team:delete', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:delete:ack', src, { ok = false, error = 'no_permission' })
     return
   end
@@ -195,7 +183,7 @@ end)
 
 RegisterNetEvent('refboard:team:roster:list', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:roster:list:ack', src, { rows = {} })
     return
   end
@@ -235,7 +223,7 @@ end)
 
 RegisterNetEvent('refboard:team:roster:add', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:roster:add:ack', src, { ok = false, error = 'no_permission' })
     return
   end
@@ -280,7 +268,7 @@ end)
 
 RegisterNetEvent('refboard:team:roster:update', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:roster:update:ack', src, { ok = false, error = 'no_permission' })
     return
   end
@@ -321,7 +309,7 @@ end)
 
 RegisterNetEvent('refboard:team:roster:remove', function(payload)
   local src = source
-  if not requireReferee(src) then
+  if not RefboardRequireEdit(src) then
     TriggerClientEvent('refboard:team:roster:remove:ack', src, { ok = false, error = 'no_permission' })
     return
   end

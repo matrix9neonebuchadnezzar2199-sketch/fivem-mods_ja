@@ -2,10 +2,6 @@
   editor_locks 単一行ロック + ハートビートタイムアウト（設計書 2.5.1）
 ]]
 
-local function canRefer(src)
-  return IsPlayerAceAllowed(src, Config.RefereePermission)
-end
-
 local function readRow()
   return MySQL.single.await(
     [[SELECT match_id, holder_license, holder_name, holder_server_id,
@@ -52,7 +48,7 @@ end
 RegisterNetEvent('refboard:lock:acquire', function(payload)
   local src = source
   RefboardGuard(src, 'refboard:lock:acquire:result', 'net:lock:acquire', function()
-  if not canRefer(src) then
+  if not RefboardIsEditApproved(src) then
     TriggerClientEvent('refboard:lock:acquire:result', src, MakeError(ErrorCodes.NO_PERMISSION))
     return
   end
@@ -97,12 +93,8 @@ end)
 RegisterNetEvent('refboard:lock:release', function()
   local src = source
   RefboardGuard(src, 'refboard:lock:ack', 'net:lock:release', function()
-  if not canRefer(src) then
-    TriggerClientEvent('refboard:lock:ack', src, MakeError(ErrorCodes.NO_PERMISSION))
-    return
-  end
   local r = readRow()
-  if not r or not r.holder_server_id or r.holder_server_id ~= src then
+  if not r or not r.holder_server_id or tonumber(r.holder_server_id) ~= tonumber(src) then
     TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'not_holder' })
     return
   end
@@ -115,11 +107,8 @@ end)
 
 RegisterNetEvent('refboard:lock:heartbeat', function()
   local src = source
-  if not canRefer(src) then
-    return
-  end
   local r = readRow()
-  if r and r.holder_server_id == src then
+  if r and tonumber(r.holder_server_id) == tonumber(src) then
     touchHeartbeat(src)
   end
 end)

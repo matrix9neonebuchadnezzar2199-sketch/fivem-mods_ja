@@ -1,7 +1,7 @@
 Config = {}
 
--- 審判（試合編集）に付与する ACE 権限名（server.cfg 例: add_ace group.admin refboard.referee allow）
-Config.RefereePermission = 'refboard.referee'
+-- 編集モード入室時のパスワード（NUI ランチャー「編集モード」と一致させる）
+Config.EditPassword = 'ref'
 
 -- ロック: クライアントが送るハートビート間隔（ミリ秒）
 Config.HeartbeatIntervalMs = 10000
