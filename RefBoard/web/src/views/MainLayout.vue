@@ -129,11 +129,16 @@ function toggleLocale() {
   width: 100vw;
 }
 
-/* 試合詳細「小窓モード」: シェルを透過し背面ゲームを見る。本文はクリック透過、ヘッダのみ操作可 */
-.layout--stadium-compact .sidebar,
+/* 試合詳細「小窓モード」: サイドバーはレイアウトから外す。メインは透過＋クリック透過、ヘッダのみ操作可 */
+.layout--stadium-compact {
+  grid-template-columns: 1fr;
+}
+.layout--stadium-compact .sidebar {
+  display: none;
+}
 .layout--stadium-compact .main {
   background-color: transparent;
-  border-color: rgb(51 65 85 / 0.2);
+  border-color: transparent;
   pointer-events: none;
 }
 .layout--stadium-compact .main-header {
