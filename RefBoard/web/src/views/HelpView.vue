@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MarqueeText from '../components/common/MarqueeText.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -82,8 +83,8 @@ function openArticleFile(file: string) {
       <h1 class="text-lg font-bold text-slate-50">{{ t('help.title') }}</h1>
       <p class="mt-1 text-xs text-slate-400">{{ t('help.subtitle') }}</p>
     </header>
-    <div class="grid min-h-0 flex-1 grid-cols-1 gap-0 md:grid-cols-[minmax(200px,30%)_1fr]">
-      <aside class="overflow-y-auto border-b border-slate-700 p-3 md:border-b-0 md:border-r">
+    <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-0 md:grid-cols-[minmax(200px,30%)_1fr]">
+      <aside class="min-w-0 overflow-y-auto overflow-x-hidden border-b border-slate-700 p-3 md:border-b-0 md:border-r">
         <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('help.reverse_tab') }}</h2>
         <div v-for="cat in categories" :key="cat.id" class="mb-4">
           <div class="mb-1 flex items-center gap-1 text-xs font-semibold text-primary">
@@ -91,20 +92,22 @@ function openArticleFile(file: string) {
             <span>{{ cat.title }}</span>
           </div>
           <ul class="space-y-1">
-            <li v-for="item in cat.items" :key="item.id">
+            <li v-for="item in cat.items" :key="item.id" class="min-w-0">
               <button
                 type="button"
-                class="w-full rounded px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-slate-800"
+                class="flex w-full min-w-0 items-center rounded px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-slate-800"
                 :class="activeSlug === slugFromArticleFile(item.article) ? 'bg-slate-800 text-white' : ''"
                 @click="openArticleFile(item.article)"
               >
-                {{ item.title }}
+                <span class="min-w-0 flex-1 overflow-hidden">
+                  <MarqueeText :text="item.title" variant="subtle" />
+                </span>
               </button>
             </li>
           </ul>
         </div>
       </aside>
-      <main class="min-h-0 overflow-y-auto p-4">
+      <main class="min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-4">
         <div v-if="!activeSlug" class="rounded-lg border border-slate-700 bg-slate-900/50 p-6 text-slate-400">
           {{
             route.name === 'help-error' && route.params.code

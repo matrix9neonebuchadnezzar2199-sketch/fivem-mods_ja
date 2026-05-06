@@ -2,6 +2,7 @@
 
 ## v0.6.1 — Unreleased
 
+- **sprint_08 フェーズ2b**: 6箇所にマーキー適用（`MainLayout` サイドバー5リンク `v-marquee` subtle、`Toast` 本文 ticker、`HelpView` 逆引き `item.title` subtle、`PlayerListCard` 見出し default＋選手名 subtle、`EventTimelineCard` 本文 default）。`table-fixed`＋`min-w-0` で表組みを圧縮。
 - **sprint_08 設計書**: `docs/sprints/sprint_08_marquee.md` に複数行同時マーキー方針の確定文言と、フェーズ 2b 着手前の flex/grid レイアウトチェックリスト（`c172c9e` の教訓）を追記。
 - **MatchList**: 試合ステータス列を `MatchStatusBadge`（日英 `match.status.*`・状態別色）に変更。
 - **モック**: ブラウザ開発用 `nuiMock` に `localStorage` 永続化レイヤ（`mockPersistence.ts`）を追加。`team_create` ほか CRUD がリロード後も保持され、`window.__refboardMock`（DEV のみ）でリセット・ダンプ可能。

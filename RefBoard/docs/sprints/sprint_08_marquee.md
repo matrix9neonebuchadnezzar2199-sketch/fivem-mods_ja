@@ -81,6 +81,26 @@ const VARIANTS = {
 - **2026-05-06**: `web/src/components/match/ScoreBoardCard.vue` の **ホーム・アウェイ正式名**のみ `MarqueeText`（`variant="scoreboard"`）へ置換。得点者・スコア数字・時計・score-flash は未着手（フェーズ3）。
 - **数値感**: 実装は **`marqueeVariants.ts` の scoreboard 初期値（28 / 2200 / 64）**のまま。体感の適否はローカル `npm run dev` での目視後に判断し、違和感があれば **同ファイルのみ**を次コミットで調整する想定。
 
+#### フェーズ 2b（グローバル＋試合詳細内の長文）— 完了
+
+**適用した箇所**
+
+| ファイル | 対象 | variant |
+|----------|------|---------|
+| `MainLayout.vue` | サイドバー `RouterLink` 5項目（`v-marquee` + `text: t(...)` で i18n 追従） | `subtle` |
+| `HelpView.vue` | 逆引き `item.title`（`MarqueeText`） | `subtle` |
+| `Toast.vue` | `row.message`（`MarqueeText`） | `ticker` |
+| `PlayerListCard.vue` | カード見出し `title`（`default`）、テーブル選手名（`subtle`）、`table-fixed`＋列幅 | 上記 |
+| `EventTimelineCard.vue` | イベント本文 `e.text`（`default`） | `default` |
+
+**意図的に適用しなかったもの（理由）**
+
+- **試合詳細ヘッダーに試合名を出す＋マーキー**: 試合名のヘッダー表示は **新規 UI**。フェーズ2bは既存要素へのマーキーのみとし、試合名行の追加は **別タスク**とする。
+- **`MatchDetail.vue` ヘッダー行（Autosave・ボタン群）**: 短文・固定文言のため **マーキー不要**。
+- **ヘルプ記事の H1（Markdown → `v-html` 内）**: DOM が一塊の HTML のため、`MarqueeText` を差し込むには **パイプライン別設計**が必要。フェーズ2bでは対象外とし、sprint_07 の記事拡充時に検討する。
+- **逆引き `cat.title`**: 現状データは短文（例:「緊急度高」）のため **マーキー未適用**。長文化したら `subtle` を検討。
+- **サイドバー**: ロゴ「RefBoard」・`v0.6.0`・言語切替は **固定短文**のためマーキー対象外（設計どおり）。
+
 #### スコアボード適用方針（案 A 確定）
 
 - **方針**: オーバーフロー時は **常時マーキーで全文表示**し、チーム正式名を **省略せず完全に流す**（`ellipsis` は使わない）。
@@ -172,3 +192,4 @@ const VARIANTS = {
 - 2026-05-06: フェーズ1実装完了（進捗節・関連ファイル表に `marqueeVariants.ts` 追記、チェックリスト消化を明記）。
 - 2026-05-06: フェーズ2a（`ScoreBoardCard` チーム名のみマーキー）完了。
 - 2026-05-06: **複数行同時マーキーを設計意図として明文化**。フェーズ 2b 着手前の **flex/grid レイアウトチェックリスト**（`min-w-0` / `overflow-hidden` / `shrink-0`）を追記（`c172c9e` の教訓）。
+- 2026-05-06: **フェーズ2b完了**（`MainLayout` サイドバー5リンク `v-marquee` subtle、`HelpView` 逆引きタイトル、`Toast` 本文、`PlayerListCard` 見出し＋選手名、`EventTimelineCard` 本文）。ヘッダー試合名・記事 H1 はスコープ外として文書化。

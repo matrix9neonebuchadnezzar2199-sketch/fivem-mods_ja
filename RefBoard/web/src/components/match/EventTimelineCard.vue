@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MarqueeText from '../common/MarqueeText.vue'
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
@@ -38,8 +39,8 @@ function pick(kind: 'sub' | 'yellow' | 'red') {
   <div
     :class="
       embed
-        ? ''
-        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+        ? 'min-w-0'
+        : 'min-w-0 rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
     "
   >
     <div v-if="!embed" class="mb-2 flex items-center justify-between gap-2">
@@ -51,10 +52,16 @@ function pick(kind: 'sub' | 'yellow' | 'red') {
         {{ t('match_status.editing_here') }}
       </span>
     </div>
-    <ul class="max-h-64 space-y-2 overflow-y-auto pr-1 text-sm">
-      <li v-for="e in events" :key="e.id" class="flex gap-2 rounded bg-slate-900/50 px-2 py-1.5 font-mono text-slate-200">
+    <ul class="max-h-64 min-w-0 space-y-2 overflow-y-auto overflow-x-hidden pr-1 text-sm">
+      <li
+        v-for="e in events"
+        :key="e.id"
+        class="flex min-w-0 gap-2 overflow-hidden rounded bg-slate-900/50 px-2 py-1.5 font-mono text-slate-200"
+      >
         <span class="shrink-0 text-primary">{{ e.minute }}</span>
-        <span>{{ e.text }}</span>
+        <div class="min-w-0 flex-1 overflow-hidden">
+          <MarqueeText :text="e.text" variant="default" />
+        </div>
       </li>
     </ul>
     <div ref="menuRef" class="relative mt-3">

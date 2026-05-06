@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MarqueeText from '../common/MarqueeText.vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchPlayer } from '../../types/match'
 
@@ -47,13 +48,15 @@ function rowClass(s: MatchPlayer['status']) {
   <div
     :class="
       embed
-        ? ''
-        : 'rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
+        ? 'min-w-0'
+        : 'min-w-0 rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 shadow-sm backdrop-blur-md'
     "
   >
-    <div v-if="!embed" class="mb-2 flex flex-wrap items-center justify-between gap-2">
-      <h3 class="text-sm font-semibold text-slate-200">{{ title }}</h3>
-      <div class="flex items-center gap-2">
+    <div v-if="!embed" class="mb-2 flex min-w-0 flex-wrap items-center justify-between gap-2 overflow-hidden">
+      <div class="min-w-0 flex-1 overflow-hidden pr-2">
+        <MarqueeText :text="title" variant="default" />
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
         <button type="button" class="text-[10px] text-primary hover:underline" @click="emit('history')">
           {{ t('player.list_history_link') }}
         </button>
@@ -65,22 +68,24 @@ function rowClass(s: MatchPlayer['status']) {
         </span>
       </div>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full min-w-[280px] border-collapse text-left text-xs">
+    <div class="min-w-0 overflow-x-auto">
+      <table class="w-full min-w-[280px] table-fixed border-collapse text-left text-xs">
         <thead>
           <tr class="border-b border-slate-600 text-slate-500">
-            <th class="py-2 pr-2">No</th>
-            <th class="py-2 pr-2">選手</th>
-            <th class="py-2 pr-2">POS</th>
-            <th class="py-2">状態</th>
+            <th class="w-10 shrink-0 py-2 pr-2">No</th>
+            <th class="min-w-0 py-2 pr-2">選手</th>
+            <th class="w-12 shrink-0 py-2 pr-2">POS</th>
+            <th class="w-24 shrink-0 py-2">状態</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="p in players" :key="p.id" class="border-b border-slate-700/80" :class="rowClass(p.status)">
-            <td class="py-2 pr-2 font-mono text-slate-300">{{ p.number }}</td>
-            <td class="py-2 pr-2 text-slate-100">{{ p.name }}</td>
-            <td class="py-2 pr-2 text-slate-400">{{ p.position }}</td>
-            <td class="py-2 font-medium" :class="statusClass(p.status)">{{ statusLabel(p.status) }}</td>
+            <td class="w-10 shrink-0 py-2 pr-2 font-mono text-slate-300">{{ p.number }}</td>
+            <td class="min-w-0 overflow-hidden py-2 pr-2 text-slate-100">
+              <MarqueeText :text="p.name" variant="subtle" />
+            </td>
+            <td class="w-12 shrink-0 py-2 pr-2 text-slate-400">{{ p.position }}</td>
+            <td class="w-24 shrink-0 py-2 font-medium" :class="statusClass(p.status)">{{ statusLabel(p.status) }}</td>
           </tr>
         </tbody>
       </table>
