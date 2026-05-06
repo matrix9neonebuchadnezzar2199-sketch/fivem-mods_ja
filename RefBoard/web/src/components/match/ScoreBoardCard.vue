@@ -108,8 +108,9 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         {{ t('match_status.editing_here') }}
       </span>
     </div>
-    <!-- flex 子の既定 min-width:auto を潰すため列ラッパーに min-w-0。中央は shrink-0 でスコア列を守る -->
-    <div class="flex min-w-0 items-stretch justify-between gap-4 overflow-hidden">
+    <!-- flex 子の既定 min-width:auto を潰すため列ラッパーに min-w-0。中央は shrink-0 でスコア列を守る。
+         overflow-hidden は左右マーキー列のみ（中央に付けると ⋯ ドロップダウンがクリップされ無反応に見える） -->
+    <div class="flex min-w-0 items-stretch justify-between gap-4">
       <div class="flex min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden text-center">
         <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary">
           {{ model.home.short }}
