@@ -37,13 +37,45 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
 
 - In game: **`/refboard`** or **`F6`** (see `Config.OpenKey`).
 
-## Design docs
+## Documentation index
 
-| File | Topic |
-|------|--------|
-| [docs/01_database.md](docs/01_database.md) | Database design |
-| [docs/02_server.md](docs/02_server.md) | FiveM server / `refboard:` events |
-| [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI |
+### Design & architecture
+
+| Doc | Summary |
+|-----|---------|
+| [docs/01_database.md](docs/01_database.md) | DB layout and relationships; canonical DDL in `sql/install.sql` |
+| [docs/02_server.md](docs/02_server.md) | Server Lua, `refboard:` NetEvents and ACK flow |
+| [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI, `useNui`, routing |
+| [docs/04_design_mockup.md](docs/04_design_mockup.md) | Screen mockups and early IA notes |
+| [docs/error_handling.md](docs/error_handling.md) | Error codes (`ErrorCodes` / `MakeError`), `RefboardGuard`, `Logger`, NUI handling |
+
+### Testing & quality
+
+| Doc | Summary |
+|-----|---------|
+| [docs/testing/release_test_plan.md](docs/testing/release_test_plan.md) | Pre-release on-device test plan (phases / scenarios) |
+| [docs/testing/test_results.md](docs/testing/test_results.md) | Template for recording test runs |
+| [docs/testing/known_issues.md](docs/testing/known_issues.md) | Known bugs and workarounds |
+| [docs/testing/transaction_test.md](docs/testing/transaction_test.md) | DB transaction verification (`Config.EnableTestCommands`) |
+
+### Sprint notes (context for changes)
+
+| Doc | Summary |
+|-----|---------|
+| [docs/sprints/sprint_02.md](docs/sprints/sprint_02.md) | ~v0.2.0: match list/create, lock, autosave |
+| [docs/sprints/sprint_03.md](docs/sprints/sprint_03.md) | ~v0.3.0: `match:get`, score, players, finish/reopen |
+| [docs/sprints/sprint_04.md](docs/sprints/sprint_04.md) | ~v0.4.0: subs, cards, PK, presence focus |
+| [docs/sprints/sprint_05.md](docs/sprints/sprint_05.md) | ~v0.5.0: teams/roster, data hub, settings, PK UI |
+| [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | Toward v0.9.0: hardening, on-device QA plan |
+| [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1: pre-test triage (observability, guards, health) |
+
+### Changelog & user-facing
+
+| Doc | Summary |
+|-----|---------|
+| [CHANGELOG.md](CHANGELOG.md) | Version-by-version release notes |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Operator / referee guide (Japanese) |
+| [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md) | Same (English) |
 
 ## UI development
 
@@ -55,12 +87,9 @@ npm run dev
 
 Production: `npm run build` outputs to `web/dist`.
 
-## User guide
-
-- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) (Japanese)
-- [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md) (English)
-
 ## Status
+
+**v0.5.1** — On-device triage: `ErrorCodes` / `MakeError`, `Logger`, `RefboardGuard`, NUI request trace, health check. See `docs/error_handling.md` and `docs/sprints/sprint_06_pretriage.md`.
 
 **v0.5.0** — Team management + roster, data hub + CSV export, settings (localStorage), PK decided flow, UX polish, screenshots + user guides. `docs/sprints/sprint_05.md`.
 

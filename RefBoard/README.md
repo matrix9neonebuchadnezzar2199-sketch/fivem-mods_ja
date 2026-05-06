@@ -37,13 +37,45 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
 
 - ゲーム内: **`/refboard`** または **`F6`**（`config.lua` の `Config.OpenKey`）で NUI を開閉。
 
-## ドキュメント（設計）
+## ドキュメント索引
 
-| ファイル | 内容 |
-|----------|------|
-| [docs/01_database.md](docs/01_database.md) | DB 方針・テーブル一覧（DDL は `sql/install.sql`） |
-| [docs/02_server.md](docs/02_server.md) | Lua サーバー・イベント `refboard:` |
-| [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI |
+### 設計・アーキテクチャ
+
+| 文書 | 概要 |
+|------|------|
+| [docs/01_database.md](docs/01_database.md) | DB 方針・テーブル関係。DDL の正は `sql/install.sql` |
+| [docs/02_server.md](docs/02_server.md) | FiveM サーバー Lua、`refboard:` NetEvent / ACK の流れ |
+| [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI、`useNui` とルーティング |
+| [docs/04_design_mockup.md](docs/04_design_mockup.md) | 画面モック・情報設計のたたき台 |
+| [docs/error_handling.md](docs/error_handling.md) | エラーコード（`ErrorCodes` / `MakeError`）、`RefboardGuard`、`Logger`、NUI 側の扱い |
+
+### テスト・品質
+
+| 文書 | 概要 |
+|------|------|
+| [docs/testing/release_test_plan.md](docs/testing/release_test_plan.md) | リリース前の実機テスト計画（フェーズ・シナリオ） |
+| [docs/testing/test_results.md](docs/testing/test_results.md) | テスト実行結果の記録用テンプレート |
+| [docs/testing/known_issues.md](docs/testing/known_issues.md) | 既知の不具合・回避策の一覧 |
+| [docs/testing/transaction_test.md](docs/testing/transaction_test.md) | DB トランザクション検証手順（`Config.EnableTestCommands` 連動） |
+
+### スプリント記録（変更の文脈）
+
+| 文書 | 概要 |
+|------|------|
+| [docs/sprints/sprint_02.md](docs/sprints/sprint_02.md) | v0.2.0 相当：試合一覧・作成、ロック、オートセーブ |
+| [docs/sprints/sprint_03.md](docs/sprints/sprint_03.md) | v0.3.0 相当：`match:get` / スコア・選手・終了再編集 |
+| [docs/sprints/sprint_04.md](docs/sprints/sprint_04.md) | v0.4.0 相当：交代・カード・PK・プレゼンスフォーカス |
+| [docs/sprints/sprint_05.md](docs/sprints/sprint_05.md) | v0.5.0 相当：チーム／ロスター、データ管理、設定、PK 決着 UI |
+| [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | v0.9.0 方面：実機検証・堅牢性などの計画 |
+| [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1：実機前夜のトリアージ強化（観測・ガード・ヘルス等） |
+
+### 変更履歴・ユーザー向け
+
+| 文書 | 概要 |
+|------|------|
+| [CHANGELOG.md](CHANGELOG.md) | バージョンごとの機能・修正の要約 |
+| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | 審判・運営向け操作ガイド（日本語） |
+| [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md) | 同上（English） |
 
 ## UI 開発
 
@@ -55,12 +87,9 @@ npm run dev
 
 本番ビルド: `npm run build` → `web/dist` を FiveM が読み込みます。
 
-## エンドユーザー向けガイド
-
-- [docs/USER_GUIDE.md](docs/USER_GUIDE.md)（日本語）
-- [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md)（English）
-
 ## ステータス
+
+**v0.5.1** — 実機テスト向けトリアージ：`ErrorCodes` / `MakeError`、`Logger`、`RefboardGuard`、NUI 通信トレース、ヘルスチェック。詳細は `docs/error_handling.md` と `docs/sprints/sprint_06_pretriage.md`。
 
 **v0.5.0** — チーム管理（ロスター）、データ管理・CSV、設定画面、PK 決着後フロー、UX ポリッシュ、スクリーンショット・ユーザーガイド。`docs/sprints/sprint_05.md`。
 
