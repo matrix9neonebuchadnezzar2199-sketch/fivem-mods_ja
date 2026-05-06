@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { blockDateTimeFieldKeydown, openNativeDateTimePicker } from '../composables/openNativeDateTimePicker'
 import { useNui } from '../composables/useNui'
 import { downloadFile, refboardFilename, toCSV } from '../utils/exporters'
+import MarqueeText from '../components/common/MarqueeText.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -252,22 +253,36 @@ function openMatch(id: number) {
           {{ t('data.export_csv') }}
         </button>
       </div>
-      <div class="overflow-auto rounded border border-slate-700">
-        <table class="w-full border-collapse text-left text-xs">
+      <div class="min-w-0 overflow-auto rounded border border-slate-700">
+        <table class="w-full min-w-[720px] table-fixed border-collapse text-left text-xs">
           <thead class="bg-slate-900 text-slate-400">
             <tr>
-              <th class="p-2">{{ t('match_list.col_date') }}</th>
-              <th class="p-2">{{ t('match_list.col_teams') }}</th>
-              <th class="p-2">{{ t('match_list.col_score') }}</th>
-              <th class="p-2">{{ t('data.col_result') }}</th>
-              <th class="p-2">{{ t('create_match.venue') }}</th>
-              <th class="p-2">{{ t('match_list.col_actions') }}</th>
+              <th class="w-28 shrink-0 p-2">{{ t('match_list.col_date') }}</th>
+              <th class="min-w-0 p-2">{{ t('match_list.col_match_name') }}</th>
+              <th class="min-w-0 p-2">{{ t('match_list.col_teams') }}</th>
+              <th class="w-24 shrink-0 p-2">{{ t('match_list.col_score') }}</th>
+              <th class="w-10 shrink-0 p-2">{{ t('data.col_result') }}</th>
+              <th class="min-w-0 p-2">{{ t('create_match.venue') }}</th>
+              <th class="w-20 shrink-0 p-2">{{ t('match_list.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="r in matchHistory" :key="String(r.id)" class="border-t border-slate-800 text-slate-200">
               <td class="p-2">{{ r.match_date }}</td>
-              <td class="p-2">{{ r.team1_name }} vs {{ r.team2_name }}</td>
+              <td class="min-w-0 overflow-hidden p-2">
+                <MarqueeText :text="String(r.match_name ?? '').trim() || '—'" variant="default" />
+              </td>
+              <td class="min-w-0 overflow-hidden p-2">
+                <div class="flex min-w-0 items-center gap-1">
+                  <span class="min-w-0 flex-1 overflow-hidden">
+                    <MarqueeText :text="String(r.team1_name ?? '')" variant="subtle" />
+                  </span>
+                  <span class="shrink-0 text-slate-500">vs</span>
+                  <span class="min-w-0 flex-1 overflow-hidden">
+                    <MarqueeText :text="String(r.team2_name ?? '')" variant="subtle" />
+                  </span>
+                </div>
+              </td>
               <td class="p-2 font-mono">{{ r.team1_score }} - {{ r.team2_score }}</td>
               <td class="p-2 text-slate-400">{{ resultLabel(r) }}</td>
               <td class="p-2 text-slate-400">{{ r.venue || '—' }}</td>
@@ -285,23 +300,25 @@ function openMatch(id: number) {
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="loadTeamStats">{{ t('data.reload') }}</button>
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="exportTeamStatsCsv">{{ t('data.export_csv') }}</button>
       </div>
-      <div class="overflow-auto rounded border border-slate-700">
-        <table class="w-full border-collapse text-left text-xs">
+      <div class="min-w-0 overflow-auto rounded border border-slate-700">
+        <table class="w-full min-w-[520px] table-fixed border-collapse text-left text-xs">
           <thead class="bg-slate-900 text-slate-400">
             <tr>
-              <th class="p-2">{{ t('team.name') }}</th>
-              <th class="p-2">MP</th>
-              <th class="p-2">W</th>
-              <th class="p-2">D</th>
-              <th class="p-2">L</th>
-              <th class="p-2">GF</th>
-              <th class="p-2">GA</th>
-              <th class="p-2">GD</th>
+              <th class="min-w-0 p-2">{{ t('team.name') }}</th>
+              <th class="w-10 shrink-0 p-2">MP</th>
+              <th class="w-8 shrink-0 p-2">W</th>
+              <th class="w-8 shrink-0 p-2">D</th>
+              <th class="w-8 shrink-0 p-2">L</th>
+              <th class="w-10 shrink-0 p-2">GF</th>
+              <th class="w-10 shrink-0 p-2">GA</th>
+              <th class="w-10 shrink-0 p-2">GD</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="r in teamStats" :key="String(r.id)" class="border-t border-slate-800 text-slate-200">
-              <td class="p-2">{{ r.name }}</td>
+              <td class="min-w-0 overflow-hidden p-2">
+                <MarqueeText :text="String(r.name ?? '')" variant="subtle" />
+              </td>
               <td class="p-2">{{ r.matches_played }}</td>
               <td class="p-2">{{ r.wins }}</td>
               <td class="p-2">{{ r.draws }}</td>
@@ -320,22 +337,24 @@ function openMatch(id: number) {
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="loadPlayerStats">{{ t('data.reload') }}</button>
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="exportPlayerStatsCsv">{{ t('data.export_csv') }}</button>
       </div>
-      <div class="overflow-auto rounded border border-slate-700">
-        <table class="w-full border-collapse text-left text-xs">
+      <div class="min-w-0 overflow-auto rounded border border-slate-700">
+        <table class="w-full min-w-[480px] table-fixed border-collapse text-left text-xs">
           <thead class="bg-slate-900 text-slate-400">
             <tr>
-              <th class="p-2">{{ t('data.col_player') }}</th>
-              <th class="p-2">{{ t('data.col_guest') }}</th>
-              <th class="p-2">MP</th>
-              <th class="p-2">G</th>
-              <th class="p-2">A</th>
-              <th class="p-2">🟨</th>
-              <th class="p-2">🟥</th>
+              <th class="min-w-0 p-2">{{ t('data.col_player') }}</th>
+              <th class="w-16 shrink-0 p-2">{{ t('data.col_guest') }}</th>
+              <th class="w-10 shrink-0 p-2">MP</th>
+              <th class="w-8 shrink-0 p-2">G</th>
+              <th class="w-8 shrink-0 p-2">A</th>
+              <th class="w-8 shrink-0 p-2">🟨</th>
+              <th class="w-8 shrink-0 p-2">🟥</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(r, idx) in playerStats" :key="String(r.grp_key ?? idx)" class="border-t border-slate-800 text-slate-200">
-              <td class="p-2">{{ r.player_name }}</td>
+              <td class="min-w-0 overflow-hidden p-2">
+                <MarqueeText :text="String(r.player_name ?? '')" variant="subtle" />
+              </td>
               <td class="p-2">{{ Number(r.has_license) === 0 ? t('data.guest') : '—' }}</td>
               <td class="p-2">{{ r.matches_played }}</td>
               <td class="p-2">{{ r.goals }}</td>

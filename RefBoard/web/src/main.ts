@@ -8,6 +8,7 @@ import { useToast } from './composables/useToast'
 import { vMarquee } from './directives/marquee'
 import './styles/main.css'
 import './styles/marquee.css'
+import './styles/score-flash.css'
 
 const app = createApp(App)
 const pinia = createPinia()

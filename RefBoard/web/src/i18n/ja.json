@@ -165,6 +165,7 @@
     "finished": "終了",
     "cancelled": "キャンセル",
     "col_date": "日付",
+    "col_match_name": "試合名",
     "col_teams": "対戦",
     "col_score": "スコア",
     "col_status": "状態",

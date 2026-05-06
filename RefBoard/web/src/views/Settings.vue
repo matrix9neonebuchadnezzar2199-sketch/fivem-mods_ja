@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { useNui, getResourceName } from '../composables/useNui'
+import MarqueeText from '../components/common/MarqueeText.vue'
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
@@ -27,11 +28,15 @@ function syncLocale() {
 </script>
 
 <template>
-  <div class="h-full overflow-y-auto p-4 text-sm text-slate-200">
-    <h1 class="mb-4 text-lg font-bold text-slate-50">{{ t('settings.title') }}</h1>
+  <div class="h-full min-w-0 overflow-y-auto p-4 text-sm text-slate-200">
+    <h1 class="mb-4 min-w-0 overflow-hidden text-lg font-bold text-slate-50">
+      <MarqueeText :text="t('settings.title')" variant="default" />
+    </h1>
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
-      <h2 class="mb-3 text-sm font-semibold text-primary">{{ t('settings.section_general') }}</h2>
+      <h2 class="mb-3 min-w-0 overflow-hidden text-sm font-semibold text-primary">
+        <MarqueeText :text="t('settings.section_general')" variant="subtle" />
+      </h2>
       <div class="grid gap-3 md:grid-cols-2">
         <label class="block text-slate-400">
           {{ t('settings.locale') }}
@@ -59,7 +64,9 @@ function syncLocale() {
     </section>
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
-      <h2 class="mb-3 text-sm font-semibold text-primary">{{ t('settings.section_match') }}</h2>
+      <h2 class="mb-3 min-w-0 overflow-hidden text-sm font-semibold text-primary">
+        <MarqueeText :text="t('settings.section_match')" variant="subtle" />
+      </h2>
       <div class="grid gap-3 md:grid-cols-2">
         <label class="block text-slate-400">
           {{ t('settings.default_half_min') }}
@@ -81,10 +88,16 @@ function syncLocale() {
     </section>
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
-      <h2 class="mb-3 text-sm font-semibold text-primary">{{ t('settings.section_display') }}</h2>
+      <h2 class="mb-3 min-w-0 overflow-hidden text-sm font-semibold text-primary">
+        <MarqueeText :text="t('settings.section_display')" variant="subtle" />
+      </h2>
       <fieldset class="mb-4 space-y-2 border-0 p-0">
-        <legend class="mb-1 block text-slate-400">{{ t('settings.marquee_mode.label') }}</legend>
-        <p class="mb-2 text-xs text-slate-500">{{ t('settings.marquee_mode.description') }}</p>
+        <legend class="mb-1 block min-w-0 overflow-hidden text-slate-400">
+          <MarqueeText :text="t('settings.marquee_mode.label')" variant="subtle" />
+        </legend>
+        <p class="mb-2 min-w-0 overflow-hidden text-xs text-slate-500">
+          <MarqueeText :text="t('settings.marquee_mode.description')" variant="subtle" />
+        </p>
         <label class="flex cursor-pointer items-start gap-2 rounded border border-transparent px-1 py-1 hover:border-slate-600">
           <input v-model="settings.settings.marqueeMode" type="radio" value="always" class="mt-1 shrink-0 rounded border-slate-500" />
           <span>
@@ -127,7 +140,9 @@ function syncLocale() {
     </section>
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
-      <h2 class="mb-3 text-sm font-semibold text-primary">{{ t('settings.section_dev') }}</h2>
+      <h2 class="mb-3 min-w-0 overflow-hidden text-sm font-semibold text-primary">
+        <MarqueeText :text="t('settings.section_dev')" variant="subtle" />
+      </h2>
       <label class="flex items-center gap-2 text-slate-300">
         <input v-model="settings.settings.nuiMock" type="checkbox" class="rounded border-slate-500" disabled />
         {{ t('settings.nui_mock') }}

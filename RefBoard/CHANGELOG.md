@@ -1,7 +1,9 @@
 # Changelog
 
-## v0.6.1 — Unreleased
+## v0.6.1 — 2026-05-06
 
+- **feat**: sprint_08 フェーズ3 マーキー全面展開（`TeamList` / `RosterList`、`DataManage` 試合履歴・統計表、`Settings` 見出し、`PresenceBadge`、`MatchList` に `MarqueeText`。試合一覧・データの試合履歴に **試合名**列、`match_list.col_match_name` 日英 i18n）。
+- **feat**: `ScoreBoardCard` に **score-flash**（`rb-score-flash`、ゴール時スコア増分のみ 600ms、`prefers-reduced-motion` で無効）。スタイルは `web/src/styles/score-flash.css` を `main.ts` で import。
 - **マーキー**: `marquee.css` の両端フェード `mask-image` を **`.rb-marquee.is-overflowing` のみ**に限定（短文時の先頭文字欠け対策）。`prefers-reduced-motion` 時は `-webkit-mask-image` も解除。
 - **マーキー**: `.rb-marquee-plain` の `overflow: hidden` を削除し、親 `.rb-marquee` との二重クリップによる先頭欠けを解消。
 - **開発支援**: DEV 専用 `window.__refboardToastPush` を `main.ts` に追加（フェーズ2b 目視・Toast 長文の手動発火用。`import.meta.env.DEV` のみ）。

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import MarqueeText from '../common/MarqueeText.vue'
 import type { MatchDetailModel } from '../../types/match'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     model: MatchDetailModel
     readonly: boolean
@@ -31,6 +31,63 @@ function toggleMenu() {
 function openManual() {
   menuOpen.value = false
   emit('manualScore')
+}
+
+/** 初回 props 反映後のみ増分ゴールでフラッシュ（0→読込は nextTick で同期し、減算は対象外） */
+const scoreFlashReady = ref(false)
+const lastHomeScore = ref(0)
+const lastAwayScore = ref(0)
+
+function syncScoreFlashBaseline() {
+  lastHomeScore.value = props.model.score.home
+  lastAwayScore.value = props.model.score.away
+}
+
+onMounted(() => {
+  void nextTick(() => {
+    syncScoreFlashBaseline()
+    scoreFlashReady.value = true
+  })
+})
+
+watch(
+  () => props.model.id,
+  () => {
+    syncScoreFlashBaseline()
+  },
+)
+
+const flashHomeScore = ref(false)
+const flashAwayScore = ref(false)
+
+watch(
+  () => props.model.score.home,
+  (nv) => {
+    if (!scoreFlashReady.value) return
+    const ov = lastHomeScore.value
+    if (nv !== ov) {
+      if (nv > ov) flashHomeScore.value = true
+      lastHomeScore.value = nv
+    }
+  },
+)
+
+watch(
+  () => props.model.score.away,
+  (nv) => {
+    if (!scoreFlashReady.value) return
+    const ov = lastAwayScore.value
+    if (nv !== ov) {
+      if (nv > ov) flashAwayScore.value = true
+      lastAwayScore.value = nv
+    }
+  },
+)
+
+function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
+  if (ev.animationName !== 'rb-score-flash') return
+  if (side === 'home') flashHomeScore.value = false
+  else flashAwayScore.value = false
 }
 </script>
 
@@ -63,8 +120,20 @@ function openManual() {
         <span class="rounded bg-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">HOME</span>
       </div>
       <div class="relative flex shrink-0 flex-col items-center justify-center px-2">
-        <div class="text-7xl font-bold leading-none tracking-tight text-slate-50">
-          {{ model.score.home }} - {{ model.score.away }}
+        <div
+          class="flex items-baseline justify-center gap-1 text-7xl font-bold tabular-nums leading-none tracking-tight text-slate-50"
+        >
+          <span
+            class="inline-block min-w-[0.6ch] transform-gpu motion-reduce:transform-none"
+            :class="{ 'rb-score-flash': flashHomeScore }"
+            @animationend="onScoreFlashAnimEnd('home', $event)"
+          >{{ model.score.home }}</span>
+          <span class="shrink-0">-</span>
+          <span
+            class="inline-block min-w-[0.6ch] transform-gpu motion-reduce:transform-none"
+            :class="{ 'rb-score-flash': flashAwayScore }"
+            @animationend="onScoreFlashAnimEnd('away', $event)"
+          >{{ model.score.away }}</span>
         </div>
         <div class="mt-3 flex items-center gap-2 text-sm text-slate-400">
           <button type="button" class="rounded border border-slate-600 px-2 py-0.5" disabled>−</button>

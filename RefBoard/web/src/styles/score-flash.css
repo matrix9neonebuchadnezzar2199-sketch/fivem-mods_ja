@@ -1,0 +1,37 @@
+/**
+ * スコアボード数字のゴール時フラッシュ（sprint_08 フェーズ3）
+ * クラス名は marquee.css の rb-* と揃える。
+ */
+@keyframes rb-score-flash {
+  0% {
+    color: inherit;
+    text-shadow: none;
+    transform: scale(1);
+  }
+  20% {
+    color: #fbbf24;
+    text-shadow: 0 0 16px #fbbf24, 0 0 32px #f59e0b;
+    transform: scale(1.15);
+  }
+  60% {
+    color: #fbbf24;
+    text-shadow: 0 0 12px #fbbf24, 0 0 24px #f59e0b;
+    transform: scale(1.08);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+    transform: scale(1);
+  }
+}
+
+.rb-score-flash {
+  animation: rb-score-flash 600ms ease-out;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-score-flash {
+    animation: none !important;
+  }
+}

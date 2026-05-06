@@ -133,7 +133,7 @@ async function onCreatedTeam(id: number) {
 
 <template>
   <div class="flex h-full min-h-0 flex-col gap-2 p-3">
-    <div class="grid min-h-0 flex-1 grid-cols-1 gap-2 lg:grid-cols-[30%_1fr]">
+    <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-2 lg:grid-cols-[30%_1fr]">
       <TeamList
         :search="search"
         :teams="teams"
@@ -147,7 +147,7 @@ async function onCreatedTeam(id: number) {
         @select="selectTeam"
         @open-create="showCreate = true"
       />
-      <div class="grid min-h-0 grid-rows-1 gap-2 lg:grid-rows-2">
+      <div class="grid min-h-0 min-w-0 grid-rows-1 gap-2 lg:grid-rows-2">
         <TeamDetail :team="team" :stats="stats" @update="onUpdate" @delete="onDelete" />
         <RosterList
           :rows="roster"

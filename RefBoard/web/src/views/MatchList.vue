@@ -7,6 +7,7 @@ import { useSessionStore } from '../stores/session'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
+import MarqueeText from '../components/common/MarqueeText.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -141,21 +142,33 @@ function onCreated(id: number) {
     </div>
 
     <div class="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-700 bg-slate-900/60">
-      <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+      <table class="w-full min-w-[760px] table-fixed border-collapse text-left text-sm">
         <thead class="sticky top-0 bg-slate-900/95 text-xs uppercase text-slate-500">
           <tr>
-            <th class="border-b border-slate-700 px-3 py-2">{{ t('match_list.col_date') }}</th>
-            <th class="border-b border-slate-700 px-3 py-2">{{ t('match_list.col_teams') }}</th>
-            <th class="border-b border-slate-700 px-3 py-2">{{ t('match_list.col_score') }}</th>
-            <th class="border-b border-slate-700 px-3 py-2">{{ t('match_list.col_status') }}</th>
-            <th class="border-b border-slate-700 px-3 py-2">{{ t('match_list.col_actions') }}</th>
+            <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_date') }}</th>
+            <th class="min-w-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_match_name') }}</th>
+            <th class="min-w-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_teams') }}</th>
+            <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_score') }}</th>
+            <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_status') }}</th>
+            <th class="w-44 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="m in rows" :key="m.id" class="border-b border-slate-800 hover:bg-slate-800/40">
             <td class="px-3 py-2 text-slate-300">{{ m.match_date }}</td>
-            <td class="px-3 py-2 text-slate-100">
-              {{ m.team1_name || m.team1_id }} vs {{ m.team2_name || m.team2_id }}
+            <td class="min-w-0 overflow-hidden px-3 py-2 text-slate-100">
+              <MarqueeText :text="(m.match_name && String(m.match_name).trim()) || '—'" variant="default" />
+            </td>
+            <td class="min-w-0 overflow-hidden px-3 py-2 text-slate-100">
+              <div class="flex min-w-0 items-center gap-2">
+                <span class="min-w-0 flex-1 overflow-hidden">
+                  <MarqueeText :text="String(m.team1_name ?? m.team1_id)" variant="subtle" />
+                </span>
+                <span class="shrink-0 text-slate-500">vs</span>
+                <span class="min-w-0 flex-1 overflow-hidden">
+                  <MarqueeText :text="String(m.team2_name ?? m.team2_id)" variant="subtle" />
+                </span>
+              </div>
             </td>
             <td class="px-3 py-2 font-mono text-slate-200">{{ m.team1_score }} - {{ m.team2_score }}</td>
             <td class="px-3 py-2">
@@ -175,7 +188,7 @@ function onCreated(id: number) {
             </td>
           </tr>
           <tr v-if="!rows.length">
-            <td colspan="5" class="px-3 py-8 text-center text-slate-500">{{ t('match_list.empty') }}</td>
+            <td colspan="6" class="px-3 py-8 text-center text-slate-500">{{ t('match_list.empty') }}</td>
           </tr>
         </tbody>
       </table>

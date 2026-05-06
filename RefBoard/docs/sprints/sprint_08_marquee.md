@@ -1,5 +1,7 @@
 # Sprint 08 — v0.6.1（マーキー / 1 行テキストの視覚言語）
 
+**Sprint 08 全フェーズ完了（2026-05-06）**: フェーズ1（基盤）→ フェーズ2a（スコアボードチーム名）→ フェーズ2b（高視認エリア）→ **フェーズ3（一覧・管理画面全域＋`score-flash`）**まで実装済み。**v0.6.1 リリース可能状態**（残: デモ GIF 等は受け入れ基準の任意項目）。
+
 ## ゴール
 
 **オーバーフローした 1 行テキストは `text-overflow: ellipsis` で省略せず、マーキーで全文を見せる**方針を RefBoard 全体の約束事にする。スタジアム LED・中継テロップ感とブランドを揃えつつ、`prefers-reduced-motion` と設定でのオフを用意する。
@@ -144,9 +146,40 @@ const VARIANTS = {
 | プレイヤーリストの選手名 | `subtle` |
 | イベントタイムライン本文 | `default` |
 
-### フェーズ 3 — 全域＋演出（PR3）
+### フェーズ 3 — 全域＋演出（PR3）— **完了（2026-05-06）**
 
-プレイヤーリスト、イベントタイムライン、試合一覧、TeamManage / DataManage / Settings の残り、PresenceBadge、エラートースト等。スコア変動時の `score-flash`、得点者の LED 風クラス（`scorer-name-marquee` 等）を追加。
+プレイヤーリスト・イベントタイムラインはフェーズ2bで対応済み。フェーズ3では **TeamManage（`TeamList` / `RosterList`）**、**`DataManage`**（試合履歴＋チーム統計＋選手統計）、**`Settings`**（ページタイトル・各セクション見出し・マーキー設定の legend / 説明文）、**`PresenceBadge`**（オンライン人数文・ポップアップ内ユーザー名）、**`MatchList`**（試合名列追加＋チーム名）へマーキーを拡張。**`ScoreBoardCard`** にスコア増分時のみ発火する **`rb-score-flash`**（`web/src/styles/score-flash.css`、`main.ts` で import）。**減算・手動減点時はフラッシュしない**。`prefers-reduced-motion: reduce` では `animation: none`。得点者 LED 風（`scorer-name-marquee`）は本フェーズでは未着手（将来拡張）。
+
+#### フェーズ3 完了表（場所・variant・主ファイル）
+
+| 箇所 | variant | ファイル |
+|------|---------|----------|
+| チーム一覧の正式チーム名 | `default` | `TeamList.vue` |
+| チーム一覧の略称 | `subtle` | `TeamList.vue` |
+| ロスター表の選手名 | `subtle` | `RosterList.vue` |
+| データ管理・試合履歴の試合名 | `default` | `DataManage.vue` |
+| データ管理・試合履歴のチーム名（左右） | `subtle` | `DataManage.vue` |
+| データ管理・チーム統計のチーム名 | `subtle` | `DataManage.vue` |
+| データ管理・選手統計の選手名 | `subtle` | `DataManage.vue` |
+| 設定ページタイトル | `default` | `Settings.vue` |
+| 設定セクション見出し・マーキー legend / 説明 | `subtle` | `Settings.vue` |
+| プレゼンス「N人が…」・ユーザー名 | `subtle` | `PresenceBadge.vue` |
+| 試合一覧の試合名 | `default` | `MatchList.vue` |
+| 試合一覧のホーム/アウェイ名 | `subtle` | `MatchList.vue` |
+| スコア数字ゴール時閃光 | CSS `rb-score-flash` | `ScoreBoardCard.vue` + `score-flash.css` |
+
+レイアウトはフェーズ2b チェックリストに従い、表組みは **`table-fixed`**＋**`min-w-0` / `overflow-hidden`**＋数値・操作列に **`shrink-0`** を付与。
+
+#### score-flash 仕様
+
+| 項目 | 内容 |
+|------|------|
+| CSS | `@keyframes rb-score-flash`（0→20→60→100%、金色 `#fbbf24`＋`text-shadow`、`transform: scale`）。`.rb-score-flash { animation: rb-score-flash 600ms ease-out; transform-origin: center; }` |
+| トリガー | `props.model.score.home` / `away` を **別 watch**。`onMounted` → `nextTick` で現スコアを `lastHomeScore` / `lastAwayScore` に同期し **`scoreFlashReady`** 後のみ、**新値 > 旧値** のとき該当側に `rb-score-flash` を付与。`animationend`（`animationName === 'rb-score-flash'`）でクラス除去 |
+| 初回マウント | マウント直後の同期ではフラッシュしない（`scoreFlashReady` ガード＋ baseline 同期） |
+| 減算 | `nv > ov` のみのため **発火しない**（テンプレ推奨どおり） |
+| reduced motion | `@media (prefers-reduced-motion: reduce) { .rb-score-flash { animation: none !important; } }` |
+| home / away | **独立**（別 span・別 ref フラグ） |
 
 ## 受け入れ基準（v0.6.1 全体・最終）
 
@@ -193,3 +226,4 @@ const VARIANTS = {
 - 2026-05-06: フェーズ2a（`ScoreBoardCard` チーム名のみマーキー）完了。
 - 2026-05-06: **複数行同時マーキーを設計意図として明文化**。フェーズ 2b 着手前の **flex/grid レイアウトチェックリスト**（`min-w-0` / `overflow-hidden` / `shrink-0`）を追記（`c172c9e` の教訓）。
 - 2026-05-06: **フェーズ2b完了**（`MainLayout` サイドバー5リンク `v-marquee` subtle、`HelpView` 逆引きタイトル、`Toast` 本文、`PlayerListCard` 見出し＋選手名、`EventTimelineCard` 本文）。ヘッダー試合名・記事 H1 はスコープ外として文書化。
+- 2026-05-06: **フェーズ3完了**（`TeamList` / `RosterList`、`DataManage`、`Settings`、`PresenceBadge`、`MatchList`、`ScoreBoardCard` + `score-flash.css`）。冒頭に全フェーズ完了・v0.6.1 リリース可能の明記を追加。

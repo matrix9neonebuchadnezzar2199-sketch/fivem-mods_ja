@@ -165,6 +165,7 @@
     "finished": "Finished",
     "cancelled": "Cancelled",
     "col_date": "Date",
+    "col_match_name": "Match name",
     "col_teams": "Fixture",
     "col_score": "Score",
     "col_status": "Status",
