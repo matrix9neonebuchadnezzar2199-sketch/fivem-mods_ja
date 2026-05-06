@@ -35,18 +35,23 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const menuOpen = ref(false)
-const menuRef = ref<HTMLElement | null>(null)
-onClickOutside(menuRef, () => {
-  menuOpen.value = false
+const goalMenuOpen = ref(false)
+const goalMenuRef = ref<HTMLElement | null>(null)
+onClickOutside(goalMenuRef, () => {
+  goalMenuOpen.value = false
 })
 
-function toggleMenu() {
-  menuOpen.value = !menuOpen.value
+function toggleGoalMenu() {
+  goalMenuOpen.value = !goalMenuOpen.value
 }
 
-function openManual() {
-  menuOpen.value = false
+function openGoalWizard() {
+  goalMenuOpen.value = false
+  emit('goal')
+}
+
+function openManualFromGoalMenu() {
+  goalMenuOpen.value = false
   emit('manualScore')
 }
 
@@ -137,7 +142,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
       </span>
     </div>
     <!-- flex 子の既定 min-width:auto を潰すため列ラッパーに min-w-0。中央は shrink-0 でスコア列を守る。
-         overflow-hidden は左右マーキー列のみ（中央に付けると ⋯ ドロップダウンがクリップされ無反応に見える） -->
+         overflow-hidden は左右マーキー列のみ（中央に付けると [ゴール] メニューがクリップされ無反応に見える） -->
     <div class="flex min-w-0 items-stretch justify-between gap-4">
       <div class="flex min-w-0 flex-1 flex-col items-center gap-2 overflow-hidden text-center">
         <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/20 text-lg font-bold text-primary">
@@ -149,33 +154,41 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         <span class="rounded bg-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">HOME</span>
       </div>
       <div class="relative flex shrink-0 flex-col items-center justify-center px-2">
-        <div class="mb-2 flex flex-wrap items-center justify-center gap-2">
+        <div ref="goalMenuRef" class="relative mb-2 flex flex-wrap items-center justify-center">
           <button
             type="button"
             class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
             :disabled="readonly"
-            @click="emit('goal')"
+            :aria-expanded="goalMenuOpen"
+            aria-haspopup="menu"
+            :aria-label="t('score_board.goal_menu_aria')"
+            @click.stop="toggleGoalMenu"
           >
             {{ t('score_board.goal') }}
           </button>
-          <div ref="menuRef" class="relative">
+          <div
+            v-if="goalMenuOpen"
+            role="menu"
+            class="absolute left-1/2 z-20 min-w-[14rem] -translate-x-1/2 rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
+            :class="embed ? 'bottom-full z-[85] mb-1' : 'top-full mt-1'"
+          >
             <button
               type="button"
-              class="rounded border border-slate-600 px-2 py-1.5 text-xs text-slate-300 disabled:opacity-40"
-              :disabled="readonly"
-              @click.stop="toggleMenu"
+              role="menuitem"
+              class="block w-full px-3 py-2 text-left hover:bg-slate-800"
+              @click="openGoalWizard"
             >
-              ⋯
+              <span class="block text-xs font-medium text-slate-200">{{ t('score_board.goal_menu_record') }}</span>
+              <span class="mt-0.5 block text-[10px] leading-snug text-slate-500">{{ t('score_board.goal_menu_record_hint') }}</span>
             </button>
-            <div
-              v-if="menuOpen"
-              class="absolute right-0 w-48 rounded-lg border border-slate-600 bg-slate-900 py-1 shadow-xl"
-              :class="embed ? 'bottom-full z-[85] mb-1' : 'top-full z-20 mt-1'"
+            <button
+              type="button"
+              role="menuitem"
+              class="block w-full px-3 py-2 text-left text-xs text-slate-200 hover:bg-slate-800"
+              @click="openManualFromGoalMenu"
             >
-              <button type="button" class="block w-full px-3 py-2 text-left text-xs hover:bg-slate-800" @click="openManual">
-                {{ t('score_board.manual_edit') }}
-              </button>
-            </div>
+              {{ t('score_board.goal_menu_manual') }}
+            </button>
           </div>
         </div>
         <div

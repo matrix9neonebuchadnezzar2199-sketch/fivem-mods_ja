@@ -115,6 +115,10 @@
   "score_board": {
     "title": "Score",
     "goal": "[Goal]",
+    "goal_menu_aria": "Goal menu",
+    "goal_menu_record": "Record a goal",
+    "goal_menu_record_hint": "Choose team and scorer",
+    "goal_menu_manual": "Edit score manually",
     "manual_edit": "[Edit score directly]",
     "clock_start_aria": "Start match clock",
     "clock_stop_aria": "Stop match clock",

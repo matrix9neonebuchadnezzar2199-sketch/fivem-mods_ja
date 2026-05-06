@@ -115,6 +115,10 @@
   "score_board": {
     "title": "スコア",
     "goal": "[ゴール]",
+    "goal_menu_aria": "[ゴール] メニュー",
+    "goal_menu_record": "ゴールを記録",
+    "goal_menu_record_hint": "チームと得点者を選んで記録",
+    "goal_menu_manual": "手動で得点を編集",
     "manual_edit": "[スコアを直接編集]",
     "clock_start_aria": "試合時計を開始",
     "clock_stop_aria": "試合時計を停止",
