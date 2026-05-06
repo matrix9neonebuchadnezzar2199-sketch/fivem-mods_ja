@@ -48,6 +48,7 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
 | [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI, `useNui`, routing |
 | [docs/04_design_mockup.md](docs/04_design_mockup.md) | Screen mockups and early IA notes |
 | [docs/error_handling.md](docs/error_handling.md) | Error codes (`ErrorCodes` / `MakeError`), `RefboardGuard`, `Logger`, NUI handling |
+| [docs/help_system_design.md](docs/help_system_design.md) | **Planned v0.6.0**: In-app help (tree + task index, search, context `?`, toast → help for errors) |
 
 ### Testing & quality
 
@@ -68,6 +69,8 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
 | [docs/sprints/sprint_05.md](docs/sprints/sprint_05.md) | ~v0.5.0: teams/roster, data hub, settings, PK UI |
 | [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | Toward v0.9.0: hardening, on-device QA plan |
 | [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1: pre-test triage (observability, guards, health) |
+| [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md) | **Planned v0.6.0**: In-app help sprint (acceptance criteria, roadmap plan B) |
+| [docs/sprints/sprint_07_uiux_findings.md](docs/sprints/sprint_07_uiux_findings.md) | UX notes while writing help (input for v0.9.1 fixes) |
 
 ### Changelog & user-facing
 
@@ -88,6 +91,8 @@ npm run dev
 Production: `npm run build` outputs to `web/dist`.
 
 ## Status
+
+**v0.6.0 (planned)** — In-app help (topic tree + task-based index, search, `?` on key screens, errors link to help). Spec: [docs/help_system_design.md](docs/help_system_design.md), sprint: [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md). **Plan B**: ship help before full on-device QA.
 
 **v0.5.1** — On-device triage: `ErrorCodes` / `MakeError`, `Logger`, `RefboardGuard`, NUI request trace, health check. See `docs/error_handling.md` and `docs/sprints/sprint_06_pretriage.md`.
 

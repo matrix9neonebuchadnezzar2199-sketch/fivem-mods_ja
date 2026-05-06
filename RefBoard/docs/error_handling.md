@@ -83,7 +83,12 @@
 4. 高リスクハンドラなら **`RefboardGuard`** で包み、`ackEvent` 名を既存 ACK と一致させる。
 5. 調査に必要なら **`Logger.info`** を入口、`Logger.warn` をビジネス上の失敗、`Logger.error` を例外に使う。
 
-## 8. 関連ソース一覧
+## 8. アプリ内ヘルプとの連携（v0.6.0〜）
+
+- Toast の「解決方法を見る」や `/help/error/:code` は、本書の **`code`（`E1xxx`…）** と [help_system_design.md](help_system_design.md) のトラブル記事を対応付ける。  
+- 記事本文の `error` キー表記は、**`MakeError` の `error`（レガシー文字列）** と一致させる（例: `E1003` ↔ `lock_held`）。
+
+## 9. 関連ソース一覧
 
 | 種別 | パス |
 |------|------|
@@ -95,6 +100,7 @@
 | 通信トレース | `web/src/composables/useNui.ts` |
 | グローバルハンドラ | `web/src/main.ts` |
 | 前夜スプリント要約 | `docs/sprints/sprint_06_pretriage.md` |
+| アプリ内ヘルプ設計 | `docs/help_system_design.md` |
 | 変更履歴 | `CHANGELOG.md` |
 
 ---
@@ -102,3 +108,4 @@
 **改版履歴**
 
 - 2026-05-06: v0.5.1 トリアージ強化に合わせ初版作成。
+- 2026-05-06: §8 ヘルプ連携・§9 関連一覧に `help_system_design.md` を追加。
