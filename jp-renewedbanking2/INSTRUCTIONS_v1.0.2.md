@@ -251,7 +251,7 @@ robocopy "H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2" "<サーバー側>\res
 - `<サーバー側>\resources\Renewed-Banking\web\public\index.html`
 - `<サーバー側>\resources\Renewed-Banking\locales\`
 
-`web\public\build\bundle.js` が無いと NUI が真っ白になる。v1.0.1-ja のコミットで `git add -f` 経由によりリポジトリに bundle を同梱している想定のため、コピー元の `H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2\web\public\build\` に `bundle.js` があるか事前に確認しておくとよい。
+`web\public\build\bundle.js` が無いと NUI が真っ白になる。v1.0.1-ja のコミット 6 で `git add -f` 経由によりリポジトリに bundle を同梱している想定のため、コピー元の `H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2\web\public\build\` に `bundle.js` があるか事前に確認しておくとよい。
 
 ### ステップ 2: server.cfg の確認
 
