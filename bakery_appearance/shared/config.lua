@@ -5,6 +5,9 @@ Config.Debug = false
 -- 利用可能: en, de, ja（shared/locale/<code>.json）
 Config.Locale = 'ja'
 
+-- true のとき、ゾーンの店員 Ped をスポーンしない（enablePed や管理メニュー設定より優先）。ブリップ／polyzone／マーカーのみ。
+Config.DisableShopPeds = true
+
 Config.Camera = {
     Body_Distance = 2.0, -- Distance of the camera from the player
     Default_Distance = 1.0, -- Default distance for close-up views

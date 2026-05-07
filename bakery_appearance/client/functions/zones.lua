@@ -173,7 +173,7 @@ local function initializeZones()
     DebugPrint(string.format('[bakery_appearance] Initializing %d zones', #zones))
 
     for _, zone in ipairs(zones) do
-        if zone.enablePed then
+        if zone.enablePed and not Config.DisableShopPeds then
             -- Create ped interaction
             createZonePed(zone)
         elseif zone.polyzone and #zone.polyzone > 0 then
