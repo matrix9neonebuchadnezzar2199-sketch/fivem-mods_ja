@@ -15,6 +15,7 @@
 - 将来 SQL が複雑化した場合は、**パーサの拡張**（ブロックコメント・クォート内セミコロン対応）または **マイグレーションツール／分割 SQL ファイル**への移行を検討すること。いずれも本節と `CHANGELOG.ja.md` を更新してから着手する想定。
 - **v1.0.3-ja**: サーバー末尾に残っていた原作由来の `createTables` + `MySQL.transaction.await` による DDL は削除し、**`Renewed-Banking.sql` 読み込み経路のみ**に統一した（ログの二重実行感の解消）。
 - **ATM と入金ボタン**: 原作 UI は **`atm == true` のとき入金ボタンを表示しない**実装だった（出金・送金のみ）。**v1.0.4-ja** から `config.lua` の **`allowDepositAtAtm`**（既定 `true`）で ATM でも入金を出せる。原作どおりにするなら `false`。
+- **`ensure jp-renewedbanking2` で UI が読めない（v1.0.5-ja より前）**: 旧版は `LoadResourceFile("Renewed-Banking", …)` 固定のため、フォルダ名が違うと `bundle.js` / SQL が見つからなかった。**v1.0.5-ja** で `GetCurrentResourceName()` / `GetParentResourceName()` に修正。他 MOD から `exports['Renewed-Banking']` を使う本番構成では、引き続きフォルダ名 **`Renewed-Banking`** を推奨。
 
 ## 環境・運用
 

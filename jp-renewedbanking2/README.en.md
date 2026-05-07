@@ -22,7 +22,9 @@ Same as upstream: **CC BY-NC-SA 4.0**. Do not strip credits. **No commercial use
 
 ## Resource name
 
-**Ensure name in `server.cfg` must be `Renewed-Banking`** (not the monorepo folder name `jp-renewedbanking2`). Keep the deployed folder/resource name **`Renewed-Banking`** so that `exports['Renewed-Banking']` from other resources keeps working.
+**Recommended:** deploy as **`Renewed-Banking`** so `exports['Renewed-Banking']` from other resources keeps working.
+
+**As of v1.0.5-ja:** you may **`ensure jp-renewedbanking2`** (monorepo folder name) for local dev — server `LoadResourceFile` and NUI `fetchNui` use the **actual resource name**. Production should still use **`Renewed-Banking`** if other scripts call those exports.
 
 ## Dependencies
 

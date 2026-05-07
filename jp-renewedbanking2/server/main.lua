@@ -8,8 +8,9 @@
 local cachedAccounts = {}
 local cachedPlayers = {}
 
--- UI ビルドの存在とリソース名を検証（リネームすると停止）
+-- UI ビルドの存在を検証。LoadResourceFile は必ず自リソース名（モノレポの jp-renewedbanking2 フォルダ名でも可）
 CreateThread(function()
+    local resName = GetCurrentResourceName()
     -- 起動時に Renewed-Banking.sql を自動投入（oxmysql 準備後、初回 SELECT より前に完了させる）
     do
         local timeout = 100
@@ -20,7 +21,7 @@ CreateThread(function()
         if GetResourceState('oxmysql') ~= 'started' then
             print('[Renewed-Banking] oxmysql not started, skip auto schema setup')
         else
-            local sql = LoadResourceFile('Renewed-Banking', 'Renewed-Banking.sql')
+            local sql = LoadResourceFile(resName, 'Renewed-Banking.sql')
             if not sql or sql == '' then
                 print('[Renewed-Banking] Renewed-Banking.sql not found, skip auto schema setup')
             else
@@ -49,9 +50,12 @@ CreateThread(function()
     end
 
     Wait(500)
-    if not LoadResourceFile("Renewed-Banking", 'web/public/build/bundle.js') or GetCurrentResourceName() ~= "Renewed-Banking" then
+    if not LoadResourceFile(resName, 'web/public/build/bundle.js') then
         error(locale("ui_not_built"))
-        return StopResource("Renewed-Banking")
+        return StopResource(resName)
+    end
+    if resName ~= 'Renewed-Banking' then
+        print(('[^3Renewed-Banking^0] リソース名が ^1%s^0 です。他スクリプトの exports[^5Renewed-Banking^0] は動きません。本番はフォルダ名 ^2Renewed-Banking^0 を推奨。'):format(resName))
     end
     local accounts = MySQL.query.await('SELECT * FROM bank_accounts_new', {})
     if accounts then

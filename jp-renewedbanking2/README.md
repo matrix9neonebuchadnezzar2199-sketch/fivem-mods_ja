@@ -73,7 +73,7 @@ setr ox:locale ja
 
 ## インストール手順
 
-1. **リソース名を `Renewed-Banking` のまま** `resources` 配下に配置する（フォルダ名を変えると `exports['Renewed-Banking']` を参照する他スクリプトが壊れます）。
+1. **推奨: フォルダ名・`ensure` 名を `Renewed-Banking` にする**（`exports['Renewed-Banking']` を参照する他スクリプトとの互換のため）。**v1.0.5-ja 以降**は開発用に **`jp-renewedbanking2` のまま `ensure jp-renewedbanking2` でも起動可能**（SQL / UI ファイルは自リソースから読み込む）。本番では引き続き `Renewed-Banking` 名を推奨。
 2. **初回起動時に `Renewed-Banking.sql` が自動実行され**、`bank_accounts_new` / `player_transactions` テーブルが作成される（`oxmysql` が起動していることが前提）。DDL の確認・バックアップからの手動復元用に、リソースルートの `Renewed-Banking.sql` を phpMyAdmin / HeidiSQL から流すことも可能。
 3. `web` フォルダで **`pnpm install`** のあと **`pnpm run build`** を実行し、`web/public/build/` にバンドルを生成する（ロックは `pnpm-lock.yaml` のみ。`npm` を使う場合は `npm install --no-package-lock` を推奨）。
 4. `server.cfg` に `ensure Renewed-Banking` を追加する（名前は上記ディレクトリ名と一致させる）。

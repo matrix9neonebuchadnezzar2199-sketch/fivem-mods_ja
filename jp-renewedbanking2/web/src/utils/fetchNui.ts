@@ -1,16 +1,22 @@
 /**
- * NUI コールバックへ POST する。リソース名は本家 export 互換のため Renewed-Banking 固定（フォルダ名を変えても URL はこの名前）。
- *
- * @param eventName - コールバック名
- * @param data - 送信ペイロード
+ * NUI コールバックへ POST する。
+ * ゲーム内では FiveM の GetParentResourceName()（実フォルダ名＝ensure 名）を使う。
+ * ブラウザ単体デバッグ時のみ Renewed-Banking にフォールバック。
  */
-const RESOURCE_NAME = "Renewed-Banking";
+const RESOURCE_NAME_FALLBACK = "Renewed-Banking";
+
+function nuiResourceName(): string {
+  if (typeof window !== "undefined" && window.GetParentResourceName) {
+    return window.GetParentResourceName();
+  }
+  return RESOURCE_NAME_FALLBACK;
+}
 
 export async function fetchNui<T = unknown>(
   eventName: string,
   data: unknown = {}
 ): Promise<T> {
-  const url = `https://${RESOURCE_NAME}/${eventName}`;
+  const url = `https://${nuiResourceName()}/${eventName}`;
   const options: RequestInit = {
     method: "post",
     headers: {

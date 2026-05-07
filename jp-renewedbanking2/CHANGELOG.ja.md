@@ -2,6 +2,14 @@
 
 本ファイルは原作 [Renewed-Banking](https://github.com/Renewed-Scripts/Renewed-Banking) からの派生版独自の変更を記録します。原作の変更履歴は本家 README を参照してください。
 
+## [1.0.5-ja] - 2026-05-07
+
+### 修正
+
+- サーバー: `LoadResourceFile` / `StopResource` を **`GetCurrentResourceName()`** に統一。モノレポの **`jp-renewedbanking2` フォルダ名のまま `ensure` しても** `Renewed-Banking.sql`・`bundle.js` を読める。
+- Web: `fetchNui` の URL を **`GetParentResourceName()`** に変更（ensure 名と一致）。`jp-renewedbanking2` で NUI コールバックが届く。
+- リソース名が `Renewed-Banking` でない場合、**`exports['Renewed-Banking']` は他リソースから使えない**旨をサーバーコンソールに警告表示（本番は従来どおり `Renewed-Banking` フォルダ名を推奨）。
+
 ## [1.0.4-ja] - 2026-05-07
 
 ### 追加・変更
