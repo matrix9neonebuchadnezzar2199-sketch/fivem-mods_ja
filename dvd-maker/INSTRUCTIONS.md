@@ -48,11 +48,11 @@ dvd-maker/
     ├── script.js
     └── img/
         ├── README.txt          (画像配置の説明)
-        ├── dvd_blank.png       (作成しない。READMEで案内)
-        └── dvd_recorded.png    (作成しない。READMEで案内)
+        ├── disc_128_tight.png       (同梱または差し替え。READMEで案内)
+        └── dvd_case_128_tight.png   (同梱または差し替え。READMEで案内)
 ```
 
-PNGファイル本体は作成しなくてよい。`html/img/README.txt` に「ここに `dvd_blank.png`（白いDVDディスク）と `dvd_recorded.png`（"DVD"と書かれたディスク）を配置してください。推奨サイズ 256x256px」と書いておくこと。
+既定では `disc_128_tight.png`（空ディスク）と `dvd_case_128_tight.png`（ケース）を同梱する想定。`html/img/README.txt` でファイル名と ox_inventory へのコピーを案内する。
 
 ---
 
@@ -84,7 +84,7 @@ ox_inventory に2種類のアイテムを登録する。**README に items.lua �
 ### 1. 空DVDの使用フロー
 1. プレイヤーが `dvd_blank` を使う
 2. NUI（作成画面）が開く。マウスフォーカス取得
-3. 画面左に `dvd_blank.png` を大きく表示
+3. 画面左に `disc_128_tight.png` を大きく表示
 4. 画面右に作成メニュー
    - テキスト入力1: 「タイトル」（最大40文字）
    - テキスト入力2: 「YouTube動画のURL」
@@ -99,7 +99,7 @@ ox_inventory に2種類のアイテムを登録する。**README に items.lua �
 ### 2. データ入りDVDの使用フロー
 1. プレイヤーが `dvd_recorded` を使う（slot.metadata に title と url が入っている）
 2. NUI（再生メニュー）が開く
-3. 画面左に `dvd_recorded.png` を大きく表示
+3. 画面左に `dvd_case_128_tight.png` を大きく表示
 4. 画面右に再生メニュー
    - 見出し: `タイトル: {metadata.title}`
    - ボタン: 「再生」「取り消し」
@@ -216,7 +216,7 @@ dependency 'ox_inventory'
 5. **インストール手順**:
    1. このリポジトリをクローンまたはダウンロードして `resources/dvd-maker` に配置
    2. ox_inventory の `data/items.lua` に以下を追記（コード例を記載）
-   3. `html/img/dvd_blank.png` と `html/img/dvd_recorded.png` を配置
+   3. `html/img/disc_128_tight.png` と `html/img/dvd_case_128_tight.png` を配置（同梱想定）
    4. ox_inventory のアイコン用ディレクトリ（`web/images/`）にも同じPNGをコピー
    5. `server.cfg` に `ensure dvd-maker` を追加
 6. **使い方**: 空DVDを使ってタイトルとURLを入力 → データ入りDVDが完成 → 使うと再生
@@ -234,7 +234,7 @@ dependency 'ox_inventory'
     close = true,
     description = '何も記録されていないDVD',
     client = {
-        image = 'dvd_blank.png',
+        image = 'disc_128_tight.png',
         export = 'dvd-maker.useBlank'
     }
 },
@@ -245,7 +245,7 @@ dependency 'ox_inventory'
     close = true,
     description = '映像が記録されたDVD',
     client = {
-        image = 'dvd_recorded.png',
+        image = 'dvd_case_128_tight.png',
         export = 'dvd-maker.useRecorded'
     }
 },

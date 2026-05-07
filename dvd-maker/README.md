@@ -19,8 +19,8 @@ DVD を使うと NUI が開き、記録または再生メニューから操作�
 
 1. 本フォルダを `resources/dvd-maker`（任意のリソース名で可）に配置する。
 2. **ox_inventory** の `data/items.lua`（またはアイテムを定義しているファイル）に、下記「items.lua 追記例」をコピーして追記する。
-3. `html/img/dvd_blank.png` と `html/img/dvd_recorded.png` を用意し、このリソースの `html/img/` に配置する（詳細は `html/img/README.txt`）。
-4. 同じ PNG を **ox_inventory のアイコン用ディレクトリ**（例: `ox_inventory/web/images/`）にもコピーする。ファイル名は `dvd_blank.png` / `dvd_recorded.png`。
+3. 画像は **`html/img/disc_128_tight.png`**（空ディスク）と **`html/img/dvd_case_128_tight.png`**（ケース）が同梱想定です。差し替える場合は同じファイル名で置き換えてください（詳細は `html/img/README.txt`）。
+4. 上記2ファイルを **ox_inventory のアイコン用ディレクトリ**（例: `ox_inventory/web/images/`）にもコピーする。`items.lua` の `image` は下記例のとおりファイル名で一致させる。
 5. `server.cfg` に `ensure dvd-maker`（フォルダ名に合わせる）を追加する。
 6. サーバーを `refresh` し、リソースを開始する。
 
@@ -34,7 +34,7 @@ DVD を使うと NUI が開き、記録または再生メニューから操作�
     close = true,
     description = '何も記録されていないDVD',
     client = {
-        image = 'dvd_blank.png',
+        image = 'disc_128_tight.png',
         export = 'dvd-maker.useBlank'
     }
 },
@@ -45,7 +45,7 @@ DVD を使うと NUI が開き、記録または再生メニューから操作�
     close = true,
     description = '映像が記録されたDVD',
     client = {
-        image = 'dvd_recorded.png',
+        image = 'dvd_case_128_tight.png',
         export = 'dvd-maker.useRecorded'
     }
 },

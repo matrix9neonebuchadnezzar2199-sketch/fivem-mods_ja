@@ -1,8 +1,8 @@
-ここに次の2つの PNG を配置してください。
+このフォルダの画像（128×128 想定）
 
-- dvd_blank.png … 白い DVD ディスクのイラスト（UI 左・空 DVD 用）
-- dvd_recorded.png … 「DVD」等が描かれたディスク（UI 左・記録済み用）
+- disc_128_tight.png … 空 DVD 用（作成メニュー左・インベントリ空ディスクアイコン）
+- dvd_case_128_tight.png … 記録済み用（再生メニュー左・インベントリケースアイコン）
 
-推奨サイズ: 256×256 px（透明背景可）
+差し替える場合は上記ファイル名を維持するか、html/script.js の img 参照と ox_inventory の items.lua の image を揃えてください。
 
-ox_inventory のアイコン用に、同じファイルを ox_inventory の画像ディレクトリ（例: ox_inventory/web/images/）へもコピーしてください。
+ox_inventory では同じ PNG を web/images/ 等にコピーし、items の image 名と一致させます。

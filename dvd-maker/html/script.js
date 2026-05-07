@@ -74,7 +74,7 @@ function showCreate() {
 
   var img = document.createElement('img');
   img.className = 'dvd-img';
-  img.src = 'img/dvd_blank.png';
+  img.src = 'img/disc_128_tight.png';
   img.alt = '空のDVD';
 
   var col = document.createElement('div');
@@ -133,7 +133,7 @@ function showPlayerMenu() {
 
   var img = document.createElement('img');
   img.className = 'dvd-img';
-  img.src = 'img/dvd_recorded.png';
+  img.src = 'img/dvd_case_128_tight.png';
   img.alt = 'DVD';
 
   var col = document.createElement('div');
