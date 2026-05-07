@@ -3,7 +3,7 @@ game 'gta5'
 use_experimental_fxv2_oal 'yes'
 lua54 'yes'
 
-author 'TechJess#0 (jp fork: JP-Mods locale/i18n)'
+author 'TechJess#0 / JP-Mods (locale+i18n)'
 description '外見カスタムメニュー（日本語ロケール・i18next 同梱）。原作: Bakery Appearance / bl_appearance 系'
 repository 'https://github.com/BakeryDevelopments/bakery_appearance'
 

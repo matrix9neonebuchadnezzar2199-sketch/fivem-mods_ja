@@ -2,11 +2,12 @@
 
 An advanced appearance and clothing customization menu for FiveM.
 
-## 日本語フォーク（jp-bakeryappearance）
+## 日本語化（このリポジトリ版）
 
+- **リソースフォルダ名**: **`bakery_appearance`**（`server.cfg` で `ensure bakery_appearance`）。原作と同じ名前のため exports / 他リソース連携が素直です。
 - **言語**: `shared/config.lua` の `Config.Locale`（既定 **`ja`**）。`shared/locale/<code>.json` を追加すれば拡張可能（`en` / `de` / `ja` 同梱）。
 - **NUI**: [i18next](https://www.i18next.com/) + [react-i18next](https://react.i18next.com/) を導入済み。ビルド時は `ja` / `en` / `de` をバンドルし、起動後にクライアント Lua が読み込んだ JSON を `setLocale` で上書きマージします。新規コンポーネントでは `Hooks/useAppTranslation.ts` の `useAppTranslation()` → `t('KEY')` を推奨（キーは `shared/locale/*.json` と揃える）。
-- **リソース名**: `LoadResourceFile` / `SaveResourceFile` は **`GetCurrentResourceName()`** を使用。フォルダ名を `jp-bakeryappearance` にしてもロケール・データ JSON が読み込めます（※コールバック名 `bakery_appearance:*` は原作互換のためそのまま）。
+- **データ読込**: `LoadResourceFile` / `SaveResourceFile` は **`GetCurrentResourceName()`** を使用（リネームしても JSON が追従）。
 
 原作: [BakeryDevelopments/bakery_appearance](https://github.com/BakeryDevelopments/bakery_appearance)
 
