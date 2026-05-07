@@ -69,6 +69,7 @@ interface AppearanceSettings {
   };
   /** クライアントが Config から付与。JSON には保存されない */
   showOutfitShareButton?: boolean;
+  showOutfitImportButton?: boolean;
 }
 
 interface JobOutfit {

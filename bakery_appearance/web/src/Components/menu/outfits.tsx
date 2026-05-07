@@ -44,6 +44,7 @@ const Outfits: React.FC = () => {
         outfitShareNotice,
         dismissOutfitShareNotice,
         showOutfitShareButton,
+        showOutfitImportButton,
     } = useAppearanceStore();
 
     // Separate personal and admin outfits
@@ -345,6 +346,7 @@ const Outfits: React.FC = () => {
                 jobDataIsBoss={jobData.isBoss}
                 locale={locale}
                 theme={theme}
+                showOutfitImportButton={showOutfitImportButton}
                 onSavePersonal={handleSavePersonalOutfit}
                 onSaveJob={handleSaveJobOutfit}
                 onImport={() => {
@@ -563,14 +565,22 @@ interface OutfitCreationProps {
     onSavePersonal: () => void;
     onSaveJob: () => void;
     onImport: () => void;
+    showOutfitImportButton: boolean;
 }
 
 const OutfitCreation: React.FC<OutfitCreationProps> = ({
     isAdding, setIsAdding, isJobAdding, setIsJobAdding, isImporting, setIsImporting,
     newOutfitLabel, setNewOutfitLabel, newOutfitJobRank, setNewOutfitJobRank,
     importShareCode, setImportShareCode, jobDataIsBoss, locale, theme,
-    onSavePersonal, onSaveJob, onImport,
+    onSavePersonal, onSaveJob, onImport, showOutfitImportButton,
 }) => {
+    useEffect(() => {
+        if (!showOutfitImportButton && isImporting) {
+            setIsImporting(false);
+            setImportShareCode('');
+        }
+    }, [showOutfitImportButton, isImporting, setIsImporting, setImportShareCode]);
+
     const resetNewOutfitFields = () => {
         setIsAdding(false);
         setIsJobAdding(false);
@@ -622,7 +632,7 @@ const OutfitCreation: React.FC<OutfitCreationProps> = ({
         );
     }
 
-    if (isImporting) {
+    if (isImporting && showOutfitImportButton) {
         return (
             <Box style={{ animation: 'fadeScaleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1)' }}>
                 <Text fw="bold" mb="sm" size="md" c="white" tt="uppercase">
@@ -707,30 +717,32 @@ const OutfitCreation: React.FC<OutfitCreationProps> = ({
                 </Button>
             )}
 
-            <Button
-                fullWidth
-                size="sm"
-                leftIcon={<IconImport size={16} />}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: `2px solid ${theme.primaryColor}`,
-                  color: theme.primaryColor,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = theme.primaryColor;
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = theme.primaryColor;
-                }}
-                onClick={() => setIsImporting(true)}
-            >
-                {locale?.IMPORTOUTFIT_TITLE || 'Import Outfit'}
-            </Button>
+            {showOutfitImportButton && (
+                <Button
+                    fullWidth
+                    size="sm"
+                    leftIcon={<IconImport size={16} />}
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: `2px solid ${theme.primaryColor}`,
+                      color: theme.primaryColor,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = theme.primaryColor;
+                      e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = theme.primaryColor;
+                    }}
+                    onClick={() => setIsImporting(true)}
+                >
+                    {locale?.IMPORTOUTFIT_TITLE || 'Import Outfit'}
+                </Button>
+            )}
         </Stack>
     );
 };
