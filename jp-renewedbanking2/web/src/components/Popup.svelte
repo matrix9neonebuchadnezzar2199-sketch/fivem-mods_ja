@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { accounts, popupDetails, loading, translations } from "../store/stores";
-    import {fetchNui} from "../utils/fetchNui"
+    import { accounts, popupDetails, loading, translations, notify } from "../store/stores";
+    import { fetchNui } from "../utils/fetchNui";
     import HelpButton from "./HelpButton.svelte";
     let amount: number = 0;
     let comment: string = "";
@@ -16,15 +16,27 @@
 
     function submitInput() {
         loading.set(true);
-        fetchNui($popupDetails.actionType, {fromAccount: acc.id, amount: amount, comment: comment, stateid: stateid}).then(retData => {
-            setTimeout(() => {
-                if (retData !== false){
-                    accounts.set(retData);
-                }
-                loading.set(false);
-            }, 1000);
+        fetchNui($popupDetails.actionType, {
+            fromAccount: acc.id,
+            amount: amount,
+            comment: comment,
+            stateid: stateid,
         })
-        closePopup();
+            .then((retData) => {
+                setTimeout(() => {
+                    if (retData !== false) {
+                        accounts.set(retData);
+                        closePopup();
+                    }
+                    loading.set(false);
+                }, 1000);
+            })
+            .catch(() => {
+                loading.set(false);
+                notify.set(
+                    $translations?.fail_transfer || "エラーが発生しました"
+                );
+            });
     }
 </script>
 

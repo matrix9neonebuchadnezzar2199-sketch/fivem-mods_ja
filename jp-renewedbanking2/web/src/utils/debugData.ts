@@ -1,30 +1,26 @@
-import {isEnvBrowser} from "./misc";
-
-interface DebugEvent<T = any> {
-  action: string;
-  data: T;
-}
+import { isEnvBrowser } from "./misc";
 
 /**
- * Emulates dispatching an event using SendNuiMessage in the lua scripts.
- * This is used when developing in browser
- *
- * @param events - The event you want to cover
- * @param timer - How long until it should trigger (ms)
+ * ブラウザ単体開発時に `SendNUIMessage` と同じ **フラット** な `event.data` を再現する。
+ * 本番 Lua は `action` と口座・状態などを同一オブジェクトに載せるため、`useNuiEvent` は
+ * `handler(event.data)` で参照する（`event.data.data` のネストは使わない）。
  */
-export const debugData = <P>(events: DebugEvent<P>[], timer = 1000): void => {
+export type NuiDebugMessage = { action: string; [key: string]: unknown };
+
+/**
+ * @param events - 各要素がそのまま `MessageEvent.data` になる
+ * @param timer - 先頭イベントまでの遅延（ms）。複数件時は 50ms ずつずらして順に発火
+ */
+export const debugData = (events: NuiDebugMessage[], timer = 1000): void => {
   if (isEnvBrowser()) {
-    for (const event of events) {
+    events.forEach((event, index) => {
       setTimeout(() => {
         window.dispatchEvent(
           new MessageEvent("message", {
-            data: {
-              action: event.action,
-              data: event.data,
-            },
+            data: event,
           })
         );
-      }, timer);
-    }
+      }, timer + index * 50);
+    });
   }
 };
