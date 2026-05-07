@@ -21,6 +21,16 @@
 
 - **`useNuiEvent.ts` の短絡評価**: 原作互換のため v1.0.1-ja では未変更。`if (event.data.action === action) handler(event.data);` への if 化は **v1.0.2-ja 以降**で ESLint / 可読性の観点から検討する。
 
+## luacheck（`--std=lua54` 実行時の注意）
+
+v1.0.1-ja 時点で `luacheck client server --no-global --std=lua54` を走らせると、**警告多数・「error」表記が 2 件**出ることがあるが、いずれも原作・FiveM 前提の範囲で **コードロジックの欠陥ではない**。
+
+- **`+=` / `-=`**: FiveM（CfxLua）の拡張構文。Lua 5.4 標準には無いため luacheck が構文エラー相当に扱うが、ゲーム内では正常動作（原作 `server/main.lua` 由来）。
+- **`line is too long`**: 原作のスタイル。日本語コメントで伸びた行も含む。原作ロジック非変更スコープでは触らない。
+- **`unused argument`（`xPlayer` / `reason` 等）**: ESX / QB / QBX で同一シグネチャを保つための意図的な未使用引数（`framework.lua` 由来）。
+
+**v1.0.2-ja 以降の検討候補**: `jp-renewedbanking2/.luacheckrc` で FiveM グローバル、`std` / `max_line_length`、必要なら CfxLua 向けプラグインやインライン抑止の方針を整理する。
+
 ## `/givecash` 通知の種別
 
 原作どおり、成功時の一部通知で `type = 'error'` が使われている箇所があります。表示上の好みを変える場合は原作差分として別検討ください。

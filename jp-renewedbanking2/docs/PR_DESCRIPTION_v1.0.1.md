@@ -6,12 +6,12 @@ GitHub の Pull Request Description にそのまま貼れるよう、`INSTRUCTIO
 
 - ベースタグ: `jp-renewedbanking2/v1.0.0-ja`
 - ブランチ: `work/jp-renewedbanking2-v1.0.1`
-- 方針: 原作ロジック非変更、Web 派生品質改善、当初 **6 コミット分割** + ドキュメント追記 **2 コミット**（計 8）、**merge commit でマージ**（squash しない）
+- 方針: 原作ロジック非変更、Web 派生品質改善、当初 **6 コミット分割** + ドキュメント追記 **3 コミット**（計 9）、**merge commit でマージ**（squash しない）
 
 ## 完了報告（指示書 6 章）
 
 - **ブランチ名**: `work/jp-renewedbanking2-v1.0.1`
-- **コミット**: `jp-renewedbanking2/v1.0.0-ja` から **計 8 件**（品質改善 6 + マージ前レビュー反映 1 + タグ fetch 注記・luacheck 例 1）。一覧は `git log --oneline jp-renewedbanking2/v1.0.0-ja..work/jp-renewedbanking2-v1.0.1`。
+- **コミット**: `jp-renewedbanking2/v1.0.0-ja` から **計 9 件**（品質改善 6 + マージ前レビュー反映 1 + タグ fetch 注記・luacheck 例 1 + luacheck 判定の known_issues 追記 1）。一覧は `git log --oneline jp-renewedbanking2/v1.0.0-ja..work/jp-renewedbanking2-v1.0.1`。
 - **タグ**: `jp-renewedbanking2/v1.0.1-ja`（注釈付きで push 済み想定）
 - **`pnpm run build`**: 各コミット完了時に OK（最終は Svelte 4 / Rollup 4 / TS 5）
 - **`pnpm run check`**: コミット 4 完了時・コミット 6 完了時の 2 回とも **0 errors / 0 warnings**
