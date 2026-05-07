@@ -9,6 +9,12 @@ body,
   margin: 0;
 }
 
+/* NUI シェル非表示時は #app が空でも不透明な body でゲームを覆わない */
+html,
+body {
+  background-color: transparent;
+}
+
 /* 日付・時刻のネイティブアイコン（カレンダー／時計）を緑系に（暗い UI・背景写真上でも視認しやすく） */
 @layer components {
   input[type='date'].refboard-input-pickers,

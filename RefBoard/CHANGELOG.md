@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.4 — 2026-05-07
+
+- **fix（重大）**: `ensure` 直後やシェル非表示時、`#app` が空でも **`body` の `bg-bg`（不透明）が全画面を塗り**ゲームが見えない問題を修正。`html` / `body` を **透明**にし、見た目の背景は **`App.vue` のシェル表示中のみ**付与する。
+
 ## v0.6.3 — 2026-05-07
 
 - **fix（重大）**: `editor_locks.holder_server_id` と `source` の型ずれ（数値／文字列）で `playerDropped` や acquire 判定が外れ、切断後もロックが残り「他プレイヤーが編集中」になる問題を修正（`lock.lua` は比較を `tonumber` 統一。タイムアウト時の `presence:setMode` / `notify` も数値 ID のみ送る）。
