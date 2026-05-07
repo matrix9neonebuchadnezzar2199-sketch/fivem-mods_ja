@@ -67,6 +67,8 @@ interface AppearanceSettings {
     tattoo?: number;
     surgeon?: number;
   };
+  /** クライアントが Config から付与。JSON には保存されない */
+  showOutfitShareButton?: boolean;
 }
 
 interface JobOutfit {

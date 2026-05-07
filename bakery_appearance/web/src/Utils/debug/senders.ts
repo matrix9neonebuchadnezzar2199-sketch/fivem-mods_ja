@@ -67,6 +67,7 @@ const SendDebuggers: DebugSection[] = [
             useTarget: true,
             enablePedsForShops: false,
             blips: {},
+            showOutfitShareButton: true,
           });
           DebugEventSend('setModels', debugModels || []);
           DebugEventSend('setLockedModels', []);

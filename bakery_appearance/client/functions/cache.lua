@@ -209,6 +209,9 @@ local function loadAppearanceSettings()
         end
     end
 
+    -- NUI 用（JSON には保存しない。shared/config.lua のみ）
+    Cache.appearanceSettings.showOutfitShareButton = Config.ShowOutfitShareButton ~= false
+
     return Cache.appearanceSettings
 end
 
@@ -536,6 +539,7 @@ end)
 
 RegisterNetEvent('bakery_appearance:client:updateAppearanceSettings', function(settings)
     Cache.appearanceSettings = settings or Cache.appearanceSettings or {}
+    Cache.appearanceSettings.showOutfitShareButton = Config.ShowOutfitShareButton ~= false
     handleNuiMessage({ action = 'setAppearanceSettings', data = Cache.appearanceSettings })
 end)
 
@@ -567,6 +571,7 @@ CacheAPI = {
             Cache.outfits = value
         elseif key == 'appearanceSettings' then
             Cache.appearanceSettings = value
+            Cache.appearanceSettings.showOutfitShareButton = Config.ShowOutfitShareButton ~= false
         end
     end,
     getRestrictions = function()

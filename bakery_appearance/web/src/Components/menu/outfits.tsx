@@ -43,6 +43,7 @@ const Outfits: React.FC = () => {
         importOutfit,
         outfitShareNotice,
         dismissOutfitShareNotice,
+        showOutfitShareButton,
     } = useAppearanceStore();
 
     // Separate personal and admin outfits
@@ -283,6 +284,7 @@ const Outfits: React.FC = () => {
                             handleOutfitAction={handleOutfitAction}
                             handleRename={handleRename}
                             shareOutfit={shareOutfit}
+                            showOutfitShareButton={showOutfitShareButton}
                         />
                     ))}
                     <Divider my="lg" />
@@ -319,6 +321,7 @@ const Outfits: React.FC = () => {
                             handleOutfitAction={handleOutfitAction}
                             handleRename={handleRename}
                             shareOutfit={shareOutfit}
+                            showOutfitShareButton={showOutfitShareButton}
                         />
                     ))}
                     <Divider my="lg" />
@@ -385,13 +388,14 @@ interface OutfitItemProps {
     handleOutfitAction: (action: string, index: number, outfit?: TOutfitData, label?: string) => void;
     handleRename: (index: number) => void;
     shareOutfit: (id: number | string) => void;
+    showOutfitShareButton: boolean;
 }
 
 const OutfitItem: React.FC<OutfitItemProps> = ({
     label, outfit, id, index, isJob, jobname, isAdmin, isBoss, locale, theme,
     activeDropdownId, setActiveDropdownId, renameIndex, setRenameIndex,
     renameLabel, setRenameLabel, deleteIndex, setDeleteIndex,
-    handleOutfitAction, handleRename, shareOutfit,
+    handleOutfitAction, handleRename, shareOutfit, showOutfitShareButton,
 }) => {
     return (
         <Box>
@@ -463,7 +467,7 @@ const OutfitItem: React.FC<OutfitItemProps> = ({
                         >
                             {locale?.EDIT_TITLE || 'Edit'}
                         </Button>
-                        {!isJob && (
+                        {!isJob && showOutfitShareButton && (
                             <Button
                                 size="xs"
                                 style={{

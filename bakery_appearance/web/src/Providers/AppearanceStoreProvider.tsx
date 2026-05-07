@@ -42,6 +42,8 @@ interface AppearanceStoreContextType {
   tattoos: TZoneTattoo[] | undefined;
   appearance: TAppearance | undefined;
   toggles: TToggles;
+  /** shared/config.lua Config.ShowOutfitShareButton（false で共有ボタン非表示） */
+  showOutfitShareButton: boolean;
 
   // Setters
   setTabs: (tabs: TTab[]) => void;
@@ -116,6 +118,7 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
   const [outfits, setOutfits] = useState<TOutfit[] | undefined>(undefined);
   const [tattoos, setTattoos] = useState<TZoneTattoo[] | undefined>(undefined);
   const [appearance, setAppearance] = useState<TAppearance | undefined>(undefined);
+  const [showOutfitShareButton, setShowOutfitShareButton] = useState(true);
   const [outfitShareNotice, setOutfitShareNotice] = useState<{ message: string; color: 'green' | 'red' } | null>(
     null,
   );
@@ -168,6 +171,10 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
 
   HandleNuiMessage<any>('setDisableConfig', (data) => {
     setDisableConfig(data || {});
+  });
+
+  HandleNuiMessage<{ showOutfitShareButton?: boolean }>('setAppearanceSettings', (data) => {
+    setShowOutfitShareButton(data?.showOutfitShareButton !== false);
   });
 
   HandleNuiMessage<TZoneTattoo[]>('setTattoos', (data) => {
@@ -503,6 +510,7 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
     tattoos,
     appearance,
     toggles,
+    showOutfitShareButton,
     setTabs,
     setLocale,
     setSelectedTab,
