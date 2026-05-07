@@ -8,6 +8,10 @@ Config.Locale = 'ja'
 -- true のとき、ゾーンの店員 Ped をスポーンしない（enablePed や管理メニュー設定より優先）。ブリップ／polyzone／マーカーのみ。
 Config.DisableShopPeds = true
 
+-- コーデバッグ: インベントリにコーデ用アイテムを1個付与する（任意）。nil のときは NUI だけ即応答し、未設定の通知を出す（フリーズ防止）。
+-- ox_inventory 利用時はアイテム定義を用意し、metadata（label / outfit）を読む use 処理を別途実装すること。
+Config.OutfitBagItem = nil -- 例: 'outfit_bag'
+
 Config.Camera = {
     Body_Distance = 2.0, -- Distance of the camera from the player
     Default_Distance = 1.0, -- Default distance for close-up views

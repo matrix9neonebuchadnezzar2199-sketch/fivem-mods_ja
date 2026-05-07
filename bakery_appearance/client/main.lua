@@ -276,6 +276,51 @@ RegisterNuiCallback('deleteOutfitPlayer', function(data, cb)
   end, data)
 end)
 
+RegisterNuiCallback('itemOutfit', function(data, cb)
+  if not data or type(data.outfit) ~= 'table' then
+    cb({ success = false, err = 'invalid' })
+    return
+  end
+
+  lib.callback('bakery_appearance:itemOutfit', false, function(result)
+    local loc = CacheAPI.getLocale() or {}
+    local r = result or { success = false, err = 'unknown' }
+
+    if r.success then
+      lib.notify({
+        title = loc.NOTIFY_OUTFIT_BAG_OK_TITLE or 'Outfit bag',
+        description = loc.NOTIFY_OUTFIT_BAG_OK_DESC or 'Item added to your inventory.',
+        type = 'success',
+      })
+    else
+      local err = r.err or 'unknown'
+      local title = loc.NOTIFY_OUTFIT_BAG_ERROR_TITLE or 'Outfit bag'
+      local description = loc.NOTIFY_OUTFIT_BAG_ERROR_DESC or 'Could not create outfit item.'
+      local ntype = 'error'
+
+      if err == 'not_configured' then
+        title = loc.NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_TITLE or title
+        description = loc.NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_DESC or description
+        ntype = 'inform'
+      elseif err == 'no_inventory' then
+        description = loc.NOTIFY_OUTFIT_BAG_NO_INVENTORY_DESC or description
+      elseif err == 'give_failed' then
+        description = loc.NOTIFY_OUTFIT_BAG_GIVE_FAILED_DESC or description
+      elseif err == 'invalid' then
+        description = loc.NOTIFY_OUTFIT_BAG_INVALID_DESC or description
+      end
+
+      lib.notify({
+        title = title,
+        description = description,
+        type = ntype,
+      })
+    end
+
+    cb(r)
+  end, data)
+end)
+
 RegisterNuiCallback('cancel', function(data, cb)
   -- Check if data is different from current appearance
   local currentAppearance = GetAppearance(cache.ped)

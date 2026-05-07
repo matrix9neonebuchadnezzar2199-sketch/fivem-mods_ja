@@ -221,6 +221,16 @@
 
     "NOTIFY_ACCESS_DENIED_TITLE": "アクセス拒否",
     "NOTIFY_ACCESS_DENIED_DESC": "この場所を利用する権限がありません",
+
+    "NOTIFY_OUTFIT_BAG_OK_TITLE": "コーデバッグ",
+    "NOTIFY_OUTFIT_BAG_OK_DESC": "インベントリにコーデ用アイテムを追加しました。",
+    "NOTIFY_OUTFIT_BAG_ERROR_TITLE": "コーデバッグ",
+    "NOTIFY_OUTFIT_BAG_ERROR_DESC": "コーデ用アイテムを作成できませんでした。",
+    "NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_TITLE": "コーデバッグ",
+    "NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_DESC": "サーバーの shared/config.lua で Config.OutfitBagItem（アイテム名）を設定し、ox_inventory にアイテムを定義してください。未設定のままではアイテムは付与されません。",
+    "NOTIFY_OUTFIT_BAG_NO_INVENTORY_DESC": "ox_inventory が起動していないため、アイテムを付与できません。",
+    "NOTIFY_OUTFIT_BAG_GIVE_FAILED_DESC": "インベントリに空きがないか、アイテム定義が不正な可能性があります。",
+    "NOTIFY_OUTFIT_BAG_INVALID_DESC": "コーデデータが不正です。",
     "ALERT_SHARE_CODE_FAILED": "共有コードを取得できませんでした。",
     "ALERT_SHARE_COPIED": "共有コードをクリップボードにコピーしました。\n\nコード: {{code}}\n\n他プレイヤーはこのコードでコーデを取り込めます。",
     "ALERT_SHARE_COPY_FAILED": "コピーに失敗しました。共有コード: {{code}}",

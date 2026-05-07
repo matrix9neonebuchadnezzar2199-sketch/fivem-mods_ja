@@ -221,6 +221,16 @@
 
     "NOTIFY_ACCESS_DENIED_TITLE": "Zugriff verweigert",
     "NOTIFY_ACCESS_DENIED_DESC": "Du hast keinen Zugang zu diesem Ort",
+
+    "NOTIFY_OUTFIT_BAG_OK_TITLE": "Outfit-Tasche",
+    "NOTIFY_OUTFIT_BAG_OK_DESC": "Outfit-Gegenstand wurde ins Inventar gelegt.",
+    "NOTIFY_OUTFIT_BAG_ERROR_TITLE": "Outfit-Tasche",
+    "NOTIFY_OUTFIT_BAG_ERROR_DESC": "Outfit-Gegenstand konnte nicht erstellt werden.",
+    "NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_TITLE": "Outfit-Tasche",
+    "NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_DESC": "Setze Config.OutfitBagItem in shared/config.lua und definiere den Gegenstand in ox_inventory. Ohne Konfiguration wird kein Item vergeben.",
+    "NOTIFY_OUTFIT_BAG_NO_INVENTORY_DESC": "ox_inventory läuft nicht; Gegenstand kann nicht vergeben werden.",
+    "NOTIFY_OUTFIT_BAG_GIVE_FAILED_DESC": "Inventar voll oder ungültige Item-Definition.",
+    "NOTIFY_OUTFIT_BAG_INVALID_DESC": "Ungültige Outfit-Daten.",
     "ALERT_SHARE_CODE_FAILED": "Share-Code für dieses Outfit konnte nicht geladen werden.",
     "ALERT_SHARE_COPIED": "✓ Share-Code in die Zwischenablage kopiert!\n\nCode: {{code}}\n\nAndere können diesen Code zum Import nutzen.",
     "ALERT_SHARE_COPY_FAILED": "Kopieren fehlgeschlagen. Dein Share-Code: {{code}}",

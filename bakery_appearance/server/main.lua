@@ -320,6 +320,39 @@ lib.callback.register('bakery_appearance:deleteOutfit', function(source, outfitD
     return success
 end)
 
+-- コーデバッグ（NUI itemOutfit）: アイテム付与。Config.OutfitBagItem が nil の場合は success=false（クライアントが通知）。
+lib.callback.register('bakery_appearance:itemOutfit', function(source, data)
+    if type(data) ~= 'table' or type(data.outfit) ~= 'table' then
+        return { success = false, err = 'invalid' }
+    end
+
+    local label = type(data.label) == 'string' and data.label:sub(1, 100) or 'Outfit'
+    local itemName = Config.OutfitBagItem
+
+    if not itemName or itemName == '' then
+        return { success = false, err = 'not_configured' }
+    end
+
+    if GetResourceState('ox_inventory') ~= 'started' then
+        return { success = false, err = 'no_inventory' }
+    end
+
+    local meta = {
+        label = label,
+        outfit = data.outfit,
+    }
+
+    local ok, added = pcall(function()
+        return exports.ox_inventory:AddItem(source, itemName, 1, meta)
+    end)
+
+    if not ok or not added then
+        return { success = false, err = 'give_failed' }
+    end
+
+    return { success = true }
+end)
+
 -- Get player appearance callback
 lib.callback.register('bakery_appearance:getAppearance', function(source)
     local citizenid = Framework.GetCitizenId(source)

@@ -221,6 +221,16 @@
 
     "NOTIFY_ACCESS_DENIED_TITLE": "Access Denied",
     "NOTIFY_ACCESS_DENIED_DESC": "You do not have access to this location",
+
+    "NOTIFY_OUTFIT_BAG_OK_TITLE": "Outfit bag",
+    "NOTIFY_OUTFIT_BAG_OK_DESC": "Outfit item added to your inventory.",
+    "NOTIFY_OUTFIT_BAG_ERROR_TITLE": "Outfit bag",
+    "NOTIFY_OUTFIT_BAG_ERROR_DESC": "Could not create the outfit item.",
+    "NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_TITLE": "Outfit bag",
+    "NOTIFY_OUTFIT_BAG_NOT_CONFIGURED_DESC": "Set Config.OutfitBagItem in shared/config.lua and define the item in ox_inventory. No item is given until configured.",
+    "NOTIFY_OUTFIT_BAG_NO_INVENTORY_DESC": "ox_inventory is not running; cannot give the item.",
+    "NOTIFY_OUTFIT_BAG_GIVE_FAILED_DESC": "Inventory may be full or the item definition is invalid.",
+    "NOTIFY_OUTFIT_BAG_INVALID_DESC": "Invalid outfit data.",
     "ALERT_SHARE_CODE_FAILED": "Failed to get share code for this outfit.",
     "ALERT_SHARE_COPIED": "✓ Share code copied to clipboard!\n\nCode: {{code}}\n\nOthers can use this code to import your outfit.",
     "ALERT_SHARE_COPY_FAILED": "Failed to copy. Your share code is: {{code}}",
