@@ -13,7 +13,7 @@ Config.DisableShopPeds = true
 Config.OutfitBagItem = nil -- 例: 'outfit_bag'
 
 -- コーデタブの「共有」ボタンを表示するか。false で非表示（共有処理・API は残る。運営が config だけ切り替え）
-Config.ShowOutfitShareButton = true
+Config.ShowOutfitShareButton = false
 
 Config.Camera = {
     Body_Distance = 2.0, -- Distance of the camera from the player
