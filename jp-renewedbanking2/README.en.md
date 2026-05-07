@@ -44,6 +44,13 @@ setr ox:locale ja
 
 - Client console command to close the NUI was renamed from **`closeBankUI`** to **`renewedbanking:close`**. Update scripts/macros if needed.
 
+## Hotfix note (v1.0.3-ja)
+
+- Lua sends **`updateLocale`** so main action button labels show in-game (matches `ox:locale` / `locales/*.json`).
+- Closing the UI (ESC, ×, or **`renewedbanking:close`**) clears NUI focus and **clears ped tasks** so the character no longer gets stuck after ATMs.
+- Main screen and amount popup include a **close (×)** button.
+- Server DDL runs only via **`Renewed-Banking.sql` auto-apply** (duplicate inline DDL removed). See [`CHANGELOG.ja.md`](./CHANGELOG.ja.md).
+
 ## Install (short)
 
 1. Place as `Renewed-Banking` (folder name = resource name).

@@ -43,6 +43,7 @@
 
 <section class="popup-container">
     <section class="popup-content">
+        <button type="button" class="popup-close" on:click={closePopup} aria-label="閉じる">×</button>
         <div class="popup-header">
             <h2>{acc.type}{$translations.account}/ {acc.id}</h2>
             {#if $popupDetails.actionType === "deposit"}
@@ -94,11 +95,38 @@
     }
 
     .popup-content {
+        position: relative;
         max-width: 60rem;
         width: 100%;
         background-color: var(--clr-primary);
         padding: 5rem;
         border-radius: 1rem;
+    }
+
+    .popup-close {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 2;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.75rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #f3f4f5;
+        background-color: #393a45;
+    }
+
+    .popup-close:hover {
+        background-color: #4a4b56;
+    }
+
+    .popup-close:focus-visible {
+        outline: 2px solid #f59e0b;
+        outline-offset: 2px;
     }
 
     .popup-header {

@@ -38,6 +38,7 @@ FiveM 用バンキングリソース **[Renewed-Banking](https://github.com/Rene
 2. Lua / TS / Svelte の **コメント和訳**（処理ロジックは本家に合わせ維持）
 3. 画面上の **ヘルプ（？）** と **使い方モーダル**
 4. 本 README・`CHANGELOG.ja.md`・`README.en.md`
+5. **v1.0.3-ja（hotfix）**: Lua から NUI へ `updateLocale` を送信（メインボタンラベル表示）、UI 閉じ後のキャラ固まり修正、メイン・ポップアップに閉じる（×）ボタン、サーバー DDL を `Renewed-Banking.sql` 自動投入に一本化（詳細は [`CHANGELOG.ja.md`](./CHANGELOG.ja.md)）
 
 ## スクリーンショット
 

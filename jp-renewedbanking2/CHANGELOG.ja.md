@@ -2,6 +2,15 @@
 
 本ファイルは原作 [Renewed-Banking](https://github.com/Renewed-Scripts/Renewed-Banking) からの派生版独自の変更を記録します。原作の変更履歴は本家 README を参照してください。
 
+## [1.0.3-ja] - 2026-05-07
+
+### 修正（実機 hotfix）
+
+- Lua から `SendNUIMessage` で `updateLocale` を送り、メイン画面の入金・出金・送金ボタンラベルが表示されるようにした（`ox:locale` に応じた `locales/*.json` を 1 回キャッシュ読み込み）
+- `closeInterface` と `renewedbanking:close` で `ClearPedTasksImmediately` を実行し、ESC や UI 閉じ後にキャラが固まる問題を解消
+- サーバー側の DDL を `Renewed-Banking.sql` 自動投入（v1.0.2 経路）のみに一本化し、末尾の重複 `createTables` を削除
+- メイン画面・入出金ポップアップ右上に閉じる（×）ボタンを追加（アクセシビリティ対応の `button` + `aria-label`）
+
 ## [1.0.2-ja] - 2026-05-07
 
 ### 追加
