@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useToast } from '../composables/useToast'
+import { REFBOARD_UI_VERSION } from '../constants/version'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -66,7 +67,7 @@ function enableDebugTrace() {
   <div class="flex min-h-full flex-col items-center justify-center gap-6 p-8">
     <div class="text-center">
       <h1 class="text-2xl font-bold text-slate-50">{{ t('app.title') }}</h1>
-      <p class="mt-2 text-sm text-slate-400">RefBoard v0.6.0</p>
+      <p class="mt-2 text-sm text-slate-400">RefBoard v{{ REFBOARD_UI_VERSION }}</p>
     </div>
     <div class="flex w-full max-w-md flex-col gap-3">
       <label class="block w-full text-left text-xs text-slate-400">

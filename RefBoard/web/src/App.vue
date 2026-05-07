@@ -7,10 +7,11 @@ import { useSettingsStore } from './stores/settings'
 import { useSessionStore } from './stores/session'
 import { usePresenceStore, type PresenceUser } from './stores/presence'
 import { useAutosaveStore } from './stores/autosave'
-import { useNui } from './composables/useNui'
+import { useNui, isInFiveM } from './composables/useNui'
 import { useToast } from './composables/useToast'
 import Toast from './components/Toast.vue'
 import appBackgroundUrl from '../image/back.jpg'
+import { nuiShellOpenRef } from './nuiShellVisibility'
 
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
@@ -25,6 +26,12 @@ const appRootBgClass = computed(() => {
 })
 
 provide('marqueeMode', marqueeMode)
+
+/** FiveM では Lua が開いたときだけシェル描画。閉じている間は CEF がログイン UI を覆わない */
+const showNuiChrome = computed(() => {
+  if (import.meta.env.DEV && !isInFiveM()) return true
+  return nuiShellOpenRef.value
+})
 
 const session = useSessionStore()
 const presence = usePresenceStore()
@@ -58,6 +65,7 @@ onMounted(() => {
 
 <template>
   <div
+    v-if="showNuiChrome"
     class="relative flex h-full min-h-0 flex-col"
     :class="appRootBgClass"
     :style="showBackgroundImage && !transparentChrome ? { backgroundImage: `url(${appBackgroundUrl})` } : {}"

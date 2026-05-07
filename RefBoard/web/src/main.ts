@@ -6,9 +6,18 @@ import { i18n } from './i18n'
 import { useSettingsStore } from './stores/settings'
 import { useToast } from './composables/useToast'
 import { vMarquee } from './directives/marquee'
+import { setNuiShellOpenFromLua } from './nuiShellVisibility'
 import './styles/main.css'
 import './styles/marquee.css'
 import './styles/score-flash.css'
+
+/** Lua client/main.lua の SendNUIMessage({ type: 'refboard:setOpen', ... }) と同期 */
+window.addEventListener('message', (e: MessageEvent) => {
+  const d = e.data as { type?: string; payload?: { open?: boolean } } | undefined
+  if (d?.type === 'refboard:setOpen') {
+    setNuiShellOpenFromLua(Boolean(d.payload?.open))
+  }
+})
 
 const app = createApp(App)
 const pinia = createPinia()

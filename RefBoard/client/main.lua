@@ -7,6 +7,13 @@ local function setOpen(state)
   SendNUIMessage({ type = 'refboard:setOpen', payload = { open = state } })
 end
 
+-- リソース起動・再起動時は NUI を必ず閉じた状態に同期（ログイン画面を CEF が覆う事故の防止）
+AddEventHandler('onClientResourceStart', function(resourceName)
+  if resourceName == GetCurrentResourceName() then
+    setOpen(false)
+  end
+end)
+
 local function toggle()
   if isOpen then
     setOpen(false)

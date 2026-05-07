@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.2 — 2026-05-07
+
+- **fix（重大）**: Lua が送る `refboard:setOpen` を NUI 側で購読し、**閉じている間は App シェルを描画しない**（`nuiShellOpenRef` + `App.vue` `v-if`）。ログイン・多キャラ画面を RefBoard の CEF が覆って操作不能になる問題を解消。
+- **fix**: `onClientResourceStart` で **`setOpen(false)`** を必ず実行し、フォーカスとペイロードを起動直後に同期。
+- **dev**: ブラウザ単体（`npm run dev`）では従来どおり常時 UI を表示（`isInFiveM()` が false のとき）。
+
 ## v0.6.1 — 2026-05-06
 
 - **feat**: sprint_08 フェーズ3 マーキー全面展開（`TeamList` / `RosterList`、`DataManage` 試合履歴・統計表、`Settings` 見出し、`PresenceBadge`、`MatchList` に `MarqueeText`。試合一覧・データの試合履歴に **試合名**列、`match_list.col_match_name` 日英 i18n）。

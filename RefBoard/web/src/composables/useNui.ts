@@ -29,7 +29,8 @@ export async function refboardRecaptureNuiFocus(): Promise<void> {
   }
 }
 
-function isInFiveM(): boolean {
+/** ブラウザ単体開発か FiveM NUI 内か */
+export function isInFiveM(): boolean {
   const w = window as unknown as { invokeNative?: unknown; GetParentResourceName?: () => string }
   return typeof w.invokeNative !== 'undefined' || typeof w.GetParentResourceName === 'function'
 }
