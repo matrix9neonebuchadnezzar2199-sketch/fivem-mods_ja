@@ -3,7 +3,7 @@
   原作: Renewed-Banking — CC BY-NC-SA 4.0
 -->
 <script lang="ts">
-  import { showHelp } from '../store/stores';
+  import { showHelp, translations } from '../store/stores';
 
   /** ヘルプトピック（HelpModal の topicMeta と対応） */
   export let topic: 'deposit' | 'withdraw' | 'transfer' | 'create' | 'general' = 'general';
@@ -13,7 +13,13 @@
   }
 </script>
 
-<button type="button" class="help-btn" on:click={open} title="使い方" aria-label="使い方">
+<button
+  type="button"
+  class="help-btn"
+  on:click={open}
+  title={$translations._help_button_title || 'Help'}
+  aria-label={$translations._help_button_aria || $translations._help_button_title || 'Help'}
+>
   ？
 </button>
 

@@ -248,7 +248,7 @@ lib.callback.register('Renewed-Banking:server:deposit', function(source, data)
         return false
     end
     local name = GetCharacterName(Player)
-    if not data.comment or data.comment == "" then data.comment = locale("comp_transaction", name, "deposited", amount) else sanitizeMessage(data.comment) end
+    if not data.comment or data.comment == "" then data.comment = locale("comp_transaction", name, locale("comp_action_deposited"), amount) else sanitizeMessage(data.comment) end
     if RemoveMoney(Player, amount, 'cash', data.comment) then
         if cachedAccounts[data.fromAccount] then
             AddAccountMoney(data.fromAccount, amount)
@@ -291,7 +291,7 @@ lib.callback.register('Renewed-Banking:server:withdraw', function(source, data)
     end
     local name = GetCharacterName(Player)
     local funds = GetFunds(Player)
-    if not data.comment or data.comment == "" then data.comment = locale("comp_transaction", name, "withdrawed", amount) else sanitizeMessage(data.comment) end
+    if not data.comment or data.comment == "" then data.comment = locale("comp_transaction", name, locale("comp_action_withdrawn"), amount) else sanitizeMessage(data.comment) end
 
     local canWithdraw
     if cachedAccounts[data.fromAccount] then
@@ -320,7 +320,7 @@ lib.callback.register('Renewed-Banking:server:transfer', function(source, data)
         return false
     end
     local name = GetCharacterName(Player)
-    if not data.comment or data.comment == "" then data.comment = locale("comp_transaction", name, "transfered", amount) else sanitizeMessage(data.comment) end
+    if not data.comment or data.comment == "" then data.comment = locale("comp_transaction", name, locale("comp_action_transferred"), amount) else sanitizeMessage(data.comment) end
     if cachedAccounts[data.fromAccount] then
         if cachedAccounts[data.stateid] then
             local canTransfer = RemoveAccountMoney(data.fromAccount, amount)
