@@ -10,6 +10,44 @@ local cachedPlayers = {}
 
 -- UI ビルドの存在とリソース名を検証（リネームすると停止）
 CreateThread(function()
+    -- 起動時に Renewed-Banking.sql を自動投入（oxmysql 準備後、初回 SELECT より前に完了させる）
+    do
+        local timeout = 100
+        while GetResourceState('oxmysql') ~= 'started' and timeout > 0 do
+            Wait(100)
+            timeout = timeout - 1
+        end
+        if GetResourceState('oxmysql') ~= 'started' then
+            print('[Renewed-Banking] oxmysql not started, skip auto schema setup')
+        else
+            local sql = LoadResourceFile('Renewed-Banking', 'Renewed-Banking.sql')
+            if not sql or sql == '' then
+                print('[Renewed-Banking] Renewed-Banking.sql not found, skip auto schema setup')
+            else
+                -- 行頭の単行コメント（--）行のみ除去（/* */ や文字列内 ; は v1.0.2 では非対応）
+                local kept = {}
+                for line in (sql .. '\n'):gmatch('(.-)\n') do
+                    if not line:match('^%s*%-%-') then
+                        kept[#kept + 1] = line
+                    end
+                end
+                sql = table.concat(kept, '\n')
+                for stmt in sql:gmatch('[^;]+') do
+                    local trimmed = stmt:match('^%s*(.-)%s*$')
+                    if trimmed and trimmed ~= '' then
+                        local ok, err = pcall(function()
+                            MySQL.query.await(trimmed, {})
+                        end)
+                        if not ok then
+                            print('[Renewed-Banking] SQL execution warning: ' .. tostring(err))
+                        end
+                    end
+                end
+                print('[Renewed-Banking] DB schema check complete')
+            end
+        end
+    end
+
     Wait(500)
     if not LoadResourceFile("Renewed-Banking", 'web/public/build/bundle.js') or GetCurrentResourceName() ~= "Renewed-Banking" then
         error(locale("ui_not_built"))

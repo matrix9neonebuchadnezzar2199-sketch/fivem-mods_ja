@@ -39,6 +39,7 @@ dependencies {
 }
 
 files {
+  'Renewed-Banking.sql',
   'web/public/index.html',
   'web/public/**/*',
   'locales/*.json'
