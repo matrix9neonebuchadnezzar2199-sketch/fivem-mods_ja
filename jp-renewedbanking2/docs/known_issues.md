@@ -12,7 +12,13 @@
 ## 環境・運用
 
 - **`server_version` / FX ビルド番号**: `fxmanifest.lua` には `dependencies` のみ記載。自サーバーの ox_lib が要求する `server_version` がある場合は、手元の `ox_lib/fxmanifest.lua` を参照して追記してください。
+- **ox_lib の互換バージョン**: 派生版の開発・確認は **ox_lib 3.x 系（コミュニティ標準の現行 major）** を前提としている。最新 major での互換は未検証のため、更新時は本家 Renewed-Banking の issue / release と併せて確認すること。
 - **Font Awesome CDN**: `web/public/index.html` で CDN 読み込み。完全オフライン配布では npm 同梱への置換を検討（将来作業）。
+- **NUI ビルド成果物（`web/public/build/bundle.js` 等）**: v1.0.1-ja では `web/.gitignore` を `git add -f` で突破し同梱している（pnpm 未導入のテストサーバーへそのまま `ensure` できるようにするため）。**中長期**は「タグごとに Releases で zip 添付のみ」「または CI で成果物を生成しリポジトリからは除外」のいずれかに寄せると diff ノイズが減る。v1.0.2-ja で方針決定する想定。
+
+## 開発用コード（将来の軽微改善）
+
+- **`useNuiEvent.ts` の短絡評価**: 原作互換のため v1.0.1-ja では未変更。`if (event.data.action === action) handler(event.data);` への if 化は **v1.0.2-ja 以降**で ESLint / 可読性の観点から検討する。
 
 ## `/givecash` 通知の種別
 

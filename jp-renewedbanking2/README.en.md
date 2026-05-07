@@ -40,6 +40,10 @@ Set ox_lib locale to Japanese in `server.cfg`, e.g.:
 setr ox:locale ja
 ```
 
+## Upgrade note (v1.0.1-ja)
+
+- Client console command to close the NUI was renamed from **`closeBankUI`** to **`renewedbanking:close`**. Update scripts/macros if needed.
+
 ## Install (short)
 
 1. Place as `Renewed-Banking` (folder name = resource name).
