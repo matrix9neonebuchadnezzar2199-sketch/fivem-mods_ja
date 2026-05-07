@@ -9,9 +9,18 @@ let currentTitle = '';
 let currentUrl = '';
 let ytPlayer = null;
 
-function GetParentResourceName() {
-  return window.GetParentResourceName ? window.GetParentResourceName() : 'dvd-maker';
-}
+/** リソース名（起動時に1回だけ取得）。同名の function を定義すると注入 API を上書きし再帰で落ちる */
+const dvdMakerResourceName = (function () {
+  var fn = window['GetParentResourceName'];
+  if (typeof fn === 'function') {
+    try {
+      return fn();
+    } catch (e) {
+      return 'dvd-maker';
+    }
+  }
+  return 'dvd-maker';
+})();
 
 /** XSS 対策（テキストを HTML に載せる場合のみ使用） */
 function escapeHtml(str) {
@@ -22,7 +31,7 @@ function escapeHtml(str) {
 }
 
 function nuiPost(name, data) {
-  fetch('https://' + GetParentResourceName() + '/' + name, {
+  fetch('https://' + dvdMakerResourceName + '/' + name, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json; charset=UTF-8' },
     body: JSON.stringify(data || {}),
@@ -31,7 +40,7 @@ function nuiPost(name, data) {
 
 /** NUI コールバック（Lua の RegisterNUICallback と対応）。戻り値で完了を待てる */
 function nuiPostAsync(name, data) {
-  return fetch('https://' + GetParentResourceName() + '/' + name, {
+  return fetch('https://' + dvdMakerResourceName + '/' + name, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json; charset=UTF-8' },
     body: JSON.stringify(data != null ? data : {}),
