@@ -12,7 +12,10 @@ export async function TriggerNuiCallback<T = unknown>(callback: string, data?: u
   if (IsRunningInBrowser() && mockData) return mockData;
   const options = {method: 'post', headers: {'Content-Type': 'application/json; charset=UTF-8'}, body: JSON.stringify(data)};
   const resource = (window as any).GetParentResourceName ? (window as any).GetParentResourceName() : 'nui-frame-app';
-  const response = (await fetch(`https://${resource}/${callback}`, options)).json();
-
-  return response;
+  const res = await fetch(`https://${resource}/${callback}`, options);
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return undefined as T;
+  }
 };

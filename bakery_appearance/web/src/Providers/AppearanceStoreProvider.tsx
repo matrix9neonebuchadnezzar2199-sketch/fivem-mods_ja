@@ -228,17 +228,21 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
   };
 
   const shareOutfit = (id: number | string) => {
-    // Get the share code from the server
-    TriggerNuiCallback<any>('getOutfitShareCode', { id }, { id }).then((response) => {
-      if (response && response.shareCode) {
-        const shareCode = response.shareCode;
-        
-        // Use fallback method directly (more reliable in FiveM iframe)
-        fallbackCopyToClipboard(shareCode);
-      } else {
+    if (id === undefined || id === null || id === '') {
+      alert(locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.');
+      return;
+    }
+    TriggerNuiCallback<{ shareCode?: string }>('getOutfitShareCode', { id }, { shareCode: 'MOCK' })
+      .then((response) => {
+        if (response && response.shareCode) {
+          fallbackCopyToClipboard(response.shareCode);
+        } else {
+          alert(locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.');
+        }
+      })
+      .catch(() => {
         alert(locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.');
-      }
-    });
+      });
   };
 
   const fallbackCopyToClipboard = (text: string) => {

@@ -238,11 +238,14 @@ RegisterNuiCallback('renameOutfit', function(data, cb)
 end)
 
 RegisterNuiCallback('getOutfitShareCode', function(data, cb)
-  local outfitId = data.id
-  
+  if type(data) ~= 'table' or data.id == nil then
+    cb({ shareCode = nil })
+    return
+  end
+
   lib.callback('bakery_appearance:getOutfitShareCode', false, function(shareCode)
     cb({ shareCode = shareCode })
-  end, outfitId)
+  end, data.id)
 end)
 
 RegisterNuiCallback('importOutfitByCode', function(data, cb)

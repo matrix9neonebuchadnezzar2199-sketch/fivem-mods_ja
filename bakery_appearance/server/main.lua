@@ -218,7 +218,7 @@ lib.callback.register('bakery_appearance:getOutfits', function(source)
     return transformedOutfits
 end)
 
--- Get outfit share code callback
+-- Get outfit share code callback（個人コーデの DB ID のみ。job_ プレフィックスは DB に無いので共有不可）
 lib.callback.register('bakery_appearance:getOutfitShareCode', function(source, outfitId)
     local citizenid = Framework.GetCitizenId(source)
     
@@ -226,8 +226,12 @@ lib.callback.register('bakery_appearance:getOutfitShareCode', function(source, o
         return nil
     end
 
-    -- Extract numeric ID from prefixed ID (e.g., "personal_1" -> 1)
     local idStr = tostring(outfitId)
+    if idStr:sub(1, 4) == 'job_' then
+        return nil
+    end
+
+    -- Extract numeric ID from prefixed ID (e.g., "personal_1" -> 1)
     local numericId = tonumber(idStr:match('%d+'))
     
     if not numericId then
