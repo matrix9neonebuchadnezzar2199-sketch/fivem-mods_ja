@@ -2,6 +2,20 @@
 
 本ファイルは原作 [Renewed-Banking](https://github.com/Renewed-Scripts/Renewed-Banking) からの派生版独自の変更を記録します。原作の変更履歴は本家 README を参照してください。
 
+## [1.0.2-ja] - 2026-05-07
+
+### 追加
+
+- 起動時に `Renewed-Banking.sql` を自動投入する機能（手動 phpMyAdmin/HeidiSQL 不要化）。oxmysql 起動完了を待機後、SQL をセミコロン分割して `MySQL.query.await` で逐次実行。
+
+### 変更
+
+- `README.md` / `README.en.md` のセットアップ手順から手動 SQL 投入を必須ステップから外し、自動作成の説明に差し替え。
+
+### 既知の制限
+
+- SQL パーサは行頭 `--` の単行コメント行の除去と `;` 区切りの単純実装。`/* */` 複数行コメントや、文字列リテラル内の `;` には対応しない（現状の `Renewed-Banking.sql` には該当なし）。
+
 ## [1.0.1-ja] - 2026-05-07
 
 ### Breaking changes

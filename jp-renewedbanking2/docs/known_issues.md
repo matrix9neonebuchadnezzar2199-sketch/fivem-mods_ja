@@ -9,6 +9,11 @@
 - **NUI `debugData` と本番**: 開発用モックはブラウザ専用。本番は Lua の `SendNUIMessage` が正。
 - **HelpModal のトピック一覧**: `topicMeta` はコンポーネント側ハードコード。トピック追加時は HelpModal / HelpButton / locales の同期が必要。
 
+## SQL 自動投入（v1.0.2-ja）の制限
+
+- サーバー起動時に `Renewed-Banking.sql` を読み、**行頭が `--` の行をスキップ**したうえで **`;` で文分割**し、`MySQL.query.await` で順に実行する。現行の `Renewed-Banking.sql` には **`/* */` ブロックコメントや、文字列内の `;` は含まれない**前提。
+- 将来 SQL が複雑化した場合は、**パーサの拡張**（ブロックコメント・クォート内セミコロン対応）または **マイグレーションツール／分割 SQL ファイル**への移行を検討すること。いずれも本節と `CHANGELOG.ja.md` を更新してから着手する想定。
+
 ## 環境・運用
 
 - **`server_version` / FX ビルド番号**: `fxmanifest.lua` には `dependencies` のみ記載。自サーバーの ox_lib が要求する `server_version` がある場合は、手元の `ox_lib/fxmanifest.lua` を参照して追記してください。
