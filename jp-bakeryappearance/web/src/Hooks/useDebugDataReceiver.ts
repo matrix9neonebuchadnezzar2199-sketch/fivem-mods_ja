@@ -1,0 +1,86 @@
+import { useAppearanceStore } from '../Providers/AppearanceStoreProvider';
+import { HandleNuiMessage } from '../Hooks/HandleNuiMessage';
+import type { TMenuData } from '../types/appearance';
+import i18n from '../i18n';
+
+/**
+ * Hook to listen for debug data events and populate the appearance store
+ */
+export const useDebugDataReceiver = () => {
+  const {
+    setTabs,
+    setAppearance,
+    setOriginalAppearance,
+    setAllowExit,
+    setBlacklist,
+    setTattoos,
+    setOutfits,
+    setModels,
+    setLockedModels,
+    setLocale,
+    setSelectedTab,
+  } = useAppearanceStore();
+
+  HandleNuiMessage<TMenuData>('data', (data) => {
+
+    // Set all the data
+      setModels(data.models);
+      
+      // Use the modelIndex directly from appearance data
+      let modelIndex = 0;
+      if (data.appearance && typeof data.appearance.model === 'number') {
+        modelIndex = data.appearance.model;
+      }
+      
+      // Ensure modelIndex is set in appearance
+      const appearanceData = data.appearance
+        ? {
+            ...data.appearance,
+            modelIndex:
+              typeof data.appearance.modelIndex === 'number'
+                ? data.appearance.modelIndex
+                : modelIndex,
+          }
+        : data.appearance;
+
+      setAppearance(appearanceData);
+      // Cache original appearance for cancel operation (deep copy to prevent reference mutations)
+      setOriginalAppearance(JSON.parse(JSON.stringify(appearanceData)));
+      
+      setAllowExit(data.allowExit);
+      setBlacklist(data.blacklist);
+      setTattoos(data.tattoos);
+      setOutfits(data.outfits);
+
+      if (data.locale && typeof data.locale === 'string') {
+        try {
+          const parsed = JSON.parse(data.locale) as Record<string, string>;
+          void i18n.changeLanguage('ja');
+          setLocale(parsed);
+          i18n.addResourceBundle('ja', 'translation', parsed, true, true);
+        } catch {
+          /* ignore */
+        }
+      }
+
+    // Create tabs from the tab names (locale will be loaded from cache via setLocale handler)
+    const tabs = (Array.isArray(data.tabs) ? data.tabs : [data.tabs]).map((tabId) => ({
+      id: tabId,
+      label: tabId,
+      icon: `Icon${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`,
+      src: tabId,
+    }));
+
+    setTabs(tabs);
+    
+    // Set first tab as selected
+    if (tabs.length > 0) {
+      setSelectedTab(tabs[0]);
+    }
+  });
+
+  // Handle locked models updates
+  HandleNuiMessage<string[]>('setLockedModels', (data) => {
+    setLockedModels(data || []);
+  });
+};
