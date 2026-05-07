@@ -29,9 +29,17 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
 ## Install
 
 1. Copy this folder under `resources/.../RefBoard`.
-2. Run `sql/install.sql` on your MySQL database (for local testing, also run `sql/seed_dev_teams.sql` for two sample teams). **Existing databases**: apply prior migrations and `sql/migration_004_team_roster.sql` (roster + emblem column).
+2. **MySQL (required on first setup)**: Run `sql/install.sql` on the **same database** your **oxmysql** connection string uses (e.g. `fivem_db`).
+   - If you run the script on a different schema, you will see errors like `Table 'fivem_db.teams' doesn't exist` because the server connects elsewhere.
+   - Example CLI: `mysql -u USER -p fivem_db < sql/install.sql` (replace `fivem_db` with your actual database name).
+   - For local testing, also run `sql/seed_dev_teams.sql` for two sample teams.
+   - **Existing installs**: apply prior migrations and `sql/migration_004_team_roster.sql` (roster + emblem column).
 3. Add `ensure RefBoard` after `ensure oxmysql` in `server.cfg`.
 4. Grant `refboard.referee` to referee accounts (example: `add_ace identifier.license:xxxx refboard.referee allow`).
+
+### Common errors
+
+- **`Table '….teams' doesn't exist`** (or `matches`, `editor_locks`): You skipped step 2 or ran `install.sql` on the wrong database. Re-run it on the DB configured in oxmysql.
 
 ## Usage
 

@@ -29,9 +29,17 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
 ## インストール
 
 1. 本フォルダを `resources/[local]/RefBoard` などに配置。
-2. MySQL で `sql/install.sql` を実行（開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チームを投入推奨）。**既存 DB** はこれまでのマイグレーションに続けて `sql/migration_004_team_roster.sql`（ロスター・エンブレム列）を適用してください。
+2. **MySQL（必須・初回）**: **`server.cfg` の oxmysql 接続先と同じデータベース**（例: `fivem_db`）を選び、`sql/install.sql` を実行する。
+   - 別名の DB にだけ流すと、`Table 'fivem_db.teams' doesn't exist` のように **接続先にはテーブルが無い**状態になる。
+   - CLI の例: `mysql -u USER -p fivem_db < sql/install.sql`（`fivem_db` は接続文字列の DB 名に合わせる）
+   - 開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チーム投入を推奨。
+   - **既存 DB**（install 済みの環境）: これまでのマイグレーションに続けて `sql/migration_004_team_roster.sql`（ロスター・エンブレム列）を適用。
 3. `server.cfg` に `ensure oxmysql` のあと `ensure RefBoard`。
 4. 審判用プレイヤーに `add_ace identifier.license:xxxxxxxx refboard.referee allow` 等を付与。
+
+### よくあるエラー
+
+- **`Table '…​.teams' doesn't exist` / `…​matches` / `…​editor_locks`**: 上記 **手順 2 を未実施**か **DB 名の取り違え**。`install.sql` を oxmysql が使っている DB で再実行する。
 
 ## 操作
 
