@@ -22,7 +22,15 @@ Same as upstream: **CC BY-NC-SA 4.0**. Do not strip credits. **No commercial use
 
 ## Resource name
 
-Keep the folder/resource name **`Renewed-Banking`** so that `exports['Renewed-Banking']` from other resources keeps working.
+**Ensure name in `server.cfg` must be `Renewed-Banking`** (not the monorepo folder name `jp-renewedbanking2`). Keep the deployed folder/resource name **`Renewed-Banking`** so that `exports['Renewed-Banking']` from other resources keeps working.
+
+## Dependencies
+
+`fxmanifest.lua` declares `ox_lib`, `oxmysql`, and `ox_target`. See upstream for framework requirements.
+
+## Known limitations
+
+See [`docs/known_issues.md`](./docs/known_issues.md) for items intentionally unchanged from upstream behaviour.
 
 ## Locale
 
@@ -36,8 +44,10 @@ setr ox:locale ja
 
 1. Place as `Renewed-Banking` (folder name = resource name).
 2. Import `Renewed-Banking.sql`.
-3. In `web/`: `pnpm install` && `pnpm run build` (or npm equivalents).
+3. In `web/`: **`pnpm install`** then **`pnpm run build`** (lockfile is `pnpm-lock.yaml` only; with npm prefer `npm install --no-package-lock`).
 4. `ensure Renewed-Banking` in `server.cfg`.
+
+Use **`renewedbanking:close`** in the F8 client console to close the banking NUI (replaces legacy `closeBankUI` as of v1.0.1-ja).
 
 Full steps and screenshots placeholders are in [`README.md`](./README.md) (Japanese).
 

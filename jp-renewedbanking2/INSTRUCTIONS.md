@@ -1,5 +1,7 @@
 # 【作業指示書】jp-renewedbanking2 — Renewed-Banking 完全日本語化プロジェクト
 
+**サーバーで ensure する名前は `Renewed-Banking`（モノレポ上のフォルダ名 `jp-renewedbanking2` ではありません）。`server.cfg` に `ensure jp-renewedbanking2` と書かないこと。**
+
 ## 0. プロジェクト概要
 
 本プロジェクトは、FiveM 用のバンキングリソース **Renewed-Banking**（uShifty / Renewed-Scripts 製、CC BY-NC-SA 4.0 ライセンス）の **完全日本語化派生版** を作成し、初心者ユーザーでも扱いやすいよう UI に使い方ヘルプ機能を追加することを目的とする。
