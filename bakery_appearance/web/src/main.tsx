@@ -17,12 +17,13 @@ createRoot(document.getElementById('root')!).render(
     <MantineProvider theme={{
       colorScheme: 'dark',
       fontFamily: '"Inter", sans-serif',
+      /* 既定 × (1.2×テキスト / 1.4×root × 旧1.5×root) = 既定 × 9/7 … 旧1.5倍UI時の文字の1.2倍を維持 */
       fontSizes: {
-        xs: '0.75rem',
-        sm: '0.875rem',
-        md: '1rem',
-        lg: '1.125rem',
-        xl: '1.25rem',
+        xs: '0.964rem',
+        sm: '1.125rem',
+        md: '1.286rem',
+        lg: '1.446rem',
+        xl: '1.607rem',
       },
       globalStyles: (theme) => ({
         body: {
@@ -30,7 +31,7 @@ createRoot(document.getElementById('root')!).render(
           WebkitFontSmoothing: 'antialiased',
           //MozOsxFontSmoothing: 'grayscale',
           textRendering: 'optimizeSpeed',
-        fontSize: '1rem',
+        fontSize: '1.286rem',
         },
         '*': {
           fontWeight: 500,

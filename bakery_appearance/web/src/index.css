@@ -1,6 +1,6 @@
 :root {
-  /* rem の基準。Mantine のフォント／余白の多くが rem 参照のため、テキスト中心に約1.5倍になる */
-  font-size: 150%;
+  /* rem の基準。UI 全体（余白など）を約 1.4 倍。テキストは main.tsx で「1.5倍時の 1.2 倍」相当に調整 */
+  font-size: 140%;
   font-family: 'Inter', sans-serif;
   font-weight: 600 !important;
   -webkit-font-smoothing: antialiased !important;
