@@ -33,5 +33,8 @@ nul
 jp-taxijob/
 jp-lation_mining/
 
+# Renewed-Banking 日本語派生: GitHub に含めない（ローカル・別配布のみ）
+jp-renewedbanking2/
+
 # it-drugs 系: it_bridge 等の配布制約のため GitHub から除外。ノウハウ用にローカルのみ保管
 jp-it-drugs/
