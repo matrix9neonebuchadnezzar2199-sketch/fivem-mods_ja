@@ -47,7 +47,7 @@ setr ox:locale ja
 ## Install (short)
 
 1. Place as `Renewed-Banking` (folder name = resource name).
-2. Import `Renewed-Banking.sql`.
+2. On first server start, **`Renewed-Banking.sql` runs automatically** and creates `bank_accounts_new` and `player_transactions` (requires **oxmysql** to be running). You can still run the root `Renewed-Banking.sql` manually via phpMyAdmin / HeidiSQL for DDL review or restore from backup.
 3. In `web/`: **`pnpm install`** then **`pnpm run build`** (lockfile is `pnpm-lock.yaml` only; with npm prefer `npm install --no-package-lock`).
 4. `ensure Renewed-Banking` in `server.cfg`.
 
