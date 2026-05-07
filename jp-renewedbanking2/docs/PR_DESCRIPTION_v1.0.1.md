@@ -6,16 +6,16 @@ GitHub の Pull Request Description にそのまま貼れるよう、`INSTRUCTIO
 
 - ベースタグ: `jp-renewedbanking2/v1.0.0-ja`
 - ブランチ: `work/jp-renewedbanking2-v1.0.1`
-- 方針: 原作ロジック非変更、Web 派生品質改善、当初 **6 コミット分割** + マージ前レビュー反映 **1 コミット**（計 7）、**merge commit でマージ**（squash しない）
+- 方針: 原作ロジック非変更、Web 派生品質改善、当初 **6 コミット分割** + ドキュメント追記 **2 コミット**（計 8）、**merge commit でマージ**（squash しない）
 
 ## 完了報告（指示書 6 章）
 
 - **ブランチ名**: `work/jp-renewedbanking2-v1.0.1`
-- **コミット**: `jp-renewedbanking2/v1.0.0-ja` から **計 7 件**（品質改善 6 コミット + マージ前レビュー用ドキュメント 1 コミット）。一覧は `git log --oneline jp-renewedbanking2/v1.0.0-ja..work/jp-renewedbanking2-v1.0.1`。
+- **コミット**: `jp-renewedbanking2/v1.0.0-ja` から **計 8 件**（品質改善 6 + マージ前レビュー反映 1 + タグ fetch 注記・luacheck 例 1）。一覧は `git log --oneline jp-renewedbanking2/v1.0.0-ja..work/jp-renewedbanking2-v1.0.1`。
 - **タグ**: `jp-renewedbanking2/v1.0.1-ja`（注釈付きで push 済み想定）
 - **`pnpm run build`**: 各コミット完了時に OK（最終は Svelte 4 / Rollup 4 / TS 5）
 - **`pnpm run check`**: コミット 4 完了時・コミット 6 完了時の 2 回とも **0 errors / 0 warnings**
-- **`luacheck`**: CI / レビュア環境に **未インストールのため本 PR では未実行**。マージ前に `luacheck client server --no-global`（`jp-renewedbanking2` 直下）を実行し、結果を PR コメントへ貼付推奨。
+- **`luacheck`**: CI / レビュア環境に **未インストールのため本 PR では未実行**。マージ前に `jp-renewedbanking2` 直下で `luacheck client server --no-global --std=lua54` を実行し、結果を PR コメントへ貼付推奨（FiveM 由来のグローバル警告のみなら PR コメントで注記して可。`.luacheckrc` は本スコープ外）。
 - **ensure 名検証（4 点）**:
   1. `fxmanifest.lua` コメント・リソース名想定 → `Renewed-Banking`
   2. `server/main.lua` `LoadResourceFile("Renewed-Banking", …)` → 一致
@@ -40,3 +40,18 @@ GitHub の Pull Request Description にそのまま貼れるよう、`INSTRUCTIO
 2. `git tag -v jp-renewedbanking2/v1.0.1-ja` で注釈確認（署名は任意）
 3. GitHub Releases: `CHANGELOG.ja.md` の `[1.0.1-ja]` 節をベースにリリースノート作成
 4. 作業ブランチ `work/jp-renewedbanking2-v1.0.1` の削除
+
+## フットノート: タグ `jp-renewedbanking2/v1.0.1-ja` をリモートで付け替えたあと
+
+既に同名タグを fetch 済みのクローンでは、`git fetch --tags --prune` だけではローカルタグが古いままの場合がある。別マシンで作業を再開するときは次のいずれかで上書きすること。
+
+```powershell
+git fetch origin --tags --force
+```
+
+または:
+
+```powershell
+git tag -d jp-renewedbanking2/v1.0.1-ja
+git fetch origin tag jp-renewedbanking2/v1.0.1-ja
+```

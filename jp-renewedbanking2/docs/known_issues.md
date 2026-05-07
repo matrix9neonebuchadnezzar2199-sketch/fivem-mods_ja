@@ -15,6 +15,7 @@
 - **ox_lib の互換バージョン**: 派生版の開発・確認は **ox_lib 3.x 系（コミュニティ標準の現行 major）** を前提としている。最新 major での互換は未検証のため、更新時は本家 Renewed-Banking の issue / release と併せて確認すること。
 - **Font Awesome CDN**: `web/public/index.html` で CDN 読み込み。完全オフライン配布では npm 同梱への置換を検討（将来作業）。
 - **NUI ビルド成果物（`web/public/build/bundle.js` 等）**: v1.0.1-ja では `web/.gitignore` を `git add -f` で突破し同梱している（pnpm 未導入のテストサーバーへそのまま `ensure` できるようにするため）。**中長期**は「タグごとに Releases で zip 添付のみ」「または CI で成果物を生成しリポジトリからは除外」のいずれかに寄せると diff ノイズが減る。v1.0.2-ja で方針決定する想定。
+- **注釈付きタグの付け替え後の fetch**: リモートで `jp-renewedbanking2/v1.0.1-ja` を同じ名前で付け直した場合、既にそのタグを fetch 済みのクローンでは `git fetch --tags --prune` だけでは **ローカルタグが古いコミットのまま残る**ことがある。別マシンで再開するときは `git fetch origin --tags --force`、または `git tag -d jp-renewedbanking2/v1.0.1-ja` のあと `git fetch origin tag jp-renewedbanking2/v1.0.1-ja` で明示的に上書きすること。
 
 ## 開発用コード（将来の軽微改善）
 
