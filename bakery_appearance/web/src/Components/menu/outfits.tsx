@@ -28,7 +28,22 @@ const Outfits: React.FC = () => {
             document.head.appendChild(styleSheet);
         }
     }, []);
-    const { outfits, locale, jobData, blacklist, appearance, editOutfit, useOutfit, shareOutfit, itemOutfit, deleteOutfit, saveOutfit, importOutfit } = useAppearanceStore();
+    const {
+        outfits,
+        locale,
+        jobData,
+        blacklist,
+        appearance,
+        editOutfit,
+        useOutfit,
+        shareOutfit,
+        itemOutfit,
+        deleteOutfit,
+        saveOutfit,
+        importOutfit,
+        outfitShareNotice,
+        dismissOutfitShareNotice,
+    } = useAppearanceStore();
 
     // Separate personal and admin outfits
     const { personalOutfits, adminOutfits } = useMemo(() => {
@@ -218,6 +233,23 @@ const Outfits: React.FC = () => {
                 >
                     <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
                         {validationError}
+                    </Text>
+                </Alert>
+            )}
+
+            {outfitShareNotice && (
+                <Alert
+                    icon={outfitShareNotice.color === 'green' ? <IconCheck size={16} /> : <IconCancel size={16} />}
+                    title={locale?.SHAREOUTFIT_TITLE || 'Share'}
+                    color={outfitShareNotice.color}
+                    withCloseButton
+                    onClose={dismissOutfitShareNotice}
+                    style={{
+                        animation: 'fadeScaleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
+                >
+                    <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
+                        {outfitShareNotice.message}
                     </Text>
                 </Alert>
             )}

@@ -248,6 +248,25 @@ RegisterNuiCallback('getOutfitShareCode', function(data, cb)
   end, data.id)
 end)
 
+-- NUI から ox_lib 通知（alert は CEF でフリーズしやすいため共有などで使用）
+RegisterNuiCallback('appearanceNuiNotify', function(data, cb)
+  if type(data) == 'table' and data.description and tostring(data.description) ~= '' then
+    local t = data.type
+    local ntype = 'inform'
+    if t == 'error' then
+      ntype = 'error'
+    elseif t == 'success' then
+      ntype = 'success'
+    end
+    lib.notify({
+      title = data.title and tostring(data.title) or 'Appearance',
+      description = tostring(data.description),
+      type = ntype,
+    })
+  end
+  cb('ok')
+end)
+
 RegisterNuiCallback('importOutfitByCode', function(data, cb)
   lib.callback('bakery_appearance:importOutfitByCode', false, function(success)
     if success then

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, FC, useState, useRef, useEffect } from 'react';
+import { createContext, useContext, ReactNode, FC, useState, useRef, useEffect, useCallback } from 'react';
 import { Send } from '../enums/events';
 import { TriggerNuiCallback } from '../Utils/TriggerNuiCallback';
 import { HandleNuiMessage } from '../Hooks/HandleNuiMessage';
@@ -66,6 +66,9 @@ interface AppearanceStoreContextType {
   importOutfit: (shareCode: string) => void;
   shareOutfit: (id: number | string) => void;
   itemOutfit: (outfit: TOutfitData, label: string) => void;
+  /** 共有の結果表示（alert 不使用。コーデタブ内 Alert 用） */
+  outfitShareNotice: { message: string; color: 'green' | 'red' } | null;
+  dismissOutfitShareNotice: () => void;
 
   // Tattoos methods
   setTattoos: (tattoos: TZoneTattoo[] | undefined) => void;
@@ -113,6 +116,18 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
   const [outfits, setOutfits] = useState<TOutfit[] | undefined>(undefined);
   const [tattoos, setTattoos] = useState<TZoneTattoo[] | undefined>(undefined);
   const [appearance, setAppearance] = useState<TAppearance | undefined>(undefined);
+  const [outfitShareNotice, setOutfitShareNotice] = useState<{ message: string; color: 'green' | 'red' } | null>(
+    null,
+  );
+
+  const dismissOutfitShareNotice = useCallback(() => setOutfitShareNotice(null), []);
+
+  useEffect(() => {
+    if (!outfitShareNotice) return;
+    const t = window.setTimeout(() => setOutfitShareNotice(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [outfitShareNotice]);
+
   const [toggles, setToggles] = useState<TToggles>({
     hats: false,
     masks: false,
@@ -227,46 +242,75 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
     });
   };
 
+  const sendAppearanceNotify = (title: string, description: string, type: 'success' | 'error' | 'inform') => {
+    const line = description.replace(/\s*\n\s*/g, ' ').trim();
+    TriggerNuiCallback<string>('appearanceNuiNotify', { title, description: line, type }).catch(() => {});
+  };
+
+  const copyShareCodeToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      /* textarea フォールバックへ */
+    }
+    try {
+      const clipElem = document.createElement('textarea');
+      clipElem.value = text;
+      clipElem.style.position = 'fixed';
+      clipElem.style.left = '-9999px';
+      clipElem.setAttribute('readonly', '');
+      document.body.appendChild(clipElem);
+      clipElem.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(clipElem);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
   const shareOutfit = (id: number | string) => {
+    const failMsg = locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.';
+    const shareTitle = locale?.SHAREOUTFIT_TITLE || 'Share';
+
     if (id === undefined || id === null || id === '') {
-      alert(locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.');
+      setOutfitShareNotice({ message: failMsg, color: 'red' });
+      sendAppearanceNotify(shareTitle, failMsg, 'error');
       return;
     }
+
     TriggerNuiCallback<{ shareCode?: string }>('getOutfitShareCode', { id }, { shareCode: 'MOCK' })
-      .then((response) => {
-        if (response && response.shareCode) {
-          fallbackCopyToClipboard(response.shareCode);
+      .then(async (response) => {
+        const code = response?.shareCode != null ? String(response.shareCode).trim() : '';
+        if (!code) {
+          setOutfitShareNotice({ message: failMsg, color: 'red' });
+          sendAppearanceNotify(shareTitle, failMsg, 'error');
+          return;
+        }
+        const copied = await copyShareCodeToClipboard(code);
+        if (copied) {
+          const okMsg = (
+            locale?.ALERT_SHARE_COPIED ||
+            'Share code copied.\n\nCode: {{code}}\n\nOthers can import with this code.'
+          ).replace(/\{\{code\}\}/g, code);
+          setOutfitShareNotice({ message: okMsg, color: 'green' });
+          sendAppearanceNotify(shareTitle, okMsg, 'success');
         } else {
-          alert(locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.');
+          const copyFail = (locale?.ALERT_SHARE_COPY_FAILED || 'Could not copy. Code: {{code}}').replace(
+            /\{\{code\}\}/g,
+            code,
+          );
+          setOutfitShareNotice({ message: copyFail, color: 'red' });
+          sendAppearanceNotify(shareTitle, copyFail, 'error');
         }
       })
       .catch(() => {
-        alert(locale?.ALERT_SHARE_CODE_FAILED || 'Failed to get share code for this outfit.');
+        setOutfitShareNotice({ message: failMsg, color: 'red' });
+        sendAppearanceNotify(shareTitle, failMsg, 'error');
       });
-  };
-
-  const fallbackCopyToClipboard = (text: string) => {
-    const clipElem = document.createElement('textarea');
-    clipElem.value = text;
-    clipElem.style.position = 'fixed';
-    clipElem.style.opacity = '0';
-    document.body.appendChild(clipElem);
-    clipElem.select();
-    try {
-      document.execCommand('copy');
-      const okMsg = (
-        locale?.ALERT_SHARE_COPIED ||
-        '✓ Share code copied to clipboard!\n\nCode: {{code}}\n\nOthers can use this code to import your outfit.'
-      ).replace(/\{\{code\}\}/g, text);
-      alert(okMsg);
-    } catch (err) {
-      const failMsg = (locale?.ALERT_SHARE_COPY_FAILED || 'Failed to copy. Your share code is: {{code}}').replace(
-        /\{\{code\}\}/g,
-        text,
-      );
-      alert(failMsg);
-    }
-    document.body.removeChild(clipElem);
   };
 
   const itemOutfit = (outfit: TOutfitData, label: string) => {
@@ -477,6 +521,8 @@ export const AppearanceStoreProvider: FC<{ children: ReactNode }> = ({ children 
     useOutfit,
     importOutfit,
     shareOutfit,
+    outfitShareNotice,
+    dismissOutfitShareNotice,
     itemOutfit,
     setTattoos,
     setPlayerTattoos,
