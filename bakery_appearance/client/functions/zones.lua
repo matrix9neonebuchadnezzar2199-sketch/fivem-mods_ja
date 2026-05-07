@@ -4,6 +4,20 @@ local activeZones = {}
 local activePeds = {}
 local activeMarkers = {}
 
+--- ゾーン案内を「よくある」左上ヘルプテキストで表示（毎フレーム呼ぶこと）
+---@param label string
+---@param withContextKey boolean true なら ~INPUT_CONTEXT~（E）を先頭に付与
+local function showZoneHelpPrompt(label, withContextKey)
+    if not label or label == '' then return end
+    BeginTextCommandDisplayHelp('STRING')
+    if withContextKey then
+        AddTextComponentSubstringPlayerName('~INPUT_CONTEXT~ ' .. label)
+    else
+        AddTextComponentSubstringPlayerName(label)
+    end
+    EndTextCommandDisplayHelp(0, false, true, -1)
+end
+
 -- Check if ox_target is available
 local hasTarget = GetResourceState('ox_target') == 'started'
 
@@ -91,25 +105,23 @@ local function createPolyZone(zone)
         onEnter = function()
             if not hasAccess(zone) then return end
 
-            local prompt = canuseradial and getZoneLabel(zone) or '[E] ' .. getZoneLabel(zone)
-
             if canuseradial then
                 addtoradial(zone)
             end
-
-            lib.showTextUI(prompt)
         end,
         onExit = function()
-            lib.hideTextUI()
-
             if canuseradial then
                 removefromradial(zone)
             end
         end,
         inside = function()
-            if not canuseradial and IsControlJustPressed(0, 38) then -- E key (only if not using radial menu)
-                if hasAccess(zone) then
-                    lib.hideTextUI()
+            if not hasAccess(zone) then return end
+
+            if canuseradial then
+                showZoneHelpPrompt(getZoneLabel(zone), false)
+            else
+                showZoneHelpPrompt(getZoneLabel(zone), true)
+                if IsControlJustPressed(0, 38) then -- E
                     OpenAppearanceMenu(zone)
                 end
             end
@@ -146,17 +158,14 @@ CreateThread(function()
                     )
 
                     if distance < 2.0 then
-                        local settings = CacheAPI.getAppearanceSettings()
-                        local prompt = settings.useRadialMenu and getZoneLabel(marker.zone) or
-                        '[E] ' .. getZoneLabel(marker.zone)
-                        lib.showTextUI(prompt)
-
-                        if not settings.useRadialMenu and IsControlJustPressed(0, 38) then -- E key (only if not using radial menu)
-                            lib.hideTextUI()
-                            OpenAppearanceMenu(marker.zone)
+                        if shouldUseRadialMenu() then
+                            showZoneHelpPrompt(getZoneLabel(marker.zone), false)
+                        else
+                            showZoneHelpPrompt(getZoneLabel(marker.zone), true)
+                            if IsControlJustPressed(0, 38) then -- E
+                                OpenAppearanceMenu(marker.zone)
+                            end
                         end
-                    elseif distance >= 2.0 and distance < 3.0 then
-                        lib.hideTextUI()
                     end
                 end
             end
