@@ -11,7 +11,7 @@ lua54 'yes'
 
 author 'uShifty (原作) / matrix9neonebuchadnezzar2199-sketch (日本語版)'
 description 'Renewed-Banking 日本語化版 — 銀行・ATM・口座管理（CC BY-NC-SA 4.0）'
-version '2.1.4-ja.2'
+version '2.1.4-ja.3'
 
 shared_scripts {
     '@ox_lib/init.lua',
