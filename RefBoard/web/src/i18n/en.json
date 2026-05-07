@@ -29,7 +29,8 @@
     "lock_open_view": "Open as view-only",
     "lock_back": "Back",
     "unknown_editor": "Another user",
-    "debug_trace": "🐛 Enable debug NUI trace (reload)"
+    "debug_trace": "🐛 Enable debug NUI trace (reload)",
+    "back_to_game": "Return to game (close tool)"
   },
   "sidebar": {
     "team_manage": "Teams",

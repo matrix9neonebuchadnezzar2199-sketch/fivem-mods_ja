@@ -60,8 +60,10 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
   end
 
   local r = readRow()
-  local heldBy = r and r.holder_server_id
-  if heldBy and heldBy ~= src and not isStale(r) then
+  -- oxmysql は holder_server_id を数値／文字列のどちらでも返し得るため、常に tonumber で比較する
+  local heldBy = r and tonumber(r.holder_server_id)
+  local srcNum = tonumber(src)
+  if heldBy and srcNum and heldBy ~= srcNum and not isStale(r) then
     local err = MakeError(ErrorCodes.LOCK_HELD_BY_OTHER, nil, {
       holderLicense = r.holder_license,
       holderServerId = r.holder_server_id,
@@ -116,7 +118,7 @@ end)
 AddEventHandler('playerDropped', function()
   local src = source
   local ok, r = pcall(readRow)
-  if ok and r and r.holder_server_id == src then
+  if ok and r and tonumber(r.holder_server_id) == tonumber(src) then
     clearRow()
     TriggerEvent('refboard:presence:setMode', src, 'view')
     broadcastLock(nil)
@@ -128,11 +130,13 @@ CreateThread(function()
     Wait(5000)
     local ok, r = pcall(readRow)
     if ok and r and r.holder_server_id and isStale(r) then
-      local hid = r.holder_server_id
+      local hid = tonumber(r.holder_server_id)
       clearRow()
-      TriggerEvent('refboard:presence:setMode', hid, 'view')
       broadcastLock(nil)
-      TriggerClientEvent('refboard:notify', hid, { type = 'info', key = 'lock_timeout' })
+      if hid then
+        TriggerEvent('refboard:presence:setMode', hid, 'view')
+        TriggerClientEvent('refboard:notify', hid, { type = 'info', key = 'lock_timeout' })
+      end
     end
   end
 end)

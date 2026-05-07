@@ -3,7 +3,8 @@ import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRouter, RouterLink, RouterView } from 'vue-router'
-import { useSessionStore } from '../stores/session'
+import { useSessionStore, DEFAULT_EDIT_PASSWORD } from '../stores/session'
+import { REFBOARD_UI_VERSION } from '../constants/version'
 import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { getResourceName, useNui } from '../composables/useNui'
@@ -23,12 +24,21 @@ onMounted(() => {
 })
 
 async function closeApp() {
-  await session.leave()
-  await fetch(`https://${getResourceName()}/refboard:close`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-    body: '{}',
-  }).catch(() => undefined)
+  try {
+    await session.leave()
+  } catch {
+    /* NUI 送信失敗時もフォーカス解除は続行 */
+  }
+  try {
+    await fetch(`https://${getResourceName()}/refboard:close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: '{}',
+    })
+  } catch {
+    /* ブラウザ単体開発時の 404 等 */
+  }
+  session.editPassword = DEFAULT_EDIT_PASSWORD
   await router.push({ name: 'launcher' })
 }
 
@@ -101,7 +111,7 @@ function toggleLocale() {
           <span class="h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
           {{ t('shell.online') }}
         </div>
-        <div>v0.6.0</div>
+        <div>v{{ REFBOARD_UI_VERSION }}</div>
       </div>
       <button type="button" class="mt-2 shrink-0 rounded-lg border border-slate-600 px-2 py-1 text-xs" @click="toggleLocale">
         {{ locale === 'ja' ? 'EN' : 'JA' }}

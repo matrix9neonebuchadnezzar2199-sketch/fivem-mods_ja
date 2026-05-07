@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.3 — 2026-05-07
+
+- **fix（重大）**: `editor_locks.holder_server_id` と `source` の型ずれ（数値／文字列）で `playerDropped` や acquire 判定が外れ、切断後もロックが残り「他プレイヤーが編集中」になる問題を修正（`lock.lua` は比較を `tonumber` 統一。タイムアウト時の `presence:setMode` / `notify` も数値 ID のみ送る）。
+- **fix**: NUI を閉じる経路（F6・`refboard:close`）でクライアントから `refboard:lock:release` と `refboard:session:leave` を必ず送り、Web 側の `leave()` が届かない場合でもロック／プレゼンスが残らないようにした。
+- **fix**: `MainLayout` の Close で `session.leave()` が例外でも `refboard:close` を続行し、マウス／キーボードフォーカスがゲームに戻るようにした。
+- **feat**: ランチャーに「ゲーム画面に戻る（ツールを閉じる）」を追加（ログイン相当画面だけ開いているときの出口）。
+- **chore**: サイドバー表記の UI 版を `REFBOARD_UI_VERSION` に統一。
+
 ## v0.6.2 — 2026-05-07
 
 - **fix（重大）**: Lua が送る `refboard:setOpen` を NUI 側で購読し、**閉じている間は App シェルを描画しない**（`nuiShellOpenRef` + `App.vue` `v-if`）。ログイン・多キャラ画面を RefBoard の CEF が覆って操作不能になる問題を解消。

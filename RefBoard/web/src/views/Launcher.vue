@@ -6,6 +6,8 @@ import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useToast } from '../composables/useToast'
 import { REFBOARD_UI_VERSION } from '../constants/version'
+import { getResourceName } from '../composables/useNui'
+import { DEFAULT_EDIT_PASSWORD } from '../stores/session'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -53,6 +55,22 @@ function closeDialog() {
   showLockDialog.value = false
 }
 
+/** ゲーム画面へ戻す（NUI フォーカス解除。クライアント Lua がロック／セッションも解放） */
+async function backToGame() {
+  try {
+    await fetch(`https://${getResourceName()}/refboard:close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: '{}',
+    })
+  } catch {
+    /* ブラウザ単体開発時の 404 等 */
+  }
+  session.mode = null
+  session.lockHolder = null
+  session.editPassword = DEFAULT_EDIT_PASSWORD
+}
+
 function enableDebugTrace() {
   try {
     localStorage.setItem('refboard_trace', '1')
@@ -92,6 +110,13 @@ function enableDebugTrace() {
         @click="goView"
       >
         {{ t('launcher.view_mode') }}
+      </button>
+      <button
+        type="button"
+        class="rounded-xl border border-slate-600 bg-slate-950/80 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+        @click="backToGame"
+      >
+        {{ t('launcher.back_to_game') }}
       </button>
     </div>
 

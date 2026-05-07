@@ -29,7 +29,8 @@
     "lock_open_view": "閲覧モードで開く",
     "lock_back": "戻る",
     "unknown_editor": "他のユーザー",
-    "debug_trace": "🐛 デバッグログを有効化（再読込）"
+    "debug_trace": "🐛 デバッグログを有効化（再読込）",
+    "back_to_game": "ゲーム画面に戻る（ツールを閉じる）"
   },
   "sidebar": {
     "team_manage": "チーム管理",

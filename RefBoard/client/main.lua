@@ -1,7 +1,13 @@
 local isOpen = false
 
 local function setOpen(state)
+  local wasOpen = isOpen
   isOpen = state
+  -- NUI を閉じるときはサーバ側のロック／プレゼンスも必ず外す（F6 閉じ・Close ・ランチャーからの戻りで統一）
+  if wasOpen and not state then
+    TriggerServerEvent('refboard:lock:release')
+    TriggerServerEvent('refboard:session:leave')
+  end
   SetNuiFocus(state, state)
   SetNuiFocusKeepInput(false)
   SendNUIMessage({ type = 'refboard:setOpen', payload = { open = state } })
