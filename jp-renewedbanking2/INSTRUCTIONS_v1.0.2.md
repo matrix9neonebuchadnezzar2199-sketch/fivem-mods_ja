@@ -224,6 +224,46 @@ git push origin jp-renewedbanking2/v1.0.2-ja
 
 作業者環境で実機テスト可能な場合の手順。
 
+### ステップ 1: リソースを配置
+
+Windows では `web\node_modules` を含めてコピーするとパス長制限で失敗しやすい。**`node_modules` と `.git` を除外**してコピーする（`robocopy` の `/XD`）。
+
+```powershell
+# 既存の Renewed-Banking があればバックアップ（任意）
+# Rename-Item <サーバー側>\resources\Renewed-Banking <サーバー側>\resources\Renewed-Banking.bak
+
+# robocopy で node_modules と .git を除外してコピー
+robocopy "H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2" "<サーバー側>\resources\Renewed-Banking" /E /XD node_modules .git
+```
+
+`<サーバー側>` は FiveM サーバーの `resources` を含む実パスに置き換える。短いパス（例: `C:\FX\res` の下に `[jp]` と `Renewed-Banking` を置く）を選ぶと安全。
+
+**robocopy の終了コード**: `0`〜`7` は成功扱い（`1` は「コピーされたファイルあり」で正常）。`8` 以上はエラー。`8` 以上が出たらログを確認すること。
+
+**確認ポイント（コピー後、サーバー側に存在すれば実行に必要な一式が揃っている）**
+
+- `<サーバー側>\resources\Renewed-Banking\fxmanifest.lua`
+- `<サーバー側>\resources\Renewed-Banking\Renewed-Banking.sql`
+- `<サーバー側>\resources\Renewed-Banking\client\`
+- `<サーバー側>\resources\Renewed-Banking\server\`
+- `<サーバー側>\resources\Renewed-Banking\web\public\build\bundle.js`
+- `<サーバー側>\resources\Renewed-Banking\web\public\build\bundle.css`
+- `<サーバー側>\resources\Renewed-Banking\web\public\index.html`
+- `<サーバー側>\resources\Renewed-Banking\locales\`
+
+`web\public\build\bundle.js` が無いと NUI が真っ白になる。v1.0.1-ja のコミットで `git add -f` 経由によりリポジトリに bundle を同梱している想定のため、コピー元の `H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2\web\public\build\` に `bundle.js` があるか事前に確認しておくとよい。
+
+### ステップ 2: server.cfg の確認
+
+コピーが終わったら `server.cfg` を確認する。
+
+- **`ensure Renewed-Banking`**（リソース名は `jp-renewedbanking2` と誤記しない）
+- **`oxmysql` / `ox_lib` / `ox_target`** など依存リソースが **`ensure Renewed-Banking` より前**に起動する順序になっていること
+- **oxmysql** の DB 接続設定が正しいこと
+- 日本語 UI を ox_lib 側でも揃えたい場合は **`setr ox:locale ja`** 等（詳細は `README.md`）
+
+### ステップ 3 以降: テスト用 DB でのスキーマ自動作成確認
+
 1. テスト用 DB を用意（既存 DB と分離。`renewed_banking_test` 等の名前）
 2. `server.cfg` の oxmysql 接続文字列をテスト用 DB に向ける
 3. テスト用 DBで `DROP TABLE IF EXISTS bank_accounts_new, player_transactions;` を実行して空にする
