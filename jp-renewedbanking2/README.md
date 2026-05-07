@@ -53,7 +53,7 @@ FiveM 用バンキングリソース **[Renewed-Banking](https://github.com/Rene
 
 ## 依存リソース
 
-`fxmanifest.lua` に `dependencies { 'ox_lib', 'oxmysql', 'ox_target' }` を記載済みです。起動順の参考にしてください。
+`fxmanifest.lua` に `dependencies { 'ox_lib', 'oxmysql', 'ox_target' }` を記載済みです。起動順の参考にしてください。**ox_lib は 3.x 系を想定**（`server_version` の固定値はリポジトリに含めていない。自環境の `ox_lib/fxmanifest.lua` を参照のこと）。詳細は `docs/known_issues.md`。
 
 - [oxmysql](https://github.com/overextended/oxmysql)
 - [ox_lib](https://github.com/overextended/ox_lib)

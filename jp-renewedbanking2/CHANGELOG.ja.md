@@ -4,6 +4,10 @@
 
 ## [1.0.1-ja] - 2026-05-07
 
+### Breaking changes
+
+- **クライアントコマンド**: F8 用の UI 閉じコマンドを `closeBankUI` から **`renewedbanking:close`** にリネーム。`server.cfg` やマクロで旧名を呼んでいる場合は置き換えが必要（旧名の併記は行っていない）。
+
 ### 修正・改善
 
 - i18n: `comp_transaction` の動詞をロケールキー化、`give_cash` / `received_cash` の英語プレースホルダを Lua 引数順に整合、`en.json` に `_help_*` を追加（`docs/i18n_audit.md` 参照）
@@ -11,11 +15,15 @@
 - Web: Font Awesome を `index.html` に集約、`Notification` の CSS タイポ修正、`setClipboard` ファイル名修正
 - Web: `stores` の型付け、`HelpModal` のバックドロップをボタン化、Svelte 4 / Rollup 4 / TypeScript 5 への更新、`pnpm-lock.yaml` のみでロック管理、ルート `.gitattributes` 追加
 - `fxmanifest.lua` に `dependencies { 'ox_lib', 'oxmysql', 'ox_target' }` を追記
-- クライアント: `RegisterCommand('renewedbanking:close', …)`（旧 `closeBankUI`）
+- クライアント: `RegisterCommand('renewedbanking:close', …)`（上記 Breaking 参照）
 
 ### 維持
 
 - 原作の口座・送金ロジックは変更なし（詳細は `docs/known_issues.md`）
+
+### フォローアップ（v1.0.2-ja 以降で検討）
+
+- NUI の `web/public/build/*` をリポジトリに含めるか、GitHub Releases の zip のみにするかの**配布ポリシー**を整理する（現状は pnpm 非導入サーバー向けに bundle を同梱。詳細は `docs/known_issues.md`）。
 
 ## [1.0.0-ja] - 2026-05-06
 

@@ -12,7 +12,24 @@
 ## 環境・運用
 
 - **`server_version` / FX ビルド番号**: `fxmanifest.lua` には `dependencies` のみ記載。自サーバーの ox_lib が要求する `server_version` がある場合は、手元の `ox_lib/fxmanifest.lua` を参照して追記してください。
+- **ox_lib の互換バージョン**: 派生版の開発・確認は **ox_lib 3.x 系（コミュニティ標準の現行 major）** を前提としている。最新 major での互換は未検証のため、更新時は本家 Renewed-Banking の issue / release と併せて確認すること。
 - **Font Awesome CDN**: `web/public/index.html` で CDN 読み込み。完全オフライン配布では npm 同梱への置換を検討（将来作業）。
+- **NUI ビルド成果物（`web/public/build/bundle.js` 等）**: v1.0.1-ja では `web/.gitignore` を `git add -f` で突破し同梱している（pnpm 未導入のテストサーバーへそのまま `ensure` できるようにするため）。**中長期**は「タグごとに Releases で zip 添付のみ」「または CI で成果物を生成しリポジトリからは除外」のいずれかに寄せると diff ノイズが減る。v1.0.2-ja で方針決定する想定。
+- **注釈付きタグの付け替え後の fetch**: リモートで `jp-renewedbanking2/v1.0.1-ja` を同じ名前で付け直した場合、既にそのタグを fetch 済みのクローンでは `git fetch --tags --prune` だけでは **ローカルタグが古いコミットのまま残る**ことがある。別マシンで再開するときは `git fetch origin --tags --force`、または `git tag -d jp-renewedbanking2/v1.0.1-ja` のあと `git fetch origin tag jp-renewedbanking2/v1.0.1-ja` で明示的に上書きすること。
+
+## 開発用コード（将来の軽微改善）
+
+- **`useNuiEvent.ts` の短絡評価**: 原作互換のため v1.0.1-ja では未変更。`if (event.data.action === action) handler(event.data);` への if 化は **v1.0.2-ja 以降**で ESLint / 可読性の観点から検討する。
+
+## luacheck（`--std=lua54` 実行時の注意）
+
+v1.0.1-ja 時点で `luacheck client server --no-global --std=lua54` を走らせると、**警告多数・「error」表記が 2 件**出ることがあるが、いずれも原作・FiveM 前提の範囲で **コードロジックの欠陥ではない**。
+
+- **`+=` / `-=`**: FiveM（CfxLua）の拡張構文。Lua 5.4 標準には無いため luacheck が構文エラー相当に扱うが、ゲーム内では正常動作（原作 `server/main.lua` 由来）。
+- **`line is too long`**: 原作のスタイル。日本語コメントで伸びた行も含む。原作ロジック非変更スコープでは触らない。
+- **`unused argument`（`xPlayer` / `reason` 等）**: ESX / QB / QBX で同一シグネチャを保つための意図的な未使用引数（`framework.lua` 由来）。
+
+**v1.0.2-ja 以降の検討候補**: `jp-renewedbanking2/.luacheckrc` で FiveM グローバル、`std` / `max_line_length`、必要なら CfxLua 向けプラグインやインライン抑止の方針を整理する。
 
 ## `/givecash` 通知の種別
 
