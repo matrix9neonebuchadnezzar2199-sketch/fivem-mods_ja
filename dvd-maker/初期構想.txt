@@ -1,0 +1,301 @@
+なるほど、自分のコードで一から作るスタイルですね。MITで出すなら他人のコードを引用しない方が確かに楽です。仕様も明確なので、これに沿って実装方針をまとめますね。
+
+参考にしてよいFiveMの一般的なAPIパターン（`RegisterNUICallback`、`SendNUIMessage`、`ox_inventory`のmetadata仕様など）はFiveM公式ドキュメントの公開仕様なので、そこは安心して使ってください。著作権が発生するのは「他人が書いたコード本体をコピペすること」です。
+
+## 仕様の整理（確認）
+
+- アイテム2種類：`dvd_blank`（空）と `dvd_recorded`（データ有）
+- アイコン画像はあなたが用意（白ディスク／「DVD」と書かれたディスク）
+- 空DVDをUSE → 作成UIでタイトルとYouTube URLを入力 → 保存で `dvd_recorded` に変換
+- データ有DVDをUSE → タイトル表示と再生/取消メニュー → 再生で動画ストリーミング → 終了でメニューに戻る
+
+## ディレクトリ構成
+
+```
+mydvd/
+├── fxmanifest.lua
+├── LICENSE                  (MIT、著作権者はあなた)
+├── README.md
+├── config.lua
+├── client/
+│   └── main.lua
+├── server/
+│   └── main.lua
+└── html/
+    ├── index.html
+    ├── style.css
+    ├── script.js
+    └── img/
+        ├── dvd_blank.png    (アイテムアイコン兼UI用)
+        └── dvd_recorded.png
+```
+
+## fxmanifest.lua
+
+```lua
+fx_version 'cerulean'
+game 'gta5'
+lua54 'yes'
+
+author 'あなたの名前'
+description 'DVD recording and playback system'
+version '1.0.0'
+license 'MIT'
+
+shared_script 'config.lua'
+client_script 'client/main.lua'
+server_script 'server/main.lua'
+
+ui_page 'html/index.html'
+files {
+    'html/index.html',
+    'html/style.css',
+    'html/script.js',
+    'html/img/*.png'
+}
+```
+
+## config.lua
+
+```lua
+Config = {}
+Config.BlankItem = 'dvd_blank'
+Config.RecordedItem = 'dvd_recorded'
+Config.MaxTitleLength = 40
+```
+
+## ox_inventoryアイテム定義（ox_inventory/data/items.lua に追記）
+
+```lua
+['dvd_blank'] = {
+    label = 'DVD（空）',
+    weight = 20,
+    stack = true,
+    close = true,
+    description = '何も記録されていないDVD',
+    client = {
+        image = 'dvd_blank.png',
+        export = 'mydvd.useBlank'
+    }
+},
+['dvd_recorded'] = {
+    label = 'DVD',
+    weight = 20,
+    stack = false,           -- metadataで個別管理
+    close = true,
+    description = '映像が記録されたDVD',
+    client = {
+        image = 'dvd_recorded.png',
+        export = 'mydvd.useRecorded'
+    }
+}
+```
+
+ポイントは `dvd_recorded` を `stack = false` にすること。これで1枚ごとに別アイテム扱いになり、metadataでタイトルとURLを個別に保持できます。
+
+## client/main.lua の構造（ロジックの流れだけ）
+
+書くべき関数は4つです。
+
+```lua
+-- 1. 空DVDを使った時：作成UIを開く
+exports('useBlank', function(data, slot)
+    SetNuiFocus(true, true)
+    SendNUIMessage({ action = 'openCreate' })
+end)
+
+-- 2. データ有DVDを使った時：再生メニューを開く
+exports('useRecorded', function(data, slot)
+    local meta = slot.metadata or {}
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = 'openPlayer',
+        title = meta.title or '無題',
+        url = meta.url or '',
+        slot = slot.slot
+    })
+end)
+
+-- 3. 作成UI → 保存ボタン
+RegisterNUICallback('save', function(data, cb)
+    SetNuiFocus(false, false)
+    -- サーバーに「空→データ有」変換を依頼
+    TriggerServerEvent('mydvd:create', data.title, data.url)
+    cb('ok')
+end)
+
+-- 4. UI閉じる
+RegisterNUICallback('close', function(_, cb)
+    SetNuiFocus(false, false)
+    cb('ok')
+end)
+
+-- 5. 再生終了通知（NUI→Lua、その後再びメニュー表示）
+RegisterNUICallback('playbackEnded', function(_, cb)
+    SendNUIMessage({ action = 'backToMenu' })
+    cb('ok')
+end)
+```
+
+## server/main.lua の構造
+
+ox_inventoryの場合、空DVDを1個減らしてデータ有DVDをmetadata付きで1個追加する処理を書きます。
+
+```lua
+local ox_inventory = exports.ox_inventory
+
+RegisterNetEvent('mydvd:create', function(title, url)
+    local src = source
+    
+    -- バリデーション
+    if type(title) ~= 'string' or type(url) ~= 'string' then return end
+    if #title == 0 or #title > Config.MaxTitleLength then return end
+    if not url:match('^https?://') then return end  -- 簡易URLチェック
+    
+    -- 空DVDを所持しているか確認
+    local hasBlank = ox_inventory:Search(src, 'count', Config.BlankItem)
+    if hasBlank < 1 then return end
+    
+    -- 空DVDを1つ消費
+    local removed = ox_inventory:RemoveItem(src, Config.BlankItem, 1)
+    if not removed then return end
+    
+    -- データ有DVDを付与（metadataにタイトルとURL）
+    ox_inventory:AddItem(src, Config.RecordedItem, 1, {
+        title = title,
+        url = url,
+        description = 'タイトル: ' .. title
+    })
+end)
+```
+
+## NUI側（html/script.js）の流れ
+
+3つの画面状態を持たせます：`hidden` / `create` / `player` / `playing`。
+
+```javascript
+const root = document.getElementById('app');
+let currentSlot = null;
+let currentTitle = '';
+let currentUrl = '';
+
+window.addEventListener('message', (e) => {
+    const d = e.data;
+    if (d.action === 'openCreate') {
+        showCreate();
+    } else if (d.action === 'openPlayer') {
+        currentSlot = d.slot;
+        currentTitle = d.title;
+        currentUrl = d.url;
+        showPlayerMenu();
+    } else if (d.action === 'backToMenu') {
+        showPlayerMenu();
+    }
+});
+
+function showCreate() {
+    root.innerHTML = `
+        <div class="dvd-panel">
+            <img src="img/dvd_blank.png" class="dvd-img">
+            <div class="menu">
+                <h2>DVDに記録</h2>
+                <input id="title" placeholder="タイトル" maxlength="40">
+                <input id="url" placeholder="YouTube URL">
+                <button onclick="save()">保存</button>
+                <button onclick="close_()">取り消し</button>
+            </div>
+        </div>`;
+}
+
+function showPlayerMenu() {
+    root.innerHTML = `
+        <div class="dvd-panel">
+            <img src="img/dvd_recorded.png" class="dvd-img">
+            <div class="menu">
+                <h2>タイトル: ${escapeHtml(currentTitle)}</h2>
+                <button onclick="play()">再生</button>
+                <button onclick="close_()">取り消し</button>
+            </div>
+        </div>`;
+}
+
+function showPlaying() {
+    const id = extractYouTubeId(currentUrl);
+    root.innerHTML = `
+        <div class="player">
+            <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&enablejsapi=1"
+                    allow="autoplay" allowfullscreen></iframe>
+            <button class="stop" onclick="stop()">停止してメニューに戻る</button>
+        </div>`;
+}
+
+function save() {
+    const title = document.getElementById('title').value.trim();
+    const url = document.getElementById('url').value.trim();
+    if (!title || !url) return;
+    fetch(`https://${GetParentResourceName()}/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, url })
+    });
+    hide();
+}
+
+function play()  { showPlaying(); }
+function stop()  { fetch(`https://${GetParentResourceName()}/playbackEnded`, {method:'POST',body:'{}'}); }
+function close_(){ fetch(`https://${GetParentResourceName()}/close`, {method:'POST',body:'{}'}); hide(); }
+function hide()  { root.innerHTML = ''; }
+
+function extractYouTubeId(url) {
+    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+    return m ? m[1] : '';
+}
+function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+```
+
+## style.css のミニマル例
+
+```css
+body { margin: 0; background: transparent; font-family: sans-serif; color: #fff; }
+#app { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+.dvd-panel { display: flex; gap: 30px; background: rgba(0,0,0,0.85); padding: 30px; border-radius: 12px; }
+.dvd-img { width: 200px; height: 200px; }
+.menu { display: flex; flex-direction: column; gap: 10px; min-width: 280px; }
+.menu input { padding: 8px; font-size: 14px; }
+.menu button { padding: 10px; cursor: pointer; }
+.player { width: 80vw; height: 80vh; }
+.player iframe { width: 100%; height: calc(100% - 50px); border: 0; }
+.stop { width: 100%; height: 50px; cursor: pointer; }
+```
+
+## 実装の注意点
+
+`escapeHtml` は地味だけど必須です。タイトル欄に `<script>` 入れて他プレイヤーのDVDを使ったときにXSSが走る、という事故を防ぎます。
+
+URLバリデーションはサーバー側でも必ずやってください。クライアントだけだと改ざんでき、悪意ある人が `javascript:` プロトコルなどを仕込めてしまう可能性があります。`youtube.com` か `youtu.be` のドメインだけ許可するホワイトリスト方式が一番安全です。
+
+```lua
+local function isValidYouTubeUrl(url)
+    return url:match('^https://www%.youtube%.com/watch%?v=[%w%-_]+') 
+        or url:match('^https://youtu%.be/[%w%-_]+')
+        or url:match('^https://youtube%.com/watch%?v=[%w%-_]+')
+end
+```
+
+YouTube埋め込みは音声がブラウザポリシーで自動再生ブロックされることがあるので、`autoplay=1&mute=0` でも初回はミュート起動して、ユーザーがクリックで音を出す設計のほうが確実です。あるいはNUIフォーカスを取った直後に `iframe` を生成すれば大抵自動再生は通ります。
+
+## README.mdの推奨セクション
+
+タイトルと短い紹介、機能（空DVDへの録画、データ有DVDの再生）、デモGIF、必要環境（FiveM、ox_inventoryまたは他フレームワーク）、インストール手順（リソースをresourcesに置く、items.luaに追記、画像をinventoryのimagesフォルダにコピー、server.cfgにensure追加）、設定（config.lua）、ライセンス（MIT）。
+
+## 著作権を綺麗に保つコツ
+
+コードを自分で書くにあたって、参考にした他人のコードは「考え方だけ覚えて、見ないで自分の言葉で書き直す」のが一番安全です。1行2行レベルでも構造的にコピーしてしまうと著作権上グレーになることがあります。FiveM公式ドキュメント（docs.fivem.net）と ox_inventory公式README の関数シグネチャは公開仕様なので、そのまま使ってOKです。
+
+アイコンPNGとUI画像は完全自作（またはCC0素材を加工）にしておけば、ライセンス周りで悩むことはなくなります。
+
+---
+
+この設計で進めれば、最短数百行のコードで仕様通りに動くはずです。実装中に「ここどう書くのが綺麗？」「このイベントの同期どうする？」みたいな質問が出てきたら、コードの考え方ベースで答えますので気軽に聞いてください。
