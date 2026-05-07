@@ -9,6 +9,28 @@ local isVisible = false
 local progressBar = Config.progressbar == 'circle' and lib.progressCircle or lib.progressBar
 PlayerPed = cache.ped
 
+-- NUI の translations ストア初期化用（locales/*.json を 1 回だけ読み込みキャッシュ）
+local cachedTranslations
+
+local function loadTranslations()
+    if cachedTranslations ~= nil then
+        return cachedTranslations
+    end
+    local loc = GetConvar('ox:locale', 'en')
+    local raw = LoadResourceFile(GetCurrentResourceName(), ('locales/%s.json'):format(loc))
+    if not raw or raw == '' then
+        raw = LoadResourceFile(GetCurrentResourceName(), 'locales/en.json')
+    end
+    local ok, decoded = pcall(json.decode, raw or '{}')
+    if not ok then
+        print('[Renewed-Banking] locale load failed: ' .. tostring(decoded))
+        cachedTranslations = {}
+        return cachedTranslations
+    end
+    cachedTranslations = decoded or {}
+    return cachedTranslations
+end
+
 lib.onCache('ped', function(newPed)
 	PlayerPed = newPed
 end)
@@ -22,6 +44,12 @@ end
 -- 銀行データ取得後に NUI を開く
 local function openBankUI(isAtm)
     SendNUIMessage({action = 'setLoading', status = true})
+    local tr = loadTranslations()
+    SendNUIMessage({
+        action = 'updateLocale',
+        translations = tr,
+        currency = Config.currency or 'USD',
+    })
     nuiHandler(true)
     lib.callback('renewed-banking:server:initalizeBanking', false, function(accounts)
         if not accounts then
