@@ -3,12 +3,15 @@
     import AccountTransactionItem from "./AccountTransactionItem.svelte";
     import HelpButton from "../HelpButton.svelte";
     import { convertToCSV } from "../../utils/convertToCSV";
-    import { setClipboard } from "../../utils/setClipboad";
+    import { setClipboard } from "../../utils/setClipboard";
     let transSearch = '';
     $: account = $accounts.find((accountItem: any) => $activeAccount === accountItem.id);
 
     function handleClickExportData() {
-        if (account == null) console.log("No account selected");
+        if (account == null) {
+            console.log("No account selected");
+            return;
+        }
         if (account.transactions.length === 0) {
             notify.set("No transactions to export!");
             setTimeout(() => {

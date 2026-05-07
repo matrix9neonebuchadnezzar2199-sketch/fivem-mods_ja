@@ -32,6 +32,12 @@ server_scripts {
 
 ui_page 'web/public/index.html'
 
+dependencies {
+    'ox_lib',
+    'oxmysql',
+    'ox_target',
+}
+
 files {
   'web/public/index.html',
   'web/public/**/*',

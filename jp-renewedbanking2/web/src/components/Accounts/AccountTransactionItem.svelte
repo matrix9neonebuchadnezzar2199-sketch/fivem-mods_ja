@@ -11,19 +11,19 @@
         const weeks = Math.floor(days / 7);
 
         if (weeks !== 0 && weeks > 1) {
-            retData = $translations.weeks.replace("%s", weeks);
+            retData = $translations.weeks.replace("%s", String(weeks));
         } else if (weeks !== 0 && weeks === 1) {
             retData = $translations.aweek;
         } else if (days !== 0 && days > 1) {
-            retData = $translations.days.replace("%s", days);
+            retData = $translations.days.replace("%s", String(days));
         } else if (days !== 0 && days === 1) {
             retData = $translations.aday;
         } else if (hours !== 0 && hours > 1) {
-            retData = $translations.hours.replace("%s", hours);
+            retData = $translations.hours.replace("%s", String(hours));
         } else if (hours !== 0 && hours === 1) {
             retData = $translations.ahour;
         } else if (minutes !== 0 && minutes > 1) {
-            retData = $translations.mins.replace("%s", minutes);
+            retData = $translations.mins.replace("%s", String(minutes));
         } else if (minutes !== 0 && minutes === 1) {
             retData = $translations.amin;
         } else {

@@ -10,7 +10,10 @@
     let isAtm: boolean;
     function handleButton(id:string, type:string) {
         let account = $accounts.find((accountItem: any) => id === accountItem.id);
-        popupDetails.update(() => ({ actionType: type, account }));
+        popupDetails.update(() => ({
+            actionType: type,
+            account: account ?? {},
+        }));
     }
 
     atm.subscribe((usingAtm: boolean) => {
@@ -33,7 +36,7 @@
     </div>
 
     <div class="btns-group">
-        {#if !account.isFrozen}
+        {#if !account.frozen}
             {#if !isAtm}
                 <button class="btn btn-green" on:click={() => handleButton(account.id, "deposit")}>{$translations.deposit_but}</button>
             {/if}

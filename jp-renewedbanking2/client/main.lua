@@ -73,7 +73,7 @@ RegisterNUICallback('closeInterface', function(_, cb)
     cb('ok')
 end)
 
-RegisterCommand('closeBankUI', function() nuiHandler(false) end, false)
+RegisterCommand('renewedbanking:close', function() nuiHandler(false) end, false)
 
 -- 入金・出金・送金は同名の NUI コールバックでサーバーへ委譲
 local bankActions = {'deposit', 'withdraw', 'transfer'}

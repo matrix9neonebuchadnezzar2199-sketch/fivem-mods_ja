@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Account } from "../types";
     import { accounts, popupDetails, loading, translations, notify } from "../store/stores";
     import { fetchNui } from "../utils/fetchNui";
     import HelpButton from "./HelpButton.svelte";
@@ -25,7 +26,7 @@
             .then((retData) => {
                 setTimeout(() => {
                     if (retData !== false) {
-                        accounts.set(retData);
+                        accounts.set(retData as Account[]);
                         closePopup();
                     }
                     loading.set(false);
