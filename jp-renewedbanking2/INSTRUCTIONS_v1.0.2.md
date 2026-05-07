@@ -226,14 +226,16 @@ git push origin jp-renewedbanking2/v1.0.2-ja
 
 ### ステップ 1: リソースを配置
 
-Windows では `web\node_modules` を含めてコピーするとパス長制限で失敗しやすい。**`node_modules` と `.git` を除外**してコピーする（`robocopy` の `/XD`）。
+Windows では `web\node_modules` を含めてコピーするとパス長制限で失敗しやすい。**`node_modules` と `.git` を除外**してコピーする（`robocopy` の `/XD`）。エクスプローラーが **`dist` フォルダ**を指して「パスが長すぎる」と出す場合、多くは **`node_modules` の奥**にある各パッケージの `dist` である（全体ドラッグコピーだと `node_modules` ごと送られてしまう）。必ず下記 `robocopy` を使う。
+
+ローカルに **`web\dist` など開発用の `dist` が残っている**場合も同様に深くなり得る。本リソースの実行に `dist` は不要（NUI は `web\public\build`）なので、**`/XD dist` で除外**するか、コピー前にフォルダごと削除してよい。
 
 ```powershell
 # 既存の Renewed-Banking があればバックアップ（任意）
 # Rename-Item <サーバー側>\resources\Renewed-Banking <サーバー側>\resources\Renewed-Banking.bak
 
-# robocopy で node_modules と .git を除外してコピー
-robocopy "H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2" "<サーバー側>\resources\Renewed-Banking" /E /XD node_modules .git
+# robocopy で node_modules / .git / dist を除外してコピー（いずれも実行時不要またはリポ外の生成物）
+robocopy "H:\CURSOR\Dev\fivem-mods_ja\jp-renewedbanking2" "<サーバー側>\resources\Renewed-Banking" /E /XD node_modules .git dist
 ```
 
 `<サーバー側>` は FiveM サーバーの `resources` を含む実パスに置き換える。短いパス（例: `C:\FX\res` の下に `[jp]` と `Renewed-Banking` を置く）を選ぶと安全。
