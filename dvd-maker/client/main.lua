@@ -9,6 +9,22 @@ local function closeUi()
     SendNUIMessage({ action = 'setState', state = 'hidden' })
 end
 
+---ゲーム側で ESC / フロントキャンセルを拾う（NUI に届かない環境向け）
+CreateThread(function()
+    while true do
+        if uiOpen then
+            Wait(0)
+            -- 202 INPUT_FRONTEND_CANCEL / 322 は他 JP-MOD でメニュー閉じに使用
+            if IsControlJustPressed(0, 202) or IsControlJustPressed(0, 322) then
+                closeUi()
+                Wait(200)
+            end
+        else
+            Wait(500)
+        end
+    end
+end)
+
 ---作成結果（サーバーまたはローカル検証）
 ---@param ok boolean
 local function applyCreateResult(ok)

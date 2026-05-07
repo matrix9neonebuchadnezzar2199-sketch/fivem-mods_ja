@@ -29,6 +29,15 @@ function nuiPost(name, data) {
   }).catch(function () {});
 }
 
+/** NUI コールバック（Lua の RegisterNUICallback と対応）。戻り値で完了を待てる */
+function nuiPostAsync(name, data) {
+  return fetch('https://' + GetParentResourceName() + '/' + name, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify(data != null ? data : {}),
+  });
+}
+
 /** YouTube 動画 ID 抽出（埋め込み用） */
 function extractYouTubeId(url) {
   if (!url || typeof url !== 'string') return '';
@@ -99,14 +108,16 @@ function showCreate() {
   urlIn.placeholder = 'https://www.youtube.com/watch?v=...';
 
   var bSave = document.createElement('button');
+  bSave.type = 'button';
   bSave.className = 'btn btn-primary';
   bSave.textContent = '保存';
-  bSave.onclick = onSaveClick;
+  bSave.addEventListener('click', onSaveClick);
 
   var bCancel = document.createElement('button');
+  bCancel.type = 'button';
   bCancel.className = 'btn btn-secondary';
   bCancel.textContent = '取り消し';
-  bCancel.onclick = onCloseClick;
+  bCancel.addEventListener('click', onCloseClick);
 
   col.appendChild(h);
   col.appendChild(lt);
@@ -143,14 +154,16 @@ function showPlayerMenu() {
   h.innerHTML = 'タイトル: ' + escapeHtml(currentTitle || '（無題）');
 
   var bPlay = document.createElement('button');
+  bPlay.type = 'button';
   bPlay.className = 'btn btn-primary';
   bPlay.textContent = '再生';
-  bPlay.onclick = onPlayClick;
+  bPlay.addEventListener('click', onPlayClick);
 
   var bCancel = document.createElement('button');
+  bCancel.type = 'button';
   bCancel.className = 'btn btn-secondary';
   bCancel.textContent = '取り消し';
-  bCancel.onclick = onCloseClick;
+  bCancel.addEventListener('click', onCloseClick);
 
   col.appendChild(h);
   col.appendChild(bPlay);
@@ -198,9 +211,10 @@ function showPlaying(videoId) {
   holder.id = 'yt-player';
 
   var stopBtn = document.createElement('button');
+  stopBtn.type = 'button';
   stopBtn.className = 'btn btn-secondary btn-stop';
   stopBtn.textContent = '停止してメニューに戻る';
-  stopBtn.onclick = onStopPlayback;
+  stopBtn.addEventListener('click', onStopPlayback);
 
   wrap.appendChild(holder);
   wrap.appendChild(stopBtn);
@@ -241,9 +255,17 @@ function onSaveClick() {
   nuiPost('save', { title: title, url: url });
 }
 
-function onCloseClick() {
-  nuiPost('close', {});
-  setHidden();
+function onCloseClick(ev) {
+  if (ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+  if (uiState === 'hidden') return;
+  nuiPostAsync('close', {})
+    .catch(function () {})
+    .finally(function () {
+      setHidden();
+    });
 }
 
 window.addEventListener('message', function (event) {
@@ -264,3 +286,20 @@ window.addEventListener('message', function (event) {
     showPlayerMenu();
   }
 });
+
+/** ESC: CEF 側。iframe 内フォーカス時は効かない場合があるため client でも拾う */
+window.addEventListener(
+  'keydown',
+  function (e) {
+    if (e.key !== 'Escape') return;
+    if (uiState === 'hidden') return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (uiState === 'playing') {
+      onStopPlayback();
+    } else {
+      onCloseClick();
+    }
+  },
+  true
+);
