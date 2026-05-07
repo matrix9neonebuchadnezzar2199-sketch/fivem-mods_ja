@@ -46,6 +46,8 @@ local function closeBankUI()
     isVisible = false
     SetNuiFocus(false, false)
     ClearPedTasksImmediately(PlayerPed)
+    -- NUI 側の visibility を必ず下げる（fetchNui 失敗時でもメニュー残り・入力奪い取りを防ぐ）
+    SendNUIMessage({ action = 'setBankingHidden' })
 end
 
 -- 銀行データ取得後に NUI を開く
@@ -70,7 +72,8 @@ local function openBankUI(isAtm)
                 status = isVisible,
                 accounts = accounts,
                 loading = false,
-                atm = isAtm
+                atm = isAtm,
+                allowDepositAtAtm = Config.allowDepositAtAtm ~= false,
             })
         end)
     end)

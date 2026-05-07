@@ -2,6 +2,13 @@
 
 本ファイルは原作 [Renewed-Banking](https://github.com/Renewed-Scripts/Renewed-Banking) からの派生版独自の変更を記録します。原作の変更履歴は本家 README を参照してください。
 
+## [1.0.4-ja] - 2026-05-07
+
+### 追加・変更
+
+- `config.lua` に **`allowDepositAtAtm`**（既定 `true`）。原作どおり **ATM では入金ボタンを出さない**運用にしたい場合は `false`。
+- UI を閉じる際、Lua から **`setBankingHidden`** を送り NUI の表示状態を同期（閉じたのに入力が奪われたまま等の切り分け用）。
+
 ## [1.0.3-ja] - 2026-05-07
 
 ### 修正（実機 hotfix）

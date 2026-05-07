@@ -12,6 +12,7 @@
     notify,
     popupDetails,
     atm,
+    allowDepositAtAtm,
     translations,
     currency,
     showHelp,
@@ -29,6 +30,7 @@
     visibility.set(data.status);
     loading.set(data.loading);
     atm.set(data.atm);
+    allowDepositAtAtm.set(data.allowDepositAtAtm !== false);
   })
 
   useNuiEvent<any>('setLoading', data => {
@@ -46,6 +48,16 @@
     translations.set(data.translations);
     currency.set(data.currency);
   })
+
+  useNuiEvent('setBankingHidden', () => {
+    visibility.set(false);
+    showHelp.set(null);
+    popupDetails.update((val) => ({
+      ...val,
+      actionType: '',
+    }));
+    loading.set(false);
+  });
   
   onMount(() => {
     const keyHandler = (e: KeyboardEvent) => {

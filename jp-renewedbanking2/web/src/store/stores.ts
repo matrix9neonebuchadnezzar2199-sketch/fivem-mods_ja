@@ -13,6 +13,8 @@ export const loading = writable(false);
 export const notify = writable("");
 export const activeAccount = writable<string | null>(null);
 export const atm = writable(false);
+/** ATM でも入金ボタンを出すか（Lua setVisible の allowDepositAtAtm） */
+export const allowDepositAtAtm = writable(true);
 export const currency = writable("USD");
 
 export const popupDetails = writable({

@@ -12,6 +12,8 @@ Config = {
     renewedMultiJob = false, -- QBCORE のみ。Renewed qb-phone マルチジョブ: https://github.com/Renewed-Scripts/qb-phone
     progressbar = 'circle', -- circle または rectangle（circle 以外は矩形扱い）
     currency = 'USD', -- 通貨コード（USD, EUR, GBP 等）。表示は NUI 側 format に依存。
+    -- 原作は ATM 利用時（ox_target の atm=true）に入金ボタンを出さない。日本語サーバーでは ATM 入金を期待する運営が多いため true 推奨。原作どおりにしたい場合は false。
+    allowDepositAtAtm = true,
     atms = {
         `prop_atm_01`,
         `prop_atm_02`,

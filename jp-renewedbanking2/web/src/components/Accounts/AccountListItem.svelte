@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { accounts, activeAccount, popupDetails, atm, translations } from "../../store/stores";
+    import { accounts, activeAccount, popupDetails, atm, allowDepositAtAtm, translations } from "../../store/stores";
     import { formatMoney } from "../../utils/misc";
     export let account:any;
 
@@ -48,7 +48,7 @@
 
     <div class="btns-group">
         {#if !account.frozen}
-            {#if !isAtm}
+            {#if !isAtm || $allowDepositAtAtm}
                 <button class="btn btn-green" on:click={() => handleButton(account.id, "deposit")}>{$translations.deposit_but}</button>
             {/if}
             <button class="btn btn-orange" on:click={() => handleButton(account.id, "withdraw")}>{$translations.withdraw_but}</button>
