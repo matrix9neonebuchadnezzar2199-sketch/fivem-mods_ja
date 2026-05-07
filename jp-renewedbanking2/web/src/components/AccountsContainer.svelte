@@ -10,7 +10,11 @@
         <AccountsList />
         <AccountTransactionsList />
     </section>
-    <h5><i class="fa-solid fa-wallet fa-fw"></i>{formatMoney($accounts[0].cash)}</h5>
+    {#if $accounts && $accounts.length > 0}
+        <h5>
+            <i class="fa-solid fa-wallet fa-fw"></i>{formatMoney($accounts[0]?.cash)}
+        </h5>
+    {/if}
 </div>
 
 <style>

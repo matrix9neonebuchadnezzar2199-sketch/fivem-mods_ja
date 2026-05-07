@@ -53,6 +53,8 @@ FiveM 用バンキングリソース **[Renewed-Banking](https://github.com/Rene
 
 ## 依存リソース
 
+`fxmanifest.lua` に `dependencies { 'ox_lib', 'oxmysql', 'ox_target' }` を記載済みです。起動順の参考にしてください。
+
 - [oxmysql](https://github.com/overextended/oxmysql)
 - [ox_lib](https://github.com/overextended/ox_lib)
 - [ox_target](https://github.com/overextended/ox_target)
@@ -72,9 +74,19 @@ setr ox:locale ja
 
 1. **リソース名を `Renewed-Banking` のまま** `resources` 配下に配置する（フォルダ名を変えると `exports['Renewed-Banking']` を参照する他スクリプトが壊れます）。
 2. `Renewed-Banking.sql` をデータベースに流す。
-3. `web` フォルダで `pnpm install`（または `npm install`）のあと **`pnpm run build`**（または `npm run build`）を実行し、`web/public/build/` にバンドルを生成する。
+3. `web` フォルダで **`pnpm install`** のあと **`pnpm run build`** を実行し、`web/public/build/` にバンドルを生成する（ロックは `pnpm-lock.yaml` のみ。`npm` を使う場合は `npm install --no-package-lock` を推奨）。
 4. `server.cfg` に `ensure Renewed-Banking` を追加する（名前は上記ディレクトリ名と一致させる）。
 5. 上記 **ox:locale** を希望言語に設定する。
+
+F8 コンソールから **`renewedbanking:close`** で銀行 NUI を閉じられます（v1.0.1-ja より。旧コマンド名 `closeBankUI` は廃止）。
+
+## 既知の制限
+
+原作ロジックに踏み込まない方針で残している点は [`docs/known_issues.md`](./docs/known_issues.md) を参照してください。
+
+## カスタマイズ
+
+- `locales/ja.json` の `bank_name`（既定「ロスサントス銀行」）はサーバー固有名詞として上書きして構いません。
 
 ## 外部リソースからの利用（exports）
 

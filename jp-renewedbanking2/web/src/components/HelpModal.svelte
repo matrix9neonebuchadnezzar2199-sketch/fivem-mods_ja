@@ -33,10 +33,16 @@
 </script>
 
 {#if topic}
-  <div class="overlay" on:click={close} transition:fade={{ duration: 150 }} role="presentation">
+  <!-- ESC でのクローズは VisibilityProvider の keyHandler が showHelp を null にする -->
+  <div class="help-wrap" transition:fade={{ duration: 150 }}>
+    <button
+      type="button"
+      class="backdrop"
+      on:click={close}
+      aria-label={t('_help_close')}
+    ></button>
     <div
       class="modal"
-      on:click|stopPropagation
       transition:scale={{ duration: 200, start: 0.92 }}
       role="dialog"
       aria-modal="true"
@@ -61,16 +67,30 @@
 {/if}
 
 <style>
-  .overlay {
+  .help-wrap {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    pointer-events: none;
+  }
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    margin: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.55);
+    cursor: pointer;
+    pointer-events: auto;
+    font: inherit;
   }
   .modal {
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
     background: #1f2937;
     color: #fff;
     border-radius: 12px;

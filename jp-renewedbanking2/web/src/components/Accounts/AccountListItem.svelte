@@ -10,7 +10,10 @@
     let isAtm: boolean;
     function handleButton(id:string, type:string) {
         let account = $accounts.find((accountItem: any) => id === accountItem.id);
-        popupDetails.update(() => ({ actionType: type, account }));
+        popupDetails.update(() => ({
+            actionType: type,
+            account: account ?? {},
+        }));
     }
 
     atm.subscribe((usingAtm: boolean) => {
@@ -18,7 +21,18 @@
     });
 </script>
 
-<section class="account" on:click={()=>handleAccountClick(account.id)} on:keydown={()=>{}}>
+<section
+    class="account"
+    role="button"
+    tabindex="0"
+    on:click={() => handleAccountClick(account.id)}
+    on:keydown={(e) => {
+        if (e.code === 'Enter' || e.code === 'Space') {
+            e.preventDefault();
+            handleAccountClick(account.id);
+        }
+    }}
+>
     <h4>
         {account.type}{$translations.account}/ {account.id}
     </h4>
@@ -33,7 +47,7 @@
     </div>
 
     <div class="btns-group">
-        {#if !account.isFrozen}
+        {#if !account.frozen}
             {#if !isAtm}
                 <button class="btn btn-green" on:click={() => handleButton(account.id, "deposit")}>{$translations.deposit_but}</button>
             {/if}
