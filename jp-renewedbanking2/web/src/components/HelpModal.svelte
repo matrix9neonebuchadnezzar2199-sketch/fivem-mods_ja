@@ -43,7 +43,6 @@
     ></button>
     <div
       class="modal"
-      on:click|stopPropagation
       transition:scale={{ duration: 200, start: 0.92 }}
       role="dialog"
       aria-modal="true"

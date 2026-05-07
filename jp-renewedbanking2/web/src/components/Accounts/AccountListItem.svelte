@@ -21,7 +21,18 @@
     });
 </script>
 
-<section class="account" on:click={()=>handleAccountClick(account.id)} on:keydown={()=>{}}>
+<section
+    class="account"
+    role="button"
+    tabindex="0"
+    on:click={() => handleAccountClick(account.id)}
+    on:keydown={(e) => {
+        if (e.code === 'Enter' || e.code === 'Space') {
+            e.preventDefault();
+            handleAccountClick(account.id);
+        }
+    }}
+>
     <h4>
         {account.type}{$translations.account}/ {account.id}
     </h4>
