@@ -41,6 +41,13 @@ local function nuiHandler(val)
     SetNuiFocus(val, val)
 end
 
+-- UI を閉じる（NUI コールバック・F8 コマンド共通）。ATM シナリオ残りによる入力不能を防ぐ
+local function closeBankUI()
+    isVisible = false
+    SetNuiFocus(false, false)
+    ClearPedTasksImmediately(PlayerPed)
+end
+
 -- 銀行データ取得後に NUI を開く
 local function openBankUI(isAtm)
     SendNUIMessage({action = 'setLoading', status = true})
@@ -53,7 +60,7 @@ local function openBankUI(isAtm)
     nuiHandler(true)
     lib.callback('renewed-banking:server:initalizeBanking', false, function(accounts)
         if not accounts then
-            nuiHandler(false)
+            closeBankUI()
             lib.notify({title = locale('bank_name'), description = locale('loading_failed'), type = 'error'})
             return
         end
@@ -97,11 +104,11 @@ RegisterNetEvent('Renewed-Banking:client:openBankUI', function(data)
 end)
 
 RegisterNUICallback('closeInterface', function(_, cb)
-    nuiHandler(false)
+    closeBankUI()
     cb('ok')
 end)
 
-RegisterCommand('renewedbanking:close', function() nuiHandler(false) end, false)
+RegisterCommand('renewedbanking:close', function() closeBankUI() end, false)
 
 -- 入金・出金・送金は同名の NUI コールバックでサーバーへ委譲
 local bankActions = {'deposit', 'withdraw', 'transfer'}
