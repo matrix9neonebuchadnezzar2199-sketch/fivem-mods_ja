@@ -5,9 +5,9 @@
 html {
   /*
    * FiveM CEF では UI 全体が極小に見えることがある。
-   * ルートの font-size を上げると、Tailwind の rem 系（text-* / p-* / gap 等）が一括で拡大し視認性が上がる。
+   * ルートを 200%（ブラウザ既定の 2 倍）にし、Tailwind の rem 系を一括で拡大する。
    */
-  font-size: 150%;
+  font-size: 200%;
 }
 
 html,
