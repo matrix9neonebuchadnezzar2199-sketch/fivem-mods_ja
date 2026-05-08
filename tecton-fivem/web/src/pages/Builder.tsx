@@ -8,6 +8,7 @@ import { useBuilderStore, type BuilderMode } from '../store/builderStore'
 import { usePropsStore } from '../store/propsStore'
 import { CategoryTree } from '../components/CategoryTree'
 import { PropList } from '../components/PropList'
+import { SearchBar } from '../components/SearchBar'
 import styles from './Builder.module.css'
 
 type ToastState = { kind: 'ok' | 'err'; text: string } | null
@@ -105,7 +106,12 @@ export function Builder() {
                 {ja.props.failed}
               </div>
             )}
-            {propsLoaded && !propsError && <PropList onPlaced={onPlaced} />}
+            {propsLoaded && !propsError && (
+              <>
+                <SearchBar />
+                <PropList onPlaced={onPlaced} />
+              </>
+            )}
           </main>
           <aside className={styles.right}>
             <div style={{ fontSize: theme.fontSize.h2, fontWeight: 600, marginBottom: '0.5rem' }}>{ja.panel.selection}</div>

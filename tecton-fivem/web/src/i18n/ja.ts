@@ -23,6 +23,12 @@ export const ja = {
     failed: 'プロップデータの読み込みに失敗しました',
     selectCategory: '左のツリーからカテゴリを選択してください',
     emptyCategory: 'このカテゴリにプロップがありません',
+    searchNoResults: '検索に一致するプロップがありません',
+  },
+  search: {
+    placeholder: 'モデル名・名前・タグで検索（空白で AND）',
+    ariaLabel: 'プロップ検索',
+    hint: '例: chair / 椅子 / prop_',
   },
   panel: {
     selection: '選択中のオブジェクト',

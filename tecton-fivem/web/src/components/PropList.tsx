@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 import type { CSSProperties } from 'react'
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { List } from 'react-window'
 import { fetchNui } from '../lib/nui'
 import { ja } from '../i18n/ja'
 import { theme } from '../theme'
-import { listModelsForCategory, usePropsStore } from '../store/propsStore'
+import { filterModelsBySearch, listModelsForCategory, usePropsStore } from '../store/propsStore'
 import { useBuilderStore } from '../store/builderStore'
 import styles from '../pages/Builder.module.css'
 
@@ -54,6 +54,8 @@ type PropListProps = {
 export function PropList({ onPlaced }: PropListProps) {
   const dictionary = usePropsStore((s) => s.dictionary)
   const selectedCategory = useBuilderStore((s) => s.selectedCategory)
+  const searchQuery = useBuilderStore((s) => s.searchQuery)
+  const deferredQuery = useDeferredValue(searchQuery)
   const wrapRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(320)
   const [listWidth, setListWidth] = useState(400)
@@ -76,7 +78,12 @@ export function PropList({ onPlaced }: PropListProps) {
     return () => ro.disconnect()
   }, [selectedCategory])
 
-  const models = useMemo(() => listModelsForCategory(selectedCategory, dictionary), [selectedCategory, dictionary])
+  const baseModels = useMemo(() => listModelsForCategory(selectedCategory, dictionary), [selectedCategory, dictionary])
+
+  const models = useMemo(
+    () => filterModelsBySearch(baseModels, dictionary, deferredQuery),
+    [baseModels, dictionary, deferredQuery],
+  )
 
   const onPick = useCallback(
     async (model: string) => {
@@ -113,7 +120,7 @@ export function PropList({ onPlaced }: PropListProps) {
     )
   }
 
-  if (models.length === 0) {
+  if (baseModels.length === 0) {
     return (
       <div className={styles.propListPlaceholder} style={{ color: theme.textDim, fontSize: theme.fontSize.body }}>
         {ja.props.emptyCategory}
@@ -121,9 +128,18 @@ export function PropList({ onPlaced }: PropListProps) {
     )
   }
 
+  if (models.length === 0) {
+    return (
+      <div className={styles.propListPlaceholder} style={{ color: theme.textDim, fontSize: theme.fontSize.body }}>
+        {ja.props.searchNoResults}
+      </div>
+    )
+  }
+
   return (
     <div ref={wrapRef} className={styles.propListWrap}>
       <List<RowProps>
+        key={`${selectedCategory}|${deferredQuery}`}
         rowCount={models.length}
         rowHeight={itemSize}
         rowProps={rowProps}

@@ -80,6 +80,38 @@ export function listModelsForCategory(path: string | null, dict: Record<string, 
   return out
 }
 
+/**
+ * カテゴリで絞った `models` に対し、クエリで再フィルタ。
+ * 空白区切りトークンは AND（各トークンがモデル名・ラベル・いずれかのタグに部分一致）。
+ */
+export function filterModelsBySearch(
+  models: string[],
+  dict: Record<string, PropDef>,
+  query: string,
+): string[] {
+  const raw = query.trim().toLowerCase()
+  if (!raw) {
+    return models
+  }
+  const tokens = raw.split(/\s+/).filter(Boolean)
+  if (tokens.length === 0) {
+    return models
+  }
+  return models.filter((model) => {
+    const def = dict[model]
+    if (!def) {
+      return false
+    }
+    const label = (def.label ?? '').toLowerCase()
+    const name = model.toLowerCase()
+    const tagStr = (def.tags ?? [])
+      .map((t) => String(t).toLowerCase())
+      .join(' ')
+    const hay = `${name} ${label} ${tagStr}`
+    return tokens.every((t) => hay.includes(t))
+  })
+}
+
 type PropsState = {
   dictionary: Record<string, PropDef>
   categories: CategoryNode[]
