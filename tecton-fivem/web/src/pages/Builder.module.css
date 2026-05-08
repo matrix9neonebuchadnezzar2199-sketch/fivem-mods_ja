@@ -16,8 +16,9 @@
 }
 
 .panel {
-  /* 左寄せのままビューポート幅をフル活用（M2-b 追補） */
-  width: calc(100vw - 2rem);
+  /* サイドバー20rem + 中央4列(140px×4=35rem) + 余白 ≒ 60rem。
+     画面が狭い場合は viewport に追従。全幅化はゲーム視認性のため撤回済み。 */
+  width: min(60rem, calc(100vw - 2rem));
   min-height: 85vh;
   max-height: 90vh;
   display: flex;
