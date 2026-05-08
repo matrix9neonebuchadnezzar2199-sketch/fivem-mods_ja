@@ -3,7 +3,6 @@
 import type { CSSProperties } from 'react'
 import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Grid } from 'react-window'
-import { fetchNui } from '../lib/nui'
 import { ja } from '../i18n/ja'
 import { theme } from '../theme'
 import { filterModelsBySearch, listModelsForCategory, type PropDef, usePropsStore } from '../store/propsStore'
@@ -25,8 +24,9 @@ const MAX_PROP_GRID_COLUMNS = 3
 type CellProps = {
   models: string[]
   dictionary: Record<string, PropDef>
-  onPick: (model: string) => void
+  onPick: (model: string, category: string) => void
   columnCount: number
+  pendingModel: string | null
 }
 
 type GridCellProps = CellProps & {
@@ -39,7 +39,17 @@ type GridCellProps = CellProps & {
   }
 }
 
-function GridCell({ rowIndex, columnIndex, style, ariaAttributes, models, dictionary, onPick, columnCount }: GridCellProps) {
+function GridCell({
+  rowIndex,
+  columnIndex,
+  style,
+  ariaAttributes,
+  models,
+  dictionary,
+  onPick,
+  columnCount,
+  pendingModel,
+}: GridCellProps) {
   const index = rowIndex * columnCount + columnIndex
   if (index >= models.length) {
     return <div style={style} className={gridStyles.cellEmpty} />
@@ -49,10 +59,18 @@ function GridCell({ rowIndex, columnIndex, style, ariaAttributes, models, dictio
   const label = def?.label ?? model
   const category = def?.category ?? 'furniture'
   const thumbFile = def?.thumb ?? ''
+  const cat = def?.category ?? 'furniture'
+
+  const isPendingPick = pendingModel === model
 
   return (
     <div style={style} {...ariaAttributes} className={gridStyles.cellPad}>
-      <button type="button" className={gridStyles.card} style={{ color: theme.text }} onClick={() => onPick(model)}>
+      <button
+        type="button"
+        className={`${gridStyles.card} ${isPendingPick ? gridStyles.cardSelected : ''}`}
+        style={{ color: theme.text }}
+        onClick={() => onPick(model, cat)}
+      >
         <PropThumb key={model} model={model} thumbFile={thumbFile} label={label} category={category} />
         <div className={gridStyles.meta}>
           <span className={gridStyles.label}>{label}</span>
@@ -65,13 +83,11 @@ function GridCell({ rowIndex, columnIndex, style, ariaAttributes, models, dictio
   )
 }
 
-type PropListProps = {
-  onPlaced: (ok: boolean, id?: number, reason?: string) => void
-}
-
-export function PropList({ onPlaced }: PropListProps) {
+export function PropList() {
   const dictionary = usePropsStore((s) => s.dictionary)
   const selectedCategory = useBuilderStore((s) => s.selectedCategory)
+  const setPendingCatalog = useBuilderStore((s) => s.setPendingCatalog)
+  const pendingModel = useBuilderStore((s) => s.pendingCatalog?.model ?? null)
   const searchQuery = useBuilderStore((s) => s.searchQuery)
   const deferredQuery = useDeferredValue(searchQuery)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -116,21 +132,11 @@ export function PropList({ onPlaced }: PropListProps) {
   const rowCount = useMemo(() => Math.ceil(models.length / columnCount), [models.length, columnCount])
 
   const onPick = useCallback(
-    async (model: string) => {
-      const cat = dictionary[model]?.category ?? selectedCategory ?? 'furniture'
-      const res = await fetchNui<{ ok?: boolean; id?: number; reason?: string }>('createObject', {
-        mode: 'furniture' as const,
-        model,
-        category: cat,
-      })
-      if (res?.ok && typeof res.id === 'number') {
-        onPlaced(true, res.id)
-      } else {
-        const reason = typeof res?.reason === 'string' ? res.reason : 'unknown'
-        onPlaced(false, undefined, reason)
-      }
+    (model: string, category: string) => {
+      const cat = dictionary[model]?.category ?? category ?? selectedCategory ?? 'furniture'
+      setPendingCatalog({ model, category: cat })
     },
-    [onPlaced, dictionary, selectedCategory],
+    [dictionary, selectedCategory, setPendingCatalog],
   )
 
   const cellProps: CellProps = useMemo(
@@ -139,8 +145,9 @@ export function PropList({ onPlaced }: PropListProps) {
       dictionary,
       onPick,
       columnCount,
+      pendingModel,
     }),
-    [models, dictionary, onPick, columnCount],
+    [models, dictionary, onPick, columnCount, pendingModel],
   )
 
   if (!selectedCategory) {

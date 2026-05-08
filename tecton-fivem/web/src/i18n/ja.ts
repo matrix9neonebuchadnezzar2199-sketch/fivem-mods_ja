@@ -33,7 +33,10 @@ export const ja = {
   },
   panel: {
     selection: '選択中のオブジェクト',
-    selectionHint: 'M2-e でトランスフォーム等を表示',
+    catalogPickHint: '一覧でモデルを選ぶと、下に表示されます。見た目を確認してから「設置」でワールドへ出します（ギズモで位置調整して確定）。',
+    placedSelectionHint: 'ワールドで選んだ配置済みの数値調整は M2-e で表示予定です。',
+    place: '設置',
+    cancelPick: '一覧に戻る',
   },
   toast: {
     placeSuccess: '配置しました（ID: {id}）',
