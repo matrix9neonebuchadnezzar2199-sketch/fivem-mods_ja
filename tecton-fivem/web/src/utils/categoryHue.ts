@@ -8,3 +8,8 @@ export function categoryHue(category: string): number {
   }
   return Math.abs(h) % 360
 }
+
+/** 同一カテゴリ内でもモデルごとに色がばらけるようカテゴリとモデル名を混ぜる */
+export function placeholderHue(category: string, model: string): number {
+  return (categoryHue(category) + categoryHue(model)) % 360
+}

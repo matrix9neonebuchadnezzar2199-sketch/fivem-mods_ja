@@ -19,6 +19,8 @@ function gridRowHeightPx(): number {
 }
 
 const MIN_COL_PX = 92
+/** カードが小さすぎないよう列数の上限（実機フィードバック: 約3列） */
+const MAX_PROP_GRID_COLUMNS = 3
 
 type CellProps = {
   models: string[]
@@ -51,7 +53,7 @@ function GridCell({ rowIndex, columnIndex, style, ariaAttributes, models, dictio
   return (
     <div style={style} {...ariaAttributes} className={gridStyles.cellPad}>
       <button type="button" className={gridStyles.card} style={{ color: theme.text }} onClick={() => onPick(model)}>
-        <PropThumb key={model} thumbFile={thumbFile} label={label} category={category} />
+        <PropThumb key={model} model={model} thumbFile={thumbFile} label={label} category={category} />
         <div className={gridStyles.meta}>
           <span className={gridStyles.label}>{label}</span>
           <span className={gridStyles.model} style={{ color: theme.textDim }}>
@@ -98,7 +100,8 @@ export function PropList({ onPlaced }: PropListProps) {
     if (listWidth <= 0) {
       return 1
     }
-    return Math.max(1, Math.floor(listWidth / MIN_COL_PX))
+    const fromWidth = Math.max(1, Math.floor(listWidth / MIN_COL_PX))
+    return Math.min(MAX_PROP_GRID_COLUMNS, fromWidth)
   }, [listWidth])
 
   const columnWidth = useMemo(() => Math.max(1, Math.floor(listWidth / columnCount)), [listWidth, columnCount])

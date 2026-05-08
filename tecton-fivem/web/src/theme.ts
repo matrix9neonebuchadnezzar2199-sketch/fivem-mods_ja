@@ -17,10 +17,10 @@ export const theme = {
   fontSize: {
     small: '0.75rem',
     body: '0.875rem',
-    /** カテゴリツリー等・視認性優先のリスト（body の約2倍、16px基準） */
-    bodyLarge: '1.75rem',
-    /** ツリー右の件数バッジ（small の2倍相当） */
-    treeBadge: '1.5rem',
+    /** カテゴリツリー等（従来 1.75rem から約 75% に縮小して密度調整） */
+    bodyLarge: '1.3125rem',
+    /** ツリー右の件数バッジ（従来 1.5rem の約 75%） */
+    treeBadge: '1.125rem',
     h2: '1.125rem',
     h1: '1.25rem',
   },

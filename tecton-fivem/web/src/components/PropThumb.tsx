@@ -2,19 +2,20 @@
 
 import { useMemo, useState } from 'react'
 import { resolveThumbnailUrl } from '../utils/thumbnailUrl'
-import { categoryHue } from '../utils/categoryHue'
+import { placeholderHue } from '../utils/categoryHue'
 import styles from './PropThumb.module.css'
 
 type PropThumbProps = {
+  model: string
   thumbFile: string
   label: string
   category: string
 }
 
-export function PropThumb({ thumbFile, label, category }: PropThumbProps) {
+export function PropThumb({ model, thumbFile, label, category }: PropThumbProps) {
   const [imgFailed, setImgFailed] = useState(false)
   const src = useMemo(() => resolveThumbnailUrl(thumbFile), [thumbFile])
-  const hue = useMemo(() => categoryHue(category), [category])
+  const hue = useMemo(() => placeholderHue(category, model), [category, model])
   const letter = useMemo(() => {
     const t = label.trim()
     if (t.length > 0) {
