@@ -1,0 +1,8 @@
+{
+  "name": "tecton-fivem",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:reverse": "node tools/build_reverse_index.mjs"
+  }
+}

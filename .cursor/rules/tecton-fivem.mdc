@@ -1,0 +1,22 @@
+---
+description: TECTON（tecton-fivem）作業時の開発日記とナレッジ記録
+globs: tecton-fivem/**/*
+alwaysApply: false
+---
+
+# TECTON（tecton-fivem）
+
+## 開発日記
+
+- `tecton-fivem/` 配下で**実装・調査・仕様変更**をしたら、その日の作業内容を **`tecton-fivem/YYYY-MM-DD_HHMM_開発日記.md`** に追記する（UTF-8、BOM なし）。
+- ファイル名の日時は作業完了時点のローカル時刻でよい。
+
+## ナレッジ・解決手法
+
+- **再利用したいノウハウ**（DB・NUI・FiveM 固有のハマり、ビルド手順など）は、開発日記に書くだけでなく、必要なら **`docs/ja/`** の該当ドキュメントや **`CONTRIBUTING.md`** に反映し、検索できる形にする。
+
+## 逆引きヘルプ
+
+- 原稿は **`docs/ja/reverse-index.md`**（SPDX コメント付き）。
+- JSON 生成: リポジトリルートで `npm run build:reverse`（`tecton-fivem/package.json` のスクリプト。カレントは `tecton-fivem/`）。
+- 成果物: `docs/ja/reverse-index.json` と `web/src/data/reverse-index.json`（同一内容）。

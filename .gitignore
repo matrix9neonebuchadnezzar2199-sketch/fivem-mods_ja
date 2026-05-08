@@ -14,8 +14,9 @@ desktop.ini
 .vscode/
 .idea/
 
-# GitHub 公開リポには含めない（ローカル開発用のみ。`.cursor/rules` も含めてコミットしない）
-.cursor/
+# GitHub 公開リポ: `.cursor` は原則除外。TECTON 用ルールファイルのみ追跡
+.cursor/**
+!.cursor/rules/tecton-fivem.mdc
 # 各所の docs/ 配下は原則無視（ルート docs/STYLEGUIDE.md と jp-tcgbook/docs は例外）
 docs/*
 !docs/STYLEGUIDE.md
