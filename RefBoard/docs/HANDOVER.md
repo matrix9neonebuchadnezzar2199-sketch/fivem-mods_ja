@@ -2,14 +2,16 @@
 
 **作成日**: 2026-05-08（同日中の大幅改訂）
 **初版作成時点**: v0.6.7（Sprint 09 Phase C 完了直後）
-**第 2 版時点**: **v0.8.3**（Sprint 09 完了済み・運用フェーズ突入）
-**作成時点のリポジトリ**: `origin/main`、`fxmanifest.lua` の `version '0.8.3'`、`CHANGELOG.md` 先頭が v0.8.3
+**第 2 版時点**: **v0.8.4**（Sprint 09 完了済み・運用フェーズ・フォント倍率 Settings 化まで反映）
+**作成時点のリポジトリ**: `origin/main`、`fxmanifest.lua` の `version '0.8.4'`、`CHANGELOG.md` 先頭が v0.8.4
 
 ---
 
 ## 0. 第 2 版で変わったこと（読み飛ばし可）
 
-初版（v0.6.7 時点）は「Sprint 09 Phase D を次にやる」前提で書かれていたが、その後の同日中に Phase D / E（v0.6.8 / v0.7.0）でヘルプ Sprint 09 をクローズし、さらに **v0.7.1〜v0.8.3 まで 12 リリースぶんの不具合修正と運用改善**が積まれた。第 2 版ではリリース履歴・ディレクトリ・既知 TODO・ロードマップを現状（v0.8.3）に合わせて全面更新している。初版にあった「Phase D の記事 8 本」「Phase E の英語化」は**すでに完了済み**として閉じた。
+初版（v0.6.7 時点）は「Sprint 09 Phase D を次にやる」前提で書かれていたが、その後の同日中に Phase D / E（v0.6.8 / v0.7.0）でヘルプ Sprint 09 をクローズし、さらに **v0.7.1〜v0.8.3 まで 12 リリースぶんの不具合修正と運用改善**が積まれた。第 2 版ではリリース履歴・ディレクトリ・既知 TODO・ロードマップを現状（v0.8.4）に合わせて全面更新している。初版にあった「Phase D の記事 8 本」「Phase E の英語化」は**すでに完了済み**として閉じた。
+
+- 2026-05-09 追記: v0.8.4（フォント倍率 Settings 化）完了に合わせて §4 / §7 / §9 / §10 を微修正。
 
 ---
 
@@ -46,11 +48,11 @@ npm run build  # FiveM 配布用（dist/）
 
 ---
 
-## 3. ディレクトリ構成（v0.8.3 現在）
+## 3. ディレクトリ構成（v0.8.4 現在）
 
 ```
 RefBoard/
-├── fxmanifest.lua                  # version '0.8.3'、files に seed_test_5teams_15roster.sql を含む
+├── fxmanifest.lua                  # version '0.8.4'、files に seed_test_5teams_15roster.sql を含む
 ├── config.lua                      # AutoCreateSchema / SeedDemoTeamsOnStart / EnableTestCommands など
 ├── CHANGELOG.md
 ├── server/
@@ -79,7 +81,7 @@ RefBoard/
 │   ├── sprints/sprint_08_marquee.md
 │   └── testing/{release_test_plan, test_results, known_issues, transaction_test}.md
 └── web/
-    ├── package.json                # version 0.8.3
+    ├── package.json                # version 0.8.4
     └── src/
         ├── views/
         │   ├── MainLayout.vue          ← ContextHelpPanel をここでマウント、ロックハートビートもここから
@@ -117,7 +119,7 @@ RefBoard/
 
 ---
 
-## 4. リリース履歴（要約・v0.8.3 まで）
+## 4. リリース履歴（要約・v0.8.4 まで）
 
 | 版 | 日付 | 主内容 |
 |----|------|-------|
@@ -143,6 +145,7 @@ RefBoard/
 | v0.8.1 | 05-08 | NUI モックを 5 チーム × 15 人に拡張、`STORAGE_VERSION` 1→2、`sql/seed_test_5teams_15roster.sql` 追加 |
 | v0.8.2 | 05-08 | ルート `font-size` 150%→200% に戻す（CEF フィードバック） |
 | **v0.8.3** | 05-08 | **`server/demo_seed.lua` で 5 チーム × 15 人 SQL を自動実行（`Config.SeedDemoTeamsOnStart`）。`STORAGE_VERSION` 2→3** |
+| v0.8.4 | 05-09 | フォント倍率を Settings から切替（100/150/200%、既定 200）。`html.style.fontSize` を JS で動的反映、FOUC は `index.html` インラインで先読み |
 
 詳細は `RefBoard/CHANGELOG.md` を参照。
 
@@ -164,7 +167,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 ---
 
-## 6. v0.8.3 時点で動いている重要な仕組み
+## 6. v0.8.4 時点で動いている重要な仕組み
 
 第 2 版で新たに「忘れやすいので明文化」した設計上の決定。
 
@@ -180,13 +183,13 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 **エラーコード**: 構造化 `code`（E1xxx〜E5xxx）+ `error`（レガシー文字列）の両持ち。NUI 側の `errorCodeMapper.ts` が両方から記事 slug を解決。現状の主要マッピングは `E1003 → trouble_e1003_lock_held`、`E2005 → match_manual_score_edit`、`E3006 → （未配線・後述）`、`E4003 / tx_failed → trouble_autosave_failed`。
 
-**フォント倍率の往復**: v0.8.0 で 200%→150%、v0.8.2 で 150%→200% に戻している。CEF 上の見え方で運用フィードバックが分かれており、将来 `Settings` で切り替えられるようにする案が候補に挙がっている（後述ロードマップ参照）。
+**フォント倍率（v0.8.4）**: v0.8.0 / v0.8.2 でルート `font-size` を往復したのち、**v0.8.4 で `Settings` から 100% / 150% / 200% を選択**可能にした。`stores/settings.ts` の `rootFontScale`（`localStorage` の `refboard_settings`）と `App.vue` の `watchEffect` で `html.style.fontSize` を更新。初回 FOUC は `web/index.html` の `<head>` インラインで `localStorage` を先読み。
 
 **ロックと再編集**: `editor_locks` はハートビートタイムアウトで自動解放。`Match.reopen` で finished → in_progress に戻せる（`reopened_*` 記録）。再編集は何度でも可能、最後の reopen のみカラムに残る（履歴は `edit_logs`）。
 
 ---
 
-## 7. 既知の TODO（v0.8.3 時点で未消化）
+## 7. 既知の TODO（v0.8.4 時点で未消化）
 
 `docs/sprints/sprint_07_uiux_findings.md` 集約のものから、初版以降にも消えていない項目を抽出。
 
@@ -194,7 +197,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 UI 機能で未着手なのが、PK 戦のキャンセル / 先攻チーム間違いの取り消し UI（Sprint 10 候補）、ロスタイム表記（`45+2` 等）の入力許容、手動スコア編集での PK 内訳の直し、選手状態セルのタップ切替（出場 → 警告中…、監査ログ付き専用 NetEvent が必要）、オートセーブ失敗時の「再試行」ボタン配線、ゴール取消の `Ctrl+Z` ショートカット配線。
 
-v0.8.x で発生した新規 TODO として、`E3006` (`player_has_events`) のヘルプ記事（`errorCodeMapper.ts` の slug 配線含む）、フォント倍率を `Settings` から選択できる UI、ビルド警告で出ている `index.js` 肥大化のチャンク分割、`STORAGE_VERSION` 上げに伴う開発者向け案内（READMEで一行触れる程度でよい）。
+v0.8.x で発生した新規 TODO として、`E3006` (`player_has_events`) のヘルプ記事（`errorCodeMapper.ts` の slug 配線含む）、ビルド警告で出ている `index.js` 肥大化のチャンク分割、`STORAGE_VERSION` 上げに伴う開発者向け案内（READMEで一行触れる程度でよい）の 3 点。
 
 ---
 
@@ -208,19 +211,19 @@ v0.8.x で発生した新規 TODO として、`E3006` (`player_has_events`) の�
 
 ---
 
-## 9. 次の作業ロードマップ（v0.8.3 → v1.0.0）
+## 9. 次の作業ロードマップ（v0.8.4 → v1.0.0）
 
 Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB ブートストラップ系」も区切り、v0.8.x で「テストデータ・運用整備」も入った。ここからは **実機テストに向けた残課題の刈り取り** と **ユーザー要望ベースの小改善** が主軸になる。
 
-### 短期（v0.8.4 〜 v0.8.6 想定 / 1 リリース 1〜3 項目）
+### 短期（v0.8.5 〜 v0.8.6 想定 / 1 リリース 1〜3 項目）
+
+**v0.8.4（完了・2026-05-09）**: フォント倍率を Settings から切替可能に。詳細は CHANGELOG / §4 参照。
 
 UI 設定の作り込みと、v0.8.x で残した「記事側で吸収しきれていない」TODO を片付けるフェーズ。
 
-**v0.8.4 候補（フォント倍率の Settings 化）**: `stores/settings.ts` に `rootFontScale`（`100` / `150` / `200`、既定 `200`、`localStorage` 永続化）を追加し、`App.vue` ルートで `style="font-size: ${scale}%"` を当てる。`main.css` の `html { font-size: 200% }` は削除して JS 側に集約。`Settings.vue` にラジオ UI を追加、日英 i18n（`settings.font_scale.*`）。`prefers-reduced-motion` のような OS 設定連動は不要。受け入れ基準は「ラジオ変更で即座に反映される」「リロード後も維持」「nuiMock でも動く」。
+**v0.8.5（次の作業）— `E3006` ヘルプ記事と配線**: `web/src/help/ja/articles/trouble_e3006_player_has_events.md` と英語版を追加（試合メンバーを削除しようとして「タイムラインに参照あり」で失敗したときの対処と回避策）。`errorCodeMapper.ts` の `ERROR_CODE_TO_HELP_SLUG` に `E3006` を追加し、`reverse_index.json` のトラブル系カテゴリに登録。`context_map.json` の `match_detail` にも追加。受け入れ基準は「試合詳細で削除を試みて E3006 が出たトーストから記事へ遷移できる」「日英で同 slug」。
 
-**v0.8.5 候補（`E3006` ヘルプ記事と配線）**: `web/src/help/ja/articles/trouble_e3006_player_has_events.md` と英語版を追加（試合メンバーを削除しようとして「タイムラインに参照あり」で失敗したときの対処と回避策）。`errorCodeMapper.ts` の `ERROR_CODE_TO_HELP_SLUG` に `E3006` を追加し、`reverse_index.json` のトラブル系カテゴリに登録。`context_map.json` の `match_detail` にも追加。受け入れ基準は「試合詳細で削除を試みて E3006 が出たトーストから記事へ遷移できる」「日英で同 slug」。
-
-**v0.8.6 候補（ビルドチャンク分割）**: 現状 `index.js` が肥大化して Vite が警告を出している。`vite.config.ts` の `build.rollupOptions.output.manualChunks` で `vue-router` / `pinia` / `vue-i18n` / `marked` + `dompurify` / `fuse.js` / ヘルプ記事 glob を分割し、警告を消す。受け入れ基準は「`npm run build` が警告なし」「FiveM 実機でも従来どおり起動する（NUI ロード時に複数チャンクをフェッチできる）」。
+**v0.8.6（その次）— ビルドチャンク分割**: 現状 `index.js` が肥大化して Vite が警告を出している。`vite.config.ts` の `build.rollupOptions.output.manualChunks` で `vue-router` / `pinia` / `vue-i18n` / `marked` + `dompurify` / `fuse.js` / ヘルプ記事 glob を分割し、警告を消す。受け入れ基準は「`npm run build` が警告なし」「FiveM 実機でも従来どおり起動する（NUI ロード時に複数チャンクをフェッチできる）」。
 
 ### 中期（v0.9.0 〜 v0.9.1 / 実機テストフェーズ）
 
@@ -244,9 +247,9 @@ UI 設定の作り込みと、v0.8.x で残した「記事側で吸収しきれ�
 
 > **管理場所**: `https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/tree/main/RefBoard`
 > **作業ディレクトリ**: `H:\CURSOR\Dev\fivem-mods_ja\RefBoard`
-> **現状**: v0.8.3。Sprint 09（ヘルプ）と v0.7.x ロック・DB ブートストラップ系修正、v0.8.x テストデータ整備までクローズ。次は v0.8.4 候補（フォント倍率の Settings 化）か v0.8.5 候補（`E3006` ヘルプ記事）から着手したい。引継資料は `docs/HANDOVER.md` 第 2 版。
+> **現状**: v0.8.4。Sprint 09（ヘルプ）と v0.7.x ロック・DB ブートストラップ系修正、v0.8.x テストデータ整備＋フォント倍率 Settings 化までクローズ。次は v0.8.5 候補（`E3006` ヘルプ記事と配線）から着手したい。引継資料は `docs/HANDOVER.md` 第 2 版。
 
-短く済ませたい場合は「**v0.8.4 いって**」「**E3006 記事いって**」「**実機テスト準備いって**」のいずれかでスコープが一意に決まる。
+短く済ませたい場合は「**E3006 記事いって**」「**チャンク分割いって**」「**実機テスト準備いって**」のいずれかでスコープが一意に決まる。
 
 ---
 
@@ -254,3 +257,4 @@ UI 設定の作り込みと、v0.8.x で残した「記事側で吸収しきれ�
 
 - 2026-05-08（初版）: Sprint 09 Phase C 完了時点（v0.6.7）。
 - 2026-05-08（第 2 版）: 同日中に Sprint 09 完了（v0.7.0）と運用フェーズ突入（v0.7.1〜v0.8.3）を反映。リリース履歴・既知 TODO・ロードマップを v0.8.3 起点で全面書き直し。
+- 2026-05-09: v0.8.4 完了反映（リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
