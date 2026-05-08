@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  /*
+   * FiveM CEF では UI 全体が極小に見えることがある。
+   * ルートの font-size を 2 倍にすると、Tailwind の rem 系（text-* / p-* / gap 等）が一括で拡大し視認性が上がる。
+   */
+  font-size: 200%;
+}
+
 html,
 body,
 #app {
