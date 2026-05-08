@@ -1,2 +1,2 @@
 /** UI 表示・ヘルスチェック送信用（リリース時に fxmanifest と揃える） */
-export const REFBOARD_UI_VERSION = '0.8.5'
+export const REFBOARD_UI_VERSION = '0.8.6'

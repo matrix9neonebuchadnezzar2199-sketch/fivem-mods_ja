@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.6 — 2026-05-09
+
+- **chore（ビルド）**: Vite の `build.rollupOptions.output.manualChunks` を関数形式で導入し、ヘルプ記事 Markdown（`help-articles-ja` / `help-articles-en` / `help-meta`）と主要ベンダ（`vendor-markdown` = marked + dompurify、`vendor-search` = fuse.js、`vendor-i18n` / `vendor-router` / `vendor-pinia` / `vendor-headlessui` / `vendor-vueuse` / `vendor`）を独立チャンクに分割。`index.js` の 500kB 超警告を解消。
+- **chore（ビルド）**: `chunkFileNames` に `[hash]` を付与してチャンクのキャッシュ衝突を回避（エントリ `index.js` はハッシュなしのまま維持し、`index.html` の参照を安定化）。`chunkSizeWarningLimit` を 600 に引き上げ、分割後の警告ノイズを抑制。
+- **互換**: ランタイム挙動の変更なし。FiveM 側は `fxmanifest.lua` の `files = { 'web/dist/**/*' }` で新チャンクを自動的に配信。
+
 ## v0.8.5 — 2026-05-09
 
 - **feat（ヘルプ）**: `E3006`（`player_has_events`）の専用記事を日英で追加（`trouble_e3006_player_has_events.md`）。試合メンバー削除時に「タイムラインに参照あり」で失敗したときの解決手順・取消フロー・FAQ を収録。

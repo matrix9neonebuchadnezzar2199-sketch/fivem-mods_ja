@@ -2,17 +2,18 @@
 
 **作成日**: 2026-05-08（同日中の大幅改訂）
 **初版作成時点**: v0.6.7（Sprint 09 Phase C 完了直後）
-**第 2 版時点**: **v0.8.5**（Sprint 09 完了済み・運用フェーズ・フォント Settings・`E3006` ヘルプまで反映）
-**作成時点のリポジトリ**: `origin/main`、`fxmanifest.lua` の `version '0.8.5'`、`CHANGELOG.md` 先頭が v0.8.5
+**第 2 版時点**: **v0.8.6**（Sprint 09 完了済み・運用フェーズ・v0.8.x 運用整備・ビルドチャンク分割まで反映）
+**作成時点のリポジトリ**: `origin/main`、`fxmanifest.lua` の `version '0.8.6'`、`CHANGELOG.md` 先頭が v0.8.6
 
 ---
 
 ## 0. 第 2 版で変わったこと（読み飛ばし可）
 
-初版（v0.6.7 時点）は「Sprint 09 Phase D を次にやる」前提で書かれていたが、その後の同日中に Phase D / E（v0.6.8 / v0.7.0）でヘルプ Sprint 09 をクローズし、さらに **v0.7.1〜v0.8.3 まで 12 リリースぶんの不具合修正と運用改善**が積まれた。第 2 版ではリリース履歴・ディレクトリ・既知 TODO・ロードマップを現状（v0.8.5）に合わせて全面更新している。初版にあった「Phase D の記事 8 本」「Phase E の英語化」は**すでに完了済み**として閉じた。
+初版（v0.6.7 時点）は「Sprint 09 Phase D を次にやる」前提で書かれていたが、その後の同日中に Phase D / E（v0.6.8 / v0.7.0）でヘルプ Sprint 09 をクローズし、さらに **v0.7.1〜v0.8.3 まで 12 リリースぶんの不具合修正と運用改善**が積まれた。第 2 版ではリリース履歴・ディレクトリ・既知 TODO・ロードマップを現状（v0.8.6）に合わせて全面更新している。初版にあった「Phase D の記事 8 本」「Phase E の英語化」は**すでに完了済み**として閉じた。
 
 - 2026-05-09 追記: v0.8.4（フォント倍率 Settings 化）完了に合わせて §4 / §7 / §9 / §10 を微修正。
 - 2026-05-09 追記: v0.8.5（`E3006` ヘルプ記事と配線）完了に合わせて §4 / §7 / §9 / §10 を微修正。
+- 2026-05-09 追記: v0.8.6（ビルドチャンク分割）完了に合わせて §4 / §7 / §9 / §10 を微修正。
 
 ---
 
@@ -49,11 +50,11 @@ npm run build  # FiveM 配布用（dist/）
 
 ---
 
-## 3. ディレクトリ構成（v0.8.5 現在）
+## 3. ディレクトリ構成（v0.8.6 現在）
 
 ```
 RefBoard/
-├── fxmanifest.lua                  # version '0.8.5'、files に seed_test_5teams_15roster.sql を含む
+├── fxmanifest.lua                  # version '0.8.6'、files に seed_test_5teams_15roster.sql を含む
 ├── config.lua                      # AutoCreateSchema / SeedDemoTeamsOnStart / EnableTestCommands など
 ├── CHANGELOG.md
 ├── server/
@@ -82,7 +83,8 @@ RefBoard/
 │   ├── sprints/sprint_08_marquee.md
 │   └── testing/{release_test_plan, test_results, known_issues, transaction_test}.md
 └── web/
-    ├── package.json                # version 0.8.5
+    ├── package.json                # version 0.8.6
+    ├── vite.config.ts              # manualChunks（help-articles-ja/en、vendor 分割、v0.8.6）
     └── src/
         ├── views/
         │   ├── MainLayout.vue          ← ContextHelpPanel をここでマウント、ロックハートビートもここから
@@ -120,7 +122,7 @@ RefBoard/
 
 ---
 
-## 4. リリース履歴（要約・v0.8.5 まで）
+## 4. リリース履歴（要約・v0.8.6 まで）
 
 | 版 | 日付 | 主内容 |
 |----|------|-------|
@@ -148,6 +150,7 @@ RefBoard/
 | **v0.8.3** | 05-08 | **`server/demo_seed.lua` で 5 チーム × 15 人 SQL を自動実行（`Config.SeedDemoTeamsOnStart`）。`STORAGE_VERSION` 2→3** |
 | v0.8.4 | 05-09 | フォント倍率を Settings から切替（100/150/200%、既定 200）。`html.style.fontSize` を JS で動的反映、FOUC は `index.html` インラインで先読み |
 | v0.8.5 | 05-09 | `E3006`（`player_has_events`）専用ヘルプを日英追加。`errorCodeMapper` / `reverse_index` / `index` / `context_map`（`match_detail`）に配線 |
+| v0.8.6 | 05-09 | Vite `manualChunks` でヘルプ記事・主要ベンダを分割。`index.js` 500kB 超警告解消。子チャンクは `assets/*-[hash].js`（`fxmanifest` の `web/dist/**/*` で配信） |
 
 詳細は `RefBoard/CHANGELOG.md` を参照。
 
@@ -169,7 +172,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 ---
 
-## 6. v0.8.5 時点で動いている重要な仕組み
+## 6. v0.8.6 時点で動いている重要な仕組み
 
 第 2 版で新たに「忘れやすいので明文化」した設計上の決定。
 
@@ -191,7 +194,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 ---
 
-## 7. 既知の TODO（v0.8.5 時点で未消化）
+## 7. 既知の TODO（v0.8.6 時点で未消化）
 
 `docs/sprints/sprint_07_uiux_findings.md` 集約のものから、初版以降にも消えていない項目を抽出。
 
@@ -199,7 +202,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 UI 機能で未着手なのが、PK 戦のキャンセル / 先攻チーム間違いの取り消し UI（Sprint 10 候補）、ロスタイム表記（`45+2` 等）の入力許容、手動スコア編集での PK 内訳の直し、選手状態セルのタップ切替（出場 → 警告中…、監査ログ付き専用 NetEvent が必要）、オートセーブ失敗時の「再試行」ボタン配線、ゴール取消の `Ctrl+Z` ショートカット配線。
 
-v0.8.x で残る新規 TODO として、ビルド警告で出ている `index.js` 肥大化のチャンク分割、`STORAGE_VERSION` 上げに伴う開発者向け案内（READMEで一行触れる程度でよい）の 2 点。
+v0.8.x で残っていた **`STORAGE_VERSION` 上げに伴う開発者向け案内**は、README に一行触れる程度で吸収可能な軽微項目として扱ってよい（未記載なら追記のみ）。
 
 ---
 
@@ -213,21 +216,19 @@ v0.8.x で残る新規 TODO として、ビルド警告で出ている `index.js
 
 ---
 
-## 9. 次の作業ロードマップ（v0.8.5 → v1.0.0）
+## 9. 次の作業ロードマップ（v0.8.6 → v1.0.0）
 
-Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB ブートストラップ系」も区切り、v0.8.x で「テストデータ・運用整備」も入った。ここからは **実機テストに向けた残課題の刈り取り** と **ユーザー要望ベースの小改善** が主軸になる。
+Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB ブートストラップ系」も区切り、v0.8.x で「テストデータ・運用整備・フォント・E3006 ヘルプ・ビルド分割」まで完了した。**次の主戦場は中期の v0.9.0（実機テスト）**。
 
-### 短期（v0.8.6 想定 / 1 リリース 1〜3 項目）
+### 短期（v0.8.x 運用整備 — **完了**）
 
 **v0.8.4（完了・2026-05-09）**: フォント倍率を Settings から切替可能に。詳細は CHANGELOG / §4 参照。
 
 **v0.8.5（完了・2026-05-09）**: `E3006`（`player_has_events`）専用記事を日英で追加し、`errorCodeMapper` / `reverse_index` / `index` / `context_map` に配線。詳細は CHANGELOG / §4 参照。
 
-UI 設定の作り込みと、v0.8.x で残した「記事側で吸収しきれていない」TODO を片付けるフェーズ。
+**v0.8.6（完了・2026-05-09）**: `vite.config.ts` の `manualChunks`（関数形式）でヘルプ記事 Markdown・JSON メタ・主要ベンダを分割し、`index.js` の 500kB 超警告を解消。詳細は CHANGELOG / §4 参照。
 
-**v0.8.6（次の作業）— ビルドチャンク分割**: 現状 `index.js` が肥大化して Vite が警告を出している。`vite.config.ts` の `build.rollupOptions.output.manualChunks` で `vue-router` / `pinia` / `vue-i18n` / `marked` + `dompurify` / `fuse.js` / ヘルプ記事 glob を分割し、警告を消す。受け入れ基準は「`npm run build` が警告なし」「FiveM 実機でも従来どおり起動する（NUI ロード時に複数チャンクをフェッチできる）」。
-
-### 中期（v0.9.0 〜 v0.9.1 / 実機テストフェーズ）
+### 中期（v0.9.0 〜 v0.9.1 / 実機テストフェーズ）— **次の作業**
 
 **v0.9.0（実機テスト・結果記録）**: `docs/testing/release_test_plan.md` のシナリオを実機で消化し、結果を `docs/testing/test_results.md` に記録。`Config.EnableTestCommands=true` で `refboard_test_transaction` 等を回す。`docs/testing/known_issues.md` に新規発見を追記。複数審判による同時編集・編集ロックの取り合い・F6 開閉のフォーカス・小窓と歩行モードの切替・PK 戦・ハーフ別スコア・`Match.reopen` を最低限通す。
 
@@ -249,9 +250,9 @@ UI 設定の作り込みと、v0.8.x で残した「記事側で吸収しきれ�
 
 > **管理場所**: `https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/tree/main/RefBoard`
 > **作業ディレクトリ**: `H:\CURSOR\Dev\fivem-mods_ja\RefBoard`
-> **現状**: v0.8.5。Sprint 09（ヘルプ）と v0.7.x ロック・DB ブートストラップ系修正、v0.8.x テストデータ整備＋フォント倍率 Settings 化＋`E3006` ヘルプ記事までクローズ。次は v0.8.6 候補（ビルドチャンク分割）から着手したい。引継資料は `docs/HANDOVER.md` 第 2 版。
+> **現状**: v0.8.6。Sprint 09（ヘルプ）と v0.7.x ロック・DB ブートストラップ系修正、v0.8.x 運用整備（テストデータ自動投入・フォント倍率 Settings 化・`E3006` ヘルプ・ビルドチャンク分割）まで完了。次は **v0.9.0（実機テスト）の準備**から着手したい。引継資料は `docs/HANDOVER.md` 第 2 版。
 
-短く済ませたい場合は「**チャンク分割いって**」「**STORAGE 案内いって**」「**実機テスト準備いって**」のいずれかでスコープが一意に決まる。
+短く済ませたい場合は「**実機テスト準備いって**」でスコープが一意に決まる（README の `STORAGE_VERSION` 一行など軽微追記はその中で扱ってよい）。
 
 ---
 
@@ -261,3 +262,4 @@ UI 設定の作り込みと、v0.8.x で残した「記事側で吸収しきれ�
 - 2026-05-08（第 2 版）: 同日中に Sprint 09 完了（v0.7.0）と運用フェーズ突入（v0.7.1〜v0.8.3）を反映。リリース履歴・既知 TODO・ロードマップを v0.8.3 起点で全面書き直し。
 - 2026-05-09: v0.8.4 完了反映（リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
 - 2026-05-09: v0.8.5 完了反映（`E3006` ヘルプ・配線。リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
+- 2026-05-09: v0.8.6 完了反映（ビルドチャンク分割。リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
