@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.3 — 2026-05-08
+
+- **fix（NUI）**: 編集ロック取得が **`db_query_failed` 等の DB エラー**で失敗したときに、**「他のユーザーが編集中」モーダル**を出さない。トーストで **install.sql / DB** を案内する（`Launcher.vue` / `MatchList.vue`）。分類は `utils/lockAcquireErrors.ts`。
+
 ## v0.7.2 — 2026-05-08
 
 - **fix（起動）**: `editor_locks` が未作成（`install.sql` 未実行）の DB でも **`ensure RefBoard` でスクリプトが落ちない**よう、`lock.lua` の `clearRow` / `readRow` / `writeRow` / ハートビート / `playerDropped` フォールバックを **`pcall` で包み**、失敗時は `Logger.warn` とクライアント向けエラー（`db_error` / `E4002`）に留める。

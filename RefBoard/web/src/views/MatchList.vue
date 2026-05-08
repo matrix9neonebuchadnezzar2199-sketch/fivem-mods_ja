@@ -9,6 +9,7 @@ import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
+import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -72,6 +73,18 @@ async function openEdit(id: number) {
     void router.push({ name: 'match-detail', params: { id: String(id) } })
     return
   }
+  if (r.error === 'timeout') {
+    toast(t('launcher.lock_acquire_timeout'), 'error', { ms: 6000 })
+    return
+  }
+  if (isDbOrInfraAcquireError(r.error)) {
+    toast(t('launcher.db_or_config_error'), 'error', { ms: 14000 })
+    return
+  }
+  if (!isPeerLockHeldError(r.error)) {
+    toast(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', { ms: 8000 })
+    return
+  }
   lockPeer.value = r.holder?.name || t('launcher.unknown_editor')
   pendingOpenId.value = id
   showLock.value = true
@@ -127,6 +140,18 @@ async function confirmReopen() {
   if (!er.ok) {
     showReopen.value = false
     reopenId.value = null
+    if (er.error === 'timeout') {
+      toast(t('launcher.lock_acquire_timeout'), 'error', { ms: 6000 })
+      return
+    }
+    if (isDbOrInfraAcquireError(er.error)) {
+      toast(t('launcher.db_or_config_error'), 'error', { ms: 14000 })
+      return
+    }
+    if (!isPeerLockHeldError(er.error)) {
+      toast(t('launcher.lock_acquire_other', { error: er.error ?? 'unknown' }), 'error', { ms: 8000 })
+      return
+    }
     lockPeer.value = er.holder?.name || t('launcher.unknown_editor')
     pendingOpenId.value = id
     showLock.value = true

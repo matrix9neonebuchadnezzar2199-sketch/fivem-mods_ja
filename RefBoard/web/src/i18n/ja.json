@@ -29,6 +29,9 @@
     "lock_open_view": "閲覧モードで開く",
     "lock_back": "戻る",
     "unknown_editor": "他のユーザー",
+    "lock_acquire_timeout": "編集ロックの応答がタイムアウトしました。もう一度お試しください。",
+    "db_or_config_error": "データベースに接続できないか、テーブルが未作成です。oxmysql が使っている DB で sql/install.sql を実行し、サーバーで refresh してから RefBoard を再起動してください。",
+    "lock_acquire_other": "編集ロックを取得できませんでした（{error}）。管理者にログを確認してもらうか、ヘルプのトラブルシューティングを参照してください。",
     "debug_trace": "🐛 デバッグログを有効化（再読込）",
     "back_to_game": "ゲーム画面に戻る（ツールを閉じる）"
   },

@@ -8,6 +8,7 @@ import { useToast } from '../composables/useToast'
 import { REFBOARD_UI_VERSION } from '../constants/version'
 import { getResourceName } from '../composables/useNui'
 import { DEFAULT_EDIT_PASSWORD } from '../stores/session'
+import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -30,6 +31,18 @@ async function goEdit() {
   }
   if (r.error === 'session_timeout' || r.error === 'session_failed') {
     toastPush(t('launcher.session_failed'), 'error', 4000)
+    return
+  }
+  if (r.error === 'timeout') {
+    toastPush(t('launcher.lock_acquire_timeout'), 'error', 6000)
+    return
+  }
+  if (isDbOrInfraAcquireError(r.error)) {
+    toastPush(t('launcher.db_or_config_error'), 'error', 14000)
+    return
+  }
+  if (!isPeerLockHeldError(r.error)) {
+    toastPush(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', 8000)
     return
   }
   if (r.holder?.name) {
