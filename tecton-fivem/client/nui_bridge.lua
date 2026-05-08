@@ -194,14 +194,33 @@ RegisterNUICallback('updateObject', function(data, cb)
 end)
 
 RegisterNUICallback('deleteObject', function(data, cb)
-    if type(data) ~= 'table' or not data.id then
+    if type(data) ~= 'table' or data.id == nil then
         SendNUIMessage({ action = 'opAck', op = 'delete', ok = false, reason = 'bad_payload' })
         cb({ ok = false, reason = 'bad_payload' })
         return
     end
-    local ok = lib.callback.await('tecton:op:delete', false, data.id)
+    local hid = tonumber(data.id)
+    if not hid then
+        SendNUIMessage({ action = 'opAck', op = 'delete', ok = false, reason = 'bad_payload' })
+        cb({ ok = false, reason = 'bad_payload' })
+        return
+    end
+    local ok = lib.callback.await('tecton:op:delete', false, hid)
     if ok then
-        SendNUIMessage({ action = 'opAck', op = 'delete', ok = true, id = data.id })
+        local client = getState()
+        local handle = resolveSpawnedHandle(client, hid)
+        local placement = TectonPlacement
+        if handle and placement and type(placement.removeObject) == 'function' then
+            placement.removeObject(handle)
+        end
+        client.spawnedHandles[hid] = nil
+        client.spawnedHandles[tostring(hid)] = nil
+        local sel = tonumber(client.selected)
+        if sel == hid then
+            client.selected = nil
+        end
+        SendNUIMessage({ action = 'selectedObject', selected = nil, object = nil })
+        SendNUIMessage({ action = 'opAck', op = 'delete', ok = true, id = hid })
         cb({ ok = true })
     else
         SendNUIMessage({ action = 'opAck', op = 'delete', ok = false })

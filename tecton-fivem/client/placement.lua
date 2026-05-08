@@ -131,4 +131,24 @@ function M.removeObject(handle)
     end
 end
 
+--- `spawnedHandles` を逆引きして DB のオブジェクト id を返す（レイキャスト選択用）。
+---@param handle integer
+---@return integer|nil
+function M.findSpawnedIdByHandle(handle)
+    if not handle or handle == 0 or not DoesEntityExist(handle) then
+        return nil
+    end
+    local client = TectonClient
+    local t = client and client.spawnedHandles
+    if type(t) ~= 'table' then
+        return nil
+    end
+    for id, h in pairs(t) do
+        if h == handle then
+            return tonumber(id) or id
+        end
+    end
+    return nil
+end
+
 TectonPlacement = M

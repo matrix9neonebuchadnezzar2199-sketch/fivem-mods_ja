@@ -203,3 +203,55 @@ lib.addKeybind({
         ToggleBuilder()
     end,
 })
+
+--- 視線方向のカプセルレイキャストで配置済み TECTON オブジェクトを選択（M2-e）。
+local function pickTectonObjectRaycast()
+    local placement = TectonPlacement
+    if not placement or type(placement.findSpawnedIdByHandle) ~= 'function' then
+        return
+    end
+    local ped = PlayerPedId()
+    if ped == 0 or not DoesEntityExist(ped) then
+        return
+    end
+    local c = GetEntityCoords(ped)
+    local f = GetEntityForwardVector(ped)
+    local zOff = 0.65
+    local len = 12.0
+    local x1, y1, z1 = c.x, c.y, c.z + zOff
+    local x2, y2, z2 = x1 + f.x * len, y1 + f.y * len, z1 + f.z * len
+    local ray = StartShapeTestCapsule(x1, y1, z1, x2, y2, z2, 0.5, 511, ped, 7)
+    local retval, hit, _, _, entityHit = GetShapeTestResult(ray)
+    local deadline = GetGameTimer() + 50
+    while retval == 1 and GetGameTimer() < deadline do
+        Wait(0)
+        retval, hit, _, _, entityHit = GetShapeTestResult(ray)
+    end
+    if retval ~= 2 or not hit or not entityHit or entityHit == 0 then
+        lib.notify({ description = 'TECTON object ではありません', type = 'error' })
+        return
+    end
+    local id = placement.findSpawnedIdByHandle(entityHit)
+    if not id then
+        lib.notify({ description = 'TECTON object ではありません', type = 'error' })
+        return
+    end
+    local obj = lib.callback.await('tecton:object:get', false, id)
+    if not obj then
+        lib.notify({ description = 'TECTON object ではありません', type = 'error' })
+        return
+    end
+    local client = TectonClient
+    client.selected = id
+    if not client.open then
+        ToggleBuilder()
+        Wait(0)
+    end
+    SendNUIMessage({ action = 'selectedObject', selected = id, object = obj })
+end
+
+RegisterCommand('tecPick', function()
+    pickTectonObjectRaycast()
+end, false)
+
+RegisterKeyMapping('tecPick', 'TECTON: 配置物を選択', 'keyboard', 'B')
