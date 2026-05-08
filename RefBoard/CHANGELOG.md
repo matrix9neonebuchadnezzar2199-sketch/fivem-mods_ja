@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.3 — 2026-05-08
+
+- **fix（本番 DB）**: テスト用 **5チーム×ロスター15人**が入らない問題に対し、既定で **`Config.SeedDemoTeamsOnStart = true`** のときリソース起動後に `sql/seed_test_5teams_15roster.sql` を自動実行する **`server/demo_seed.lua`** を追加（`teams` 準備をポーリング。SQL は従来どおり idempotent）。本番で不要なら `config.lua` で **false**。
+- **manifest**: 上記 SQL を `files` に含め、`LoadResourceFile` で読込可能に。
+- **dev（NUI モック）**: 古い `localStorage` を確実に差し替えるため **`STORAGE_VERSION` を 3** に更新。
+
 ## v0.8.2 — 2026-05-08
 
 - **UI**: ルート `font-size` を **200%**（ブラウザ既定の 2 倍）に戻し、CEF 上の文字・余白（rem 系）を再拡大。

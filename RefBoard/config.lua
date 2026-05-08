@@ -34,3 +34,7 @@ Config.HalfDurationMs = 45 * 60 * 1000
 -- true: 起動時に editor_locks が無ければ sql/install.sql を自動実行（空 DB の即席セットアップ用）
 -- 本番で手動マイグレーション運用のみにしたい場合は false
 Config.AutoCreateSchema = true
+
+-- true: リソース起動時に sql/seed_test_5teams_15roster.sql を実行（5チーム×ロスター15人・再実行安全）
+-- 本番でデモチーム名を入れたくない場合は false（手動で SQL を流す運用でも可）
+Config.SeedDemoTeamsOnStart = true

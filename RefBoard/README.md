@@ -34,7 +34,7 @@ RefBoard は、**審判（運営）**が試合スコア・経過・メンバー�
    - CLI の例: `mysql -u USER -p fivem_db < sql/install.sql`（`fivem_db` は接続文字列の DB 名に合わせる）
    - 開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チーム投入を推奨。
    - **既存 DB**（install 済みの環境）: これまでのマイグレーションに続けて `sql/migration_004_team_roster.sql`（ロスター・エンブレム列）を適用。
-   - （任意・開発用）**5チーム × ロスター15人**のテストデータ: `sql/seed_test_5teams_15roster.sql`（同名チームや既存ロスターがある場合はスキップ）。
+   - **5チーム × ロスター15人**のテストデータ: 既定では **`Config.SeedDemoTeamsOnStart = true`** により **リソース起動時に自動実行**（`sql/seed_test_5teams_15roster.sql`）。本番で不要なら `config.lua` で **false** にし、必要時のみ CLI で `mysql ... < sql/seed_test_5teams_15roster.sql`。
 3. `server.cfg` に `ensure oxmysql` のあと `ensure RefBoard`。
 4. 審判用プレイヤーに `add_ace identifier.license:xxxxxxxx refboard.referee allow` 等を付与。
 

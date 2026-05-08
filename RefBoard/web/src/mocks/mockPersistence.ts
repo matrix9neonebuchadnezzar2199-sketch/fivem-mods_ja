@@ -2,7 +2,7 @@
  * モック永続化レイヤ（ブラウザ専用）
  *
  * - localStorage キー: `refboard:mock:state`
- * - スキーマバージョン: `STORAGE_VERSION`（現在 2）。破壊的変更時は bump し、古い JSON は破棄して `seedInitialState()` が使われる。
+ * - スキーマバージョン: `STORAGE_VERSION`（現在 3）。破壊的変更時は bump し、古い JSON は破棄して `seedInitialState()` が使われる。
  * - 開発者は `window.__refboardMock.reset()`（DEV のみ公開）で手動リセット可能。
  * - FiveM 本番 NUI では `useBrowserMock()` が false のため本モジュールの save は呼ばれない想定。
  *
@@ -14,7 +14,7 @@ import { mockMatchDetail } from './matchDetail'
 
 export const STORAGE_KEY = 'refboard:mock:state'
 /** 破壊的シード変更時に上げる（localStorage を捨てて `seedInitialState()` へ） */
-export const STORAGE_VERSION = 2
+export const STORAGE_VERSION = 3
 
 export type PersistedTeam = {
   id: number

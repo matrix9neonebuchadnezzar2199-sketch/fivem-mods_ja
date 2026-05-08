@@ -34,6 +34,7 @@ RefBoard lets **referees / staff** record match scores, clock, and rosters with 
    - Example CLI: `mysql -u USER -p fivem_db < sql/install.sql` (replace `fivem_db` with your actual database name).
    - For local testing, also run `sql/seed_dev_teams.sql` for two sample teams.
    - **Existing installs**: apply prior migrations and `sql/migration_004_team_roster.sql` (roster + emblem column).
+   - **Demo data (5 teams × 15 roster players)**: by default **`Config.SeedDemoTeamsOnStart = true`** runs `sql/seed_test_5teams_15roster.sql` on resource start. Set **`false`** in `config.lua` for production if you do not want those rows; you can still run the SQL manually when needed.
 3. Add `ensure RefBoard` after `ensure oxmysql` in `server.cfg`.
 4. Grant `refboard.referee` to referee accounts (example: `add_ace identifier.license:xxxx refboard.referee allow`).
 
