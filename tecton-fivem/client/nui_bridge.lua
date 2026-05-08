@@ -29,15 +29,20 @@ end)
 
 RegisterNUICallback('createObject', function(data, cb)
     local s = getState()
-    local payload = type(data) == 'table' and data or {}
-    payload.scene_id = payload.scene_id or s.scene
-    local id = lib.callback.await('tecton:op:create', false, payload)
-    if id then
-        SendNUIMessage({ action = 'opAck', op = 'create', ok = true, id = id })
-        cb({ ok = true, id = id })
+    local mode = s.mode or 'furniture'
+    local handler = TectonModeHandlers and TectonModeHandlers[mode]
+    if not handler or type(handler.handleCreate) ~= 'function' then
+        SendNUIMessage({ action = 'opAck', op = 'create', ok = false, reason = 'unsupported_mode' })
+        cb({ ok = false, reason = 'unsupported_mode' })
+        return
+    end
+    local res = handler.handleCreate(data)
+    if res.ok then
+        SendNUIMessage({ action = 'opAck', op = 'create', ok = true, id = res.id })
+        cb({ ok = true, id = res.id })
     else
-        SendNUIMessage({ action = 'opAck', op = 'create', ok = false })
-        cb({ ok = false })
+        SendNUIMessage({ action = 'opAck', op = 'create', ok = false, reason = res.reason })
+        cb({ ok = false, reason = res.reason })
     end
 end)
 

@@ -15,17 +15,18 @@ shared_scripts {
 }
 
 client_scripts {
+    'client/state.lua',
     'client/main.lua',
-    'client/nui_bridge.lua',
     'client/gizmo.lua',
     'client/placement.lua',
     'client/snap.lua',
     'client/history.lua',
     'client/autosave.lua',
-    'client/modes/door.lua',
     'client/modes/furniture.lua',
+    'client/modes/door.lua',
     'client/modes/parking.lua',
     'client/modes/stash.lua',
+    'client/nui_bridge.lua',
 }
 server_scripts {
     '@oxmysql/lib/MySQL.lua',

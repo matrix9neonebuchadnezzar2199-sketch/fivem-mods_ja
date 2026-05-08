@@ -31,4 +31,6 @@ Config.Debug = {
     verbose = true,
     -- M1-a のみ: true のとき `/testTectonInsert` が有効。DB 確認後は必ず false。
     testTectonInsert = false,
+    -- M1-c のみ: true のとき `/tecPlaceTest`（椅子 + gizmo + DB）が有効。テスト後は必ず false。
+    testTectonPlace = false,
 }
