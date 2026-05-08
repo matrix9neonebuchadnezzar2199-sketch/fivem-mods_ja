@@ -1,8 +1,40 @@
 # DVD Maker for FiveM
 
-プレイヤーが **空の DVD** に YouTube 動画の **タイトル**と **URL** を書き込み、**パッケージ種類**（不織布スリーブ / クリアケース / トールケース）に応じた **記録済み DVD** として所持・再生できるスタンドアロンリソースです。**ox_inventory 専用**で、ESX / QBCore 等への依存はありません。
+<p align="right"><strong>日本語</strong> · <a href="./README.en.md">English</a></p>
 
-DVD をインベントリから「使う」と NUI が開きます。サーバー側で YouTube URL をホワイトリスト検証します。**トールケース**では任意で **表紙画像の https URL** を指定でき、再生メニューでは **左に大きな表紙プレビュー**、**右にトールケース画像**として並べて表示します。記録時は **`metadata.image`**（`Config.InventorySlotImage`）でスロット絵を種類どおりに上書きします（`metadata.imageurl` は付与しません）。
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-326CB5?style=flat-square" alt="MIT License"></a>
+  <a href="https://www.lua.org/"><img src="https://img.shields.io/badge/Lua-5.4-000080?style=flat-square&logo=lua&logoColor=white" alt="Lua 5.4"></a>
+  <img src="https://img.shields.io/badge/FiveM-cerulean-111111?style=flat-square" alt="FiveM">
+  <a href="https://github.com/overextended/ox_inventory"><img src="https://img.shields.io/badge/ox__inventory-required-EF7F31?style=flat-square" alt="ox_inventory required"></a>
+</p>
+
+<p align="center">
+  <sub>スタンドアロン · Vanilla JS NUI · YouTube IFrame API · サーバー側 URL 検証</sub>
+</p>
+
+> プレイヤーが **空の DVD** に YouTube の **タイトル**と **URL** を書き込み、**パッケージ種類**（不織布スリーブ / クリアケース / トールケース）に応じた **記録済み DVD** として所持・再生する **ox_inventory 専用**リソース。ESX / QBCore 等への依存はありません。  
+> インベントリから「使う」と NUI が開きます。**トール**では任意の **表紙画像 HTTPS URL**、再生メニューは **左：表紙プレビュー** / **右：ケース画像**。記録時は **`metadata.image`**（`Config.InventorySlotImage`）でスロット絵を上書き（**`metadata.imageurl` は付与しません**）。
+
+---
+
+## 目次
+
+- [機能一覧](#features)
+- [必要環境](#requirements)
+- [インストール手順](#install)
+- [使い方（プレイヤー向け）](#usage)
+- [トール表紙用: GitHub で画像を管理する](#github-cover-images)
+- [記録時の metadata（参考）](#metadata)
+- [設定（config.lua）](#config)
+- [既知の制限](#limitations)
+- [旧バージョンからの移行](#migration)
+- [ライセンス](#license)
+- [コントリビューション](#contributing)
+
+---
+
+<a id="features"></a>
 
 ## 機能一覧
 
@@ -11,12 +43,16 @@ DVD をインベントリから「使う」と NUI が開きます。サーバ�
 - **インベントリ表示名**: 付与時の metadata に **`label = タイトル`** を入れるため、スロット名は入力タイトルになる（ox_inventory の仕様）
 - **動画ソース**: `youtube.com` / `youtu.be` / `m.youtube.com` の許可形式のみ
 
+<a id="requirements"></a>
+
 ## 必要環境
 
 - FiveM サーバー（比較的新しい Artifact を推奨）
-- **ox_inventory**
+- **[ox_inventory](https://github.com/overextended/ox_inventory)**（汎用フレームワーク用ブリッジではなく **専用**の利用形）
 
 ---
+
+<a id="install"></a>
 
 ## インストール手順（この順でやる）
 
@@ -121,7 +157,7 @@ ensure dvd-maker
 | `client.image` | `ox_inventory/web/images/` に置いた PNG のファイル名 |
 | `client.export` | 記録済み 3 種とも **`dvd-maker.useRecorded`** で共通可（**スロットのアイテム名** `dvd_recorded1`〜`3` で見た目を決定） |
 
-**トールを選んだのにインベントリが別パッケージの絵になる場合**は、(1) **`items.lua` の `['dvd_recorded3']` の `client.image`** が **`dvd_case_text_transparent_128.png`** と一致しているか確認する。(2) **新規記録**では `metadata.image` が **`dvd_case_text_transparent_128.png`** 付きで付与されるため、古い枚は **再記録**すると揃うことが多い。
+**トールを選んだのにインベントリが別パッケージの絵になる場合**は、(1) **`items.lua` の `['dvd_recorded3']` の `client.image`** が **`dvd_case_text_transparent_128.png`** と一致しているか確認する。(2) **新規記録**では `metadata.image` に **拡張子なしベース名**（例: `dvd_case_text_transparent_128`）が入るため、古い枚は **再記録**すると揃うことが多い。
 
 ### 5. サーバーで読み込み直す
 
@@ -137,6 +173,8 @@ restart ox_inventory
 
 ---
 
+<a id="usage"></a>
+
 ## 使い方（プレイヤー向け）
 
 1. インベントリで **DVD（空）** を使う → 記録メニュー  
@@ -144,7 +182,7 @@ restart ox_inventory
 3. 空 DVD が 1 枚減り、選んだ種類の **記録済み DVD** が 1 枚増える（インベントリ名はタイトル）  
 4. 記録済み DVD を使う → 再生メニュー → 「再生」。トールのときは **左に大きな表紙プレビュー**、**右に大きなケース**を表示。表紙は **クリックで拡大**（NUI 内の別レイヤー・`Esc` または「閉じる」で戻る）。表紙 URL が読めない場合は左パネルにエラー文を表示。  
 
-※**インベントリのマス目の大きさ**は **ox_inventory の UI** なので、このリソースからは変更できません（高解像度 PNG を使うと若干シャープになる程度）。  
+> **インベントリのマス目の大きさ**は **ox_inventory の UI** 依存のため、このリソースからは変更できません（高解像度 PNG でわずかにシャープになる程度）。
 
 <a id="github-cover-images"></a>
 
@@ -165,12 +203,18 @@ restart ox_inventory
 1. 作ったリポジトリのページを開く。  
 2. **Add file → Upload files** を選ぶ。  
 3. PC から **PNG などの画像**をドラッグ＆ドロップする。  
-   - フォルダにまとめたい場合は、先に **Add file → Create new file** で、ファイル名欄に `covers/readme.txt` のように **スラッシュ付きのパス**を入力して一度保存し、そのあと `covers/` の中に画像をアップロードしてもよい。  
+   - フォルダにまとめたい場合は、先に **Add file → Create new file** で、ファイル名欄に `covers/.gitkeep` のように **スラッシュ付きのパス**を入力して一度保存し、そのあと `covers/` の中に画像をアップロードしてもよい。  
 4. 下の **Commit changes** を押して確定する。
 
 **ファイル名**は英数字と `-` `_` だけにするとトラブルが少ない（日本語ファイル名も動くことはありますが、URL が長くなりやすいです）。
 
 ### 3. 表紙に貼る URL の取り方（ここが重要）
+
+| URL の種類 | ゲーム内（本 MOD） |
+|-------------|-------------------|
+| `https://raw.githubusercontent.com/…` | **そのまま利用可**（推奨） |
+| `https://github.com/…/blob/…/file.png` | **保存・再生時に raw へ自動変換** |
+| リポジトリのトップ・フォルダ一覧・`github.com/…/tree/…` | **不可**（HTML ページのため） |
 
 GitHub 上で **画像ファイルそのもの**を開いた状態にします（一覧ではなく、1 枚のファイルのページ）。
 
@@ -202,6 +246,8 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 
 うまくいかないときは、ブラウザで **同じ URL を新しいタブに貼る**と、**画像だけが表示されるか**確認してください。GitHub のログイン画面や 404 になっていれば、その URL はゲーム内でも読めません。
 
+<a id="metadata"></a>
+
 ## 記録時の metadata（参考）
 
 サーバーが付与する主なキー:
@@ -225,6 +271,8 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 
 `pack` は `config.lua` の `Config.RecordedByPack` のキーと一致させてある。
 
+<a id="config"></a>
+
 ## 設定（config.lua）
 
 | 項目 | 説明 |
@@ -234,6 +282,8 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 | `Config.MaxTitleLength` | タイトル最大文字数（UTF-8 文字、既定: 40） |
 | `Config.MaxCoverUrlLength` | 表紙 URL の最大長（既定: 768） |
 | `Config.InventorySlotImage` | 種類ごとに `metadata.image` へ入れる **拡張子なし**のベース名（`.png` を付けると二重になり表示されない） |
+
+<a id="limitations"></a>
 
 ## 既知の制限
 
@@ -246,14 +296,26 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 - **ox_inventory の `metadata.image`** は **拡張子なし**のベース名のみ有効（公式 Web UI が `.png` を自動付与）。誤って `xxx.png` を入れると **`xxx.png.png`** になり **インベントリで絵が出ない**。修正後に作った DVD はサーバーが末尾 `.png` を剥がすが、**古いスロットは再記録**が必要なことがあります。
 - NUI はビルド不要（Vanilla JS）
 
+<a id="migration"></a>
+
 ## 旧バージョンからの移行
 
 以前の **単一アイテム `dvd_recorded`** だけの構成から変わっています。既存プレイヤーに `dvd_recorded` が残っている場合は、運営で回収・付け替えするか、一時的に旧定義を併存させる必要があります。
 
+<a id="license"></a>
+
 ## ライセンス
 
-MIT License（[LICENSE](LICENSE)）。著作権表記の `YourName` は配布前に差し替えてください。
+MIT License（[LICENSE](./LICENSE)）。著作権表記の `YourName` は配布前に差し替えてください。
+
+<a id="contributing"></a>
 
 ## コントリビューション
 
 バグ修正・改善のプルリクエスト歓迎です。大きな仕様変更の前は Issue で相談いただけると助かります。
+
+---
+
+<p align="center">
+  <sub>ドキュメント · <a href="./README.md">日本語 README</a> · <a href="./README.en.md">English README</a></sub>
+</p>
