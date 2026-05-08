@@ -29,4 +29,6 @@ Config.Keys = {
 Config.Debug = {
     bypassPermission = true,
     verbose = true,
+    -- M1-a のみ: true のとき `/testTectonInsert` が有効。DB 確認後は必ず false。
+    testTectonInsert = false,
 }

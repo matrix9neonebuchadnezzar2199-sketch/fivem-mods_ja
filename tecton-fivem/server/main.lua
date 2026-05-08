@@ -2,10 +2,11 @@
 
 ---@diagnostic disable: undefined-global
 
---- M1-a DB smoke test: set true, run /testTectonInsert once in-game, set false (or remove command in a later commit).
-local ENABLE_TEST_TECTON_INSERT = false
-
 local scene = Config.DefaultScene or 'default'
+
+local function testTectonInsertEnabled()
+    return Config.Debug and Config.Debug.testTectonInsert == true
+end
 
 local function refreshAutosaveForScene(sid)
     local snap = TectonDB.buildSnapshot(sid)
@@ -20,7 +21,7 @@ AddEventHandler('onResourceStart', function(resName)
 end)
 
 RegisterCommand('testTectonInsert', function(src)
-    if not ENABLE_TEST_TECTON_INSERT then
+    if not testTectonInsertEnabled() then
         return
     end
     if src == 0 then
