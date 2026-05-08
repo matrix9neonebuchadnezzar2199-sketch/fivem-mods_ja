@@ -30,3 +30,7 @@ Config.LogLevel = 'INFO'
 
 -- 前半の目安時間（ミリ秒）— UI 表示用。実際の試合時間は運用で操作
 Config.HalfDurationMs = 45 * 60 * 1000
+
+-- true: 起動時に editor_locks が無ければ sql/install.sql を自動実行（空 DB の即席セットアップ用）
+-- 本番で手動マイグレーション運用のみにしたい場合は false
+Config.AutoCreateSchema = true

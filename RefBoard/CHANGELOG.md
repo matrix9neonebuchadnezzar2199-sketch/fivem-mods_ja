@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.4 — 2026-05-08
+
+- **feat（DB）**: 起動時に `information_schema` で `editor_locks` の有無を確認し、**無い場合のみ** `sql/install.sql` を自動実行する（`server/schema_bootstrap.lua`）。`Config.AutoCreateSchema`（既定 `true`）で無効化可能。既存 DB は変更しない。列追加用の `sql/migration_*.sql` は従来どおり手動。
+
 ## v0.7.3 — 2026-05-08
 
 - **fix（NUI）**: 編集ロック取得が **`db_query_failed` 等の DB エラー**で失敗したときに、**「他のユーザーが編集中」モーダル**を出さない。トーストで **install.sql / DB** を案内する（`Launcher.vue` / `MatchList.vue`）。分類は `utils/lockAcquireErrors.ts`。
