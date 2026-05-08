@@ -10,10 +10,6 @@ if not TectonClient then
         selected = nil,
         mode = 'furniture',
         open = false,
-        --- ギズモ配置中（NUI 非表示・フォーカス外し中）
-        placementActive = false,
-        --- 配置 UI 非表示後、スペースまたは /tecResume でビルダーを戻す待ち
-        uiResumeAfterPlacement = false,
         propsDictionary = nil,
         propsCategories = nil,
         propsVersion = nil,
@@ -23,8 +19,6 @@ if not TectonClient then
     }
 else
     TectonClient.spawnedHandles = TectonClient.spawnedHandles or {}
-    TectonClient.placementActive = TectonClient.placementActive or false
-    TectonClient.uiResumeAfterPlacement = TectonClient.uiResumeAfterPlacement or false
 end
 
 TectonModeHandlers = TectonModeHandlers or {}

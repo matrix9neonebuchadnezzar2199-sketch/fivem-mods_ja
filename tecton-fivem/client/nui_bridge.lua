@@ -111,22 +111,13 @@ RegisterNUICallback('createObject', function(data, cb)
     end
     local wasOpen = s.open
     if wasOpen then
-        lib.hideTextUI()
-        SendNUIMessage({ action = 'setPlacementGuide', show = false })
-        SendNUIMessage({ action = 'setOpen', open = false, keepSelection = true })
-        SendNUIMessage({ action = 'placementBanner', show = true })
+        SendNUIMessage({ action = 'setPlacementGuide', show = true })
         SetNuiFocus(false, false)
-        s.open = false
-        s.placementActive = true
-        s.uiResumeAfterPlacement = true
     end
     local res = handler.handleCreate(data)
     if wasOpen then
-        SendNUIMessage({ action = 'placementBanner', show = false })
-        s.placementActive = false
-        SetNuiFocus(false, false)
-        --- NUI は自動では開かない。ox_lib で案内（ゲーム操作中も視認可）
-        lib.showTextUI('[スペース] または /tecResume でビルダーを再表示', { position = 'bottom-center' })
+        SendNUIMessage({ action = 'setPlacementGuide', show = false })
+        SetNuiFocus(true, true)
     end
     if res.ok then
         SendNUIMessage({ action = 'opAck', op = 'create', ok = true, id = res.id })
@@ -237,7 +228,3 @@ RegisterNUICallback('deleteObject', function(data, cb)
     end
 end)
 
-RegisterNUICallback('resumeBuilder', function(_, cb)
-    exports[res]:ReopenTectonBuilderAfterPlacement()
-    cb({ ok = true })
-end)

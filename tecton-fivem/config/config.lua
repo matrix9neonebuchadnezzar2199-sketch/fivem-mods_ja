@@ -21,11 +21,7 @@ Config.UI = {
     hiContrast = false,
 }
 
-Config.Keys = {
-    -- ox_inventory 等と干渉しやすい F2 は避け、既定は F9
-    openBuilder = 'F9',
-    help = 'F1',
-}
+-- ビルダーは /tecton・/tec のチャットコマンドのみで開閉（ホットキーは使わない）。
 
 Config.Debug = {
     bypassPermission = true,

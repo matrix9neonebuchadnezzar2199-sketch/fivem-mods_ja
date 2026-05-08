@@ -5,7 +5,6 @@ import { useBuilderStore } from './store/builderStore'
 import { usePropsStore } from './store/propsStore'
 import { fetchNui, onNuiMessage } from './lib/nui'
 import { Builder } from './pages/Builder'
-import { PlacementBanner } from './components/PlacementBanner'
 import { BASE_FONT_PX, uiScale } from './theme'
 import type { PropDef, ServerCategoryRaw } from './store/propsStore'
 import type { SelectedEntity } from './store/builderStore'
@@ -29,8 +28,6 @@ export default function App() {
   const setMode = useBuilderStore((s) => s.setMode)
   const setWorldSelection = useBuilderStore((s) => s.setWorldSelection)
   const setShowPlacementGuide = useBuilderStore((s) => s.setShowPlacementGuide)
-  const showPlacementBanner = useBuilderStore((s) => s.showPlacementBanner)
-  const setShowPlacementBanner = useBuilderStore((s) => s.setShowPlacementBanner)
   const setProps = usePropsStore((s) => s.setProps)
   const setLoadFailed = usePropsStore((s) => s.setLoadFailed)
 
@@ -49,14 +46,10 @@ export default function App() {
       count?: number
     }>((msg) => {
       if (msg?.action === 'setOpen' && typeof msg.open === 'boolean') {
-        const keep = (msg as { keepSelection?: boolean }).keepSelection === true
-        setOpen(msg.open, keep)
+        setOpen(msg.open)
       }
       if (msg?.action === 'setPlacementGuide' && typeof msg.show === 'boolean') {
         setShowPlacementGuide(msg.show)
-      }
-      if (msg?.action === 'placementBanner' && typeof msg.show === 'boolean') {
-        setShowPlacementBanner(msg.show)
       }
       if (msg?.action === 'selectedObject') {
         const o = msg.object
@@ -74,7 +67,7 @@ export default function App() {
       }
     })
     return unsub
-  }, [setOpen, setProps, setLoadFailed, setShowPlacementGuide, setShowPlacementBanner, setWorldSelection])
+  }, [setOpen, setProps, setLoadFailed, setShowPlacementGuide, setWorldSelection])
 
   useEffect(() => {
     void (async () => {
@@ -110,10 +103,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  return (
-    <>
-      {showPlacementBanner ? <PlacementBanner /> : null}
-      {open ? <Builder /> : null}
-    </>
-  )
+  if (!open) {
+    return null
+  }
+
+  return <Builder />
 }

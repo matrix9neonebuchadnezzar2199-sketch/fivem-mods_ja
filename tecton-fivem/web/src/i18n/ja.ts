@@ -43,11 +43,6 @@ export const ja = {
     line1: '位置と向きを決めたら Enter で確定',
     line2: 'W：移動（位置）　R：回転',
   },
-  placement: {
-    dragHint: '左ドラッグで位置調整／右ドラッグで視点回転',
-    confirmHint: 'Enter で設置確定／ESC でキャンセル',
-    resumeHint: 'スペースキーまたは /tecResume で UI を復帰（キーは FiveM のキー設定で変更可。R・Z 等への割当も可）',
-  },
   transform: {
     position: '位置 (m)',
     rotation: '回転 (°)',
@@ -71,8 +66,7 @@ export const ja = {
   panel: {
     selection: '選択中のオブジェクト',
     catalogPickHint: '一覧でモデルを選ぶと、画面下のバーに表示されます。見た目を確認してから「設置」でワールドへ出します（ギズモで位置調整して確定）。',
-    placedSelectionHint:
-      '設置直後は下のパネルに座標が表示されます。ワールドの配置物は /tecPick またはキー B（レイキャスト）で選択できます。',
+    placedSelectionHint: '設置直後は下のパネルに座標が表示されます。ワールドの配置物はチャットで /tecPick（レイキャスト）と入力して選択できます。',
     place: '設置',
     cancelPick: '一覧に戻る',
   },
