@@ -43,6 +43,11 @@ export const ja = {
     line1: '位置と向きを決めたら Enter で確定',
     line2: 'W：移動（位置）　R：回転',
   },
+  placement: {
+    dragHint: '左ドラッグで位置調整／右ドラッグで視点回転',
+    confirmHint: 'Enter で設置確定／ESC でキャンセル',
+    resumeHint: 'スペースキーまたは /tecResume で UI を復帰（キーは FiveM のキー設定で変更可。R・Z 等への割当も可）',
+  },
   transform: {
     position: '位置 (m)',
     rotation: '回転 (°)',

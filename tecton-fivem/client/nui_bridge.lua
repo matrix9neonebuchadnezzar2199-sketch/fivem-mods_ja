@@ -111,13 +111,19 @@ RegisterNUICallback('createObject', function(data, cb)
     end
     local wasOpen = s.open
     if wasOpen then
-        SendNUIMessage({ action = 'setPlacementGuide', show = true })
+        SendNUIMessage({ action = 'setPlacementGuide', show = false })
+        SendNUIMessage({ action = 'setOpen', open = false, keepSelection = true })
+        SendNUIMessage({ action = 'placementBanner', show = true })
         SetNuiFocus(false, false)
+        s.open = false
+        s.placementActive = true
+        s.uiResumeAfterPlacement = true
     end
     local res = handler.handleCreate(data)
     if wasOpen then
-        SendNUIMessage({ action = 'setPlacementGuide', show = false })
-        SetNuiFocus(true, true)
+        SendNUIMessage({ action = 'placementBanner', show = false })
+        s.placementActive = false
+        --- 配置後は NUI を自動では開かない（スペース・/tecResume・/tec で復帰）
     end
     if res.ok then
         SendNUIMessage({ action = 'opAck', op = 'create', ok = true, id = res.id })

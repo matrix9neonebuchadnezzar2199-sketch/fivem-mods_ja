@@ -36,7 +36,9 @@ type BuilderState = {
   pendingCatalog: PendingCatalogPick | null
   /** 設置ギズモ中の操作案内（NUI は表示のまま） */
   showPlacementGuide: boolean
-  setOpen: (v: boolean) => void
+  /** ギズモ中・配置 UI 非表示時の画面下黄色バナー */
+  showPlacementBanner: boolean
+  setOpen: (v: boolean, keepSelection?: boolean) => void
   setMode: (m: BuilderMode) => void
   setSceneId: (id: string) => void
   /** Lua / NUI から渡る object を正規化して保持 */
@@ -47,6 +49,7 @@ type BuilderState = {
   /** 一覧の仮選択のみ解除（ワールド選択は触らない） */
   clearPendingCatalog: () => void
   setShowPlacementGuide: (v: boolean) => void
+  setShowPlacementBanner: (v: boolean) => void
 }
 
 export const useBuilderStore = create<BuilderState>((set) => ({
@@ -59,13 +62,13 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   searchQuery: '',
   pendingCatalog: null,
   showPlacementGuide: false,
-  setOpen: (v) =>
+  showPlacementBanner: false,
+  setOpen: (v, keepSelection) =>
     set((s) => ({
       open: v,
       pendingCatalog: v ? s.pendingCatalog : null,
       showPlacementGuide: v ? s.showPlacementGuide : false,
-      selected: v ? s.selected : null,
-      selectedEntity: v ? s.selectedEntity : null,
+      ...(!v && !keepSelection ? { selected: null, selectedEntity: null } : {}),
     })),
   setMode: (m) => set({ mode: m }),
   setSceneId: (id) => set({ sceneId: id }),
@@ -104,4 +107,5 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   setPendingCatalog: (v) => set({ pendingCatalog: v }),
   clearPendingCatalog: () => set({ pendingCatalog: null }),
   setShowPlacementGuide: (v) => set({ showPlacementGuide: v }),
+  setShowPlacementBanner: (v) => set({ showPlacementBanner: v }),
 }))

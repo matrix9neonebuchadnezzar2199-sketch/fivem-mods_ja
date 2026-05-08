@@ -128,7 +128,11 @@ end)
 local function ToggleBuilder()
     local state = TectonClient
     state.open = not state.open
+    if state.open then
+        state.uiResumeAfterPlacement = false
+    end
     SetNuiFocus(state.open, state.open)
+    SendNUIMessage({ action = 'placementBanner', show = false })
     SendNUIMessage({ action = 'setOpen', open = state.open })
     if state.open and state.propsLoaded and state.propsDictionary then
         SendNUIMessage({
@@ -255,3 +259,50 @@ RegisterCommand('tecPick', function()
 end, false)
 
 RegisterKeyMapping('tecPick', 'TECTON: 配置物を選択', 'keyboard', 'B')
+
+--- 配置完了後など、NUI を閉じたままのときにビルダーを再表示（スペース・/tecResume）
+local function reopenBuilderAfterPlacement()
+    local s = TectonClient
+    if s.open then
+        return
+    end
+    s.open = true
+    s.uiResumeAfterPlacement = false
+    s.placementActive = false
+    SetNuiFocus(true, true)
+    SendNUIMessage({ action = 'placementBanner', show = false })
+    SendNUIMessage({ action = 'setOpen', open = true })
+    if s.propsLoaded and s.propsDictionary then
+        SendNUIMessage({
+            action = 'setProps',
+            dictionary = s.propsDictionary,
+            categories = s.propsCategories,
+            version = s.propsVersion,
+            count = s.propsCount,
+        })
+    end
+    if s.selected then
+        local obj = lib.callback.await('tecton:object:get', false, s.selected)
+        if obj then
+            SendNUIMessage({ action = 'selectedObject', selected = s.selected, object = obj })
+        end
+    end
+end
+
+RegisterCommand('tecResume', reopenBuilderAfterPlacement, false)
+
+RegisterKeyMapping('tecResume', 'TECTON: UIを復帰', 'keyboard', 'SPACE')
+
+CreateThread(function()
+    while true do
+        local s = TectonClient
+        if s and not s.open and s.uiResumeAfterPlacement and not s.placementActive then
+            Wait(0)
+            if IsControlJustReleased(0, 22) and not IsNuiFocused() then
+                reopenBuilderAfterPlacement()
+            end
+        else
+            Wait(200)
+        end
+    end
+end)
