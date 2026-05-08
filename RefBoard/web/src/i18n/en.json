@@ -107,7 +107,13 @@
     "duplicate_body": "This license is already on the roster. Continue anyway?",
     "duplicate_continue": "Continue and add",
     "list_history_link": "[Edit history]",
-    "list_add": "+ Add player"
+    "list_add": "+ Add player",
+    "list_actions": "Actions",
+    "list_remove": "Remove",
+    "list_remove_aria": "Remove this player from the match roster",
+    "remove_confirm": "Remove “{name}” from this match roster? (Players referenced on the timeline cannot be removed.)",
+    "remove_draft_only": "Players can only be removed while the match is a draft.",
+    "remove_failed": "Could not remove the player."
   },
   "goal_wizard": {
     "breadcrumb": "EFmktg > Shot > Pick player",
@@ -477,6 +483,7 @@
     "E3003": "Team not found",
     "E3004": "Match status does not allow this operation",
     "E3005": "Player is not in an active state",
+    "E3006": "This player cannot be removed because they appear on the match timeline (void related events first, if applicable).",
     "E4001": "Database connection lost",
     "E4002": "Database operation failed",
     "E4003": "Transaction failed",

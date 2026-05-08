@@ -22,6 +22,7 @@ export const ERROR_KEY_TO_CODE: Record<string, string> = {
   team_not_found: 'E3003',
   bad_status: 'E3004',
   player_not_active: 'E3005',
+  player_has_events: 'E3006',
   db_connection_lost: 'E4001',
   db_query_failed: 'E4002',
   tx_failed: 'E4003',

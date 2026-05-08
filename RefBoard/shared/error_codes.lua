@@ -24,6 +24,7 @@ ErrorCodes = {
   TEAM_NOT_FOUND = { code = 'E3003', message = 'team_not_found' },
   MATCH_ALREADY_FINISHED = { code = 'E3004', message = 'bad_status' },
   PLAYER_NOT_ACTIVE = { code = 'E3005', message = 'player_not_active' },
+  PLAYER_HAS_EVENTS = { code = 'E3006', message = 'player_has_events' },
 
   DB_CONNECTION_LOST = { code = 'E4001', message = 'db_connection_lost' },
   DB_QUERY_FAILED = { code = 'E4002', message = 'db_query_failed' },

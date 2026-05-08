@@ -7,8 +7,7 @@ import { usePresenceStore } from '../stores/presence'
 import { refboardRecaptureNuiFocus, useNui } from '../composables/useNui'
 import { useFocusTracker } from '../composables/useFocusTracker'
 import { mockMatchDetail } from '../mocks/matchDetail'
-import type { MatchClockAck, MatchDetailModel } from '../types/match'
-import type { ScoreHistoryRow } from '../types/match'
+import type { MatchClockAck, MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/match'
 import {
   mapBreakdown,
   mapEventsFromServer,
@@ -324,7 +323,7 @@ function applyState(p: {
   if (p.events) {
     detail.events = mapEventsFromServer(p.events)
   }
-  if (p.players && p.players.length) {
+  if (p.players != null) {
     detail.homePlayers = mapPlayersForTeam(p.players, detail.team1Id)
     detail.awayPlayers = mapPlayersForTeam(p.players, detail.team2Id)
   }
@@ -533,6 +532,32 @@ function openAdd(teamId: number) {
   showAdd.value = true
 }
 
+const canRemoveMatchPlayers = computed(() => session.isEditor && detail.dbStatus === 'draft')
+
+async function onRemoveMatchPlayer(teamId: number, player: MatchPlayer) {
+  if (!canRemoveMatchPlayers.value) {
+    toast(t('player.remove_draft_only'), 'info', { ms: 5000 })
+    return
+  }
+  if (!confirm(t('player.remove_confirm', { name: player.name }))) return
+  const pid = Number(player.id)
+  if (!Number.isFinite(pid)) {
+    toast(t('player.remove_failed'), 'error')
+    return
+  }
+  const un = on('refboard:player:remove:ack', (r: { ok?: boolean; error?: string; code?: string }) => {
+    un()
+    if (r?.ok) {
+      void loadMatch()
+      return
+    }
+    const code = r?.code
+    const msg = code ? t(`errors.${code}`) : t('player.remove_failed')
+    toast(msg, 'error', { ms: 7000, errorCode: code, errorKey: r?.error })
+  })
+  await send('player_remove', { matchId: detail.id, teamId, playerId: pid })
+}
+
 async function onFinishConfirm() {
   const un = on('refboard:match:finish:ack', (r: { ok?: boolean }) => {
     un()
@@ -692,9 +717,11 @@ function exportMatchEventsCsv() {
                 :players="detail.homePlayers"
                 :team-id="detail.team1Id"
                 :readonly="readonly"
+                :can-remove-players="canRemoveMatchPlayers"
                 :editor-here="editorHereT1"
                 @history="showHistory = true"
                 @add="openAdd"
+                @remove="(p) => onRemoveMatchPlayer(detail.team1Id, p)"
               />
             </div>
             <div @pointerenter="setFocus('team2_players')" @pointerleave="setFocus(null)">
@@ -703,9 +730,11 @@ function exportMatchEventsCsv() {
                 :players="detail.awayPlayers"
                 :team-id="detail.team2Id"
                 :readonly="readonly"
+                :can-remove-players="canRemoveMatchPlayers"
                 :editor-here="editorHereT2"
                 @history="showHistory = true"
                 @add="openAdd"
+                @remove="(p) => onRemoveMatchPlayer(detail.team2Id, p)"
               />
             </div>
           </div>

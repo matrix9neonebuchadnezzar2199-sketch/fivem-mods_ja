@@ -19,6 +19,9 @@ const team = ref<ManageTeamRow | null>(null)
 const stats = ref<Record<string, number> | null>(null)
 const roster = ref<RosterRow[]>([])
 
+/** 古い team:detail:ack でフォームが上書きされるのを防ぐ */
+let teamDetailSeq = 0
+
 const showCreate = ref(false)
 const showRoster = ref(false)
 const rosterEditId = ref<number | null>(null)
@@ -33,8 +36,10 @@ async function refreshList() {
 }
 
 async function loadDetail(id: number) {
+  const seq = ++teamDetailSeq
   const un = on('refboard:team:detail:ack', (p: { team?: ManageTeamRow | null; stats?: Record<string, unknown> | null }) => {
     un()
+    if (seq !== teamDetailSeq) return
     team.value = p.team ?? null
     stats.value = (p.stats as Record<string, number> | null) ?? null
   })
@@ -69,6 +74,15 @@ async function onUpdate(payload: {
   const un = on('refboard:team:update:ack', (p: { ok?: boolean }) => {
     un()
     if (p?.ok) {
+      if (team.value?.id === payload.teamId) {
+        team.value = {
+          ...team.value,
+          name: payload.name,
+          short_name: payload.shortName,
+          color: payload.color,
+          emblem_emoji: payload.emblemEmoji,
+        }
+      }
       void refreshList()
       void loadDetail(payload.teamId)
     }
@@ -155,13 +169,15 @@ async function onCreatedTeam(id: number) {
         <div class="min-h-0 min-w-0 w-full justify-self-start lg:w-1/2 lg:max-w-[50%]">
           <TeamDetail :team="team" :stats="stats" @update="onUpdate" @delete="onDelete" />
         </div>
-        <RosterList
-          :rows="roster"
-          :team-id="selectedId"
-          @add="openRosterAdd"
-          @edit="openRosterEdit"
-          @remove="removeRoster"
-        />
+        <div class="min-h-0 min-w-0 w-full justify-self-start lg:w-1/2 lg:max-w-[50%]">
+          <RosterList
+            :rows="roster"
+            :team-id="selectedId"
+            @add="openRosterAdd"
+            @edit="openRosterEdit"
+            @remove="removeRoster"
+          />
+        </div>
       </div>
     </div>
 

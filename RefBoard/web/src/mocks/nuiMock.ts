@@ -308,6 +308,7 @@ export function mockResponse(path: string, data: unknown): unknown {
       return { ok: true, forwarded: true }
     }
     case 'player_add':
+    case 'player_remove':
       return { ok: true, forwarded: true }
     case 'player_online_list':
       return { ok: true, forwarded: true }
@@ -887,7 +888,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         position?: string | null
         isStarter?: boolean
       }
-      const pid = `p${Date.now()}`
+      const pid = String(Date.now())
       const row: MatchPlayer = {
         id: pid,
         number: d.jerseyNumber ?? d.serverId ?? 0,
@@ -909,6 +910,30 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         team2_score: liveDetail.score.away,
         events: liveDetail.events,
         players: null,
+      })
+    }
+    if (path === 'player_remove') {
+      const d = data as { matchId?: number; teamId?: number; playerId?: number }
+      const tid = Number(d.teamId)
+      const wantId = Number(d.playerId)
+      const filter = (xs: MatchPlayer[]) =>
+        xs.filter((x) => !(Number.isFinite(wantId) && Number(x.id) === wantId))
+      if (tid === liveDetail.team1Id) {
+        liveDetail.homePlayers = filter(liveDetail.homePlayers)
+      } else if (tid === liveDetail.team2Id) {
+        liveDetail.awayPlayers = filter(liveDetail.awayPlayers)
+      }
+      flushPersistence()
+      postNui('refboard:player:remove:ack', { ok: true })
+      postNui('refboard:match:state', {
+        matchId: d.matchId,
+        team1_score: liveDetail.score.home,
+        team2_score: liveDetail.score.away,
+        events: liveDetail.events,
+        players: [
+          ...liveDetail.homePlayers.map((p) => toMockServerPlayer(p, liveDetail.team1Id)),
+          ...liveDetail.awayPlayers.map((p) => toMockServerPlayer(p, liveDetail.team2Id)),
+        ],
       })
     }
     if (path === 'score_goal') {

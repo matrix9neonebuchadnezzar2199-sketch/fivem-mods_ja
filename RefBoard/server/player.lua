@@ -248,3 +248,67 @@ RegisterNetEvent('refboard:player:add_from_roster', function(payload)
   TriggerEvent('refboard:internal:broadcastState', matchId)
   end)
 end)
+
+RegisterNetEvent('refboard:player:remove', function(payload)
+  local src = source
+  RefboardGuard(src, 'refboard:player:remove:ack', 'net:player:remove', function()
+    if not RefboardRequireEdit(src) then
+      TriggerClientEvent('refboard:player:remove:ack', src, { ok = false, error = 'no_permission' })
+      return
+    end
+    if type(payload) ~= 'table' then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.INVALID_PAYLOAD))
+      return
+    end
+    local matchId = tonumber(payload.matchId)
+    local teamId = tonumber(payload.teamId)
+    local playerId = tonumber(payload.playerId)
+    if not matchId or not teamId or not playerId then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.BAD_ARGS))
+      return
+    end
+    if not assertEditorLock(src, matchId) then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.NO_LOCK))
+      return
+    end
+
+    local m = MySQL.single.await('SELECT status FROM matches WHERE id = ?', { matchId })
+    if not m or m.status ~= 'draft' then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.MATCH_ALREADY_FINISHED))
+      return
+    end
+
+    local row = MySQL.single.await(
+      'SELECT id FROM match_players WHERE id = ? AND match_id = ? AND team_id = ?',
+      { playerId, matchId, teamId }
+    )
+    if not row then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.PLAYER_NOT_FOUND))
+      return
+    end
+
+    local evCount = MySQL.scalar.await(
+      [[SELECT COUNT(*) FROM match_events
+        WHERE match_id = ? AND voided_at IS NULL AND (
+          player_id = ? OR assist_player_id = ? OR sub_in_player_id = ? OR sub_out_player_id = ?
+        )]],
+      { matchId, playerId, playerId, playerId, playerId }
+    )
+    if evCount and tonumber(evCount) > 0 then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.PLAYER_HAS_EVENTS))
+      return
+    end
+
+    local n = MySQL.update.await(
+      'DELETE FROM match_players WHERE id = ? AND match_id = ? AND team_id = ?',
+      { playerId, matchId, teamId }
+    )
+    if not n or tonumber(n) < 1 then
+      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.PLAYER_NOT_FOUND))
+      return
+    end
+
+    TriggerClientEvent('refboard:player:remove:ack', src, { ok = true })
+    TriggerEvent('refboard:internal:broadcastState', matchId)
+  end)
+end)

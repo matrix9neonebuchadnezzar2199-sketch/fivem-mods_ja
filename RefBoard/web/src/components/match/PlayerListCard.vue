@@ -10,13 +10,19 @@ withDefaults(
     readonly: boolean
     teamId: number
     editorHere: boolean
+    /** 下書き試合のみ true（誤追加の取り消し用） */
+    canRemovePlayers?: boolean
     /** 枠なし（下部ドック等で外側に枠があるとき） */
     embed?: boolean
   }>(),
-  { embed: false },
+  { embed: false, canRemovePlayers: false },
 )
 
-const emit = defineEmits<{ 'history': []; 'add': [teamId: number] }>()
+const emit = defineEmits<{
+  history: []
+  add: [teamId: number]
+  remove: [player: MatchPlayer]
+}>()
 
 const { t } = useI18n()
 
@@ -75,7 +81,8 @@ function rowClass(s: MatchPlayer['status']) {
             <th class="w-10 shrink-0 py-2 pr-2">No</th>
             <th class="min-w-0 py-2 pr-2">選手</th>
             <th class="w-12 shrink-0 py-2 pr-2">POS</th>
-            <th class="w-24 shrink-0 py-2">状態</th>
+            <th class="w-24 shrink-0 py-2 pr-2">状態</th>
+            <th v-if="canRemovePlayers" class="w-14 shrink-0 py-2 text-right">{{ t('player.list_actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -86,6 +93,17 @@ function rowClass(s: MatchPlayer['status']) {
             </td>
             <td class="w-12 shrink-0 py-2 pr-2 text-slate-400">{{ p.position }}</td>
             <td class="w-24 shrink-0 py-2 font-medium" :class="statusClass(p.status)">{{ statusLabel(p.status) }}</td>
+            <td v-if="canRemovePlayers" class="w-14 shrink-0 py-2 text-right">
+              <button
+                type="button"
+                class="text-red-400 hover:underline disabled:opacity-40"
+                :disabled="readonly"
+                :title="t('player.list_remove_aria')"
+                @click="emit('remove', p)"
+              >
+                {{ t('player.list_remove') }}
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>

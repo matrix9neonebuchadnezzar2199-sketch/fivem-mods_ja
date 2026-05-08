@@ -267,6 +267,10 @@ RegisterNetEvent('refboard:player:add:ack', function(payload)
   SendNUIMessage({ type = 'refboard:player:add:ack', payload = payload })
 end)
 
+RegisterNetEvent('refboard:player:remove:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:player:remove:ack', payload = payload })
+end)
+
 RegisterNetEvent('refboard:player:online_list:ack', function(payload)
   SendNUIMessage({ type = 'refboard:player:online_list:ack', payload = payload })
 end)
