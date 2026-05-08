@@ -5,7 +5,9 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  /* ゲーム画面を暗くしない（全画面シェードは使わない） */
+  background: transparent;
+  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -16,6 +18,7 @@
 }
 
 .panel {
+  pointer-events: auto;
   /* サイドバー20rem + 中央4列(140px×4=35rem) + 余白 ≒ 60rem。
      画面が狭い場合は viewport に追従。全幅化はゲーム視認性のため撤回済み。 */
   width: min(60rem, calc(100vw - 2rem));
@@ -228,6 +231,7 @@
 }
 
 .toast {
+  pointer-events: auto;
   position: fixed;
   bottom: 1.5rem;
   left: 50%;
