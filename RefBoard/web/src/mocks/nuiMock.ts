@@ -110,6 +110,19 @@ function postNui(type: string, payload: unknown) {
   window.postMessage({ type, payload }, '*')
 }
 
+/** DEV モック: イベント行テキストに「背番号 + 名前」が出ている＝タイムライン参照ありとみなす（本番の match_events 判定に相当） */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function mockTimelineReferencesPlayer(player: MatchPlayer, events: { text?: string }[] | undefined): boolean {
+  if (!events?.length) return false
+  const n = Number(player.number)
+  if (!Number.isFinite(n)) return false
+  const re = new RegExp(`\\b${n}\\s+${escapeRegExp(player.name)}\\b`)
+  return events.some((e) => Boolean(e.text && re.test(e.text)))
+}
+
 function toMockServerPlayer(p: MatchPlayer, teamId: number) {
   const out = p.status === 'subbed_out' || p.status === 'sent_off'
   return {
@@ -916,6 +929,16 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const d = data as { matchId?: number; teamId?: number; playerId?: number }
       const tid = Number(d.teamId)
       const wantId = Number(d.playerId)
+      const allPlayers = [...liveDetail.homePlayers, ...liveDetail.awayPlayers]
+      const target = allPlayers.find((x) => Number.isFinite(wantId) && Number(x.id) === wantId)
+      if (target && mockTimelineReferencesPlayer(target, liveDetail.events)) {
+        postNui('refboard:player:remove:ack', {
+          ok: false,
+          error: 'player_has_events',
+          code: 'E3006',
+        })
+        return
+      }
       const filter = (xs: MatchPlayer[]) =>
         xs.filter((x) => !(Number.isFinite(wantId) && Number(x.id) === wantId))
       if (tid === liveDetail.team1Id) {
