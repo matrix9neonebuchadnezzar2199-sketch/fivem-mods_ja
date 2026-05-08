@@ -383,7 +383,16 @@
     "pick_article": "Choose an article from the list on the left.",
     "error_article_missing": "No help article for {code} yet. Pick a related topic or run Health check in Settings.",
     "article_missing": "Article file not found.",
-    "toast_open_solution": "How to fix"
+    "toast_open_solution": "How to fix",
+    "search": {
+      "placeholder": "Search help (title, tags, body)",
+      "clear": "Clear search",
+      "searching": "Searching…",
+      "results_for": "Results for “{q}”",
+      "no_results": "No articles matched. Try different keywords.",
+      "badge_reverse": "🎯 Reverse index",
+      "badge_tree": "📚 By topic"
+    }
   },
   "health": {
     "title": "Health check",

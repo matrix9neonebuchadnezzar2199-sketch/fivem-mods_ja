@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.6 — 2026-05-08
+
+- **ヘルプ検索**: `fuse.js` 7.3 を導入し、タイトル / タグ / 本文（plain text 化）の重み付き全文検索を実装（`web/src/utils/helpSearch.ts`）。
+- **HelpView**: ヘッダーに検索ボックスを追加。クエリ入力で左カラムが検索結果リストに切り替わり、各行に「🎯 逆引き」バッジを表示。Enter で先頭ヒットを開く。IME 確定後に検索が走るよう `compositionend` を購読。
+- **i18n**: `help.search.*`（placeholder / clear / searching / results_for / no_results / badge_reverse / badge_tree）を `ja.json` / `en.json` に追加。
+- **パフォーマンス**: 検索インデックスは `onMounted` で lazy 構築し、モジュールレベルでキャッシュ。`resetHelpIndex()` を export して将来の locale 切替（Phase E）に備える。
+- **既知の制約**: 検索対象は現状 `reverse_index.json` 系のみ。`index.json` の項目ごとツリー検索は Phase D（記事 20 本完成）で配線予定（バッジ `📚 項目ごと` も同フェーズで使用開始）。
+
 ## v0.6.5 — 2026-05-08
 
 - **ヘルプ**: 日本語記事を 4 → 12 本に拡充（試合管理カテゴリ 8 本追加: `match_record_goal` / `match_record_assist` / `match_substitute_player` / `match_yellow_card` / `match_red_card` / `match_penalty_shootout` / `match_manual_score_edit` / `match_finish`）。

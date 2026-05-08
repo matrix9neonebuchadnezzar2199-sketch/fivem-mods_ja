@@ -383,7 +383,16 @@
     "pick_article": "左の一覧から記事を選んでください。",
     "error_article_missing": "エラー {code} 用のヘルプ記事はまだありません。一覧から近い項目を選ぶか、設定のヘルスチェックを確認してください。",
     "article_missing": "記事ファイルが見つかりません。",
-    "toast_open_solution": "解決方法を見る"
+    "toast_open_solution": "解決方法を見る",
+    "search": {
+      "placeholder": "ヘルプを検索（タイトル・タグ・本文）",
+      "clear": "検索をクリア",
+      "searching": "検索中…",
+      "results_for": "「{q}」の検索結果",
+      "no_results": "該当する記事は見つかりませんでした。別のキーワードでお試しください。",
+      "badge_reverse": "🎯 逆引き",
+      "badge_tree": "📚 項目ごと"
+    }
   },
   "health": {
     "title": "ヘルスチェック",
