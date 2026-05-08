@@ -50,6 +50,11 @@ Sprint 07（v0.6.0）で着地した「ヘルプ骨組み＋日本語記事 4 �
 - 2026-05-08: Phase C 着手。`HelpTriggerButton` / `ContextHelpPanel` / `contextHelp` store を新設、`context_map.json` を作成、4 画面に `?` を配置。
 - 2026-05-08: **Phase C 完了**。`npm run build` 緑、4 画面で `?` クリック → スライドイン → 記事クリック → Help 画面遷移を確認。**v0.6.7 リリース可能**。
 
+## Phase D 進捗
+
+- 2026-05-08: Phase D 着手。準備・周辺ヘルプ記事 8 本、`index.json` / `reverse_index.json` 拡張、`context_map.json` の `team_manage` / `data_manage` / `settings` / `match_detail` 更新。
+- 2026-05-08: **Phase D 完了**。日本語記事 **20 本**そろい、`npm run build` 緑。**v0.6.8 リリース可能**。項目ごとツリー（`index.json`）の HelpView 配線は Phase E。
+
 ---
 
 **改版履歴**
@@ -58,3 +63,4 @@ Sprint 07（v0.6.0）で着地した「ヘルプ骨組み＋日本語記事 4 �
 - 2026-05-08: Phase A 完了（進捗節更新）。
 - 2026-05-08: Phase B 完了（進捗節追加）。
 - 2026-05-08: Phase C 完了（進捗節追加）。
+- 2026-05-08: Phase D 完了（進捗節追加）。

@@ -1,29 +1,19 @@
 {
   "tree": [
     {
-      "id": "trouble",
-      "icon": "🔧",
-      "title": "トラブルシューティング",
+      "id": "intro",
+      "icon": "📘",
+      "title": "はじめに",
       "children": [
         {
-          "id": "trouble_e1003",
-          "title": "他の審判が編集中（E1003）",
-          "article": "trouble_e1003_lock_held.md"
+          "id": "intro_what_is_refboard",
+          "title": "RefBoard とは",
+          "article": "intro_what_is_refboard.md"
         },
         {
-          "id": "trouble_undo_goal",
-          "title": "間違えてゴールを記録してしまった",
-          "article": "trouble_undo_goal.md"
-        },
-        {
-          "id": "trouble_connection",
-          "title": "接続が切れた、データは大丈夫？",
-          "article": "trouble_connection_lost.md"
-        },
-        {
-          "id": "trouble_autosave",
-          "title": "オートセーブが失敗した時",
-          "article": "trouble_autosave_failed.md"
+          "id": "intro_setup",
+          "title": "はじめてのセットアップ（運営・審判向け）",
+          "article": "intro_setup.md"
         }
       ]
     },
@@ -32,6 +22,11 @@
       "icon": "⚽",
       "title": "試合管理",
       "children": [
+        {
+          "id": "match_create_new",
+          "title": "新しい試合を作る",
+          "article": "match_create_new.md"
+        },
         {
           "id": "match_record_goal",
           "title": "ゴールを記録する",
@@ -71,6 +66,72 @@
           "id": "match_finish",
           "title": "試合を終了する／再編集する",
           "article": "match_finish.md"
+        }
+      ]
+    },
+    {
+      "id": "team",
+      "icon": "👥",
+      "title": "チーム管理",
+      "children": [
+        {
+          "id": "team_create",
+          "title": "チームを新規登録する",
+          "article": "team_create.md"
+        },
+        {
+          "id": "team_add_roster_member",
+          "title": "ロスターにメンバーを追加する",
+          "article": "team_add_roster_member.md"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "icon": "📊",
+      "title": "データ管理",
+      "children": [
+        {
+          "id": "data_view_history",
+          "title": "データ管理で履歴を見る",
+          "article": "data_view_history.md"
+        },
+        {
+          "id": "data_export",
+          "title": "CSV でエクスポートする",
+          "article": "data_export.md"
+        }
+      ]
+    },
+    {
+      "id": "trouble",
+      "icon": "🔧",
+      "title": "トラブルシューティング",
+      "children": [
+        {
+          "id": "trouble_e1003",
+          "title": "他の審判が編集中（E1003）",
+          "article": "trouble_e1003_lock_held.md"
+        },
+        {
+          "id": "trouble_undo_goal",
+          "title": "間違えてゴールを記録してしまった",
+          "article": "trouble_undo_goal.md"
+        },
+        {
+          "id": "trouble_connection",
+          "title": "接続が切れた、データは大丈夫？",
+          "article": "trouble_connection_lost.md"
+        },
+        {
+          "id": "trouble_autosave",
+          "title": "オートセーブが失敗した時",
+          "article": "trouble_autosave_failed.md"
+        },
+        {
+          "id": "trouble_health_check_guide",
+          "title": "ヘルスチェックの見方",
+          "article": "trouble_health_check_guide.md"
         }
       ]
     }

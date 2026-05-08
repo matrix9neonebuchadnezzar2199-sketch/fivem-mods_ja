@@ -1,5 +1,6 @@
 {
   "match_detail": [
+    "match_create_new",
     "match_record_goal",
     "match_record_assist",
     "match_substitute_player",
@@ -12,9 +13,17 @@
     "trouble_e1003_lock_held",
     "trouble_autosave_failed"
   ],
-  "team_manage": [],
-  "data_manage": [],
+  "team_manage": [
+    "team_create",
+    "team_add_roster_member",
+    "intro_setup"
+  ],
+  "data_manage": [
+    "data_view_history",
+    "data_export"
+  ],
   "settings": [
+    "trouble_health_check_guide",
     "trouble_connection_lost",
     "trouble_autosave_failed"
   ]

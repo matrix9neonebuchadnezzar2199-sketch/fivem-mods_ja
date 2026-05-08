@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.8 — 2026-05-08
+
+- **ヘルプ（日本語 20 本完成）**: Phase D 記事 8 本を追加 — `intro_what_is_refboard` / `intro_setup` / `match_create_new` / `team_create` / `team_add_roster_member` / `data_view_history` / `data_export` / `trouble_health_check_guide`（`web/src/help/ja/articles/`）。
+- **ヘルプ目次**: `index.json` に「はじめに」「チーム管理」「データ管理」を追加し、試合管理へ「新しい試合を作る」を先頭に配置。トラブルに「ヘルスチェックの見方」を追加。
+- **逆引き**: `reverse_index.json` に はじめに / チーム / データ・履歴 / 試合の準備 / 診断 カテゴリを追加（既存の緊急・試合中と合わせ全 7 カテゴリ）。Fuse.js 検索インデックスは次回 Help 表示時に件数増加。
+- **コンテキストヘルプ**: `context_map.json` を更新 — `team_manage` / `data_manage` に関連記事を割当、`match_detail` に `match_create_new` を追加、`settings` に `trouble_health_check_guide` を追加。
+
 ## v0.6.7 — 2026-05-08
 
 - **コンテキストヘルプ**: 画面ヘッダの `?` ボタンから、その画面に関連する記事だけを右スライドインパネルで提示する仕組みを実装。
@@ -16,7 +23,7 @@
 - **HelpView**: ヘッダーに検索ボックスを追加。クエリ入力で左カラムが検索結果リストに切り替わり、各行に「🎯 逆引き」バッジを表示。Enter で先頭ヒットを開く。IME 確定後に検索が走るよう `compositionend` を購読。
 - **i18n**: `help.search.*`（placeholder / clear / searching / results_for / no_results / badge_reverse / badge_tree）を `ja.json` / `en.json` に追加。
 - **パフォーマンス**: 検索インデックスは `onMounted` で lazy 構築し、モジュールレベルでキャッシュ。`resetHelpIndex()` を export して将来の locale 切替（Phase E）に備える。
-- **既知の制約**: 検索対象は現状 `reverse_index.json` 系のみ。`index.json` の項目ごとツリー検索は Phase D（記事 20 本完成）で配線予定（バッジ `📚 項目ごと` も同フェーズで使用開始）。
+- **既知の制約**: 検索対象は現状 `reverse_index.json` 系のみ。`index.json` の項目ごとツリーは **Phase E** で HelpView に配線予定（バッジ `📚 項目ごと` と併用）。
 
 ## v0.6.5 — 2026-05-08
 

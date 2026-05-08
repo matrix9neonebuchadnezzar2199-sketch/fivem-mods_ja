@@ -1,6 +1,25 @@
 {
   "categories": [
     {
+      "id": "intro",
+      "icon": "📘",
+      "title": "はじめに",
+      "items": [
+        {
+          "id": "intro_what",
+          "title": "RefBoard って何？",
+          "article": "intro_what_is_refboard.md",
+          "tags": ["概要", "審判", "MySQL", "ロック"]
+        },
+        {
+          "id": "intro_setup_rev",
+          "title": "初回セットアップをしたい",
+          "article": "intro_setup.md",
+          "tags": ["インストール", "SQL", "ACE", "パスワード"]
+        }
+      ]
+    },
+    {
       "id": "urgent",
       "icon": "🆘",
       "title": "緊急度高",
@@ -28,6 +47,62 @@
           "title": "オートセーブが失敗した時",
           "article": "trouble_autosave_failed.md",
           "tags": ["オートセーブ", "保存", "E4003", "tx_failed"]
+        }
+      ]
+    },
+    {
+      "id": "team_off",
+      "icon": "👥",
+      "title": "チーム",
+      "items": [
+        {
+          "id": "team_create_rev",
+          "title": "チームを登録したい",
+          "article": "team_create.md",
+          "tags": ["チーム", "新規", "略称", "カラー"],
+          "actionUrl": "#/workspace/teams"
+        },
+        {
+          "id": "team_roster_rev",
+          "title": "ロスターに選手を足したい",
+          "article": "team_add_roster_member.md",
+          "tags": ["ロスター", "サーバーID", "背番号"],
+          "actionUrl": "#/workspace/teams"
+        }
+      ]
+    },
+    {
+      "id": "data_off",
+      "icon": "📊",
+      "title": "データ・履歴",
+      "items": [
+        {
+          "id": "data_history_rev",
+          "title": "過去の試合や統計を見たい",
+          "article": "data_view_history.md",
+          "tags": ["データ管理", "履歴", "集計", "ログ"],
+          "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_csv_rev",
+          "title": "CSV でダウンロードしたい",
+          "article": "data_export.md",
+          "tags": ["CSV", "Excel", "エクスポート", "BOM"],
+          "actionUrl": "#/workspace/data"
+        }
+      ]
+    },
+    {
+      "id": "before_match",
+      "icon": "🗓️",
+      "title": "試合の準備",
+      "items": [
+        {
+          "id": "match_new_rev",
+          "title": "新しい試合を作りたい",
+          "article": "match_create_new.md",
+          "tags": ["試合作成", "ホーム", "アウェイ", "予約"],
+          "actionUrl": "#/workspace/matches"
         }
       ]
     },
@@ -91,6 +166,20 @@
           "article": "match_finish.md",
           "tags": ["終了", "再編集", "reopen", "確定"],
           "actionUrl": "#/workspace/matches/:matchId"
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "icon": "🩺",
+      "title": "診断",
+      "items": [
+        {
+          "id": "health_check_guide",
+          "title": "ヘルスチェックの結果を読みたい",
+          "article": "trouble_health_check_guide.md",
+          "tags": ["ヘルスチェック", "DB", "権限", "診断", "Markdown"],
+          "actionUrl": "#/workspace/health"
         }
       ]
     }
