@@ -14,8 +14,8 @@ server_script 'server/main.lua'
 ui_page 'html/index.html'
 files {
     'html/index.html',
-    'html/style.css',
-    'html/script.js',
+    'html/assets/*.js',
+    'html/assets/*.css',
     'html/img/README.txt',
     'html/img/*.png',
 }

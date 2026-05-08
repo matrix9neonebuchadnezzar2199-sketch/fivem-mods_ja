@@ -63,6 +63,8 @@
 
 以降の説明ではリソース名を **`dvd-maker`** と書く。別名にしたら、手順 3・4 の **`dvd-maker` の部分をすべてその名前に置き換える**。
 
+**同梱の `html/` は NUI ビルド済み**です。`nui/src/` を変更した場合は `dvd-maker/nui` で `npm install` のあと **`npm run build`** を実行し、`html/index.html` と `html/assets/` を更新してください（ミニファイ済み JS/CSS が出力されます）。
+
 ### 2. server.cfg で起動する
 
 `server.cfg` に次を追加する（フォルダ名に合わせる）。
@@ -263,7 +265,7 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 
 ※旧版で付いた `metadata.imageurl` が残っているトール DVD は、ox がその URL を読めず **インベントリが透明**になることがあります。該当スロットの `imageurl` を運営ツール等で削除するか、アイテムを入れ直してください。
 
-※記録が常に不織布（`dvd_recorded1`）になる場合は、**`refresh` / `restart dvd-maker` 後に NUI（`html/script.js`）が最新か**確認してください。保存ペイロードは `dvdPack` キーで種類を送ります（環境によって JSON の `pack` が欠ける事例への回避）。
+※記録が常に不織布（`dvd_recorded1`）になる場合は、**`refresh` / `restart dvd-maker` 後に NUI（`nui/` を `npm run build` した `html/assets/`）が最新か**確認してください。保存ペイロードは `dvdPack` キーで種類を送ります（環境によって JSON の `pack` が欠ける事例への回避）。
 
 **付与アイテムの確認**: 記録成功時、**サーバーコンソール**に  
 `[dvd-maker] 記録成功: 付与アイテム=dvd_recorded3 pack=tall player=…`  

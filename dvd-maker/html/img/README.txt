@@ -6,7 +6,7 @@
 - dvd_jewel_transparent_128.png … **クリアケース**（dvd_recorded2）
 - dvd_case_text_transparent_128.png … **トールケース**（dvd_recorded3）。再生メニュー右のケース表示でも使用
 
-差し替える場合は上記ファイル名を維持するか、html/script.js の img 参照・config.lua の Config.InventorySlotImage・ox_inventory の items.lua の image を揃えてください。
+差し替える場合は上記ファイル名を維持するか、nui/src/main.js（ビルド前）の img 参照・config.lua の Config.InventorySlotImage・ox_inventory の items.lua の image を揃えてください。
 
 ox_inventory では同じ PNG を web/images/ 等にコピーし、items の image 名と一致させます。
 

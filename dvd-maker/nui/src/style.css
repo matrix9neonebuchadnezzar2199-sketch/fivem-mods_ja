@@ -247,8 +247,10 @@ body {
   width: 80vw;
   height: 80vh;
   padding: 16px;
+  padding-bottom: 40px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.85);
+  position: relative;
 }
 
 #yt-player {
@@ -296,4 +298,17 @@ body {
 
 .cover-lightbox-close {
   flex-shrink: 0;
+}
+
+.dm-signature {
+  position: absolute;
+  bottom: 14px;
+  right: 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.38);
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
 }

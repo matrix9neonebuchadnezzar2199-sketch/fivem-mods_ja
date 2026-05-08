@@ -2,6 +2,8 @@
  * DVD Maker NUI — 状態: hidden / create / playerMenu / playing
  */
 
+import './style.css';
+
 const app = document.getElementById('app');
 
 let uiState = 'hidden';
@@ -149,6 +151,16 @@ function openCoverLightbox(imageUrl) {
   coverLightboxEl = root;
 }
 
+/** 右下クレジット（作成・視聴 UI） */
+function appendSignature(container) {
+  if (!container) return;
+  var el = document.createElement('div');
+  el.className = 'dm-signature';
+  el.textContent = 'by eiho';
+  el.setAttribute('aria-hidden', 'true');
+  container.appendChild(el);
+}
+
 function setHidden() {
   closeCoverLightbox();
   uiState = 'hidden';
@@ -271,6 +283,7 @@ function showCreate() {
 
   panel.appendChild(img);
   panel.appendChild(col);
+  appendSignature(panel);
   app.appendChild(panel);
 }
 
@@ -392,6 +405,7 @@ function showPlayerMenu() {
   col.appendChild(bCancel);
 
   panel.appendChild(col);
+  appendSignature(panel);
   app.appendChild(panel);
 }
 
@@ -440,6 +454,7 @@ function showPlaying(videoId) {
 
   wrap.appendChild(holder);
   wrap.appendChild(stopBtn);
+  appendSignature(wrap);
   app.appendChild(wrap);
 
   loadYouTubeApi().then(function () {

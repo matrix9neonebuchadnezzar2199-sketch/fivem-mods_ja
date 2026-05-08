@@ -58,6 +58,8 @@ The **folder name becomes the resource name** (e.g. `resources/[standalone]/dvd-
 
 These instructions assume the resource is named **`dvd-maker`**. If you rename the folder, replace **`dvd-maker`** everywhere in steps 3–4 (exports, `ensure` name).
 
+The bundled **`html/`** folder is a **prebuilt NUI**. If you edit **`nui/src/`**, run **`npm install`** then **`npm run build`** inside **`dvd-maker/nui`** to refresh **`html/index.html`** and **`html/assets/`** (minified JS/CSS).
+
 ### 2. Start it from `server.cfg`
 
 Add (match your folder name):
@@ -257,7 +259,7 @@ Main keys the server sets:
 
 Legacy **`metadata.imageurl`** on some tall DVDs can make ox try to load a remote URL as a slot icon and show **transparent** slots. Remove `imageurl` with admin tools or replace the item.
 
-If recording **always** yields paper sleeve (`dvd_recorded1`), confirm **`refresh` / `restart dvd-maker`** deployed the latest **`html/script.js`** — the save payload sends **`dvdPack`** (fallback when JSON omits `pack`).
+If recording **always** yields paper sleeve (`dvd_recorded1`), confirm **`refresh` / `restart dvd-maker`** deployed the latest NUI bundle (**`npm run build`** in **`nui/`**, output under **`html/assets/`**) — the save payload sends **`dvdPack`** (fallback when JSON omits `pack`).
 
 **Server log on success** (message is **Japanese** in the current resource):
 
