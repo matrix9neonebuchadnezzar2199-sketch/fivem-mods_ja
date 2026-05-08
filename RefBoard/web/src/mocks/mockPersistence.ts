@@ -2,7 +2,7 @@
  * モック永続化レイヤ（ブラウザ専用）
  *
  * - localStorage キー: `refboard:mock:state`
- * - スキーマバージョン: `STORAGE_VERSION`（現在 1）。破壊的変更時は bump し、古い JSON は破棄して `seedInitialState()` が使われる。
+ * - スキーマバージョン: `STORAGE_VERSION`（現在 2）。破壊的変更時は bump し、古い JSON は破棄して `seedInitialState()` が使われる。
  * - 開発者は `window.__refboardMock.reset()`（DEV のみ公開）で手動リセット可能。
  * - FiveM 本番 NUI では `useBrowserMock()` が false のため本モジュールの save は呼ばれない想定。
  *
@@ -13,7 +13,8 @@ import type { MatchDetailModel } from '../types/match'
 import { mockMatchDetail } from './matchDetail'
 
 export const STORAGE_KEY = 'refboard:mock:state'
-export const STORAGE_VERSION = 1
+/** 破壊的シード変更時に上げる（localStorage を捨てて `seedInitialState()` へ） */
+export const STORAGE_VERSION = 2
 
 export type PersistedTeam = {
   id: number
@@ -94,10 +95,46 @@ function clone<T>(x: T): T {
 const MOCK_LICENSE = 'mock-license'
 const MOCK_REF_NAME = 'モック審判'
 
+/** 1チームあたりロスター15人（GK1 + DF4 + MF5 + FW5）のテスト用シード */
+const ROSTER_POSITIONS: Array<'GK' | 'DF' | 'MF' | 'FW'> = [
+  'GK',
+  'DF',
+  'DF',
+  'DF',
+  'DF',
+  'MF',
+  'MF',
+  'MF',
+  'MF',
+  'MF',
+  'FW',
+  'FW',
+  'FW',
+  'FW',
+  'FW',
+]
+
+function rosterRowsForTeam(teamId: number, code: string, firstRosterId: number): RosterRow[] {
+  return ROSTER_POSITIONS.map((position, i) => ({
+    id: firstRosterId + i,
+    player_name: `${code} 選手${String(i + 1).padStart(2, '0')}`,
+    jersey_number: i + 1,
+    position,
+    license: `mock:t${teamId}:j${i + 1}`,
+    matches_played: 0,
+    goals: 0,
+    yellows: 0,
+    reds: 0,
+  }))
+}
+
 export function seedInitialState(): MockPersistenceState {
   const teams: PersistedTeam[] = [
-    { id: 1, name: 'Los Santos FC', short_name: 'LS', color: '#3b82f6', emblem_emoji: null, deleted_at: null },
+    { id: 1, name: 'Los Santos FC', short_name: 'LS', color: '#3b82f6', emblem_emoji: '⚽', deleted_at: null },
     { id: 2, name: 'Vinewood United', short_name: 'VW', color: '#64748b', emblem_emoji: null, deleted_at: null },
+    { id: 3, name: 'Paleto Bay SC', short_name: 'PB', color: '#22c55e', emblem_emoji: null, deleted_at: null },
+    { id: 4, name: 'Sandy Shores AC', short_name: 'SS', color: '#f59e0b', emblem_emoji: null, deleted_at: null },
+    { id: 5, name: 'Grapeseed Town FC', short_name: 'GT', color: '#a855f7', emblem_emoji: null, deleted_at: null },
   ]
   const listRows: PersistedListRow[] = [
     {
@@ -117,43 +154,11 @@ export function seedInitialState(): MockPersistenceState {
     },
   ]
   const rosterByTeam: Record<string, RosterRow[]> = {
-    '1': [
-      {
-        id: 9001,
-        player_name: 'LS Keeper',
-        jersey_number: 1,
-        position: 'GK',
-        license: 'mock:ls:1',
-        matches_played: 2,
-        goals: 0,
-        yellows: 0,
-        reds: 0,
-      },
-      {
-        id: 9002,
-        player_name: 'LS Striker',
-        jersey_number: 9,
-        position: 'FW',
-        license: 'mock:ls:9',
-        matches_played: 2,
-        goals: 5,
-        yellows: 1,
-        reds: 0,
-      },
-    ],
-    '2': [
-      {
-        id: 9101,
-        player_name: 'VW Mid',
-        jersey_number: 10,
-        position: 'MF',
-        license: null,
-        matches_played: 1,
-        goals: 1,
-        yellows: 0,
-        reds: 0,
-      },
-    ],
+    '1': rosterRowsForTeam(1, 'LS', 9001),
+    '2': rosterRowsForTeam(2, 'VW', 9016),
+    '3': rosterRowsForTeam(3, 'PB', 9031),
+    '4': rosterRowsForTeam(4, 'SS', 9046),
+    '5': rosterRowsForTeam(5, 'GT', 9061),
   }
   const scoreHistory: ScoreHistoryMockRow[] = [
     {
@@ -183,7 +188,7 @@ export function seedInitialState(): MockPersistenceState {
     matchDrafts: {},
     scoreHistory,
     focusedMatchId: 1,
-    nextIds: { team: 3, match: 2, roster: 9102, history: 2 },
+    nextIds: { team: 6, match: 2, roster: 9076, history: 2 },
   }
 }
 

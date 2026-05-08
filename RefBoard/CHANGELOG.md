@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.1 — 2026-05-08
+
+- **dev（NUI モック）**: 初期シードを **チーム5件**・各 **ロスター15人**（GK1+DF4+MF5+FW5）に拡張。`localStorage` のモック状態は **`STORAGE_VERSION` 2** で再シードされる。
+- **dev（MySQL）**: 任意実行の `sql/seed_test_5teams_15roster.sql` を追加（同名チーム・既存ロスターがある場合はスキップ）。
+
 ## v0.8.0 — 2026-05-08
 
 - **UI**: ルート `font-size` を **150%** に変更（従来 200%）。Tailwind の rem ベースの文字・余白が一括で約 1.5 倍相当に。
