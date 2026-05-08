@@ -14,7 +14,9 @@
         if propertyData.owner == targetCitizenid then
             if propertyData.apartment == apartment then
                 Framework[Config.Notify].Notify(targetSrc, "You are already in this apartment", "error")
-                Framework[Config.Notify].Notify(targetSrc, "This person is already in this apartment", "error")
+                if realtorSrc then
+                    Framework[Config.Notify].Notify(realtorSrc, "This person is already in this apartment", "error")
+                end
 
                 return
 ```
@@ -27,10 +29,10 @@
 | **B** | **コピペミス**。2行目は `realtorSrc` 向け「対象プレイヤーは既にこのアパートにいます」の誤配置の可能性が高い |
 | **C** | 条件分岐欠落（テナント用 / リアルター用で分けるべきだった） |
 
-### 本フォークの暫定方針
+### 本フォークの方針
 
 - **i18n では 2 文を別キー**として投入する（`notify.apartment.already_in_tenant` / `notify.apartment.peer_already_in`）。  
-- **ロジック修正は 8A-next-2 以降の別タスク**とし、必要なら `realtorSrc` へ送るよう変更を検討する。
+- **ロジック修正**: 2026-05-08 **案 B** を採用し、`realtorSrc` 宛に 2 行目を送る（詳細は §3「採用案と修正記録」）。
 
 ---
 
@@ -107,7 +109,25 @@
 - **案 B**（必要なら `realtorSrc` nil ガード）— 差分が最小で、成功パス（L416–417）と **「テナント / 不動産で別 Notify」** のパターンと一致するため。
 - 文言まで磨くなら **案 C** を **bugfix コミットの直後**または **8A-next-2** でまとめるとレビューが追いやすい。
 
-### 採用案・diff・動作確認（※ユーザ承認後に追記）
+### 採用案と修正記録
 
-- **状態**: 精査・候補提示まで完了。**実コード変更は未実施**（採用案の確定待ち）。
-- 確定後、ここに「採用案」「修正前後の要点」「確認手順（不動産が同一アパートに既入居のテナントを追加しようとしたときの通知）」を記載する。
+- **採用**: 案 B（2026-05-08 ユーザ承認）
+- **理由**: 差分最小、成功パス（テナント + 不動産の別 Notify）との対称性回復、i18n 同期負担なし（英文据え置き）
+- **修正コミット**: メッセージ `fix(server): nil-guard duplicate notify on apartment double-entry (upstream issue)` で検索（`git log -1 --grep='nil-guard duplicate notify'` 等）。コミットオブジェクトの SHA を同一コミットの本文に自己参照で埋め込むと amend のたびに破綻するため、確定 SHA は履歴ツールで確認する。
+- **`realtorSrc` の扱い**: ハンドラ先頭で `local realtorSrc = data.realtorSrc`。成功パスと同様に `Framework[Config.Notify].Notify` を使用。**nil 時は不動産向け通知を送らない**（`if realtorSrc then`）。`targetSrc` は `tonumber` 済みだが `realtorSrc` は未変換のため、呼び出し元が常に数値ソースを渡す前提（成功パス L417 と同じ）。
+- **修正前後の diff**（実コードは `Framework[Config.Notify].Notify` 形式）:
+
+  ```lua
+  -- before
+  Framework[Config.Notify].Notify(targetSrc, "You are already in this apartment", "error")
+  Framework[Config.Notify].Notify(targetSrc, "This person is already in this apartment", "error")
+
+  -- after
+  Framework[Config.Notify].Notify(targetSrc, "You are already in this apartment", "error")
+  if realtorSrc then
+      Framework[Config.Notify].Notify(realtorSrc, "This person is already in this apartment", "error")
+  end
+  ```
+
+- **動作確認方法**: コードレビューで完結。実機テストは不要（成功パスと同一 Notify 呼び出し構造のため、論理整合の確認で十分）。
+- **将来の改善（8A-next-2-2）**: 不動産向け英文を案 C 相当に改訂する。例: `notify.apartment.peer_already_in` を *"The client is already assigned to this apartment."* 等へ。キーは既存（`i18n-keys-master.md` / `locales/en.lua` / `locales/ja.lua` に `notify.apartment.already_in_tenant` / `notify.apartment.peer_already_in` あり）。

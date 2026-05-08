@@ -385,7 +385,9 @@ AddEventHandler("ps-housing:server:addTenantToApartment", function (data)
         if propertyData.owner == targetCitizenid then
             if propertyData.apartment == apartment then
                 Framework[Config.Notify].Notify(targetSrc, "You are already in this apartment", "error")
-                Framework[Config.Notify].Notify(targetSrc, "This person is already in this apartment", "error")
+                if realtorSrc then
+                    Framework[Config.Notify].Notify(realtorSrc, "This person is already in this apartment", "error")
+                end
 
                 return
             elseif propertyData.apartment and #propertyData.apartment > 1 then

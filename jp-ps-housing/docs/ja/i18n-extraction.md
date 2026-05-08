@@ -81,9 +81,9 @@
 - L119–359: 各種 `print("Error: ...")` → `debug.*` キー（約 12 文）
 - L161: `Notify(..., "Open radial menu for furniture...")` → `notify.spawn.furniture_radial_hint`
 - L292, L408: `SendLog("Creating new apartment for ...")` → `log.apartment.creating`
-- L381: `Notify(..., "You are already in this apartment", "error")` → `notify.apartment.already_in`
-- L382: `Notify(..., "This person is already in this apartment", "error")` → `notify.apartment.peer_already_in`（文言要確認: 同一変数 targetSrc で2種類はバグ疑い）
-- L410–411, L427–428: アパート追加成功（動的名前）→ `notify.apartment.moved_success`, `notify.realtor.added_tenant`
+- L387: `Notify(..., "You are already in this apartment", "error")`（`targetSrc`）→ `notify.apartment.already_in_tenant`
+- L388–390: `Notify(..., "This person is already in this apartment", "error")`（**`realtorSrc`**、`if realtorSrc then`）→ `notify.apartment.peer_already_in`（2026-05-08 案 B で宛先修正済み。旧 upstream は同一 `targetSrc` への二重通知バグ）
+- L418–419: アパート新規作成成功（動的文面）→ `notify.apartment.moved_success`, `notify.realtor.added_tenant`
 - L442: `Notify(..., "Player not found.", "error")` → `notify.common.player_not_found`
 
 ---
