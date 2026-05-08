@@ -17,7 +17,12 @@ shared_scripts {
 client_scripts { 'client/**/*.lua' }
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'server/**/*.lua',
+    'server/db.lua',
+    'server/history.lua',
+    'server/autosave.lua',
+    'server/recover.lua',
+    'server/api.lua',
+    'server/main.lua',
 }
 
 ui_page 'web/dist/index.html'
