@@ -127,6 +127,7 @@ end)
 
 local function ToggleBuilder()
     local state = TectonClient
+    lib.hideTextUI()
     state.open = not state.open
     if state.open then
         state.uiResumeAfterPlacement = false
@@ -266,12 +267,16 @@ local function reopenBuilderAfterPlacement()
     if s.open then
         return
     end
+    lib.hideTextUI()
+    --- ギズモ等で NUI フォーカスが残っている場合の取りこぼし防止
+    SetNuiFocus(false, false)
+    Wait(0)
     s.open = true
     s.uiResumeAfterPlacement = false
     s.placementActive = false
-    SetNuiFocus(true, true)
     SendNUIMessage({ action = 'placementBanner', show = false })
     SendNUIMessage({ action = 'setOpen', open = true })
+    SetNuiFocus(true, true)
     if s.propsLoaded and s.propsDictionary then
         SendNUIMessage({
             action = 'setProps',
@@ -282,12 +287,16 @@ local function reopenBuilderAfterPlacement()
         })
     end
     if s.selected then
-        local obj = lib.callback.await('tecton:object:get', false, s.selected)
-        if obj then
+        local ok, obj = pcall(function()
+            return lib.callback.await('tecton:object:get', false, s.selected)
+        end)
+        if ok and obj then
             SendNUIMessage({ action = 'selectedObject', selected = s.selected, object = obj })
         end
     end
 end
+
+exports('ReopenTectonBuilderAfterPlacement', reopenBuilderAfterPlacement)
 
 RegisterCommand('tecResume', reopenBuilderAfterPlacement, false)
 
@@ -298,7 +307,8 @@ CreateThread(function()
         local s = TectonClient
         if s and not s.open and s.uiResumeAfterPlacement and not s.placementActive then
             Wait(0)
-            if IsControlJustReleased(0, 22) and not IsNuiFocused() then
+            --- ジャンプ（22）はギズモ等で Disable されることがあるため disabled 側も見る
+            if IsDisabledControlJustReleased(0, 22) or IsControlJustReleased(0, 22) then
                 reopenBuilderAfterPlacement()
             end
         else
