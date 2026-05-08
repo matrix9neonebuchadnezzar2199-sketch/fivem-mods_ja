@@ -33,4 +33,5 @@ files {
     'docs/ja/reverse-index.json',
 }
 
-dependencies { 'ox_lib', 'oxmysql', 'object_gizmo' }
+-- object_gizmo は配置・ギズモ用（M1-c 以降）。未導入でもリソースは起動する。導入時は object_gizmo を ensure してから使う。
+dependencies { 'ox_lib', 'oxmysql' }
