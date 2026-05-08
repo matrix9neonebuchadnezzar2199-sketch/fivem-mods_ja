@@ -132,6 +132,11 @@
           "id": "trouble_health_check_guide",
           "title": "How to read the health check",
           "article": "trouble_health_check_guide.md"
+        },
+        {
+          "id": "trouble_e3006",
+          "title": "Cannot remove a player (E3006)",
+          "article": "trouble_e3006_player_has_events.md"
         }
       ]
     }

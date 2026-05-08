@@ -47,6 +47,12 @@
           "title": "オートセーブが失敗した時",
           "article": "trouble_autosave_failed.md",
           "tags": ["オートセーブ", "保存", "E4003", "tx_failed"]
+        },
+        {
+          "id": "e3006",
+          "title": "選手を削除できない（E3006）",
+          "article": "trouble_e3006_player_has_events.md",
+          "tags": ["選手削除", "タイムライン", "E3006", "player_has_events"]
         }
       ]
     },

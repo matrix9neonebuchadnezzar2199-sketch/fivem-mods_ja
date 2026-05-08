@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.5 — 2026-05-09
+
+- **feat（ヘルプ）**: `E3006`（`player_has_events`）の専用記事を日英で追加（`trouble_e3006_player_has_events.md`）。試合メンバー削除時に「タイムラインに参照あり」で失敗したときの解決手順・取消フロー・FAQ を収録。
+- **chore（ヘルプ配線）**: `errorCodeMapper.ts` の `ERROR_CODE_TO_HELP_SLUG` に `E3006` を追加し、エラートーストの「解決方法を見る」から専用記事に直行できるようにした。`reverse_index.json` の緊急度高カテゴリ、`index.json` のトラブルカテゴリ、`context_map.json` の `match_detail` にもそれぞれ登録（日英）。
+
 ## v0.8.4 — 2026-05-09
 
 - **feat（設定）**: 全体の文字サイズ（ルート `font-size`）を **設定画面から 100% / 150% / 200%** で切替可能に。`stores/settings.ts` の `rootFontScale`（既定 **200**、`localStorage` 永続化）と `App.vue` の `watchEffect` で `html.style.fontSize` に反映。`Settings.vue` の「表示」セクションにラジオを追加。日英 i18n（`settings.font_scale.*`）。

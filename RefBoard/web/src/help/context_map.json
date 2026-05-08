@@ -11,7 +11,8 @@
     "match_finish",
     "trouble_undo_goal",
     "trouble_e1003_lock_held",
-    "trouble_autosave_failed"
+    "trouble_autosave_failed",
+    "trouble_e3006_player_has_events"
   ],
   "team_manage": [
     "team_create",

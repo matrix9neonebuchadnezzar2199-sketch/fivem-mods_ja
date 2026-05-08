@@ -34,6 +34,7 @@ export const ERROR_KEY_TO_CODE: Record<string, string> = {
 export const ERROR_CODE_TO_HELP_SLUG: Record<string, string> = {
   E1003: 'trouble_e1003_lock_held',
   E2005: 'match_manual_score_edit',
+  E3006: 'trouble_e3006_player_has_events',
   E4003: 'trouble_autosave_failed',
 }
 
