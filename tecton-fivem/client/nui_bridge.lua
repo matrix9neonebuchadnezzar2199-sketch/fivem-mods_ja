@@ -21,12 +21,20 @@ RegisterNUICallback('ready', function(_, cb)
     elseif s.propsError then
         SendNUIMessage({ action = 'propsLoadFailed' })
     end
+    local selectedObject = nil
+    if s.selected then
+        selectedObject = lib.callback.await('tecton:object:get', false, s.selected)
+        if not selectedObject then
+            s.selected = nil
+        end
+    end
     cb({
         ok = true,
         open = s.open,
         scene = s.scene,
         mode = s.mode,
         selected = s.selected,
+        selectedObject = selectedObject,
         propsLoaded = s.propsLoaded,
         propsCount = s.propsCount or 0,
         propsError = s.propsError,
@@ -87,9 +95,17 @@ end)
 
 RegisterNUICallback('selectObject', function(data, cb)
     local s = getState()
-    s.selected = data and data.id or nil
-    SendNUIMessage({ action = 'selectAck', ok = true, selected = s.selected })
-    cb({ ok = true, selected = s.selected })
+    local id = data and tonumber(data.id) or nil
+    s.selected = id
+    local obj = nil
+    if id then
+        obj = lib.callback.await('tecton:object:get', false, id)
+        if not obj then
+            s.selected = nil
+        end
+    end
+    SendNUIMessage({ action = 'selectedObject', selected = s.selected, object = obj })
+    cb({ ok = true, selected = s.selected, object = obj })
 end)
 
 RegisterNUICallback('updateObject', function(data, cb)
@@ -101,6 +117,21 @@ RegisterNUICallback('updateObject', function(data, cb)
     local after = data.after or data
     local ok = lib.callback.await('tecton:op:update', false, data.id, after)
     if ok then
+        local client = getState()
+        local hid = tonumber(data.id)
+        local handle = hid and client.spawnedHandles[hid]
+        if handle and handle ~= 0 and DoesEntityExist(handle) and after.pos and after.rot then
+            local px = tonumber(after.pos.x) or 0.0
+            local py = tonumber(after.pos.y) or 0.0
+            local pz = tonumber(after.pos.z) or 0.0
+            local rx = tonumber(after.rot.x) or 0.0
+            local ry = tonumber(after.rot.y) or 0.0
+            local rz = tonumber(after.rot.z) or 0.0
+            SetEntityCoords(handle, px, py, pz, false, false, false, false)
+            SetEntityRotation(handle, rx, ry, rz, 2, true)
+        end
+        local fresh = hid and lib.callback.await('tecton:object:get', false, hid) or nil
+        SendNUIMessage({ action = 'selectedObject', selected = client.selected, object = fresh })
         SendNUIMessage({ action = 'opAck', op = 'update', ok = true, id = data.id })
         cb({ ok = true })
     else

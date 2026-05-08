@@ -121,6 +121,16 @@ function M.softDeleteObject(id)
     return (n or 0) > 0
 end
 
+---@param id number
+---@return table|nil
+function M.fetchObjectById(id)
+    local rows = MySQL.query.await([[SELECT * FROM tec_objects WHERE id = ? AND deleted_at IS NULL]], { id })
+    if not rows or not rows[1] then
+        return nil
+    end
+    return rowToObject(rows[1])
+end
+
 ---@param scene_id string
 ---@return table[]
 function M.fetchScene(scene_id)

@@ -4,12 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchNui } from '../lib/nui'
 import { ja, tf } from '../i18n/ja'
 import { theme } from '../theme'
-import { useBuilderStore, type BuilderMode } from '../store/builderStore'
+import { useBuilderStore, type BuilderMode, type SelectedEntity } from '../store/builderStore'
 import { usePropsStore } from '../store/propsStore'
 import { CategoryTree } from '../components/CategoryTree'
 import { PropList } from '../components/PropList'
 import { SearchBar } from '../components/SearchBar'
 import { PropThumb } from '../components/PropThumb'
+import { TransformPanel } from '../components/TransformPanel'
 import styles from './Builder.module.css'
 
 type ToastState = { kind: 'ok' | 'err'; text: string } | null
@@ -20,6 +21,8 @@ export function Builder() {
   const setMode = useBuilderStore((s) => s.setMode)
   const pendingCatalog = useBuilderStore((s) => s.pendingCatalog)
   const setPendingCatalog = useBuilderStore((s) => s.setPendingCatalog)
+  const selectedEntity = useBuilderStore((s) => s.selectedEntity)
+  const setWorldSelection = useBuilderStore((s) => s.setWorldSelection)
   const dictionary = usePropsStore((s) => s.dictionary)
   const propsLoaded = usePropsStore((s) => s.loaded)
   const propsError = usePropsStore((s) => s.loadError)
@@ -74,12 +77,16 @@ export function Builder() {
     })
     if (res?.ok && typeof res.id === 'number') {
       setPendingCatalog(null)
+      const sel = await fetchNui<{ object?: SelectedEntity }>('selectObject', { id: res.id })
+      if (sel?.object && typeof sel.object.id === 'number') {
+        setWorldSelection(sel.object)
+      }
       showToast({ kind: 'ok', text: tf(ja.toast.placeSuccess, { id: res.id }) })
     } else {
       const r = typeof res?.reason === 'string' ? res.reason : 'unknown'
       showToast({ kind: 'err', text: tf(ja.toast.placeFailed, { reason: r }) })
     }
-  }, [pendingCatalog, setPendingCatalog, showToast])
+  }, [pendingCatalog, setPendingCatalog, setWorldSelection, showToast])
 
   const onCancelPending = useCallback(() => {
     setPendingCatalog(null)
@@ -199,6 +206,16 @@ export function Builder() {
                   </button>
                 </div>
               </>
+            ) : selectedEntity ? (
+              <TransformPanel
+                key={JSON.stringify({
+                  id: selectedEntity.id,
+                  pos: selectedEntity.pos,
+                  rot: selectedEntity.rot,
+                })}
+                entity={selectedEntity}
+                onToast={(kind, text) => showToast({ kind, text })}
+              />
             ) : (
               <>
                 <p className={styles.panelHint} style={{ color: theme.textDim }}>

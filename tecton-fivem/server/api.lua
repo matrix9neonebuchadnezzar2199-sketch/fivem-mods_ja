@@ -180,6 +180,29 @@ lib.callback.register('tecton:scene:load', function(source, scene_id)
 end)
 
 --- クライアントがリソース起動後・再ログイン後にシーン全体を取り直す用（M1-d）。
+--- 単体取得（NUI トランスフォームパネル用）
+lib.callback.register('tecton:object:get', function(source, id)
+    if not canUse(source) then
+        return nil
+    end
+    id = tonumber(id)
+    if not id then
+        return nil
+    end
+    local o = TectonDB.fetchObjectById(id)
+    if not o then
+        return nil
+    end
+    return {
+        id = o.id,
+        category = o.category,
+        model = o.model,
+        pos = { x = o.pos.x, y = o.pos.y, z = o.pos.z },
+        rot = { x = o.rot.x, y = o.rot.y, z = o.rot.z },
+        scene_id = o.scene_id,
+    }
+end)
+
 lib.callback.register('tecton:scene:request', function(source, scene_id)
     if not canUse(source) then
         return {}
