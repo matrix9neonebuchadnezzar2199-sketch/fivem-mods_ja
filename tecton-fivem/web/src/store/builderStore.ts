@@ -9,10 +9,13 @@ type BuilderState = {
   mode: BuilderMode
   sceneId: string
   selected: number | null
+  /** カテゴリツリー選択: `furniture` または `furniture/residential` */
+  selectedCategory: string | null
   setOpen: (v: boolean) => void
   setMode: (m: BuilderMode) => void
   setSceneId: (id: string) => void
   setSelected: (id: number | null) => void
+  setSelectedCategory: (path: string | null) => void
 }
 
 export const useBuilderStore = create<BuilderState>((set) => ({
@@ -20,8 +23,10 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   mode: 'furniture',
   sceneId: 'default',
   selected: null,
+  selectedCategory: null,
   setOpen: (v) => set({ open: v }),
   setMode: (m) => set({ mode: m }),
   setSceneId: (id) => set({ sceneId: id }),
   setSelected: (id) => set({ selected: id }),
+  setSelectedCategory: (path) => set({ selectedCategory: path }),
 }))

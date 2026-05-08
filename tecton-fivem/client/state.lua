@@ -10,6 +10,12 @@ if not TectonClient then
         selected = nil,
         mode = 'furniture',
         open = false,
+        propsDictionary = nil,
+        propsCategories = nil,
+        propsVersion = nil,
+        propsLoaded = false,
+        propsError = false,
+        propsCount = 0,
     }
 else
     TectonClient.spawnedHandles = TectonClient.spawnedHandles or {}

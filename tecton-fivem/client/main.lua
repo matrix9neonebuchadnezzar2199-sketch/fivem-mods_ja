@@ -60,10 +60,45 @@ local function restoreSceneFromServer()
     print(('TECTON: client restored %d scene objects'):format(n))
 end
 
+local function fetchPropsCatalog()
+    CreateThread(function()
+        local ok, data = pcall(function()
+            return lib.callback.await('tecton:props:fetch', false)
+        end)
+        local client = TectonClient
+        if not ok or type(data) ~= 'table' or type(data.dictionary) ~= 'table' then
+            client.propsError = true
+            client.propsLoaded = false
+            print('^1TECTON: props fetch failed (callback error or empty)^0')
+            SendNUIMessage({ action = 'propsLoadFailed' })
+            return
+        end
+        local n = 0
+        for _ in pairs(data.dictionary) do
+            n = n + 1
+        end
+        client.propsDictionary = data.dictionary
+        client.propsCategories = data.categories
+        client.propsVersion = data.version
+        client.propsLoaded = true
+        client.propsError = false
+        client.propsCount = n
+        print(('TECTON: props loaded (%d entries)'):format(n))
+        SendNUIMessage({
+            action = 'setProps',
+            dictionary = data.dictionary,
+            categories = data.categories,
+            version = data.version,
+            count = n,
+        })
+    end)
+end
+
 AddEventHandler('onClientResourceStart', function(res)
     if res ~= resName then
         return
     end
+    fetchPropsCatalog()
     CreateThread(function()
         TectonClient.spawnedHandles = {}
         if not waitForPlayablePed() then
@@ -94,6 +129,15 @@ local function ToggleBuilder()
     state.open = not state.open
     SetNuiFocus(state.open, state.open)
     SendNUIMessage({ action = 'setOpen', open = state.open })
+    if state.open and state.propsLoaded and state.propsDictionary then
+        SendNUIMessage({
+            action = 'setProps',
+            dictionary = state.propsDictionary,
+            categories = state.propsCategories,
+            version = state.propsVersion,
+            count = state.propsCount,
+        })
+    end
     if state.open then
         print('TECTON: builder open')
         vlog('builder toggled open')

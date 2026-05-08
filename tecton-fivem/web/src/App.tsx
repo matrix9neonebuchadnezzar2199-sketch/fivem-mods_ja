@@ -2,9 +2,11 @@
 
 import { useEffect } from 'react'
 import { useBuilderStore } from './store/builderStore'
+import { usePropsStore } from './store/propsStore'
 import { fetchNui, onNuiMessage } from './lib/nui'
 import { Builder } from './pages/Builder'
 import { BASE_FONT_PX, uiScale } from './theme'
+import type { PropDef, ServerCategoryRaw } from './store/propsStore'
 
 type ReadyPayload = {
   ok?: boolean
@@ -12,6 +14,9 @@ type ReadyPayload = {
   scene?: string
   mode?: string
   selected?: number | null
+  propsLoaded?: boolean
+  propsCount?: number
+  propsError?: boolean
 }
 
 export default function App() {
@@ -20,19 +25,33 @@ export default function App() {
   const setSceneId = useBuilderStore((s) => s.setSceneId)
   const setMode = useBuilderStore((s) => s.setMode)
   const setSelected = useBuilderStore((s) => s.setSelected)
+  const setProps = usePropsStore((s) => s.setProps)
+  const setLoadFailed = usePropsStore((s) => s.setLoadFailed)
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${BASE_FONT_PX * uiScale}px`
   }, [])
 
   useEffect(() => {
-    const unsub = onNuiMessage<{ open?: boolean }>((msg) => {
+    const unsub = onNuiMessage<{
+      open?: boolean
+      action?: string
+      dictionary?: Record<string, PropDef>
+      categories?: ServerCategoryRaw[]
+      count?: number
+    }>((msg) => {
       if (msg?.action === 'setOpen' && typeof msg.open === 'boolean') {
         setOpen(msg.open)
       }
+      if (msg?.action === 'setProps' && msg.dictionary && msg.categories) {
+        setProps(msg.dictionary, msg.categories)
+      }
+      if (msg?.action === 'propsLoadFailed') {
+        setLoadFailed()
+      }
     })
     return unsub
-  }, [setOpen])
+  }, [setOpen, setProps, setLoadFailed])
 
   useEffect(() => {
     void (async () => {
@@ -49,8 +68,11 @@ export default function App() {
       if (typeof d?.open === 'boolean') {
         setOpen(d.open)
       }
+      if (d?.propsError) {
+        setLoadFailed()
+      }
     })()
-  }, [setOpen, setSceneId, setMode, setSelected])
+  }, [setOpen, setSceneId, setMode, setSelected, setLoadFailed])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

@@ -10,12 +10,26 @@ end
 
 RegisterNUICallback('ready', function(_, cb)
     local s = getState()
+    if s.propsLoaded and s.propsDictionary then
+        SendNUIMessage({
+            action = 'setProps',
+            dictionary = s.propsDictionary,
+            categories = s.propsCategories,
+            version = s.propsVersion,
+            count = s.propsCount,
+        })
+    elseif s.propsError then
+        SendNUIMessage({ action = 'propsLoadFailed' })
+    end
     cb({
         ok = true,
         open = s.open,
         scene = s.scene,
         mode = s.mode,
         selected = s.selected,
+        propsLoaded = s.propsLoaded,
+        propsCount = s.propsCount or 0,
+        propsError = s.propsError,
     })
 end)
 

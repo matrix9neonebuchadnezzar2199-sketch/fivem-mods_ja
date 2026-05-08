@@ -196,3 +196,23 @@ lib.callback.register('tecton:autosave:peek', function(source, scene_id)
     scene_id = scene_id or Config.DefaultScene
     return TectonDB.fetchAutosave(scene_id)
 end)
+
+--- プロップカタログ（`config/props.lua` の `Config.Props`）を NUI へ渡す用。
+--- ペイロードが大きい（数千件・数MB級）ため、将来的に zlib 圧縮やページングを検討（TODO）。
+lib.callback.register('tecton:props:fetch', function(source)
+    if not canUse(source) then
+        return nil
+    end
+    local p = Config.Props
+    if type(p) ~= 'table' or type(p.dictionary) ~= 'table' or type(p.categories) ~= 'table' then
+        vlog(source, 'props:fetch missing Config.Props')
+        return nil
+    end
+    vlog(source, 'props:fetch')
+    return {
+        version = p.version,
+        generated_at = p.generated_at,
+        categories = p.categories,
+        dictionary = p.dictionary,
+    }
+end)

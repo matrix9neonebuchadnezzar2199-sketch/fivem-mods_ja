@@ -19,8 +19,9 @@ function M.handleCreate(payload)
         return { ok = false, reason = 'cancelled' }
     end
     local client = TectonClient
+    local cat = type(payload.category) == 'string' and payload.category ~= '' and payload.category or 'furniture'
     local obj = {
-        category = 'furniture',
+        category = cat,
         model = payload.model,
         pos = { x = result.pos.x, y = result.pos.y, z = result.pos.z },
         rot = { x = result.rot.x, y = result.rot.y, z = result.rot.z },

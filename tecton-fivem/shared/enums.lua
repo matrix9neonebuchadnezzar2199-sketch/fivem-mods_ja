@@ -8,6 +8,18 @@ Category = Category or {
     STASH = 'stash',
 }
 
+--- Config.Props / カテゴリツリーの8ルート id（`tools/category_map.json` と一致）
+Category.ROOTS = {
+    'furniture',
+    'decoration',
+    'exterior',
+    'structure',
+    'industrial',
+    'commercial',
+    'vehicle_related',
+    'misc',
+}
+
 ---@class TectonOpTypeEnum
 OpType = OpType or {
     CREATE = 'create',

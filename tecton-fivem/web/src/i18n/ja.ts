@@ -17,9 +17,16 @@ export const ja = {
   placeholder: {
     selectFromLeft: '左から家具を選んで配置を開始してください',
   },
+  props: {
+    loading: 'プロップデータ読み込み中...',
+    loadingWithCount: 'プロップデータ読み込み中... ({count} 件)',
+    failed: 'プロップデータの読み込みに失敗しました',
+    selectCategory: '左のツリーからカテゴリを選択してください',
+    emptyCategory: 'このカテゴリにプロップがありません',
+  },
   panel: {
     selection: '選択中のオブジェクト',
-    selectionHint: 'M2 でトランスフォーム等を表示',
+    selectionHint: 'M2-e でトランスフォーム等を表示',
   },
   toast: {
     placeSuccess: '配置しました（ID: {id}）',

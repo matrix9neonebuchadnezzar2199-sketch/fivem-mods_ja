@@ -5,13 +5,10 @@ import { fetchNui } from '../lib/nui'
 import { ja, tf } from '../i18n/ja'
 import { theme } from '../theme'
 import { useBuilderStore, type BuilderMode } from '../store/builderStore'
+import { usePropsStore } from '../store/propsStore'
+import { CategoryTree } from '../components/CategoryTree'
+import { PropList } from '../components/PropList'
 import styles from './Builder.module.css'
-
-const CHAIRS: { model: string; label: string }[] = [
-  { model: 'prop_chair_01a', label: '椅子（鉄パイプ）' },
-  { model: 'prop_chair_02', label: '椅子（木製）' },
-  { model: 'prop_chair_04a', label: '椅子（オフィス）' },
-]
 
 type ToastState = { kind: 'ok' | 'err'; text: string } | null
 
@@ -19,6 +16,8 @@ export function Builder() {
   const sceneId = useBuilderStore((s) => s.sceneId)
   const mode = useBuilderStore((s) => s.mode)
   const setMode = useBuilderStore((s) => s.setMode)
+  const propsLoaded = usePropsStore((s) => s.loaded)
+  const propsError = usePropsStore((s) => s.loadError)
   const [toast, setToast] = useState<ToastState>(null)
 
   const showToast = useCallback((next: ToastState) => {
@@ -32,17 +31,13 @@ export function Builder() {
     void fetchNui('close')
   }, [])
 
-  const onChairClick = useCallback(
-    async (chairModel: string) => {
-      const res = await fetchNui<{ ok?: boolean; id?: number; reason?: string }>('createObject', {
-        mode: 'furniture' as const,
-        model: chairModel,
-      })
-      if (res?.ok && typeof res.id === 'number') {
-        showToast({ kind: 'ok', text: tf(ja.toast.placeSuccess, { id: res.id }) })
+  const onPlaced = useCallback(
+    (ok: boolean, id?: number, reason?: string) => {
+      if (ok && typeof id === 'number') {
+        showToast({ kind: 'ok', text: tf(ja.toast.placeSuccess, { id }) })
       } else {
-        const reason = typeof res?.reason === 'string' ? res.reason : 'unknown'
-        showToast({ kind: 'err', text: tf(ja.toast.placeFailed, { reason }) })
+        const r = reason ?? 'unknown'
+        showToast({ kind: 'err', text: tf(ja.toast.placeFailed, { reason: r }) })
       }
     },
     [showToast],
@@ -98,20 +93,19 @@ export function Builder() {
         </nav>
 
         <div className={styles.body}>
-          <aside className={styles.sidebar}>
-            {CHAIRS.map((c) => (
-              <button key={c.model} type="button" className={styles.card} onClick={() => void onChairClick(c.model)}>
-                <div className={styles.cardTitle} style={{ color: theme.text }}>
-                  {c.label}
-                </div>
-                <div className={styles.cardModel} style={{ color: theme.textDim }}>
-                  {c.model}
-                </div>
-              </button>
-            ))}
-          </aside>
-          <main className={styles.center} style={{ color: theme.textDim }}>
-            {ja.placeholder.selectFromLeft}
+          <aside className={styles.sidebar}>{propsLoaded && !propsError ? <CategoryTree /> : null}</aside>
+          <main className={styles.centerMain}>
+            {!propsLoaded && !propsError && (
+              <div className={styles.propListPlaceholder} style={{ color: theme.textDim, fontSize: theme.fontSize.body }}>
+                {ja.props.loading}
+              </div>
+            )}
+            {propsError && (
+              <div className={styles.propListPlaceholder} style={{ color: theme.danger, fontSize: theme.fontSize.body }}>
+                {ja.props.failed}
+              </div>
+            )}
+            {propsLoaded && !propsError && <PropList onPlaced={onPlaced} />}
           </main>
           <aside className={styles.right}>
             <div style={{ fontSize: theme.fontSize.h2, fontWeight: 600, marginBottom: '0.5rem' }}>{ja.panel.selection}</div>
