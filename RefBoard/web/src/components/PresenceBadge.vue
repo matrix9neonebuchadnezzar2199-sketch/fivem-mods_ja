@@ -38,7 +38,7 @@ const overflow = computed(() => Math.max(0, presence.users.length - 3))
         <button
           v-if="overflow > 0"
           type="button"
-          class="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[10px] font-semibold text-slate-200 ring-2 ring-slate-900 hover:bg-slate-600"
+          class="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[0.625rem] font-semibold text-slate-200 ring-2 ring-slate-900 hover:bg-slate-600"
           :title="t('presence.all_users')"
           @click.stop="open = !open"
         >

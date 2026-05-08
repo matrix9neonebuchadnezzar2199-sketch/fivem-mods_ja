@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.2 — 2026-05-09
+
+- **feat（設定）**: 全体フォント倍率に **250% / 300%** を追加（`rootFontScale`・`index.html` FOUC 先読み・`sanitizeRootFontScale` を同期）。
+- **fix（表示）**: `text-[10px]` / `text-[11px]` / `text-[22px]` 等の **ピクセル固定**を `rem` 指定に変更し、ルート倍率変更で **補助ラベルやトーストのエラー行も追従**するようにした。
+
 ## v0.9.1 — 2026-05-09
 
 - **feat（開発用データ）**: `Config.EnableTestCommands = true` かつ編集モード入室時のみ、設定画面に **疑似データ投入**（全削除 → `seed_test_5teams_15roster.sql` → 試合20件 `dev_seed_20matches.sql`）と **全データ初期化**（空庫）を追加。いずれも警告後に **YES** 入力で実行。サーバー `server/dev_data_reset.lua`、SQL `sql/dev_seed_20matches.sql`。

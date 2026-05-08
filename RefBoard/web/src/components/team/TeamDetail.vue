@@ -89,7 +89,7 @@ function save() {
     </div>
     <div class="mt-3 rounded border border-slate-700 bg-slate-950/50 p-2 text-xs text-slate-300">
       <div class="font-semibold text-slate-200">{{ t('team_manage.stats_title') }}</div>
-      <div v-if="stats" class="mt-1 grid grid-cols-2 gap-1 text-[11px]">
+      <div v-if="stats" class="mt-1 grid grid-cols-2 gap-1 text-[0.6875rem]">
         <div>{{ t('team_manage.stat_matches') }}: {{ stats.matches_played ?? 0 }}</div>
         <div>{{ t('team_manage.stat_winrate') }}: {{ winRate() }}</div>
         <div>{{ t('team_manage.stat_wdl') }}: {{ stats.wins ?? 0 }}-{{ stats.draws ?? 0 }}-{{ stats.losses ?? 0 }}</div>

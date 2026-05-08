@@ -418,13 +418,17 @@
     },
     "font_scale": {
       "label": "Overall font size",
-      "description": "Text in the FiveM CEF can look small. Use this if the UI feels too large or too small.",
+      "description": "Changes the root font size (%); rem-based typography and spacing follow. Auxiliary labels use rem so they scale too.",
       "s100": "100% (browser default)",
       "s100_desc": "Default browser size. Use this when developing on a desktop browser.",
       "s150": "150% (slightly larger)",
       "s150_desc": "Larger text in CEF while keeping more information on screen.",
       "s200": "200% (recommended)",
-      "s200_desc": "Tuned for the FiveM CEF default appearance. Recommended."
+      "s200_desc": "Tuned for the FiveM CEF default appearance. Recommended.",
+      "s250": "250%",
+      "s250_desc": "Larger UI text when you still need more size than 200%.",
+      "s300": "300%",
+      "s300_desc": "Maximum scale; expect more wrapping on small layouts."
     }
   },
   "help": {

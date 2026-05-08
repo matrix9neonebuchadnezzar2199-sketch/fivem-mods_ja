@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
 export type MarqueeMode = 'always' | 'hover-only' | 'off'
-export type RootFontScale = 100 | 150 | 200
+export type RootFontScale = 100 | 150 | 200 | 250 | 300
 
 export type RefboardSettings = {
   locale: 'ja' | 'en'
@@ -20,7 +20,7 @@ export type RefboardSettings = {
   nuiMock: boolean
   showTestCommandsHint: boolean
   marqueeMode: MarqueeMode
-  /** ルート font-size の倍率（%）。CEF 上の見え方に合わせて切替可能。既定 200。 */
+  /** ルート font-size の倍率（%）。100 / 150 / 200 / 250 / 300。既定 200。 */
   rootFontScale: RootFontScale
 }
 
@@ -52,7 +52,7 @@ const defaults: RefboardSettings = {
   rootFontScale: 200,
 }
 
-const ALLOWED_ROOT_FONT_SCALES: ReadonlyArray<RootFontScale> = [100, 150, 200]
+const ALLOWED_ROOT_FONT_SCALES: ReadonlyArray<RootFontScale> = [100, 150, 200, 250, 300]
 
 function sanitizeRootFontScale(v: unknown): RootFontScale {
   const n = Number(v)

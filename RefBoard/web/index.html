@@ -13,8 +13,8 @@
           var scale = 200
           if (raw) {
             var p = JSON.parse(raw)
-            if (p && (p.rootFontScale === 100 || p.rootFontScale === 150 || p.rootFontScale === 200)) {
-              scale = p.rootFontScale
+            if (p && [100, 150, 200, 250, 300].indexOf(Number(p.rootFontScale)) !== -1) {
+              scale = Number(p.rootFontScale)
             }
           }
           document.documentElement.style.fontSize = scale + '%'

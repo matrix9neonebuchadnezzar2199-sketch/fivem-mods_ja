@@ -63,12 +63,12 @@ function rowClass(s: MatchPlayer['status']) {
         <MarqueeText :text="title" variant="default" />
       </div>
       <div class="flex shrink-0 items-center gap-2">
-        <button type="button" class="text-[10px] text-primary hover:underline" @click="emit('history')">
+        <button type="button" class="text-[0.625rem] text-primary hover:underline" @click="emit('history')">
           {{ t('player.list_history_link') }}
         </button>
         <span
           v-if="editorHere"
-          class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+          class="rounded bg-emerald-500/20 px-2 py-0.5 text-[0.625rem] font-semibold text-emerald-300"
         >
           {{ t('match_status.editing_here') }}
         </span>

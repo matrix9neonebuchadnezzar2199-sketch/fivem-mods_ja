@@ -219,7 +219,7 @@ function badgeLabel(source: 'reverse' | 'tree'): string {
                 @click="openSlug(hit.slug)"
               >
                 <span
-                  class="shrink-0 rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-200"
+                  class="shrink-0 rounded bg-slate-700 px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-slate-200"
                 >
                   {{ badgeLabel(hit.source) }}
                 </span>

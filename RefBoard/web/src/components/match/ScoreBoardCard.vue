@@ -198,7 +198,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
       <h3 class="text-sm font-semibold text-slate-200">{{ t('score_board.title') }}</h3>
       <span
         v-if="editorHere"
-        class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+        class="rounded bg-emerald-500/20 px-2 py-0.5 text-[0.625rem] font-semibold text-emerald-300"
       >
         {{ t('match_status.editing_here') }}
       </span>
@@ -213,7 +213,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         <div class="w-full min-w-0 max-w-full text-center text-xs font-medium text-slate-300">
           <MarqueeText :text="model.home.name ?? ''" variant="scoreboard" />
         </div>
-        <span class="rounded bg-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">HOME</span>
+        <span class="rounded bg-primary/30 px-2 py-0.5 text-[0.625rem] font-bold text-primary">HOME</span>
       </div>
       <div class="relative flex shrink-0 flex-col items-center justify-center px-2">
         <div ref="goalMenuRef" class="relative mb-2 flex flex-wrap items-center justify-center">
@@ -241,7 +241,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
               @click="openGoalWizard"
             >
               <span class="block text-xs font-medium text-slate-200">{{ t('score_board.goal_menu_record') }}</span>
-              <span class="mt-0.5 block text-[10px] leading-snug text-slate-500">{{ t('score_board.goal_menu_record_hint') }}</span>
+              <span class="mt-0.5 block text-[0.625rem] leading-snug text-slate-500">{{ t('score_board.goal_menu_record_hint') }}</span>
             </button>
             <button
               type="button"
@@ -289,7 +289,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
             +
           </button>
         </div>
-        <div v-if="clockPhaseLabel" class="mt-0.5 text-center text-[11px] font-medium text-slate-400">
+        <div v-if="clockPhaseLabel" class="mt-0.5 text-center text-[0.6875rem] font-medium text-slate-400">
           {{ clockPhaseLabel }}
         </div>
         <div v-if="model.dbStatus !== 'draft'" class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
@@ -335,7 +335,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         <div class="w-full min-w-0 max-w-full text-center text-xs font-medium text-slate-300">
           <MarqueeText :text="model.away.name ?? ''" variant="scoreboard" />
         </div>
-        <span class="rounded bg-slate-600/50 px-2 py-0.5 text-[10px] font-bold text-slate-400">AWAY</span>
+        <span class="rounded bg-slate-600/50 px-2 py-0.5 text-[0.625rem] font-bold text-slate-400">AWAY</span>
       </div>
     </div>
 
@@ -354,7 +354,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
           @click="openGoalWizard"
         >
           <span class="block text-xs font-medium text-slate-200">{{ t('score_board.goal_menu_record') }}</span>
-          <span class="mt-0.5 block text-[10px] leading-snug text-slate-500">{{ t('score_board.goal_menu_record_hint') }}</span>
+          <span class="mt-0.5 block text-[0.625rem] leading-snug text-slate-500">{{ t('score_board.goal_menu_record_hint') }}</span>
         </button>
         <button
           type="button"

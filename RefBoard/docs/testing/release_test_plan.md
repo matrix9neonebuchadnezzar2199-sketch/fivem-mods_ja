@@ -155,11 +155,11 @@
 
 ## シナリオ11: 設定永続化
 
-1. [ ] 全体フォント倍率を 100% / 150% / 200% で切替 → 即座に反映される（v0.8.4）
+1. [ ] 全体フォント倍率を 100% / 150% / 200% / 250% / 300% で切替 → 即座に反映される（v0.8.4 + v0.9.2）
 2. [ ] リロード後も選択が維持される（FOUC で一瞬戻らない・`index.html` インライン script）
 3. [ ] 言語・タイムゾーン・既定前半時間・スコア編集理由文字数・カード不透明度・アバター色相が永続化される
 4. [ ] `localStorage.refboard_settings` を手動削除して再ロードすると既定値（200% / ja / `Asia/Tokyo` 等）に戻る
-5. [ ] `localStorage.refboard_settings.rootFontScale` に不正値（300 等）を入れて再ロードすると 200% に丸められる（`sanitizeRootFontScale`）
+5. [ ] `localStorage.refboard_settings.rootFontScale` に不正値（333 等）を入れて再ロードすると 200% に丸められる（`sanitizeRootFontScale`）
 
 **結果 / メモ**: _______________________________________________
 

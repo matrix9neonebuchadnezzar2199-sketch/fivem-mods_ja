@@ -791,7 +791,7 @@ function exportMatchEventsCsv() {
             </p>
             <button
               type="button"
-              class="cursor-pointer rounded border border-amber-400/90 bg-amber-300 px-3 py-2 text-left text-[22px] font-bold leading-snug text-amber-950 shadow-md ring-1 ring-amber-500/30 md:text-right"
+              class="cursor-pointer rounded border border-amber-400/90 bg-amber-300 px-3 py-2 text-left text-[1.375rem] font-bold leading-snug text-amber-950 shadow-md ring-1 ring-amber-500/30 md:text-right"
               :title="`${t('match_detail.restore_ui_hint')} / ${t('match_detail.restore_full_click')}`"
               @click="exitCompactDock"
             >

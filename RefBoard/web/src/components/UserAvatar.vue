@@ -30,7 +30,7 @@ const tip = computed(() => {
 
 <template>
   <div
-    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-slate-100"
+    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[0.625rem] font-bold text-slate-100"
     :class="ringClass"
     :title="tip"
   >

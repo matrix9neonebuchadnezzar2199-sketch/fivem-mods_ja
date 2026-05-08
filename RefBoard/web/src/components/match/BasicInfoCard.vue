@@ -29,7 +29,7 @@ const { t } = useI18n()
       <h3 class="text-sm font-semibold text-slate-200">基本情報</h3>
       <span
         v-if="editorHere"
-        class="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
+        class="rounded bg-emerald-500/20 px-2 py-0.5 text-[0.625rem] font-semibold text-emerald-300"
       >
         {{ t('match_status.editing_here') }}
       </span>

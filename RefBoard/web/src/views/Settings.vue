@@ -217,6 +217,20 @@ function syncLocale() {
             <span class="block text-xs text-slate-500">{{ t('settings.font_scale.s200_desc') }}</span>
           </span>
         </label>
+        <label class="flex cursor-pointer items-start gap-2 rounded border border-transparent px-1 py-1 hover:border-slate-600">
+          <input v-model.number="settings.settings.rootFontScale" type="radio" :value="250" class="mt-1 shrink-0 rounded border-slate-500" />
+          <span>
+            <span class="block text-slate-200">{{ t('settings.font_scale.s250') }}</span>
+            <span class="block text-xs text-slate-500">{{ t('settings.font_scale.s250_desc') }}</span>
+          </span>
+        </label>
+        <label class="flex cursor-pointer items-start gap-2 rounded border border-transparent px-1 py-1 hover:border-slate-600">
+          <input v-model.number="settings.settings.rootFontScale" type="radio" :value="300" class="mt-1 shrink-0 rounded border-slate-500" />
+          <span>
+            <span class="block text-slate-200">{{ t('settings.font_scale.s300') }}</span>
+            <span class="block text-xs text-slate-500">{{ t('settings.font_scale.s300_desc') }}</span>
+          </span>
+        </label>
       </fieldset>
       <fieldset class="mb-4 space-y-2 border-0 p-0">
         <legend class="mb-1 block min-w-0 overflow-hidden text-slate-400">

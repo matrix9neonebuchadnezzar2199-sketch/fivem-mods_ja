@@ -38,7 +38,7 @@ function openHelp(row: ToastItem) {
       <div class="min-w-0 overflow-hidden">
         <MarqueeText :text="row.message" variant="ticker" />
       </div>
-      <p v-if="row.errorCode || row.errorKey" class="shrink-0 text-[10px] opacity-80">
+      <p v-if="row.errorCode || row.errorKey" class="shrink-0 text-[0.625rem] opacity-80">
         {{ row.errorCode || '' }} {{ row.errorKey ? `(${row.errorKey})` : '' }}
       </p>
       <button
