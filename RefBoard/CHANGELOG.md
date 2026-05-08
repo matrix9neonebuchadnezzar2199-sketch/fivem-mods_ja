@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.5 — 2026-05-08
+
+- **ヘルプ（Sprint 09 Phase A 前半）**: `docs/sprints/sprint_09_help_phase2.md` を追加（v0.6.5〜v0.7.0 のヘルプ拡張ロードマップ）。
+- **ヘルプ**: `web/src/help/ja/index.json` に「試合管理」カテゴリ（記事 8 件の目次）、`reverse_index.json` に「試合中」逆引きカテゴリ（`actionUrl` 付き）を追加。
+- **記事（日本語・試合中・4/8）**: `match_record_goal`、`match_record_assist`、`match_substitute_player`、`match_yellow_card`。残り 4 本（赤カード / PK / 手動スコア / 試合終了・再編集）は次ターンで追加予定。未執筆の項目を開いた場合は既存の「記事がありません」表示となる。
+
 ## v0.6.4 — 2026-05-07
 
 - **fix（重大）**: `ensure` 直後やシェル非表示時、`#app` が空でも **`body` の `bg-bg`（不透明）が全画面を塗り**ゲームが見えない問題を修正。`html` / `body` を **透明**にし、見た目の背景は **`App.vue` のシェル表示中のみ**付与する。

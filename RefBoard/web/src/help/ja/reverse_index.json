@@ -30,6 +30,69 @@
           "tags": ["オートセーブ", "保存", "E4003", "tx_failed"]
         }
       ]
+    },
+    {
+      "id": "in_match",
+      "icon": "⚽",
+      "title": "試合中",
+      "items": [
+        {
+          "id": "record_goal",
+          "title": "ゴールを記録したい",
+          "article": "match_record_goal.md",
+          "tags": ["ゴール", "得点", "シュート", "G"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "record_assist",
+          "title": "アシストを付けたい／後から追加したい",
+          "article": "match_record_assist.md",
+          "tags": ["アシスト", "得点", "後追い"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "substitute_player",
+          "title": "選手を交代したい",
+          "article": "match_substitute_player.md",
+          "tags": ["交代", "サブ", "メンバー"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "yellow_card",
+          "title": "イエローカードを出したい",
+          "article": "match_yellow_card.md",
+          "tags": ["イエロー", "警告", "カード"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "red_card",
+          "title": "レッドカードを出したい（退場）",
+          "article": "match_red_card.md",
+          "tags": ["レッド", "退場", "カード", "2枚目イエロー"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "penalty_shootout",
+          "title": "PK 戦を進めたい",
+          "article": "match_penalty_shootout.md",
+          "tags": ["PK", "ペナルティ", "シュートアウト"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "manual_score_edit",
+          "title": "スコアを手で直したい",
+          "article": "match_manual_score_edit.md",
+          "tags": ["手動", "スコア", "修正", "理由"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "match_finish",
+          "title": "試合を終了したい／再編集したい",
+          "article": "match_finish.md",
+          "tags": ["終了", "再編集", "reopen", "確定"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        }
+      ]
     }
   ]
 }

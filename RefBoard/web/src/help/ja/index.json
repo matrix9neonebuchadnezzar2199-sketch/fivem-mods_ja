@@ -26,6 +26,53 @@
           "article": "trouble_autosave_failed.md"
         }
       ]
+    },
+    {
+      "id": "match",
+      "icon": "⚽",
+      "title": "試合管理",
+      "children": [
+        {
+          "id": "match_record_goal",
+          "title": "ゴールを記録する",
+          "article": "match_record_goal.md"
+        },
+        {
+          "id": "match_record_assist",
+          "title": "アシストを付ける／後から追加する",
+          "article": "match_record_assist.md"
+        },
+        {
+          "id": "match_substitute_player",
+          "title": "選手を交代する",
+          "article": "match_substitute_player.md"
+        },
+        {
+          "id": "match_yellow_card",
+          "title": "イエローカードを出す",
+          "article": "match_yellow_card.md"
+        },
+        {
+          "id": "match_red_card",
+          "title": "レッドカードを出す（退場）",
+          "article": "match_red_card.md"
+        },
+        {
+          "id": "match_penalty_shootout",
+          "title": "PK 戦を進める",
+          "article": "match_penalty_shootout.md"
+        },
+        {
+          "id": "match_manual_score_edit",
+          "title": "スコアを手で直す（手動編集）",
+          "article": "match_manual_score_edit.md"
+        },
+        {
+          "id": "match_finish",
+          "title": "試合を終了する／再編集する",
+          "article": "match_finish.md"
+        }
+      ]
     }
   ]
 }
