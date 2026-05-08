@@ -1,5 +1,11 @@
--- TECTON: run once on the same database oxmysql uses (e.g. fivem_db).
--- If tables are missing, INSERT fails with "Table '...tec_objects' doesn't exist".
+-- Migration 001: initial schema
+-- Managed by server/migrate.lua — do not edit after release (new changes → 002_*.sql).
+
+CREATE TABLE IF NOT EXISTS tec_schema_version (
+  version     INT PRIMARY KEY,
+  applied_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  description VARCHAR(255)
+);
 
 CREATE TABLE IF NOT EXISTS tec_objects (
   id            INT AUTO_INCREMENT PRIMARY KEY,

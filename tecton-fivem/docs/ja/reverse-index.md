@@ -639,7 +639,7 @@ related: [recover-from-crash]
 ## 手順
 1. サーバーコンソールで `oxmysql` のエラーログを確認。
 2. `server.cfg` の `mysql_connection_string` が正しいか確認。
-3. `sql/install.sql` を実行済みか確認（`tec_objects` 等のテーブル存在チェック）。
+3. リソース起動でマイグレーションが走り `tec_objects` 等が作成されるか確認（`tec_schema_version` に version 1 が入る）。手動適用のみの環境では `sql/migrations/001_initial.sql` を参照。
 4. 直してリソース再起動：`restart tecton`。
 
 ## 補足

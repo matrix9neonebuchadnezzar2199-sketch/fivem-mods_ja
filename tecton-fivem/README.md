@@ -2,7 +2,7 @@
 
 **A builder’s toolkit for FiveM**
 
-Japanese-first docs live under [`docs/ja/`](docs/ja/) (start with [`docs/ja/spec.md`](docs/ja/spec.md)).
+Japanese-first docs live under [`docs/ja/`](docs/ja/) — start with [`docs/ja/getting-started.md`](docs/ja/getting-started.md) or [`docs/ja/spec.md`](docs/ja/spec.md).
 
 | | |
 | --- | --- |
@@ -10,11 +10,12 @@ Japanese-first docs live under [`docs/ja/`](docs/ja/) (start with [`docs/ja/spec
 | **Status** | **WIP** — repository scaffold only; no builder UI or DB wiring yet. |
 | **Resource name** | `tecton` (folder may be `tecton-fivem`; match `ensure` to folder name) |
 
-## Database（初回必須）
+## Getting started (quick)
 
-oxmysql が接続している **同じデータベース**（例: `fivem_db`）に、[`sql/install.sql`](sql/install.sql) を実行する。未実行だと `Table 'fivem_db.tec_objects' doesn't exist` のように INSERT が失敗する。
-
-HeidiSQL / phpMyAdmin / CLI などで `install.sql` を丸ごと流せばよい（`tec_objects`, `tec_history`, `tec_autosave`, `tec_user_prefs` が作成される）。
+1. Put **ox_lib** and **oxmysql** in your server `resources` (and start them before TECTON). **object_gizmo** is optional for resource start; add it when you use placement / gizmo (`ensure object_gizmo` before using that flow).
+2. Add to `server.cfg` (order matters): `ensure oxmysql`, `ensure ox_lib`, then `ensure tecton-fivem` (use the same folder name as on disk).
+3. **Database schema** is created automatically on first start (see [`sql/migrations/`](sql/migrations/) and [`sql/README.md`](sql/README.md)). Use the **same MySQL database** as oxmysql — no manual `install.sql` step.
+4. In-game: `/tec` when the client builder is enabled (see roadmap in `docs/ja/spec.md`).
 
 ## Credits
 

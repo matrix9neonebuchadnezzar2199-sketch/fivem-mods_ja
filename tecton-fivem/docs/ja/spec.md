@@ -82,6 +82,7 @@ tecton-fivem/
 │       └── stash.lua
 ├── server/
 │   ├── main.lua
+│   ├── migrate.lua
 │   ├── db.lua
 │   ├── history.lua
 │   ├── autosave.lua
@@ -91,7 +92,9 @@ tecton-fivem/
 │   ├── types.lua
 │   └── enums.lua
 ├── sql/
-│   └── install.sql
+│   ├── README.md
+│   └── migrations/
+│       └── 001_initial.sql
 ├── tools/
 │   └── thumb_gen/                 # サムネ生成スクリプト
 ├── assets/
@@ -150,7 +153,13 @@ shared_scripts {
 client_scripts { 'client/**/*.lua' }
 server_scripts {
   '@oxmysql/lib/MySQL.lua',
-  'server/**/*.lua'
+  'server/migrate.lua',
+  'server/db.lua',
+  'server/history.lua',
+  'server/autosave.lua',
+  'server/recover.lua',
+  'server/api.lua',
+  'server/main.lua'
 }
 
 ui_page 'web/dist/index.html'
@@ -158,58 +167,20 @@ files {
   'web/dist/index.html',
   'web/dist/assets/*',
   'assets/thumbnails/*.webp',
-  'docs/ja/reverse-index.json'
+  'docs/ja/reverse-index.json',
+  'sql/migrations/*.sql'
 }
 
-dependencies { 'ox_lib', 'oxmysql', 'object_gizmo' }
+dependencies { 'ox_lib', 'oxmysql' }
 ```
 
 ox_doorlock と ox_inventory は任意依存とし、起動時に `GetResourceState` で検出。
 
-## 4. データベース（sql/install.sql）
+## 4. データベース（sql/migrations/）
 
-```sql
-CREATE TABLE IF NOT EXISTS tec_objects (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
-  category      VARCHAR(32) NOT NULL,
-  model         VARCHAR(64) NOT NULL,
-  pos_x DOUBLE, pos_y DOUBLE, pos_z DOUBLE,
-  rot_x DOUBLE, rot_y DOUBLE, rot_z DOUBLE,
-  meta          JSON NULL,
-  scene_id      VARCHAR(64) NOT NULL,
-  created_by    VARCHAR(64),
-  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at    TIMESTAMP NULL,
-  INDEX idx_scene (scene_id),
-  INDEX idx_cat (category)
-);
-
-CREATE TABLE IF NOT EXISTS tec_history (
-  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-  scene_id    VARCHAR(64) NOT NULL,
-  user_id     VARCHAR(64),
-  action      VARCHAR(16) NOT NULL,
-  target_id   INT NULL,
-  before_data JSON NULL,
-  after_data  JSON NULL,
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_scene_time (scene_id, created_at)
-);
-
-CREATE TABLE IF NOT EXISTS tec_autosave (
-  scene_id   VARCHAR(64) PRIMARY KEY,
-  snapshot   JSON NOT NULL,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS tec_user_prefs (
-  user_id    VARCHAR(64) PRIMARY KEY,
-  recents    JSON,
-  favorites  JSON,
-  ui_state   JSON
-);
-```
+- **正本**: `sql/migrations/001_initial.sql`（および将来の `002_*.sql`）。起動時に `server/migrate.lua` が未適用バージョンだけを順に実行し、適用済みを `tec_schema_version` に記録する。
+- **運用**: 手動で `install.sql` を流す前提は廃止。上級者が CLI で DDL を流す場合は `sql/README.md` と `docs/ja/getting-started.md` を参照。
+- **テーブル**: `tec_schema_version`（マイグレーション管理）、`tec_objects`、`tec_history`、`tec_autosave`、`tec_user_prefs`。
 
 ## 5. 設定ファイル（config/）
 
@@ -255,7 +226,7 @@ CREATE TABLE IF NOT EXISTS tec_user_prefs (
 
 ## 11. README.md に必須記載
 
-プロジェクト名 TECTON とタグライン「A builder's toolkit for FiveM」、LGPL-3.0であること、商用配布想定なし、依存リソース導入手順、SQL適用手順、初回起動手順、ショートカット一覧、逆引きヘルプ導線、コントリビュート方法、サムネ提供のお願い、object_gizmo / ox_lib / ox_inventory / ox_doorlock / ShiftyWreckzz prop-list へのクレジット。
+プロジェクト名 TECTON とタグライン「A builder's toolkit for FiveM」、LGPL-3.0であること、商用配布想定なし、依存リソース導入手順、**DBスキーマは起動時マイグレーションで自動適用**であること、初回起動手順、ショートカット一覧、逆引きヘルプ導線、コントリビュート方法、サムネ提供のお願い、object_gizmo / ox_lib / ox_inventory / ox_doorlock / ShiftyWreckzz prop-list へのクレジット。
 
 ## 12. マイルストーン
 
@@ -278,7 +249,7 @@ M6 公開：README/docs整備、CIで `web` ビルド、`v0.1.0` タグ。
 4. LICENSE に LGPL-3.0-or-later 全文を配置
 5. .gitignore と .editorconfig を配置
 6. fxmanifest.lua（セクション3）を作成
-7. sql/install.sql（セクション4）を作成
+7. sql/migrations/001_initial.sql（セクション4相当）を作成し、server/migrate.lua で起動時適用
 8. config/config.lua, config/permissions.lua のスキーマ雛形を作成
 9. README.md の最小版（プロジェクト名・タグライン・ライセンス・WIP表記）を作成
 10. web/ に Vite + React + TypeScript プロジェクトを生成

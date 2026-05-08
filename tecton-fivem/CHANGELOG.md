@@ -1,5 +1,10 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+All notable changes to this project will be documented in this file.
 
-- Initial scaffold: Lua layout, SQL, Vite + React + TS NUI shell, LGPL-3.0.
+## [Unreleased]
+
+### Added
+
+- feat: SQL schema is now automatically applied on resource start (no more manual `install.sql` execution needed).
+- feat: migration system for future schema upgrades (`sql/migrations/`, `tec_schema_version`, `server/migrate.lua`).

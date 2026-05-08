@@ -1,3 +1,24 @@
-# はじめに
+# TECTON はじめに
 
-（WIP）セットアップ手順は `spec.md` マイルストーン M1 以降で追記予定。
+## データベース（自動セットアップ）
+
+TECTON は **リソース起動時**に `sql/migrations/` 以下のマイグレーションを順に適用し、`tec_objects` などのテーブルと `tec_schema_version`（適用済みバージョン管理）を **自動で作成**します。
+
+- **手動で SQL を流す必要はありません**（oxmysql が接続している DB が正しければ、初回 `ensure` でスキーマが揃います）。
+- 2 回目以降の起動では、未適用のマイグレーションだけが実行されます。
+
+### 上級者向け（手動で流したい場合）
+
+通常は不要です。トラブルシュートや検証で DDL だけ先に確認したいときは、DB クライアントから `sql/migrations/001_initial.sql`（および将来追加される `002_*.sql`）を **内容どおり**実行できます。その後の起動では、既に `tec_schema_version` に記録されているバージョンはスキップされます。手動適用と自動適用を混ぜないよう、運用ポリシーを決めてから使ってください。
+
+## サーバー側の準備
+
+1. **ox_lib** と **oxmysql** を `resources` に配置し、`server.cfg` で `ensure` する（TECTON より前に起動すること）。
+2. **object_gizmo** は配置・ギズモ利用時のみ必要。未導入でも TECTON リソース自体は起動します。
+3. `server.cfg` に `ensure tecton-fivem`（フォルダ名に合わせる）を追加。
+
+## 動作確認（開発用）
+
+`config/config.lua` の `Config.Debug.testTectonInsert = true` のときだけ、ゲーム内から `/testTectonInsert` でダミー行を挿入できます。確認後は必ず `false` に戻してください。
+
+詳細な仕様は [spec.md](spec.md) を参照してください。

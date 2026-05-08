@@ -17,7 +17,15 @@ AddEventHandler('onResourceStart', function(resName)
     if resName ~= GetCurrentResourceName() then
         return
     end
-    print(('TECTON server started, scene=%s'):format(scene))
+    if not Migrate or type(Migrate.run) ~= 'function' then
+        print('^1TECTON: Migrate module missing (server/migrate.lua)^0')
+        return
+    end
+    if not Migrate.run() then
+        print('^1TECTON: migration failed, aborting startup^0')
+        return
+    end
+    print(('TECTON server started, scene=%s'):format(Config.DefaultScene or 'default'))
 end)
 
 RegisterCommand('testTectonInsert', function(src)

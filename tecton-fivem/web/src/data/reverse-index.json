@@ -670,7 +670,7 @@
       "steps": [
         "サーバーコンソールで `oxmysql` のエラーログを確認。",
         "`server.cfg` の `mysql_connection_string` が正しいか確認。",
-        "`sql/install.sql` を実行済みか確認（`tec_objects` 等のテーブル存在チェック）。",
+        "`ensure tecton-fivem` 後にマイグレーションで `tec_objects` 等が作成されているか確認（`tec_schema_version`）。手動のみなら `sql/migrations/001_initial.sql` を参照。",
         "直してリソース再起動：`restart tecton`。"
       ],
       "note": "未保存の操作はクライアント側に履歴が残っているため、DB復旧後に再ログインで再送される設計。"

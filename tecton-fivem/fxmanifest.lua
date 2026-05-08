@@ -17,6 +17,7 @@ shared_scripts {
 client_scripts { 'client/**/*.lua' }
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
+    'server/migrate.lua',
     'server/db.lua',
     'server/history.lua',
     'server/autosave.lua',
@@ -31,6 +32,7 @@ files {
     'web/dist/assets/*',
     'assets/thumbnails/*.webp',
     'docs/ja/reverse-index.json',
+    'sql/migrations/*.sql',
 }
 
 -- object_gizmo は配置・ギズモ用（M1-c 以降）。未導入でもリソースは起動する。導入時は object_gizmo を ensure してから使う。
