@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
 export type MarqueeMode = 'always' | 'hover-only' | 'off'
+export type RootFontScale = 100 | 150 | 200
 
 export type RefboardSettings = {
   locale: 'ja' | 'en'
@@ -19,6 +20,8 @@ export type RefboardSettings = {
   nuiMock: boolean
   showTestCommandsHint: boolean
   marqueeMode: MarqueeMode
+  /** ルート font-size の倍率（%）。CEF 上の見え方に合わせて切替可能。既定 200。 */
+  rootFontScale: RootFontScale
 }
 
 const STORAGE_KEY = 'refboard_settings'
@@ -46,6 +49,16 @@ const defaults: RefboardSettings = {
   nuiMock: false,
   showTestCommandsHint: false,
   marqueeMode: 'always',
+  rootFontScale: 200,
+}
+
+const ALLOWED_ROOT_FONT_SCALES: ReadonlyArray<RootFontScale> = [100, 150, 200]
+
+function sanitizeRootFontScale(v: unknown): RootFontScale {
+  const n = Number(v)
+  return (ALLOWED_ROOT_FONT_SCALES as ReadonlyArray<number>).includes(n)
+    ? (n as RootFontScale)
+    : defaults.rootFontScale
 }
 
 export const useSettingsStore = defineStore('settings', () => {
@@ -61,6 +74,8 @@ export const useSettingsStore = defineStore('settings', () => {
         if (pr && !Object.prototype.hasOwnProperty.call(parsed, 'marqueeMode')) {
           settings.value.marqueeMode = 'off'
         }
+        // 旧バージョンの localStorage に rootFontScale が無い／不正値の場合の保護
+        settings.value.rootFontScale = sanitizeRootFontScale(settings.value.rootFontScale)
       } else {
         settings.value = {
           ...defaults,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide } from 'vue'
+import { computed, onMounted, provide, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMatchCompactDockStore } from './stores/matchCompactDock'
 import { useI18n } from 'vue-i18n'
@@ -18,6 +18,7 @@ const { settings } = storeToRefs(settingsStore)
 const { transparentChrome } = storeToRefs(useMatchCompactDockStore())
 const marqueeMode = computed(() => settings.value.marqueeMode)
 const showBackgroundImage = computed(() => settings.value.showBackgroundImage)
+const rootFontScale = computed(() => settings.value.rootFontScale)
 
 const appRootBgClass = computed(() => {
   if (transparentChrome.value) return 'bg-transparent'
@@ -26,6 +27,13 @@ const appRootBgClass = computed(() => {
 })
 
 provide('marqueeMode', marqueeMode)
+
+// ルート font-size を反映（FOUC は index.html の inline script で先回り済み）。
+watchEffect(() => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.fontSize = `${rootFontScale.value}%`
+  }
+})
 
 /** FiveM では Lua が開いたときだけシェル描画。閉じている間は CEF がログイン UI を覆わない */
 const showNuiChrome = computed(() => {
@@ -41,6 +49,8 @@ const { t } = useI18n()
 const { push: toastPush } = useToast()
 
 onMounted(() => {
+  // Settings 画面以外から起動した場合に備え、App ルートでも load を保証（冪等）。
+  settingsStore.load()
   session.bindServerMessages()
   on('refboard:presence:update', (p) => {
     presence.applyUpdate(p as { users?: PresenceUser[] })

@@ -392,6 +392,16 @@
       "hover_only_desc": "Scroll only while the pointer is over the text.",
       "off": "Off",
       "off_desc": "Disable scrolling; use ellipsis for overflow."
+    },
+    "font_scale": {
+      "label": "Overall font size",
+      "description": "Text in the FiveM CEF can look small. Use this if the UI feels too large or too small.",
+      "s100": "100% (browser default)",
+      "s100_desc": "Default browser size. Use this when developing on a desktop browser.",
+      "s150": "150% (slightly larger)",
+      "s150_desc": "Larger text in CEF while keeping more information on screen.",
+      "s200": "200% (recommended)",
+      "s200_desc": "Tuned for the FiveM CEF default appearance. Recommended."
     }
   },
   "help": {

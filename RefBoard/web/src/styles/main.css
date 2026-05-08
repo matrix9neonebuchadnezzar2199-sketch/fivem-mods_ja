@@ -2,13 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  /*
-   * FiveM CEF では UI 全体が極小に見えることがある。
-   * ルートを 200%（ブラウザ既定の 2 倍）にし、Tailwind の rem 系を一括で拡大する。
-   */
-  font-size: 200%;
-}
+/*
+ * ルート font-size は Settings から動的に切替（stores/settings.ts の rootFontScale）。
+ * App.vue が html.style.fontSize を設定する。CSS 側では既定値を持たない（FOUC 緩和は
+ * index.html の inline script で先回りして適用、stores/settings.ts と多重防御）。
+ */
 
 html,
 body,

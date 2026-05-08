@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.4 — 2026-05-09
+
+- **feat（設定）**: 全体の文字サイズ（ルート `font-size`）を **設定画面から 100% / 150% / 200%** で切替可能に。`stores/settings.ts` の `rootFontScale`（既定 **200**、`localStorage` 永続化）と `App.vue` の `watchEffect` で `html.style.fontSize` に反映。`Settings.vue` の「表示」セクションにラジオを追加。日英 i18n（`settings.font_scale.*`）。
+- **chore（CSS）**: `main.css` から `html { font-size: 200% }` を削除（JS 側に集約）。FOUC 防止のため `index.html` に `<head>` インラインスクリプトを追加し、`refboard_settings` の `rootFontScale` を先読みしてから本体スクリプトを読み込む。
+- **互換**: 旧 `localStorage` に `rootFontScale` キーが無い場合は `200` で動作（`sanitizeRootFontScale` で不正値も既定に丸める）。`STORAGE_VERSION` 変更なし（モック側の破壊的シードは伴わないため）。
+
 ## v0.8.3 — 2026-05-08
 
 - **fix（本番 DB）**: テスト用 **5チーム×ロスター15人**が入らない問題に対し、既定で **`Config.SeedDemoTeamsOnStart = true`** のときリソース起動後に `sql/seed_test_5teams_15roster.sql` を自動実行する **`server/demo_seed.lua`** を追加（`teams` 準備をポーリング。SQL は従来どおり idempotent）。本番で不要なら `config.lua` で **false**。

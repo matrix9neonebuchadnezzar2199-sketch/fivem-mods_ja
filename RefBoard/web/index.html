@@ -4,6 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RefBoard</title>
+    <script>
+      // FOUC 防止: stores/settings.ts より先に html.font-size を当てる。
+      // STORAGE_KEY と既定値は stores/settings.ts と同期させること。
+      (function () {
+        try {
+          var raw = localStorage.getItem('refboard_settings')
+          var scale = 200
+          if (raw) {
+            var p = JSON.parse(raw)
+            if (p && (p.rootFontScale === 100 || p.rootFontScale === 150 || p.rootFontScale === 200)) {
+              scale = p.rootFontScale
+            }
+          }
+          document.documentElement.style.fontSize = scale + '%'
+        } catch (e) {
+          document.documentElement.style.fontSize = '200%'
+        }
+      })()
+    </script>
   </head>
   <!-- FiveM: 閉じている間は body を透明にし、ログイン／ワールドが見える（bg-bg だと空 #app でも全面が塗られる） -->
   <body class="bg-transparent text-slate-100">
