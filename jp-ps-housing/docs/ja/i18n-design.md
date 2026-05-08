@@ -24,6 +24,12 @@
 ## 言語切替
 
 - `shared/config.lua` の **`Config.Locale = 'ja'`** または **`'en'`** を変更してリソース再起動。
+- 将来、開発機では `en`・本番では `ja` としたい場合は、`GetConvar('ps_housing_locale', 'ja')` 等で上書きする拡張も検討可（未実装）。
+
+## ロケールキーの検証（CI 化候補）
+
+- `tools/verify-locale-keys.mjs` で **`locales/en.lua` と `locales/ja.lua` のキー集合**を突き合わせ、`_test.fallback` 以外の欠落が無いことを保証する。
+- GitHub Actions 等で `node tools/verify-locale-keys.mjs` を PR ごとに走らせると、韓国語・中国語ロケール追加時も同じゲートを流用できる。
 
 ## スコープ（変更なし）
 

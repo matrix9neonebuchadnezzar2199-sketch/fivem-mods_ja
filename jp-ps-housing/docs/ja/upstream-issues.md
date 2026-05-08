@@ -56,3 +56,58 @@
 > **Body:** In `server/server.lua` inside `ps-housing:server:addTenantToApartment`, when the tenant already has the same apartment, two notifications are sent to `targetSrc`: first "You are already in this apartment" (correct for tenant), second "This person is already in this apartment" (reads like a realtor message). Likely the second call should target `realtorSrc` or be removed.
 
 （リポジトリ archived のため merge は期待しないが記録用。）
+
+---
+
+## 3. 8A-next-1.5 — コード精査（判定軸と修正案）
+
+**対象**: `server/server.lua` `AddEventHandler("ps-housing:server:addTenantToApartment", …)` 内、**現在 L387–388**（行番号はコミット時点でずれる可能性あり）。
+
+### 前後 30 行の要約
+
+- `data`: `apartment`, `targetSrc`（入居予定のプレイヤー）, `realtorSrc`（不動産側）
+- `GetCitizenid(targetSrc, realtorSrc)` で対象の `citizenid` を取得
+- `PropertiesTable` を走査し、**既に同じ `apartment` を所有している**場合に早期 `return`
+- 成功パス（L416–417）では **`targetSrc` と `realtorSrc` に別々の通知**を送っており、ここが正常パターン
+
+### 判定軸へのマッピング
+
+| 軸 | 該当 |
+|----|------|
+| **A** 片方が誤り（コピペ） | **あり**。1 行目は `targetSrc` 向けで妥当。2 行目の英文は **三人称**で不動産視点の文面だが **同一 `targetSrc` に送信**されている。 |
+| **B** 両方必要だが条件順が誤り | **該当しにくい**。同一条件で連続しているのみ。 |
+| **C** 送信先が誤り | **主因**。2 行目は **`realtorSrc` に送る**のが自然。 |
+| **D** 成功/失敗の矛盾 | **該当しない**（どちらも error）。ただし **受取人と人称が矛盾**している。 |
+
+### 修正案候補（採用はユーザ確認後）
+
+#### 案 A: 2 行目を削除
+
+- **変更内容**: L388 の `Notify` を削除し、テナント向け 1 通知のみ。
+- **(a) 他コードへの影響**: なし（分岐内のみ）。
+- **(b) プレイヤー体験**: テナントには明確。不動産側は **フィードバックなし**（誤操作に気づきにくい）。
+- **(c) 保守性**: 最も単純。
+
+#### 案 B: 2 行目の宛先のみ `realtorSrc` に変更（文言は現状維持）
+
+- **変更内容**: `Notify(realtorSrc, "This person is already in this apartment", "error")`。`realtorSrc` が **nil のときは送らない**（`if realtorSrc then … end`）。
+- **(a) 他コードへの影響**: 外部リソースが `realtorSrc` なしでイベントを飛ばす場合、不動産側通知はスキップされるのみ。
+- **(b) プレイヤー体験**: テナント・不動産の両方に合理的な通知。
+- **(c) 保守性**: 差分が小さく、既存の `notify.apartment.peer_already_in` キーとも整合。
+
+#### 案 C: 案 B に加え英文を役割別に最適化（i18n 前でも可）
+
+- **変更内容**: 例 — テナント: 現状のまま / 不動産: `"The client is already assigned to this apartment."` 等。
+- **(a) 他コードへの影響**: `locales/en.lua` / `ja.lua` / `i18n-keys-master.md` を後続で更新する必要あり。
+- **(b) プレイヤー体験**: 最も分かりやすい。
+- **(c) 保守性**: 文言変更分の追跡コストあり。
+
+### Cursor の推奨（参考）
+
+- **案 B**（必要なら `realtorSrc` nil ガード）— 差分が最小で、成功パス（L416–417）と **「テナント / 不動産で別 Notify」** のパターンと一致するため。
+- 文言まで磨くなら **案 C** を **bugfix コミットの直後**または **8A-next-2** でまとめるとレビューが追いやすい。
+
+### 採用案・diff・動作確認（※ユーザ承認後に追記）
+
+- **状態**: 精査・候補提示まで完了。**実コード変更は未実施**（採用案の確定待ち）。
+- 確定後、ここに「採用案」「修正前後の要点」「確認手順（不動産が同一アパートに既入居のテナントを追加しようとしたときの通知）」を記載する。
