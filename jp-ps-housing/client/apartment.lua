@@ -51,19 +51,19 @@ function Apartment:EnterApartment()
         end
     end
 
-    Framework[Config.Notify].Notify("You dont have an apartment here.", "error")
+    Framework[Config.Notify].Notify(Locale('notify.apartment.none_here'), "error")
 end
 
 function Apartment:GetMenuForAll()
     if next(self.apartments) == nil then 
-        Framework[Config.Notify].Notify("There are no apartments here.", "error")
+        Framework[Config.Notify].Notify(Locale('notify.apartment.none_in_building'), "error")
         return
     end
 
     local id = "apartments-" .. self.apartmentData.label
     local menu = {
         id = id,
-        title = "Apartments",
+        title = Locale('menu.apartments.list_title'),
         options = {}
     }
 
@@ -82,20 +82,20 @@ end
 
 function Apartment:GetMenuForAllToRaid()
     if next(self.apartments) == nil then 
-        Framework[Config.Notify].Notify("There are no apartments here.", "error")
+        Framework[Config.Notify].Notify(Locale('notify.apartment.none_in_building'), "error")
         return
     end
 
     local id = "apartments-" .. self.apartmentData.label
     local menu = {
         id = id,
-        title = "Apartments To Raid",
+        title = Locale('menu.apartments.raid_list_title'),
         options = {}
     }
 
     for propertyId, _ in pairs(self.apartments) do
         table.insert(menu.options,{
-            title = "Raid " .. self.apartmentData.label .. " " .. propertyId,
+            title = Locale('menu.apartments.raid_option_title', self.apartmentData.label, propertyId),
             onSelect = function()
                 TriggerServerEvent("ps-housing:server:raidProperty", propertyId)
             end,

@@ -160,6 +160,25 @@
 
 ## 次アクション
 
-1. `locales/en.lua` / `locales/ja.lua` にキーを順次追加  
-2. `Locale('key', ...)` へ置換（動的箇所は `string.format` 引数整理）  
-3. `Framework[Config.Notify]` のラッパーで `Locale` を強制するか、各呼び出しを手で差し替え
+1. ~~client: `Locale('key', ...)` 置換~~ → **8A-next-2-1 完了**（2026-05-08）
+2. server / shared の置換 → **8A-next-2-2**
+3. `Framework[Config.Notify]` のラッパーで `Locale` を強制するかは任意（現状は呼び出し側で明示）
+
+---
+
+## 8A-next-2-1 クライアント置換後の除外リスト（意図的に英語のまま／`Locale` 未適用）
+
+| 箇所 | 理由 |
+|------|------|
+| `client/client.lua` `Debug("Initialising properties")` / `Debug("Initialised properties")` | 開発用ログ。`debug.*` キーは主に server DB 系。 |
+| `client/cl_property.lua` `Debug(aptName .. " not found in Config")` / `Debug("Object: ".. …)` | 同上。 |
+| `client/modeler.lua` `RegisterNUICallback("showNotification", …)` の `data.message` | NUI / サーバからの動的本文パススルー（`Locale(variable)` を避ける）。 |
+| `client/shell.lua` コメント内の `Notify("You left the shell", …)` | 無効行（サンプル）。 |
+| `client/modeler.lua` コメント内 `"Stop Placement"` | 開発者向けコメント。 |
+
+---
+
+## 次アクション（残り）
+
+1. `locales/en.lua` / `locales/ja.lua` — server・shared 置換に伴う追記（8A-next-2-2）
+2. `Locale('key', ...)` — server / shared（`Framework` ターゲットラベル、`Config.FurnitureTypes` 等）

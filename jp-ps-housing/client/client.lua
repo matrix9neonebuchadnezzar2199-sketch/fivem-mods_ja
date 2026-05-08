@@ -53,7 +53,7 @@ if GetResourceState('qbx_properties') == 'started' then
     for k, v in pairs(Config.Apartments) do
         data[#data +1] = {
             label = v.label,
-            description = 'Luxury Apartments!',
+            description = Locale('ui.apartment.luxury_description'),
             enter = vec3(v.door.x, v.door.y, v.door.z),
             id = k
         }
@@ -121,52 +121,52 @@ end)
 
 lib.callback.register('ps-housing:cb:confirmPurchase', function(amount, street, id)
     return lib.alertDialog({
-        header = 'Purchase Confirmation',
-        content = 'Are you sure you want to purchase '..street..' ' .. id .. ' for $' .. amount .. '?',
+        header = Locale('dialog.purchase.header'),
+        content = Locale('dialog.purchase.content', street, id, amount),
         centered = true,
         cancel = true,
         labels = {
-            confirm = "Purchase",
-            cancel = "Cancel"
+            confirm = Locale('dialog.purchase.confirm'),
+            cancel = Locale('dialog.common.cancel')
         }
     })
 end)
 
 lib.callback.register('ps-housing:cb:confirmRaid', function(street, id)
     return lib.alertDialog({
-        header = 'Raid',
-        content = 'Do you want to raid '..street..' ' .. id .. '?',
+        header = Locale('dialog.raid.header'),
+        content = Locale('dialog.raid.content', street, id),
         centered = true,
         cancel = true,
         labels = {
-            confirm = "Raid",
-            cancel = "Cancel"
+            confirm = Locale('dialog.raid.confirm'),
+            cancel = Locale('dialog.common.cancel')
         }
     })
 end)
 
 lib.callback.register('ps-housing:cb:ringDoorbell', function()
     return lib.alertDialog({
-        header = 'Ring Doorbell',
-        content = 'You dont have a key for this property, would you like to ring the doorbell?',
+        header = Locale('dialog.doorbell.header'),
+        content = Locale('dialog.doorbell.content'),
         centered = true,
         cancel = true,
         labels = {
-            confirm = "Ring",
-            cancel = "Cancel"
+            confirm = Locale('dialog.doorbell.confirm'),
+            cancel = Locale('dialog.common.cancel')
         }
     })
 end)
 
 lib.callback.register('ps-housing:cb:showcase', function()
     return lib.alertDialog({
-        header = 'Showcase Property',
-        content = 'Do you want to showcase this property?',
+        header = Locale('dialog.showcase.header'),
+        content = Locale('dialog.showcase.content'),
         centered = true,
         cancel = true,
         labels = {
-            confirm = "Yes",
-            cancel = "Cancel"
+            confirm = Locale('dialog.showcase.confirm'),
+            cancel = Locale('dialog.common.cancel')
         }
     })
 end)

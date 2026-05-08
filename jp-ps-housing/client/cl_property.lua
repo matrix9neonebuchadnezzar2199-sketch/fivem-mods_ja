@@ -183,14 +183,20 @@ function Property:RegisterPropertyEntrance()
         local data = lib.callback.await("ps-housing:cb:getPropertyInfo", false, self.property_id)
         if not data then return end
 
-        local content = "**Owner:** " .. data.owner .. "  \n" .. "**Description:** " .. data.description .. "  \n" .. "**Street:** " .. data.street .. "  \n" .. "**Region:** " .. data.region .. "  \n" .. "**Shell:** " .. data.shell .. "  \n" .. "**For Sale:** " .. (data.for_sale and "Yes" or "No")
+        local forSaleLabel = data.for_sale and Locale('dialog.property_info.yes') or Locale('dialog.property_info.no')
+        local content = Locale('dialog.property_info.line_owner', data.owner)
+            .. "  \n" .. Locale('dialog.property_info.line_description', data.description)
+            .. "  \n" .. Locale('dialog.property_info.line_street', data.street)
+            .. "  \n" .. Locale('dialog.property_info.line_region', data.region)
+            .. "  \n" .. Locale('dialog.property_info.line_shell', data.shell)
+            .. "  \n" .. Locale('dialog.property_info.line_forsale', forSaleLabel)
 
         if data.for_sale then
-            content = content .. "  \n" .. "**Price:** " .. data.price
+            content = content .. "  \n" .. Locale('dialog.property_info.line_price', data.price)
         end
 
         lib.alertDialog({
-            header = data.street .. " " .. data.property_id,
+            header = Locale('dialog.property_info.header', data.street, data.property_id),
             content = content,
             centered = true,
         })
@@ -263,7 +269,7 @@ function Property:RegisterGarageZone()
     end
 
     local garageData = self.propertyData.garage_data
-    local label = self.propertyData.street .. self.property_id .. " Garage"
+    local label = Locale('ui.garage.label_format', self.propertyData.street, self.property_id)
 
     local isQbx = GetResourceState('qbx_garages') == 'started'
     local coords = vec4(garageData.x, garageData.y, garageData.z, garageData.h)
@@ -394,7 +400,7 @@ function Property:GiveMenus(garden)
     if self.owner or accessAndConfig then
         Framework[Config.Radial].AddRadialOption(
             "furniture_menu",
-            "Furniture Menu",
+            Locale('radial.furniture_menu.label'),
             "house",
             function()
                 Modeler:OpenMenu(self.property_id)
@@ -407,7 +413,7 @@ function Property:GiveMenus(garden)
     if self.owner and not garden then
         Framework[Config.Radial].AddRadialOption(
             "access_menu",
-            "Manage Property",
+            Locale('radial.manage_property.label'),
             "key",
             function()
                 self:ManageAccessMenu()
@@ -432,7 +438,7 @@ function Property:ManageAccessMenu()
     if not self.inProperty then return end
 
     if not self.owner then
-        Framework[Config.Notify].Notify("Only the owner can do this.", "error")
+        Framework[Config.Notify].Notify(Locale('notify.property.owner_only'), "error")
         return
     end
 
@@ -440,19 +446,19 @@ function Property:ManageAccessMenu()
     local id = "property-" .. self.property_id .. "-access"
     local menu = {
         id = id,
-        title = "Manage Access",
+        title = Locale('menu.access.manage_title'),
         options = {},
     }
 
     menu.options[#menu.options + 1] = {
-        title = "Give Access",
+        title = Locale('menu.access.give_option'),
         onSelect = function()
             self:GiveAccessMenu()
         end,
     }
 
     menu.options[#menu.options + 1] = {
-        title = "Revoke Access",
+        title = Locale('menu.access.revoke_option'),
         onSelect = function()
             self:RevokeAccessMenu()
         end,
@@ -472,7 +478,7 @@ function Property:GiveAccessMenu()
     local id = "property-" .. self.property_id .. "-access-give"
     local menu = {
         id = id,
-        title = "Give Access",
+        title = Locale('menu.access.give_title'),
         options = {},
     }
 
@@ -483,7 +489,7 @@ function Property:GiveAccessMenu()
             local v = players[i]
             menu.options[#menu.options + 1] = {
                 title = v.name,
-                description = "Give Access",
+                description = Locale('menu.access.give_description'),
                 onSelect = function()
                     TriggerServerEvent("ps-housing:server:addAccess", self.property_id, v.src)
                 end,
@@ -493,7 +499,7 @@ function Property:GiveAccessMenu()
         lib.registerContext(menu)
         lib.showContext(id)
     else
-        Framework[Config.Notify].Notify("No one is in the property", "error")
+        Framework[Config.Notify].Notify(Locale('notify.access.no_players_inside'), "error")
     end
 end
 
@@ -505,7 +511,7 @@ function Property:RevokeAccessMenu()
     local id = "property-" .. self.property_id .. "-access-already"
     local alreadyAccessMenu = {
         id = id,
-        title = "Revoke Access",
+        title = Locale('menu.access.revoke_title'),
         options = {},
     }
 
@@ -517,7 +523,7 @@ function Property:RevokeAccessMenu()
             local v = playersWithAccess[i]
             alreadyAccessMenu.options[#alreadyAccessMenu.options + 1] = {
                 title = v.name,
-                description = "Remove Access",
+                description = Locale('menu.access.remove_description'),
                 onSelect = function()
                     TriggerServerEvent("ps-housing:server:removeAccess", self.property_id, v.citizenid)
                 end,
@@ -527,7 +533,7 @@ function Property:RevokeAccessMenu()
         lib.registerContext(alreadyAccessMenu)
         lib.showContext(id)
     else
-        Framework[Config.Notify].Notify("No one has access to this property", "error")
+        Framework[Config.Notify].Notify(Locale('notify.access.none_to_revoke'), "error")
     end
 end
 
@@ -535,14 +541,14 @@ function Property:OpenDoorbellMenu()
     if not self.inProperty then return end
 
     if not next(self.doorbellPool) then
-        Framework[Config.Notify].Notify("No one is at the door", "error")
+        Framework[Config.Notify].Notify(Locale('notify.doorbell.no_visitors'), "error")
         return
     end
 
     local id = string.format("property-%s-doorbell", self.property_id)
     local menu = {
         id = id,
-        title = "People at the door",
+        title = Locale('menu.doorbell.title'),
         options = {},
     }
 
