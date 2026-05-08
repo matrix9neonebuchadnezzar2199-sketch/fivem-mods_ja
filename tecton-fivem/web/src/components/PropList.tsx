@@ -2,46 +2,62 @@
 
 import type { CSSProperties } from 'react'
 import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { List } from 'react-window'
+import { Grid } from 'react-window'
 import { fetchNui } from '../lib/nui'
 import { ja } from '../i18n/ja'
 import { theme } from '../theme'
-import { filterModelsBySearch, listModelsForCategory, usePropsStore } from '../store/propsStore'
+import { filterModelsBySearch, listModelsForCategory, type PropDef, usePropsStore } from '../store/propsStore'
 import { useBuilderStore } from '../store/builderStore'
+import { PropThumb } from './PropThumb'
 import styles from '../pages/Builder.module.css'
+import gridStyles from './PropGrid.module.css'
 
-/** 行の高さ（rem 相当を px に）。ラベル拡大に合わせ 4.5rem。 */
-function itemSizePx(): number {
+/** グリッド行の高さ（rem 相当を px に）。サムネ + ラベル2行 + 余白 */
+function gridRowHeightPx(): number {
   const root = typeof document !== 'undefined' ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 16
-  return 4.5 * root
+  return 7 * root + 8
 }
 
-type RowProps = {
+const MIN_COL_PX = 92
+
+type CellProps = {
   models: string[]
-  dictionary: Record<string, { label: string; category: string }>
+  dictionary: Record<string, PropDef>
   onPick: (model: string) => void
+  columnCount: number
 }
 
-type RowComponentProps = RowProps & {
-  index: number
+type GridCellProps = CellProps & {
+  columnIndex: number
+  rowIndex: number
   style: CSSProperties
   ariaAttributes: {
-    'aria-posinset': number
-    'aria-setsize': number
-    role: 'listitem'
+    'aria-colindex': number
+    role: 'gridcell'
   }
 }
 
-function Row({ index, style, ariaAttributes, models, dictionary, onPick }: RowComponentProps) {
+function GridCell({ rowIndex, columnIndex, style, ariaAttributes, models, dictionary, onPick, columnCount }: GridCellProps) {
+  const index = rowIndex * columnCount + columnIndex
+  if (index >= models.length) {
+    return <div style={style} className={gridStyles.cellEmpty} />
+  }
   const model = models[index]
   const def = dictionary[model]
+  const label = def?.label ?? model
+  const category = def?.category ?? 'furniture'
+  const thumbFile = def?.thumb ?? ''
+
   return (
-    <div style={style} {...ariaAttributes}>
-      <button type="button" className={styles.propRow} style={{ color: theme.text }} onClick={() => onPick(model)}>
-        <span className={styles.propRowLabel}>{def?.label ?? model}</span>
-        <span className={styles.propRowModel} style={{ color: theme.textDim }}>
-          {model}
-        </span>
+    <div style={style} {...ariaAttributes} className={gridStyles.cellPad}>
+      <button type="button" className={gridStyles.card} style={{ color: theme.text }} onClick={() => onPick(model)}>
+        <PropThumb key={model} thumbFile={thumbFile} label={label} category={category} />
+        <div className={gridStyles.meta}>
+          <span className={gridStyles.label}>{label}</span>
+          <span className={gridStyles.model} style={{ color: theme.textDim }}>
+            {model}
+          </span>
+        </div>
       </button>
     </div>
   )
@@ -59,7 +75,7 @@ export function PropList({ onPlaced }: PropListProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(320)
   const [listWidth, setListWidth] = useState(400)
-  const [itemSize, setItemSize] = useState(() => itemSizePx())
+  const [rowHeightPx, setRowHeightPx] = useState(() => gridRowHeightPx())
 
   useLayoutEffect(() => {
     const el = wrapRef.current
@@ -69,14 +85,23 @@ export function PropList({ onPlaced }: PropListProps) {
     const ro = new ResizeObserver(() => {
       setListHeight(Math.max(120, el.clientHeight))
       setListWidth(Math.max(200, el.clientWidth))
-      setItemSize(itemSizePx())
+      setRowHeightPx(gridRowHeightPx())
     })
     ro.observe(el)
     setListHeight(Math.max(120, el.clientHeight))
     setListWidth(Math.max(200, el.clientWidth))
-    setItemSize(itemSizePx())
+    setRowHeightPx(gridRowHeightPx())
     return () => ro.disconnect()
   }, [selectedCategory])
+
+  const columnCount = useMemo(() => {
+    if (listWidth <= 0) {
+      return 1
+    }
+    return Math.max(1, Math.floor(listWidth / MIN_COL_PX))
+  }, [listWidth])
+
+  const columnWidth = useMemo(() => Math.max(1, Math.floor(listWidth / columnCount)), [listWidth, columnCount])
 
   const baseModels = useMemo(() => listModelsForCategory(selectedCategory, dictionary), [selectedCategory, dictionary])
 
@@ -84,6 +109,8 @@ export function PropList({ onPlaced }: PropListProps) {
     () => filterModelsBySearch(baseModels, dictionary, deferredQuery),
     [baseModels, dictionary, deferredQuery],
   )
+
+  const rowCount = useMemo(() => Math.ceil(models.length / columnCount), [models.length, columnCount])
 
   const onPick = useCallback(
     async (model: string) => {
@@ -103,13 +130,14 @@ export function PropList({ onPlaced }: PropListProps) {
     [onPlaced, dictionary, selectedCategory],
   )
 
-  const rowProps: RowProps = useMemo(
+  const cellProps: CellProps = useMemo(
     () => ({
       models,
       dictionary,
       onPick,
+      columnCount,
     }),
-    [models, dictionary, onPick],
+    [models, dictionary, onPick, columnCount],
   )
 
   if (!selectedCategory) {
@@ -137,14 +165,21 @@ export function PropList({ onPlaced }: PropListProps) {
   }
 
   return (
-    <div ref={wrapRef} className={styles.propListWrap}>
-      <List<RowProps>
+    <div
+      ref={wrapRef}
+      className={styles.propListWrap}
+      role="region"
+      aria-label={ja.props.propGridAria}
+    >
+      <Grid<CellProps>
         key={`${selectedCategory}|${deferredQuery}`}
-        rowCount={models.length}
-        rowHeight={itemSize}
-        rowProps={rowProps}
-        rowComponent={Row}
-        overscanCount={10}
+        columnCount={columnCount}
+        columnWidth={columnWidth}
+        rowCount={rowCount}
+        rowHeight={rowHeightPx}
+        cellComponent={GridCell}
+        cellProps={cellProps}
+        overscanCount={2}
         style={{ height: listHeight, width: listWidth }}
       />
     </div>

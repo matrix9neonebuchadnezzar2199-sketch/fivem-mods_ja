@@ -24,6 +24,7 @@ export const ja = {
     selectCategory: '左のツリーからカテゴリを選択してください',
     emptyCategory: 'このカテゴリにプロップがありません',
     searchNoResults: '検索に一致するプロップがありません',
+    propGridAria: 'プロップカタログ（サムネイル付きグリッド）',
   },
   search: {
     placeholder: 'モデル名・名前・タグで検索（空白で AND）',
