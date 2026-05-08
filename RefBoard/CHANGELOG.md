@@ -2,9 +2,11 @@
 
 ## v0.6.5 — 2026-05-08
 
-- **ヘルプ（Sprint 09 Phase A 前半）**: `docs/sprints/sprint_09_help_phase2.md` を追加（v0.6.5〜v0.7.0 のヘルプ拡張ロードマップ）。
-- **ヘルプ**: `web/src/help/ja/index.json` に「試合管理」カテゴリ（記事 8 件の目次）、`reverse_index.json` に「試合中」逆引きカテゴリ（`actionUrl` 付き）を追加。
-- **記事（日本語・試合中・4/8）**: `match_record_goal`、`match_record_assist`、`match_substitute_player`、`match_yellow_card`。残り 4 本（赤カード / PK / 手動スコア / 試合終了・再編集）は次ターンで追加予定。未執筆の項目を開いた場合は既存の「記事がありません」表示となる。
+- **ヘルプ**: 日本語記事を 4 → 12 本に拡充（試合管理カテゴリ 8 本追加: `match_record_goal` / `match_record_assist` / `match_substitute_player` / `match_yellow_card` / `match_red_card` / `match_penalty_shootout` / `match_manual_score_edit` / `match_finish`）。
+- **ヘルプ**: `web/src/help/ja/index.json` に「試合管理」カテゴリを追加。`reverse_index.json` に「試合中」カテゴリを追加し、各項目に `actionUrl` を付与。
+- **ドキュメント**: `docs/sprints/sprint_09_help_phase2.md`（v0.6.5 〜 v0.7.0 の 5 フェーズ計画）を新設。
+- **既知の制約**: 左カラムの「項目ごと」ツリー（`index.json`）はまだ HelpView から読み込まれていない。Phase B 以降で UI 改修予定。
+- **エラー → ヘルプ**: `E2005`（`reason_too_short`）を `match_manual_score_edit` 記事に紐づけ。
 
 ## v0.6.4 — 2026-05-07
 

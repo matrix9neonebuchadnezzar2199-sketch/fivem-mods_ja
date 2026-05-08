@@ -32,6 +32,7 @@ export const ERROR_KEY_TO_CODE: Record<string, string> = {
 /** コード別の専用ヘルプ記事（slug = ファイル名から .md を除いたもの）。未設定は汎用ヘルプへ */
 export const ERROR_CODE_TO_HELP_SLUG: Record<string, string> = {
   E1003: 'trouble_e1003_lock_held',
+  E2005: 'match_manual_score_edit',
   E4003: 'trouble_autosave_failed',
 }
 
