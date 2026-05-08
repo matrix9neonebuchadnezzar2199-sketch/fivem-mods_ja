@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 import type { CSSProperties } from 'react'
-import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Grid } from 'react-window'
+import { useDebounce } from '../lib/useDebounce'
 import { ja } from '../i18n/ja'
 import { theme } from '../theme'
-import { filterModelsBySearch, listModelsForCategory, type PropDef, usePropsStore } from '../store/propsStore'
+import {
+  filterModelsBySearch,
+  filterModelsByTags,
+  listModelsForCategory,
+  type PropDef,
+  usePropsStore,
+} from '../store/propsStore'
 import { useBuilderStore } from '../store/builderStore'
 import { PropThumb } from './PropThumb'
 import styles from '../pages/Builder.module.css'
@@ -17,9 +24,10 @@ function gridRowHeightPx(): number {
   return 7 * root + 8
 }
 
-const MIN_COL_PX = 92
-/** カードが小さすぎないよう列数の上限（実機フィードバック: 約3列） */
-const MAX_PROP_GRID_COLUMNS = 3
+/** 最小幅（px）。狭い中央列でも横スクロールしにくいよう小さめ＋列数は幅に応じて最大 8 */
+const MIN_COL_PX = 76
+const MAX_PROP_GRID_COLUMNS = 8
+const SEARCH_DEBOUNCE_MS = 150
 
 type CellProps = {
   models: string[]
@@ -89,7 +97,8 @@ export function PropList() {
   const setPendingCatalog = useBuilderStore((s) => s.setPendingCatalog)
   const pendingModel = useBuilderStore((s) => s.pendingCatalog?.model ?? null)
   const searchQuery = useBuilderStore((s) => s.searchQuery)
-  const deferredQuery = useDeferredValue(searchQuery)
+  const debouncedQuery = useDebounce(searchQuery, SEARCH_DEBOUNCE_MS)
+  const selectedTags = usePropsStore((s) => s.selectedTags)
   const wrapRef = useRef<HTMLDivElement>(null)
   const [listHeight, setListHeight] = useState(320)
   const [listWidth, setListWidth] = useState(400)
@@ -124,10 +133,10 @@ export function PropList() {
 
   const baseModels = useMemo(() => listModelsForCategory(selectedCategory, dictionary), [selectedCategory, dictionary])
 
-  const models = useMemo(
-    () => filterModelsBySearch(baseModels, dictionary, deferredQuery),
-    [baseModels, dictionary, deferredQuery],
-  )
+  const models = useMemo(() => {
+    const afterSearch = filterModelsBySearch(baseModels, dictionary, debouncedQuery)
+    return filterModelsByTags(afterSearch, dictionary, selectedTags)
+  }, [baseModels, dictionary, debouncedQuery, selectedTags])
 
   const rowCount = useMemo(() => Math.ceil(models.length / columnCount), [models.length, columnCount])
 
@@ -169,7 +178,7 @@ export function PropList() {
   if (models.length === 0) {
     return (
       <div className={styles.propListPlaceholder} style={{ color: theme.textDim, fontSize: theme.fontSize.body }}>
-        {ja.props.searchNoResults}
+        {ja.search.noResults}
       </div>
     )
   }
@@ -182,7 +191,7 @@ export function PropList() {
       aria-label={ja.props.propGridAria}
     >
       <Grid<CellProps>
-        key={`${selectedCategory}|${deferredQuery}`}
+        key={`${selectedCategory}|${debouncedQuery}|${selectedTags.join('\u0001')}`}
         columnCount={columnCount}
         columnWidth={columnWidth}
         rowCount={rowCount}

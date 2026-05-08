@@ -96,7 +96,8 @@ export const useBuilderStore = create<BuilderState>((set) => ({
       },
     })
   },
-  setSelectedCategory: (path) => set({ selectedCategory: path, searchQuery: '', pendingCatalog: null }),
+  /** 検索クエリは維持（M2-b）。仮選択とタグは CategoryTree / propsStore 側でリセット */
+  setSelectedCategory: (path) => set({ selectedCategory: path, pendingCatalog: null }),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setPendingCatalog: (v) => set({ pendingCatalog: v }),
   setShowPlacementGuide: (v) => set({ showPlacementGuide: v }),

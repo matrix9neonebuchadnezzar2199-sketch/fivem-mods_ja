@@ -10,6 +10,7 @@ export function CategoryTree() {
   const categories = usePropsStore((s) => s.categories)
   const selectedPath = useBuilderStore((s) => s.selectedCategory)
   const setSelectedCategory = useBuilderStore((s) => s.setSelectedCategory)
+  const clearTags = usePropsStore((s) => s.clearTags)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set())
 
   const toggleExpanded = useCallback((id: string) => {
@@ -27,16 +28,18 @@ export function CategoryTree() {
   const onSelectRoot = useCallback(
     (node: CategoryNode) => {
       toggleExpanded(node.id)
+      clearTags()
       setSelectedCategory(node.path)
     },
-    [setSelectedCategory, toggleExpanded],
+    [setSelectedCategory, toggleExpanded, clearTags],
   )
 
   const onSelectChild = useCallback(
     (path: string) => {
+      clearTags()
       setSelectedCategory(path)
     },
-    [setSelectedCategory],
+    [setSelectedCategory, clearTags],
   )
 
   return (

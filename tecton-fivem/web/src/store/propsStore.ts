@@ -84,6 +84,29 @@ export function listModelsForCategory(path: string | null, dict: Record<string, 
  * カテゴリで絞った `models` に対し、クエリで再フィルタ。
  * 空白区切りトークンは AND（各トークンがモデル名・ラベル・いずれかのタグに部分一致）。
  */
+/** 選択タグがすべて `def.tags` に含まれるモデルのみ（大文字小文字無視・AND） */
+export function filterModelsByTags(
+  models: string[],
+  dict: Record<string, PropDef>,
+  selectedTags: string[],
+): string[] {
+  if (selectedTags.length === 0) {
+    return models
+  }
+  const required = selectedTags.map((t) => t.trim().toLowerCase()).filter(Boolean)
+  if (required.length === 0) {
+    return models
+  }
+  return models.filter((model) => {
+    const def = dict[model]
+    if (!def) {
+      return false
+    }
+    const tagSet = new Set((def.tags ?? []).map((x) => String(x).toLowerCase()))
+    return required.every((r) => tagSet.has(r))
+  })
+}
+
 export function filterModelsBySearch(
   models: string[],
   dict: Record<string, PropDef>,
@@ -112,14 +135,37 @@ export function filterModelsBySearch(
   })
 }
 
+/** カテゴリ内のタグ頻度（チップ用） */
+export function getTopTagsForModels(models: string[], dict: Record<string, PropDef>, limit: number): { tag: string; count: number }[] {
+  const counter = new Map<string, number>()
+  for (const model of models) {
+    const def = dict[model]
+    if (!def) {
+      continue
+    }
+    for (const t of def.tags ?? []) {
+      const key = String(t)
+      counter.set(key, (counter.get(key) ?? 0) + 1)
+    }
+  }
+  return [...counter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, Math.max(0, limit))
+    .map(([tag, count]) => ({ tag, count }))
+}
+
 type PropsState = {
   dictionary: Record<string, PropDef>
   categories: CategoryNode[]
   loaded: boolean
   loadError: boolean
   lastCount: number
+  /** タグチップ AND フィルタ（カテゴリ変更時は CategoryTree から clear） */
+  selectedTags: string[]
   setProps: (dict: Record<string, PropDef>, rawCategories: ServerCategoryRaw[]) => void
   setLoadFailed: () => void
+  toggleTag: (tag: string) => void
+  clearTags: () => void
 }
 
 export const usePropsStore = create<PropsState>((set) => ({
@@ -128,6 +174,21 @@ export const usePropsStore = create<PropsState>((set) => ({
   loaded: false,
   loadError: false,
   lastCount: 0,
+  selectedTags: [],
+  toggleTag: (tag) =>
+    set((s) => {
+      const t = tag.trim()
+      if (!t) {
+        return s
+      }
+      const lower = t.toLowerCase()
+      const has = s.selectedTags.some((x) => x.toLowerCase() === lower)
+      if (has) {
+        return { selectedTags: s.selectedTags.filter((x) => x.toLowerCase() !== lower) }
+      }
+      return { selectedTags: [...s.selectedTags, t] }
+    }),
+  clearTags: () => set({ selectedTags: [] }),
   setProps: (dict, rawCategories) => {
     const tree = buildCategoryNodes(rawCategories, dict)
     const lastCount = Object.keys(dict).length
@@ -137,6 +198,7 @@ export const usePropsStore = create<PropsState>((set) => ({
       loaded: true,
       loadError: false,
       lastCount,
+      selectedTags: [],
     })
   },
   setLoadFailed: () =>
@@ -146,5 +208,6 @@ export const usePropsStore = create<PropsState>((set) => ({
       dictionary: {},
       categories: [],
       lastCount: 0,
+      selectedTags: [],
     }),
 }))

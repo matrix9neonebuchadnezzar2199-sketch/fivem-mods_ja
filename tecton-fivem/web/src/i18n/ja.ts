@@ -23,14 +23,21 @@ export const ja = {
     failed: 'プロップデータの読み込みに失敗しました',
     selectCategory: '左のツリーからカテゴリを選択してください',
     emptyCategory: 'このカテゴリにプロップがありません',
-    searchNoResults: '検索に一致するプロップがありません',
+    searchNoResults: '検索に一致するプロップがありません', // 互換: 新コードは search.noResults を優先
     propGridAria: 'プロップカタログ（サムネイル付きグリッド）',
   },
   search: {
-    placeholder: 'モデル名・名前・タグで検索（空白で AND）',
+    placeholder: 'モデル名・ラベル・タグで検索（スペースで AND）',
     ariaLabel: 'プロップ検索',
     hint: '例: chair / 椅子 / prop_',
+    clear: 'クリア',
+    hitCount: '該当 {count} 件',
+    noResults: '該当するプロップが見つかりません',
     cameraLookHint: '右ボタンを押したままドラッグで視点を回転',
+  },
+  tagFilter: {
+    title: 'タグで絞り込み',
+    clearAll: 'すべて解除',
   },
   placementGuide: {
     line1: '位置と向きを決めたら Enter で確定',

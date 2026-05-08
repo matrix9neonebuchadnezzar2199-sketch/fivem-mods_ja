@@ -11,16 +11,28 @@ export function SearchBar() {
 
   return (
     <div className={styles.wrap}>
-      <input
-        type="search"
-        className={styles.input}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder={ja.search.placeholder}
-        aria-label={ja.search.ariaLabel}
-        autoComplete="off"
-        spellCheck={false}
-      />
+      <div className={styles.inputRow}>
+        <input
+          type="search"
+          className={styles.input}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={ja.search.placeholder}
+          aria-label={ja.search.ariaLabel}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {searchQuery.length > 0 && (
+          <button
+            type="button"
+            className={styles.clearBtn}
+            onClick={() => setSearchQuery('')}
+            aria-label={ja.search.clear}
+          >
+            ×
+          </button>
+        )}
+      </div>
       <div className={styles.hint} style={{ color: theme.textDim }}>
         {ja.search.hint}
       </div>

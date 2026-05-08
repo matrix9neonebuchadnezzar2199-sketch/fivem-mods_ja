@@ -16,7 +16,8 @@
 }
 
 .panel {
-  width: min(60rem, calc(100vw - 2rem));
+  /* 中央カタログ列が狭すぎてグリッドが横スクロールしないよう余裕を確保（M2-b） */
+  width: min(75rem, calc(100vw - 2rem));
   min-height: 85vh;
   max-height: 90vh;
   display: flex;
@@ -102,10 +103,23 @@
   overflow: hidden;
 }
 
+/* 検索・件数・タグをスクロール時も見える */
+.catalogSticky {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.125rem;
+  background: linear-gradient(to bottom, #1e293b 92%, transparent);
+}
+
 .propListWrap {
   flex: 1;
   min-height: 0;
   width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .propListPlaceholder {

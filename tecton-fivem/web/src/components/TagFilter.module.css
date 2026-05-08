@@ -1,0 +1,61 @@
+/* SPDX-License-Identifier: LGPL-3.0-or-later */
+
+.root {
+  flex-shrink: 0;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.clearAll {
+  flex-shrink: 0;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.6875rem;
+  border-radius: 0.25rem;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.chip {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.12);
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipCount {
+  margin-left: 0.125rem;
+  opacity: 0.75;
+  font-size: 0.6875rem;
+}
+
+.chipOn {
+  font-weight: 600;
+}

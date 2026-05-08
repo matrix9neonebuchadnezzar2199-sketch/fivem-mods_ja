@@ -9,6 +9,8 @@ import { usePropsStore } from '../store/propsStore'
 import { CategoryTree } from '../components/CategoryTree'
 import { PropList } from '../components/PropList'
 import { SearchBar } from '../components/SearchBar'
+import { CatalogHitCount } from '../components/CatalogHitCount'
+import { TagFilter } from '../components/TagFilter'
 import { PropThumb } from '../components/PropThumb'
 import { TransformPanel } from '../components/TransformPanel'
 import styles from './Builder.module.css'
@@ -166,7 +168,11 @@ export function Builder() {
             )}
             {propsLoaded && !propsError && (
               <>
-                <SearchBar />
+                <div className={styles.catalogSticky}>
+                  <SearchBar />
+                  <CatalogHitCount />
+                  <TagFilter />
+                </div>
                 <PropList />
               </>
             )}
