@@ -179,6 +179,16 @@ lib.callback.register('tecton:scene:load', function(source, scene_id)
     return TectonDB.fetchScene(scene_id)
 end)
 
+--- クライアントがリソース起動後・再ログイン後にシーン全体を取り直す用（M1-d）。
+lib.callback.register('tecton:scene:request', function(source, scene_id)
+    if not canUse(source) then
+        return {}
+    end
+    scene_id = scene_id or Config.DefaultScene
+    vlog(source, ('scene:request %s'):format(scene_id))
+    return TectonDB.fetchScene(scene_id)
+end)
+
 lib.callback.register('tecton:autosave:peek', function(source, scene_id)
     if not canUse(source) then
         return nil

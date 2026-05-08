@@ -4,11 +4,90 @@
 
 ---@diagnostic disable: undefined-global
 
+local resName = GetCurrentResourceName()
+
 local function vlog(msg)
     if Config.Debug and Config.Debug.verbose then
         print(('[TECTON] %s'):format(msg))
     end
 end
+
+--- プレイヤーが操作可能になるまで待つ（ストリーミング／スポーン前の CreateObject 失敗を減らす）。
+local function waitForPlayablePed()
+    local deadline = GetGameTimer() + 60000
+    while GetGameTimer() < deadline do
+        if LocalPlayer and LocalPlayer.state and LocalPlayer.state.isLoggedIn == false then
+            Wait(100)
+        else
+            local ped = PlayerPedId()
+            if ped ~= 0 and DoesEntityExist(ped) then
+                local c = GetEntityCoords(ped)
+                if (math.abs(c.x) > 1.0 or math.abs(c.y) > 1.0) and c.z > -150.0 and c.z < 2000.0 then
+                    return true
+                end
+            end
+            Wait(100)
+        end
+    end
+    print('^3TECTON: scene restore skipped — ped not ready in time^0')
+    return false
+end
+
+local function restoreSceneFromServer()
+    local client = TectonClient
+    local placement = TectonPlacement
+    if not placement or type(placement.spawnExistingObject) ~= 'function' then
+        print('^1TECTON: restoreScene placement unavailable^0')
+        return
+    end
+    local rows = lib.callback.await('tecton:scene:request', false, client.scene)
+    if type(rows) ~= 'table' then
+        print('^1TECTON: scene:request returned non-table^0')
+        return
+    end
+    local n = 0
+    for _, obj in ipairs(rows) do
+        if obj.id and obj.model then
+            local handle = placement.spawnExistingObject(obj)
+            if handle and handle ~= 0 then
+                client.spawnedHandles[obj.id] = handle
+                n = n + 1
+            else
+                print(('^3TECTON: spawn failed for object id=%s model=%s^0'):format(tostring(obj.id), tostring(obj.model)))
+            end
+        end
+    end
+    print(('TECTON: client restored %d scene objects'):format(n))
+end
+
+AddEventHandler('onClientResourceStart', function(res)
+    if res ~= resName then
+        return
+    end
+    CreateThread(function()
+        TectonClient.spawnedHandles = {}
+        if not waitForPlayablePed() then
+            return
+        end
+        restoreSceneFromServer()
+    end)
+end)
+
+AddEventHandler('onResourceStop', function(res)
+    if res ~= resName then
+        return
+    end
+    local placement = TectonPlacement
+    local client = TectonClient
+    if placement and type(placement.removeObject) == 'function' and client and client.spawnedHandles then
+        for _, h in pairs(client.spawnedHandles) do
+            placement.removeObject(h)
+        end
+    end
+    if client then
+        client.spawnedHandles = {}
+    end
+end)
 
 local function ToggleBuilder()
     local state = TectonClient

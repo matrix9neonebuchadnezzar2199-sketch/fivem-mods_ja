@@ -25,7 +25,13 @@ AddEventHandler('onResourceStart', function(resName)
         print('^1TECTON: migration failed, aborting startup^0')
         return
     end
-    print(('TECTON server started, scene=%s'):format(Config.DefaultScene or 'default'))
+    local objs = TectonDB.fetchScene(scene)
+    print(('TECTON: loaded %d objects from scene \'%s\''):format(#objs, scene))
+    if TectonRecover and type(TectonRecover.checkIntegrity) == 'function' then
+        TectonRecover.checkIntegrity(scene)
+    end
+    print(('TECTON server started, scene=%s'):format(scene))
+    print('[TECTON] Clients restore via tecton:scene:request on resource start (see client).')
 end)
 
 RegisterCommand('testTectonInsert', function(src)
