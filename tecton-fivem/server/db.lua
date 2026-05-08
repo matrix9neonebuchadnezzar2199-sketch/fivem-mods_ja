@@ -108,7 +108,15 @@ function M.updateObject(id, obj)
             id,
         }
     )
-    return (n or 0) > 0
+    if n == nil then
+        return false
+    end
+    if (n or 0) > 0 then
+        return true
+    end
+    -- 値が前回と同一だと affected が 0 になり得るが、行は存在する＝成功扱い
+    local row = MySQL.single.await([[SELECT id FROM tec_objects WHERE id = ? AND deleted_at IS NULL LIMIT 1]], { id })
+    return row ~= nil
 end
 
 ---@param id number

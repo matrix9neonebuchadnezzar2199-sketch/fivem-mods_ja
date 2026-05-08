@@ -50,7 +50,8 @@ local function restoreSceneFromServer()
         if obj.id and obj.model then
             local handle = placement.spawnExistingObject(obj)
             if handle and handle ~= 0 then
-                client.spawnedHandles[obj.id] = handle
+                local oid = tonumber(obj.id) or obj.id
+                client.spawnedHandles[oid] = handle
                 n = n + 1
             else
                 print(('^3TECTON: spawn failed for object id=%s model=%s^0'):format(tostring(obj.id), tostring(obj.model)))
@@ -187,7 +188,7 @@ RegisterCommand('tecPlaceTest', function()
     local id = lib.callback.await('tecton:op:create', false, obj)
     print(('TECTON: tecPlaceTest Placed: %s'):format(tostring(id)))
     if id then
-        client.spawnedHandles[id] = result.handle
+        client.spawnedHandles[tonumber(id) or id] = result.handle
     else
         placement.removeObject(result.handle)
     end

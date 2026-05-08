@@ -8,6 +8,41 @@ local function getState()
     return exports[res]:GetTectonBuilderState()
 end
 
+---@param client table
+---@param idNum number|nil
+---@return integer|nil
+local function resolveSpawnedHandle(client, idNum)
+    if not idNum then
+        return nil
+    end
+    local h = client.spawnedHandles[idNum]
+    if h and h ~= 0 then
+        return h
+    end
+    h = client.spawnedHandles[tostring(idNum)]
+    if h and h ~= 0 then
+        return h
+    end
+    return nil
+end
+
+--- NUI JSON の pos / rot を数値テーブルに（欠落時は nil）
+---@param t table|nil
+---@return table|nil
+local function nuiVec3(t)
+    if type(t) ~= 'table' then
+        return nil
+    end
+    if t.x == nil and t.y == nil and t.z == nil then
+        return nil
+    end
+    return {
+        x = tonumber(t.x) or 0.0,
+        y = tonumber(t.y) or 0.0,
+        z = tonumber(t.z) or 0.0,
+    }
+end
+
 RegisterNUICallback('ready', function(_, cb)
     local s = getState()
     if s.propsLoaded and s.propsDictionary then
@@ -109,30 +144,48 @@ RegisterNUICallback('selectObject', function(data, cb)
 end)
 
 RegisterNUICallback('updateObject', function(data, cb)
-    if type(data) ~= 'table' or not data.id then
+    if type(data) == 'string' then
+        local okj, dec = pcall(json.decode, data)
+        if okj and type(dec) == 'table' then
+            data = dec
+        end
+    end
+    if type(data) ~= 'table' or data.id == nil then
         SendNUIMessage({ action = 'opAck', op = 'update', ok = false, reason = 'bad_payload' })
         cb({ ok = false, reason = 'bad_payload' })
         return
     end
-    local after = data.after or data
-    local ok = lib.callback.await('tecton:op:update', false, data.id, after)
+    local hid = tonumber(data.id)
+    if not hid then
+        SendNUIMessage({ action = 'opAck', op = 'update', ok = false, reason = 'bad_payload' })
+        cb({ ok = false, reason = 'bad_payload' })
+        return
+    end
+    local rawAfter = data.after
+    if type(rawAfter) ~= 'table' then
+        SendNUIMessage({ action = 'opAck', op = 'update', ok = false, reason = 'bad_payload' })
+        cb({ ok = false, reason = 'bad_payload' })
+        return
+    end
+    local pos = nuiVec3(rawAfter.pos)
+    local rot = nuiVec3(rawAfter.rot)
+    if not pos or not rot then
+        SendNUIMessage({ action = 'opAck', op = 'update', ok = false, reason = 'bad_payload' })
+        cb({ ok = false, reason = 'bad_payload' })
+        return
+    end
+    local after = { pos = pos, rot = rot }
+    local ok = lib.callback.await('tecton:op:update', false, hid, after)
     if ok then
         local client = getState()
-        local hid = tonumber(data.id)
-        local handle = hid and client.spawnedHandles[hid]
-        if handle and handle ~= 0 and DoesEntityExist(handle) and after.pos and after.rot then
-            local px = tonumber(after.pos.x) or 0.0
-            local py = tonumber(after.pos.y) or 0.0
-            local pz = tonumber(after.pos.z) or 0.0
-            local rx = tonumber(after.rot.x) or 0.0
-            local ry = tonumber(after.rot.y) or 0.0
-            local rz = tonumber(after.rot.z) or 0.0
-            SetEntityCoords(handle, px, py, pz, false, false, false, false)
-            SetEntityRotation(handle, rx, ry, rz, 2, true)
+        local handle = resolveSpawnedHandle(client, hid)
+        local placement = TectonPlacement
+        if handle and placement and type(placement.applyWorldTransform) == 'function' then
+            placement.applyWorldTransform(handle, pos, rot)
         end
-        local fresh = hid and lib.callback.await('tecton:object:get', false, hid) or nil
+        local fresh = lib.callback.await('tecton:object:get', false, hid)
         SendNUIMessage({ action = 'selectedObject', selected = client.selected, object = fresh })
-        SendNUIMessage({ action = 'opAck', op = 'update', ok = true, id = data.id })
+        SendNUIMessage({ action = 'opAck', op = 'update', ok = true, id = hid })
         cb({ ok = true })
     else
         SendNUIMessage({ action = 'opAck', op = 'update', ok = false })

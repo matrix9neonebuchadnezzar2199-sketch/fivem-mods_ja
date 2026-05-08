@@ -92,6 +92,37 @@ function M.spawnExistingObject(obj)
     return handle
 end
 
+--- 数値パネル・サーバー同期後にワールドへ座標・オイラーを反映（CreateObject 済みエンティティ用）
+---@param handle integer
+---@param pos table
+---@param rot table
+---@return boolean
+function M.applyWorldTransform(handle, pos, rot)
+    if not handle or handle == 0 or not DoesEntityExist(handle) or type(pos) ~= 'table' or type(rot) ~= 'table' then
+        return false
+    end
+    local px = tonumber(pos.x) or 0.0
+    local py = tonumber(pos.y) or 0.0
+    local pz = tonumber(pos.z) or 0.0
+    local rx = tonumber(rot.x) or 0.0
+    local ry = tonumber(rot.y) or 0.0
+    local rz = tonumber(rot.z) or 0.0
+    local ok = pcall(function()
+        if NetworkGetEntityIsNetworked(handle) then
+            NetworkRequestControlOfEntity(handle)
+            local deadline = GetGameTimer() + 100
+            while not NetworkHasControlOfEntity(handle) and GetGameTimer() < deadline do
+                Wait(0)
+            end
+        end
+        FreezeEntityPosition(handle, true)
+        SetEntityCoords(handle, px, py, pz, false, false, false, false)
+        SetEntityRotation(handle, rx, ry, rz, 2, true)
+        FreezeEntityPosition(handle, false)
+    end)
+    return ok
+end
+
 ---@param handle integer|nil
 function M.removeObject(handle)
     if handle and handle ~= 0 and DoesEntityExist(handle) then

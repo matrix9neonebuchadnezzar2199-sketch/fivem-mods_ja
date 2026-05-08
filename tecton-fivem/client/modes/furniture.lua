@@ -33,7 +33,8 @@ function M.handleCreate(payload)
         placement.removeObject(result.handle)
         return { ok = false, reason = 'server_error' }
     end
-    client.spawnedHandles[id] = result.handle
+    local kid = tonumber(id) or id
+    client.spawnedHandles[kid] = result.handle
     return { ok = true, id = id }
 end
 
