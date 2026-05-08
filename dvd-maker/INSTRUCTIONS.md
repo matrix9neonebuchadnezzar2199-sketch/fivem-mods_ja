@@ -1,5 +1,7 @@
 Cursorに渡す指示書をMarkdown形式で書きます。これをそのまま `H:\CURSOR\Dev\fivem-mods_ja\dvd-maker\INSTRUCTIONS.md` として保存するか、Cursorのチャットに貼り付けてください。
 
+**メンテ用メモ:** 現行の動作・ox_inventory の追記例・画像一覧は **README.md** を正とする（記録済みは `dvd_recorded1`〜`3` の 3 アイテム）。下記は初版作成時の指示書アーカイブ。
+
 ---
 
 ````markdown

@@ -1,0 +1,43 @@
+--[[
+  DVD Maker: ox_inventory items.lua 断片（README 手順 4 と同一内容のコピー用）
+
+  画像: dvd-maker/html/img/ を ox_inventory/web/images/ にコピー（4ファイル・README 表参照）
+
+  本リソースの config.lua の Config.RecordedByPack とアイテム名を一致させること。
+]]
+
+    ['dvd_recorded1'] = {
+        label = 'DVD（不織布）',
+        weight = 20,
+        stack = false,
+        close = true,
+        description = '不織布スリーブに入った記録済みDVD',
+        client = {
+            image = 'dvd_case_128_tight.png',
+            export = 'dvd-maker.useRecorded',
+        },
+    },
+
+    ['dvd_recorded2'] = {
+        label = 'DVD（クリア）',
+        weight = 20,
+        stack = false,
+        close = true,
+        description = 'クリアケース入りの記録済みDVD',
+        client = {
+            image = 'dvd_jewel_transparent_128.png',
+            export = 'dvd-maker.useRecorded',
+        },
+    },
+
+    ['dvd_recorded3'] = {
+        label = 'DVD（トール）',
+        weight = 20,
+        stack = false,
+        close = true,
+        description = 'トールケース入りの記録済みDVD',
+        client = {
+            image = 'dvd_case_text_transparent_128.png',
+            export = 'dvd-maker.useRecorded',
+        },
+    },
