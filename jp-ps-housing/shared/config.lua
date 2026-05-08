@@ -9,11 +9,12 @@ Config = {}
 -- UI language for Lua-side i18n (`shared/locale.lua`, `locales/*.lua`)
 Config.Locale = Config.Locale or 'ja'
 
--- If you're not utilizing ox_lib, it's time to question your approach.
-Config.Target = "qb" -- "ox" or "qb"
-Config.Notify = "qb" -- "ox" or "qb"
-Config.Radial = "qb" -- "ox" or "qb"
-Config.Inventory = "qb" -- "ox" or "qb"
+-- Qbox 向け: ox_target / ox_lib notify・radial / ox_inventory を使用
+Config.Target = "ox" -- "ox" or "qb"
+Config.Notify = "ox" -- "ox" or "qb"
+Config.Radial = "ox" -- "ox" or "qb"
+Config.Inventory = "ox" -- "ox" or "qb"
+-- Discord webhook 等は qb 側（Framework.ox.SendLog は noop のため "qb" のまま）
 Config.Logs = "qb" -- "qb"
 
 -- Anyone provided with keys to a property has the ability to modify its furnishings.
