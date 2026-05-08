@@ -10,8 +10,8 @@
 |------------|------|----------|--------|
 | **A** | `Config.Furnitures`（カテゴリ + object + label） | **886** 行（CSV） | **Mid**（バッチ作業） |
 | **B** | `Config.Apartments` / `Config.Shells` の `label` | **約 89** 行（方針: 固有名詞は英語のまま可） | **Lo** |
-| **C** | `client/*.lua` の UI 系文字列 | **約 40** 箇所（`Notify` / `alertDialog` / `registerContext` / `description` 等の grep ベース） | **Hi** |
-| **D** | `server/*.lua` の通知・ログ用英文 | **約 55+**（通知中心。動的連結あり） | **Hi** |
+| **C** | `client/*.lua` の UI 系文字列 | **抽出詳細: [i18n-extraction.md](i18n-extraction.md)**（クライアント部 **約 48** 行アイテム。ダイアログ1つで複数キー） | **Hi** |
+| **D** | `server/*.lua` の通知・ログ用英文 | **同上**（サーバ部 **約 62** 行アイテム。`print` / `SendLog` 含む） | **Hi** |
 | **E** | NUI（`html/` + `ui/src`） | 静的文言 **約 35〜45**（Svelte）。`html/index.js` **約 3350 行**（ビルド済み・**ソースは `ui/` を編集**） | **Hi** |
 | **F** | コマンド | **2**（`migratehouses` / `migrateapartments`、help 文字列なし） | **Lo** |
 
@@ -37,20 +37,19 @@
 
 ## C. クライアント側 UI 文字列（`client/`）
 
-抽出の目安（手動・`Select-String`）:
+**マスター一覧**: [i18n-extraction.md](i18n-extraction.md)（ファイル別・行番号・推奨キー）。
 
-- `Framework[Config.Notify].Notify(...)`  
-- `lib.alertDialog`, `lib.registerContext` の `title` / `options` / `description`  
-- ブリップ等: `description = 'Luxury Apartments!'` など
+- 旧概算「約 40」は **Notify + 主要 grep のみ**の目安。抽出ドキュメントではダイアログ・ラジアル等を含め **約 48 行アイテム**。
 
-**優先度 Hi**（プレイ中の露出が高い）。
+**優先度 Hi**。
 
 ---
 
 ## D. サーバ側メッセージ（`server/`）
 
-- `Framework[Config.Notify].Notify(...)` の英文多数（売買・レイド・アパート等）。
-- 動的に金額・名前を埋め込むため、**翻訳テンプレ**（`string.format` / 連結）への置換が必要。
+**マスター一覧**: [i18n-extraction.md](i18n-extraction.md)。
+
+- 旧概算「約 55+」は **Notify 中心**。抽出では `print` / `SendLog` を含め **約 62 行アイテム**。
 
 **優先度 Hi**。
 
