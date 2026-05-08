@@ -5,26 +5,6 @@ Locales['en'] = {
     ['_test.format'] = 'hello %s, you have %d items', -- args: name, count
     ['_test.fallback'] = 'this exists only in en',
 
-    -- ==== debug ====
-    ['debug.db.apartment_stash_query'] = 'Error querying database for existing apartment stash: %s', -- args: err
-    ['debug.db.delete_old_stash'] = 'Error deleting old apartment stash: %s',
-    ['debug.db.inventory_query'] = 'Error querying database for inventory items: %s',
-    ['debug.db.no_inventory_items'] = 'No items found for inventory: %s', -- args: name
-    ['debug.db.no_owned_apartment'] = 'No owned apartment found for the given criteria.',
-    ['debug.db.owned_apartment_cid'] = 'Error querying database for owned apartment with cid: %s - %s', -- args: cid, err
-    ['debug.db.owned_apartment_citizenid'] = 'Error querying database for owned apartment with citizenid: %s - %s',
-    ['debug.db.player_not_found_citizen'] = 'Error: Player not found for citizen ID %s',
-    ['debug.db.player_not_found_source'] = 'Error: Player not found for source: %s',
-    ['debug.db.player_skin_query'] = 'Error querying database for player skin: %s',
-    ['debug.db.properties_no_result'] = 'Error: No result returned from properties query.',
-    ['debug.db.properties_query'] = 'Error querying properties: %s',
-    ['debug.db.property_not_found'] = 'Error: Property not found for ID %s',
-    ['debug.db.save_apartment_stash'] = 'Error saving new apartment stash: %s',
-    ['debug.db.save_door'] = 'Error saving new door: %s',
-    ['debug.migrate.apartments_done'] = 'Finished migrating apartments',
-    ['debug.migrate.houses_done'] = 'Finished migrating houses',
-    ['debug.resource.qb_inventory_not_started'] = 'Error: qb-inventory is not started',
-
     -- ==== dialog ====
     ['dialog.common.cancel'] = 'Cancel',
     ['dialog.doorbell.confirm'] = 'Ring',
@@ -51,9 +31,8 @@ Locales['en'] = {
     ['dialog.showcase.header'] = 'Showcase Property',
 
     -- ==== log ====
-    ['log.apartment.creating'] = 'Creating new apartment for %s in %s', -- args: playerName, apartmentLabel
-    ['log.furniture.player_bought'] = '**Player %s** bought furniture for **$%s**', -- args: playerName, price
-    ['log.property.apartment_description'] = 'This is %s\'s apartment in %s', -- args: fullName, apartmentLabel
+    ['log.apartment.creating'] = 'Creating new apartment for %s in %s', -- args: playerName, apartmentLabel (LocaleEn)
+    ['log.furniture.player_bought'] = '**Player %s** bought furniture for **$%s**', -- args: playerName, price (LocaleEn)
     ['log.property.changed_apartment'] = '**Changed Apartment** with id: %s by: **%s** for **%s**',
     ['log.property.changed_description'] = '**Changed Description** of property with id: %s by: %s',
     ['log.property.changed_door'] = '**Changed Door** of property with id: %s by: %s',
@@ -91,7 +70,7 @@ Locales['en'] = {
     ['notify.apartment.moved_to'] = 'Your apartment is now at %s',
     ['notify.apartment.none_here'] = 'You dont have an apartment here.',
     ['notify.apartment.none_in_building'] = 'There are no apartments here.',
-    ['notify.apartment.peer_already_in'] = 'This person is already in this apartment',
+    ['notify.apartment.peer_already_in'] = 'The client is already assigned to this apartment.',
     ['notify.common.player_not_found'] = 'Player not found.',
     ['notify.door.refresh_distance'] = 'Go far away and come back for the door to update and open/close.',
     ['notify.doorbell.no_answer'] = 'No one answered the door.',
@@ -145,6 +124,9 @@ Locales['en'] = {
     ['target.property.leave'] = 'Leave Property',
     ['target.property.raid'] = 'Raid Property',
     ['target.property.showcase'] = 'Showcase Property',
+
+    -- ==== property (DB / UI description; not Discord log) ====
+    ['property.description.apartment'] = 'This is %s\'s apartment in %s', -- args: fullName, apartmentLabel
 
     -- ==== ui ====
     ['ui.apartment.luxury_description'] = 'Luxury Apartments!',

@@ -130,4 +130,12 @@
   ```
 
 - **動作確認方法**: コードレビューで完結。実機テストは不要（成功パスと同一 Notify 呼び出し構造のため、論理整合の確認で十分）。
-- **将来の改善（8A-next-2-2）**: 不動産向け英文を案 C 相当に改訂する。例: `notify.apartment.peer_already_in` を *"The client is already assigned to this apartment."* 等へ。キーは既存（`i18n-keys-master.md` / `locales/en.lua` / `locales/ja.lua` に `notify.apartment.already_in_tenant` / `notify.apartment.peer_already_in` あり）。
+- **案 C（文言改訂）**: 2026-05-08 **8A-next-2-2** で実施。`notify.apartment.peer_already_in` の en を *"The client is already assigned to this apartment."*、ja を不動産向けの自然な訳に更新。通知本文は `Locale('notify.apartment.peer_already_in')`（`server/server.lua` 不動産宛分岐）。
+- **diff 追記（最終形の抜粋）**:
+
+  ```lua
+  Framework[Config.Notify].Notify(targetSrc, Locale('notify.apartment.already_in_tenant'), "error")
+  if realtorSrc then
+      Framework[Config.Notify].Notify(realtorSrc, Locale('notify.apartment.peer_already_in'), "error")
+  end
+  ```

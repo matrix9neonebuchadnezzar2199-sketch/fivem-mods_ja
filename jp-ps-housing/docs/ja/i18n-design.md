@@ -10,9 +10,15 @@
 
 1. `@ox_lib/init.lua`  
 2. `shared/config.lua` — `Config.Locale`（既定 `'ja'`）  
-3. `shared/locale.lua` — `Locales = {}`、`function Locale`  
+3. `shared/locale.lua` — `Locales = {}`、`function Locale`、`function LocaleEn`  
 4. `locales/en.lua` / `locales/ja.lua` — キー定義  
 5. `shared/framework.lua` — 以降の共有ロジック  
+
+## `LocaleEn(key, ...)`（Discord / 管理ログ用）
+
+- **`Locales['en'][key]` のみ**を参照し、`Config.Locale` は無視する。  
+- **`SendLog` / `Framework[Config.Logs].SendLog`** では **`LocaleEn('log.*', ...)`** を使う。`Config.Locale = 'ja'` でも webhook 出力は英語のまま。  
+- 対応キーは **`locales/en.lua` の `log.*` のみ**（`locales/ja.lua` には定義しない）。  
 
 ## `Locale(key, ...)` の挙動
 
@@ -28,7 +34,7 @@
 
 ## ロケールキーの検証（CI 化候補）
 
-- `tools/verify-locale-keys.mjs` で **`locales/en.lua` と `locales/ja.lua` のキー集合**を突き合わせ、`_test.fallback` 以外の欠落が無いことを保証する。
+- `tools/verify-locale-keys.mjs` で **`locales/en.lua` と `locales/ja.lua` のキー集合**を突き合わせ、**`_test.fallback` と `log.*` 以外**で ja が en をカバーすることを保証する（`log.*` は英語固定のため ja 側欠落を許容）。
 - GitHub Actions 等で `node tools/verify-locale-keys.mjs` を PR ごとに走らせると、韓国語・中国語ロケール追加時も同じゲートを流用できる。
 
 ## スコープ（変更なし）

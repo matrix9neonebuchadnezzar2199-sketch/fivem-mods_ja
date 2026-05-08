@@ -16,8 +16,12 @@ const extractKeys = (file) => {
 
 const en = new Set(extractKeys('en.lua'))
 const ja = new Set(extractKeys('ja.lua'))
-const missingJa = [...en].filter((k) => k !== '_test.fallback' && !ja.has(k))
+
+/** `log.*` は Discord 向け英語固定のため ja に無くてよい */
+const jaMustCover = (k) => k !== '_test.fallback' && !k.startsWith('log.')
+
+const missingJa = [...en].filter((k) => jaMustCover(k) && !ja.has(k))
 const extraJa = [...ja].filter((k) => !en.has(k))
 console.log('en:', en.size, 'ja:', ja.size)
-console.log('missing in ja (except _test.fallback):', missingJa)
+console.log('missing in ja (except _test.fallback, log.*):', missingJa)
 console.log('extra in ja:', extraJa)

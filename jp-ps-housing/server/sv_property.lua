@@ -104,16 +104,16 @@ function Property:AddToDoorbellPoolTemp(src)
     for src, _ in pairs(self.playersInside) do
         local targetSrc = tonumber(src)
 
-        Framework[Config.Notify].Notify(targetSrc, "Someone is at the door.", "info")
+        Framework[Config.Notify].Notify(targetSrc, Locale('notify.doorbell.someone_at_door'), "info")
         TriggerClientEvent("ps-housing:client:updateDoorbellPool", targetSrc, self.property_id, self.playersDoorbell)
     end
 
-    Framework[Config.Notify].Notify(src, "You rang the doorbell. Just wait...", "info")
+    Framework[Config.Notify].Notify(src, Locale('notify.doorbell.rang_wait'), "info")
 
     SetTimeout(10000, function()
         if self.playersDoorbell[_src] then
             self.playersDoorbell[_src] = nil
-            Framework[Config.Notify].Notify(src, "No one answered the door.", "error")
+            Framework[Config.Notify].Notify(src, Locale('notify.doorbell.no_answer'), "error")
         end
 
         for src, _ in pairs(self.playersInside) do
@@ -143,7 +143,7 @@ function Property:StartRaid()
 
     for src, _ in pairs(self.playersInside) do
         local targetSrc = tonumber(src)
-        Framework[Config.Notify].Notify(targetSrc, "This Property is being Raided.", "error")
+        Framework[Config.Notify].Notify(targetSrc, Locale('notify.raid.property_being_raided'), "error")
     end
 
     SetTimeout(Config.RaidTimer * 60000, function()
@@ -199,7 +199,7 @@ function Property:UpdateDescription(data)
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateDescription", self.property_id, description)
 
-    Framework[Config.Logs].SendLog("**Changed Description** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_description', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed Description of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -219,7 +219,7 @@ function Property:UpdatePrice(data)
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdatePrice", self.property_id, price)
 
-    Framework[Config.Logs].SendLog("**Changed Price** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_price', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed Price of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -237,7 +237,7 @@ function Property:UpdateForSale(data)
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateForSale", self.property_id, forsale)
 
-    Framework[Config.Logs].SendLog("**Changed For Sale** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_for_sale', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed For Sale of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -257,7 +257,7 @@ function Property:UpdateShell(data)
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateShell", self.property_id, shell)
 
-    Framework[Config.Logs].SendLog("**Changed Shell** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_shell', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed Shell of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -331,12 +331,12 @@ function Property:UpdateOwner(data)
 
     self:addMloDoorsAccess(citizenid)
     if self.propertyData.shell == 'mlo' and DoorResource == 'qb' then
-        Framework[Config.Notify].Notify(targetSrc, "Go far away and come back for the door to update and open/close.", "error")
+        Framework[Config.Notify].Notify(targetSrc, Locale('notify.door.refresh_distance'), "error")
     end
 
     if self.propertyData.owner == citizenid then
-        Framework[Config.Notify].Notify(targetSrc, "You already own this property", "error")
-        Framework[Config.Notify].Notify(realtorSrc, "Client already owns this property", "error")
+        Framework[Config.Notify].Notify(targetSrc, Locale('notify.purchase.already_own'), "error")
+        Framework[Config.Notify].Notify(realtorSrc, Locale('notify.realtor.client_already_owns'), "error")
         return
     end
 
@@ -344,14 +344,14 @@ function Property:UpdateOwner(data)
     local targetAllow = lib.callback.await("ps-housing:cb:confirmPurchase", targetSrc, self.propertyData.price, self.propertyData.street, self.propertyData.property_id)
 
     if targetAllow ~= "confirm" then
-        Framework[Config.Notify].Notify(targetSrc, "You did not confirm the purchase", "info")
-        Framework[Config.Notify].Notify(realtorSrc, "Client did not confirm the purchase", "error")
+        Framework[Config.Notify].Notify(targetSrc, Locale('notify.purchase.not_confirmed'), "info")
+        Framework[Config.Notify].Notify(realtorSrc, Locale('notify.realtor.client_not_confirmed'), "error")
         return
     end
 
     if bank < self.propertyData.price then
-                Framework[Config.Notify].Notify(targetSrc, "You do not have enough money in your bank account", "error")
-            Framework[Config.Notify].Notify(realtorSrc, "Client does not have enough money in their bank account", "error")
+                Framework[Config.Notify].Notify(targetSrc, Locale('notify.purchase.insufficient_bank'), "error")
+            Framework[Config.Notify].Notify(realtorSrc, Locale('notify.realtor.client_insufficient_bank'), "error")
         return
     end
 
@@ -369,7 +369,7 @@ function Property:UpdateOwner(data)
         exports['qb-banking']:AddMoney(realtor.PlayerData.job.name, totalAfterCommission)
     else
         if prevPlayer ~= nil then
-            Framework[Config.Notify].Notify(prevPlayer.PlayerData.source, "Sold Property: " .. self.propertyData.street .. " " .. self.property_id, "success")
+            Framework[Config.Notify].Notify(prevPlayer.PlayerData.source, Locale('notify.property.sold_previous_owner', self.propertyData.street, self.property_id), "success")
             prevPlayer.Functions.AddMoney('bank', totalAfterCommission, "Sold Property: " .. self.propertyData.street .. " " .. self.property_id)
         elseif previousOwner then
             MySQL.Async.execute('UPDATE `players` SET `bank` = `bank` + @price WHERE `citizenid` = @citizenid', {
@@ -394,10 +394,10 @@ function Property:UpdateOwner(data)
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateOwner", self.property_id, citizenid)
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateForSale", self.property_id, 0)
     
-    Framework[Config.Logs].SendLog("**House Bought** by: **"..PlayerData.charinfo.firstname.." "..PlayerData.charinfo.lastname.."** for $"..self.propertyData.price.." from **"..realtor.PlayerData.charinfo.firstname.." "..realtor.PlayerData.charinfo.lastname.."** !")
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.house_bought', PlayerData.charinfo.firstname, PlayerData.charinfo.lastname, self.propertyData.price, realtor.PlayerData.charinfo.firstname, realtor.PlayerData.charinfo.lastname))
 
-    Framework[Config.Notify].Notify(targetSrc, "You have bought the property for $"..self.propertyData.price, "success")
-    Framework[Config.Notify].Notify(realtorSrc, "Client has bought the property for $"..self.propertyData.price, "success")
+    Framework[Config.Notify].Notify(targetSrc, Locale('notify.purchase.buyer_success', self.propertyData.price), "success")
+    Framework[Config.Notify].Notify(realtorSrc, Locale('notify.realtor.sale_success', self.propertyData.price), "success")
 end
 
 function Property:UpdateImgs(data)
@@ -413,7 +413,7 @@ function Property:UpdateImgs(data)
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateImgs", self.property_id, imgs)
 
-    Framework[Config.Logs].SendLog("**Changed Images** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_images', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed Imgs of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -450,7 +450,7 @@ function Property:UpdateDoor(data)
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateDoor", self.property_id, newDoor, data.street, data.region)
 
-    Framework[Config.Logs].SendLog("**Changed Door** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_door', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed Door of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -496,7 +496,7 @@ function Property:UpdateGarage(data)
     
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateGarage", self.property_id, newData)
 
-    Framework[Config.Logs].SendLog("**Changed Garage** of property with id: " .. self.property_id .. " by: " .. GetPlayerName(realtorSrc))
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_garage', self.property_id, GetPlayerName(realtorSrc)))
 
     Debug("Changed Garage of property with id: " .. self.property_id, "by: " .. GetPlayerName(realtorSrc))
 end
@@ -513,11 +513,11 @@ function Property:UpdateApartment(data)
         ["@property_id"] = self.property_id
     })
 
-    Framework[Config.Notify].Notify(realtorSrc, "Changed Apartment of property with id: " .. self.property_id .." to ".. apartment, "success")
+    Framework[Config.Notify].Notify(realtorSrc, Locale('notify.realtor.apartment_changed', self.property_id, apartment), "success")
 
-    Framework[Config.Notify].Notify(targetSrc, "Changed Apartment to " .. apartment, "success")
+    Framework[Config.Notify].Notify(targetSrc, Locale('notify.tenant.apartment_changed', apartment), "success")
 
-    Framework[Config.Logs].SendLog("**Changed Apartment** with id: " .. self.property_id .. " by: **" .. GetPlayerName(realtorSrc) .. "** for **" .. GetPlayerName(targetSrc) .."**")
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.changed_apartment', self.property_id, GetPlayerName(realtorSrc), GetPlayerName(targetSrc)))
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateApartment", self.property_id, apartment)
 
@@ -539,9 +539,9 @@ function Property:DeleteProperty(data)
 
     TriggerClientEvent("ps-housing:client:removeProperty", -1, propertyid)
 
-    Framework[Config.Notify].Notify(realtorSrc, "Property with id: " .. propertyid .." has been removed.", "info")
+    Framework[Config.Notify].Notify(realtorSrc, Locale('notify.realtor.property_removed', propertyid), "info")
 
-    Framework[Config.Logs].SendLog("**Property Deleted** with id: " .. propertyid .. " by: " .. realtorName)
+    Framework[Config.Logs].SendLog(LocaleEn('log.property.deleted', propertyid, realtorName))
 
     PropertiesTable[propertyid] = nil
     self = nil
@@ -656,7 +656,7 @@ RegisterNetEvent('ps-housing:server:raidProperty', function(property_id)
                 if confirmRaid == "confirm" then
                     property:StartRaid(src)
                     property:PlayerEnter(src)
-                    Framework[Config.Notify].Notify(src, "Raid started", "success")
+                    Framework[Config.Notify].Notify(src, Locale('notify.raid.started'), "success")
 
                     if Config.ConsumeRaidItem then
                         -- Remove the "stormram" item from the officer's inventory
@@ -689,19 +689,19 @@ RegisterNetEvent('ps-housing:server:raidProperty', function(property_id)
                     end
                 end
             else
-                Framework[Config.Notify].Notify(src, "Raid in progress", "success")
+                Framework[Config.Notify].Notify(src, Locale('notify.raid.in_progress'), "success")
                 property:PlayerEnter(src)
             end
         else
-            Framework[Config.Notify].Notify(src, "You need a stormram to perform a raid", "error")
+            Framework[Config.Notify].Notify(src, Locale('notify.raid.need_stormram'), "error")
         end
     else
         if not PoliceJobs[jobName] then
-            Framework[Config.Notify].Notify(src, "Only police officers are permitted to perform raids", "error")
+            Framework[Config.Notify].Notify(src, Locale('notify.raid.police_only'), "error")
         elseif not onDuty then
-            Framework[Config.Notify].Notify(src, "You must be onduty before performing a raid", "error")
+            Framework[Config.Notify].Notify(src, Locale('notify.raid.need_onduty'), "error")
         elseif not gradeAllowed then
-            Framework[Config.Notify].Notify(src, "You must be a higher rank before performing a raid", "error")
+            Framework[Config.Notify].Notify(src, Locale('notify.raid.need_rank'), "error")
         end
     end
 end)
@@ -777,7 +777,7 @@ RegisterNetEvent("ps-housing:server:buyFurniture", function(property_id, items, 
     price = tonumber(price)
 
     if price > PlayerData.money.bank and price > PlayerData.money.cash then
-        Framework[Config.Notify].Notify(src, "You do not have enough money!", "error")
+        Framework[Config.Notify].Notify(src, Locale('notify.furniture.insufficient_funds'), "error")
         return
     end
 
@@ -815,9 +815,9 @@ RegisterNetEvent("ps-housing:server:buyFurniture", function(property_id, items, 
 
     property:UpdateFurnitures(propertyData.furnitures, isGarden)
 
-    Framework[Config.Notify].Notify(src, "You bought furniture for $" .. price, "success")
+    Framework[Config.Notify].Notify(src, Locale('notify.furniture.purchase_success', price), "success")
 
-    Framework[Config.Logs].SendLog("**Player ".. GetPlayerName(src) .. "** bought furniture for **$" .. price .. "**")
+    Framework[Config.Logs].SendLog(LocaleEn('log.furniture.player_bought', GetPlayerName(src), price))
 
     Debug("Player bought furniture for $" .. price, "by: " .. GetPlayerName(src))
 end)
@@ -889,7 +889,7 @@ RegisterNetEvent("ps-housing:server:addAccess", function(property_id, srcToAdd)
 
     if not property.propertyData.owner == citizenid then
         -- hacker ban or something
-        Framework[Config.Notify].Notify(src, "You are not the owner of this property!", "error")
+        Framework[Config.Notify].Notify(src, Locale('notify.property.not_owner'), "error")
         return
     end
 
@@ -903,10 +903,10 @@ RegisterNetEvent("ps-housing:server:addAccess", function(property_id, srcToAdd)
         property:addMloDoorsAccess(targetCitizenid)
         property:UpdateHas_access(has_access)
 
-        Framework[Config.Notify].Notify(src, "You added access to " .. targetPlayer.charinfo.firstname .. " " .. targetPlayer.charinfo.lastname, "success")
-        Framework[Config.Notify].Notify(srcToAdd, "You got access to this property!", "success")
+        Framework[Config.Notify].Notify(src, Locale('notify.access.added', targetPlayer.charinfo.firstname .. " " .. targetPlayer.charinfo.lastname), "success")
+        Framework[Config.Notify].Notify(srcToAdd, Locale('notify.access.received'), "success")
     else
-        Framework[Config.Notify].Notify(src, "This person already has access to this property!", "error")
+        Framework[Config.Notify].Notify(src, Locale('notify.access.already_has'), "error")
     end
 end)
 
@@ -916,7 +916,7 @@ RegisterNetEvent("ps-housing:server:qbxRegisterHouse", function(property_id)
     if not property then return end
 
     local propertyData = property.propertyData
-    local label = propertyData.street .. property.property_id .. " Garage"
+    local label = Locale('ui.garage.label_format', propertyData.street, property.property_id)
     local garageData = propertyData.garage_data
     local coords = vec4(garageData.x, garageData.y, garageData.z, garageData.h)
 
@@ -942,7 +942,7 @@ RegisterNetEvent("ps-housing:server:removeAccess", function(property_id, citizen
 
     if not property.propertyData.owner == citizenid then
         -- hacker ban or something
-        Framework[Config.Notify].Notify(src, "You are not the owner of this property!", "error")
+        Framework[Config.Notify].Notify(src, Locale('notify.property.not_owner'), "error")
         return
     end
 
@@ -963,13 +963,13 @@ RegisterNetEvent("ps-housing:server:removeAccess", function(property_id, citizen
         local removePlayerData = playerToAdd.PlayerData
         local srcToRemove = removePlayerData.source
 
-        Framework[Config.Notify].Notify(src, "You removed access from " .. removePlayerData.charinfo.firstname .. " " .. removePlayerData.charinfo.lastname, "success")
+        Framework[Config.Notify].Notify(src, Locale('notify.access.removed', removePlayerData.charinfo.firstname .. " " .. removePlayerData.charinfo.lastname), "success")
 
         if srcToRemove then
-            Framework[Config.Notify].Notify(srcToRemove, "You lost access to " .. (property.propertyData.street or property.propertyData.apartment) .. " " .. property.property_id, "error")
+            Framework[Config.Notify].Notify(srcToRemove, Locale('notify.access.lost', property.propertyData.street or property.propertyData.apartment, property.property_id), "error")
         end
     else
-        Framework[Config.Notify].Notify(src, "This person does not have access to this property!", "error")
+        Framework[Config.Notify].Notify(src, Locale('notify.access.not_has'), "error")
     end
 end)
 

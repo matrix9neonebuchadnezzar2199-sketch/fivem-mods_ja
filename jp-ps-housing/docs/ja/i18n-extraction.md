@@ -76,68 +76,35 @@
 
 ## `server/server.lua`
 
-- L13: `print("Error: No result returned from properties query.")` → `debug.db.properties_no_result`
-- L56: `print("Error querying properties: " .. err)` → `debug.db.properties_query`
-- L119–359: 各種 `print("Error: ...")` → `debug.*` キー（約 12 文）
-- L161: `Notify(..., "Open radial menu for furniture...")` → `notify.spawn.furniture_radial_hint`
-- L292, L408: `SendLog("Creating new apartment for ...")` → `log.apartment.creating`
-- L387: `Notify(..., "You are already in this apartment", "error")`（`targetSrc`）→ `notify.apartment.already_in_tenant`
-- L388–390: `Notify(..., "This person is already in this apartment", "error")`（**`realtorSrc`**、`if realtorSrc then`）→ `notify.apartment.peer_already_in`（2026-05-08 案 B で宛先修正済み。旧 upstream は同一 `targetSrc` への二重通知バグ）
-- L418–419: アパート新規作成成功（動的文面）→ `notify.apartment.moved_success`, `notify.realtor.added_tenant`
-- L442: `Notify(..., "Player not found.", "error")` → `notify.common.player_not_found`
+- **8A-next-2-2 済み**: `Notify` → `Locale('notify.*')`、`SendLog` → `LocaleEn('log.*')`。アパート説明 `string.format` → `Locale('property.description.apartment', …)`。
+- `print("Error: ...")` 等 — **ロケール化しない**（英語ベタ。下記「server 側除外」）。
+- `Debug(...)` — **同上**。
 
 ---
 
 ## `server/sv_property.lua`
 
-通知（抜粋・行番号は 2026-05-08 時点のファイル基準）:
-
-- L107 `Someone is at the door.` → `notify.doorbell.someone_at_door`
-- L111 `You rang the doorbell. Just wait...` → `notify.doorbell.rang_wait`
-- L116 `No one answered the door.` → `notify.doorbell.no_answer`
-- L146 `This Property is being Raided.` → `notify.raid.property_being_raided`
-- L334 `Go far away and come back...` → `notify.door.refresh_distance`
-- L338–339 購入済み系 → `notify.purchase.already_own`, `notify.realtor.client_already_owns`
-- L347–348 確認拒否 → `notify.purchase.not_confirmed`, `notify.realtor.client_not_confirmed`
-- L353–354 残高不足 → `notify.purchase.insufficient_bank`, `notify.realtor.client_insufficient_bank`
-- L372 売却（動的）→ `notify.property.sold_message`
-- L399–400 購入成功（動的金額）→ `notify.purchase.buyer_success`, `notify.realtor.sale_success`
-- L516–518 アパート変更 → `notify.realtor.apartment_changed`, `notify.tenant.apartment_changed`
-- L542 削除 → `notify.realtor.property_removed`
-- L659, L692 レイド → `notify.raid.started`, `notify.raid.in_progress`
-- L696–704 レイド拒否理由 → `notify.raid.need_stormram`, `notify.raid.police_only`, `notify.raid.need_onduty`, `notify.raid.need_rank`
-- L780 金欠 → `notify.furniture.insufficient_funds`
-- L818 家具購入 → `notify.furniture.purchase_success`
-- L892, L945 オーナーでない → `notify.property.not_owner`
-- L906–972 アクセス付与・剥奪系（動的名前多数）→ `notify.access.*` テンプレ群
-
-**SendLog**（運営ログ）: L202, L222, L240, L260, L397, L416, L453, L499, L520, L544, L820 等 → `log.property.*` / `log.furniture.*`
-
-**print**: L44 `print(src, self.property_id)` — デバッグ → `debug.property.trace` または除外可
+- **8A-next-2-2 済み**: 上記キー表に対応する `Notify` はすべて `Locale()`、`SendLog` は **`LocaleEn('log.*')`**（ja 未定義・英語固定）。
+- **除外**: `print`、`Debug`、`RemoveMoney` / `AddMoney` の **取引メモ文字列**（`"Bought Property: "` 等）は英語のまま。
+- **qbx ガレージ**: `label` は `Locale('ui.garage.label_format', …)`（サーバで解決）。
 
 ---
 
 ## `server/migrate.lua`
 
-- L28: `RegisterCommand("migrateapartments", …, true)` — help なし
-- L38–39: `description = "This is " .. aptName .. " Apartment "...`（動的）→ `log.migrate.apartment_description` テンプレ
-- L47, L121: `print("Finished migrating apartments/houses")` → `debug.migrate.apartments_done`, `debug.migrate.houses_done`
+- `print("Finished migrating apartments/houses")` — **英語ベタのまま**（ロケールキー削除方針に合わせ YAGNI）。
 
 ---
 
 ## `shared/framework.lua`
 
-- L21: `title="Property"`（ox notify）→ `notify.framework.property_title`
-- L84–231, L315–450: qb / ox ターゲット `label`（同一12語が二重定義）  
-  → `target.property.enter`, `target.property.showcase`, `target.property.info`, `target.doorbell.ring`, `target.property.raid`, `target.apartment.enter`, `target.apartment.see_all`, `target.apartment.raid`, `target.property.leave`, `target.door.check`, `target.common.leave`
-- L299: `title = 'Property'`（radial 系）→ `notify.framework.property_title` と共通化可
+- **8A-next-2-2 済み**: サーバ ox 通知 `title`、クライアント qb/ox ターゲット各 `label`、`lib.notify` の `title` → `Locale('notify.framework.property_title')` / `Locale('target.*')`。
 
 ---
 
 ## `shared/config.lua`（FurnitureTypes のみ）
 
-- L616: `"Storage"` → `target.furniture.storage`
-- L627: `"Clothing"` → `target.furniture.clothing`
+- **8A-next-2-2 済み**: `AddTargetEntity` のラベル → `Locale('target.furniture.storage')` / `Locale('target.furniture.clothing')`（関数実行時に解決）。
 
 ---
 
@@ -161,8 +128,8 @@
 ## 次アクション
 
 1. ~~client: `Locale('key', ...)` 置換~~ → **8A-next-2-1 完了**（2026-05-08）
-2. server / shared の置換 → **8A-next-2-2**
-3. `Framework[Config.Notify]` のラッパーで `Locale` を強制するかは任意（現状は呼び出し側で明示）
+2. ~~server / shared の置換~~ → **8A-next-2-2 完了**（2026-05-08）。`LocaleEn`、`log.*` の ja 削除、`debug.*` キー削除、`notify.apartment.peer_already_in` 案 C を含む。
+3. 以降: NUI（Svelte）i18n、フォント、家具 CSV 等は別フェーズ。
 
 ---
 
@@ -178,7 +145,17 @@
 
 ---
 
-## 次アクション（残り）
+## 8A-next-2-2 サーバ・共有側の除外（英語ベタのまま）
 
-1. `locales/en.lua` / `locales/ja.lua` — server・shared 置換に伴う追記（8A-next-2-2）
-2. `Locale('key', ...)` — server / shared（`Framework` ターゲットラベル、`Config.FurnitureTypes` 等）
+| 種別 | 例 | 理由 |
+|------|-----|------|
+| `server/server.lua` / `server/migrate.lua` の `print(...)` | DB エラー、移行完了 | 運営コンソール向け。`debug.*` ロケールキーは削除済み（YAGNI）。 |
+| `server/*.lua` の `Debug(...)` | 物件更新トレース等 | 同上。 |
+| `sv_property.lua` L27 付近 `RegisterInventory(..., 'Property: ' .. …)` | スタッシュ表示ラベル | 本タスクでは未キー化（必要なら将来 `inventory.*`）。 |
+| `Framework.qb.SendLog` の呼び出し元 | — | メッセージはすべて `LocaleEn` 経由の英語。 |
+
+---
+
+## 旧 `debug.*` キー（削除済み・復活用メモ）
+
+ロケールからは削除したが、過去に `locales/en.lua` / `ja.lua` に存在した **18 キー**（`debug.db.*`, `debug.migrate.*`, `debug.resource.*`）は、将来コンソール文言を統一したくなった場合の候補として [i18n-translation-review.md](i18n-translation-review.md) と併せて参照。

@@ -5,26 +5,6 @@ Locales['ja'] = {
     ['_test.format'] = 'こんにちは %s さん、%d 個のアイテムがあります', -- args: name, count
     -- _test.fallback は意図的に未定義（en フォールバック確認用）
 
-    -- ==== debug ====
-    ['debug.db.apartment_stash_query'] = '既存アパートのスタッシュを照会できませんでした: %s',
-    ['debug.db.delete_old_stash'] = '旧アパートのスタッシュを削除できませんでした: %s',
-    ['debug.db.inventory_query'] = 'インベントリの照会に失敗しました: %s',
-    ['debug.db.no_inventory_items'] = 'インベントリにアイテムがありません: %s',
-    ['debug.db.no_owned_apartment'] = '条件に一致する所有アパートが見つかりませんでした。',
-    ['debug.db.owned_apartment_cid'] = '所有アパートの照会に失敗しました（cid: %s）: %s',
-    ['debug.db.owned_apartment_citizenid'] = '所有アパートの照会に失敗しました（citizenid: %s）: %s',
-    ['debug.db.player_not_found_citizen'] = 'エラー: citizen ID %s のプレイヤーが見つかりません',
-    ['debug.db.player_not_found_source'] = 'エラー: source %s のプレイヤーが見つかりません',
-    ['debug.db.player_skin_query'] = 'プレイヤースキンの照会に失敗しました: %s',
-    ['debug.db.properties_no_result'] = 'エラー: properties のクエリ結果が空です。',
-    ['debug.db.properties_query'] = 'properties の照会に失敗しました: %s',
-    ['debug.db.property_not_found'] = 'エラー: 物件 ID %s が見つかりません',
-    ['debug.db.save_apartment_stash'] = '新しいアパートのスタッシュを保存できませんでした: %s',
-    ['debug.db.save_door'] = 'ドアの保存に失敗しました: %s',
-    ['debug.migrate.apartments_done'] = 'アパートの移行が完了しました',
-    ['debug.migrate.houses_done'] = '住宅の移行が完了しました',
-    ['debug.resource.qb_inventory_not_started'] = 'エラー: qb-inventory が起動していません',
-
     -- ==== dialog ====
     ['dialog.common.cancel'] = 'キャンセル',
     ['dialog.doorbell.confirm'] = '呼び出す',
@@ -49,21 +29,6 @@ Locales['ja'] = {
     ['dialog.showcase.confirm'] = 'はい',
     ['dialog.showcase.content'] = 'この物件を内覧モードにしますか？',
     ['dialog.showcase.header'] = '物件の内覧',
-
-    -- ==== log ====
-    ['log.apartment.creating'] = '新しいアパートを作成中: %s → %s',
-    ['log.furniture.player_bought'] = '**%s** が家具を **$%s** で購入',
-    ['log.property.apartment_description'] = '%s の %s にあるアパートです',
-    ['log.property.changed_apartment'] = '**アパート変更** 物件 ID: %s 担当: **%s** 対象: **%s**',
-    ['log.property.changed_description'] = '**説明変更** 物件 ID: %s 担当: %s',
-    ['log.property.changed_door'] = '**ドア変更** 物件 ID: %s 担当: %s',
-    ['log.property.changed_for_sale'] = '**売却状態変更** 物件 ID: %s 担当: %s',
-    ['log.property.changed_garage'] = '**ガレージ変更** 物件 ID: %s 担当: %s',
-    ['log.property.changed_images'] = '**画像変更** 物件 ID: %s 担当: %s',
-    ['log.property.changed_price'] = '**価格変更** 物件 ID: %s 担当: %s',
-    ['log.property.changed_shell'] = '**シェル変更** 物件 ID: %s 担当: %s',
-    ['log.property.deleted'] = '**物件削除** ID: %s 実行者: %s',
-    ['log.property.house_bought'] = '**住宅購入** 購入者: **%s %s** 金額 $%s 不動産担当: **%s %s**',
 
     -- ==== menu ====
     ['menu.access.give_description'] = '権限を付与',
@@ -91,7 +56,7 @@ Locales['ja'] = {
     ['notify.apartment.moved_to'] = 'アパートを %s に変更しました',
     ['notify.apartment.none_here'] = 'ここにアパートはありません',
     ['notify.apartment.none_in_building'] = 'この建物にアパートはありません',
-    ['notify.apartment.peer_already_in'] = 'この人は既にこのアパートに入居しています', -- upstream 不具合時の文言のまま
+    ['notify.apartment.peer_already_in'] = 'このクライアントは既にこのアパートに割り当て済みです',
     ['notify.common.player_not_found'] = 'プレイヤーが見つかりませんでした',
     ['notify.door.refresh_distance'] = '少し離れてから戻るとドアの開閉が更新されます',
     ['notify.doorbell.no_answer'] = '誰も出ませんでした',
@@ -145,6 +110,9 @@ Locales['ja'] = {
     ['target.property.leave'] = '物件から出る',
     ['target.property.raid'] = '物件をレイド',
     ['target.property.showcase'] = '内覧する',
+
+    -- ==== property (DB / UI; log ではない) ====
+    ['property.description.apartment'] = '%s の %s にあるアパートです',
 
     -- ==== ui ====
     ['ui.apartment.luxury_description'] = '高級アパート',

@@ -18,7 +18,7 @@ if IsDuplicityVersion() then
 
     function Framework.ox.Notify(src, message, type)
         type = type == "inform" and "info" or type
-        TriggerClientEvent("ox_lib:notify", src, {title="Property", description=message, type=type})
+        TriggerClientEvent("ox_lib:notify", src, { title = Locale('notify.framework.property_title'), description = message, type = type })
     end
 
     function Framework.qb.Notify(src, message, type)
@@ -81,7 +81,7 @@ Framework.qb = {
             {
                 options = {
                     {
-                        label = "Enter Property",
+                        label = Locale('target.property.enter'),
                         icon = "fas fa-door-open",
                         action = enter,
                         canInteract = function()
@@ -90,7 +90,7 @@ Framework.qb = {
                         end,
                     },
                     {
-                        label = "Showcase Property",
+                        label = Locale('target.property.showcase'),
                         icon = "fas fa-eye",
                         action = showcase,
                         canInteract = function()
@@ -101,7 +101,7 @@ Framework.qb = {
                         end,
                     },
                     {
-                        label = "Property Info",
+                        label = Locale('target.property.info'),
                         icon = "fas fa-circle-info",
                         action = showData,
                         canInteract = function()
@@ -112,7 +112,7 @@ Framework.qb = {
                         end,
                     },
                     {
-                        label = "Ring Doorbell",
+                        label = Locale('target.doorbell.ring'),
                         icon = "fas fa-bell",
                         action = enter,
                         canInteract = function()
@@ -121,7 +121,7 @@ Framework.qb = {
                         end,
                     },
                     {
-                        label = "Raid Property",
+                        label = Locale('target.property.raid'),
                         icon = "fas fa-building-shield",
                         action = raid,
                         canInteract = function()
@@ -150,7 +150,7 @@ Framework.qb = {
         }, {
             options = {
                 {
-                    label = "Enter Apartment",
+                    label = Locale('target.apartment.enter'),
                     action = enter,
                     icon = "fas fa-door-open",
                     canInteract = function()
@@ -159,12 +159,12 @@ Framework.qb = {
                     end,
                 },
                 {
-                    label = "See all apartments",
+                    label = Locale('target.apartment.see_all'),
                     icon = "fas fa-circle-info",
                     action = seeAll,
                 },
                 {
-                    label = "Raid Apartment",
+                    label = Locale('target.apartment.raid'),
                     action = seeAllToRaid,
                     icon = "fas fa-building-shield",
                     canInteract = function()
@@ -196,12 +196,12 @@ Framework.qb = {
             {
                 options = {
                     {
-                        label = "Leave Property",
+                        label = Locale('target.property.leave'),
                         action = leave,
                         icon = "fas fa-right-from-bracket",
                     },
                     {
-                        label = "Check Door",
+                        label = Locale('target.door.check'),
                         action = checkDoor,
                         icon = "fas fa-bell",
                     },
@@ -228,7 +228,7 @@ Framework.qb = {
             {
                 options = {
                     {
-                        label = "Leave",
+                        label = Locale('target.common.leave'),
                         action = leave,
                         icon = "fas fa-right-from-bracket",
                     },
@@ -296,7 +296,7 @@ Framework.ox = {
         type = type == "inform" and "info" or type
         
         lib.notify({
-            title = 'Property',
+            title = Locale('notify.framework.property_title'),
             description = message,
             type = type
         })
@@ -312,7 +312,7 @@ Framework.ox = {
             debug = Config.DebugMode,
             options = {
                 {
-                    label = "Enter Property",
+                    label = Locale('target.property.enter'),
                     icon = "fas fa-door-open",
                     onSelect = enter,
                     canInteract = function()
@@ -321,7 +321,7 @@ Framework.ox = {
                     end,
                 },
                 {
-                    label = "Showcase Property",
+                    label = Locale('target.property.showcase'),
                     icon = "fas fa-eye",
                     onSelect = showcase,
                     canInteract = function()
@@ -335,7 +335,7 @@ Framework.ox = {
                     end,
                 },
                 {
-                    label = "Property Info",
+                    label = Locale('target.property.info'),
                     icon = "fas fa-circle-info",
                     onSelect = showData,
                     canInteract = function()
@@ -346,7 +346,7 @@ Framework.ox = {
                     end,
                 },
                 {
-                    label = "Ring Doorbell",
+                    label = Locale('target.doorbell.ring'),
                     icon = "fas fa-bell",
                     onSelect = enter,
                     canInteract = function()
@@ -355,7 +355,7 @@ Framework.ox = {
                     end,
                 },
                 {
-                    label = "Raid Property",
+                    label = Locale('target.property.raid'),
                     icon = "fas fa-building-shield",
                     onSelect = raid,
                     canInteract = function()
@@ -381,7 +381,7 @@ Framework.ox = {
             debug = Config.DebugMode,
             options = {
                 {
-                    label = "Enter Apartment",
+                    label = Locale('target.apartment.enter'),
                     onSelect = enter,
                     icon = "fas fa-door-open",
                     canInteract = function()
@@ -390,12 +390,12 @@ Framework.ox = {
                     end,
                 },
                 {
-                    label = "See all apartments",
+                    label = Locale('target.apartment.see_all'),
                     onSelect = seeAll,
                     icon = "fas fa-circle-info",
                 },
                 {
-                    label = "Raid Apartment",
+                    label = Locale('target.apartment.raid'),
                     onSelect = seeAllToRaid,
                     icon = "fas fa-building-shield",
                     canInteract = function()
@@ -422,13 +422,13 @@ Framework.ox = {
             options = {
                 {
                     name = "leave",
-                    label = "Leave Property",
+                    label = Locale('target.property.leave'),
                     onSelect = leave,
                     icon = "fas fa-right-from-bracket",
                 },
                 {
                     name = "doorbell",
-                    label = "Check Door",
+                    label = Locale('target.door.check'),
                     onSelect = checkDoor,
                     icon = "fas fa-bell",
                 },
@@ -447,7 +447,7 @@ Framework.ox = {
             options = {
                 {
                     name = "leave",
-                    label = "Leave",
+                    label = Locale('target.common.leave'),
                     onSelect = leave,
                     icon = "fas fa-right-from-bracket",
                 },
