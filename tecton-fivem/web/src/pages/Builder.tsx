@@ -187,6 +187,9 @@ export function Builder() {
                 <div className={styles.pendingModel} style={{ color: theme.textDim }}>
                   {pendingCatalog.model}
                 </div>
+                <p className={styles.pendingCameraHint} role="note">
+                  {ja.panel.pendingCameraLook}
+                </p>
                 <div className={styles.panelActions}>
                   <button type="button" className={styles.placeBtn} onClick={() => void onPlacePending()}>
                     {ja.panel.place}
