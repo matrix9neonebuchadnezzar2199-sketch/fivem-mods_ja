@@ -158,6 +158,8 @@ function toggleLocale() {
 }
 .layout--stadium-compact .main-header {
   pointer-events: auto;
-  background-color: rgb(15 23 42 / 0.45);
+  background-color: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
 }
 </style>

@@ -101,6 +101,12 @@ const showFinish = ref(false)
 const showSub = ref(false)
 const showCard = ref(false)
 const cardPreset = ref<'yellow' | 'red' | null>(null)
+/** 小窓モードで Lua が SetNuiFocus(false) にしているとき true（歩行優先） */
+const compactGameInputActive = ref(false)
+
+const compactFocusHint = computed(() =>
+  compactGameInputActive.value ? t('match_detail.compact_focus_game') : t('match_detail.compact_focus_ui'),
+)
 
 watch(showCard, (v) => {
   if (!v) cardPreset.value = null
@@ -282,6 +288,7 @@ const editorHereEvents = computed(() => editorFocus.value === 'events')
 
 let offState: (() => void) | null = null
 let offFinished: (() => void) | null = null
+let offCompactInputMode: (() => void) | null = null
 
 function applyState(p: {
   matchId: number
@@ -366,6 +373,13 @@ function editableTarget(el: EventTarget | null): boolean {
 
 function onDockKeydown(ev: KeyboardEvent) {
   if (!compactDock.value || detail.serverHalf === 'pk') return
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'b') {
+    if (editableTarget(ev.target)) return
+    ev.preventDefault()
+    ev.stopPropagation()
+    void send('compact_toggle_input', {})
+    return
+  }
   if (!((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'v')) return
   if (editableTarget(ev.target)) return
   ev.preventDefault()
@@ -407,7 +421,12 @@ watch(compactDock, async (v, prev) => {
 watch(
   () => compactDock.value && detail.serverHalf !== 'pk',
   (v) => {
-    matchCompactDock.setTransparentChrome(v)
+    const on = Boolean(v)
+    matchCompactDock.setTransparentChrome(on)
+    void send('compact_dock_state', { compact: on })
+    if (!on) {
+      compactGameInputActive.value = false
+    }
   },
   { immediate: true },
 )
@@ -479,14 +498,19 @@ onMounted(() => {
       detail.dbStatus = 'finished'
     }
   })
+  offCompactInputMode = on('refboard:compact_input_mode', (p: { game?: boolean }) => {
+    compactGameInputActive.value = Boolean(p?.game)
+  })
   window.addEventListener('keydown', onDockKeydown, true)
 })
 
 onUnmounted(() => {
+  void send('compact_dock_state', { compact: false })
   matchCompactDock.setTransparentChrome(false)
   stopClockTickInterval()
   offState?.()
   offFinished?.()
+  offCompactInputMode?.()
   window.removeEventListener('keydown', onDockKeydown, true)
 })
 
@@ -698,22 +722,12 @@ function exportMatchEventsCsv() {
       </div>
     </div>
 
-    <button
-      v-if="compactDock && detail.serverHalf !== 'pk'"
-      type="button"
-      class="pointer-events-auto fixed left-2 top-2 z-[120] max-w-[min(22rem,calc(100vw-1rem))] cursor-pointer rounded border border-amber-400/90 bg-amber-300 px-3 py-2 text-left text-xs font-bold leading-snug text-amber-950 shadow-lg ring-2 ring-amber-500/35"
-      :title="t('match_detail.restore_full_click')"
-      @click="exitCompactDock"
-    >
-      {{ t('match_detail.restore_ui_hint') }}
-    </button>
-
     <div
       v-if="compactDock && detail.serverHalf !== 'pk'"
       class="pointer-events-auto fixed bottom-4 left-2 right-2 z-[100] border-t border-slate-600/80 bg-slate-950/90 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md sm:bottom-5"
     >
       <div
-        class="mx-auto max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/55 p-2 shadow-inner md:max-h-[min(46vh,26rem)]"
+        class="relative mx-auto max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/55 p-2 shadow-inner md:max-h-[min(46vh,26rem)]"
       >
         <div class="flex flex-col gap-2 md:flex-row md:items-stretch md:gap-3">
           <div class="min-h-0 min-w-0 flex-1 md:max-w-[58%]" @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
@@ -739,6 +753,21 @@ function exportMatchEventsCsv() {
             @pointerleave="setFocus(null)"
           >
             <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed />
+          </div>
+          <div
+            class="flex shrink-0 flex-col items-stretch justify-end gap-1.5 border-t border-slate-600/40 pt-2 md:w-[min(11rem,28vw)] md:border-l md:border-t-0 md:pl-3 md:pt-0"
+          >
+            <p class="text-[10px] font-medium leading-snug text-slate-400 md:text-right">
+              {{ compactFocusHint }}
+            </p>
+            <button
+              type="button"
+              class="cursor-pointer rounded border border-amber-400/90 bg-amber-300 px-2 py-1.5 text-left text-[11px] font-bold leading-snug text-amber-950 shadow-md ring-1 ring-amber-500/30 md:text-right"
+              :title="`${t('match_detail.restore_ui_hint')} / ${t('match_detail.restore_full_click')}`"
+              @click="exitCompactDock"
+            >
+              {{ t('match_detail.compact_restore_full') }}
+            </button>
           </div>
         </div>
       </div>

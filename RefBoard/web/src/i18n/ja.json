@@ -166,7 +166,10 @@
     "section_roster_suffix": "選手",
     "compact_mode": "小窓モード",
     "restore_ui_hint": "UIの復帰は Ctrl+V",
-    "restore_full_click": "タップでも全画面に戻せます"
+    "restore_full_click": "タップでも全画面に戻せます",
+    "compact_restore_full": "全体UIに戻る",
+    "compact_focus_ui": "Ctrl+B — 歩行（ゲーム操作）へ",
+    "compact_focus_game": "B または Ctrl+B — 小窓を操作"
   },
   "score": {
     "edit_reason": "変更理由（任意）",

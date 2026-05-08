@@ -166,7 +166,10 @@
     "section_roster_suffix": "Roster",
     "compact_mode": "Compact view",
     "restore_ui_hint": "Restore full UI: Ctrl+V",
-    "restore_full_click": "Tap here to restore full view"
+    "restore_full_click": "Tap here to restore full view",
+    "compact_restore_full": "Full UI",
+    "compact_focus_ui": "Ctrl+B — walk / game controls",
+    "compact_focus_game": "B or Ctrl+B — use the compact panel"
   },
   "score": {
     "edit_reason": "Reason (optional)",
