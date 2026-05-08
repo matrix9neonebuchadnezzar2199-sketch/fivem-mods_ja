@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 import { useMemo } from 'react'
+import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { useDebounce } from '../lib/useDebounce'
 import { useBuilderStore } from '../store/builderStore'
 import { filterModelsBySearch, filterModelsByTags, listModelsForCategory, usePropsStore } from '../store/propsStore'
 import { ja, tf } from '../i18n/ja'
 import { theme } from '../theme'
 import styles from './CatalogHitCount.module.css'
-
-const SEARCH_DEBOUNCE_MS = 150
 
 export function CatalogHitCount() {
   const selectedCategory = useBuilderStore((s) => s.selectedCategory)

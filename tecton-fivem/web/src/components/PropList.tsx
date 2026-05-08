@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react'
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Grid } from 'react-window'
+import { SEARCH_DEBOUNCE_MS } from '../lib/constants'
 import { useDebounce } from '../lib/useDebounce'
 import { ja } from '../i18n/ja'
 import { theme } from '../theme'
@@ -24,10 +25,10 @@ function gridRowHeightPx(): number {
   return 7 * root + 8
 }
 
-/** 最小幅（px）。狭い中央列でも横スクロールしにくいよう小さめ＋列数は幅に応じて最大 8 */
-const MIN_COL_PX = 76
-const MAX_PROP_GRID_COLUMNS = 8
-const SEARCH_DEBOUNCE_MS = 150
+/** 最小幅（px）。狭いときは列数が 1〜3 に縮退 */
+const MIN_COL_PX = 140
+/** 広いときの列数上限（固定 4 列まで） */
+const MAX_PROP_GRID_COLUMNS = 4
 
 type CellProps = {
   models: string[]
@@ -131,6 +132,8 @@ export function PropList() {
 
   const columnWidth = useMemo(() => Math.max(1, Math.floor(listWidth / columnCount)), [listWidth, columnCount])
 
+  const gridWidth = useMemo(() => columnWidth * columnCount, [columnWidth, columnCount])
+
   const baseModels = useMemo(() => listModelsForCategory(selectedCategory, dictionary), [selectedCategory, dictionary])
 
   const models = useMemo(() => {
@@ -199,7 +202,7 @@ export function PropList() {
         cellComponent={GridCell}
         cellProps={cellProps}
         overscanCount={2}
-        style={{ height: listHeight, width: listWidth }}
+        style={{ height: listHeight, width: gridWidth }}
       />
     </div>
   )

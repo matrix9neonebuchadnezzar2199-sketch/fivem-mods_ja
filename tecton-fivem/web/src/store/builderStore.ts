@@ -44,6 +44,8 @@ type BuilderState = {
   setSelectedCategory: (path: string | null) => void
   setSearchQuery: (q: string) => void
   setPendingCatalog: (v: PendingCatalogPick | null) => void
+  /** 一覧の仮選択のみ解除（ワールド選択は触らない） */
+  clearPendingCatalog: () => void
   setShowPlacementGuide: (v: boolean) => void
 }
 
@@ -100,5 +102,6 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   setSelectedCategory: (path) => set({ selectedCategory: path, pendingCatalog: null }),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setPendingCatalog: (v) => set({ pendingCatalog: v }),
+  clearPendingCatalog: () => set({ pendingCatalog: null }),
   setShowPlacementGuide: (v) => set({ showPlacementGuide: v }),
 }))

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { fetchNui } from '../lib/nui'
 import { ja, tf } from '../i18n/ja'
 import { theme } from '../theme'
@@ -11,7 +11,7 @@ import { PropList } from '../components/PropList'
 import { SearchBar } from '../components/SearchBar'
 import { CatalogHitCount } from '../components/CatalogHitCount'
 import { TagFilter } from '../components/TagFilter'
-import { PropThumb } from '../components/PropThumb'
+import { SelectionFooter } from '../components/SelectionFooter'
 import { TransformPanel } from '../components/TransformPanel'
 import styles from './Builder.module.css'
 
@@ -23,9 +23,9 @@ export function Builder() {
   const setMode = useBuilderStore((s) => s.setMode)
   const pendingCatalog = useBuilderStore((s) => s.pendingCatalog)
   const setPendingCatalog = useBuilderStore((s) => s.setPendingCatalog)
+  const clearPendingCatalog = useBuilderStore((s) => s.clearPendingCatalog)
   const selectedEntity = useBuilderStore((s) => s.selectedEntity)
   const setWorldSelection = useBuilderStore((s) => s.setWorldSelection)
-  const dictionary = usePropsStore((s) => s.dictionary)
   const propsLoaded = usePropsStore((s) => s.loaded)
   const propsError = usePropsStore((s) => s.loadError)
   const showPlacementGuide = useBuilderStore((s) => s.showPlacementGuide)
@@ -48,13 +48,6 @@ export function Builder() {
       endLook()
     }
   }, [])
-
-  const pendingDef = useMemo(() => {
-    if (!pendingCatalog) {
-      return null
-    }
-    return dictionary[pendingCatalog.model] ?? null
-  }, [pendingCatalog, dictionary])
 
   const showToast = useCallback((next: ToastState) => {
     setToast(next)
@@ -91,8 +84,8 @@ export function Builder() {
   }, [pendingCatalog, setPendingCatalog, setWorldSelection, showToast])
 
   const onCancelPending = useCallback(() => {
-    setPendingCatalog(null)
-  }, [setPendingCatalog])
+    clearPendingCatalog()
+  }, [clearPendingCatalog])
 
   const onTab = (m: BuilderMode) => {
     if (m === 'furniture') {
@@ -154,85 +147,66 @@ export function Builder() {
         </nav>
 
         <div className={styles.body}>
-          <aside className={styles.sidebar}>{propsLoaded && !propsError ? <CategoryTree /> : null}</aside>
-          <main className={styles.centerMain}>
-            {!propsLoaded && !propsError && (
-              <div className={styles.propListPlaceholder} style={{ color: theme.textDim, fontSize: theme.fontSize.body }}>
-                {ja.props.loading}
-              </div>
-            )}
-            {propsError && (
-              <div className={styles.propListPlaceholder} style={{ color: theme.danger, fontSize: theme.fontSize.body }}>
-                {ja.props.failed}
-              </div>
-            )}
-            {propsLoaded && !propsError && (
-              <>
-                <div className={styles.catalogSticky}>
-                  <SearchBar />
-                  <CatalogHitCount />
-                  <TagFilter />
+          <div className={styles.bodyMainRow}>
+            <aside className={styles.sidebar}>{propsLoaded && !propsError ? <CategoryTree /> : null}</aside>
+            <main className={styles.centerMain}>
+              {!propsLoaded && !propsError && (
+                <div className={styles.propListPlaceholder} style={{ color: theme.textDim, fontSize: theme.fontSize.body }}>
+                  {ja.props.loading}
                 </div>
-                <PropList />
-              </>
-            )}
-          </main>
-          <aside className={styles.right}>
-            <div className={styles.rightTitle} style={{ color: theme.text }}>
-              {ja.panel.selection}
-            </div>
-            {pendingCatalog ? (
-              <>
-                <div className={styles.pendingThumbWrap}>
-                  <div className={styles.pendingThumbInner}>
-                    <PropThumb
-                      key={pendingCatalog.model}
-                      model={pendingCatalog.model}
-                      thumbFile={pendingDef?.thumb ?? ''}
-                      label={pendingDef?.label ?? pendingCatalog.model}
-                      category={pendingDef?.category ?? pendingCatalog.category}
-                    />
+              )}
+              {propsError && (
+                <div className={styles.propListPlaceholder} style={{ color: theme.danger, fontSize: theme.fontSize.body }}>
+                  {ja.props.failed}
+                </div>
+              )}
+              {propsLoaded && !propsError && (
+                <>
+                  <div className={styles.catalogSticky}>
+                    <SearchBar />
+                    <CatalogHitCount />
+                    <TagFilter />
                   </div>
+                  <PropList />
+                  {!pendingCatalog && !selectedEntity && (
+                    <div className={styles.catalogHints}>
+                      <p className={styles.panelHint} style={{ color: theme.textDim }}>
+                        {ja.panel.catalogPickHint}
+                      </p>
+                      <p className={styles.panelHintDim} style={{ color: theme.textDim }}>
+                        {ja.panel.placedSelectionHint}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </main>
+          </div>
+          {pendingCatalog && (
+            <footer className={styles.footer}>
+              <SelectionFooter onPlace={() => void onPlacePending()} onCancel={onCancelPending} />
+            </footer>
+          )}
+          {!pendingCatalog && selectedEntity && (
+            <footer className={`${styles.footer} ${styles.footerTall}`}>
+              <div className={styles.footerTransformInner}>
+                <div className={styles.footerTransformTitle} style={{ color: theme.text }}>
+                  {ja.panel.selection}
                 </div>
-                <div className={styles.pendingLabel} style={{ color: theme.text }}>
-                  {pendingDef?.label ?? pendingCatalog.model}
+                <div className={styles.footerTransformScroll}>
+                  <TransformPanel
+                    key={JSON.stringify({
+                      id: selectedEntity.id,
+                      pos: selectedEntity.pos,
+                      rot: selectedEntity.rot,
+                    })}
+                    entity={selectedEntity}
+                    onToast={(kind, text) => showToast({ kind, text })}
+                  />
                 </div>
-                <div className={styles.pendingModel} style={{ color: theme.textDim }}>
-                  {pendingCatalog.model}
-                </div>
-                <p className={styles.pendingCameraHint} role="note">
-                  {ja.panel.pendingCameraLook}
-                </p>
-                <div className={styles.panelActions}>
-                  <button type="button" className={styles.placeBtn} onClick={() => void onPlacePending()}>
-                    {ja.panel.place}
-                  </button>
-                  <button type="button" className={styles.panelSecondaryBtn} onClick={onCancelPending}>
-                    {ja.panel.cancelPick}
-                  </button>
-                </div>
-              </>
-            ) : selectedEntity ? (
-              <TransformPanel
-                key={JSON.stringify({
-                  id: selectedEntity.id,
-                  pos: selectedEntity.pos,
-                  rot: selectedEntity.rot,
-                })}
-                entity={selectedEntity}
-                onToast={(kind, text) => showToast({ kind, text })}
-              />
-            ) : (
-              <>
-                <p className={styles.panelHint} style={{ color: theme.textDim }}>
-                  {ja.panel.catalogPickHint}
-                </p>
-                <p className={styles.panelHintDim} style={{ color: theme.textDim }}>
-                  {ja.panel.placedSelectionHint}
-                </p>
-              </>
-            )}
-          </aside>
+              </div>
+            </footer>
+          )}
         </div>
       </div>
 

@@ -56,11 +56,13 @@ export const ja = {
   },
   panel: {
     selection: '選択中のオブジェクト',
-    pendingCameraLook: '右クリックで視点を移動できます。',
-    catalogPickHint: '一覧でモデルを選ぶと、下に表示されます。見た目を確認してから「設置」でワールドへ出します（ギズモで位置調整して確定）。',
-    placedSelectionHint: '設置直後は右パネルに座標が出ます。ワールドで別オブジェクトを選ぶ操作は今後追加予定です。',
+    catalogPickHint: '一覧でモデルを選ぶと、画面下のバーに表示されます。見た目を確認してから「設置」でワールドへ出します（ギズモで位置調整して確定）。',
+    placedSelectionHint: '設置直後は下のパネルに座標が表示されます。ワールドで別オブジェクトを選ぶ操作は今後追加予定です。',
     place: '設置',
     cancelPick: '一覧に戻る',
+  },
+  selection: {
+    cameraHint: '右クリックで視点を移動できます。',
   },
   toast: {
     placeSuccess: '配置しました（ID: {id}）',
