@@ -6,6 +6,9 @@ exports('GetApartments', function() return ApartmentsTable end)
 
 Config = {}
 
+-- UI language for Lua-side i18n (`shared/locale.lua`, `locales/*.lua`)
+Config.Locale = Config.Locale or 'ja'
+
 -- If you're not utilizing ox_lib, it's time to question your approach.
 Config.Target = "qb" -- "ox" or "qb"
 Config.Notify = "qb" -- "ox" or "qb"

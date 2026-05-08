@@ -6,6 +6,12 @@ end
 QBCore = exports['qb-core']:GetCoreObject()
 -- PSCore = exports['ps-core']:GetCoreObject()
 
+-- [i18n bootstrap test - remove after verification]
+-- print(Locale('_test.bootstrap'))
+-- print(Locale('_test.format', 'Player1', 5))
+-- print(Locale('_test.fallback'))  -- should fallback to en
+-- print(Locale('_test.missing'))   -- should print [missing: _test.missing]
+
 local dbloaded = false
 MySQL.ready(function()
     MySQL.query('SELECT * FROM properties', {}, function(result)
