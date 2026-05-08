@@ -1,3 +1,13 @@
+## jp-ps-housing — Japanese localization fork / 日本語化フォーク
+
+**English**  
+This directory is a **Japanese localization fork** of [Project-Sloth/ps-housing](https://github.com/Project-Sloth/ps-housing). It is licensed under **CC BY-NC-SA 4.0**, the same as upstream (**non-commercial**; ShareAlike applies). See [`NOTICE.md`](NOTICE.md) for attribution, original authors, and a summary of modifications.
+
+**日本語**  
+本ディレクトリは [Project-Sloth/ps-housing](https://github.com/Project-Sloth/ps-housing) の**日本語化派生版**です。ライセンスは上流と同じ **CC BY-NC-SA 4.0**（**非営利**・同一条件での継承）です。帰属・原作者・改変内容の要約は [`NOTICE.md`](NOTICE.md) を参照してください。
+
+---
+
 # Archiving Older Repos (Focus on ps-mdt v3)
 
 To help streamline things a bit around here (for the little work we actually do 😅), I’m going to be archiving the repos listed below. This doesn’t mean they’re broken or unusable, it just means we won’t be pushing any further updates to them for now.
