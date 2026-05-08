@@ -293,7 +293,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
           {{ clockPhaseLabel }}
         </div>
         <div v-if="model.dbStatus !== 'draft'" class="mt-1 text-xs text-emerald-400">{{ model.clockLabel }}</div>
-        <div class="mt-3 flex items-center justify-center gap-2">
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-blue-400 bg-slate-900 text-blue-400 shadow-sm hover:bg-slate-800 disabled:opacity-40"
@@ -308,19 +308,20 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
           </button>
           <button
             type="button"
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-red-500 bg-slate-900 shadow-sm hover:bg-slate-800 disabled:opacity-40"
+            class="rounded border border-red-500/70 bg-red-500/10 px-2.5 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-500/20 disabled:opacity-40"
             :disabled="readonly"
             :aria-label="t('score_board.clock_stop_aria')"
             :title="t('score_board.clock_stop_aria')"
             @click="emit('clockStop')"
           >
-            <span class="block h-3 w-3 rounded-[2px] bg-red-500" aria-hidden="true" />
+            {{ t('score_board.clock_pause') }}
           </button>
-          <span class="h-9 w-9 shrink-0" aria-hidden="true" />
           <button
             type="button"
             class="rounded border border-amber-500/70 bg-amber-500/10 px-2.5 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/20 disabled:opacity-40"
             :disabled="readonly"
+            :aria-label="t('score_board.clock_clear_aria')"
+            :title="t('score_board.clock_clear_aria')"
             @click="showClearConfirm = true"
           >
             {{ t('score_board.clock_clear') }}
