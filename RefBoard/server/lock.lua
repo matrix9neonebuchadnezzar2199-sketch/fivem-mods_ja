@@ -10,11 +10,18 @@ local function readRow()
   )
 end
 
+--- editor_locks 未作成（install.sql 未実行）時は oxmysql が例外を投げる。true = 成功。
 local function clearRow()
-  MySQL.update.await(
-    [[UPDATE editor_locks SET match_id = NULL, holder_license = NULL, holder_name = NULL,
-          holder_server_id = NULL, acquired_at = NULL, last_heartbeat = NULL WHERE id = 1]]
-  )
+  local ok, err = pcall(function()
+    MySQL.update.await(
+      [[UPDATE editor_locks SET match_id = NULL, holder_license = NULL, holder_name = NULL,
+            holder_server_id = NULL, acquired_at = NULL, last_heartbeat = NULL WHERE id = 1]]
+    )
+  end)
+  if not ok then
+    Logger.warn('lock', 'clearRow failed', { err = tostring(err) })
+  end
+  return ok
 end
 
 local function writeRow(matchId, license, name, holderSrc)
@@ -59,7 +66,15 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
     matchId = tonumber(matchId)
   end
 
-  local r = readRow()
+  local okRead, r = pcall(readRow)
+  if not okRead then
+    Logger.warn('lock', 'acquire readRow failed (run sql/install.sql on oxmysql DB?)', {
+      src = src,
+      err = tostring(r),
+    })
+    TriggerClientEvent('refboard:lock:acquire:result', src, MakeError(ErrorCodes.DB_QUERY_FAILED, tostring(r)))
+    return
+  end
   -- oxmysql は holder_server_id を数値／文字列のどちらでも返し得るため、常に tonumber で比較する
   local heldBy = r and tonumber(r.holder_server_id)
   local srcNum = tonumber(src)
@@ -85,7 +100,14 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
 
   Logger.info('net:lock:acquire', 'granted', { src = src, matchId = matchId })
 
-  writeRow(matchId, license, name, src)
+  local okWrite, wErr = pcall(function()
+    writeRow(matchId, license, name, src)
+  end)
+  if not okWrite then
+    Logger.warn('lock', 'acquire writeRow failed', { src = src, err = tostring(wErr) })
+    TriggerClientEvent('refboard:lock:acquire:result', src, MakeError(ErrorCodes.DB_QUERY_FAILED, tostring(wErr)))
+    return
+  end
   TriggerEvent('refboard:presence:setMode', src, 'edit')
   TriggerClientEvent('refboard:lock:acquire:result', src, { ok = true })
   broadcastLock({
@@ -100,12 +122,20 @@ end)
 RegisterNetEvent('refboard:lock:release', function()
   local src = source
   RefboardGuard(src, 'refboard:lock:ack', 'net:lock:release', function()
-  local r = readRow()
+  local okRead, r = pcall(readRow)
+  if not okRead then
+    Logger.warn('lock', 'release readRow failed', { src = src, err = tostring(r) })
+    TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'db_error' })
+    return
+  end
   if not r or not r.holder_server_id or tonumber(r.holder_server_id) ~= tonumber(src) then
     TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'not_holder' })
     return
   end
-  clearRow()
+  if not clearRow() then
+    TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'db_error' })
+    return
+  end
   TriggerEvent('refboard:presence:setMode', src, 'view')
   TriggerClientEvent('refboard:lock:ack', src, { ok = true })
   broadcastLock(nil)
@@ -114,9 +144,14 @@ end)
 
 RegisterNetEvent('refboard:lock:heartbeat', function()
   local src = source
-  local r = readRow()
-  if r and tonumber(r.holder_server_id) == tonumber(src) then
-    touchHeartbeat(src)
+  local okRead, r = pcall(readRow)
+  if okRead and r and tonumber(r.holder_server_id) == tonumber(src) then
+    local okHb, hbErr = pcall(function()
+      touchHeartbeat(src)
+    end)
+    if not okHb then
+      Logger.warn('lock', 'heartbeat touch failed', { src = src, err = tostring(hbErr) })
+    end
   end
 end)
 
@@ -125,19 +160,25 @@ AddEventHandler('playerDropped', function()
   local cleared = false
   local ok, r = pcall(readRow)
   if ok and r and tonumber(r.holder_server_id) == tonumber(src) then
-    clearRow()
-    cleared = true
+    cleared = clearRow()
   else
     if not ok then
       Logger.warn('lock', 'playerDropped readRow failed; trying holder cleanup', { src = src })
     end
-    local n = MySQL.update.await(
-      [[UPDATE editor_locks SET match_id = NULL, holder_license = NULL, holder_name = NULL,
-            holder_server_id = NULL, acquired_at = NULL, last_heartbeat = NULL
-       WHERE id = 1 AND holder_server_id = ?]],
-      { src }
-    )
-    cleared = (type(n) == 'number' and n > 0)
+    local n
+    local okUpd, updErr = pcall(function()
+      n = MySQL.update.await(
+        [[UPDATE editor_locks SET match_id = NULL, holder_license = NULL, holder_name = NULL,
+              holder_server_id = NULL, acquired_at = NULL, last_heartbeat = NULL
+         WHERE id = 1 AND holder_server_id = ?]],
+        { src }
+      )
+    end)
+    if okUpd then
+      cleared = (type(n) == 'number' and n > 0)
+    else
+      Logger.warn('lock', 'playerDropped fallback update failed', { src = src, err = tostring(updErr) })
+    end
   end
   if cleared then
     TriggerEvent('refboard:presence:setMode', src, 'view')
@@ -154,7 +195,9 @@ function RefboardLockReleaseIfHeldBy(holderSrc)
   if not ok or not r or tonumber(r.holder_server_id) ~= tonumber(holderSrc) then
     return false
   end
-  clearRow()
+  if not clearRow() then
+    return false
+  end
   TriggerEvent('refboard:presence:setMode', holderSrc, 'view')
   broadcastLock(nil)
   return true
@@ -164,6 +207,7 @@ AddEventHandler('onResourceStart', function(resName)
   if resName ~= GetCurrentResourceName() then
     return
   end
+  -- テーブル未作成でもリソース全体は起動させる（install.sql 後に ensure し直せばロックはリセットされる）
   clearRow()
   broadcastLock(nil)
 end)
@@ -174,11 +218,12 @@ CreateThread(function()
     local ok, r = pcall(readRow)
     if ok and r and r.holder_server_id and isStale(r) then
       local hid = tonumber(r.holder_server_id)
-      clearRow()
-      broadcastLock(nil)
-      if hid then
-        TriggerEvent('refboard:presence:setMode', hid, 'view')
-        TriggerClientEvent('refboard:notify', hid, { type = 'info', key = 'lock_timeout' })
+      if clearRow() then
+        broadcastLock(nil)
+        if hid then
+          TriggerEvent('refboard:presence:setMode', hid, 'view')
+          TriggerClientEvent('refboard:notify', hid, { type = 'info', key = 'lock_timeout' })
+        end
       end
     end
   end

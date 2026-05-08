@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.2 — 2026-05-08
+
+- **fix（起動）**: `editor_locks` が未作成（`install.sql` 未実行）の DB でも **`ensure RefBoard` でスクリプトが落ちない**よう、`lock.lua` の `clearRow` / `readRow` / `writeRow` / ハートビート / `playerDropped` フォールバックを **`pcall` で包み**、失敗時は `Logger.warn` とクライアント向けエラー（`db_error` / `E4002`）に留める。
+
 ## v0.7.1 — 2026-05-08
 
 - **fix（編集ロック）**: 同一 `license` で再接続しただけで `holder_server_id` が変わり **E1003（lock_held）** になるケースに対し、`refboard:lock:acquire` で **保持者 license が自分と一致すればロックを奪い返す**（幽霊ロック防止）。
