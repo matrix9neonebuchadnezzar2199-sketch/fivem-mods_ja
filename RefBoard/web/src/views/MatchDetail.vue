@@ -724,10 +724,10 @@ function exportMatchEventsCsv() {
 
     <div
       v-if="compactDock && detail.serverHalf !== 'pk'"
-      class="pointer-events-auto fixed bottom-4 left-2 right-2 z-[100] border-t border-slate-600/80 bg-slate-950/90 px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-2 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-md sm:bottom-5"
+      class="pointer-events-auto fixed bottom-4 left-0 right-0 z-[100] flex justify-center bg-transparent px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-0 sm:bottom-5"
     >
       <div
-        class="relative mx-auto max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/55 p-2 shadow-inner md:max-h-[min(46vh,26rem)]"
+        class="relative w-full max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/95 p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] shadow-inner backdrop-blur-md md:max-h-[min(46vh,26rem)]"
       >
         <div class="flex flex-col gap-2 md:flex-row md:items-stretch md:gap-3">
           <div class="min-h-0 min-w-0 flex-1 md:max-w-[58%]" @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
@@ -755,14 +755,14 @@ function exportMatchEventsCsv() {
             <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed />
           </div>
           <div
-            class="flex shrink-0 flex-col items-stretch justify-end gap-1.5 border-t border-slate-600/40 pt-2 md:w-[min(11rem,28vw)] md:border-l md:border-t-0 md:pl-3 md:pt-0"
+            class="flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-slate-600/40 pt-2 md:min-w-[min(22rem,40vw)] md:border-l md:border-t-0 md:pl-3 md:pt-0"
           >
-            <p class="text-[10px] font-medium leading-snug text-slate-400 md:text-right">
+            <p class="text-xl font-medium leading-snug text-slate-300 md:text-right">
               {{ compactFocusHint }}
             </p>
             <button
               type="button"
-              class="cursor-pointer rounded border border-amber-400/90 bg-amber-300 px-2 py-1.5 text-left text-[11px] font-bold leading-snug text-amber-950 shadow-md ring-1 ring-amber-500/30 md:text-right"
+              class="cursor-pointer rounded border border-amber-400/90 bg-amber-300 px-3 py-2 text-left text-[22px] font-bold leading-snug text-amber-950 shadow-md ring-1 ring-amber-500/30 md:text-right"
               :title="`${t('match_detail.restore_ui_hint')} / ${t('match_detail.restore_full_click')}`"
               @click="exitCompactDock"
             >
