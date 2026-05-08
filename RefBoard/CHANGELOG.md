@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.0 — 2026-05-08
+
+- **ヘルプ英語版（Sprint 09 Phase E）**: `web/src/help/en/articles/` に日本語 20 本と同一 slug の英語記事を追加。`en/index.json` / `en/reverse_index.json` を新設。
+- **ロケール連動**: `HelpView.vue` が UI 言語（`vue-i18n` / `refboard-locale`）に応じて `ja` / `en` の Markdown・逆引き・目次を切替。`helpSearch.ts` はロケール別に Fuse インデックスをキャッシュ（`buildHelpIndex('ja'|'en')`）。
+- **目次タブ**: 左カラムに「やりたいことから / 目次（トピック順）」の切替を追加し、`index.json` のツリーを表示。
+- **コンテキスト `?`**: `ContextHelpPanel` の記事タイトルが UI 言語の `reverse_index` に追従。
+- **i18n**: `help.tree_tab` を `ja.json` / `en.json` に追加。`help.subtitle` を v0.7 表記に更新。
+- **ユーティリティ**: `web/src/utils/helpLocale.ts`（`resolveHelpLocale`）を追加。
+
 ## v0.6.8 — 2026-05-08
 
 - **ヘルプ（日本語 20 本完成）**: Phase D 記事 8 本を追加 — `intro_what_is_refboard` / `intro_setup` / `match_create_new` / `team_create` / `team_add_roster_member` / `data_view_history` / `data_export` / `trouble_health_check_guide`（`web/src/help/ja/articles/`）。

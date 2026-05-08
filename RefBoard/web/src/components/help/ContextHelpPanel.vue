@@ -5,8 +5,10 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useContextHelpStore } from '../../stores/contextHelp'
 import contextMap from '../../help/context_map.json'
-import reverseIndex from '../../help/ja/reverse_index.json'
+import reverseIndexJa from '../../help/ja/reverse_index.json'
+import reverseIndexEn from '../../help/en/reverse_index.json'
 import MarqueeText from '../common/MarqueeText.vue'
+import { resolveHelpLocale } from '../../utils/helpLocale'
 
 interface RevItem {
   id: string
@@ -24,12 +26,16 @@ interface RevCat {
 const store = useContextHelpStore()
 const { isOpen, contextId } = storeToRefs(store)
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const reverseIndex = computed(() =>
+  resolveHelpLocale(locale.value as string) === 'en' ? reverseIndexEn : reverseIndexJa,
+)
 
 /** slug → 表示用タイトル / カテゴリアイコン のマップ。reverse_index から組み立てる。 */
 const slugMeta = computed<Record<string, { title: string; icon: string }>>(() => {
   const map: Record<string, { title: string; icon: string }> = {}
-  for (const cat of (reverseIndex as { categories: RevCat[] }).categories) {
+  for (const cat of (reverseIndex.value as { categories: RevCat[] }).categories) {
     for (const item of cat.items) {
       const slug = item.article.replace(/\.md$/, '')
       map[slug] = { title: item.title, icon: cat.icon }

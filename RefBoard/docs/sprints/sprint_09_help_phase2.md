@@ -55,6 +55,11 @@ Sprint 07（v0.6.0）で着地した「ヘルプ骨組み＋日本語記事 4 �
 - 2026-05-08: Phase D 着手。準備・周辺ヘルプ記事 8 本、`index.json` / `reverse_index.json` 拡張、`context_map.json` の `team_manage` / `data_manage` / `settings` / `match_detail` 更新。
 - 2026-05-08: **Phase D 完了**。日本語記事 **20 本**そろい、`npm run build` 緑。**v0.6.8 リリース可能**。項目ごとツリー（`index.json`）の HelpView 配線は Phase E。
 
+## Phase E 進捗
+
+- 2026-05-08: Phase E 着手。`en/articles` 20 本、`en/index.json` / `en/reverse_index.json`、`HelpView` / `helpSearch` / `ContextHelpPanel` のロケール連動、左カラム目次タブ。
+- 2026-05-08: **Phase E 完了**。`npm run build` 緑。**v0.7.0 リリース可能**（Sprint 09 当初スコープのヘルプ Phase 2 を完了）。
+
 ---
 
 **改版履歴**
@@ -64,3 +69,4 @@ Sprint 07（v0.6.0）で着地した「ヘルプ骨組み＋日本語記事 4 �
 - 2026-05-08: Phase B 完了（進捗節追加）。
 - 2026-05-08: Phase C 完了（進捗節追加）。
 - 2026-05-08: Phase D 完了（進捗節追加）。
+- 2026-05-08: Phase E 完了（進捗節追加）。

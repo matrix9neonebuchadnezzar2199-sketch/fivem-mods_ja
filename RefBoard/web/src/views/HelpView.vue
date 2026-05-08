@@ -5,11 +5,21 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import reverseIndex from '../help/ja/reverse_index.json'
+import reverseIndexJa from '../help/ja/reverse_index.json'
+import reverseIndexEn from '../help/en/reverse_index.json'
+import indexTreeJa from '../help/ja/index.json'
+import indexTreeEn from '../help/en/index.json'
 import { helpSlugForErrorCode } from '../utils/errorCodeMapper'
 import { buildHelpIndex, searchHelp, type HelpSearchHit } from '../utils/helpSearch'
+import { resolveHelpLocale, type HelpLocale } from '../utils/helpLocale'
 
-const modules = import.meta.glob<string>('../help/ja/articles/*.md', {
+const modulesJa = import.meta.glob<string>('../help/ja/articles/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const modulesEn = import.meta.glob<string>('../help/en/articles/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -17,19 +27,43 @@ const modules = import.meta.glob<string>('../help/ja/articles/*.md', {
 
 const route = useRoute()
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const activeSlug = ref<string | null>(null)
 
-// ───────── 検索状態 ─────────
 const searchQuery = ref('')
 const searchHits = ref<HelpSearchHit[]>([])
 const searching = ref(false)
 const isComposing = ref(false)
 
+/** 左カラム: 逆引き vs 目次ツリー（検索中は非表示） */
+const sidebarTab = ref<'reverse' | 'tree'>('reverse')
+
+const helpLocale = computed<HelpLocale>(() => resolveHelpLocale(locale.value as string))
+
+const modules = computed(() => (helpLocale.value === 'en' ? modulesEn : modulesJa))
+
+const reverseIndex = computed(() =>
+  helpLocale.value === 'en' ? reverseIndexEn : reverseIndexJa,
+)
+
+const indexTree = computed(() => {
+  const raw = helpLocale.value === 'en' ? indexTreeEn : indexTreeJa
+  return (raw as { tree: IndexSection[] }).tree
+})
+
+type RevItem = { id: string; title: string; article: string; tags?: string[] }
+type RevCat = { id: string; icon: string; title: string; items: RevItem[] }
+
+type IndexChild = { id: string; title: string; article: string }
+type IndexSection = { id: string; icon: string; title: string; children: IndexChild[] }
+
+const categories = computed(() => (reverseIndex.value as { categories: RevCat[] }).categories)
+
 function pathForSlug(slug: string): string | undefined {
   const suffix = `/articles/${slug}.md`
-  for (const k of Object.keys(modules)) {
+  const map = modules.value
+  for (const k of Object.keys(map)) {
     if (k.endsWith(suffix)) return k
   }
   return undefined
@@ -63,17 +97,12 @@ const articleHtml = computed(() => {
   const slug = activeSlug.value
   if (!slug) return ''
   const p = pathForSlug(slug)
-  const raw = p ? modules[p] : ''
+  const raw = p ? modules.value[p] : ''
   if (!raw) return `<p class="text-slate-400">${t('help.article_missing')}</p>`
   const md = stripFrontMatter(raw)
   const parsed = marked.parse(md, { async: false }) as string
   return DOMPurify.sanitize(parsed)
 })
-
-type RevItem = { id: string; title: string; article: string; tags?: string[] }
-type RevCat = { id: string; icon: string; title: string; items: RevItem[] }
-
-const categories = computed(() => (reverseIndex as { categories: RevCat[] }).categories)
 
 function slugFromArticleFile(file: string): string {
   return file.replace(/\.md$/, '')
@@ -87,7 +116,6 @@ function openSlug(slug: string) {
   void router.push({ name: 'help-article', params: { slug } })
 }
 
-// ───────── 検索ロジック ─────────
 const isSearchMode = computed(() => searchQuery.value.trim().length > 0)
 
 async function runSearch(q: string) {
@@ -98,7 +126,7 @@ async function runSearch(q: string) {
   }
   searching.value = true
   try {
-    searchHits.value = await searchHelp(q)
+    searchHits.value = await searchHelp(q, 30, helpLocale.value)
   } finally {
     searching.value = false
   }
@@ -109,13 +137,16 @@ watch(searchQuery, (q) => {
   void runSearch(q)
 })
 
+watch(helpLocale, () => {
+  if (searchQuery.value.trim()) void runSearch(searchQuery.value)
+})
+
 function onCompositionEnd(event: CompositionEvent) {
   isComposing.value = false
   void runSearch((event.target as HTMLInputElement).value)
 }
 
 function onSearchEnter() {
-  // Enter で先頭ヒットを開く
   if (searchHits.value.length > 0) {
     openSlug(searchHits.value[0].slug)
   }
@@ -126,9 +157,12 @@ function onClearSearch() {
   searchHits.value = []
 }
 
-// 初回マウントでインデックスを温めておく（検索 1 回目を高速化）
 onMounted(() => {
-  void buildHelpIndex()
+  void buildHelpIndex(helpLocale.value)
+})
+
+watch(helpLocale, (loc) => {
+  void buildHelpIndex(loc)
 })
 
 function badgeLabel(source: 'reverse' | 'tree'): string {
@@ -169,7 +203,6 @@ function badgeLabel(source: 'reverse' | 'tree'): string {
     </header>
     <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-0 md:grid-cols-[minmax(200px,30%)_1fr]">
       <aside class="min-w-0 overflow-y-auto overflow-x-hidden border-b border-slate-700 p-3 md:border-b-0 md:border-r">
-        <!-- 検索モード -->
         <template v-if="isSearchMode">
           <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             {{ t('help.search.results_for', { q: searchQuery }) }}
@@ -198,29 +231,79 @@ function badgeLabel(source: 'reverse' | 'tree'): string {
           </ul>
         </template>
 
-        <!-- 通常モード（reverse_index ベース） -->
         <template v-else>
-          <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('help.reverse_tab') }}</h2>
-          <div v-for="cat in categories" :key="cat.id" class="mb-4">
-            <div class="mb-1 flex items-center gap-1 text-xs font-semibold text-primary">
-              <span>{{ cat.icon }}</span>
-              <span>{{ cat.title }}</span>
-            </div>
-            <ul class="space-y-1">
-              <li v-for="item in cat.items" :key="item.id" class="min-w-0">
-                <button
-                  type="button"
-                  class="flex w-full min-w-0 items-center rounded px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-slate-800"
-                  :class="activeSlug === slugFromArticleFile(item.article) ? 'bg-slate-800 text-white' : ''"
-                  @click="openArticleFile(item.article)"
-                >
-                  <span class="min-w-0 flex-1 overflow-hidden">
-                    <MarqueeText :text="item.title" variant="subtle" />
-                  </span>
-                </button>
-              </li>
-            </ul>
+          <div class="mb-3 flex gap-1 rounded border border-slate-700 bg-slate-950/50 p-0.5">
+            <button
+              type="button"
+              class="flex-1 rounded px-2 py-1.5 text-xs font-medium transition-colors"
+              :class="
+                sidebarTab === 'reverse'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+              "
+              @click="sidebarTab = 'reverse'"
+            >
+              {{ t('help.reverse_tab') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 rounded px-2 py-1.5 text-xs font-medium transition-colors"
+              :class="
+                sidebarTab === 'tree'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+              "
+              @click="sidebarTab = 'tree'"
+            >
+              {{ t('help.tree_tab') }}
+            </button>
           </div>
+
+          <template v-if="sidebarTab === 'reverse'">
+            <div v-for="cat in categories" :key="cat.id" class="mb-4">
+              <div class="mb-1 flex items-center gap-1 text-xs font-semibold text-primary">
+                <span>{{ cat.icon }}</span>
+                <span>{{ cat.title }}</span>
+              </div>
+              <ul class="space-y-1">
+                <li v-for="item in cat.items" :key="item.id" class="min-w-0">
+                  <button
+                    type="button"
+                    class="flex w-full min-w-0 items-center rounded px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-slate-800"
+                    :class="activeSlug === slugFromArticleFile(item.article) ? 'bg-slate-800 text-white' : ''"
+                    @click="openArticleFile(item.article)"
+                  >
+                    <span class="min-w-0 flex-1 overflow-hidden">
+                      <MarqueeText :text="item.title" variant="subtle" />
+                    </span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </template>
+
+          <template v-else>
+            <div v-for="section in indexTree" :key="section.id" class="mb-4">
+              <div class="mb-1 flex items-center gap-1 text-xs font-semibold text-primary">
+                <span>{{ section.icon }}</span>
+                <span>{{ section.title }}</span>
+              </div>
+              <ul class="space-y-1">
+                <li v-for="child in section.children" :key="child.id" class="min-w-0">
+                  <button
+                    type="button"
+                    class="flex w-full min-w-0 items-center rounded px-2 py-1.5 text-left text-xs text-slate-300 hover:bg-slate-800"
+                    :class="activeSlug === slugFromArticleFile(child.article) ? 'bg-slate-800 text-white' : ''"
+                    @click="openArticleFile(child.article)"
+                  >
+                    <span class="min-w-0 flex-1 overflow-hidden">
+                      <MarqueeText :text="child.title" variant="subtle" />
+                    </span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </template>
         </template>
       </aside>
       <main class="min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-4">

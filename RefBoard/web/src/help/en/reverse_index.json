@@ -1,0 +1,187 @@
+{
+  "categories": [
+    {
+      "id": "intro",
+      "icon": "📘",
+      "title": "Getting started",
+      "items": [
+        {
+          "id": "intro_what",
+          "title": "What is RefBoard?",
+          "article": "intro_what_is_refboard.md",
+          "tags": ["overview", "referee", "MySQL", "lock"]
+        },
+        {
+          "id": "intro_setup_rev",
+          "title": "First-time setup",
+          "article": "intro_setup.md",
+          "tags": ["install", "SQL", "ACE", "password", "oxmysql"]
+        }
+      ]
+    },
+    {
+      "id": "urgent",
+      "icon": "🆘",
+      "title": "High urgency",
+      "items": [
+        {
+          "id": "undo_goal",
+          "title": "I recorded the wrong goal",
+          "article": "trouble_undo_goal.md",
+          "tags": ["goal", "undo", "mistake", "G"]
+        },
+        {
+          "id": "e1003",
+          "title": "Another referee is editing (E1003)",
+          "article": "trouble_e1003_lock_held.md",
+          "tags": ["lock", "edit", "E1003", "lock_held"]
+        },
+        {
+          "id": "connection",
+          "title": "Lost connection — is my data OK?",
+          "article": "trouble_connection_lost.md",
+          "tags": ["connection", "disconnect", "autosave"]
+        },
+        {
+          "id": "autosave_fail",
+          "title": "When autosave fails",
+          "article": "trouble_autosave_failed.md",
+          "tags": ["autosave", "save", "E4003", "tx_failed"]
+        }
+      ]
+    },
+    {
+      "id": "team_off",
+      "icon": "👥",
+      "title": "Teams",
+      "items": [
+        {
+          "id": "team_create_rev",
+          "title": "Register a team",
+          "article": "team_create.md",
+          "tags": ["team", "new", "abbreviation", "color"],
+          "actionUrl": "#/workspace/teams"
+        },
+        {
+          "id": "team_roster_rev",
+          "title": "Add a player to the roster",
+          "article": "team_add_roster_member.md",
+          "tags": ["roster", "server id", "number"],
+          "actionUrl": "#/workspace/teams"
+        }
+      ]
+    },
+    {
+      "id": "data_off",
+      "icon": "📊",
+      "title": "Data & history",
+      "items": [
+        {
+          "id": "data_history_rev",
+          "title": "View past matches and stats",
+          "article": "data_view_history.md",
+          "tags": ["data", "history", "stats", "log"],
+          "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_csv_rev",
+          "title": "Download as CSV",
+          "article": "data_export.md",
+          "tags": ["CSV", "Excel", "export", "BOM"],
+          "actionUrl": "#/workspace/data"
+        }
+      ]
+    },
+    {
+      "id": "before_match",
+      "icon": "🗓️",
+      "title": "Before the match",
+      "items": [
+        {
+          "id": "match_new_rev",
+          "title": "Create a new match",
+          "article": "match_create_new.md",
+          "tags": ["match", "home", "away", "schedule"],
+          "actionUrl": "#/workspace/matches"
+        }
+      ]
+    },
+    {
+      "id": "in_match",
+      "icon": "⚽",
+      "title": "During the match",
+      "items": [
+        {
+          "id": "record_goal",
+          "title": "Record a goal",
+          "article": "match_record_goal.md",
+          "tags": ["goal", "score", "shot", "G"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "record_assist",
+          "title": "Add an assist (now or later)",
+          "article": "match_record_assist.md",
+          "tags": ["assist", "score"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "substitute_player",
+          "title": "Make a substitution",
+          "article": "match_substitute_player.md",
+          "tags": ["sub", "substitution", "bench"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "yellow_card",
+          "title": "Issue a yellow card",
+          "article": "match_yellow_card.md",
+          "tags": ["yellow", "warning", "card"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "red_card",
+          "title": "Issue a red card (send-off)",
+          "article": "match_red_card.md",
+          "tags": ["red", "send-off", "card", "second yellow"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "penalty_shootout",
+          "title": "Run a penalty shootout",
+          "article": "match_penalty_shootout.md",
+          "tags": ["PK", "penalty", "shootout"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "manual_score_edit",
+          "title": "Edit the score manually",
+          "article": "match_manual_score_edit.md",
+          "tags": ["manual", "score", "edit", "reason"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "match_finish",
+          "title": "Finish or reopen the match",
+          "article": "match_finish.md",
+          "tags": ["finish", "reopen", "final"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        }
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "icon": "🩺",
+      "title": "Diagnostics",
+      "items": [
+        {
+          "id": "health_check_guide",
+          "title": "Read the health check report",
+          "article": "trouble_health_check_guide.md",
+          "tags": ["health", "DB", "permission", "diagnostics"],
+          "actionUrl": "#/workspace/health"
+        }
+      ]
+    }
+  ]
+}

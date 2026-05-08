@@ -4,6 +4,10 @@
 
 RefBoard is a FiveM NUI tool for referees to record match score, timeline events, and rosters in MySQL with audit-friendly history.
 
+## Help (v0.7+)
+
+The in-app **Help** follows the UI language: set the UI to English to load articles from `web/src/help/en/`. The left column has tabs for the **task index** (reverse lookup) and **browse by topic** (table of contents). Full-text search uses the same locale.
+
 ## Install
 
 1. Put the resource under `resources/` and `ensure RefBoard` after `ensure oxmysql` in `server.cfg`.

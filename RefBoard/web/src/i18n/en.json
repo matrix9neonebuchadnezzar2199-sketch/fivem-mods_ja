@@ -378,8 +378,9 @@
   },
   "help": {
     "title": "Help & guide",
-    "subtitle": "Emergency fixes and common tasks (expanding in v0.6).",
+    "subtitle": "Emergency fixes and common tasks (v0.7 — help in JA / EN).",
     "reverse_tab": "Task index",
+    "tree_tab": "Browse by topic",
     "pick_article": "Choose an article from the list on the left.",
     "error_article_missing": "No help article for {code} yet. Pick a related topic or run Health check in Settings.",
     "article_missing": "Article file not found.",
