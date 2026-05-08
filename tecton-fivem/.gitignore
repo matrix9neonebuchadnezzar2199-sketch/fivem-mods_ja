@@ -19,3 +19,6 @@ Thumbs.db
 # Debug / cache
 *.tmp
 .cache/
+
+# Local prop_list.lua download for experiments (regen from network instead)
+tools/_prop_list_sample.lua

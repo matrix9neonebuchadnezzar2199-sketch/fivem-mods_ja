@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:reverse": "node tools/build_reverse_index.mjs"
+    "build:reverse": "node tools/build_reverse_index.mjs",
+    "build:props": "node tools/import_props.mjs",
+    "build:all": "npm run build:reverse && npm run build:props"
   }
 }

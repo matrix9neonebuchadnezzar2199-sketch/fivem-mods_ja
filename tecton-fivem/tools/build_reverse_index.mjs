@@ -71,7 +71,54 @@ function parseMarkdownSections(text) {
   return out
 }
 
+/** @param {Record<string, unknown>[]} items */
+function validateItems(items) {
+  const ids = new Set()
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i]
+    const id = typeof it.id === 'string' ? it.id : ''
+    if (!id) {
+      console.error(`Item #${i}: missing id`)
+      process.exit(1)
+    }
+    if (ids.has(id)) {
+      console.error(`Duplicate id: "${id}"`)
+      process.exit(1)
+    }
+    ids.add(id)
+  }
+  for (const it of items) {
+    const id = /** @type {string} */ (it.id)
+    if (typeof it.goal !== 'string' || !it.goal.trim()) {
+      console.error(`Item "${id}": missing goal`)
+      process.exit(1)
+    }
+    const diff = it.difficulty
+    if (diff !== 'easy' && diff !== 'normal' && diff !== 'advanced') {
+      console.error(`Item "${id}": invalid difficulty (need easy|normal|advanced): ${diff}`)
+      process.exit(1)
+    }
+    if (!Array.isArray(it.tags) || it.tags.length === 0) {
+      console.warn(`WARN: item "${id}": tags empty or missing`)
+    }
+    if (!Array.isArray(it.steps) || it.steps.length === 0) {
+      console.warn(`WARN: item "${id}": steps empty`)
+    }
+    const rel = it.related
+    if (Array.isArray(rel)) {
+      for (const r of rel) {
+        if (typeof r !== 'string' || !r) continue
+        if (!ids.has(r)) {
+          console.error(`Item "${id}": related references unknown id "${r}"`)
+          process.exit(1)
+        }
+      }
+    }
+  }
+}
+
 const items = parseItems(md)
+validateItems(items)
 const payload = { version: 1, items }
 const json = JSON.stringify(payload, null, 2)
 
