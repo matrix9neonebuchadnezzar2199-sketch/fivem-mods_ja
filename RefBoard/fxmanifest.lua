@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'RefBoard'
 author 'matrix9neonebuchadnezzar2199-sketch'
-version '0.9.0'
+version '0.9.1'
 description 'RefBoard — FiveM 向けサッカー試合管理（改ざん防止履歴・編集ロック・i18n）'
 
 dependencies {
@@ -24,7 +24,8 @@ server_scripts {
   'server/util.lua',
   'server/db.lua',
   'server/schema_bootstrap.lua',
-  'server/demo_seed.lua',
+    'server/demo_seed.lua',
+    'server/dev_data_reset.lua',
   'server/presence.lua',
   'server/permission.lua',
   'server/lock.lua',
@@ -52,4 +53,5 @@ files {
   'web/dist/index.html',
   'web/dist/**/*',
   'sql/seed_test_5teams_15roster.sql',
+  'sql/dev_seed_20matches.sql',
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.1 — 2026-05-09
+
+- **feat（開発用データ）**: `Config.EnableTestCommands = true` かつ編集モード入室時のみ、設定画面に **疑似データ投入**（全削除 → `seed_test_5teams_15roster.sql` → 試合20件 `dev_seed_20matches.sql`）と **全データ初期化**（空庫）を追加。いずれも警告後に **YES** 入力で実行。サーバー `server/dev_data_reset.lua`、SQL `sql/dev_seed_20matches.sql`。
+- **chore**: `fxmanifest.lua` の `files` に `dev_seed_20matches.sql` を追加。
+
 ## v0.9.0 — 2026-05-09（実機テスト準備リリース）
 
 - **docs（実機テスト計画刷新）**: `docs/testing/release_test_plan.md` を v0.5.0 当時の前提から v0.8.6 までの全機能をカバーする内容に拡張。シナリオ 8（ヘルプ機能）、シナリオ 9（小窓モード）、シナリオ 10（マーキー）、シナリオ 11（設定永続化）を新設。シナリオ 1〜3 / 6 にも v0.6〜v0.8 の確認項目を追補。

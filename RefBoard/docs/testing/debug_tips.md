@@ -10,7 +10,7 @@
 
 ### トランザクション検証
 
-`Config.EnableTestCommands = true` で `refboard_test_transaction` が有効化。`docs/testing/transaction_test.md` の手順を参照。本番では `false` に戻すこと。
+`Config.EnableTestCommands = true` で `refboard_test_transaction` が有効化され、設定画面に **疑似データ投入／全データ初期化**（`server/dev_data_reset.lua`）も表示される。`docs/testing/transaction_test.md` の手順を参照。本番では `false` に戻すこと。
 
 ### `editor_locks` の手動確認
 

@@ -298,3 +298,7 @@ end)
 RegisterNetEvent('refboard:health:check:ack', function(payload)
   SendNUIMessage({ type = 'refboard:health:check:ack', payload = payload })
 end)
+
+RegisterNetEvent('refboard:dev:data_action:ack', function(payload)
+  SendNUIMessage({ type = 'refboard:dev:data_action:ack', payload = payload })
+end)

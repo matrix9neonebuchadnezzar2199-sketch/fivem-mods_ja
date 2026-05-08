@@ -1,25 +1,119 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
-import { useNui, getResourceName } from '../composables/useNui'
+import { useSessionStore } from '../stores/session'
+import { useNui, getResourceName, isInFiveM } from '../composables/useNui'
+import { REFBOARD_UI_VERSION } from '../constants/version'
+import { useToast } from '../composables/useToast'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
+const session = useSessionStore()
+const { isEditor } = storeToRefs(session)
 const { send, on } = useNui()
+const { push: toast } = useToast()
 
 const dbMeta = ref<{ schemaVersion?: string; resourceVersion?: string } | null>(null)
+const serverTestCommands = ref<boolean | null>(null)
+const devBusy = ref(false)
+const devModal = ref<'fixture' | 'wipe' | null>(null)
+const devConfirmInput = ref('')
+
+const showDevDataPanel = computed(() => isInFiveM() && serverTestCommands.value === true)
+
+function openDevModal(kind: 'fixture' | 'wipe') {
+  devModal.value = kind
+  devConfirmInput.value = ''
+}
+
+function closeDevModal() {
+  devModal.value = null
+  devConfirmInput.value = ''
+}
+
+const canSubmitDevConfirm = computed(() => devConfirmInput.value.trim() === 'YES')
+
+let unDbMeta: (() => void) | null = null
+let unHealth: (() => void) | null = null
+let unDevAck: (() => void) | null = null
+
+function handleDevAck(p: {
+  ok?: boolean
+  error?: string
+  action?: string
+  detail?: string
+}) {
+  if (!devBusy.value) {
+    return
+  }
+  devBusy.value = false
+  closeDevModal()
+  if (p?.ok) {
+    if (p.action === 'apply_fixture') {
+      toast(t('settings.dev_data.toast_fixture_ok'), 'success', { ms: 6000 })
+    } else if (p.action === 'wipe_all') {
+      toast(t('settings.dev_data.toast_wipe_ok'), 'success', { ms: 6000 })
+    } else {
+      toast(t('settings.dev_data.toast_ok'), 'success', { ms: 4000 })
+    }
+    return
+  }
+  const err = p?.error ?? 'unknown'
+  if (err === 'test_commands_disabled') {
+    toast(t('settings.dev_data.err_test_commands'), 'error', { ms: 8000 })
+  } else if (err === 'no_permission') {
+    toast(t('settings.dev_data.err_no_edit'), 'error', { ms: 8000 })
+  } else if (err === 'bad_confirm') {
+    toast(t('settings.dev_data.err_bad_confirm'), 'error')
+  } else {
+    toast(t('settings.dev_data.err_sql', { detail: p?.detail ? String(p.detail) : err }), 'error', { ms: 10000 })
+  }
+}
+
+async function submitDevAction() {
+  if (!canSubmitDevConfirm.value || !devModal.value || devBusy.value) {
+    return
+  }
+  if (!isEditor.value) {
+    toast(t('settings.dev_data.err_no_edit'), 'error')
+    return
+  }
+  devBusy.value = true
+  const path = devModal.value === 'fixture' ? 'dev_apply_fixture' : 'dev_wipe_all'
+  try {
+    await send(path, { confirm: 'YES' })
+  } catch {
+    devBusy.value = false
+    toast(t('settings.dev_data.err_network'), 'error')
+  }
+}
 
 onMounted(() => {
   settings.load()
   locale.value = settings.settings.locale
-  const un = on('refboard:data:db_meta:ack', (p: { schemaVersion?: string; resourceVersion?: string }) => {
-    un()
+  unDbMeta = on('refboard:data:db_meta:ack', (p: { schemaVersion?: string; resourceVersion?: string }) => {
+    unDbMeta?.()
+    unDbMeta = null
     dbMeta.value = p
   })
   void send('data_db_meta', {})
+
+  unHealth = on('refboard:health:check:ack', (h: { enableTestCommands?: boolean }) => {
+    serverTestCommands.value = h.enableTestCommands === true
+  })
+  void send('health_check', { clientVersion: REFBOARD_UI_VERSION })
+
+  unDevAck = on('refboard:dev:data_action:ack', handleDevAck)
+})
+
+onUnmounted(() => {
+  unDbMeta?.()
+  unHealth?.()
+  unDevAck?.()
 })
 
 function syncLocale() {
@@ -196,6 +290,72 @@ function syncLocale() {
       >
         {{ t('settings.health_link') }} →
       </router-link>
+
+      <div v-if="showDevDataPanel" class="mt-4 rounded-lg border border-amber-700/60 bg-amber-950/20 p-3">
+        <h3 class="text-xs font-semibold text-amber-200">{{ t('settings.dev_data.title') }}</h3>
+        <p class="mt-1 text-xs text-amber-100/90">{{ t('settings.dev_data.intro') }}</p>
+        <p v-if="!isEditor" class="mt-2 text-xs font-medium text-amber-300">{{ t('settings.dev_data.need_edit') }}</p>
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            class="rounded-lg border border-amber-600/80 bg-amber-900/40 px-3 py-2 text-left text-xs font-medium text-amber-50 hover:bg-amber-900/60 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!isEditor || devBusy"
+            @click="openDevModal('fixture')"
+          >
+            {{ t('settings.dev_data.btn_fixture') }}
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-red-700/70 bg-red-950/30 px-3 py-2 text-left text-xs font-medium text-red-100 hover:bg-red-950/50 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!isEditor || devBusy"
+            @click="openDevModal('wipe')"
+          >
+            {{ t('settings.dev_data.btn_wipe') }}
+          </button>
+        </div>
+      </div>
     </section>
+
+    <!-- 破壊的操作の確認（YES 入力） -->
+    <Teleport to="body">
+      <div
+        v-if="devModal"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4"
+        role="dialog"
+        aria-modal="true"
+        @click.self="closeDevModal"
+      >
+        <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 p-4 shadow-xl">
+          <h3 class="text-base font-semibold text-slate-50">
+            {{ devModal === 'fixture' ? t('settings.dev_data.modal_fixture_title') : t('settings.dev_data.modal_wipe_title') }}
+          </h3>
+          <p class="mt-2 text-sm leading-relaxed text-amber-100/95">
+            {{ devModal === 'fixture' ? t('settings.dev_data.modal_fixture_body') : t('settings.dev_data.modal_wipe_body') }}
+          </p>
+          <p class="mt-3 text-xs text-slate-400">{{ t('settings.dev_data.type_yes') }}</p>
+          <input
+            v-model="devConfirmInput"
+            type="text"
+            autocomplete="off"
+            class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+            :placeholder="t('settings.dev_data.yes_placeholder')"
+          />
+          <div class="mt-4 flex justify-end gap-2">
+            <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200" @click="closeDevModal">
+              {{ t('settings.dev_data.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg px-3 py-2 text-sm font-semibold text-white"
+              :class="devModal === 'wipe' ? 'bg-red-700 hover:bg-red-600' : 'bg-amber-700 hover:bg-amber-600'"
+              :disabled="!canSubmitDevConfirm || devBusy"
+              @click="submitDevAction"
+            >
+              {{ t('settings.dev_data.execute') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

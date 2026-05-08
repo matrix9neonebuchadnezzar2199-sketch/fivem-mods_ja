@@ -22,7 +22,7 @@ Config.OpenKey = 'F6'
 -- 既定ロケール（クライアントで上書き可）
 Config.DefaultLocale = 'ja'
 
--- サーバー上のトランザクション検証コマンド（本番では false 推奨）
+-- サーバー上のトランザクション検証コマンド・設定の「疑似データ投入／全データ初期化」（本番では false 推奨）
 Config.EnableTestCommands = false
 
 -- サーバーログレベル（Logger 用）: DEBUG / INFO / WARN / ERROR

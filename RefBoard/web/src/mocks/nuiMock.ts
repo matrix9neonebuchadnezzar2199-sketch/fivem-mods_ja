@@ -342,6 +342,9 @@ export function mockResponse(path: string, data: unknown): unknown {
     case 'player_add_from_roster':
     case 'health_check':
       return { ok: true, forwarded: true }
+    case 'dev_wipe_all':
+    case 'dev_apply_fixture':
+      return { ok: true, forwarded: true }
     default:
       // eslint-disable-next-line no-console
       console.warn('[NUI MOCK] Unhandled event:', path)
@@ -364,6 +367,14 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       } else {
         postNui('refboard:session:ack', { ok: true, mode: 'view' })
       }
+    }
+    if (path === 'dev_wipe_all' || path === 'dev_apply_fixture') {
+      const d = data as { confirm?: string }
+      if (d.confirm !== 'YES') {
+        postNui('refboard:dev:data_action:ack', { ok: false, error: 'bad_confirm' })
+        return
+      }
+      postNui('refboard:dev:data_action:ack', { ok: false, error: 'test_commands_disabled' })
     }
     if (path === 'health_check') {
       const cv = (data as { clientVersion?: string })?.clientVersion ?? ''
