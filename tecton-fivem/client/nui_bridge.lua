@@ -29,14 +29,21 @@ end)
 
 RegisterNUICallback('createObject', function(data, cb)
     local s = getState()
-    local mode = s.mode or 'furniture'
+    local mode = (type(data) == 'table' and data.mode) or s.mode or 'furniture'
     local handler = TectonModeHandlers and TectonModeHandlers[mode]
     if not handler or type(handler.handleCreate) ~= 'function' then
         SendNUIMessage({ action = 'opAck', op = 'create', ok = false, reason = 'unsupported_mode' })
         cb({ ok = false, reason = 'unsupported_mode' })
         return
     end
+    local wasOpen = s.open
+    if wasOpen then
+        SetNuiFocus(false, false)
+    end
     local res = handler.handleCreate(data)
+    if wasOpen then
+        SetNuiFocus(true, true)
+    end
     if res.ok then
         SendNUIMessage({ action = 'opAck', op = 'create', ok = true, id = res.id })
         cb({ ok = true, id = res.id })

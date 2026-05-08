@@ -1,124 +1,66 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect } from 'react'
+import { useBuilderStore } from './store/builderStore'
+import { fetchNui, onNuiMessage } from './lib/nui'
+import { Builder } from './pages/Builder'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+type ReadyPayload = {
+  ok?: boolean
+  open?: boolean
+  scene?: string
+  mode?: string
+  selected?: number | null
 }
 
-export default App
+export default function App() {
+  const open = useBuilderStore((s) => s.open)
+  const setOpen = useBuilderStore((s) => s.setOpen)
+  const setSceneId = useBuilderStore((s) => s.setSceneId)
+  const setMode = useBuilderStore((s) => s.setMode)
+  const setSelected = useBuilderStore((s) => s.setSelected)
+
+  useEffect(() => {
+    const unsub = onNuiMessage<{ open?: boolean }>((msg) => {
+      if (msg?.action === 'setOpen' && typeof msg.open === 'boolean') {
+        setOpen(msg.open)
+      }
+    })
+    return unsub
+  }, [setOpen])
+
+  useEffect(() => {
+    void (async () => {
+      const d = await fetchNui<ReadyPayload>('ready')
+      if (d?.scene) {
+        setSceneId(d.scene)
+      }
+      if (d?.mode === 'furniture' || d?.mode === 'door' || d?.mode === 'parking' || d?.mode === 'stash') {
+        setMode(d.mode)
+      }
+      if (d?.selected !== undefined) {
+        setSelected(d.selected ?? null)
+      }
+      if (typeof d?.open === 'boolean') {
+        setOpen(d.open)
+      }
+    })()
+  }, [setOpen, setSceneId, setMode, setSelected])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && useBuilderStore.getState().open) {
+        e.preventDefault()
+        void fetchNui('close')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  if (!open) {
+    return null
+  }
+
+  return <Builder />
+}
