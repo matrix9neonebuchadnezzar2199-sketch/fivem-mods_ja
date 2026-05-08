@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.0 — 2026-05-09（実機テスト準備リリース）
+
+- **docs（実機テスト計画刷新）**: `docs/testing/release_test_plan.md` を v0.5.0 当時の前提から v0.8.6 までの全機能をカバーする内容に拡張。シナリオ 8（ヘルプ機能）、シナリオ 9（小窓モード）、シナリオ 10（マーキー）、シナリオ 11（設定永続化）を新設。シナリオ 1〜3 / 6 にも v0.6〜v0.8 の確認項目を追補。
+- **docs（テスト結果テンプレート）**: `docs/testing/test_results.md` に「v0.9.0 実施回テンプレート」を追加。シナリオ 11 件・新規不具合・改善提案・総合判定を一括で記録できる形に。
+- **docs（既知の問題刷新）**: `docs/testing/known_issues.md` を「未解決 / 仕様として許容（記事で吸収済み）/ 解決済み（直近 6 リリース）」の 3 セクション構成に再編。v0.7〜v0.8 で解決した重大バグ 11 件を解決済みに整理。
+- **docs（デバッグ Tips 新設）**: `docs/testing/debug_tips.md` を新設し、サーバー側ログレベル / `editor_locks` 手動確認 / NUI トレース / nuiMock 操作 / ヘルスチェック / ログ採取動線を集約。
+- **docs（HANDOVER）**: §8 に「実機テストの始め方」サブセクションを追加。
+- **互換**: ランタイム挙動の変更なし。`fxmanifest.lua` / `package.json` / `version.ts` を 0.9.0 に同期。
+
 ## v0.8.6 — 2026-05-09
 
 - **chore（ビルド）**: Vite の `build.rollupOptions.output.manualChunks` を関数形式で導入し、ヘルプ記事 Markdown（`help-articles-ja` / `help-articles-en` / `help-meta`）と主要ベンダ（`vendor-markdown` = marked + dompurify、`vendor-search` = fuse.js、`vendor-i18n` / `vendor-router` / `vendor-pinia` / `vendor-headlessui` / `vendor-vueuse` / `vendor`）を独立チャンクに分割。`index.js` の 500kB 超警告を解消。

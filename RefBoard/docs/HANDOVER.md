@@ -2,8 +2,8 @@
 
 **作成日**: 2026-05-08（同日中の大幅改訂）
 **初版作成時点**: v0.6.7（Sprint 09 Phase C 完了直後）
-**第 2 版時点**: **v0.8.6**（Sprint 09 完了済み・運用フェーズ・v0.8.x 運用整備・ビルドチャンク分割まで反映）
-**作成時点のリポジトリ**: `origin/main`、`fxmanifest.lua` の `version '0.8.6'`、`CHANGELOG.md` 先頭が v0.8.6
+**第 2 版時点**: **v0.9.0**（実機テスト準備ドキュメント刷新・Sprint 09 / v0.7.x / v0.8.x まで反映）
+**作成時点のリポジトリ**: `origin/main`、`fxmanifest.lua` の `version '0.9.0'`、`CHANGELOG.md` 先頭が v0.9.0
 
 ---
 
@@ -14,6 +14,7 @@
 - 2026-05-09 追記: v0.8.4（フォント倍率 Settings 化）完了に合わせて §4 / §7 / §9 / §10 を微修正。
 - 2026-05-09 追記: v0.8.5（`E3006` ヘルプ記事と配線）完了に合わせて §4 / §7 / §9 / §10 を微修正。
 - 2026-05-09 追記: v0.8.6（ビルドチャンク分割）完了に合わせて §4 / §7 / §9 / §10 を微修正。
+- 2026-05-09 追記: **v0.9.0**（実機テスト準備リリース）— `release_test_plan.md` 11 シナリオ、`test_results.md` 実施回テンプレート、`known_issues.md` 3 セクション再編、`debug_tips.md` 新設、§8 実機手順、バージョン 0.9.0 同期。ランタイムコード変更なし。
 
 ---
 
@@ -50,11 +51,11 @@ npm run build  # FiveM 配布用（dist/）
 
 ---
 
-## 3. ディレクトリ構成（v0.8.6 現在）
+## 3. ディレクトリ構成（v0.9.0 現在）
 
 ```
 RefBoard/
-├── fxmanifest.lua                  # version '0.8.6'、files に seed_test_5teams_15roster.sql を含む
+├── fxmanifest.lua                  # version '0.9.0'、files に seed_test_5teams_15roster.sql を含む
 ├── config.lua                      # AutoCreateSchema / SeedDemoTeamsOnStart / EnableTestCommands など
 ├── CHANGELOG.md
 ├── server/
@@ -81,9 +82,9 @@ RefBoard/
 │   ├── sprints/sprint_02 〜 09_*.md
 │   ├── sprints/sprint_07_uiux_findings.md
 │   ├── sprints/sprint_08_marquee.md
-│   └── testing/{release_test_plan, test_results, known_issues, transaction_test}.md
+│   └── testing/{release_test_plan, test_results, known_issues, transaction_test, debug_tips}.md
 └── web/
-    ├── package.json                # version 0.8.6
+    ├── package.json                # version 0.9.0
     ├── vite.config.ts              # manualChunks（help-articles-ja/en、vendor 分割、v0.8.6）
     └── src/
         ├── views/
@@ -122,7 +123,7 @@ RefBoard/
 
 ---
 
-## 4. リリース履歴（要約・v0.8.6 まで）
+## 4. リリース履歴（要約・v0.9.0 まで）
 
 | 版 | 日付 | 主内容 |
 |----|------|-------|
@@ -151,6 +152,7 @@ RefBoard/
 | v0.8.4 | 05-09 | フォント倍率を Settings から切替（100/150/200%、既定 200）。`html.style.fontSize` を JS で動的反映、FOUC は `index.html` インラインで先読み |
 | v0.8.5 | 05-09 | `E3006`（`player_has_events`）専用ヘルプを日英追加。`errorCodeMapper` / `reverse_index` / `index` / `context_map`（`match_detail`）に配線 |
 | v0.8.6 | 05-09 | Vite `manualChunks` でヘルプ記事・主要ベンダを分割。`index.js` 500kB 超警告解消。子チャンクは `assets/*-[hash].js`（`fxmanifest` の `web/dist/**/*` で配信） |
+| **v0.9.0** | 05-09 | **実機テスト準備リリース**: テスト計画 11 シナリオ、結果テンプレート、`known_issues` 再編、`debug_tips` 新設。ランタイムコード変更なし |
 
 詳細は `RefBoard/CHANGELOG.md` を参照。
 
@@ -172,7 +174,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 ---
 
-## 6. v0.8.6 時点で動いている重要な仕組み
+## 6. v0.9.0 時点で動いている重要な仕組み
 
 第 2 版で新たに「忘れやすいので明文化」した設計上の決定。
 
@@ -194,15 +196,13 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 ---
 
-## 7. 既知の TODO（v0.8.6 時点で未消化）
+## 7. 中期に持ち越しの項目（v0.9.0 時点）
 
-`docs/sprints/sprint_07_uiux_findings.md` 集約のものから、初版以降にも消えていない項目を抽出。
+`docs/sprints/sprint_07_uiux_findings.md` 集約のものから、初版以降にも消えていない項目を抽出。開発者向けの **`STORAGE_VERSION` / `localStorage` リセット・NUI トレース**は `docs/testing/debug_tips.md` に集約した。
 
 ヘルプ／検索系で残っているのは「Fuse.js のしきい値再評価」（記事 20 本完成後の再チューニング、`tags` を厚めにする運用で当面吸収）と「`📚 項目ごと` バッジはツリー二重インデックス未実装のまま」。
 
 UI 機能で未着手なのが、PK 戦のキャンセル / 先攻チーム間違いの取り消し UI（Sprint 10 候補）、ロスタイム表記（`45+2` 等）の入力許容、手動スコア編集での PK 内訳の直し、選手状態セルのタップ切替（出場 → 警告中…、監査ログ付き専用 NetEvent が必要）、オートセーブ失敗時の「再試行」ボタン配線、ゴール取消の `Ctrl+Z` ショートカット配線。
-
-v0.8.x で残っていた **`STORAGE_VERSION` 上げに伴う開発者向け案内**は、README に一行触れる程度で吸収可能な軽微項目として扱ってよい（未記載なら追記のみ）。
 
 ---
 
@@ -210,29 +210,33 @@ v0.8.x で残っていた **`STORAGE_VERSION` 上げに伴う開発者向け案�
 
 コミット前は `cd RefBoard/web && npm run build` を緑にする。`npx vue-tsc --noEmit` も Sprint 09 以降は緑を維持しているので、回帰させない。マーキー実装と型エラーは混在させない（Sprint 08 の教訓）。
 
-実機テスト（v0.9.0 で本格化予定）は `docs/testing/release_test_plan.md` をベースにし、`Config.EnableTestCommands = true` で `refboard_test_transaction` などの破壊系コマンドを使う。設定 → 「ヘルスチェック（実機テスト前）」で DB / 認証 / ロック状態を一覧確認できる。
+実機テストは `docs/testing/release_test_plan.md` をベースにし、`Config.EnableTestCommands = true` で `refboard_test_transaction` などの破壊系コマンドを使う。設定 → 「ヘルスチェック（実機テスト前）」で DB / 認証 / ロック状態を一覧確認できる。ログ・DB の採取手順は `docs/testing/debug_tips.md`。
 
-コミットメッセージは `feat(RefBoard): <要約> (vX.Y.Z)`、`fix(RefBoard): <要約>`、`chore(RefBoard): <要約>` を踏襲。push 先は `origin/main`（個人管理リポジトリ・直 push 運用）。リリース時は `package.json` / `fxmanifest.lua` / `web/src/constants/version.ts` の 3 点を必ず同期。
+### 実機テストの始め方（v0.9.0 で本格化）
+
+1. **準備**: `docs/testing/release_test_plan.md` の「環境準備」をすべてチェック。`Config.EnableTestCommands = true` / `Config.LogLevel = 'DEBUG'` を一時的に設定。
+2. **実施**: シナリオ 1 → 2 → 3 → … の順で進める。各シナリオの結果を `docs/testing/test_results.md` の実施回テンプレートに記録。
+3. **不具合発見時**: 重大なら即座に `docs/testing/known_issues.md` の「未解決」に追加し、シナリオ続行か中断かを判断。軽微なら findings に追記して続行。
+4. **完了後**: テスト結果サマリを `test_results.md` に記載、未解決の重要度を判定。**致命的なし → v0.9.1 修正フェーズへ**。**致命的あり → 即時 hotfix リリース**。
+5. **`Config` を本番値に戻す**: `EnableTestCommands = false`、`LogLevel = 'INFO'`、`SeedDemoTeamsOnStart` は配布形態で判断。
+
+コミットメッセージは `feat(RefBoard): <要約> (vX.Y.Z)`、`fix(RefBoard): <要約>`、`chore(RefBoard): <要約>`、`docs(RefBoard): <要約>` を踏襲。push 先は `origin/main`（個人管理リポジトリ・直 push 運用）。リリース時は `package.json` / `fxmanifest.lua` / `web/src/constants/version.ts` の 3 点を必ず同期。
 
 ---
 
-## 9. 次の作業ロードマップ（v0.8.6 → v1.0.0）
+## 9. 次の作業ロードマップ（v0.9.0 → v1.0.0）
 
-Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB ブートストラップ系」も区切り、v0.8.x で「テストデータ・運用整備・フォント・E3006 ヘルプ・ビルド分割」まで完了した。**次の主戦場は中期の v0.9.0（実機テスト）**。
+Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB ブートストラップ系」も区切り、v0.8.x で「テストデータ・運用整備・フォント・E3006 ヘルプ・ビルド分割」まで完了した。**v0.9.0 は実機テスト計画・手順・既知問題リストのドキュメント整備までを完了**し、次は実機でのシナリオ消化フェーズに移る。
 
-### 短期（v0.8.x 運用整備 — **完了**）
+### 短期（v0.8.x 運用整備 + v0.9.0 ドキュメント — **完了**）
 
-**v0.8.4（完了・2026-05-09）**: フォント倍率を Settings から切替可能に。詳細は CHANGELOG / §4 参照。
+v0.8.4〜v0.8.6 の内容は CHANGELOG / §4 参照。**v0.9.0（完了・2026-05-09）**: 実機テスト準備リリース。次は実機実施フェーズ。
 
-**v0.8.5（完了・2026-05-09）**: `E3006`（`player_has_events`）専用記事を日英で追加し、`errorCodeMapper` / `reverse_index` / `index` / `context_map` に配線。詳細は CHANGELOG / §4 参照。
+### 中期（v0.9.x 実機テスト実施 → v0.9.1 findings 反映）
 
-**v0.8.6（完了・2026-05-09）**: `vite.config.ts` の `manualChunks`（関数形式）でヘルプ記事 Markdown・JSON メタ・主要ベンダを分割し、`index.js` の 500kB 超警告を解消。詳細は CHANGELOG / §4 参照。
-
-### 中期（v0.9.0 〜 v0.9.1 / 実機テストフェーズ）— **次の作業**
-
-**v0.9.0（実機テスト・結果記録）**: `docs/testing/release_test_plan.md` のシナリオを実機で消化し、結果を `docs/testing/test_results.md` に記録。`Config.EnableTestCommands=true` で `refboard_test_transaction` 等を回す。`docs/testing/known_issues.md` に新規発見を追記。複数審判による同時編集・編集ロックの取り合い・F6 開閉のフォーカス・小窓と歩行モードの切替・PK 戦・ハーフ別スコア・`Match.reopen` を最低限通す。
-
-**v0.9.1（findings 反映）**: 実機テストで出た不具合のうち軽微なものをまとめて修正。Sprint 10 候補として残していた **PK 戦のキャンセル UI** と **ロスタイム `45+2` 入力許容** をここに合流させるか、別途 v0.9.2 として切るかを v0.9.0 の結果で判断する。findings の中で「監査ログ付き NetEvent が必要なもの」（選手状態セルのタップ切替、ゴール取消ショートカット）はスコープが大きいので v0.9.1 ではなく v1.x に回す。
+- **v0.9.x（実施）**: `docs/testing/release_test_plan.md` のシナリオ 11 件を実機で消化、結果を `test_results.md` に記録、不具合は `known_issues.md` に追記。実機が無い段階ではモックでカバーできるシナリオ（6 / 8 / 10 / 11）を先行実施可能。
+- **v0.9.1（findings 反映）**: 実機テストで出た不具合のうち軽微なものを修正。重大なら即時 hotfix（v0.9.0.1 等）。
+- **v0.9.2（候補）**: PK 戦のキャンセル UI、ロスタイム `45+2` 入力許容、E3007 / E3008 等の新規エラー記事、を v0.9.0 の結果次第で着手判断。
 
 ### 長期（v1.0.0 / 正式リリース）
 
@@ -250,9 +254,9 @@ Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB 
 
 > **管理場所**: `https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/tree/main/RefBoard`
 > **作業ディレクトリ**: `H:\CURSOR\Dev\fivem-mods_ja\RefBoard`
-> **現状**: v0.8.6。Sprint 09（ヘルプ）と v0.7.x ロック・DB ブートストラップ系修正、v0.8.x 運用整備（テストデータ自動投入・フォント倍率 Settings 化・`E3006` ヘルプ・ビルドチャンク分割）まで完了。次は **v0.9.0（実機テスト）の準備**から着手したい。引継資料は `docs/HANDOVER.md` 第 2 版。
+> **現状**: v0.9.0。実機テスト準備（テスト計画 11 シナリオ・結果テンプレ・`known_issues` 再編・`debug_tips`・§8 手順）が完了し、次は **実機実施フェーズ**。引継資料は `docs/HANDOVER.md` 第 2 版。
 
-短く済ませたい場合は「**実機テスト準備いって**」でスコープが一意に決まる（README の `STORAGE_VERSION` 一行など軽微追記はその中で扱ってよい）。
+短く済ませたい場合は「**実機テストいって（モック先行）**」「**実機テスト結果を記録して**」でスコープが決まる。
 
 ---
 
@@ -263,3 +267,4 @@ Sprint 09 完了で「ヘルプ系」は一段落、v0.7.x で「ロック・DB 
 - 2026-05-09: v0.8.4 完了反映（リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
 - 2026-05-09: v0.8.5 完了反映（`E3006` ヘルプ・配線。リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
 - 2026-05-09: v0.8.6 完了反映（ビルドチャンク分割。リリース履歴・TODO・ロードマップ・開始フレーズの差分更新）。
+- 2026-05-09: v0.9.0 完了反映（実機テスト準備ドキュメント、§7 中期持ち越し整理、§8 実機手順、§9 ロードマップ、§10 開始フレーズ）。
