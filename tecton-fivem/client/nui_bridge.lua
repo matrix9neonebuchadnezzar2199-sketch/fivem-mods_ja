@@ -41,6 +41,22 @@ RegisterNUICallback('close', function(_, cb)
     cb({ ok = true })
 end)
 
+--- 右ボタンドラッグ中のみマウスをゲームへ渡し、視点回転（カメラ）を可能にする。
+RegisterNUICallback('cameraLook', function(data, cb)
+    local s = getState()
+    if not s.open then
+        cb({ ok = true })
+        return
+    end
+    local enable = type(data) == 'table' and data.enable == true
+    if enable then
+        SetNuiFocus(true, false)
+    else
+        SetNuiFocus(true, true)
+    end
+    cb({ ok = true })
+end)
+
 RegisterNUICallback('createObject', function(data, cb)
     local s = getState()
     local mode = (type(data) == 'table' and data.mode) or s.mode or 'furniture'
@@ -52,10 +68,12 @@ RegisterNUICallback('createObject', function(data, cb)
     end
     local wasOpen = s.open
     if wasOpen then
+        SendNUIMessage({ action = 'setPlacementGuide', show = true })
         SetNuiFocus(false, false)
     end
     local res = handler.handleCreate(data)
     if wasOpen then
+        SendNUIMessage({ action = 'setPlacementGuide', show = false })
         SetNuiFocus(true, true)
     end
     if res.ok then

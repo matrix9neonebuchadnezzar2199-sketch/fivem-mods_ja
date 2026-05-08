@@ -30,6 +30,11 @@ export const ja = {
     placeholder: 'モデル名・名前・タグで検索（空白で AND）',
     ariaLabel: 'プロップ検索',
     hint: '例: chair / 椅子 / prop_',
+    cameraLookHint: '右ボタンを押したままドラッグで視点を回転',
+  },
+  placementGuide: {
+    line1: '位置と向きを決めたら Enter で確定',
+    line2: 'W：移動（位置）　R：回転',
   },
   panel: {
     selection: '選択中のオブジェクト',

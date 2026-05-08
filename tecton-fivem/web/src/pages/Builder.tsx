@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchNui } from '../lib/nui'
 import { ja, tf } from '../i18n/ja'
 import { theme } from '../theme'
@@ -23,7 +23,26 @@ export function Builder() {
   const dictionary = usePropsStore((s) => s.dictionary)
   const propsLoaded = usePropsStore((s) => s.loaded)
   const propsError = usePropsStore((s) => s.loadError)
+  const showPlacementGuide = useBuilderStore((s) => s.showPlacementGuide)
   const [toast, setToast] = useState<ToastState>(null)
+
+  useEffect(() => {
+    const endLook = () => {
+      void fetchNui('cameraLook', { enable: false })
+    }
+    const onUp = (e: PointerEvent) => {
+      if (e.button === 2) {
+        endLook()
+      }
+    }
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+    return () => {
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      endLook()
+    }
+  }, [])
 
   const pendingDef = useMemo(() => {
     if (!pendingCatalog) {
@@ -73,7 +92,17 @@ export function Builder() {
   }
 
   return (
-    <div className={styles.overlay} role="presentation">
+    <div
+      className={styles.overlay}
+      role="presentation"
+      onContextMenu={(e) => e.preventDefault()}
+      onPointerDownCapture={(e) => {
+        if (e.button === 2) {
+          e.preventDefault()
+          void fetchNui('cameraLook', { enable: true })
+        }
+      }}
+    >
       <div
         className={styles.panel}
         style={{ backgroundColor: theme.panel, color: theme.text }}
@@ -191,6 +220,13 @@ export function Builder() {
           role="status"
         >
           {toast.text}
+        </div>
+      )}
+
+      {showPlacementGuide && (
+        <div className={styles.placementGuide} role="status" aria-live="polite">
+          <p className={styles.placementGuideLine}>{ja.placementGuide.line1}</p>
+          <p className={styles.placementGuideLine}>{ja.placementGuide.line2}</p>
         </div>
       )}
     </div>

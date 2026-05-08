@@ -24,6 +24,9 @@ export function SearchBar() {
       <div className={styles.hint} style={{ color: theme.textDim }}>
         {ja.search.hint}
       </div>
+      <div className={styles.hint} style={{ color: theme.textDim, opacity: 0.8, marginTop: '0.125rem', fontSize: '0.8125rem' }}>
+        {ja.search.cameraLookHint}
+      </div>
     </div>
   )
 }

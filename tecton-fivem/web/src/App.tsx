@@ -25,6 +25,7 @@ export default function App() {
   const setSceneId = useBuilderStore((s) => s.setSceneId)
   const setMode = useBuilderStore((s) => s.setMode)
   const setSelected = useBuilderStore((s) => s.setSelected)
+  const setShowPlacementGuide = useBuilderStore((s) => s.setShowPlacementGuide)
   const setProps = usePropsStore((s) => s.setProps)
   const setLoadFailed = usePropsStore((s) => s.setLoadFailed)
 
@@ -36,12 +37,16 @@ export default function App() {
     const unsub = onNuiMessage<{
       open?: boolean
       action?: string
+      show?: boolean
       dictionary?: Record<string, PropDef>
       categories?: ServerCategoryRaw[]
       count?: number
     }>((msg) => {
       if (msg?.action === 'setOpen' && typeof msg.open === 'boolean') {
         setOpen(msg.open)
+      }
+      if (msg?.action === 'setPlacementGuide' && typeof msg.show === 'boolean') {
+        setShowPlacementGuide(msg.show)
       }
       if (msg?.action === 'setProps' && msg.dictionary && msg.categories) {
         setProps(msg.dictionary, msg.categories)
@@ -51,7 +56,7 @@ export default function App() {
       }
     })
     return unsub
-  }, [setOpen, setProps, setLoadFailed])
+  }, [setOpen, setProps, setLoadFailed, setShowPlacementGuide])
 
   useEffect(() => {
     void (async () => {
