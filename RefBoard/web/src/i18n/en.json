@@ -6,7 +6,10 @@
     "match_clock_timeout": "Match clock request timed out. Please reload.",
     "match_clock_error": "Could not update the match clock ({code}).",
     "match_delete_failed": "Could not delete the match.",
-    "match_delete_locked": "Another user is editing this match; delete is blocked."
+    "match_delete_locked": "Another user is editing this match; delete is blocked.",
+    "card_issue_incomplete": "Pick team, player, and card type again.",
+    "card_issue_timeout": "No response for card registration. Check connection and edit lock.",
+    "card_issue_failed": "Could not register the card ({code})."
   },
   "presence": {
     "online": "Online",

@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
+import { useToast } from '../../composables/useToast'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 
 const props = defineProps<{
@@ -15,6 +16,7 @@ const emit = defineEmits<{ 'update:open': [boolean]; done: [] }>()
 
 const { t } = useI18n()
 const { send, on } = useNui()
+const { push: toast } = useToast()
 
 const step = ref(1)
 const teamId = ref<number | null>(null)
@@ -46,6 +48,23 @@ watch(
     }
   },
 )
+
+function selectTeamForCard(tid: number) {
+  teamId.value = tid
+  step.value = 2
+}
+
+function selectPlayer(id: string) {
+  playerId.value = id
+}
+
+function goStep1() {
+  step.value = 1
+}
+
+function goStep2() {
+  step.value = 2
+}
 
 function afterPlayerSelected() {
   const pk = props.presetKind
@@ -82,6 +101,12 @@ function pickYellow() {
   step.value = 4
 }
 
+function pickRedDirect() {
+  redFromSecondYellow.value = false
+  cardKind.value = 'red'
+  step.value = 4
+}
+
 function confirmSecondYellowAsRed() {
   showSecondYellow.value = false
   redFromSecondYellow.value = true
@@ -89,9 +114,27 @@ function confirmSecondYellowAsRed() {
   step.value = 4
 }
 
+function goBackFromConfirm() {
+  cardKind.value = null
+  step.value = props.presetKind ? 2 : 3
+}
+
 async function record() {
-  if (!teamId.value || !playerId.value || !cardKind.value) return
+  if (!teamId.value || !playerId.value || !cardKind.value) {
+    toast(t('toast.card_issue_incomplete'), 'error', 5000)
+    return
+  }
+  const pid = Number(playerId.value)
+  if (!Number.isFinite(pid) || pid <= 0) {
+    toast(t('toast.card_issue_incomplete'), 'error', 5000)
+    return
+  }
+  let settled = false
+  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
   const un = on('refboard:event:issue_card:ack', (r: { ok?: boolean; error?: string }) => {
+    if (settled) return
+    settled = true
+    if (timeoutId != null) window.clearTimeout(timeoutId)
     un()
     if (r?.ok) {
       emit('done')
@@ -100,16 +143,34 @@ async function record() {
     }
     if (r?.error === 'second_yellow_confirm') {
       showSecondYellow.value = true
+      return
     }
+    const code = r?.error ?? 'unknown'
+    toast(t('toast.card_issue_failed', { code }), 'error', 8000)
   })
-  await send('event_issue_card', {
-    matchId: props.model.id,
-    teamId: teamId.value,
-    playerId: Number(playerId.value),
-    cardType: cardKind.value === 'yellow' ? 'yellow_card' : 'red_card',
-    ejectionReason:
-      cardKind.value === 'red' ? (redFromSecondYellow.value ? 'second_yellow' : 'red_card') : undefined,
-  })
+  timeoutId = window.setTimeout(() => {
+    if (settled) return
+    settled = true
+    un()
+    toast(t('toast.card_issue_timeout'), 'error', 8000)
+  }, 8000)
+  try {
+    await send('event_issue_card', {
+      matchId: props.model.id,
+      teamId: teamId.value,
+      playerId: pid,
+      cardType: cardKind.value === 'yellow' ? 'yellow_card' : 'red_card',
+      ejectionReason:
+        cardKind.value === 'red' ? (redFromSecondYellow.value ? 'second_yellow' : 'red_card') : undefined,
+    })
+  } catch {
+    if (!settled) {
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      toast(t('toast.card_issue_timeout'), 'error', 8000)
+    }
+  }
 }
 </script>
 
@@ -127,20 +188,14 @@ async function record() {
         <button
           type="button"
           class="w-full rounded-lg border border-slate-600 py-2 text-slate-100"
-          @click="
-            teamId = model.team1Id;
-            step = 2
-          "
+          @click="selectTeamForCard(model.team1Id)"
         >
           {{ model.home.name }}
         </button>
         <button
           type="button"
           class="w-full rounded-lg border border-slate-600 py-2 text-slate-100"
-          @click="
-            teamId = model.team2Id;
-            step = 2
-          "
+          @click="selectTeamForCard(model.team2Id)"
         >
           {{ model.away.name }}
         </button>
@@ -155,13 +210,13 @@ async function record() {
             type="button"
             class="rounded border border-slate-600 px-2 py-2 text-left text-sm text-slate-100"
             :class="playerId === p.id ? 'border-primary ring-1 ring-primary' : ''"
-            @click="playerId = p.id"
+            @click="selectPlayer(p.id)"
           >
             {{ p.number }} {{ p.name }}
           </button>
         </div>
         <div class="flex justify-between">
-          <button type="button" class="text-sm text-slate-400" @click="step = 1">
+          <button type="button" class="text-sm text-slate-400" @click="goStep1">
             {{ t('match.back') }}
           </button>
           <button type="button" class="text-primary disabled:opacity-40" :disabled="!playerId" @click="afterPlayerSelected">
@@ -179,18 +234,10 @@ async function record() {
         >
           {{ t('card.yellow') }}
         </button>
-        <button
-          type="button"
-          class="w-full rounded-lg bg-red-700 py-3 font-semibold text-white"
-          @click="
-            redFromSecondYellow = false;
-            cardKind = 'red';
-            step = 4
-          "
-        >
+        <button type="button" class="w-full rounded-lg bg-red-700 py-3 font-semibold text-white" @click="pickRedDirect">
           {{ t('card.red') }}
         </button>
-        <button type="button" class="text-sm text-slate-400" @click="step = 2">{{ t('match.back') }}</button>
+        <button type="button" class="text-sm text-slate-400" @click="goStep2">{{ t('match.back') }}</button>
       </div>
 
       <div v-else class="space-y-2">
@@ -202,14 +249,7 @@ async function record() {
           }}
         </p>
         <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            class="rounded border border-slate-600 px-3 py-2 text-sm"
-            @click="
-              cardKind = null;
-              step = presetKind ? 2 : 3
-            "
-          >
+          <button type="button" class="rounded border border-slate-600 px-3 py-2 text-sm" @click="goBackFromConfirm">
             {{ t('match.back') }}
           </button>
           <button type="button" class="rounded bg-primary px-3 py-2 text-sm font-semibold text-white" @click="record">

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import MarqueeText from '../common/MarqueeText.vue'
+import { formatDateJa } from '../../utils/formatDate'
 
 export type ManageTeamRow = {
   id: number
@@ -68,7 +69,7 @@ const { t } = useI18n()
               <MarqueeText :text="x.name" variant="default" />
             </td>
             <td class="p-1 text-slate-400">{{ x.roster_count ?? 0 }}</td>
-            <td class="p-1 text-slate-500">{{ x.last_match_date || '—' }}</td>
+            <td class="p-1 text-slate-500">{{ formatDateJa(x.last_match_date) }}</td>
           </tr>
         </tbody>
       </table>

@@ -7,6 +7,7 @@ import { useNui } from '../composables/useNui'
 import { downloadFile, refboardFilename, toCSV } from '../utils/exporters'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import { formatDateJa, formatDateTimeJa } from '../utils/formatDate'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -272,7 +273,7 @@ function openMatch(id: number) {
           </thead>
           <tbody>
             <tr v-for="r in matchHistory" :key="String(r.id)" class="border-t border-slate-800 text-slate-200">
-              <td class="p-2">{{ r.match_date }}</td>
+              <td class="p-2">{{ formatDateJa(r.match_date) }}</td>
               <td class="min-w-0 overflow-hidden p-2">
                 <MarqueeText :text="String(r.match_name ?? '').trim() || '—'" variant="default" />
               </td>
@@ -423,7 +424,7 @@ function openMatch(id: number) {
           </thead>
           <tbody>
             <tr v-for="r in editLog" :key="String(r.id)" class="border-t border-slate-800 text-slate-200">
-              <td class="p-2 text-slate-400">{{ r.created_at }}</td>
+              <td class="p-2 text-slate-400">{{ formatDateTimeJa(r.created_at) }}</td>
               <td class="p-2">{{ r.changed_by_name }}</td>
               <td class="p-2">{{ r.team1_name }} vs {{ r.team2_name }} (#{{ r.match_id }})</td>
               <td class="p-2 font-mono">{{ r.team1_score }}-{{ r.team2_score }}</td>

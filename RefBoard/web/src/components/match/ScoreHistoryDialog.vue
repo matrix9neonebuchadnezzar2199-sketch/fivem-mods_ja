@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ScoreHistoryRow } from '../../types/match'
+import { formatDateTimeJa } from '../../utils/formatDate'
 
 const props = defineProps<{
   open: boolean
@@ -29,14 +30,14 @@ function close() {
 function line(prev: ScoreHistoryRow | null, cur: ScoreHistoryRow): string {
   if (!prev) {
     return t('score_history.line_first', {
-      time: cur.created_at,
+      time: formatDateTimeJa(cur.created_at),
       name: cur.changed_by_name,
       score: `${cur.team1_score}-${cur.team2_score}`,
       reason: cur.reason || '—',
     })
   }
   return t('score_history.line_change', {
-    time: cur.created_at,
+    time: formatDateTimeJa(cur.created_at),
     name: cur.changed_by_name,
     from: `${prev.team1_score}-${prev.team2_score}`,
     to: `${cur.team1_score}-${cur.team2_score}`,

@@ -9,6 +9,7 @@ import type {
   PlayerRowStatus,
   ScoreHistoryRow,
 } from '../types/match'
+import { toDateInputString } from './formatDate'
 
 export type ServerBreakdown = {
   firstHalf: { home: number; away: number }
@@ -215,7 +216,7 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
       : 'draft') as MatchDbStatus,
     matchName: m.match_name || '',
     venue: m.venue || '',
-    matchDate: m.match_date || '',
+    matchDate: toDateInputString(m.match_date) || '',
     kickoffTime: kickoffUi(m.kickoff_time),
     uiStatus: mapUiStatusFromHalf(status, half),
     home: { name: m.team1_name || 'Team 1', short: (m.team1_name || 'T1').slice(0, 2).toUpperCase(), isHome: true },

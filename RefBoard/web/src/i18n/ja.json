@@ -6,7 +6,10 @@
     "match_clock_timeout": "試合時計の応答がタイムアウトしました。再読込してください。",
     "match_clock_error": "試合時計を更新できませんでした（{code}）。",
     "match_delete_failed": "試合の削除に失敗しました。",
-    "match_delete_locked": "他のユーザーがこの試合を編集中のため削除できません。"
+    "match_delete_locked": "他のユーザーがこの試合を編集中のため削除できません。",
+    "card_issue_incomplete": "チーム・選手・カード種別を選び直してください。",
+    "card_issue_timeout": "カード登録の応答がありません。接続と編集ロックを確認してください。",
+    "card_issue_failed": "カードを登録できませんでした（{code}）。"
   },
   "presence": {
     "online": "接続中",

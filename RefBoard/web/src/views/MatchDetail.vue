@@ -102,6 +102,10 @@ const showSub = ref(false)
 const showCard = ref(false)
 const cardPreset = ref<'yellow' | 'red' | null>(null)
 
+watch(showCard, (v) => {
+  if (!v) cardPreset.value = null
+})
+
 // --- 試合時計: DB の clock_* を正とする残りカウントダウン。ティックでは clockMmSs を書き換えない（自動保存のノイズ防止） ---
 function parseClockMmSsToMs(s: string): number {
   const m = /^(\d+):(\d{2})$/.exec(String(s ?? '').trim())

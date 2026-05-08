@@ -10,6 +10,7 @@ import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
+import { formatDateJa } from '../utils/formatDate'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -213,7 +214,7 @@ function onCreated(id: number) {
         </thead>
         <tbody>
           <tr v-for="m in rows" :key="m.id" class="border-b border-slate-800 hover:bg-slate-800/40">
-            <td class="px-3 py-2 text-slate-300">{{ m.match_date }}</td>
+            <td class="px-3 py-2 text-slate-300">{{ formatDateJa(m.match_date) }}</td>
             <td class="min-w-0 overflow-hidden px-3 py-2 text-slate-100">
               <MarqueeText :text="(m.match_name && String(m.match_name).trim()) || '—'" variant="default" />
             </td>
