@@ -22,7 +22,8 @@ Config.UI = {
 }
 
 Config.Keys = {
-    openBuilder = 'F2',
+    -- ox_inventory 等と干渉しやすい F2 は避け、既定は F9
+    openBuilder = 'F9',
     help = 'F1',
 }
 

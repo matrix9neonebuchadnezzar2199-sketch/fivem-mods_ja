@@ -184,7 +184,7 @@ ox_doorlock と ox_inventory は任意依存とし、起動時に `GetResourceSt
 
 ## 5. 設定ファイル（config/）
 
-`config/config.lua`：DB接続前提、シーン既定値、オートセーブ間隔、Undo保持件数（既定500）、UI色テーマ、ショートカット既定値、ホットキー（既定 `F2` でビルダー、`F1` でヘルプ）。
+`config/config.lua`：DB接続前提、シーン既定値、オートセーブ間隔、Undo保持件数（既定500）、UI色テーマ、ショートカット既定値、ホットキー（既定 `F9` でビルダー、`F1` でヘルプ）。
 
 `config/permissions.lua`：ACE権限名 `tecton.use` `tecton.delete` `tecton.admin`。
 
@@ -214,7 +214,7 @@ ox_doorlock と ox_inventory は任意依存とし、起動時に `GetResourceSt
 
 ## 8. ショートカット（既定）
 
-`F2` 開閉、`F1` ヘルプ、`Ctrl+Z/Ctrl+Shift+Z` Undo/Redo、`Ctrl+S` 保存、`Ctrl+D` 複製、`Delete` 削除、`G` グリッドスナップ、`R` 回転、`T` 移動、`Y` 回転スナップ、`Shift+ドラッグ` 等倍スケール、`Alt` 微調整、`Esc` キャンセル、`F5` シーン再読込。すべて設定でリバインド可能。
+`F9` 開閉、`F1` ヘルプ、`Ctrl+Z/Ctrl+Shift+Z` Undo/Redo、`Ctrl+S` 保存、`Ctrl+D` 複製、`Delete` 削除、`G` グリッドスナップ、`R` 回転、`T` 移動、`Y` 回転スナップ、`Shift+ドラッグ` 等倍スケール、`Alt` 微調整、`Esc` キャンセル、`F5` シーン再読込。すべて設定でリバインド可能。
 
 ## 9. 履歴・オートセーブ・復帰
 

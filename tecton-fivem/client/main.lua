@@ -194,7 +194,7 @@ RegisterCommand('tecPlaceTest', function()
     end
 end, false)
 
-local openKey = (Config.Keys and Config.Keys.openBuilder) or 'F2'
+local openKey = (Config.Keys and Config.Keys.openBuilder) or 'F9'
 lib.addKeybind({
     name = 'tecton_toggle_builder',
     description = 'Toggle TECTON builder',
