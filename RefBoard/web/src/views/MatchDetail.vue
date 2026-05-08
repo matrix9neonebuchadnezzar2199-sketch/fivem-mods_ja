@@ -5,7 +5,6 @@ import { useSessionStore } from '../stores/session'
 import { useAutosaveStore } from '../stores/autosave'
 import { usePresenceStore } from '../stores/presence'
 import { refboardRecaptureNuiFocus, useNui } from '../composables/useNui'
-import { useHeartbeat } from '../composables/useHeartbeat'
 import { useFocusTracker } from '../composables/useFocusTracker'
 import { mockMatchDetail } from '../mocks/matchDetail'
 import type { MatchClockAck, MatchDetailModel } from '../types/match'
@@ -423,8 +422,6 @@ async function loadMatch() {
   })
   await send('match_get', { matchId: id })
 }
-
-useHeartbeat()
 
 let deb: ReturnType<typeof setTimeout> | null = null
 watch(

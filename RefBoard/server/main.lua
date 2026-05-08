@@ -25,6 +25,8 @@ end)
 RegisterNetEvent('refboard:session:leave', function()
   local src = source
   RefboardGuard(src, nil, 'net:session:leave', function()
+    -- lock_release 未送信でも幽霊ロックが残らないよう、保持者なら必ず掃除（lock.lua）
+    RefboardLockReleaseIfHeldBy(src)
     RefboardSetEditApproved(src, false)
     TriggerEvent('refboard:presence:remove', src)
     TriggerClientEvent('refboard:session:left', src, { ok = true })

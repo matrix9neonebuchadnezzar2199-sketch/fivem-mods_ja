@@ -64,18 +64,23 @@ RegisterNetEvent('refboard:lock:acquire', function(payload)
   local heldBy = r and tonumber(r.holder_server_id)
   local srcNum = tonumber(src)
   if heldBy and srcNum and heldBy ~= srcNum and not isStale(r) then
-    local err = MakeError(ErrorCodes.LOCK_HELD_BY_OTHER, nil, {
-      holderLicense = r.holder_license,
-      holderServerId = r.holder_server_id,
-    })
-    err.holder = {
-      license = r.holder_license,
-      name = r.holder_name,
-      serverId = r.holder_server_id,
-      since = (r.last_hb_unix or os.time()) * 1000,
-    }
-    TriggerClientEvent('refboard:lock:acquire:result', src, err)
-    return
+    -- 再接続で server id が変わっても license が同一なら同一審判とみなしロックを奪い返す（幽霊 E1003 防止）
+    local reclaim = (license ~= '' and r.holder_license and r.holder_license == license)
+    if not reclaim then
+      local err = MakeError(ErrorCodes.LOCK_HELD_BY_OTHER, nil, {
+        holderLicense = r.holder_license,
+        holderServerId = r.holder_server_id,
+      })
+      err.holder = {
+        license = r.holder_license,
+        name = r.holder_name,
+        serverId = r.holder_server_id,
+        since = (r.last_hb_unix or os.time()) * 1000,
+      }
+      TriggerClientEvent('refboard:lock:acquire:result', src, err)
+      return
+    end
+    Logger.info('net:lock:acquire', 'reclaim_same_license', { oldHolder = heldBy, src = srcNum })
   end
 
   Logger.info('net:lock:acquire', 'granted', { src = src, matchId = matchId })
@@ -117,12 +122,50 @@ end)
 
 AddEventHandler('playerDropped', function()
   local src = source
+  local cleared = false
   local ok, r = pcall(readRow)
   if ok and r and tonumber(r.holder_server_id) == tonumber(src) then
     clearRow()
+    cleared = true
+  else
+    if not ok then
+      Logger.warn('lock', 'playerDropped readRow failed; trying holder cleanup', { src = src })
+    end
+    local n = MySQL.update.await(
+      [[UPDATE editor_locks SET match_id = NULL, holder_license = NULL, holder_name = NULL,
+            holder_server_id = NULL, acquired_at = NULL, last_heartbeat = NULL
+       WHERE id = 1 AND holder_server_id = ?]],
+      { src }
+    )
+    cleared = (type(n) == 'number' and n > 0)
+  end
+  if cleared then
     TriggerEvent('refboard:presence:setMode', src, 'view')
     broadcastLock(nil)
   end
+end)
+
+--- session:leave 等から呼ぶ: この src が保持者ならロックを掃除する（NUI が lock_release を送れなかった場合の保険）
+function RefboardLockReleaseIfHeldBy(holderSrc)
+  if type(holderSrc) ~= 'number' then
+    return false
+  end
+  local ok, r = pcall(readRow)
+  if not ok or not r or tonumber(r.holder_server_id) ~= tonumber(holderSrc) then
+    return false
+  end
+  clearRow()
+  TriggerEvent('refboard:presence:setMode', holderSrc, 'view')
+  broadcastLock(nil)
+  return true
+end
+
+AddEventHandler('onResourceStart', function(resName)
+  if resName ~= GetCurrentResourceName() then
+    return
+  end
+  clearRow()
+  broadcastLock(nil)
 end)
 
 CreateThread(function()

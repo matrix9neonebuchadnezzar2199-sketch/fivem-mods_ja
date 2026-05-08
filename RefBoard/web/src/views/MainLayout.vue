@@ -10,6 +10,7 @@ import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { getResourceName, useNui } from '../composables/useNui'
 import PresenceBadge from '../components/PresenceBadge.vue'
 import ContextHelpPanel from '../components/help/ContextHelpPanel.vue'
+import { useHeartbeat } from '../composables/useHeartbeat'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -17,6 +18,8 @@ const session = useSessionStore()
 const settingsStore = useSettingsStore()
 const { send } = useNui()
 const { transparentChrome } = storeToRefs(useMatchCompactDockStore())
+
+useHeartbeat()
 
 onMounted(() => {
   settingsStore.load()

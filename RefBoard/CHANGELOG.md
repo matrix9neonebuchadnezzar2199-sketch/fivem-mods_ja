@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.7.1 — 2026-05-08
+
+- **fix（編集ロック）**: 同一 `license` で再接続しただけで `holder_server_id` が変わり **E1003（lock_held）** になるケースに対し、`refboard:lock:acquire` で **保持者 license が自分と一致すればロックを奪い返す**（幽霊ロック防止）。
+- **fix（セッション）**: `refboard:session:leave` 時に **保持者なら `editor_locks` を必ず解放**（`RefboardLockReleaseIfHeldBy`）。NUI が `lock_release` を送れなかった場合の保険。
+- **fix（切断）**: `playerDropped` で `readRow` が失敗したときも **`holder_server_id = source` の行を直接 UPDATE** して掃除を試みる。
+- **fix（リソース再起動）**: `onResourceStart` で **`editor_locks` をクリア**し、設計書どおり再起動後に古い保持者 ID が残らないようにする。
+- **fix（NUI）**: 編集ロックの **ハートビートを `MainLayout` で送る**（試合詳細以外の画面にいても 30 秒タイムアウトでロックが勝手に切れない）。
+
 ## v0.7.0 — 2026-05-08
 
 - **ヘルプ英語版（Sprint 09 Phase E）**: `web/src/help/en/articles/` に日本語 20 本と同一 slug の英語記事を追加。`en/index.json` / `en/reverse_index.json` を新設。
