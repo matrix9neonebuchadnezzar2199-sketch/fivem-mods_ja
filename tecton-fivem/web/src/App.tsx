@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useBuilderStore } from './store/builderStore'
 import { fetchNui, onNuiMessage } from './lib/nui'
 import { Builder } from './pages/Builder'
+import { BASE_FONT_PX, uiScale } from './theme'
 
 type ReadyPayload = {
   ok?: boolean
@@ -19,6 +20,10 @@ export default function App() {
   const setSceneId = useBuilderStore((s) => s.setSceneId)
   const setMode = useBuilderStore((s) => s.setMode)
   const setSelected = useBuilderStore((s) => s.setSelected)
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${BASE_FONT_PX * uiScale}px`
+  }, [])
 
   useEffect(() => {
     const unsub = onNuiMessage<{ open?: boolean }>((msg) => {

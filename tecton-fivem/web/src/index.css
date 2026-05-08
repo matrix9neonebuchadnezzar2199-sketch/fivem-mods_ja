@@ -6,6 +6,14 @@
   box-sizing: border-box;
 }
 
+/*
+ * 実際のルート `font-size` は App.tsx で `BASE_FONT_PX * uiScale` を設定する。
+ * 初回ペイント〜JS 実行までのフォールバック（1.5 倍 = 24px）。
+ */
+:root {
+  font-size: 24px;
+}
+
 html,
 body,
 #root {

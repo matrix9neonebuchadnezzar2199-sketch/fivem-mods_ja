@@ -62,7 +62,7 @@ export function Builder() {
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <header className={styles.topbar} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <header className={styles.topbar} style={{ borderBottom: '0.0625rem solid rgba(255,255,255,0.08)' }}>
           <div className={styles.brand}>
             <span style={{ fontSize: theme.fontSize.h1, fontWeight: 700 }}>{ja.app.title}</span>
             <span style={{ fontSize: theme.fontSize.small, color: theme.textDim }}>{ja.app.tagline}</span>
@@ -114,7 +114,7 @@ export function Builder() {
             {ja.placeholder.selectFromLeft}
           </main>
           <aside className={styles.right}>
-            <div style={{ fontSize: theme.fontSize.h2, fontWeight: 600, marginBottom: 8 }}>{ja.panel.selection}</div>
+            <div style={{ fontSize: theme.fontSize.h2, fontWeight: 600, marginBottom: '0.5rem' }}>{ja.panel.selection}</div>
             <div style={{ fontSize: theme.fontSize.small, color: theme.textDim }}>{ja.panel.selectionHint}</div>
           </aside>
         </div>
