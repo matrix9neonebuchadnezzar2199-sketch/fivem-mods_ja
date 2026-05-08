@@ -132,7 +132,8 @@
     "clock_clear_confirm_title": "Clear the clock?",
     "clock_clear_confirm_body": "Resets elapsed to 0 and sets remaining to the full match length. This updates the database.",
     "clock_state_running": "Clock: running",
-    "clock_state_stopped": "Clock: stopped"
+    "clock_state_stopped": "Clock: stopped",
+    "clock_readonly_hint": "View mode: the match clock is read-only. Enter via Edit from the launcher."
   },
   "score_manual": {
     "title": "Edit score directly",

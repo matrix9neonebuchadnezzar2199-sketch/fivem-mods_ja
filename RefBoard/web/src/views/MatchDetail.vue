@@ -42,6 +42,7 @@ import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
 import { useToast } from '../composables/useToast'
+import { nuiShellOpenRef } from '../nuiShellVisibility'
 
 defineProps<{
   id?: string
@@ -193,7 +194,8 @@ function callMatchClock(
   return new Promise((resolve) => {
     let settled = false
     const un = on('refboard:match:clock:ack', (r: MatchClockAck) => {
-      if (r?.matchId != null && r.matchId !== detail.id) {
+      const ackMid = r?.matchId != null ? Number(r.matchId) : NaN
+      if (Number.isFinite(ackMid) && ackMid !== Number(detail.id)) {
         return
       }
       settled = true
@@ -229,25 +231,31 @@ function callMatchClock(
   })
 }
 
+function toastIfReadonlyClock(): boolean {
+  if (!readonly.value) return false
+  toast(t('score_board.clock_readonly_hint'), 'info', { ms: 4000 })
+  return true
+}
+
 async function onClockStart() {
-  if (readonly.value) return
+  if (toastIfReadonlyClock()) return
   if (detail.clockRunning) return
   await callMatchClock('start')
 }
 
 async function onClockStop() {
-  if (readonly.value) return
+  if (toastIfReadonlyClock()) return
   if (!detail.clockRunning) return
   await callMatchClock('stop')
 }
 
 async function onClockClear() {
-  if (readonly.value) return
+  if (toastIfReadonlyClock()) return
   await callMatchClock('clear')
 }
 
 async function onClockAdjust(deltaMs: number) {
-  if (readonly.value) return
+  if (toastIfReadonlyClock()) return
   await callMatchClock('adjust', deltaMs)
 }
 
@@ -286,7 +294,7 @@ function applyState(p: {
   players?: ServerPlayerRow[] | null
   history?: ServerHistoryRow[]
 }) {
-  if (p.matchId !== detail.id) return
+  if (Number(p.matchId) !== Number(detail.id)) return
   detail.score.home = p.team1_score
   detail.score.away = p.team2_score
   if (p.status === 'finished' || p.status === 'draft' || p.status === 'cancelled') {
@@ -393,13 +401,6 @@ watch(compactDock, async (v, prev) => {
 })
 
 watch(
-  () => route.params.id,
-  () => {
-    compactDock.value = false
-  },
-)
-
-watch(
   () => compactDock.value && detail.serverHalf !== 'pk',
   (v) => {
     matchCompactDock.setTransparentChrome(v)
@@ -423,6 +424,19 @@ async function loadMatch() {
   await send('match_get', { matchId: id })
 }
 
+watch(
+  () => route.params.id,
+  () => {
+    compactDock.value = false
+    const id = Number(route.params.id)
+    if (session.isEditor && id) {
+      void send('lock_acquire', { matchId: id })
+    }
+    void loadMatch()
+  },
+  { immediate: true },
+)
+
 let deb: ReturnType<typeof setTimeout> | null = null
 watch(
   () => detail,
@@ -442,23 +456,22 @@ watch(
   { deep: true },
 )
 
-watch(
-  () => route.params.id,
-  () => {
-    void loadMatch()
-  },
-  { immediate: true },
-)
+/** F6 で NUI を閉じたとき Lua がロック解放する。再オープン時は同一ルートのままなので onMounted が走らず lock が無いまま → 時計が no_lock で失敗する。ここで取り直す */
+watch(nuiShellOpenRef, (open, prevOpen) => {
+  if (!open || prevOpen !== false) return
+  if (!session.isEditor) return
+  const id = Number(detail.id)
+  if (!id) return
+  void send('lock_acquire', { matchId: id })
+  void loadMatch()
+})
 
 onMounted(() => {
   settings.load()
   syncClockFromDetail()
-  if (session.isEditor) {
-    void send('lock_acquire', { matchId: detail.id })
-  }
   offState = on('refboard:match:state', (p) => applyState(p as never))
   offFinished = on('refboard:match:finished', (p: { matchId?: number }) => {
-    if (p?.matchId === detail.id) {
+    if (p?.matchId != null && Number(p.matchId) === Number(detail.id)) {
       detail.dbStatus = 'finished'
     }
   })

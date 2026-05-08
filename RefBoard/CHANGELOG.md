@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.5 — 2026-05-08
+
+- **fix（試合時計）**: F6 で NUI を閉じるとサーバーが編集ロックを解放するが、**同じ試合詳細のまま**ツールを開き直すと `onMounted` が走らず **ロック未取得のまま**になり、`match_clock` が `no_lock` で失敗していた。**NUI 再表示時**（`nuiShellOpenRef` false→true）に `lock_acquire` + `match_get` で取り直し。
+- **fix（編集ロック）**: **別の試合**へルート切替時も `lock_acquire` を送る（従来は初回マウント時のみで、一覧から試合を切り替えると前試合のロックのまま時計が失敗し得た）。
+- **fix（同期）**: `refboard:match:clock:ack` / `refboard:match:state` の `matchId` が数値と文字列で混在しても適用されるよう **Number 比較**に統一。
+- **UX**: 閲覧モードで時計ボタンを押したとき無反応だったため、**トースト**で案内（`score_board.clock_readonly_hint`）。
+
 ## v0.7.4 — 2026-05-08
 
 - **feat（DB）**: 起動時に `information_schema` で `editor_locks` の有無を確認し、**無い場合のみ** `sql/install.sql` を自動実行する（`server/schema_bootstrap.lua`）。`Config.AutoCreateSchema`（既定 `true`）で無効化可能。既存 DB は変更しない。列追加用の `sql/migration_*.sql` は従来どおり手動。

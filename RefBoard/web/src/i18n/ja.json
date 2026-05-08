@@ -132,7 +132,8 @@
     "clock_clear_confirm_title": "時計をクリアしますか？",
     "clock_clear_confirm_body": "経過時間を 0 に戻し、残りを定尺いっぱいにします。DB にも反映されます。",
     "clock_state_running": "時計: 進行中",
-    "clock_state_stopped": "時計: 停止中"
+    "clock_state_stopped": "時計: 停止中",
+    "clock_readonly_hint": "閲覧モードのため試合時計を操作できません。ランチャーから「編集」で入室してください。"
   },
   "score_manual": {
     "title": "スコアを直接編集",
