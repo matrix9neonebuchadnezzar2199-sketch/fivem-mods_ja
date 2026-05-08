@@ -1,23 +1,23 @@
-# jp-ps-housing 依存関係チェックリスト
+# 依存関係（Qbox 前提）
 
-`fxmanifest.lua` の **`dependency` ブロック**で明示されているのは次のみです。
+`fxmanifest.lua` の **`dependency { }` に明示されているのは `fivem-freecam` のみ**です。  
+それ以外は `@ox_lib`、`@oxmysql`、`exports.ox_target` 等の**実行時参照**です。
 
-- [ ] **fivem-freecam** — `dependency { 'fivem-freecam' }`。`client/modeler.lua` で `exports['fivem-freecam']` を使用。**家具モデラー（フリーカム）を使うなら必須**。
+モノレポ `fivem-mods_ja` 配下に **ox_* / qbx_* のフォルダは同梱されていない**ため、サーバーの `resources` で別途導入されているかを確認してください。
 
-次は **shared_script** 等で参照されるが、`dependencies` に列挙されていないものです。
+## 一覧（必須 / 推奨 / 省略可）
 
-- [x] **ox_lib** — `@ox_lib/init.lua`。**モノレポ `fivem-mods_ja` 配下には `ox_lib` フォルダは含まれない**（サーバー側 `[standalone]` 等で別途導入が前提）。
-- [ ] **oxmysql** — `@oxmysql/lib/MySQL.lua`。Qbox セットアップに通常含まれる。**モノレポ内フォルダなし**。
-- [ ] **ox_target** — `shared/framework.lua` で `exports.ox_target`（`Config.Target = "ox"` 時）。**モノレポ内に `ox_target` フォルダなし**（別途導入）。
-- [ ] **ps-realtor** — `fxmanifest` には無いが、不動産ジョブ UI（物件登録・売買フロー）と連携するリソース。**モノレポ内に `ps-realtor` フォルダなし**。家具配置・既存物件のみなら省略可能、**売買・リアルター業務まで使うなら導入必須**に近い。
-- [ ] **qb-banking / QBCore 系** — `server/sv_property.lua` 等に `qb-banking` export の参照あり。Qbox では代替（銀行スクリプト）に差し替え要検討。
+| リソース | 判定 | モノレポ同梱 | メモ |
+|----------|------|--------------|------|
+| [ox_lib](https://github.com/overextended/ox_lib) | **必須** | なし | `@ox_lib/init.lua` |
+| [oxmysql](https://github.com/overextended/oxmysql) | **必須** | なし | `@oxmysql/lib/MySQL.lua` |
+| [ox_target](https://github.com/overextended/ox_target) | **必須**（`Config.Target = "ox"` 時） | なし | `shared/framework.lua`。qb-target 利用時は [qb-target](https://github.com/qbcore-framework/qb-target) |
+| [ox_inventory](https://github.com/overextended/ox_inventory) | **推奨**（Qbox 標準） | なし | `Config.Inventory = "ox"` で利用想定 |
+| **qbx_core** | **必須**（Qbox） | なし | QBCore 互換 API。本リソースは Qbox の bridge 前提で動作 |
+| [fivem-freecam](https://github.com/Deltanic/fivem-freecam) | **推奨**（モデラー利用時は実質必須） | なし | `dependency` 指定。家具配置フリーカム |
+| [ps-realtor](https://github.com/Project-Sloth/ps-realtor) | **省略可**（家具・既存物件のみ） / **推奨**（売買・登録フロー） | なし | README では依存として言及。`fxmanifest` には未記載 |
 
-## まとめ
+## 補足
 
-| リソース | モノレポ同梱 | 備考 |
-|----------|--------------|------|
-| ox_lib | なし | 導入済み前提 |
-| ox_target | なし | Qbox で通常導入 |
-| oxmysql | なし | 導入済み前提 |
-| fivem-freecam | なし | モデラー利用時は必須 |
-| ps-realtor | なし | フル housing 運用なら要検討 |
+- **家具モデラーのみ**運用: `fivem-freecam` は manifest 上必須。`ps-realtor` は無くてもコードの一部は動くが、**物件売買・登録 UI** は別途必要。  
+- **フル運用**（不動産ジョブ込み）: `ps-realtor` を導入し、README の起動順に合わせる。

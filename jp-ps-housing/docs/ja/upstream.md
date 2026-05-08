@@ -1,9 +1,11 @@
-# 上流（upstream）情報
+# 上流（upstream）追跡
 
-| 項目 | 値 |
-|------|-----|
-| fork 元 | `https://github.com/Project-Sloth/ps-housing` |
-| 状態 | GitHub 上 **archived**（参照時点で確認） |
-| 本リポジトリでの扱い | 親リポ `fivem-mods_ja` のサブディレクトリ `jp-ps-housing` として追跡。**独立した `upstream` リモートは設定していません**（必要なら `git remote add upstream …` でローカルのみ追加可）。 |
+| 項目 | 内容 |
+|------|------|
+| upstream URL | `https://github.com/Project-Sloth/ps-housing` |
+| 記録した upstream `HEAD` | `eaba693b44a8fc87680fb3b02805694e5b11c5f8`（2026-05-08 時点、`git ls-remote`） |
+| archived | **はい**（GitHub 上でアーカイブ済みの想定。上流の更新は期待しない） |
+| モノレポへの取り込み | 親リポ `fivem-mods_ja` のサブディレクトリ `jp-ps-housing` として管理（独立した `jp-ps-housing/.git` は**なし**） |
+| 取り込み記録日 | 2026-05-08 |
 
-スナップショットの差分を追う場合は、上流のタグ / コミットと `jp-ps-housing/fxmanifest.lua` の `version` を突き合わせてください。
+英語の短いサマリは `docs/upstream.md` を参照。
