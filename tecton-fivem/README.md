@@ -10,6 +10,12 @@ Japanese-first docs live under [`docs/ja/`](docs/ja/) (start with [`docs/ja/spec
 | **Status** | **WIP** — repository scaffold only; no builder UI or DB wiring yet. |
 | **Resource name** | `tecton` (folder may be `tecton-fivem`; match `ensure` to folder name) |
 
+## Database（初回必須）
+
+oxmysql が接続している **同じデータベース**（例: `fivem_db`）に、[`sql/install.sql`](sql/install.sql) を実行する。未実行だと `Table 'fivem_db.tec_objects' doesn't exist` のように INSERT が失敗する。
+
+HeidiSQL / phpMyAdmin / CLI などで `install.sql` を丸ごと流せばよい（`tec_objects`, `tec_history`, `tec_autosave`, `tec_user_prefs` が作成される）。
+
 ## Credits
 
 - **Prop categorization data** derived from [ShiftyWreckzz/prop-list](https://github.com/ShiftyWreckzz/prop-list) (GPL-3.0). Original listings trace to **Menyoo** (GPL-3.0). Regenerated into `config/props.lua` via `npm run build:props` — see file header and [CONTRIBUTING.md](CONTRIBUTING.md).

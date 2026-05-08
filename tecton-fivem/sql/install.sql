@@ -1,3 +1,6 @@
+-- TECTON: run once on the same database oxmysql uses (e.g. fivem_db).
+-- If tables are missing, INSERT fails with "Table '...tec_objects' doesn't exist".
+
 CREATE TABLE IF NOT EXISTS tec_objects (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   category      VARCHAR(32) NOT NULL,
