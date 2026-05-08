@@ -1,0 +1,21 @@
+{
+  "match_detail": [
+    "match_record_goal",
+    "match_record_assist",
+    "match_substitute_player",
+    "match_yellow_card",
+    "match_red_card",
+    "match_penalty_shootout",
+    "match_manual_score_edit",
+    "match_finish",
+    "trouble_undo_goal",
+    "trouble_e1003_lock_held",
+    "trouble_autosave_failed"
+  ],
+  "team_manage": [],
+  "data_manage": [],
+  "settings": [
+    "trouble_connection_lost",
+    "trouble_autosave_failed"
+  ]
+}

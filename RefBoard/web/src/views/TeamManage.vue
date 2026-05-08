@@ -7,6 +7,7 @@ import TeamDetail from '../components/team/TeamDetail.vue'
 import RosterList, { type RosterRow } from '../components/team/RosterList.vue'
 import CreateTeamDialog from '../components/team/CreateTeamDialog.vue'
 import AddRosterMemberDialog, { type RosterInitial } from '../components/team/AddRosterMemberDialog.vue'
+import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 
 const { t } = useI18n()
 const { send, on } = useNui()
@@ -133,6 +134,9 @@ async function onCreatedTeam(id: number) {
 
 <template>
   <div class="flex h-full min-h-0 flex-col gap-2 p-3">
+    <div class="flex shrink-0 items-center justify-end">
+      <HelpTriggerButton context-id="team_manage" />
+    </div>
     <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-2 lg:grid-cols-[30%_1fr]">
       <TeamList
         :search="search"

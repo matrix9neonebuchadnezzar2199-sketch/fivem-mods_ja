@@ -9,6 +9,7 @@ import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { getResourceName, useNui } from '../composables/useNui'
 import PresenceBadge from '../components/PresenceBadge.vue'
+import ContextHelpPanel from '../components/help/ContextHelpPanel.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -126,6 +127,7 @@ function toggleLocale() {
         <RouterView />
       </div>
     </div>
+    <ContextHelpPanel />
   </div>
 </template>
 

@@ -45,6 +45,11 @@ Sprint 07（v0.6.0）で着地した「ヘルプ骨組み＋日本語記事 4 �
 - 2026-05-08: Phase B 着手。`fuse.js` 7.3 導入、`helpSearch.ts`（インデックス構築・検索）と `HelpView.vue` の検索バー実装、i18n 拡張。`reverse_index.json` 12 件をインデックス化。
 - 2026-05-08: **Phase B 完了**。`npm run build` 緑、検索動作確認（タイトル一致・タグ一致・本文一致いずれもヒットすることを `npm run dev` で確認）。**v0.6.6 リリース可能**。
 
+## Phase C 進捗
+
+- 2026-05-08: Phase C 着手。`HelpTriggerButton` / `ContextHelpPanel` / `contextHelp` store を新設、`context_map.json` を作成、4 画面に `?` を配置。
+- 2026-05-08: **Phase C 完了**。`npm run build` 緑、4 画面で `?` クリック → スライドイン → 記事クリック → Help 画面遷移を確認。**v0.6.7 リリース可能**。
+
 ---
 
 **改版履歴**
@@ -52,3 +57,4 @@ Sprint 07（v0.6.0）で着地した「ヘルプ骨組み＋日本語記事 4 �
 - 2026-05-08: 初版（v0.6.5 〜 v0.7.0 の 5 フェーズ計画と Phase A 受け入れ基準）。
 - 2026-05-08: Phase A 完了（進捗節更新）。
 - 2026-05-08: Phase B 完了（進捗節追加）。
+- 2026-05-08: Phase C 完了（進捗節追加）。

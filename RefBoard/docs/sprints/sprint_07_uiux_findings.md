@@ -8,6 +8,7 @@
 
 ## 記録
 
+- **2026-05-08（Phase C）**: `team_manage` / `data_manage` 用の関連記事が Phase A 時点で存在せず、`context_map.json` で空配列になった。「関連記事なし」表示は Phase D 完成までの暫定で、ユーザー目線では `?` を押した期待を裏切る。Phase D の記事順序を「intro / team / data 系を最優先」に組み替えるか、Phase D 完了まで `team_manage` / `data_manage` の `?` ボタン自体を非表示にする選択肢もある（後者は今回採用せず、空表示で文書化に留めた）。
 - **2026-05-08（Phase B）**: 検索を実装してわかったこと → 記事 12 本だと閾値 0.4 でも本文一致が「揺れる」（例: `breakdown` のような英語キーで日本語記事がヒットしないケース）。Phase D で記事 20 本に増えた段階で `threshold` / `minMatchCharLength` を再評価したい。当面は `tags` を厚めに付ける運用で吸収。
 - **2026-05-08（Phase A 後半）**: PK 戦のキャンセル / 先攻チーム間違いの取り消し UI が無い。`match_penalty_shootout` 記事で「未実装」と書く以外に逃げがなかった。Sprint 10 候補: `current_half=pk` に入る前のロールバックボタンと、PK 戦そのもののキャンセル経路。
 - **2026-05-08（Phase A 後半）**: ロスタイム表記（`45+2` 等）が時間欄に入れられず整数の分で代用、と記事に書く必要があった。`match_record_goal` の FAQ で吸収したが、UI 側で `+` 表記を許容する小改修を v0.7 系で検討したい。
@@ -26,3 +27,4 @@
 - 2026-05-08: Sprint 09 Phase A 執筆メモを追記。
 - 2026-05-08: Sprint 09 Phase A 後半（PK / 手動スコア / 終了・reopen）の気づきを追記。
 - 2026-05-08: Sprint 09 Phase B（Fuse.js 検索）の閾値・タグ運用メモを追記。
+- 2026-05-08: Sprint 09 Phase C（コンテキスト `?` と空 `context_map`）のメモを追記。

@@ -392,6 +392,16 @@
       "no_results": "No articles matched. Try different keywords.",
       "badge_reverse": "🎯 Reverse index",
       "badge_tree": "📚 By topic"
+    },
+    "context": {
+      "open_aria": "Open help for this screen",
+      "open_title": "Help for this screen",
+      "panel_aria": "Context help",
+      "close_aria": "Close help",
+      "title": "Help for this screen",
+      "subtitle": "Articles related to what you’re viewing.",
+      "empty": "No curated articles for this screen yet. Use “Open full help” below.",
+      "open_all": "Open full help →"
     }
   },
   "health": {

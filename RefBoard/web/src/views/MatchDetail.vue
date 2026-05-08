@@ -33,6 +33,7 @@ import PenaltyShootoutPanel from '../components/match/PenaltyShootoutPanel.vue'
 import SubstitutionDialog from '../components/match/SubstitutionDialog.vue'
 import CardIssueDialog from '../components/match/CardIssueDialog.vue'
 import AutosaveIndicator from '../components/AutosaveIndicator.vue'
+import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 import GoalRecordWizard from '../components/match/GoalRecordWizard.vue'
 import AddPlayerDialog from '../components/match/AddPlayerDialog.vue'
 import ScoreEditDialog from '../components/match/ScoreEditDialog.vue'
@@ -617,6 +618,7 @@ function exportMatchEventsCsv() {
             >
               CSV
             </button>
+            <HelpTriggerButton context-id="match_detail" />
           </div>
         </header>
 

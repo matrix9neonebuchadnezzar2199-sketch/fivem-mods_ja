@@ -6,6 +6,7 @@ import { blockDateTimeFieldKeydown, openNativeDateTimePicker } from '../composab
 import { useNui } from '../composables/useNui'
 import { downloadFile, refboardFilename, toCSV } from '../utils/exporters'
 import MarqueeText from '../components/common/MarqueeText.vue'
+import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -168,7 +169,7 @@ function openMatch(id: number) {
 
 <template>
   <div class="flex h-full min-h-0 flex-col gap-2 p-3">
-    <div class="flex flex-wrap gap-1 border-b border-slate-700 pb-2 text-xs">
+    <div class="flex flex-wrap items-center gap-1 border-b border-slate-700 pb-2 text-xs">
       <button
         v-for="x in [
           ['matches', t('data.tabs.matches')],
@@ -184,6 +185,9 @@ function openMatch(id: number) {
       >
         {{ x[1] }}
       </button>
+      <div class="ml-auto">
+        <HelpTriggerButton context-id="data_manage" />
+      </div>
     </div>
 
     <div v-if="tab === 'matches'" class="min-h-0 flex-1 space-y-2 overflow-auto">

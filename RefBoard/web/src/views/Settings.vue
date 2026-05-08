@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { useNui, getResourceName } from '../composables/useNui'
 import MarqueeText from '../components/common/MarqueeText.vue'
+import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
@@ -29,9 +30,12 @@ function syncLocale() {
 
 <template>
   <div class="h-full min-w-0 overflow-y-auto p-4 text-sm text-slate-200">
-    <h1 class="mb-4 min-w-0 overflow-hidden text-lg font-bold text-slate-50">
-      <MarqueeText :text="t('settings.title')" variant="default" />
-    </h1>
+    <div class="mb-4 flex items-center gap-2">
+      <h1 class="min-w-0 flex-1 overflow-hidden text-lg font-bold text-slate-50">
+        <MarqueeText :text="t('settings.title')" variant="default" />
+      </h1>
+      <HelpTriggerButton context-id="settings" />
+    </div>
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
       <h2 class="mb-3 min-w-0 overflow-hidden text-sm font-semibold text-primary">

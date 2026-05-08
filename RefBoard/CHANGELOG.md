@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.7 — 2026-05-08
+
+- **コンテキストヘルプ**: 画面ヘッダの `?` ボタンから、その画面に関連する記事だけを右スライドインパネルで提示する仕組みを実装。
+- **新規コンポーネント**: `HelpTriggerButton.vue`（`?` 丸ボタン）、`ContextHelpPanel.vue`（Teleport で `body` にマウントするスライドインパネル）。Pinia store `contextHelp` で開閉状態を一元管理。
+- **配置**: `MatchDetail` / `TeamManage` / `DataManage` / `Settings` の 4 画面に `?` を配置。コンパクトドック中の MatchDetail には出さない（ヘッダごと隠れるため）。
+- **マッピング**: `web/src/help/context_map.json` を新設し、画面 ID → 記事 slug 配列で定義。`match_detail` は試合中・トラブル系 11 件、`settings` は接続・オートセーブ 2 件。`team_manage` / `data_manage` は Phase D で記事追加時に埋める（現状空配列で「関連記事なし」表示）。
+- **遷移**: 記事クリックで `help-article` ルートへフル遷移（Phase B 検索と挙動を統一）。`Esc` / オーバーレイクリックで閉じる。ルート変更時は自動的に閉じる。
+- **i18n**: `help.context.*`（open_aria / open_title / panel_aria / close_aria / title / subtitle / empty / open_all）を `ja.json` / `en.json` に追加。
+- **既知の制約**: `team_manage` / `data_manage` のコンテキスト記事は Phase D（v0.6.8）で記事 20 本完成に合わせて配線予定。
+
 ## v0.6.6 — 2026-05-08
 
 - **ヘルプ検索**: `fuse.js` 7.3 を導入し、タイトル / タグ / 本文（plain text 化）の重み付き全文検索を実装（`web/src/utils/helpSearch.ts`）。
