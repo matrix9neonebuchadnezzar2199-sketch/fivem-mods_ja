@@ -304,7 +304,7 @@ Older setups used a **single** item `dvd_recorded`. This version uses **three** 
 
 ## License
 
-[MIT License](./LICENSE). Replace placeholder author text in the license file before you ship.
+[MIT License](./LICENSE). Copyright **えいほー** (2026).
 
 <a id="contributing"></a>
 

@@ -2,7 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-author 'YourName'
+author 'えいほー'
 description 'DVD recording and playback system for FiveM'
 version '1.0.0'
 license 'MIT'

@@ -306,7 +306,7 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 
 ## ライセンス
 
-MIT License（[LICENSE](./LICENSE)）。著作権表記の `YourName` は配布前に差し替えてください。
+MIT License（[LICENSE](./LICENSE)）。著作権表示: **えいほー**（2026）。
 
 <a id="contributing"></a>
 
