@@ -8,13 +8,16 @@
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  justify-content: flex-start;
+  padding-left: 2rem;
+  box-sizing: border-box;
+  z-index: 9999;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 .panel {
-  width: min(50rem, 96vw);
+  width: min(60rem, calc(100vw - 2rem));
+  min-height: 85vh;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -74,13 +77,16 @@
 .body {
   display: flex;
   flex: 1;
-  min-height: 20rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 15rem;
+  width: 20rem;
+  min-width: 0;
   padding: 0.75rem;
   border-right: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -93,6 +99,7 @@
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   line-height: 1.5;
+  overflow: hidden;
 }
 
 .propListWrap {
@@ -134,21 +141,24 @@
 }
 
 .propRowLabel {
-  font-size: 0.875rem;
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
 .propRowModel {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   margin-top: 0.125rem;
   opacity: 0.9;
 }
 
 .right {
   width: 17.5rem;
+  min-width: 0;
   padding: 0.75rem;
   border-left: 0.0625rem solid rgba(255, 255, 255, 0.08);
   font-size: 0.875rem;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .card {

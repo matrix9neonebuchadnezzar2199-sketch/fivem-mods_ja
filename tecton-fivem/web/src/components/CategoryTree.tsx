@@ -40,7 +40,7 @@ export function CategoryTree() {
   )
 
   return (
-    <div className={styles.root} role="tree" aria-label="categories">
+    <div className={styles.root} style={{ fontSize: theme.fontSize.bodyLarge }} role="tree" aria-label="categories">
       {categories.map((root) => {
         const expanded = expandedIds.has(root.id)
         const rootSelected = selectedPath === root.path
@@ -57,7 +57,7 @@ export function CategoryTree() {
                 {expanded ? '▼' : '▶'}
               </span>
               <span className={styles.label}>{root.label}</span>
-              <span className={styles.badge} style={{ color: theme.textDim }}>
+              <span className={styles.badge} style={{ color: theme.textDim, fontSize: theme.fontSize.treeBadge }}>
                 ({root.count ?? 0})
               </span>
             </button>
@@ -74,7 +74,7 @@ export function CategoryTree() {
                   >
                     <span className={styles.chevron} aria-hidden />
                     <span className={styles.label}>{ch.label}</span>
-                    <span className={styles.badge} style={{ color: theme.textDim }}>
+                    <span className={styles.badge} style={{ color: theme.textDim, fontSize: theme.fontSize.treeBadge }}>
                       ({ch.count ?? 0})
                     </span>
                   </button>

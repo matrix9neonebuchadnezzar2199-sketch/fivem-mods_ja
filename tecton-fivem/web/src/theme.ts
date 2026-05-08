@@ -15,9 +15,13 @@ export const theme = {
   danger: '#F87171',
   /** いずれも「16px = 1rem」基準。ルート `font-size` を変えると一括スケール。 */
   fontSize: {
-    body: '0.875rem',
-    h1: '1.25rem',
-    h2: '1.125rem',
     small: '0.75rem',
+    body: '0.875rem',
+    /** カテゴリツリー等・視認性優先のリスト（body の約2倍、16px基準） */
+    bodyLarge: '1.75rem',
+    /** ツリー右の件数バッジ（small の2倍相当） */
+    treeBadge: '1.5rem',
+    h2: '1.125rem',
+    h1: '1.25rem',
   },
 } as const

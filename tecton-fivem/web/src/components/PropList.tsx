@@ -10,10 +10,10 @@ import { listModelsForCategory, usePropsStore } from '../store/propsStore'
 import { useBuilderStore } from '../store/builderStore'
 import styles from '../pages/Builder.module.css'
 
-/** 3rem を px に近似的に（ルート font-size 連動） */
+/** 行の高さ（rem 相当を px に）。ラベル拡大に合わせ 4.5rem。 */
 function itemSizePx(): number {
   const root = typeof document !== 'undefined' ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 16
-  return 3 * root
+  return 4.5 * root
 }
 
 type RowProps = {

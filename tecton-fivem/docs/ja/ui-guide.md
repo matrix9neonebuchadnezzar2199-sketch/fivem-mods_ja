@@ -13,7 +13,7 @@ TECTON の NUI はベース解像度 1920×1080 を想定し、**ルートの `f
 
 - データは **`tecton:props:fetch`** で `Config.Props`（`dictionary` + `categories`）を取得し、クライアントが **`setProps` NUI メッセージ**で Web に渡す。
 - **`CategoryTree`** は 8 ルートを展開し、子カテゴリ選択で `builderStore.selectedCategory`（`furniture` または `furniture/residential` 形式）を更新する。
-- **`PropList`** は `react-window` の **`List`** で仮想スクロールし、行高さは **3rem** 基準。新規行コンポーネントも **rem + `theme.fontSize`** を守る。
+- **`PropList`** は `react-window` の **`List`** で仮想スクロールし、行高さは **約 4.5rem**（ラベルサイズに追従）。カテゴリツリーは **`theme.fontSize.bodyLarge` / `treeBadge`** で本文より大きく表示する。
 
 ## 関連ファイル
 
