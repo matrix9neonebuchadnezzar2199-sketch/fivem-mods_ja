@@ -4,6 +4,7 @@
 
 - **ヘルプ（F-3）**: `npm run check:help` — `scripts/check-help-articles.mjs` で `index.json`／`reverse_index.json`／`articles/*.md`／`context_map.json` の整合と ja/en スラッグ対称、各記事フロントマター（`title`・`category` 必須）を検証。
 - **ヘルプ（F-2）**: 試合一覧・チーム管理・設定の「?」を **`HelpHoverDialog`（中央モーダル）** に統一。旧右スライドの `ContextHelpPanel`／`HelpTriggerButton`／`contextHelp` ストアを削除。`context_map.json` に **`match_list`** を追加し、**`settings`** の関連記事を拡充。
+- **UX（F-4）**: イベント時刻の **`formatMinute`** で `stoppage === 0` を **`M'` のみ**に統一（試合開始直後の **`0+0'`** 表記を解消）。`EventTimelineCard`／`CompactEventList` で **ロスタイム分（`+N'`）を amber で強調**（`EventMinuteColumn.vue`）。`MinuteInput` の表示も `+0` を省略。
 
 ### Future（v0.5.0 後に検討）
 

@@ -111,7 +111,7 @@ RefBoard/
 - **ヘルプ**: ja/en 各 **16 本**（data カテゴリ 6 本削除）。**試合一覧・試合詳細・チーム管理・設定**の「?」はいずれも `HelpHoverDialog`（中央モーダル）：`context_map.json` のキー `match_list` / `match_detail` / `team_manage` / `settings` で関連記事スラッグを列挙。記事内の `#/workspace/help/article/…` リンクは **画面遷移せず** slug を切替（←／Esc で一覧へ）。全ヘルプ目次はサイドバー **ヘルプ** の `HelpView`。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定は従来どおり（`threshold: 0.35` 等）。評価クエリは `docs/testing/help_search_queries.md`（データ管理系クエリは削除）。`web/scripts/eval-help-fuse.mjs` で再評価可能。
 - **ヘルプ記事の整合検証（v0.5.0 作業 F-3）**: `npm run check:help`（`scripts/check-help-articles.mjs`）。**記事の追加・削除・リネームや `index.json` / `reverse_index.json` / `context_map.json` を編集したら必ず実行**し、インデックス↔ディスク↔逆引き↔コンテキストの参照欠落、ja/en スラッグ非対称、フロントマター欠落（`title`・`category` 必須）をローカルで検出する。失敗時は `[NG]` と件数で終了コード 1。
-- **試合時刻入力**: `parseMinuteInput` に加え、オープン時の既定値に `eventMinutePresetFromClock(match, clockNowMs)`（前半／後半で 45+α・90+β に分離、PK は 0/null）。ゴール／カード／交代ダイアログは `MinuteInput` を開いた時点でプリセット。
+- **試合時刻入力**: `parseMinuteInput` に加え、オープン時の既定値に `eventMinutePresetFromClock(match, clockNowMs)`（前半／後半で 45+α・90+β に分離、PK は 0/null）。ゴール／カード／交代ダイアログは `MinuteInput` を開いた時点でプリセット。**表示**は `formatMinute` が `stoppage` 0 を `M'` のみとし、タイムライン／小窓は `EventMinuteColumn` で `+N'` を色強調（v0.5.0 F-4）。
 - **カード表示**: 赤牌イベントの `note` に保存する内部的な `red_card` / `second_yellow` は、タイムライン表示テキストにそのまま出さない（`localEventToRow`）。
 - **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（または `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` で一括書き込みし **ページリロードなし**で Pinia を再 hydrate。10 チーム × 13 名・**20 試合**（**finished 12** / **live 3**［通常 1・PK デモ完了相当 1・PK 進行中 1］/ **draft 5**）。PK 進行中は「カップ戦 PK進行中（実機検証用）」で PK ドック・3 列・通し番号をすぐ確認可能。
 
@@ -195,3 +195,4 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 - 2026‑05‑09: **v0.4.0** データ管理・CSV/JSON・関連ヘルプ削除（破壊的変更）。PK 3 列 UI、ヘルプモーダル内ナビ、赤牌表示、試合分プリセット、`eventMinutePresetFromClock` テスト追加。Git タグ **`v0.4.0`**。
 - 2026‑05‑09: **v0.4.1** PK 進行中のシード試合追加（`SeedMatch.pkInProgress`／`seedActions`）。版数と README バッジを 0.4.1 に同期。Git タグ **`v0.4.1`**。
 - 2026‑05‑09: **v0.5.0 作業** — F-1（intro_setup スクショ更新）は記事に画像が無いため **v0.5.0 スコープ外**、**F-1'** として CHANGELOG Future に記録。F-2: `MatchList`／`TeamManage`／`Settings` に `HelpHoverDialog` を展開し `ContextHelpPanel` 系を削除。`context_map.json` に `match_list`、`settings` の記事拡充。
+- 2026‑05‑09: **v0.5.0 F-4** — `formatMinute` で stoppage 0 を `+0` なしに統一（`0+0'` 解消）。`EventMinuteColumn` でロスタイムを強調色表示。`MinuteInput` の `+0` 表記省略。

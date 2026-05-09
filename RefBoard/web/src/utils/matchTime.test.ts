@@ -103,8 +103,9 @@ describe('formatMinute', () => {
   it('stoppage が undefined なら 45 単独表記', () => {
     expect(formatMinute(45, undefined)).toBe("45'")
   })
-  it('stoppage が 0 なら 45+0 表記（明示）', () => {
-    expect(formatMinute(45, 0)).toBe("45+0'")
+  it('stoppage が 0 なら規定時刻のみ（+0 は付けない）', () => {
+    expect(formatMinute(45, 0)).toBe("45'")
+    expect(formatMinute(0, 0)).toBe("0'")
   })
   it('stoppage が 2 なら 45+2 表記', () => {
     expect(formatMinute(45, 2)).toBe("45+2'")

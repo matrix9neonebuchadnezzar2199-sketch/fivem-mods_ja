@@ -42,10 +42,13 @@ export function parseMinuteInput(raw: string | null | undefined): { ok: true; va
   return { ok: true, value: { minute, stoppage } }
 }
 
-/** タイムライン等。`stoppage == null` → `45'`、`stoppage >= 0` → `45+2'`（0 も明示） */
+/**
+ * タイムライン等。`stoppage == null` または `0` → `45'`（規定内の 0 ロスタイムは +0 を付けない）。
+ * `stoppage >= 1` → `45+2'`。
+ */
 export function formatMinute(minute: number, stoppage: number | null | undefined): string {
   const m = Math.max(0, Math.floor(minute))
-  if (stoppage == null) return `${m}'`
+  if (stoppage == null || stoppage === 0) return `${m}'`
   return `${m}+${Math.max(0, Math.floor(stoppage))}'`
 }
 

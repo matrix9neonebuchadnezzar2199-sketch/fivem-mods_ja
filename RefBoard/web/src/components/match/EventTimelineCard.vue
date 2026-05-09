@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MarqueeText from '../common/MarqueeText.vue'
+import EventMinuteColumn from './EventMinuteColumn.vue'
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
@@ -58,7 +59,7 @@ function pick(kind: 'sub' | 'yellow' | 'red') {
         :key="e.id"
         class="flex min-w-0 gap-2 overflow-hidden rounded bg-slate-900/50 px-2 py-1.5 font-mono text-slate-200"
       >
-        <span class="shrink-0 text-primary">{{ e.minute }}</span>
+        <EventMinuteColumn :row="e" />
         <div class="min-w-0 flex-1 overflow-hidden">
           <MarqueeText :text="e.text" variant="default" />
         </div>

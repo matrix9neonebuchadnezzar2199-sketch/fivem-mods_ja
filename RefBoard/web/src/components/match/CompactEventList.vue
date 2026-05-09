@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchEvent } from '../../types/match'
+import EventMinuteColumn from './EventMinuteColumn.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -32,7 +33,9 @@ const recent = computed(() => [...props.events].reverse())
         :key="row.id"
         class="flex min-w-0 items-center gap-2 rounded bg-slate-800/40 px-2 py-1"
       >
-        <span class="w-12 shrink-0 tabular-nums text-slate-400">{{ row.minute }}</span>
+        <div class="w-[3.35rem] shrink-0 text-right">
+          <EventMinuteColumn :row="row" compact />
+        </div>
         <span class="min-w-0 truncate text-slate-200">{{ row.text }}</span>
       </li>
     </ul>

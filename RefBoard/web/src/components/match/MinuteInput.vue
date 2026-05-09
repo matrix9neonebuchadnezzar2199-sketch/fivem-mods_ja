@@ -34,7 +34,7 @@ watch(
       text.value = ''
       return
     }
-    text.value = v.stoppage == null ? String(v.minute) : `${v.minute}+${v.stoppage}`
+    text.value = v.stoppage == null || v.stoppage === 0 ? String(v.minute) : `${v.minute}+${v.stoppage}`
   },
   { immediate: true },
 )
