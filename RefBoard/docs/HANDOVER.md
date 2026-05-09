@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.4.0（ローカル専用・データ管理廃止・PK 3 列ドック）
+- **対象バージョン**: v0.4.1（ローカル専用・データ管理廃止・PK 3 列ドック・PK 進行中シード）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.4.0）
+## 3. ディレクトリ構成（v0.4.1）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.4.0'
+├─ fxmanifest.lua          version '0.4.1'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.4.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.4.1（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
@@ -109,7 +109,7 @@ RefBoard/
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定は従来どおり（`threshold: 0.35` 等）。評価クエリは `docs/testing/help_search_queries.md`（データ管理系クエリは削除）。`web/scripts/eval-help-fuse.mjs` で再評価可能。
 - **試合時刻入力**: `parseMinuteInput` に加え、オープン時の既定値に `eventMinutePresetFromClock(match, clockNowMs)`（前半／後半で 45+α・90+β に分離、PK は 0/null）。ゴール／カード／交代ダイアログは `MinuteInput` を開いた時点でプリセット。
 - **カード表示**: 赤牌イベントの `note` に保存する内部的な `red_card` / `second_yellow` は、タイムライン表示テキストにそのまま出さない（`localEventToRow`）。
-- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（または `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` で一括書き込みし **ページリロードなし**で Pinia を再 hydrate。10 チーム × 13 名・20 試合。**進行中のうち 1 件が PK デモ**。
+- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（または `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` で一括書き込みし **ページリロードなし**で Pinia を再 hydrate。10 チーム × 13 名・**20 試合**（**finished 12** / **live 3**［通常 1・PK デモ完了相当 1・PK 進行中 1］/ **draft 5**）。PK 進行中は「カップ戦 PK進行中（実機検証用）」で PK ドック・3 列・通し番号をすぐ確認可能。
 
 ## 6. 開発・ビルド・配布
 
@@ -152,6 +152,7 @@ npx vue-tsc --noEmit # 型チェック
 - **v0.3.1（完了）**: 疑似データ `reload` 廃止＋Pinia 再 hydrate、`downloadFile` の DOM クリック改善、小窓 `CompactEventList` 配置。タグ `v0.3.1`。
 - **v0.3.2（完了）**: PK 中は下部固定 PK 専用ドック、試合詳細ヘルプを `HelpHoverDialog`、FiveM 向け CSV/JSON 不可の注意文。タグ `v0.3.2`。
 - **v0.4.0（完了）**: **データ管理画面・CSV/JSON 機能の全削除**（BREAKING）。PK ドック 3 列化、`HelpHoverDialog` 内で記事遷移、赤牌 `note` 表示修正、イベント時刻プリセット。タグ **`v0.4.0`**。
+- **v0.4.1（完了）**: 疑似データに **PK 進行中**試合「カップ戦 PK進行中（実機検証用）」を追加（live 3 件構成は維持）。タグ **`v0.4.1`**。
 - **v0.5.0（候補）**: 大会／リーグ集計（旧 B2）、他画面ヘルプのモーダル統一、`intro_setup` スクショ、Fuse 再調整。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
@@ -160,7 +161,7 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.4.0。タグ `v0.4.0`。バックアップ UI なし（`localStorage` のみ）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 現状: v0.4.1。先端タグ `v0.4.1`（安定版 `v0.4.0` タグも維持）。バックアップ UI なし（`localStorage` のみ）。`RefBoard_old/` は GitHub 非追跡の素材庫。
 > 次着手候補: §7 の PK キャンセル UI、v0.5.0 候補（集計・ヘルプ統一など）。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
@@ -186,3 +187,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑10: **v0.3.1** 疑似データ操作から `location.reload` を除去し Pinia 再 hydrate、`localPersist.saveLocalBatch` と `localId` バッチ、`downloadFile` の DOM 追加クリック、小窓の直近イベントを前後半カード列下へ。Git タグ **`v0.3.1`**。
 - 2026‑05‑10: **v0.3.2** PK 戦を常に下部固定の専用ドックで表示、`HelpHoverDialog`、データ管理に FiveM エクスポート不可の注記。Git タグ **`v0.3.2`**。
 - 2026‑05‑09: **v0.4.0** データ管理・CSV/JSON・関連ヘルプ削除（破壊的変更）。PK 3 列 UI、ヘルプモーダル内ナビ、赤牌表示、試合分プリセット、`eventMinutePresetFromClock` テスト追加。Git タグ **`v0.4.0`**。
+- 2026‑05‑09: **v0.4.1** PK 進行中のシード試合追加（`SeedMatch.pkInProgress`／`seedActions`）。版数と README バッジを 0.4.1 に同期。Git タグ **`v0.4.1`**。

@@ -188,7 +188,22 @@ function buildMatchFromSeed(
       }
     }
   } else if (s.status === 'live') {
-    if (s.pkDemo) {
+    if (s.pkInProgress) {
+      currentHalf = 'PK'
+      clockStartedAt = null
+      clockAccumulatedMs = 90 * 60 * 1000
+      startedAt = new Date(nowMs - 2 * 60 * 60 * 1000).toISOString()
+      if (homePlayers.length >= 2 && awayPlayers.length >= 2) {
+        events.push(makeGoalEvent(matchId, home.id, homePlayers[0].id, '2H', 28))
+        events.push(makeGoalEvent(matchId, away.id, awayPlayers[0].id, '2H', 41))
+        events.push(makeGoalEvent(matchId, home.id, homePlayers[1].id, '2H', 62))
+        events.push(makeGoalEvent(matchId, away.id, awayPlayers[1].id, '2H', 78))
+        events.push(makePkEvent(matchId, 'pk_goal', home.id, homePlayers[0].id))
+        events.push(makePkEvent(matchId, 'pk_goal', away.id, awayPlayers[0].id))
+        events.push(makePkEvent(matchId, 'pk_miss', home.id, homePlayers[1].id))
+        events.push(makePkEvent(matchId, 'pk_miss', away.id, awayPlayers[1].id))
+      }
+    } else if (s.pkDemo) {
       currentHalf = 'PK'
       clockStartedAt = null
       clockAccumulatedMs = 90 * 60 * 1000
@@ -246,8 +261,8 @@ function buildMatchFromSeed(
     awayName: away.name,
     homeScore: s.homeScore,
     awayScore: s.awayScore,
-    homePkScore: s.pkDemo ? 2 : null,
-    awayPkScore: s.pkDemo ? 2 : null,
+    homePkScore: s.pkInProgress ? 1 : s.pkDemo ? 2 : null,
+    awayPkScore: s.pkInProgress ? 1 : s.pkDemo ? 2 : null,
     status: s.status,
     currentHalf,
     halfMinutes: 45,

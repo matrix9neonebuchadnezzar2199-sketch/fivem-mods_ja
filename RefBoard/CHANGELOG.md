@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.1 — 2026‑05‑09
+
+- **疑似データ**: PK 進行中の live 試合「カップ戦 PK進行中（実機検証用）」を追加（90 分同点 2-2 後、PK 4 本で 1-1・次は先攻の第 3 本）。進行中 live は **通常 1 + PK デモ 1 + PK 進行中 1** の 3 件のまま（旧「カップ戦 1回戦 第1試合」を置換）。
+- 版数: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.4.1** に同期。
+
 ## v0.4.0 — 2026‑05‑09（BREAKING: データ管理・エクスポート削除）
 
 - **削除（破壊的変更）**: データ管理画面（`/workspace/data`）、試合詳細の JSON/CSV ボタン、`exporters` / `localImport` / `ImportBackupDialog`、関連単体テスト、i18n の `data.*` 一式、ヘルプ記事 6 本（`data_view_history` / `data_export` / `data_import` / `data_csv_format` / `data_csv_excel_open` / `data_migration`）と `index.json` の data カテゴリ・`reverse_index` の `data_off`・`context_map` の `data_manage`。
