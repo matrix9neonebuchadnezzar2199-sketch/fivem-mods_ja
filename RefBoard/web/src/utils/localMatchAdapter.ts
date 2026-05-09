@@ -93,6 +93,11 @@ function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[]): Match
     const inn = e.subInPlayerId != null ? players.find((p) => p.id === e.subInPlayerId) : null
     if (inn) text = `↑ ${inn.number ?? ''} ${inn.name}`.trim()
   }
+  if (!text && (e.kind === 'pk_goal' || e.kind === 'pk_miss')) {
+    const shotLabel = e.kind === 'pk_goal' ? '⚽' : '失敗'
+    if (scorer) text = `${shotLabel} ${scorer.number ?? ''} ${scorer.name}`.trim()
+    else text = shotLabel
+  }
   const isPkShot = e.kind === 'pk_goal' || e.kind === 'pk_miss'
   const minuteLabel = isPkShot ? 'PK' : formatMinuteDisplay(e.minute, e.stoppage ?? null)
   return {
