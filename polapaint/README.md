@@ -87,7 +87,7 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 - **`Could not find dependency screenshot-basic`** … `screenshot-basic` フォルダがサーバの `resources` に無い、または名前が違う。本リポの **`screenshot-basic/` を polapaint と並べてコピー**し、`ensure screenshot-basic` を追加する。
 - **Mixed Content / `Failed to fetch`（`http://screenshot-basic/screenshot_created`）** … 新しい CEF では NUI が HTTPS のため、上流の **`http://` コールバック URL** がブロックされます。本リポ同梱の **`screenshot-basic` v1.0.1** では `dist/client.js` を **`https://`** に修正済みです。古い同梱版を手元で直す場合は `screenshot-basic/BUNDLED_WITH_POLAPAINT.md` を参照。
 - **インベントリでカメラ／チェキの絵が出ない（ox 2.4x）** … **`client.image = 'polaroid_camera'` だけでは拡張子が付かず表示されない**ことがあります。**`nui://polapaint/html/images/polaroid_camera.png`** にするか、ox 側に PNG を置いたうえで **`polaroid_camera.png`**（`.png` 付き）に直し、**`restart ox_inventory`** してください。
-- **名前を付けても写真が増えない** … **`polaroid_photo` が `items.lua` に未定義**だと `AddItem` が `invalid_item` で失敗します（カメラだけ追加していないか確認）。**インベントリ満杯・重量オーバー**でも同様です。`config.lua` の **`Config.DiscordWebhook`** が正しいか、F8／サーバーログも併せて確認してください。
+- **名前を付けても写真が増えない** … **`polaroid_photo` が `items.lua` に未定義**だと `AddItem` が `invalid_item` で失敗します（カメラだけ追加していないか確認）。**インベントリ満杯・重量オーバー**でも同様です。`config.lua` の **`Config.DiscordWebhook`** が正しいか、F8／サーバーログも併せて確認してください。**v1.0.3** 以降は Discord／復号失敗時に**より具体的な通知**が出ます。切り分けには **`Config.Debug = true`** でサーバーに `[polapaint]` ログを出すとよいです。
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
 - **ペイント保存で真っ黒・失敗** … 外部画像の CORS により Canvas が汚染されている可能性があります。Discord CDN の URL で通常は問題ありません。

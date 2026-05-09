@@ -52,8 +52,6 @@ local function isDiscordWebhookUrl(url)
         and url:match('^https://discord%.com/api/webhooks/%d+/.+') ~= nil
 end
 
----@param url string
----@return boolean
 ---@param label string|nil
 ---@return string|nil
 local function normalizePhotoLabel(label)
@@ -71,39 +69,58 @@ local function isDiscordAttachmentUrl(url)
     if type(url) ~= 'string' or not url:match('^https://') then return false end
     if url:match('^https://cdn%.discordapp%.com/attachments/') then return true end
     if url:match('^https://media%.discordapp%.net/attachments/') then return true end
+    if url:match('^https://cdn%.discord%.com/attachments/') then return true end
     return false
 end
 
--- Base64 decode（標準アルファベット）
+-- Base64 decode（RFC 4648・大きな JPEG でもビット列連結方式より高速）
 ---@param data string
 ---@return string?
 local function base64_decode(data)
     if type(data) ~= 'string' then return nil end
-    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    data = data:gsub('%s+', ''):gsub('[^' .. b .. '=]', '')
-    local ok, result = pcall(function()
-        return (data:gsub('.', function(x)
-            if x == '=' then return '' end
-            local f = (b:find(x, 1, true) or 1) - 1
-            local r = ''
-            for i = 6, 1, -1 do
-                local bit = f % (2 ^ i) - f % (2 ^ (i - 1))
-                r = r .. (bit > 0 and '1' or '0')
-            end
-            return r
-        end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-            if #x ~= 8 then return '' end
-            local c = 0
-            for i = 1, 8 do
-                if x:sub(i, i) == '1' then
-                    c = c + (2 ^ (8 - i))
-                end
-            end
-            return string.char(c % 256)
-        end))
-    end)
-    if not ok or type(result) ~= 'string' or result == '' then return nil end
-    return result
+    local alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    local map = {}
+    for i = 1, #alpha do
+        map[alpha:sub(i, i)] = i - 1
+    end
+    data = data:gsub('%s+', ''):gsub('[^A-Za-z0-9%+/=]', '')
+    local len = #data
+    if len == 0 or len % 4 ~= 0 then return nil end
+    local out = {}
+    for pos = 1, len, 4 do
+        local c1, c2, c3, c4 = data:sub(pos, pos), data:sub(pos + 1, pos + 1), data:sub(pos + 2, pos + 2), data:sub(pos + 3, pos + 3)
+        local v1, v2 = map[c1], map[c2]
+        if not v1 or not v2 then return nil end
+        if c3 == '=' then
+            out[#out + 1] = string.char(v1 * 4 + math.floor(v2 / 16))
+        elseif c4 == '=' then
+            local v3 = map[c3]
+            if not v3 then return nil end
+            local n = v1 * 4096 + v2 * 64 + v3
+            out[#out + 1] = string.char(math.floor(n / 1024) % 256)
+            out[#out + 1] = string.char(math.floor(n / 4) % 256)
+        else
+            local v3, v4 = map[c3], map[c4]
+            if not v3 or not v4 then return nil end
+            local n = v1 * 262144 + v2 * 4096 + v3 * 64 + v4
+            out[#out + 1] = string.char(math.floor(n / 65536) % 256)
+            out[#out + 1] = string.char(math.floor(n / 256) % 256)
+            out[#out + 1] = string.char(n % 256)
+        end
+    end
+    return table.concat(out)
+end
+
+---@param err string|nil
+---@return string
+local function discordErrToNotifyKey(err)
+    if err == 'decode' then return 'notify_capture_decode_fail' end
+    if err == 'http' then return 'notify_capture_discord_http' end
+    if err == 'empty' then return 'notify_capture_discord_empty' end
+    if err == 'json' then return 'notify_capture_discord_json' end
+    if err == 'attachments' then return 'notify_capture_discord_attachments' end
+    if err == 'badurl' then return 'notify_capture_discord_badurl' end
+    return 'notify_capture_fail'
 end
 
 ---@param webhookUrl string
@@ -233,7 +250,11 @@ RegisterNetEvent('polapaint:server:submitCapture', function(b64Payload, photoLab
     discordUploadJpeg(b64Payload, function(url, err)
         if not url then
             dbg('capture upload fail: ' .. tostring(err))
-            notify(src, err == 'webhook' and 'notify_webhook_not_configured' or 'notify_capture_fail')
+            if err == 'webhook' then
+                notify(src, 'notify_webhook_not_configured')
+            else
+                notify(src, discordErrToNotifyKey(err))
+            end
             return
         end
         local meta = {
@@ -293,7 +314,11 @@ RegisterNetEvent('polapaint:server:submitEdited', function(slot, b64Payload)
     discordUploadJpeg(b64Payload, function(url, err)
         if not url then
             dbg('edit upload fail: ' .. tostring(err))
-            notify(src, err == 'webhook' and 'notify_webhook_not_configured' or 'notify_upload_http_error')
+            if err == 'webhook' then
+                notify(src, 'notify_webhook_not_configured')
+            else
+                notify(src, discordErrToNotifyKey(err))
+            end
             return
         end
         local newMeta = {}

@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'JP-Mods'
 description 'polapaint — 拡張ポラロイドカメラ（撮影・Discord Webhook・NUI 編集 / ox_inventory + screenshot-basic）'
-version '1.0.2'
+version '1.0.3'
 license 'GPL-3.0'
 
 dependency 'ox_inventory'
