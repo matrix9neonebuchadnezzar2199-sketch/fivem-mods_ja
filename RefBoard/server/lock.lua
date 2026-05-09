@@ -237,14 +237,24 @@ function RefboardAssertEditorLockForMatch(src, matchId)
     return true
   end
   if mid == nil then
+    local n
     local okUpd, err = pcall(function()
-      MySQL.update.await(
+      n = MySQL.update.await(
         'UPDATE editor_locks SET match_id = ? WHERE id = 1 AND holder_server_id = ?',
         { matchId, srcNum }
       )
     end)
     if not okUpd then
       Logger.warn('lock', 'bind match_id failed', { src = srcNum, matchId = matchId, err = tostring(err) })
+      return false
+    end
+    local affected = tonumber(n) or 0
+    if affected < 1 then
+      Logger.warn('lock', 'bind match_id affected 0', {
+        src = srcNum,
+        matchId = matchId,
+        rowHolder = r.holder_server_id,
+      })
       return false
     end
     return true

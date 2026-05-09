@@ -16,7 +16,9 @@
     "card_issue_tx_detail": "Card registration error: {detail}",
     "player_remove_timeout": "Player removal timed out. Check connection and edit lock.",
     "match_finish_failed": "Could not finalize the match.",
-    "goal_record_timeout": "No response when recording the goal. Check connection and edit lock."
+    "goal_record_timeout": "No response when recording the goal. Check connection and edit lock.",
+    "goal_record_failed": "Could not record the goal ({code}).",
+    "card_issue_no_lock": "The edit lock is not bound to this match. Re-open the match from the list, or close with F6 and enter as editor again."
   },
   "presence": {
     "online": "Online",

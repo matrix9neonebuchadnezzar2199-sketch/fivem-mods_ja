@@ -6,7 +6,8 @@ import { useI18n } from 'vue-i18n'
 import { useToast, type ToastItem } from '../composables/useToast'
 import { getHelpRouteForError } from '../utils/errorCodeMapper'
 
-const { items } = useToast()
+/** items を分割代入しない（useToast 内で配列を差し替えないが、常に reactive 経由で読む） */
+const toastApi = useToast()
 const router = useRouter()
 const { t } = useI18n()
 
@@ -24,7 +25,7 @@ function openHelp(row: ToastItem) {
 <template>
   <div class="pointer-events-none fixed bottom-4 right-4 z-[500] flex flex-col gap-2">
     <div
-      v-for="row in items"
+      v-for="row in toastApi.items"
       :key="row.id"
       class="pointer-events-auto flex max-w-sm flex-col gap-1 rounded-lg border px-3 py-2 text-sm shadow-lg"
       :class="

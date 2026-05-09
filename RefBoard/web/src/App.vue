@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, watchEffect } from 'vue'
+import { computed, onMounted, provide, watch, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMatchCompactDockStore } from './stores/matchCompactDock'
 import { useI18n } from 'vue-i18n'
@@ -12,6 +12,7 @@ import { useToast } from './composables/useToast'
 import Toast from './components/Toast.vue'
 import appBackgroundUrl from '../image/back.jpg'
 import { nuiShellOpenRef } from './nuiShellVisibility'
+import { useRouter } from 'vue-router'
 
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
@@ -41,12 +42,24 @@ const showNuiChrome = computed(() => {
   return nuiShellOpenRef.value
 })
 
+const router = useRouter()
 const session = useSessionStore()
 const presence = usePresenceStore()
 const autosave = useAutosaveStore()
 const { on } = useNui()
 const { t } = useI18n()
 const { push: toastPush } = useToast()
+
+watch(nuiShellOpenRef, (open, prev) => {
+  if (prev === true && open === false) {
+    const r = router.currentRoute.value
+    const mid =
+      r.name === 'match-detail' && r.params?.id != null && String(r.params.id) !== ''
+        ? Number(r.params.id)
+        : NaN
+    session.syncAfterNuiShellClosedByClient(Number.isFinite(mid) && mid > 0 ? mid : undefined)
+  }
+})
 
 onMounted(() => {
   // Settings 画面以外から起動した場合に備え、App ルートでも load を保証（冪等）。

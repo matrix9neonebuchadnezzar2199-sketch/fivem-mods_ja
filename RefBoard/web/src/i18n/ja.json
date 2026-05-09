@@ -16,7 +16,9 @@
     "card_issue_tx_detail": "カード登録エラー: {detail}",
     "player_remove_timeout": "選手削除の応答がありません。接続と編集ロックを確認してください。",
     "match_finish_failed": "試合終了を確定できませんでした。",
-    "goal_record_timeout": "ゴール記録の応答がありません。接続と編集ロックを確認してください。"
+    "goal_record_timeout": "ゴール記録の応答がありません。接続と編集ロックを確認してください。",
+    "goal_record_failed": "ゴールを記録できませんでした（{code}）。",
+    "card_issue_no_lock": "編集ロックがこの試合に紐づいていません。試合一覧から当該試合を開き直すか、F6で閉じて編集で入り直してください。"
   },
   "presence": {
     "online": "接続中",

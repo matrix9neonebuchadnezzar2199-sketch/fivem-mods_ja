@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../composables/useNui'
+import { useToast } from '../composables/useToast'
 import TeamList, { type ManageTeamRow } from '../components/team/TeamList.vue'
 import TeamDetail from '../components/team/TeamDetail.vue'
 import RosterList, { type RosterRow } from '../components/team/RosterList.vue'
@@ -11,6 +12,7 @@ import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 
 const { t } = useI18n()
 const { send, on } = useNui()
+const { push: toast } = useToast()
 
 const teams = ref<ManageTeamRow[]>([])
 const search = ref('')
@@ -26,6 +28,9 @@ const showCreate = ref(false)
 const showRoster = ref(false)
 const rosterEditId = ref<number | null>(null)
 const rosterInitial = ref<RosterInitial | null>(null)
+
+const showDeleteTeamConfirm = ref(false)
+const rosterRemoveTarget = ref<RosterRow | null>(null)
 
 async function refreshList() {
   const un = on('refboard:team:manage_list:ack', (p: { teams?: ManageTeamRow[] }) => {
@@ -96,11 +101,25 @@ async function onUpdate(payload: {
   })
 }
 
-async function onDelete() {
+function requestDeleteTeam() {
   if (!selectedId.value) return
-  if (!confirm(t('team_manage.delete_confirm'))) return
+  showDeleteTeamConfirm.value = true
+}
+
+function closeDeleteTeamConfirm() {
+  showDeleteTeamConfirm.value = false
+}
+
+async function confirmDeleteTeam() {
+  if (!selectedId.value) return
+  showDeleteTeamConfirm.value = false
   const id = selectedId.value
+  let settled = false
+  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
   const un = on('refboard:team:delete:ack', (p: { ok?: boolean }) => {
+    if (settled) return
+    settled = true
+    if (timeoutId != null) window.clearTimeout(timeoutId)
     un()
     if (p?.ok) {
       selectedId.value = null
@@ -110,7 +129,22 @@ async function onDelete() {
       void refreshList()
     }
   })
-  await send('team_delete', { teamId: id })
+  timeoutId = window.setTimeout(() => {
+    if (settled) return
+    settled = true
+    un()
+    toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
+  }, 8000)
+  try {
+    await send('team_delete', { teamId: id })
+  } catch {
+    if (!settled) {
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
+    }
+  }
 }
 
 function openRosterAdd() {
@@ -130,14 +164,44 @@ function openRosterEdit(r: RosterRow) {
   showRoster.value = true
 }
 
-async function removeRoster(r: RosterRow) {
-  if (!selectedId.value) return
-  if (!confirm(t('team_manage.roster_remove_confirm', { name: r.player_name }))) return
+function requestRemoveRoster(r: RosterRow) {
+  rosterRemoveTarget.value = r
+}
+
+function closeRosterRemoveConfirm() {
+  rosterRemoveTarget.value = null
+}
+
+async function confirmRemoveRoster() {
+  const r = rosterRemoveTarget.value
+  if (!r || !selectedId.value) return
+  rosterRemoveTarget.value = null
+  const teamId = selectedId.value
+  let settled = false
+  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
   const un = on('refboard:team:roster:remove:ack', (p: { ok?: boolean }) => {
+    if (settled) return
+    settled = true
+    if (timeoutId != null) window.clearTimeout(timeoutId)
     un()
-    if (p?.ok) void loadRoster(selectedId.value!)
+    if (p?.ok) void loadRoster(teamId)
   })
-  await send('team_roster_remove', { teamId: selectedId.value, rosterId: r.id })
+  timeoutId = window.setTimeout(() => {
+    if (settled) return
+    settled = true
+    un()
+    toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
+  }, 8000)
+  try {
+    await send('team_roster_remove', { teamId, rosterId: r.id })
+  } catch {
+    if (!settled) {
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
+    }
+  }
 }
 
 async function onCreatedTeam(id: number) {
@@ -167,7 +231,7 @@ async function onCreatedTeam(id: number) {
       />
       <div class="grid min-h-0 min-w-0 grid-rows-1 gap-2 lg:grid-rows-2">
         <div class="min-h-0 min-w-0 w-full justify-self-start lg:w-1/2 lg:max-w-[50%]">
-          <TeamDetail :team="team" :stats="stats" @update="onUpdate" @delete="onDelete" />
+          <TeamDetail :team="team" :stats="stats" @update="onUpdate" @delete="requestDeleteTeam" />
         </div>
         <div class="min-h-0 min-w-0 w-full justify-self-start lg:w-1/2 lg:max-w-[50%]">
           <RosterList
@@ -175,7 +239,7 @@ async function onCreatedTeam(id: number) {
             :team-id="selectedId"
             @add="openRosterAdd"
             @edit="openRosterEdit"
-            @remove="removeRoster"
+            @remove="requestRemoveRoster"
           />
         </div>
       </div>
@@ -189,5 +253,41 @@ async function onCreatedTeam(id: number) {
       :initial="rosterInitial"
       @saved="selectedId ? loadRoster(selectedId) : undefined"
     />
+
+    <div
+      v-if="showDeleteTeamConfirm"
+      class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
+    >
+      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <p class="mb-4 text-sm text-slate-300">{{ t('team_manage.delete_confirm') }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="closeDeleteTeamConfirm">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmDeleteTeam">
+            {{ t('dialog.yes') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="rosterRemoveTarget"
+      class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
+    >
+      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <p class="mb-4 text-sm text-slate-300">
+          {{ t('team_manage.roster_remove_confirm', { name: rosterRemoveTarget.player_name }) }}
+        </p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="closeRosterRemoveConfirm">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmRemoveRoster">
+            {{ t('dialog.yes') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

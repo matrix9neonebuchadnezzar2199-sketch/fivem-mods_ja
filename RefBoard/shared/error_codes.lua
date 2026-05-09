@@ -25,6 +25,8 @@ ErrorCodes = {
   MATCH_ALREADY_FINISHED = { code = 'E3004', message = 'bad_status' },
   PLAYER_NOT_ACTIVE = { code = 'E3005', message = 'player_not_active' },
   PLAYER_HAS_EVENTS = { code = 'E3006', message = 'player_has_events' },
+  --- 試合終了時: メンバーの license がチームの現役ロスターに無い（チーム管理で外された等）
+  ROSTER_SOURCE_REVOKED = { code = 'E3007', message = 'roster_source_revoked' },
 
   DB_CONNECTION_LOST = { code = 'E4001', message = 'db_connection_lost' },
   DB_QUERY_FAILED = { code = 'E4002', message = 'db_query_failed' },

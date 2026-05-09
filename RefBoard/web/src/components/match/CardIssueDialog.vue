@@ -152,6 +152,10 @@ async function record() {
       return
     }
     const code = r?.error ?? 'unknown'
+    if (code === 'no_lock') {
+      toast(t('toast.card_issue_no_lock'), 'error', 10000)
+      return
+    }
     if (code === 'bad_player') {
       toast(t('toast.card_issue_bad_player'), 'error', 8000)
       return

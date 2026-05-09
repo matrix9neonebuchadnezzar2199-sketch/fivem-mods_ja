@@ -23,7 +23,7 @@ const overflow = computed(() => Math.max(0, presence.users.length - 3))
 <template>
   <div
     ref="pop"
-    class="relative flex min-w-0 max-w-full items-center gap-3 rounded-full border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-sm text-slate-100 shadow-lg backdrop-blur"
+    class="relative flex min-w-0 max-w-full items-center gap-3 rounded-full border border-slate-700 bg-slate-800/95 px-3 py-1.5 text-sm text-slate-100 shadow-lg"
   >
     <span class="flex shrink-0 items-center gap-1.5">
       <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
@@ -49,7 +49,7 @@ const overflow = computed(() => Math.max(0, presence.users.length - 3))
 
     <div
       v-if="open && presence.users.length"
-      class="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-700 bg-slate-900/95 p-2 text-xs shadow-2xl backdrop-blur"
+      class="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-slate-700 bg-slate-900/98 p-2 text-xs shadow-2xl"
     >
       <div class="mb-1 font-semibold text-slate-300">{{ t('presence.all_users') }}</div>
       <ul class="max-h-48 space-y-1 overflow-y-auto">

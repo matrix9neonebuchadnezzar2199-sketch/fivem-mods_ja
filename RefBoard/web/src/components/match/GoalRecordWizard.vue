@@ -132,16 +132,23 @@ async function record() {
   const assistPid = assistId.value ? resolveMatchPlayerRowId(assistId.value) : null
   let settled = false
   let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:score:goal:ack', (r: { ok?: boolean; error?: string }) => {
-    if (settled) return
-    settled = true
-    if (timeoutId != null) window.clearTimeout(timeoutId)
-    un()
-    if (r?.ok) {
-      emit('recorded')
-      close()
-    }
-  })
+  const un = on(
+    'refboard:score:goal:ack',
+    (r: { ok?: boolean; error?: string; code?: string; detail?: string }) => {
+      if (settled) return
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      if (r?.ok) {
+        emit('recorded')
+        close()
+        return
+      }
+      const code = (r?.error as string | undefined) ?? (r?.code as string | undefined) ?? 'unknown'
+      const detail = r?.detail ? ` ${String(r.detail).slice(0, 120)}` : ''
+      toast(t('toast.goal_record_failed', { code: String(code) }) + detail, 'error', { ms: 10000 })
+    },
+  )
   timeoutId = window.setTimeout(() => {
     if (settled) return
     settled = true
