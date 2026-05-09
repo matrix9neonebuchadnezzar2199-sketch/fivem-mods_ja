@@ -1,7 +1,7 @@
 ---
 title: Record yellow and red cards
 category: in_match
-tags: [yellow, red, warning, send-off, card, YC, RC]
+tags: [yellow, red, warning, send-off, card, YC, RC, stoppage, additional time, 45+2]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -25,14 +25,14 @@ errorCode: null
 
 1. **Card** on the player row, or **event menu → Card**.
 2. Choose **Yellow**.
-3. Optional **minute** and short **reason**.
+3. Optional **match minute** and short **reason**. You can enter **`45+2`** (`minute+stoppage`). Leave blank and confirm to use the **current match clock**.
 4. Confirm.
 
 ## Straight red
 
 1. Open **Card**.
 2. Choose **Red**.
-3. Optional minute / reason.
+3. Optional **match minute** and short **reason** (same **`45+2`** rules as yellow).
 4. Confirm the **send-off** dialog.
 
 ## Second yellow → red

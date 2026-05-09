@@ -1,7 +1,7 @@
 ---
 title: Substitute a player
 category: in_match
-tags: [sub, substitution, bench]
+tags: [sub, substitution, bench, stoppage, additional time, 45+2]
 related: [match_card, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -27,7 +27,7 @@ errorCode: null
 1. Use **Substitute** on a row in the player list, or **event menu → Substitution**.
 2. Confirm **OUT** (player leaving).
 3. Pick **IN** from roster / picker.
-4. Set **minute** and **half** if needed.
+4. Set **match minute** and **half** if needed. Minutes support **`45+2`** (`minute+stoppage`). Leave blank and confirm to use the **current match clock**.
 5. Confirm.
 
 ## After substitution

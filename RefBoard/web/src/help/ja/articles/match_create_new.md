@@ -1,7 +1,7 @@
 ---
 title: 新しい試合を作る
 category: match_prep
-tags: [試合作成, ホーム, アウェイ, 予約]
+tags: [試合作成, ホーム, アウェイ, 予約, ハーフ, ロスタイム, stoppage]
 related: [match_finish, intro_setup, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches"
@@ -32,6 +32,8 @@ errorCode: null
 
 - `matches` 行が **ドラフト（`draft`）** として作成され、スコア 0-0・メンバー未登録の状態から始まります。
 - 試合詳細では **基本情報・スコア・選手** を順に埋めていきます。
+
+ここで決める **各ハーフの分数**（例: 45 分）と、記録時の **ロスタイム**（`45+2` の **分に足す**表記）は別概念です。ロスタイムはゴール・カード・交代などのダイアログの時刻欄で入力します。
 
 ## よくある質問
 

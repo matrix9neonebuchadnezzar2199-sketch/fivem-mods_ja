@@ -44,6 +44,9 @@ export type MatchEventKind = 'goal' | 'yellow' | 'red' | 'sub' | 'penalty' | 'ot
 export type MatchEvent = {
   id: string
   minute: string
+  /** CSV 用。ローカル `MatchEvent` 由来の数値（`minute` は表示ラベル） */
+  eventMinute?: number
+  eventStoppage?: number | null
   kind: MatchEventKind
   text: string
   /** PK 記録時のみ */

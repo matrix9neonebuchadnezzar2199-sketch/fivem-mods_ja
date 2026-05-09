@@ -8,6 +8,7 @@ import type { Half } from '../types/local'
 import { downloadFile, exportMatchEventsToCSV, exportMatchToJSON, refboardFilename } from '../utils/exporters'
 import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
 import { getElapsedMsFromClockState, parseEpochMsFromServer } from '../utils/matchClock'
+import type { ParsedMinute } from '../utils/matchTime'
 import { applyBasicInfoFromDetail, matchToDetailModel, scoreHistoryToRows, serverHalfStringToHalf } from '../utils/localMatchAdapter'
 import { useMatchesStore } from '../stores/matches'
 import { useTeamsStore } from '../stores/teams'
@@ -215,6 +216,24 @@ const elapsedMmSsLive = computed(() => {
   if (!m) return '0:00'
   return formatClockMs(matchesStore.clockNowMs(m))
 })
+
+/** イベント時刻欄の既定（空欄確定時は試合時計からこの分・stoppage を採用） */
+const suggestedEventTime = computed((): ParsedMinute => {
+  const id = matchId.value
+  if (!id) return { minute: 0, stoppage: null }
+  return { minute: matchesStore.currentMinuteFromClock(id), stoppage: null }
+})
+
+function resolveEventTime(override: ParsedMinute | null | undefined): ParsedMinute {
+  if (override) return override
+  return { ...suggestedEventTime.value }
+}
+
+/** PK 中は分・ロスタイムを保存しない（0 / null 固定） */
+function eventTimeForStorage(override: ParsedMinute | null | undefined): ParsedMinute {
+  if (currentHalf() === 'PK') return { minute: 0, stoppage: null }
+  return resolveEventTime(override)
+}
 
 const clockPhaseLabel = computed(() =>
   detail.clockRunning ? t('score_board.clock_state_running') : t('score_board.clock_state_stopped'),
@@ -519,15 +538,20 @@ function onSetHalf(p: { matchId: number; half: string; pkFirstTeamId?: number })
   syncDetail()
 }
 
-function onRecordGoal(payload: { teamId: number; scorerPlayerId: number; assistPlayerId: number | null }) {
+function onRecordGoal(payload: {
+  teamId: number
+  scorerPlayerId: number
+  assistPlayerId: number | null
+  eventTime: ParsedMinute | null
+}) {
   const id = matchId.value
   const half = currentHalf()
-  const minute = matchesStore.currentMinuteFromClock(id)
+  const t = eventTimeForStorage(payload.eventTime)
   matchesStore.addEvent(id, {
     kind: 'goal',
     half,
-    minute,
-    stoppage: null,
+    minute: t.minute,
+    stoppage: t.stoppage,
     teamId: payload.teamId,
     playerId: payload.scorerPlayerId,
     assistPlayerId: payload.assistPlayerId,
@@ -544,15 +568,15 @@ function onManualScore(p: { homeScore: number; awayScore: number; reason: string
   syncDetail()
 }
 
-function onSubstitute(p: { teamId: number; outPlayerId: number; inPlayerId: number }) {
+function onSubstitute(p: { teamId: number; outPlayerId: number; inPlayerId: number; eventTime: ParsedMinute | null }) {
   const id = matchId.value
   const half = currentHalf()
-  const minute = matchesStore.currentMinuteFromClock(id)
+  const t = eventTimeForStorage(p.eventTime)
   matchesStore.addEvent(id, {
     kind: 'sub_out',
     half,
-    minute,
-    stoppage: null,
+    minute: t.minute,
+    stoppage: t.stoppage,
     teamId: p.teamId,
     playerId: p.outPlayerId,
     assistPlayerId: null,
@@ -564,8 +588,8 @@ function onSubstitute(p: { teamId: number; outPlayerId: number; inPlayerId: numb
   matchesStore.addEvent(id, {
     kind: 'sub_in',
     half,
-    minute,
-    stoppage: null,
+    minute: t.minute,
+    stoppage: t.stoppage,
     teamId: p.teamId,
     playerId: p.inPlayerId,
     assistPlayerId: null,
@@ -584,16 +608,17 @@ function onIssueCard(payload: {
   playerId: number
   cardType: 'yellow_card' | 'red_card'
   ejectionReason?: 'second_yellow' | 'red_card'
+  eventTime: ParsedMinute | null
 }) {
   const id = matchId.value
   const half = currentHalf()
-  const minute = matchesStore.currentMinuteFromClock(id)
+  const t = eventTimeForStorage(payload.eventTime)
   if (payload.cardType === 'yellow_card') {
     matchesStore.addEvent(id, {
       kind: 'yellow',
       half,
-      minute,
-      stoppage: null,
+      minute: t.minute,
+      stoppage: t.stoppage,
       teamId: payload.teamId,
       playerId: payload.playerId,
       assistPlayerId: null,
@@ -607,8 +632,8 @@ function onIssueCard(payload: {
     matchesStore.addEvent(id, {
       kind: 'red',
       half,
-      minute,
-      stoppage: null,
+      minute: t.minute,
+      stoppage: t.stoppage,
       teamId: payload.teamId,
       playerId: payload.playerId,
       assistPlayerId: null,
@@ -625,12 +650,11 @@ function onIssueCard(payload: {
 function onPkShot(payload: { teamId: number; playerId: number; success: boolean }) {
   const id = matchId.value
   const half: Half = 'PK'
-  const minute = matchesStore.currentMinuteFromClock(id)
   const kind = payload.success ? 'pk_goal' : 'pk_miss'
   matchesStore.addEvent(id, {
     kind,
     half,
-    minute,
+    minute: 0,
     stoppage: null,
     teamId: payload.teamId,
     playerId: payload.playerId,
@@ -908,15 +932,29 @@ function exportMatchEventsCsv() {
     </div>
 
     <div class="pointer-events-auto">
-      <GoalRecordWizard v-model:open="showGoal" :model="detail" @record-goal="onRecordGoal" @recorded="reloadMatch" />
+      <GoalRecordWizard
+        v-model:open="showGoal"
+        :model="detail"
+        :suggested-event-time="suggestedEventTime"
+        @record-goal="onRecordGoal"
+        @recorded="reloadMatch"
+      />
       <SubstitutionDialog
         v-model:open="showSub"
         :model="detail"
+        :suggested-event-time="suggestedEventTime"
         :match-time-mm-ss="elapsedMmSsLive"
         @substitute="onSubstitute"
         @done="reloadMatch"
       />
-      <CardIssueDialog v-model:open="showCard" :model="detail" :preset-kind="cardPreset" @issue-card="onIssueCard" @done="reloadMatch" />
+      <CardIssueDialog
+        v-model:open="showCard"
+        :model="detail"
+        :suggested-event-time="suggestedEventTime"
+        :preset-kind="cardPreset"
+        @issue-card="onIssueCard"
+        @done="reloadMatch"
+      />
       <AddPlayerDialog
         v-model:open="showAdd"
         :match-id="detail.id"

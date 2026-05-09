@@ -96,7 +96,7 @@
           "id": "match_new_rev",
           "title": "新しい試合を作りたい",
           "article": "match_create_new.md",
-          "tags": ["試合作成", "ホーム", "アウェイ", "予約"],
+          "tags": ["試合作成", "ホーム", "アウェイ", "予約", "ハーフ", "stoppage"],
           "actionUrl": "#/workspace/matches"
         }
       ]
@@ -110,21 +110,21 @@
           "id": "record_goal",
           "title": "ゴールを記録したい",
           "article": "match_record_goal.md",
-          "tags": ["ゴール", "goal", "得点", "シュート", "G", "アシスト", "記録"],
+          "tags": ["ゴール", "goal", "得点", "シュート", "G", "アシスト", "記録", "ロスタイム", "stoppage", "45+2"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
           "id": "substitute_player",
           "title": "選手を交代したい",
           "article": "match_substitute_player.md",
-          "tags": ["交代", "サブ", "メンバー"],
+          "tags": ["交代", "サブ", "メンバー", "ロスタイム", "stoppage", "45+2"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
           "id": "match_card_rev",
           "title": "イエロー／レッドを出したい",
           "article": "match_card.md",
-          "tags": ["イエロー", "レッド", "黄色", "赤", "警告", "退場", "カード", "card", "yellow", "red"],
+          "tags": ["イエロー", "レッド", "黄色", "赤", "警告", "退場", "カード", "card", "yellow", "red", "ロスタイム", "stoppage", "45+2"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -145,7 +145,7 @@
           "id": "match_finish",
           "title": "試合を終了したい／再編集したい",
           "article": "match_finish.md",
-          "tags": ["終了", "再開", "再編集", "reopen", "確定"],
+          "tags": ["終了", "再開", "再編集", "reopen", "確定", "ハーフ", "stoppage"],
           "actionUrl": "#/workspace/matches/:matchId"
         }
       ]

@@ -1,7 +1,7 @@
 ---
 title: 試合を終了する／再編集する
 category: in_match
-tags: [終了, 再開, 再編集, reopen, 確定, finish]
+tags: [終了, 再開, 再編集, reopen, 確定, finish, ハーフ, ロスタイム, stoppage]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -20,6 +20,8 @@ errorCode: null
 
 - 対象の試合が **編集モード**で開かれている。
 - 試合のハーフが **後半終了**（または PK 戦の決着）まで進んでいる。前半中の終了は確認ダイアログで止められませんが、運用上は推奨しません。
+
+試合作成時に設定した **各ハーフの分数**（例: 45 分×2）とは別に、イベントの時刻欄では **ロスタイム**を `45+2` のように **分に足す形**で記録できます（タイムラインは `45+2'` と表示）。
 
 ## 手順 — 試合を終了する
 

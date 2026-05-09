@@ -70,7 +70,14 @@
     },
     "operator_label": "Operator",
     "operator_unset": "not set",
-    "operator_set_in_settings": "Set your name in Settings"
+    "operator_set_in_settings": "Set your name in Settings",
+    "minute_input": {
+      "hint": "e.g. 45 or 45+2 (45 minutes + 2 minutes stoppage). Leave blank and confirm to use the current match clock minute.",
+      "error_empty": "Enter a time",
+      "error_invalid_format": "Invalid format (e.g. 45 / 45+2)",
+      "error_minute_out_of_range": "Minute must be between 0 and 120",
+      "error_stoppage_out_of_range": "Stoppage must be between 0 and 29"
+    }
   },
   "tabs": {
     "score_record": "Score",
@@ -129,11 +136,13 @@
     "remove_failed": "Could not remove the player."
   },
   "goal_wizard": {
-    "breadcrumb": "EFmktg > Shot > Pick player",
+    "breadcrumb": "Goal > Shot > Pick player",
     "pick_team": "Which team scored?",
     "pick_scorer": "Pick the scorer",
     "pick_assist": "Assist (optional)",
     "no_assist": "[No assist]",
+    "event_time": "Match minute",
+    "event_time_hint": "Leave blank and confirm to use the current clock minute. Stoppage: type e.g. 45+2.",
     "confirm": "Confirm",
     "submit": "[Record]",
     "summary_goal": "15' {team}: {scorer}",
@@ -279,7 +288,8 @@
     "pick_out": "Player going off (OUT)",
     "pick_in": "Player coming on (IN, from bench)",
     "summary": "{time} {team}: OUT {outNo} {outName} → IN {inNo} {inName}",
-    "submit": "Record"
+    "submit": "Record",
+    "event_time_label": "Match minute (optional)"
   },
   "card": {
     "title": "Card",
@@ -291,7 +301,8 @@
     "confirm_red": "Record a red card (send-off)? — {name}",
     "submit": "Record",
     "second_yellow_body": "Second caution — record as red card (send-off). Continue?",
-    "second_yellow_ok": "Record as red"
+    "second_yellow_ok": "Record as red",
+    "event_time_label": "Match minute (optional)"
   },
   "penalty": {
     "title": "Penalty shootout",

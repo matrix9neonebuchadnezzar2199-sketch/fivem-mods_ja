@@ -1,7 +1,7 @@
 ---
 title: Create a new match
 category: match_prep
-tags: [match, home, away, schedule]
+tags: [match, home, away, schedule, half, stoppage, additional time]
 related: [match_finish, intro_setup, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches"
@@ -32,6 +32,8 @@ errorCode: null
 
 - A `matches` row starts as **draft** with score 0–0 and no lineup until you add players.
 - Fill **info, score, and players** from match detail.
+
+**Half length** (e.g. 45 minutes) set here is separate from **stoppage time** on events (`45+2` = minute + added time). Enter stoppage in goal / card / substitution dialogs.
 
 ## FAQ
 

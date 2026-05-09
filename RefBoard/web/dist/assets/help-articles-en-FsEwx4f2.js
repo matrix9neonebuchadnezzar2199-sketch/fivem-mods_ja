@@ -165,7 +165,7 @@ RefBoard **does not talk to a game server** for storage. Data lives in this brow
 
 - [What is RefBoard?](#/workspace/help/article/intro_what_is_refboard)
 - [Export to CSV](#/workspace/help/article/data_export)
-`,r=`---
+`,o=`---
 title: What is RefBoard?
 category: intro
 tags: [overview, referee, match, FiveM, local]
@@ -207,10 +207,10 @@ A. Use **Data** → **Full data backup (JSON)** and restore on the new machine.
 
 - [Get started with RefBoard](#/workspace/help/article/intro_setup)
 - [Create a new match](#/workspace/help/article/match_create_new)
-`,o=`---
+`,r=`---
 title: Record yellow and red cards
 category: in_match
-tags: [yellow, red, warning, send-off, card, YC, RC]
+tags: [yellow, red, warning, send-off, card, YC, RC, stoppage, additional time, 45+2]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -234,14 +234,14 @@ errorCode: null
 
 1. **Card** on the player row, or **event menu → Card**.
 2. Choose **Yellow**.
-3. Optional **minute** and short **reason**.
+3. Optional **match minute** and short **reason**. You can enter **\`45+2\`** (\`minute+stoppage\`). Leave blank and confirm to use the **current match clock**.
 4. Confirm.
 
 ## Straight red
 
 1. Open **Card**.
 2. Choose **Red**.
-3. Optional minute / reason.
+3. Optional **match minute** and short **reason** (same **\`45+2\`** rules as yellow).
 4. Confirm the **send-off** dialog.
 
 ## Second yellow → red
@@ -270,7 +270,7 @@ A. Use **Undo** on the timeline row when available; otherwise follow your staff 
 `,s=`---
 title: Create a new match
 category: match_prep
-tags: [match, home, away, schedule]
+tags: [match, home, away, schedule, half, stoppage, additional time]
 related: [match_finish, intro_setup, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches"
@@ -302,6 +302,8 @@ errorCode: null
 - A \`matches\` row starts as **draft** with score 0–0 and no lineup until you add players.
 - Fill **info, score, and players** from match detail.
 
+**Half length** (e.g. 45 minutes) set here is separate from **stoppage time** on events (\`45+2\` = minute + added time). Enter stoppage in goal / card / substitution dialogs.
+
 ## FAQ
 
 **Q. Teams do not appear in the list**  
@@ -317,7 +319,7 @@ A. Whether **Delete** is allowed depends on server rules and lock state. Follow 
 `,i=`---
 title: Finish or reopen a match
 category: in_match
-tags: [finish, reopen, resume, final]
+tags: [finish, reopen, resume, final, half, stoppage, additional time]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -336,6 +338,8 @@ errorCode: null
 
 - **Edit mode**.
 - Play reached **end of second half** (or PK decided) — finishing early is possible but discouraged.
+
+Each **half length** you set at match creation (e.g. 45×2) is separate from **stoppage time** on events: record it as **\`45+2\`** (\`minute+stoppage\`; timeline shows \`45+2'\`).
 
 ## Finish
 
@@ -515,7 +519,7 @@ A. **Not** via manual score edit (that is for regulation goals). Use PK event un
 `,d=`---
 title: Record a goal
 category: in_match
-tags: [goal, score, shot, G, assist, record]
+tags: [goal, score, shot, G, assist, record, stoppage, additional time, 45+2]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"
@@ -541,7 +545,7 @@ errorCode: null
 2. Pick **home or away**.
 3. Select the **scorer** (on-pitch players only).
 4. Optionally pick an **assist**, or leave **no assist**.
-5. Adjust **minute** / **half** if needed.
+5. Set **match minute** if needed (\`45+2\` for stoppage; leave blank and confirm to use the **current match clock**). Half follows the match clock phase.
 6. Confirm in the dialog.
 
 ## Assists
@@ -578,7 +582,7 @@ Only **one** assist is supported (no double assist).
 A. Record as the **opponent’s goal** and add a note.
 
 **Q. Stoppage time**  
-A. Use an **integer minute** (e.g. \`47\`), not \`45+2\` text.
+A. In the wizard’s **match minute** field, enter **\`45+2\`** style (\`minute+stoppage\`; \`+\` can be half-width or full-width). Leave it blank and confirm to use the **current match clock** minute. The timeline shows values like \`45+2'\`.
 
 ## See also
 
@@ -594,7 +598,7 @@ A. Use an **integer minute** (e.g. \`47\`), not \`45+2\` text.
 `,h=`---
 title: Substitute a player
 category: in_match
-tags: [sub, substitution, bench]
+tags: [sub, substitution, bench, stoppage, additional time, 45+2]
 related: [match_card, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -620,7 +624,7 @@ errorCode: null
 1. Use **Substitute** on a row in the player list, or **event menu → Substitution**.
 2. Confirm **OUT** (player leaving).
 3. Pick **IN** from roster / picker.
-4. Set **minute** and **half** if needed.
+4. Set **match minute** and **half** if needed. Minutes support **\`45+2\`** (\`minute+stoppage\`). Leave blank and confirm to use the **current match clock**.
 5. Confirm.
 
 ## After substitution
@@ -877,4 +881,4 @@ Use **Data** → **Full data backup (JSON)** to snapshot the current state, rest
 
 - \`G\` — goal wizard (match detail, when enabled)  
 - \`Esc\` — close dialog
-`;export{f as _,u as a,p as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,o as j,r as k,a as l,t as m,n,e as o};
+`;export{f as _,u as a,p as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,r as j,o as k,a as l,t as m,n,e as o};

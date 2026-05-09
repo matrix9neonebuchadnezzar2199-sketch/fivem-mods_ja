@@ -1,4 +1,5 @@
 import type { MatchDetailModel, MatchEvent, ScoreHistoryRow } from '../types/match'
+import { formatMinuteForCsv } from './matchTime'
 import { dumpAllLocal, LOCAL_PERSIST_KEY_PREFIX, LOCAL_PERSIST_SCHEMA_VERSION } from './localPersist'
 
 export interface BackupFile {
@@ -99,7 +100,14 @@ export function exportMatchEventsToCSV(events: MatchEvent[]): string {
   const cols = ['id', 'minute', 'kind', 'text', 'penaltySuccess']
   const rows = events.map((e) => ({
     id: e.id,
-    minute: e.minute,
+    minute:
+      e.minute === 'PK'
+        ? 'PK'
+        : e.eventMinute != null
+          ? formatMinuteForCsv(e.eventMinute, e.eventStoppage ?? null)
+          : typeof e.minute === 'string'
+            ? e.minute.replace(/'$/, '')
+            : e.minute,
     kind: e.kind,
     text: e.text,
     penaltySuccess: e.penaltySuccess ?? '',

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0 — 2026‑05‑09（運用品質）
+
+- ヘルプ検索 Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`minMatchCharLength` 2、`ignoreLocation` true、`keys` に `slug` 追加）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。`scripts/eval-help-fuse.mjs` で再評価可能。第九コミット `ce6f281`。
+- 試合イベントの時刻入力に `45+2` 表記を許容。`web/src/utils/matchTime.ts` 新設、`MinuteInput.vue` をゴール／カード／交代ダイアログで採用。表示・CSV の分列は `formatMinute` / `formatMinuteForCsv` で統一。PK 中は保存値 `minute=0` / `stoppage=null`、表示は `PK` のみ。
+
 ## v0.1.0 — 2026‑05‑09（ローカル版リブート）
 
 サーバ連動版（旧 v0.8.6）からローカル単体版へ刷新した最初のリリース。oxmysql 依存・編集ロック・プレゼンス・オートセーブ・ヘルスチェックを全廃し、データは端末の `localStorage` のみ。詳細は 4 連コミット（`571cfdd` / `767dd35` / `c89256a` ＋初回コミット）と `docs/diary/2026-05-09_local_reboot.md`、`docs/HANDOVER.md` 第 3 版を参照。
@@ -7,8 +12,6 @@
 - 2026‑05‑09 追記: `web/package.json`・`package-lock.json`・`REFBOARD_UI_VERSION` を 0.1.0 に同期（`fxmanifest.lua` と整合）。
 - 2026‑05‑09 追記: 試合詳細ヘッダに操作者名（`selfName`）を表示。未設定時は Settings への誘導リンク。
 - 2026‑05‑09 追記: JSON バックアップのインポート UI（置換／追記）と取り込み履歴（直近 20 件）を追加。`schemaVersion=1` のみ対応。
-- 2026‑05‑09 追記: ヘルプ検索 Fuse.js のしきい値とキー重み付けを 16 本構成向けに再調整。評価クエリリストを `docs/testing/help_search_queries.md` に追加。
-
 ## v0.9.2 — 2026-05-09
 
 - **feat（設定）**: 全体フォント倍率に **250% / 300%** を追加（`rootFontScale`・`index.html` FOUC 先読み・`sanitizeRootFontScale` を同期）。

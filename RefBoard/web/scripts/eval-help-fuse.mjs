@@ -96,9 +96,10 @@ const jaQueries = [
   'ゴール取消',
   '削除できない',
   'E3006',
+  'ロスタイム',
 ]
 
-const enQueries = ['goal', 'card', 'import', 'substitute', 'operator']
+const enQueries = ['goal', 'card', 'import', 'substitute', 'operator', 'stoppage']
 
 for (const loc of ['ja', 'en']) {
   const fuse = new Fuse(buildEntries(loc), FUSE_OPTIONS)

@@ -35,11 +35,13 @@ Fuse.js の設定変更時は、`RefBoard/web` で `node scripts/eval-help-fuse.
 | ゴール取消 | ja | trouble_undo_goal | trouble_undo_goal | undo 側タグから単独「ゴール」を外し「ゴール取消」を付与 |
 | 削除できない | ja | trouble_e3006_player_has_events | trouble_e3006_player_has_events > team_create > match_create_new | |
 | E3006 | ja | trouble_e3006_player_has_events | trouble_e3006_player_has_events | |
+| ロスタイム | ja | match_record_goal, match_card, match_substitute_player（順不同で上位3） | match_card > match_substitute_player > match_record_goal | `reverse_index` の試合中記事タグに `ロスタイム` / `stoppage` / `45+2` を付与 |
 | goal | en | match_record_goal | match_record_goal > trouble_undo_goal > intro_setup | |
 | card | en | match_card | match_card > match_record_goal > intro_what_is_refboard | |
 | import | en | data_import | data_import > data_export > intro_setup | |
 | substitute | en | match_substitute_player | match_substitute_player > match_card > trouble_e3006_player_has_events | `substitute` を tags に追加 |
 | operator | en | intro_setup | intro_setup > data_import | `operator` を intro tags に追加 |
+| stoppage | en | match_record_goal, match_card, match_substitute_player（順不同） | match_substitute_player > match_card > match_record_goal | `match_create_new` / `match_finish` の `reverse_index` から `stoppage` タグを外し本文マッチに寄せない |
 
 ## 旧設定（参考）
 

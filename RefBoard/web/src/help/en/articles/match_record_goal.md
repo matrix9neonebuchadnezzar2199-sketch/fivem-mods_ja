@@ -1,7 +1,7 @@
 ---
 title: Record a goal
 category: in_match
-tags: [goal, score, shot, G, assist, record]
+tags: [goal, score, shot, G, assist, record, stoppage, additional time, 45+2]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"
@@ -27,7 +27,7 @@ errorCode: null
 2. Pick **home or away**.
 3. Select the **scorer** (on-pitch players only).
 4. Optionally pick an **assist**, or leave **no assist**.
-5. Adjust **minute** / **half** if needed.
+5. Set **match minute** if needed (`45+2` for stoppage; leave blank and confirm to use the **current match clock**). Half follows the match clock phase.
 6. Confirm in the dialog.
 
 ## Assists
@@ -64,7 +64,7 @@ Only **one** assist is supported (no double assist).
 A. Record as the **opponent’s goal** and add a note.
 
 **Q. Stoppage time**  
-A. Use an **integer minute** (e.g. `47`), not `45+2` text.
+A. In the wizard’s **match minute** field, enter **`45+2`** style (`minute+stoppage`; `+` can be half-width or full-width). Leave it blank and confirm to use the **current match clock** minute. The timeline shows values like `45+2'`.
 
 ## See also
 

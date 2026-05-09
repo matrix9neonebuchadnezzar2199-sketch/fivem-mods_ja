@@ -3,10 +3,13 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
+import type { ParsedMinute } from '../../utils/matchTime'
+import MinuteInput from './MinuteInput.vue'
 
 const props = defineProps<{
   open: boolean
   model: MatchDetailModel
+  suggestedEventTime: ParsedMinute
   /** 未指定なら model.clockMmSs（進行中は親から経過のライブ文字列を渡す） */
   matchTimeMmSs?: string
 }>()
@@ -14,7 +17,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:open': [boolean]
   done: []
-  substitute: [{ teamId: number; outPlayerId: number; inPlayerId: number }]
+  substitute: [{ teamId: number; outPlayerId: number; inPlayerId: number; eventTime: ParsedMinute | null }]
 }>()
 
 const { t } = useI18n()
@@ -23,6 +26,9 @@ const step = ref(1)
 const teamId = ref<number | null>(null)
 const outId = ref<string | null>(null)
 const inId = ref<string | null>(null)
+const eventTime = ref<ParsedMinute | null>(null)
+
+const isPkPhase = computed(() => props.model.serverHalf === 'pk')
 
 const teamPlayers = computed(() => {
   if (!teamId.value) return [] as MatchPlayer[]
@@ -41,10 +47,12 @@ const teamName = computed(() => {
   return ''
 })
 
+const summaryTimeLabel = computed(() => (isPkPhase.value ? 'PK' : `${props.matchTimeMmSs ?? props.model.clockMmSs}`))
+
 const summary = computed(() => {
   if (!outP.value || !inP.value || !teamName.value) return ''
   return t('substitution.summary', {
-    time: `${props.matchTimeMmSs ?? props.model.clockMmSs}`,
+    time: summaryTimeLabel.value,
     team: teamName.value,
     outNo: outP.value.number,
     outName: outP.value.name,
@@ -58,6 +66,7 @@ function reset() {
   teamId.value = null
   outId.value = null
   inId.value = null
+  eventTime.value = null
 }
 
 watch(
@@ -76,7 +85,7 @@ function submit() {
   const outPid = resolveMatchPlayerRowId(outId.value)
   const inPid = resolveMatchPlayerRowId(inId.value)
   if (outPid == null || inPid == null || outPid <= 0 || inPid <= 0) return
-  emit('substitute', { teamId: teamId.value, outPlayerId: outPid, inPlayerId: inPid })
+  emit('substitute', { teamId: teamId.value, outPlayerId: outPid, inPlayerId: inPid, eventTime: eventTime.value })
   emit('done')
   close()
 }
@@ -159,6 +168,10 @@ function submit() {
       </div>
 
       <div v-else class="space-y-3">
+        <div v-if="!isPkPhase">
+          <p class="mb-1 text-xs text-slate-500">{{ t('substitution.event_time_label') }}</p>
+          <MinuteInput v-model="eventTime" :suggested="suggestedEventTime" />
+        </div>
         <p class="rounded border border-slate-600 bg-slate-950/80 p-3 text-sm text-slate-200">{{ summary }}</p>
         <div class="flex justify-end gap-2">
           <button type="button" class="rounded border border-slate-600 px-3 py-2 text-sm" @click="step = 3">

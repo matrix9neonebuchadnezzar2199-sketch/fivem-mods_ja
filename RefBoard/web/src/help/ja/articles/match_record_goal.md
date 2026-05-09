@@ -1,7 +1,7 @@
 ---
 title: ゴールを記録する
 category: in_match
-tags: [ゴール, goal, 得点, シュート, G, アシスト, 記録]
+tags: [ゴール, goal, 得点, シュート, G, アシスト, 記録, ロスタイム, stoppage, 45+2]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"
@@ -64,7 +64,7 @@ errorCode: null
 A. 「相手チームの得点」として記録し、メモやタイムラインで補足してください。
 
 **Q. ロスタイムの得点は？**  
-A. 時間は **整数の分**（例: `47`）で入れてください。
+A. ウィザードの **試合内の時刻** に `45+2` のように **`分+ロスタイム`** で入力できます（半角／全角の `+` 可）。空欄のまま確定すると、**現在の試合時計**から分が自動入力されます。タイムラインでは `45+2'` のように表示されます。
 
 ## 関連項目
 

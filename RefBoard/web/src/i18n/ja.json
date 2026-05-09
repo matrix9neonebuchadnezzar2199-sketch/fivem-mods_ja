@@ -70,7 +70,14 @@
     },
     "operator_label": "操作者",
     "operator_unset": "未設定",
-    "operator_set_in_settings": "設定で表示名を入力"
+    "operator_set_in_settings": "設定で表示名を入力",
+    "minute_input": {
+      "hint": "例: 45 または 45+2（後半 45 分＋ロスタイム 2 分）。空欄のまま確定すると試合時計から自動入力されます。",
+      "error_empty": "時刻を入力してください",
+      "error_invalid_format": "形式が正しくありません（例: 45 / 45+2）",
+      "error_minute_out_of_range": "分は 0〜120 の範囲で入力してください",
+      "error_stoppage_out_of_range": "ロスタイムは 0〜29 の範囲で入力してください"
+    }
   },
   "tabs": {
     "score_record": "スコア記録",
@@ -129,11 +136,13 @@
     "remove_failed": "選手の削除に失敗しました。"
   },
   "goal_wizard": {
-    "breadcrumb": "EFmktg > シュート > 選手選択",
+    "breadcrumb": "ゴール > シュート > 選手選択",
     "pick_team": "得点したチームを選んでください",
     "pick_scorer": "得点者を選んでください",
     "pick_assist": "アシスト（任意）",
     "no_assist": "[アシストなし]",
+    "event_time": "試合内の時刻",
+    "event_time_hint": "空欄で確定すると、現在の試合時計から分が自動入力されます。ロスタイムは `45+2` のように入力できます。",
     "confirm": "確認",
     "submit": "[記録]",
     "summary_goal": "15' {team}: {scorer}",
@@ -279,7 +288,8 @@
     "pick_out": "退場（OUT）する選手",
     "pick_in": "入場（IN）する選手（ベンチ）",
     "summary": "{time} {team}: OUT {outNo} {outName} → IN {inNo} {inName}",
-    "submit": "記録する"
+    "submit": "記録する",
+    "event_time_label": "試合内の時刻（任意）"
   },
   "card": {
     "title": "カード",
@@ -291,7 +301,8 @@
     "confirm_red": "レッドカード（退場）を記録しますか？ — {name}",
     "submit": "記録",
     "second_yellow_body": "2枚目の警告のため、退場（レッド）として記録します。よろしいですか？",
-    "second_yellow_ok": "レッドで記録"
+    "second_yellow_ok": "レッドで記録",
+    "event_time_label": "試合内の時刻（任意）"
   },
   "penalty": {
     "title": "PK戦",

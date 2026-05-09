@@ -4,10 +4,13 @@ import { useI18n } from 'vue-i18n'
 import { useToast } from '../../composables/useToast'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
+import type { ParsedMinute } from '../../utils/matchTime'
+import MinuteInput from './MinuteInput.vue'
 
 const props = defineProps<{
   open: boolean
   model: MatchDetailModel
+  suggestedEventTime: ParsedMinute
   /** 親からプリセット（メニューから黄/赤を選んだ場合） */
   presetKind?: 'yellow' | 'red' | null
 }>()
@@ -21,6 +24,7 @@ const emit = defineEmits<{
       playerId: number
       cardType: 'yellow_card' | 'red_card'
       ejectionReason?: 'second_yellow' | 'red_card'
+      eventTime: ParsedMinute | null
     },
   ]
 }>()
@@ -35,6 +39,9 @@ const cardKind = ref<'yellow' | 'red' | null>(null)
 const showSecondYellow = ref(false)
 /** 2枚目黄から赤に切り替えた場合のみ true（ejectionReason 用） */
 const redFromSecondYellow = ref(false)
+const eventTime = ref<ParsedMinute | null>(null)
+
+const isPkPhase = computed(() => props.model.serverHalf === 'pk')
 
 const teamPlayers = computed(() => {
   if (!teamId.value) return [] as MatchPlayer[]
@@ -58,6 +65,7 @@ watch(
       cardKind.value = null
       showSecondYellow.value = false
       redFromSecondYellow.value = false
+      eventTime.value = null
     }
   },
 )
@@ -148,6 +156,7 @@ function record() {
     cardType: cardKind.value === 'yellow' ? 'yellow_card' : 'red_card',
     ejectionReason:
       cardKind.value === 'red' ? (redFromSecondYellow.value ? 'second_yellow' : 'red_card') : undefined,
+    eventTime: eventTime.value,
   })
   emit('done')
   close()
@@ -227,6 +236,10 @@ function record() {
               : t('card.confirm_red', { name: sel?.name ?? '' })
           }}
         </p>
+        <div v-if="!isPkPhase">
+          <p class="mb-1 text-xs text-slate-500">{{ t('card.event_time_label') }}</p>
+          <MinuteInput v-model="eventTime" :suggested="suggestedEventTime" />
+        </div>
         <div class="flex justify-end gap-2">
           <button type="button" class="rounded border border-slate-600 px-3 py-2 text-sm" @click="goBackFromConfirm">
             {{ t('match.back') }}

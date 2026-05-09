@@ -1,7 +1,7 @@
 ---
 title: Finish or reopen a match
 category: in_match
-tags: [finish, reopen, resume, final]
+tags: [finish, reopen, resume, final, half, stoppage, additional time]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -20,6 +20,8 @@ errorCode: null
 
 - **Edit mode**.
 - Play reached **end of second half** (or PK decided) — finishing early is possible but discouraged.
+
+Each **half length** you set at match creation (e.g. 45×2) is separate from **stoppage time** on events: record it as **`45+2`** (`minute+stoppage`; timeline shows `45+2'`).
 
 ## Finish
 

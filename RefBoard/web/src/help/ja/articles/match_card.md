@@ -1,7 +1,7 @@
 ---
 title: イエロー／レッドカードを記録する
 category: in_match
-tags: [イエロー, レッド, 黄色, 赤, 警告, 退場, カード, card, yellow, red]
+tags: [イエロー, レッド, 黄色, 赤, 警告, 退場, カード, card, yellow, red, ロスタイム, stoppage, 45+2]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -25,7 +25,7 @@ errorCode: null
 
 1. 選手一覧の行から **「カード」**、またはイベントメニュー → **「カード」**。
 2. ダイアログで **黄（Yellow）** を選ぶ。
-3. 任意で **時間（分）**・**理由**（短文）。
+3. 任意で **試合内の時刻**・**理由**（短文）。時刻は `45+2` のように **分＋ロスタイム** も入力できます（空欄で確定すると現在の試合時計から自動）。
 4. **「発行」**で確定。
 
 ## 手順 — 一発レッド

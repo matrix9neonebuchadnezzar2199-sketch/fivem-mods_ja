@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.1.0（ローカル専用リブート起点）
+- **対象バージョン**: v0.2.0（ローカル専用・運用品質更新）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.1.0）
+## 3. ディレクトリ構成（v0.2.0）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.1.0'
+├─ fxmanifest.lua          version '0.2.0'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.1.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.2.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
@@ -54,11 +54,13 @@ RefBoard/
       ├─ utils/
       │  ├─ localPersist.ts       localStorage ラッパ（v=1）
       │  ├─ localId.ts            ID カウンタ
+      │  ├─ matchTime.ts          イベント時刻 `45+2` パース／表示／CSV 用整形
       │  ├─ localMatchAdapter.ts  Match → MatchDetailModel ブリッジ
       │  ├─ exporters.ts          CSV／全データ JSON バックアップ／インポート用パース
       │  ├─ localImport.ts        JSON インポート（replace／merge）と取り込み履歴
       │  └─ errorCodeMapper.ts    E2001/E3004/E3006 のみ
       ├─ components/
+      │  ├─ match/MinuteInput.vue  イベント時刻（分＋ロスタイム）入力
       │  └─ data/ImportBackupDialog.vue  JSON 取り込みウィザード
       ├─ views/
       │  ├─ Launcher.vue          表示名入力 → 試合一覧へ
@@ -100,6 +102,7 @@ RefBoard/
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
+- **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
 
 ## 6. 開発・ビルド・配布
 
@@ -113,9 +116,8 @@ npx vue-tsc --noEmit # 型チェック
 
 `fxmanifest.lua` は `web/dist/index.html` と `web/dist/**/*` をパッケージ。`server.cfg` には `ensure RefBoard` の 1 行のみ（`oxmysql` も ACE も不要）。`Config.OpenKey`（既定 F6）と `Config.DefaultLocale`（既定 `ja`）だけ設定可能。
 
-## 7. 既知の TODO（v0.1.0 時点）
+## 7. 既知の TODO（v0.2.0 時点）
 
-- ロスタイム表記（`45+2`）の入力許容と表示整形。
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
 - `intro_setup` のスクリーンショット差し替え（旧版のままなら更新）。
 
@@ -131,11 +133,11 @@ npx vue-tsc --noEmit # 型チェック
 8. F5 でリロードしてデータが永続していることを確認。
 9. 不具合は `RefBoard/docs/diary/` にその日のファイルを起こして記録。
 
-## 9. ロードマップ（v0.1.0 → v1.0.0）
+## 9. ロードマップ（v0.2.0 → v1.0.0）
 
-- **v0.1.x（短期）**: `intro_setup` スクショ更新、ロスタイム入力。
-- **v0.2.0（中期）**: 大会／リーグの集計、CSV 出力の項目拡充、コンパクト小窓モードの再評価。
-- **v0.3.0**: ヘルプ拡充（v0.1.0 では削った記事のうち再度必要になったものをローカル文脈で書き直し）。Fuse しきい値の再調整は v0.2.0 第九コミットで実施済み。
+- **v0.1.x（短期）**: `intro_setup` スクショ更新。
+- **v0.2.0（中期・進行中）**: Fuse 再調整／評価クエリ、ロスタイム入力と表示・CSV 整形、JSON インポートの部分マージ（第十一コミット予定）。
+- **v0.3.0 以降**: 大会／リーグの集計、CSV 出力の項目拡充、コンパクト小窓モードの再評価。ヘルプ拡充（v0.1.0 で削った記事のうち再び必要になったものをローカル文脈で書き直し）。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -143,11 +145,11 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.1.0（ローカル版リブート完了、4 連コミット済）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: ロスタイム入力許容、PK キャンセル UI など §7 TODO のいずれか。
+> 現状: v0.2.0（ロスタイム入力・Fuse 評価基盤まで反映）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 次着手候補: JSON インポート部分マージ（第十一コミット）、PK キャンセル UI など §7 TODO のいずれか。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
-短縮フレーズ: `ロスタイムいって` / `PK キャンセルいって`
+短縮フレーズ: `インポート部分マージいって` / `PK キャンセルいって`
 
 ## 11. 改版履歴
 
@@ -156,3 +158,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑09: 試合詳細ヘッダに `selfName`（操作者）を表示。未設定時は Settings へ誘導するリンクを表示。小窓モードで `transparentChrome` のときはヘッダから非表示。
 - 2026‑05‑09: 全データ JSON の **インポート UI**（置換／追記、置換はダイアログ内二段確認）、`import_history` 最大 20 件、ヘルプ `data_import` 追加。完了後は `location.reload()` で反映。
 - 2026‑05‑09: ヘルプ Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`keys` に `slug` 追加と重み付け変更）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。
+- 2026‑05‑09: イベント時刻に `45+2` 入力（`matchTime.ts` / `MinuteInput.vue`）、表示・CSV 整形、PK 中の保存ルール、ヘルプ記事・`reverse_index` 追従。版数 v0.2.0（`package.json` / `fxmanifest` / `REFBOARD_UI_VERSION`）。

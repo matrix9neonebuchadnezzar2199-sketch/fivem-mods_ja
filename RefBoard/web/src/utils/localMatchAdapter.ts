@@ -1,5 +1,6 @@
 import type { Match, MatchEvent as LocalMatchEvent, MatchPlayer as LocalMatchPlayer, Half } from '../types/local'
 import type { MatchDetailModel, MatchDbStatus, MatchEvent, MatchPlayer, MatchUiStatus, ScoreHistoryRow } from '../types/match'
+import { formatMinute as formatMinuteDisplay } from './matchTime'
 
 function halfToServerHalf(h: Half): string {
   switch (h) {
@@ -70,12 +71,6 @@ function localKindToOld(k: LocalMatchEvent['kind']): MatchEvent['kind'] {
   return 'other'
 }
 
-function formatMinute(m: number, stoppage?: number | null): string {
-  const base = `${Math.max(0, m)}'`
-  if (stoppage != null && stoppage > 0) return `${m}+${stoppage}'`
-  return base
-}
-
 function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[]): MatchEvent {
   const scorer = e.playerId != null ? players.find((p) => p.id === e.playerId) : null
   const assist = e.assistPlayerId != null ? players.find((p) => p.id === e.assistPlayerId) : null
@@ -98,9 +93,13 @@ function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[]): Match
     const inn = e.subInPlayerId != null ? players.find((p) => p.id === e.subInPlayerId) : null
     if (inn) text = `↑ ${inn.number ?? ''} ${inn.name}`.trim()
   }
+  const isPkShot = e.kind === 'pk_goal' || e.kind === 'pk_miss'
+  const minuteLabel = isPkShot ? 'PK' : formatMinuteDisplay(e.minute, e.stoppage ?? null)
   return {
     id: String(e.id),
-    minute: formatMinute(e.minute, e.stoppage),
+    minute: minuteLabel,
+    eventMinute: isPkShot ? undefined : e.minute,
+    eventStoppage: isPkShot ? undefined : (e.stoppage ?? null),
     kind: localKindToOld(e.kind),
     text,
     penaltySuccess: e.kind === 'pk_goal' || e.kind === 'pk_miss' ? (e.kind === 'pk_goal' ? true : false) : undefined,

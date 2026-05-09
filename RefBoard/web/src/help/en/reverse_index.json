@@ -96,7 +96,7 @@
           "id": "match_new_rev",
           "title": "Create a new match",
           "article": "match_create_new.md",
-          "tags": ["match", "home", "away", "schedule"],
+          "tags": ["match", "home", "away", "schedule", "half", "additional time"],
           "actionUrl": "#/workspace/matches"
         }
       ]
@@ -110,21 +110,21 @@
           "id": "record_goal",
           "title": "Record a goal",
           "article": "match_record_goal.md",
-          "tags": ["goal", "score", "shot", "G", "assist", "record"],
+          "tags": ["goal", "score", "shot", "G", "assist", "record", "stoppage", "additional time", "45+2"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
           "id": "substitute_player",
           "title": "Make a substitution",
           "article": "match_substitute_player.md",
-          "tags": ["sub", "substitution", "substitute", "bench"],
+          "tags": ["sub", "substitution", "substitute", "bench", "stoppage", "additional time", "45+2"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
           "id": "match_card_rev",
           "title": "Issue yellow or red",
           "article": "match_card.md",
-          "tags": ["yellow", "red", "warning", "send-off", "card"],
+          "tags": ["yellow", "red", "warning", "send-off", "card", "stoppage", "additional time", "45+2"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -145,7 +145,7 @@
           "id": "match_finish",
           "title": "Finish or reopen the match",
           "article": "match_finish.md",
-          "tags": ["finish", "reopen", "resume", "final"],
+          "tags": ["finish", "reopen", "resume", "final", "half", "additional time"],
           "actionUrl": "#/workspace/matches/:matchId"
         }
       ]

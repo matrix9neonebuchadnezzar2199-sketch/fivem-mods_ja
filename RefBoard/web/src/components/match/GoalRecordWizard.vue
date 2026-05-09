@@ -3,17 +3,22 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
+import type { ParsedMinute } from '../../utils/matchTime'
+import MinuteInput from './MinuteInput.vue'
 import PlayerSelectGrid from './PlayerSelectGrid.vue'
 
 const props = defineProps<{
   open: boolean
   model: MatchDetailModel
+  suggestedEventTime: ParsedMinute
 }>()
 
 const emit = defineEmits<{
   'update:open': [boolean]
   recorded: []
-  'record-goal': [{ teamId: number; scorerPlayerId: number; assistPlayerId: number | null }]
+  'record-goal': [
+    { teamId: number; scorerPlayerId: number; assistPlayerId: number | null; eventTime: ParsedMinute | null },
+  ]
 }>()
 
 const { t } = useI18n()
@@ -22,6 +27,9 @@ const teamId = ref<number | null>(null)
 const scorerId = ref<string | null>(null)
 const assistId = ref<string | null>(null)
 const showEscConfirm = ref(false)
+const eventTime = ref<ParsedMinute | null>(null)
+
+const isPkPhase = computed(() => props.model.serverHalf === 'pk')
 
 const teamPlayers = computed(() => {
   if (!teamId.value) return [] as MatchPlayer[]
@@ -53,6 +61,7 @@ function reset() {
   teamId.value = null
   scorerId.value = null
   assistId.value = null
+  eventTime.value = null
 }
 
 watch(
@@ -71,7 +80,8 @@ function close() {
 }
 
 function tryClose() {
-  if (step.value > 1 && step.value < 5) {
+  const maxStep = 5
+  if (step.value > 1 && step.value <= maxStep) {
     showEscConfirm.value = true
     return
   }
@@ -108,7 +118,7 @@ function nextFromTeam() {
 
 function nextFromScorer() {
   if (!scorerId.value) return
-  step.value = 3
+  step.value = isPkPhase.value ? 5 : 3
 }
 
 function skipAssist() {
@@ -120,8 +130,17 @@ function nextFromAssist() {
   step.value = 4
 }
 
+function nextFromEventTime() {
+  step.value = 5
+}
+
 function back() {
-  if (step.value > 1) step.value -= 1
+  if (step.value <= 1) return
+  if (step.value === 5 && isPkPhase.value) {
+    step.value = 2
+    return
+  }
+  step.value -= 1
 }
 
 function record() {
@@ -133,6 +152,7 @@ function record() {
     teamId: teamId.value,
     scorerPlayerId: scorerPid,
     assistPlayerId: assistPid,
+    eventTime: eventTime.value,
   })
   emit('recorded')
   close()
@@ -236,6 +256,17 @@ function record() {
             </div>
           </div>
           <div v-else-if="step === 4" key="s4" class="space-y-3">
+            <h3 class="text-lg font-semibold text-slate-50">{{ t('goal_wizard.event_time') }}</h3>
+            <p class="text-xs text-slate-500">{{ t('goal_wizard.event_time_hint') }}</p>
+            <MinuteInput v-if="!isPkPhase" v-model="eventTime" :suggested="suggestedEventTime" />
+            <div class="flex justify-between pt-2">
+              <button type="button" class="text-sm text-slate-400 hover:text-slate-200" @click="back">{{ t('match.back') }}</button>
+              <button type="button" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white" @click="nextFromEventTime">
+                {{ t('match.next') }}
+              </button>
+            </div>
+          </div>
+          <div v-else-if="step === 5" key="s5" class="space-y-3">
             <h3 class="text-lg font-semibold text-slate-50">{{ t('goal_wizard.confirm') }}</h3>
             <p class="rounded-lg border border-slate-600 bg-slate-950/80 p-3 text-sm text-slate-200">{{ summary }}</p>
             <div class="flex justify-between pt-2">
