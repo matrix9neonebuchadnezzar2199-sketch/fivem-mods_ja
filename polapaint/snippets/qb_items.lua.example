@@ -1,0 +1,16 @@
+-- qb-core/shared/items.lua 等に追加する例（ファイル名は環境に合わせる）
+
+polaroid_camera = {
+    name = 'polaroid_camera', label = 'ポラロイドカメラ',
+    weight = 400, type = 'item', image = 'polaroid_camera.png',
+    unique = false, useable = true, shouldClose = true, combinable = nil,
+    description = '撮影してインベントリに写真を追加します。',
+},
+polaroid_photo = {
+    name = 'polaroid_photo', label = 'ポラロイド写真',
+    weight = 50, type = 'item', image = 'polaroid_photo.png',
+    unique = true, useable = true, shouldClose = true, combinable = nil,
+    description = '写真。USE で落書き編集。',
+},
+
+-- useable は polapaint の server/main.lua で CreateUseableItem 登録済み（qb 時）。

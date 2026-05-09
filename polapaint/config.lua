@@ -1,38 +1,56 @@
 Config = {}
 
--- 表示言語（locales のキーと一致）
+-- 表示言語（locales/ja.lua, en.lua のキー）
 Config.Locale = 'ja'
 
---[[ Discord Incoming Webhook の完全な URL（https://discord.com/api/webhooks/...）
-     配布時はダミーのまま。運営環境では実 URL に差し替えること。
-     実トークンはリポに含めない（例: polapaint/ウェブフックキー.txt は .gitignore 済み）。 ]]
-Config.DiscordWebhook = 'https://discord.com/api/webhooks/000000000000000000/REPLACE_ME'
+--[[ インベントリフレームワーク
+     'ox'  : ox_inventory
+     'qb'  : qb-inventory
+     'auto': 自動判定（推奨） ]]
+Config.Framework = 'auto'
 
---[[ ox_inventory の items.lua で定義するアイテム名（キーと一致させる）
-     カメラは stack = true 推奨（複数台を1スロットにまとめる）。写真は URL 付きメタのため通常 stack = false。 ]]
+-- アイテム名（items 定義側のキーと一致させる）
 Config.Items = {
-    camera = 'polaroid_camera', -- 撮影用（consume=0、撮影しても減らない）
-    photo = 'polaroid_photo', -- 撮影済み（metadata.url / metadata.label に画像 URL と付けた名前）
+    camera = 'polaroid_camera',
+    photo  = 'polaroid_photo',
 }
 
--- 撮影完了時にプレイヤーが付ける「写真の名前」の最大文字数（UTF-8 文字単位・サーバーで検証）
-Config.MaxPhotoNameLength = 40
+-- 撮影 / 保存仕様
+Config.MaxImageWidth         = 2560     -- 最大幅 (px) ※仕様書要件
+Config.JpegQuality           = 0.85
+Config.MaxPhotoNameLength    = 40       -- UTF-8 grapheme 単位（Lua 側は utf8.len）
+Config.CaptureCooldownSec    = 4
+Config.EditSaveCooldownSec   = 3
+Config.CaptureSessionTTLSec  = 30       -- 撮影トークン有効秒
+Config.EditSessionTTLSec     = 120      -- 編集トークン有効秒
 
--- 撮影・保存 JPEG の品質（0.0〜1.0、screenshot-basic / Canvas 双方で使用）
-Config.JpegQuality = 0.85
+-- ローカルストレージ（リソース配下の data/photos/）
+Config.Storage = {
+    -- HTTP ハンドラの公開パス（リソース名の後に続く部分）。例: …/polapaint/photo/<signed>.jpg
+    httpRoute      = '/photo/',
+    -- 保存可能な画像の最大バイト数（multipart 全体ではなく画像本体）
+    maxBytes       = 4 * 1024 * 1024,    -- 4 MiB
+    -- 自動削除（0 で無効。秒単位で経過した jpg を起動時に掃除）
+    retentionSec   = 0,
+}
 
--- 画像の最大幅（px）。これを超える場合は NUI で縮小してからサーバーへ送る（負荷軽減）
-Config.MaxImageWidth = 2560
+--[[ Discord Webhook（任意・通知のみ）
+     設定方法: server.cfg に
+       set polapaint_webhook "https://discord.com/api/webhooks/..."
+     と書く。空文字列なら通知無効。 ]]
+Config.Webhook = {
+    enabled    = true,                   -- false で完全無効化
+    convarName = 'polapaint_webhook',
+    username   = 'polapaint',
+    -- 投稿に使用するベースURL（埋め込みで画像表示するため、外部到達可能なURLが必要）
+    -- 空ならローカル URL の代わりに「保存しました」テキスト通知のみ
+    publicBaseUrl = '',                  -- 例: 'https://photos.example.com/polapaint'
+}
 
--- 撮影の連打防止（秒）
-Config.CaptureCooldownSec = 4
+-- HTTP 経路の認可（簡易トークン。NUI から画像表示時のみ付与）
+Config.HttpToken = {
+    enabled      = true,                 -- false で誰でも閲覧可（社内サーバ向け）
+    rotateSec    = 3600,                 -- 将来用（現在は起動時に HMAC キー生成）
+}
 
--- 編集保存の連打防止（秒）
-Config.EditSaveCooldownSec = 3
-
---[[ サーバーが受け付ける Base64 文字列の最大長（data: プレフィックス除く）
-     大きすぎるペイロードは拒否（イベントサイズ・Discord 制限対策） ]]
-Config.MaxBase64PayloadLength = 4500000
-
--- サーバー・クライアントのデバッグログ
 Config.Debug = false

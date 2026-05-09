@@ -1,372 +1,297 @@
 ---@diagnostic disable: undefined-global
 
-local ox = exports.ox_inventory
+local L = PolaPaintUtil.L
+local now = PolaPaintUtil.now
 
----@return string
-local function L(key)
-    local pack = Locales[Config.Locale or 'ja']
-    if type(pack) == 'table' and pack[key] then
-        return pack[key]
-    end
-    return key
-end
+local cooldown        = { capture = {}, edit = {} }
+local pendingCapture  = {}
+local pendingEdit     = {}
 
----@param msg string
-local function dbg(msg)
-    if Config.Debug then
-        print(('[polapaint] %s'):format(msg))
-    end
-end
-
-local lastCapture = {}
-local lastEdit = {}
-
----@param src number
----@param kind 'capture'|'edit'
----@param sec number
----@return boolean
-local function checkCooldown(src, kind, sec)
-    local t = os.time()
-    local tab = kind == 'capture' and lastCapture or lastEdit
-    local prev = tab[src]
-    if prev and (t - prev) < sec then
-        return false
-    end
-    tab[src] = t
-    return true
-end
-
----@param url string
----@return boolean
-local function isPlaceholderWebhook(url)
-    if type(url) ~= 'string' then return true end
-    if url:find('REPLACE_ME', 1, true) then return true end
-    if url:find('000000000000000000', 1, true) then return true end
-    return false
-end
-
----@param url string
----@return boolean
-local function isDiscordWebhookUrl(url)
-    return type(url) == 'string'
-        and url:match('^https://discord%.com/api/webhooks/%d+/.+') ~= nil
-end
-
----@param label string|nil
----@return string|nil
-local function normalizePhotoLabel(label)
-    local maxLen = Config.MaxPhotoNameLength or 40
-    if type(label) ~= 'string' then return nil end
-    label = label:gsub('^%s+', ''):gsub('%s+$', '')
-    local len = utf8.len(label)
-    if not len or len < 1 or len > maxLen then
-        return nil
-    end
-    return label
-end
-
-local function isDiscordAttachmentUrl(url)
-    if type(url) ~= 'string' or not url:match('^https://') then return false end
-    if url:match('^https://cdn%.discordapp%.com/attachments/') then return true end
-    if url:match('^https://media%.discordapp%.net/attachments/') then return true end
-    if url:match('^https://cdn%.discord%.com/attachments/') then return true end
-    return false
-end
-
--- Base64 decode（RFC 4648・大きな JPEG でもビット列連結方式より高速）
----@param data string
----@return string?
-local function base64_decode(data)
-    if type(data) ~= 'string' then return nil end
-    local alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    local map = {}
-    for i = 1, #alpha do
-        map[alpha:sub(i, i)] = i - 1
-    end
-    data = data:gsub('%s+', ''):gsub('[^A-Za-z0-9%+/=]', '')
-    local len = #data
-    if len == 0 or len % 4 ~= 0 then return nil end
-    local out = {}
-    for pos = 1, len, 4 do
-        local c1, c2, c3, c4 = data:sub(pos, pos), data:sub(pos + 1, pos + 1), data:sub(pos + 2, pos + 2), data:sub(pos + 3, pos + 3)
-        local v1, v2 = map[c1], map[c2]
-        if not v1 or not v2 then return nil end
-        if c3 == '=' then
-            out[#out + 1] = string.char(v1 * 4 + math.floor(v2 / 16))
-        elseif c4 == '=' then
-            local v3 = map[c3]
-            if not v3 then return nil end
-            local n = v1 * 4096 + v2 * 64 + v3
-            out[#out + 1] = string.char(math.floor(n / 1024) % 256)
-            out[#out + 1] = string.char(math.floor(n / 4) % 256)
-        else
-            local v3, v4 = map[c3], map[c4]
-            if not v3 or not v4 then return nil end
-            local n = v1 * 262144 + v2 * 4096 + v3 * 64 + v4
-            out[#out + 1] = string.char(math.floor(n / 65536) % 256)
-            out[#out + 1] = string.char(math.floor(n / 256) % 256)
-            out[#out + 1] = string.char(n % 256)
-        end
-    end
-    return table.concat(out)
-end
-
----@param err string|nil
----@return string
-local function discordErrToNotifyKey(err)
-    if err == 'decode' then return 'notify_capture_decode_fail' end
-    if err == 'empty' then return 'notify_capture_discord_empty' end
-    if err == 'json' then return 'notify_capture_discord_json' end
-    if err == 'attachments' then return 'notify_capture_discord_attachments' end
-    if err == 'badurl' then return 'notify_capture_discord_badurl' end
-    return 'notify_capture_fail'
-end
-
----@param webhookUrl string
----@return string
-local function webhookWithWait(webhookUrl)
-    if webhookUrl:find('wait=', 1, true) then
-        return webhookUrl
-    end
-    if webhookUrl:find('?', 1, true) then
-        return webhookUrl .. '&wait=true'
-    end
-    return webhookUrl .. '?wait=true'
-end
-
----@param url string|nil
----@return string|nil
-local function trimWebhookUrl(url)
-    if type(url) ~= 'string' then return nil end
-    url = url:gsub('^%s+', ''):gsub('%s+$', '')
-    -- UTF-8 BOM（先頭のみ）を除去（コピペで混入すると https が壊れる）
-    if url:sub(1, 3) == '\239\187\191' then
-        url = url:sub(4)
-    end
-    return url
-end
-
----@param b64 string
----@param cb fun(url: string?, err: string?, httpStatus: number|nil)
-local function discordUploadJpeg(b64, cb)
-    local wraw = trimWebhookUrl(Config.DiscordWebhook)
-    local webhook = webhookWithWait(wraw or '')
-    if not wraw or isPlaceholderWebhook(wraw) or not isDiscordWebhookUrl(wraw) then
-        cb(nil, 'webhook')
-        return
-    end
-    local bin = base64_decode(b64)
-    if not bin or #bin < 32 then
-        cb(nil, 'decode')
-        return
-    end
-    local b1, b2 = bin:byte(1), bin:byte(2)
-    if b1 ~= 0xFF or b2 ~= 0xD8 then
-        cb(nil, 'decode')
-        return
-    end
-    -- multipart では files[n] と対応する attachments を payload_json に書く必要がある（無いと Discord が 400 を返すことが多い）
-    local payloadJson = '{"attachments":[{"id":0,"filename":"polapaint.jpg"}]}'
-    local boundary = '----polapaintBoundary' .. tostring(math.random(100000000, 999999999))
-    local crlf = '\r\n'
-    local partMeta = table.concat({
-        '--',
-        boundary,
-        crlf,
-        'Content-Disposition: form-data; name="payload_json"',
-        crlf,
-        'Content-Type: application/json',
-        crlf,
-        crlf,
-        payloadJson,
-        crlf,
-    })
-    local partFile = table.concat({
-        '--',
-        boundary,
-        crlf,
-        'Content-Disposition: form-data; name="files[0]"; filename="polapaint.jpg"',
-        crlf,
-        'Content-Type: image/jpeg',
-        crlf,
-        crlf,
-    })
-    local tail = crlf .. '--' .. boundary .. '--' .. crlf
-    local body = partMeta .. partFile .. bin .. tail
-    local headers = {
-        ['Content-Type'] = 'multipart/form-data; boundary=' .. boundary,
-    }
-    PerformHttpRequest(webhook, function(status, response)
-        dbg(('webhook status=%s len=%s'):format(tostring(status), response and #response or 0))
-        if status ~= 200 and status ~= 204 then
-            cb(nil, 'http', status)
-            return
-        end
-        if type(response) ~= 'string' or response == '' then
-            cb(nil, 'empty')
-            return
-        end
-        local ok, decoded = pcall(json.decode, response)
-        if not ok or type(decoded) ~= 'table' then
-            cb(nil, 'json')
-            return
-        end
-        local atts = decoded.attachments
-        if type(atts) ~= 'table' or not atts[1] or type(atts[1].url) ~= 'string' then
-            cb(nil, 'attachments')
-            return
-        end
-        local u = atts[1].url
-        if not isDiscordAttachmentUrl(u) then
-            cb(nil, 'badurl')
-            return
-        end
-        cb(u, nil)
-    end, 'POST', body, headers)
-end
-
----@param src number
 local function notify(src, key)
     TriggerClientEvent('polapaint:client:notify', src, L(key))
 end
 
----@param src number
----@param err string|nil
----@param httpStatus number|nil
-local function notifyDiscordFail(src, err, httpStatus)
-    if err == 'webhook' then
-        notify(src, 'notify_webhook_not_configured')
-    elseif err == 'http' then
-        TriggerClientEvent(
-            'polapaint:client:notify',
-            src,
-            L('notify_capture_discord_http'):format(tostring(httpStatus ~= nil and httpStatus or '?'))
-        )
-    else
-        notify(src, discordErrToNotifyKey(err))
+local function peekCooldown(src, kind, sec)
+    local prev = cooldown[kind][src]
+    return not prev or (now() - prev) >= (sec * 1000)
+end
+
+local function markCooldown(src, kind)
+    cooldown[kind][src] = now()
+end
+
+local function normalizePhotoLabel(label)
+    local maxLen = Config.MaxPhotoNameLength or 40
+    if type(label) ~= 'string' then return nil end
+    label = label:gsub('^%s+', ''):gsub('%s+$', '')
+    if label == '' then return nil end
+    if PolaPaintUtil.hasControl(label) then return nil end
+    local len = PolaPaintUtil.utf8len(label)
+    if not len or len < 1 or len > maxLen then return nil end
+    return label
+end
+
+local function buildPhotoMeta(id, label)
+    local signed = PolaPaintStorage.publicUrl(id)
+    return {
+        url   = ('polapaint://photo/%s'):format(signed),
+        label = label,
+        ts    = os.time(),
+    }
+end
+
+local function webhookImageUrlForId(id)
+    local pub = Config.Webhook and Config.Webhook.publicBaseUrl
+    if type(pub) ~= 'string' or pub == '' then return nil end
+    local signed = PolaPaintStorage.publicUrl(id)
+    pub = pub:gsub('/$', '')
+    return ('%s/photo/%s.jpg'):format(pub, signed)
+end
+
+---@param body string
+---@return boolean ok, string|nil errKey
+local function handleUploadCapture(src, body, token, name)
+    local s = pendingCapture[src]
+    if not s or s.token ~= token or now() > s.expires_ms then
+        return false, 'notify_session_expired'
     end
+    pendingCapture[src] = nil
+
+    local label = normalizePhotoLabel(name)
+    if not label then return false, 'notify_photo_name_invalid' end
+
+    if PolaPaintSvBridge.cameraCount(src) < 1 then return false, 'notify_no_camera' end
+
+    local id, err = PolaPaintStorage.savePhoto(body)
+    if not id then
+        if err == 'too_large' then return false, 'notify_payload_too_large' end
+        return false, 'notify_storage_fail'
+    end
+
+    local meta = buildPhotoMeta(id, label)
+    local ok, reason = PolaPaintSvBridge.givePhoto(src, meta)
+    if not ok then
+        local key = 'notify_capture_fail'
+        if reason == 'invalid_item' then key = 'notify_capture_item_not_defined'
+        elseif reason == 'inventory_full' then key = 'notify_capture_inventory_full'
+        elseif reason == 'cannot_carry' or reason == 'cannot_carry_other' then
+            key = 'notify_capture_weight_limit'
+        end
+        return false, key
+    end
+
+    markCooldown(src, 'capture')
+    PolaPaintWebhook.notify(
+        ('%s が写真を撮影: %s'):format(GetPlayerName(src) or '?', label),
+        webhookImageUrlForId(id)
+    )
+    return true, nil
+end
+
+---@return boolean ok, string|nil errKey
+local function handleUploadEdit(src, body, token, slotStr)
+    if not peekCooldown(src, 'edit', Config.EditSaveCooldownSec or 3) then
+        return false, 'notify_edit_cooldown'
+    end
+    local s = pendingEdit[src]
+    if not s or s.token ~= token or now() > s.expires_ms then
+        return false, 'notify_session_expired'
+    end
+    local slot = tonumber(slotStr)
+    if not slot or slot ~= s.slot then return false, 'notify_slot_invalid' end
+    pendingEdit[src] = nil
+
+    local item = PolaPaintSvBridge.getSlot(src, slot)
+    if not item or item.name ~= (Config.Items and Config.Items.photo) then
+        return false, 'notify_slot_invalid'
+    end
+
+    local id, err = PolaPaintStorage.savePhoto(body)
+    if not id then
+        if err == 'too_large' then return false, 'notify_payload_too_large' end
+        return false, 'notify_edit_fail'
+    end
+
+    local newMeta = {}
+    for k, v in pairs(item.metadata or {}) do newMeta[k] = v end
+    newMeta.url = ('polapaint://photo/%s'):format(PolaPaintStorage.publicUrl(id))
+    newMeta.ts = os.time()
+
+    local okMeta = PolaPaintSvBridge.setMetadata(src, slot, newMeta)
+    if not okMeta then return false, 'notify_edit_fail' end
+
+    markCooldown(src, 'edit')
+    PolaPaintWebhook.notify(
+        ('%s が写真を編集'):format(GetPlayerName(src) or '?'),
+        webhookImageUrlForId(id)
+    )
+    return true, nil
+end
+
+local function parseQuery(path)
+    local q = path and path:match('%?(.*)$')
+    if not q then return {} end
+    local out = {}
+    for kv in (q .. '&'):gmatch('([^&]+)&') do
+        local k, v = kv:match('^([^=]+)=(.*)$')
+        if k then
+            v = v or ''
+            v = v:gsub('+', ' ')
+            v = v:gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
+            out[k] = v
+        end
+    end
+    return out
+end
+
+local function handleRequestCapture(src)
+    if not peekCooldown(src, 'capture', Config.CaptureCooldownSec or 4) then
+        notify(src, 'notify_capture_cooldown'); return
+    end
+    if PolaPaintSvBridge.cameraCount(src) < 1 then
+        notify(src, 'notify_no_camera'); return
+    end
+    local token = PolaPaintUtil.token(16)
+    pendingCapture[src] = {
+        token = token,
+        expires_ms = now() + (Config.CaptureSessionTTLSec or 30) * 1000,
+    }
+    TriggerClientEvent('polapaint:client:doCapture', src, token)
 end
 
 RegisterNetEvent('polapaint:server:requestCapture', function()
-    local src = source
-    if not checkCooldown(src, 'capture', Config.CaptureCooldownSec or 4) then
-        notify(src, 'notify_capture_cooldown')
-        return
-    end
-    local wcheck = trimWebhookUrl(Config.DiscordWebhook)
-    if not wcheck or isPlaceholderWebhook(wcheck) or not isDiscordWebhookUrl(wcheck) then
-        notify(src, 'notify_webhook_not_configured')
-        return
-    end
-    local cam = Config.Items and Config.Items.camera
-    if type(cam) ~= 'string' then return end
-    local n = ox:Search(src, 'count', cam) or 0
-    if n < 1 then
-        notify(src, 'notify_no_camera')
-        return
-    end
-    TriggerClientEvent('polapaint:client:doCapture', src)
+    handleRequestCapture(source)
 end)
 
----@param b64Payload string|nil
----@param photoLabel string|nil
-RegisterNetEvent('polapaint:server:submitCapture', function(b64Payload, photoLabel)
-    local src = source
-    if type(b64Payload) ~= 'string' then return end
-    b64Payload = b64Payload:gsub('^%s+', ''):gsub('%s+$', '')
-    local maxLen = Config.MaxBase64PayloadLength or 4500000
-    if #b64Payload > maxLen then
-        notify(src, 'notify_payload_too_large')
-        return
-    end
-    local labelOk = normalizePhotoLabel(photoLabel)
-    if not labelOk then
-        notify(src, 'notify_photo_name_invalid')
-        return
-    end
-    local cam = Config.Items and Config.Items.camera
-    local photo = Config.Items and Config.Items.photo
-    if type(cam) ~= 'string' or type(photo) ~= 'string' then return end
-    if (ox:Search(src, 'count', cam) or 0) < 1 then
-        notify(src, 'notify_no_camera')
-        return
-    end
-    discordUploadJpeg(b64Payload, function(url, err, httpStatus)
-        if not url then
-            dbg(('capture upload fail: err=%s http=%s'):format(tostring(err), tostring(httpStatus)))
-            notifyDiscordFail(src, err, httpStatus)
-            return
-        end
-        local meta = {
-            url = url,
-            label = labelOk,
-        }
-        local added, addReason = ox:AddItem(src, photo, 1, meta)
-        if not added then
-            dbg('AddItem failed: ' .. tostring(addReason))
-            local key = 'notify_capture_fail'
-            if addReason == 'invalid_item' then
-                key = 'notify_capture_item_not_defined'
-            elseif addReason == 'inventory_full' then
-                key = 'notify_capture_inventory_full'
-            elseif addReason == 'cannot_carry' or addReason == 'cannot_carry_other' then
-                key = 'notify_capture_weight_limit'
-            end
-            notify(src, key)
-            return
-        end
-        notify(src, 'notify_capture_ok')
-    end)
-end)
-
----@param slot number|nil
----@param b64Payload string|nil
-RegisterNetEvent('polapaint:server:submitEdited', function(slot, b64Payload)
+RegisterNetEvent('polapaint:server:requestEdit', function(slot)
     local src = source
     slot = tonumber(slot)
-    if not slot or type(b64Payload) ~= 'string' then return end
-    b64Payload = b64Payload:gsub('^%s+', ''):gsub('%s+$', '')
-    if not checkCooldown(src, 'edit', Config.EditSaveCooldownSec or 3) then
-        notify(src, 'notify_edit_cooldown')
-        return
+    if not slot then return end
+    local item = PolaPaintSvBridge.getSlot(src, slot)
+    if not item or item.name ~= (Config.Items and Config.Items.photo) then
+        notify(src, 'notify_slot_invalid'); return
     end
-    local maxLen = Config.MaxBase64PayloadLength or 4500000
-    if #b64Payload > maxLen then
-        notify(src, 'notify_payload_too_large')
-        return
+    local meta = item.metadata or {}
+    if type(meta.url) ~= 'string' or meta.url == '' then
+        notify(src, 'notify_photo_no_url'); return
     end
-    local photoName = Config.Items and Config.Items.photo
-    if type(photoName) ~= 'string' then return end
-    local slotData = ox:GetSlot(src, slot)
-    if not slotData or slotData.name ~= photoName then
-        notify(src, 'notify_slot_invalid')
-        return
-    end
-    local meta = slotData.metadata
-    if type(meta) ~= 'table' or type(meta.url) ~= 'string' or meta.url == '' then
-        notify(src, 'notify_photo_no_url')
-        return
-    end
-    if not isDiscordAttachmentUrl(meta.url) then
-        notify(src, 'notify_edit_fail')
-        return
-    end
-    discordUploadJpeg(b64Payload, function(url, err, httpStatus)
-        if not url then
-            dbg(('edit upload fail: err=%s http=%s'):format(tostring(err), tostring(httpStatus)))
-            notifyDiscordFail(src, err, httpStatus)
+    local token = PolaPaintUtil.token(16)
+    pendingEdit[src] = {
+        token = token,
+        slot = slot,
+        expires_ms = now() + (Config.EditSessionTTLSec or 120) * 1000,
+    }
+    TriggerClientEvent('polapaint:client:openPaint', src, {
+        imageUrl  = meta.url,
+        slot      = slot,
+        editToken = token,
+    })
+end)
+
+CreateThread(function()
+    PolaPaintStorage.init()
+
+    SetHttpHandler(function(req, res)
+        local path = req.path or ''
+        local method = (req.method or 'GET'):upper()
+
+        if method == 'GET' then
+            local signed = path:match('/photo/([^/%?]+)%.jpg')
+            if signed then
+                local id = PolaPaintStorage.verifySignedId(signed)
+                if not id then res.writeHead(403); res.send('forbidden'); return end
+                local bin = PolaPaintStorage.loadPhoto(id)
+                if not bin then res.writeHead(404); res.send('not found'); return end
+                res.writeHead(200, {
+                    ['Content-Type']  = 'image/jpeg',
+                    ['Cache-Control'] = 'public, max-age=86400',
+                })
+                res.send(bin)
+                return
+            end
+            res.writeHead(404); res.send('not found'); return
+        end
+
+        if method == 'POST' then
+            req.setDataHandler(function(body)
+                local q = parseQuery(path)
+                if path:find('uploadCapture', 1, true) then
+                    local token = q.token
+                    local name = q.name or ''
+                    if not token then res.writeHead(400); res.send('bad'); return end
+                    local foundSrc
+                    for s, st in pairs(pendingCapture) do
+                        if st.token == token then foundSrc = s; break end
+                    end
+                    if not foundSrc then res.writeHead(403); res.send('expired'); return end
+                    local ok, errKey = handleUploadCapture(foundSrc, body, token, name)
+                    if not ok then
+                        notify(foundSrc, errKey or 'notify_capture_fail')
+                        res.writeHead(400); res.send(errKey or 'fail'); return
+                    end
+                    notify(foundSrc, 'notify_capture_ok')
+                    res.writeHead(204); res.send('')
+                    return
+                end
+
+                if path:find('uploadEdit', 1, true) then
+                    local token = q.token
+                    local slotStr = q.slot or ''
+                    if not token then res.writeHead(400); res.send('bad'); return end
+                    local foundSrc
+                    for s, st in pairs(pendingEdit) do
+                        if st.token == token then foundSrc = s; break end
+                    end
+                    if not foundSrc then res.writeHead(403); res.send('expired'); return end
+                    local ok, errKey = handleUploadEdit(foundSrc, body, token, slotStr)
+                    if not ok then
+                        notify(foundSrc, errKey or 'notify_edit_fail')
+                        res.writeHead(400); res.send(errKey or 'fail'); return
+                    end
+                    notify(foundSrc, 'notify_edit_saved')
+                    res.writeHead(204); res.send('')
+                    return
+                end
+
+                res.writeHead(404); res.send('not found')
+            end)
             return
         end
-        local newMeta = {}
-        for k, v in pairs(meta) do
-            newMeta[k] = v
-        end
-        newMeta.url = url
-        local setRes = ox:SetMetadata(src, slot, newMeta)
-        if setRes == false then
-            notify(src, 'notify_edit_fail')
-            return
-        end
-        notify(src, 'notify_edit_saved')
+
+        res.writeHead(405); res.send('method not allowed')
     end)
+
+    if Config.Debug then print('[polapaint] server initialized (HTTP handler)') end
+end)
+
+AddEventHandler('playerDropped', function()
+    local s = source
+    cooldown.capture[s] = nil
+    cooldown.edit[s] = nil
+    pendingCapture[s] = nil
+    pendingEdit[s] = nil
+end)
+
+CreateThread(function()
+    Wait(500)
+    if PolaPaintSvBridge.detect() ~= 'qb' then return end
+    local ok, QBCore = pcall(function()
+        return exports['qb-core']:GetCoreObject()
+    end)
+    if not ok or not QBCore then return end
+
+    local cam = Config.Items and Config.Items.camera
+    local pho = Config.Items and Config.Items.photo
+    if cam then
+        QBCore.Functions.CreateUseableItem(cam, function(src)
+            handleRequestCapture(src)
+        end)
+    end
+    if pho then
+        QBCore.Functions.CreateUseableItem(pho, function(src, item)
+            local slot = item and item.slot
+            if type(slot) ~= 'number' then return end
+            TriggerClientEvent('polapaint:client:qbUsePhoto', src, slot)
+        end)
+    end
 end)
