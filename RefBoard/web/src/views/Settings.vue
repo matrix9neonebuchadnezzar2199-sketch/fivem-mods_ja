@@ -1,107 +1,63 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
-import { useNui, getResourceName, isInFiveM } from '../composables/useNui'
-import { useToast } from '../composables/useToast'
+import { isInFiveM } from '../composables/useNui'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import { isSeedInstalled, getSeedInstalledAt, installSeedData, clearMatchData, clearAllData } from '../dev/seedActions'
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
-/** ローカル版では常に編集相当（サーバー側の閲覧モードなし） */
-const isEditor = true
-const { send, on } = useNui()
-const { push: toast } = useToast()
 
-const dbMeta = ref<{ schemaVersion?: string; resourceVersion?: string } | null>(null)
-const devBusy = ref(false)
-const devModal = ref<'fixture' | 'wipe' | null>(null)
-const devConfirmInput = ref('')
+const seedInstalled = ref(false)
+const seedInstalledAt = ref<string | null>(null)
+const confirmAction = ref<null | 'install' | 'clear_match' | 'clear_all'>(null)
 
-/** 「テスト用DB操作パネル」チェック時のみ。FiveM 実機でも config.lua は不要。ブラウザ DEV はモック動作 */
+/** 「テスト用データ操作パネル」チェック時のみ。FiveM 実機でも config.lua は不要。ブラウザ DEV は表示可 */
 const showDevDataPanel = computed(
   () =>
     settings.settings.showTestCommandsHint === true && (isInFiveM() === true || import.meta.env.DEV === true),
 )
 
-function openDevModal(kind: 'fixture' | 'wipe') {
-  devModal.value = kind
-  devConfirmInput.value = ''
-}
-
-function closeDevModal() {
-  devModal.value = null
-  devConfirmInput.value = ''
-}
-
-const canSubmitDevConfirm = computed(() => devConfirmInput.value.trim() === 'YES')
-
-let unDevAck: (() => void) | null = null
-
-function handleDevAck(p: {
-  ok?: boolean
-  error?: string
-  action?: string
-  detail?: string
-}) {
-  if (!devBusy.value) {
-    return
-  }
-  devBusy.value = false
-  closeDevModal()
-  if (p?.ok) {
-    if (p.action === 'apply_fixture') {
-      toast(t('settings.dev_data.toast_fixture_ok'), 'success', { ms: 6000 })
-    } else if (p.action === 'wipe_all') {
-      toast(t('settings.dev_data.toast_wipe_ok'), 'success', { ms: 6000 })
-    } else {
-      toast(t('settings.dev_data.toast_ok'), 'success', { ms: 4000 })
-    }
-    return
-  }
-  const err = p?.error ?? 'unknown'
-  if (err === 'test_commands_disabled') {
-    toast(t('settings.dev_data.err_test_commands'), 'error', { ms: 8000 })
-  } else if (err === 'no_permission') {
-    toast(t('settings.dev_data.err_no_edit'), 'error', { ms: 8000 })
-  } else if (err === 'bad_confirm') {
-    toast(t('settings.dev_data.err_bad_confirm'), 'error')
-  } else {
-    toast(t('settings.dev_data.err_sql', { detail: p?.detail ? String(p.detail) : err }), 'error', { ms: 10000 })
-  }
-}
-
-async function submitDevAction() {
-  if (!canSubmitDevConfirm.value || !devModal.value || devBusy.value) {
-    return
-  }
-  if (!isEditor) {
-    toast(t('settings.dev_data.err_no_edit'), 'error')
-    return
-  }
-  devBusy.value = true
-  const path = devModal.value === 'fixture' ? 'dev_apply_fixture' : 'dev_wipe_all'
-  try {
-    await send(path, { confirm: 'YES' })
-  } catch {
-    devBusy.value = false
-    toast(t('settings.dev_data.err_network'), 'error')
-    return
-  }
-  devBusy.value = false
-  closeDevModal()
+function refreshSeedStatus() {
+  seedInstalled.value = isSeedInstalled()
+  seedInstalledAt.value = getSeedInstalledAt()
 }
 
 onMounted(() => {
   settings.load()
   locale.value = settings.settings.locale
-  dbMeta.value = { schemaVersion: 'local', resourceVersion: '0.1.0' }
-  unDevAck = on('refboard:dev:data_action:ack', handleDevAck)
+  refreshSeedStatus()
 })
 
-onUnmounted(() => {
-  unDevAck?.()
+function askInstall() {
+  confirmAction.value = 'install'
+}
+function askClearMatch() {
+  confirmAction.value = 'clear_match'
+}
+function askClearAll() {
+  confirmAction.value = 'clear_all'
+}
+function cancelConfirm() {
+  confirmAction.value = null
+}
+
+function executeConfirmed() {
+  const a = confirmAction.value
+  if (a === 'install') installSeedData()
+  else if (a === 'clear_match') clearMatchData()
+  else if (a === 'clear_all') clearAllData()
+  confirmAction.value = null
+  location.reload()
+}
+
+const confirmExecuteClass = computed(() => {
+  if (confirmAction.value === 'install') {
+    return 'bg-emerald-600 hover:bg-emerald-500'
+  }
+  return 'bg-rose-600 hover:bg-rose-500'
 })
 
 function syncLocale() {
@@ -292,71 +248,68 @@ function syncLocale() {
         <input v-model="settings.settings.showTestCommandsHint" type="checkbox" class="rounded border-slate-500" />
         {{ t('settings.show_test_commands') }}
       </label>
-      <div class="mt-3 rounded border border-slate-700 bg-slate-950/60 p-2 text-xs text-slate-400">
-        <div>DB: {{ dbMeta?.schemaVersion || '—' }}</div>
-        <div>Resource: {{ dbMeta?.resourceVersion || '—' }}</div>
-        <div>getResourceName: {{ getResourceName() }}</div>
-      </div>
-      <div v-if="showDevDataPanel" class="mt-4 rounded-lg border border-amber-700/60 bg-amber-950/20 p-3">
-        <h3 class="text-xs font-semibold text-amber-200">{{ t('settings.dev_data.title') }}</h3>
-        <p class="mt-1 text-xs text-amber-100/90">{{ t('settings.dev_data.intro') }}</p>
-        <p v-if="!isEditor" class="mt-2 text-xs font-medium text-amber-300">{{ t('settings.dev_data.need_edit') }}</p>
-        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <button
-            type="button"
-            class="rounded-lg border border-red-700/70 bg-red-950/30 px-3 py-2 text-left text-xs font-medium text-red-100 hover:bg-red-950/50 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="!isEditor || devBusy"
-            @click="openDevModal('wipe')"
-          >
-            {{ t('settings.dev_data.btn_wipe') }}
-          </button>
-          <button
-            type="button"
-            class="rounded-lg border border-amber-600/80 bg-amber-900/40 px-3 py-2 text-left text-xs font-medium text-amber-50 hover:bg-amber-900/60 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="!isEditor || devBusy"
-            @click="openDevModal('fixture')"
-          >
-            {{ t('settings.dev_data.btn_fixture') }}
-          </button>
-        </div>
-      </div>
-    </section>
 
-    <!-- 破壊的操作の確認（YES 入力） -->
-    <Teleport to="body">
-      <div
-        v-if="devModal"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 p-4 shadow-xl">
-          <h3 class="text-base font-semibold text-slate-50">
-            {{ devModal === 'fixture' ? t('settings.dev_data.modal_fixture_title') : t('settings.dev_data.modal_wipe_title') }}
-          </h3>
-          <p class="mt-2 text-sm leading-relaxed text-amber-100/95">
-            {{ devModal === 'fixture' ? t('settings.dev_data.modal_fixture_body') : t('settings.dev_data.modal_wipe_body') }}
-          </p>
-          <p class="mt-3 text-xs text-slate-400">{{ t('settings.dev_data.type_yes') }}</p>
-          <input
-            v-model="devConfirmInput"
-            type="text"
-            autocomplete="off"
-            class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
-            :placeholder="t('settings.dev_data.yes_placeholder')"
-          />
-          <div class="mt-4 flex justify-end gap-2">
-            <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200" @click="closeDevModal">
-              {{ t('settings.dev_data.cancel') }}
+      <div v-if="showDevDataPanel" class="mt-4 rounded-lg border border-amber-700/60 bg-amber-950/20 p-3">
+        <fieldset class="border-0 p-0">
+          <legend class="text-sm text-amber-100">{{ t('settings.dev_seed.title') }}</legend>
+          <p class="mt-2 text-xs text-amber-100/90">{{ t('settings.dev_seed.warning') }}</p>
+
+          <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <button
+              type="button"
+              class="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500"
+              @click="askInstall"
+            >
+              {{ t('settings.dev_seed.install_button') }}
             </button>
             <button
               type="button"
-              class="rounded-lg px-3 py-2 text-sm font-semibold text-white"
-              :class="devModal === 'wipe' ? 'bg-red-700 hover:bg-red-600' : 'bg-amber-700 hover:bg-amber-600'"
-              :disabled="!canSubmitDevConfirm || devBusy"
-              @click="submitDevAction"
+              class="rounded bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-500"
+              @click="askClearMatch"
             >
-              {{ t('settings.dev_data.execute') }}
+              {{ t('settings.dev_seed.clear_match_button') }}
+            </button>
+            <button
+              type="button"
+              class="rounded bg-rose-900 px-3 py-1.5 text-sm text-white hover:bg-rose-800"
+              @click="askClearAll"
+            >
+              {{ t('settings.dev_seed.clear_all_button') }}
+            </button>
+          </div>
+          <p v-if="seedInstalled" class="mt-2 text-xs text-slate-400">
+            {{ t('settings.dev_seed.installed_at', { at: seedInstalledAt ?? '—' }) }}
+          </p>
+        </fieldset>
+      </div>
+    </section>
+
+    <Teleport to="body">
+      <div
+        v-if="confirmAction"
+        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="max-w-md rounded-lg border border-slate-600 bg-slate-800 p-4 shadow-lg">
+          <p class="text-sm text-slate-200">
+            {{ t(`settings.dev_seed.confirm_${confirmAction}`) }}
+          </p>
+          <div class="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded bg-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-600"
+              @click="cancelConfirm"
+            >
+              {{ t('common.cancel') }}
+            </button>
+            <button
+              type="button"
+              class="rounded px-3 py-1.5 text-sm font-medium text-white"
+              :class="confirmExecuteClass"
+              @click="executeConfirmed"
+            >
+              {{ t('common.execute') }}
             </button>
           </div>
         </div>

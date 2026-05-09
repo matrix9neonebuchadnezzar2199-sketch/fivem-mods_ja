@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.2.1（ローカル専用・運用品質更新）
+- **対象バージョン**: v0.2.2（ローカル専用・運用品質更新）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.2.1）
+## 3. ディレクトリ構成（v0.2.2）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.2.1'
+├─ fxmanifest.lua          version '0.2.2'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.2.1（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.2.2（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
@@ -51,6 +51,9 @@ RefBoard/
       │  ├─ settings.ts    selfName, locale, fontScale, marquee 等
       │  └─ matchCompactDock.ts
       ├─ composables/useNui.ts    close/コンパクト関連のみ POST、他はダミー
+      ├─ dev/
+      │  ├─ sampleData.ts         開発用疑似データの固定配列（チーム・試合シード）
+      │  └─ seedActions.ts        投入／試合データのみ削除／全削除＋`location.reload()`
       ├─ utils/
       │  ├─ localPersist.ts       localStorage ラッパ（v=1）
       │  ├─ localId.ts            ID カウンタ
@@ -103,6 +106,7 @@ RefBoard/
 - **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
 - **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
+- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（またはブラウザ `npm run dev` 時）、`dev/sampleData.ts` 固定データを `localPersist` へ書き込み `location.reload()` で反映。10 チーム × 13 名・20 試合（終了／進行中／下書き混在）。全削除時は `refboard_local_*` に加え `refboard_settings` と `refboard-locale` も除去。
 
 ## 6. 開発・ビルド・配布
 
@@ -118,7 +122,7 @@ npx vue-tsc --noEmit # 型チェック
 
 `fxmanifest.lua` は `web/dist/index.html` と `web/dist/**/*` をパッケージ。`server.cfg` には `ensure RefBoard` の 1 行のみ（`oxmysql` も ACE も不要）。`Config.OpenKey`（既定 F6）と `Config.DefaultLocale`（既定 `ja`）だけ設定可能。
 
-## 7. 既知の TODO（v0.2.0 時点）
+## 7. 既知の TODO（v0.2.2 時点）
 
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
 - `intro_setup` のスクリーンショット差し替え（旧版のままなら更新）。
@@ -147,7 +151,7 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.2.1（vitest＋`matchTime` 単体テスト。Fuse・ロスタイム入力・JSON 部分マージは v0.2.0 まで反映）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 現状: v0.2.2（開発用疑似データ投入／削除、設定の DB メタ表示撤去。vitest は v0.2.1〜）。`RefBoard_old/` は GitHub 非追跡の素材庫。
 > 次着手候補: PK キャンセル UI、コンパクト小窓再評価など §7 TODO のいずれか。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
@@ -163,3 +167,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑09: イベント時刻に `45+2` 入力（`matchTime.ts` / `MinuteInput.vue`）、表示・CSV 整形、PK 中の保存ルール、ヘルプ記事・`reverse_index` 追従。版数 v0.2.0（`package.json` / `fxmanifest` / `REFBOARD_UI_VERSION`）。
 - 2026‑05‑09: JSON インポート **部分マージ**（`mergeImportPartial` / `ImportSelection`、`buildPreviewDetail`、履歴 `partial`）。
 - 2026‑05‑10: vitest を devDependencies に追加し、`utils/matchTime.ts` の単体テストを新設（`parseMinuteInput`／`formatMinute`／`formatMinuteForCsv`）。`npm test` / `npm run test:watch` を導入。版数 v0.2.1。
+- 2026‑05‑10: Settings の SQL／DB メタ表示を撤去。`dev/sampleData.ts` / `dev/seedActions.ts` によるローカル疑似データ投入・削除（版数 v0.2.2）。

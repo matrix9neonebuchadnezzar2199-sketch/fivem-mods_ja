@@ -1,5 +1,9 @@
 {
   "app": { "title": "Soccer match control" },
+  "common": {
+    "cancel": "Cancel",
+    "execute": "Run"
+  },
   "toast": {
     "match_finished": "Match finished",
     "match_clock_failed": "Could not update the match clock.",
@@ -463,29 +467,17 @@
     "avatar_hue": "Avatar hue",
     "nui_mock": "Enable NUI mock",
     "nui_mock_note": "Browser dev uses mock automatically.",
-    "show_test_commands": "Show test DB actions panel (enables SQL reset & test fixture; keep off on shared PCs)",
-    "dev_data": {
-      "title": "SQL reset & test fixture",
-      "intro": "This block appears only when “Show test DB actions panel” above is on (no config.lua needed). Editors in Edit mode may run actions. “Full SQL reset” empties related tables. “Load test fixture” wipes first, then inserts bundled sample teams (5), roster members (15 each), and matches (20).",
-      "need_edit": "Enter via the launcher in Edit mode to use these actions.",
-      "btn_fixture": "Load test fixture",
-      "btn_wipe": "Full SQL reset (wipe data)",
-      "modal_fixture_title": "Load test fixture",
-      "modal_fixture_body": "All existing matches, teams, rosters, events, etc. will be deleted, then the bundled SQL registers sample teams (5), members (15 per team), and matches (20). This cannot be undone.",
-      "modal_wipe_title": "Full SQL reset (wipe data)",
-      "modal_wipe_body": "All match-related rows and teams/rosters will be removed; the editor lock row is cleared. Table schema is not dropped. This cannot be undone.",
-      "type_yes": "Type YES in uppercase in the box below to continue.",
-      "yes_placeholder": "YES",
-      "cancel": "Cancel",
-      "execute": "Run",
-      "toast_fixture_ok": "Test fixture loaded into the database. Refresh the match list.",
-      "toast_wipe_ok": "Full SQL reset (data wipe) completed.",
-      "toast_ok": "Done.",
-      "err_test_commands": "The server rejected this action.",
-      "err_no_edit": "Not in Edit mode; action blocked.",
-      "err_bad_confirm": "Confirmation text did not match.",
-      "err_sql": "Database operation failed: {detail}",
-      "err_network": "Failed to reach the server."
+    "show_test_commands": "Show developer data panel (sample seed & clear; keep off on shared PCs)",
+    "dev_seed": {
+      "title": "Sample data (development)",
+      "warning": "Do not use in production. Install wipes existing matches, teams, and roster, then writes the seed.",
+      "install_button": "Install sample data",
+      "clear_match_button": "Clear matches, teams & roster",
+      "clear_all_button": "Clear everything (including settings)",
+      "installed_at": "Last installed: {at}",
+      "confirm_install": "Delete all matches, teams, and roster, then install sample data (10 teams × 13 players, 20 matches). Continue?",
+      "confirm_clear_match": "Delete all matches, teams, and roster. Settings, display name, and import history stay. Continue?",
+      "confirm_clear_all": "Delete all local data including settings, display name, and import history. Continue?"
     },
     "marquee_mode": {
       "label": "Text scroll",
