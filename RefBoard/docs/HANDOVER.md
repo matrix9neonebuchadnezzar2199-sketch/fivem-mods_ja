@@ -40,6 +40,9 @@ RefBoard/
    ├─ package.json         version 0.4.1（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
+   ├─ scripts/
+   │  ├─ check-help-articles.mjs   ヘルプ整合チェック（`npm run check:help`、記事変更時に必須）
+   │  └─ eval-help-fuse.mjs        Fuse 検索の簡易評価
    └─ src/
       ├─ main.ts           refboard:setOpen 受信、未処理例外トースト
       ├─ App.vue           settings.load() のみ
@@ -107,6 +110,7 @@ RefBoard/
 - **小窓ドック直近イベント**: `MatchDetail.vue` の `compactDock && !isPkPhase` ブロック内で、`CompactEventList` を前後半カード列下に配置。PK 専用ドックでは直近イベントは出さず PK パネルに集約。
 - **ヘルプ**: ja/en 各 **16 本**（data カテゴリ 6 本削除）。**試合詳細**の「?」は `HelpHoverDialog`：一覧から記事を選ぶと **同一モーダル内**で本文表示し、記事内の `#/workspace/help/article/…` リンクも **画面遷移せず** slug を切替（←／Esc で一覧へ）。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定は従来どおり（`threshold: 0.35` 等）。評価クエリは `docs/testing/help_search_queries.md`（データ管理系クエリは削除）。`web/scripts/eval-help-fuse.mjs` で再評価可能。
+- **ヘルプ記事の整合検証（v0.5.0 作業 F-3）**: `npm run check:help`（`scripts/check-help-articles.mjs`）。**記事の追加・削除・リネームや `index.json` / `reverse_index.json` / `context_map.json` を編集したら必ず実行**し、インデックス↔ディスク↔逆引き↔コンテキストの参照欠落、ja/en スラッグ非対称、フロントマター欠落（`title`・`category` 必須）をローカルで検出する。失敗時は `[NG]` と件数で終了コード 1。
 - **試合時刻入力**: `parseMinuteInput` に加え、オープン時の既定値に `eventMinutePresetFromClock(match, clockNowMs)`（前半／後半で 45+α・90+β に分離、PK は 0/null）。ゴール／カード／交代ダイアログは `MinuteInput` を開いた時点でプリセット。
 - **カード表示**: 赤牌イベントの `note` に保存する内部的な `red_card` / `second_yellow` は、タイムライン表示テキストにそのまま出さない（`localEventToRow`）。
 - **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（または `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` で一括書き込みし **ページリロードなし**で Pinia を再 hydrate。10 チーム × 13 名・**20 試合**（**finished 12** / **live 3**［通常 1・PK デモ完了相当 1・PK 進行中 1］/ **draft 5**）。PK 進行中は「カップ戦 PK進行中（実機検証用）」で PK ドック・3 列・通し番号をすぐ確認可能。
@@ -119,6 +123,8 @@ npm install
 npm run dev          # ブラウザ単体プレビュー
 npm run build        # web/dist 出力（FiveM 配布物）
 npx vue-tsc --noEmit # 型チェック
+npm run check:help   # ヘルプ index / reverse_index / articles / context_map / ja-en 整合
+node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意）
 ```
 
 - `npm test`: vitest による単体テスト。`matchTime.test.ts` 等（v0.4.0 時点 **37** 件）。watch は `npm run test:watch`。

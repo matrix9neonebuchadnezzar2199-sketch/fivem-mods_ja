@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:help": "node scripts/check-help-articles.mjs"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",

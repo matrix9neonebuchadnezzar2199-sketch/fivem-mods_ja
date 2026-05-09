@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0（未リリース）
+
+- **ヘルプ（F-3）**: `npm run check:help` — `scripts/check-help-articles.mjs` で `index.json`／`reverse_index.json`／`articles/*.md`／`context_map.json` の整合と ja/en スラッグ対称、各記事フロントマター（`title`・`category` 必須）を検証。
+
 ## v0.4.1 — 2026‑05‑09
 
 - **疑似データ**: PK 進行中の live 試合「カップ戦 PK進行中（実機検証用）」を追加（90 分同点 2-2 後、PK 4 本で 1-1・次は先攻の第 3 本）。進行中 live は **通常 1 + PK デモ 1 + PK 進行中 1** の 3 件のまま（旧「カップ戦 1回戦 第1試合」を置換）。
