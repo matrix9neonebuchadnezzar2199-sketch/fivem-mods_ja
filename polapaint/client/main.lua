@@ -14,9 +14,34 @@ end
 
 ---@param msg string
 local function notify(msg)
-    BeginTextCommandThefeedPost('STRING')
-    AddTextComponentSubstringPlayerName(msg)
-    EndTextCommandThefeedPostTicker(false, true)
+    if type(msg) ~= 'string' or msg == '' then return end
+    -- ox_lib（ox_inventory と併用されることが多い）があれば確実に表示される
+    if GetResourceState('ox_lib') == 'started' then
+        local ok = pcall(function()
+            exports.ox_lib:notify({
+                title = 'polapaint',
+                description = msg,
+                duration = 7500,
+                position = 'top-right',
+            })
+        end)
+        if ok then return end
+    end
+    -- ネイティブは長文・日本語で出ない環境があるため短くし、KeyboardDisplay を使う
+    local short = msg
+    if #short > 220 then
+        short = short:sub(1, 217) .. '...'
+    end
+    local okFeed = pcall(function()
+        BeginTextCommandThefeedPost('STRING')
+        AddTextComponentSubstringKeyboardDisplay(short)
+        EndTextCommandThefeedPostTicker(false, true)
+    end)
+    if not okFeed then
+        BeginTextCommandThefeedPost('STRING')
+        AddTextComponentSubstringPlayerName(short)
+        EndTextCommandThefeedPostTicker(false, true)
+    end
 end
 
 local function closeUi()
