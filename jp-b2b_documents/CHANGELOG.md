@@ -4,6 +4,12 @@ All notable changes to **jp-b2b_documents** are documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning where applicable.
 
+## [2.0.3-jp.12] — 2026-05-09
+
+### Fixed
+
+- **ox_inventory `registerHook` + lua54**: 素の `function` は `getmetatable` が `nil` のため、`createItem` フック登録時に **`attempt to index a nil value (local 'mt')`** が出る環境がある。フック本体を **`__call` 付きテーブル**に変更（`server.lua`）。
+
 ## [2.0.3-jp.11] — 2026-05-05
 
 ### Fixed
