@@ -21,7 +21,7 @@ import PenaltyShootoutPanel from '../components/match/PenaltyShootoutPanel.vue'
 import CompactEventList from '../components/match/CompactEventList.vue'
 import SubstitutionDialog from '../components/match/SubstitutionDialog.vue'
 import CardIssueDialog from '../components/match/CardIssueDialog.vue'
-import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import HelpHoverDialog from '../components/help/HelpHoverDialog.vue'
 import GoalRecordWizard from '../components/match/GoalRecordWizard.vue'
 import AddPlayerDialog from '../components/match/AddPlayerDialog.vue'
 import ScoreEditDialog from '../components/match/ScoreEditDialog.vue'
@@ -321,12 +321,15 @@ async function onClockAdjust(deltaMs: number) {
 
 syncClockFromDetail()
 
-/** 下部固定の小窓（スコア＋試合ステータスのみ）。PK 中は全画面を優先 */
+/** 下部固定の小窓（スコア＋試合ステータスのみ） */
 const compactDock = ref(false)
 /** 小窓解除後にフォーカスを移す（キーボード／スクリーンリーダー用） */
 const fullEditorAnchorRef = ref<HTMLElement | null>(null)
 
-const showFullEditor = computed(() => !compactDock.value || detail.serverHalf === 'pk')
+const isPkPhase = computed(() => detail.serverHalf === 'pk')
+/** PK 中は専用ドックのみ表示。小窓中はスクロール編集を隠す */
+const showFullEditor = computed(() => !compactDock.value && !isPkPhase.value)
+const showHelpDialog = ref(false)
 
 const editorHereBasic = computed(() => false)
 const editorHereScore = computed(() => false)
@@ -399,11 +402,10 @@ watch(compactDock, async (v, prev) => {
 })
 
 watch(
-  () => compactDock.value && detail.serverHalf !== 'pk',
-  (v) => {
-    const on = Boolean(v)
-    matchCompactDock.setTransparentChrome(on)
-    void send('compact_dock_state', { compact: on })
+  () => compactDock.value || isPkPhase.value,
+  (on) => {
+    matchCompactDock.setTransparentChrome(Boolean(on))
+    void send('compact_dock_state', { compact: Boolean(on) })
     if (!on) {
       compactGameInputActive.value = false
     }
@@ -714,7 +716,7 @@ function exportMatchEventsCsv() {
 <template>
   <div
     class="flex h-full min-h-0 flex-col overflow-hidden bg-transparent"
-    :class="{ 'pointer-events-none': compactDock && detail.serverHalf !== 'pk' }"
+    :class="{ 'pointer-events-none': compactDock && !isPkPhase }"
   >
     <div
       v-if="settings.settings.showHero && showFullEditor"
@@ -735,14 +737,7 @@ function exportMatchEventsCsv() {
       tabindex="-1"
       class="min-h-0 flex-1 overflow-y-auto px-4 py-4 outline-none focus:outline-none"
     >
-      <PenaltyShootoutPanel
-        v-if="detail.serverHalf === 'pk'"
-        :model="detail"
-        :readonly="readonly"
-        @pk-shot="onPkShot"
-        @finish-match="onPkPanelFinishMatch"
-      />
-      <div v-if="detail.serverHalf !== 'pk'">
+      <div>
         <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
           <div class="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-200">
             <div class="flex min-w-0 flex-wrap items-center gap-2">
@@ -821,7 +816,15 @@ function exportMatchEventsCsv() {
                 CSV
               </button>
             </div>
-            <HelpTriggerButton context-id="match_detail" />
+            <button
+              type="button"
+              class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 text-slate-200 hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              :aria-label="t('help.context.open_aria')"
+              :title="t('help.context.open_title')"
+              @click="showHelpDialog = true"
+            >
+              <span aria-hidden="true" class="text-sm font-bold">?</span>
+            </button>
           </div>
         </header>
 
@@ -891,8 +894,64 @@ function exportMatchEventsCsv() {
       </div>
     </div>
 
+    <!-- PK 戦：compact 状態に依存せず画面下部固定（操作者のみ／イベント一覧は PK パネル側） -->
     <div
-      v-if="compactDock && detail.serverHalf !== 'pk'"
+      v-if="isPkPhase"
+      class="pointer-events-auto fixed bottom-4 left-0 right-0 z-[100] flex flex-col items-center gap-1.5 bg-transparent px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-0 sm:bottom-5"
+    >
+      <div
+        class="relative w-full max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/95 p-2 pt-7 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] shadow-inner backdrop-blur-md md:max-h-[min(46vh,26rem)]"
+      >
+        <div
+          class="pointer-events-none absolute right-3 top-2 z-10 text-xs tracking-wide text-slate-500"
+          aria-hidden="true"
+        >
+          by eiho
+        </div>
+        <header class="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-slate-600/50 pb-2">
+          <h2 class="text-base font-semibold text-slate-100">{{ t('penalty.title') }}</h2>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 text-slate-200 hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              :aria-label="t('help.context.open_aria')"
+              :title="t('help.context.open_title')"
+              @click="showHelpDialog = true"
+            >
+              <span aria-hidden="true" class="text-sm font-bold">?</span>
+            </button>
+            <button
+              type="button"
+              class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+              @click="onCancel"
+            >
+              {{ t('match_detail.pk_back_to_list') }}
+            </button>
+          </div>
+        </header>
+        <div class="mb-2 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-xs text-slate-500">
+          <span>{{ t('match.operator_label') }}:</span>
+          <span v-if="operatorIsSet" class="font-medium text-slate-300">{{ operatorName }}</span>
+          <RouterLink
+            v-else
+            :to="{ name: 'settings' }"
+            class="text-slate-400 underline-offset-2 hover:text-emerald-300 hover:underline"
+            :title="t('match.operator_set_in_settings')"
+          >
+            {{ t('match.operator_unset') }}
+          </RouterLink>
+        </div>
+        <PenaltyShootoutPanel
+          :model="detail"
+          :readonly="readonly"
+          @pk-shot="onPkShot"
+          @finish-match="onPkPanelFinishMatch"
+        />
+      </div>
+    </div>
+
+    <div
+      v-if="compactDock && !isPkPhase"
       class="pointer-events-auto fixed bottom-4 left-0 right-0 z-[100] flex flex-col items-center gap-1.5 bg-transparent px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-0 sm:bottom-5"
     >
       <div
@@ -954,6 +1013,8 @@ function exportMatchEventsCsv() {
         </div>
       </div>
     </div>
+
+    <HelpHoverDialog context-id="match_detail" :open="showHelpDialog" @close="showHelpDialog = false" />
 
     <div class="pointer-events-auto">
       <GoalRecordWizard

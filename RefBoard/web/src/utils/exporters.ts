@@ -503,7 +503,7 @@ export function exportMatchToJSON(match: MatchDetailModel, history: ScoreHistory
       events: match.events,
       score_history: history,
       exported_at: new Date().toISOString(),
-      exporter_version: '0.3.1',
+      exporter_version: '0.3.2',
     },
     null,
     2,
@@ -522,7 +522,7 @@ export function exportFullBackup(): void {
   const payload = {
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
-    appVersion: '0.3.1',
+    appVersion: '0.3.2',
     data: dumpAllLocal(),
   }
   const ts = new Date().toISOString().slice(0, 19).replace(/\D/g, '').slice(0, 13)

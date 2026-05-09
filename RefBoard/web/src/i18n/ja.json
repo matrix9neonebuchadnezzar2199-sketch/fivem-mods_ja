@@ -208,7 +208,8 @@
     "compact_restore_full": "全体UIに戻る",
     "compact_focus_ui": "Ctrl+B — 歩行（ゲーム操作）へ",
     "compact_focus_game": "B または Ctrl+B — 小窓を操作",
-    "view_mode_local_hint": "ローカル版に閲覧専用モードはありません（常にこの端末で編集できます）。"
+    "view_mode_local_hint": "ローカル版に閲覧専用モードはありません（常にこの端末で編集できます）。",
+    "pk_back_to_list": "試合一覧に戻る"
   },
   "score": {
     "edit_reason": "変更理由（任意）",
@@ -369,6 +370,7 @@
     "title": "データ管理",
     "finished_section": "終了済み試合",
     "finished_hint": "この端末に保存された試合のうち、終了ステータスのものです。",
+    "fivem_export_note": "FiveM 内の NUI では CSV／JSON のファイル保存ができません（CEF の制限）。ブラウザで `npm run dev` するか同一データを手元のブラウザで開き、エクスポートしてください。ゲーム内対応は v0.4.0 で NUI→Lua ブリッジを予定しています。",
     "export_finished_csv": "終了済みを CSV エクスポート",
     "csv_column_set": "CSV 形式",
     "csv_standard": "標準（13 列）",

@@ -17,6 +17,7 @@ import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 import ImportBackupDialog from '../components/data/ImportBackupDialog.vue'
 import { formatDateJa } from '../utils/formatDate'
+import { isInFiveM } from '../composables/useNui'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -28,6 +29,7 @@ const finished = computed(() => matchesStore.matches.filter((m) => m.status === 
 const importDialogOpen = ref(false)
 const importHistory = ref<ImportRecord[]>([])
 const finishedCsvColumnSet = ref<CsvColumnSet>('standard')
+const inFiveM = computed(() => isInFiveM())
 
 function refreshImportHistory() {
   importHistory.value = loadImportHistory()
@@ -85,6 +87,12 @@ function rowModeLabel(mode: ImportRecord['mode']) {
     <section class="rounded-lg border border-slate-700 bg-slate-900/70 p-4">
       <h3 class="mb-2 text-sm font-semibold text-slate-200">{{ t('data.finished_section') }}</h3>
       <p class="mb-3 text-xs text-slate-500">{{ t('data.finished_hint') }}</p>
+      <p
+        v-if="inFiveM"
+        class="mb-3 rounded border border-amber-600/40 bg-amber-950/35 px-3 py-2 text-xs text-amber-100/95"
+      >
+        {{ t('data.fivem_export_note') }}
+      </p>
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <label class="flex items-center gap-2 text-xs text-slate-400">
           <span>{{ t('data.csv_column_set') }}</span>

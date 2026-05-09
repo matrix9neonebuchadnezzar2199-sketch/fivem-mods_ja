@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.2 — 2026‑05‑10
+
+- **PK 戦**: `serverHalf === 'pk'` の間は小窓フラグに依存せず、**画面下部固定の PK 専用ドック**のみ表示（通常の試合編集 UI は非表示）。操作者行・「試合一覧に戻る」・`PenaltyShootoutPanel` を同梱。小窓と同寸法・`transparentChrome`／`compact_dock_state` は PK 中も有効化。
+- **ヘルプ（試合詳細）**: 「?」でスライドインではなく **中央モーダル**（`HelpHoverDialog.vue`、ESC／背景クリックで閉じる）。`context_map` の `match_detail` 記事一覧は `ContextHelpPanel` と同ロジックを再利用。
+- **データ管理**: FiveM NUI 実行時のみ **CSV/JSON が保存できない旨**の注意（`data.fivem_export_note`）。ブラウザでのエクスポート運用を案内。
+- **見送り**: FiveM CEF での Blob ダウンロードは **v0.4.0** で NUI→Lua ブリッジ予定（HANDOVER 参照）。
+- 版数: `package.json` / `fxmanifest` / `REFBOARD_UI_VERSION` / エクスポート JSON の `appVersion`・`exporter_version` を **0.3.2** に同期。
+
 ## v0.3.1 — 2026‑05‑10（実機ホットフィックス）
 
 - **疑似データ（設定）**: `location.reload()` を廃止し、`localStorage` 書き込み後に `teams` / `matches` / `settings` の Pinia を再読込。`id_counters` は `beginIdCounterBatch` / `endIdCounterBatch` でシード構築中のディスク書き込みを抑制。`saveLocalBatch` で配列キーをまとめて保存。FiveM CEF での NUI フォーカス滞留・クラッシュ回避。

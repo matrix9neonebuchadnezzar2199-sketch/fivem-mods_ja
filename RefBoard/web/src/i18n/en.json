@@ -208,7 +208,8 @@
     "compact_restore_full": "Full UI",
     "compact_focus_ui": "Ctrl+B — walk / game controls",
     "compact_focus_game": "B or Ctrl+B — use the compact panel",
-    "view_mode_local_hint": "There is no read-only mode in the local build (you always edit on this device)."
+    "view_mode_local_hint": "There is no read-only mode in the local build (you always edit on this device).",
+    "pk_back_to_list": "Back to match list"
   },
   "score": {
     "edit_reason": "Reason (optional)",
@@ -369,6 +370,7 @@
     "title": "Data",
     "finished_section": "Finished matches",
     "finished_hint": "Matches stored on this device with status finished.",
+    "fivem_export_note": "CSV/JSON downloads do not work inside the FiveM NUI (CEF limitation). Use `npm run dev` or open RefBoard in a normal browser to export. In-game file save is planned for v0.4.0 via an NUI→Lua bridge.",
     "export_finished_csv": "Export finished to CSV",
     "csv_column_set": "CSV format",
     "csv_standard": "Standard (13 cols)",
