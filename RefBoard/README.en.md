@@ -1,121 +1,102 @@
 <div align="center">
 
-<img src="./docs/screenshots/03_match_detail.png" width="100%" alt="RefBoard Match Detail Screen" />
-
-<p><em>Soccer match control — simple and safe.</em></p>
-
-<img src="./docs/logo.svg" width="120" alt="RefBoard logo" />
+<picture>
+  <img src="./docs/logo.svg" width="96" height="96" alt="RefBoard" />
+</picture>
 
 # RefBoard
 
-**Open-source soccer match management for FiveM — tamper-evident score history, edit lock, JA/EN UI.**
+### Match control for referees & staff &nbsp;·&nbsp; **Local-first**, zero network storage
 
-[日本語](./README.md)
+**No live DB sync.** A self-contained FiveM NUI to run the full lifecycle—clock, goals, subs, cards, PKs—entirely on the operator’s machine.
 
-[![License: MIT](LICENSE)](LICENSE)
+<p>
+  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.4.0-5b6cf9?style=flat-square" alt="version" /></a>
+  <img src="https://img.shields.io/badge/FiveM-cerulean-1a1a2e?style=flat-square" alt="FiveM cerulean" />
+  <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Lua-5.4-000080?style=flat-square" alt="Lua 5.4" />
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/License-MIT-9ca3af?style=flat-square" alt="MIT" /></a>
+</p>
+
+[日本語](./README.md) &nbsp;·&nbsp; [CHANGELOG](./CHANGELOG.md) &nbsp;·&nbsp; [HANDOVER (technical)](./docs/HANDOVER.md)
+
+<br />
 
 </div>
 
 ---
 
-## Overview
+## Why RefBoard
 
-RefBoard lets **referees / staff** record match scores, clock, and rosters with **MySQL as the source of truth**. It targets a **single-editor lock** and **append-only score history** (see `docs/01_database.md`).
+| | |
+|---|---|
+| **Privacy** | Match data lives in **`localStorage` on that client only**—nothing is shipped to a central game database. |
+| **Standalone** | **No ESX, QBCore, or oxmysql.** One line: `ensure RefBoard`. |
+| **Bilingual** | Japanese by default; English via `vue-i18n`. |
+| **Field-ready** | Full layout plus **compact dock**, **PK dock**, and contextual **help** (search & reverse index). |
 
-- **Resource folder**: `RefBoard` (`ensure RefBoard`)
-- **Dependency**: [oxmysql](https://github.com/overextended/oxmysql)
-- **Edit mode**: enter the password from `Config.EditPassword` in `config.lua` (default `ref`) on the launcher. View mode needs no password.
+> **v0.4.0 note**  
+> The data-management screen and CSV/JSON export have been **removed**. Plan your own record-keeping outside the app. See [CHANGELOG.md](./CHANGELOG.md).
 
-## Install
+---
 
-1. Copy this folder under `resources/.../RefBoard`.
-2. **MySQL (required on first setup)**: Run `sql/install.sql` on the **same database** your **oxmysql** connection string uses (e.g. `fivem_db`).
-   - If you run the script on a different schema, you will see errors like `Table 'fivem_db.teams' doesn't exist` because the server connects elsewhere.
-   - Example CLI: `mysql -u USER -p fivem_db < sql/install.sql` (replace `fivem_db` with your actual database name).
-   - For local testing, also run `sql/seed_dev_teams.sql` for two sample teams.
-   - **Existing installs**: apply prior migrations and `sql/migration_004_team_roster.sql` (roster + emblem column).
-   - **Demo data (5 teams × 15 roster players)**: by default **`Config.SeedDemoTeamsOnStart = true`** runs `sql/seed_test_5teams_15roster.sql` on resource start. Set **`false`** in `config.lua` for production if you do not want those rows; you can still run the SQL manually when needed.
-3. Add `ensure RefBoard` after `ensure oxmysql` in `server.cfg`.
-4. Grant `refboard.referee` to referee accounts (example: `add_ace identifier.license:xxxx refboard.referee allow`).
+## Feature highlights
 
-### Common errors
+- **Matches** — list/create/detail, running clock, goal wizard, manual score edits with history  
+- **Players** — roster-aware subs, yellow/red, PK logging (three-column first/second kicker layout)  
+- **Teams** — registration and roster  
+- **Help** — 16 articles (JA/EN), Fuse.js search, per-screen `?` (match detail keeps navigation inside the modal)  
+- **Dev** — optional **seed data** from Settings (keep off on production machines)
 
-- **`Table '….teams' doesn't exist`** (or `matches`, `editor_locks`): You skipped step 2 or ran `install.sql` on the wrong database. Re-run it on the DB configured in oxmysql.
+---
 
-## Usage
+## Quick start (FiveM)
 
-- In game: **`/refboard`** or **`F6`** (see `Config.OpenKey`).
+1. Copy the **`RefBoard/`** folder into your server `resources` tree (e.g. `resources/[local]/RefBoard`).  
+2. Add **`ensure RefBoard`** to `server.cfg` (**no `oxmysql` required**).  
+3. In-game, open the UI with **`F6`** (default) or **`/refboard`**.  
+4. Set an optional **display name**, create **teams**, then create a **match**.
 
-## Documentation index
+Tweak [`config.lua`](./config.lua) for `Config.OpenKey` and `Config.DefaultLocale`.
 
-### Design & architecture
+---
 
-| Doc | Summary |
-|-----|---------|
-| [docs/01_database.md](docs/01_database.md) | DB layout and relationships; canonical DDL in `sql/install.sql` |
-| [docs/02_server.md](docs/02_server.md) | Server Lua, `refboard:` NetEvents and ACK flow |
-| [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI, `useNui`, routing |
-| [docs/04_design_mockup.md](docs/04_design_mockup.md) | Screen mockups and early IA notes |
-| [docs/error_handling.md](docs/error_handling.md) | Error codes (`ErrorCodes` / `MakeError`), `RefboardGuard`, `Logger`, NUI handling |
-| [docs/help_system_design.md](docs/help_system_design.md) | **Planned v0.6.0**: In-app help (tree + task index, search, context `?`, toast → help for errors) |
-
-### Testing & quality
-
-| Doc | Summary |
-|-----|---------|
-| [docs/testing/release_test_plan.md](docs/testing/release_test_plan.md) | Pre-release on-device test plan (phases / scenarios) |
-| [docs/testing/test_results.md](docs/testing/test_results.md) | Template for recording test runs |
-| [docs/testing/known_issues.md](docs/testing/known_issues.md) | Known bugs and workarounds |
-| [docs/testing/transaction_test.md](docs/testing/transaction_test.md) | DB transaction verification (`Config.EnableTestCommands`) |
-
-### Sprint notes (context for changes)
-
-| Doc | Summary |
-|-----|---------|
-| [docs/sprints/sprint_02.md](docs/sprints/sprint_02.md) | ~v0.2.0: match list/create, lock, autosave |
-| [docs/sprints/sprint_03.md](docs/sprints/sprint_03.md) | ~v0.3.0: `match:get`, score, players, finish/reopen |
-| [docs/sprints/sprint_04.md](docs/sprints/sprint_04.md) | ~v0.4.0: subs, cards, PK, presence focus |
-| [docs/sprints/sprint_05.md](docs/sprints/sprint_05.md) | ~v0.5.0: teams/roster, data hub, settings, PK UI |
-| [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | Toward v0.9.0: hardening, on-device QA plan |
-| [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1: pre-test triage (observability, guards, health) |
-| [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md) | **Planned v0.6.0**: In-app help sprint (acceptance criteria, roadmap plan B) |
-| [docs/sprints/sprint_08_marquee.md](docs/sprints/sprint_08_marquee.md) | **v0.6.1**: Marquee typography rollout (separate from Sprint 07; 3-phase PR plan) |
-| [docs/sprints/sprint_07_uiux_findings.md](docs/sprints/sprint_07_uiux_findings.md) | UX notes while writing help (input for v0.9.1 fixes) |
-
-### Changelog & user-facing
-
-| Doc | Summary |
-|-----|---------|
-| [CHANGELOG.md](CHANGELOG.md) | Version-by-version release notes |
-| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | Operator / referee guide (Japanese) |
-| [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md) | Same (English) |
-
-## UI development
+## Building the UI (developers)
 
 ```bash
 cd RefBoard/web
 npm install
-npm run dev
+npm run dev    # browser-only preview
+npm run build  # output → web/dist (what FiveM serves)
+npx vue-tsc --noEmit
+npm test
 ```
 
-Production: `npm run build` outputs to `web/dist`.
+`fxmanifest.lua` points at `web/dist`. Always run **`npm run build`** before shipping.
 
-## Status
+---
 
-**v0.6.0 (planned)** — In-app help (topic tree + task-based index, search, `?` on key screens, errors link to help). Spec: [docs/help_system_design.md](docs/help_system_design.md), sprint: [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md). **Plan B**: ship help before full on-device QA.
+## Documentation
 
-**v0.5.1** — On-device triage: `ErrorCodes` / `MakeError`, `Logger`, `RefboardGuard`, NUI request trace, health check. See `docs/error_handling.md` and `docs/sprints/sprint_06_pretriage.md`.
+| Doc | Purpose |
+|-----|---------|
+| [**docs/HANDOVER.md**](docs/HANDOVER.md) | Architecture, tree, TODOs, roadmap |
+| [**CHANGELOG.md**](CHANGELOG.md) | Release notes (breaking changes called out) |
+| [**docs/diary/**](docs/diary/) | Dev diary entries |
 
-**v0.5.0** — Team management + roster, data hub + CSV export, settings (localStorage), PK decided flow, UX polish, screenshots + user guides. `docs/sprints/sprint_05.md`.
+The legacy **MySQL-backed** tree (v0.8.x) lives outside this folder as **`RefBoard_old/`** (gitignored). The current `RefBoard/` tree **does not** ship `sql/` or `docs/01_database.md`.
 
-**v0.3.0** — Goal wizard, add player, manual score + history dialog, finish/reopen match, real `match:get` / `match:state`, NUI mocks for `npm run dev`. Sprint: `docs/sprints/sprint_03.md`.
-
-**v0.2.0** — Match list + create, `MatchDetail` mock, editor lock, autosave. `docs/sprints/sprint_02.md`.
-
-**v0.1.1** — Presence (option A), design doc 04, match meta columns.
-
-**v0.1.0** — Initial scaffolding.
+---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+**MIT** — see [LICENSE](../LICENSE) at the repository root.
+
+---
+
+<div align="center">
+
+<sub>Crafted for Japanese FiveM RP servers · Feedback welcome via <strong>Issues</strong> & <strong>Pull requests</strong></sub>
+
+</div>

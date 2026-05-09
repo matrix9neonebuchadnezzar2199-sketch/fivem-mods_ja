@@ -1,121 +1,102 @@
 <div align="center">
 
-<img src="./docs/screenshots/03_match_detail.png" width="100%" alt="RefBoard Match Detail Screen" />
-
-<p><em>サッカー試合管理を、シンプルに、安全に。</em></p>
-
-<img src="./docs/logo.svg" width="120" alt="RefBoard logo" />
+<picture>
+  <img src="./docs/logo.svg" width="96" height="96" alt="RefBoard" />
+</picture>
 
 # RefBoard
 
-**FiveM 向けオープンソースのサッカー試合管理ツール（改ざん防止履歴・編集ロック・日本語/英語 UI）**
+### 審判・運営向け &nbsp;·&nbsp; ローカルファーストのサッカー試合管理
 
-[English](./README.en.md)
+**通信なし・DB なし。** 各監督・審判の端末に閉じた NUI で、スコア・時計・交代・カード・PK までを一気通貫で記録します。
 
-[![License: MIT](LICENSE)](LICENSE)
+<p>
+  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.4.0-5b6cf9?style=flat-square" alt="version" /></a>
+  <img src="https://img.shields.io/badge/FiveM-cerulean-1a1a2e?style=flat-square" alt="FiveM cerulean" />
+  <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Lua-5.4-000080?style=flat-square" alt="Lua 5.4" />
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/License-MIT-9ca3af?style=flat-square" alt="MIT" /></a>
+</p>
+
+[English](./README.en.md) &nbsp;·&nbsp; [CHANGELOG](./CHANGELOG.md) &nbsp;·&nbsp; [引継資料（HANDOVER）](./docs/HANDOVER.md)
+
+<br />
 
 </div>
 
 ---
 
-## 概要
+## なぜ RefBoard か
 
-RefBoard は、**審判（運営）**が試合スコア・経過・メンバーを **MySQL 上に権威付きで記録**するための NUI ツールです。複数クライアント間で状態を共有し、**単一編集ロック**と **append-only のスコア履歴** を前提に設計されています。
-
-- **リソースフォルダ名**: `RefBoard`（`ensure RefBoard`）
-- **依存**: [oxmysql](https://github.com/overextended/oxmysql)
-- **編集モード**: `config.lua` の `Config.EditPassword`（既定 `ref`）をランチャーで入力して入室。閲覧モードはパスワード不要。
-
-## インストール
-
-1. 本フォルダを `resources/[local]/RefBoard` などに配置。
-2. **MySQL（必須・初回）**: **`server.cfg` の oxmysql 接続先と同じデータベース**（例: `fivem_db`）を選び、`sql/install.sql` を実行する。
-   - 別名の DB にだけ流すと、`Table 'fivem_db.teams' doesn't exist` のように **接続先にはテーブルが無い**状態になる。
-   - CLI の例: `mysql -u USER -p fivem_db < sql/install.sql`（`fivem_db` は接続文字列の DB 名に合わせる）
-   - 開発時は続けて `sql/seed_dev_teams.sql` でサンプル2チーム投入を推奨。
-   - **既存 DB**（install 済みの環境）: これまでのマイグレーションに続けて `sql/migration_004_team_roster.sql`（ロスター・エンブレム列）を適用。
-   - **5チーム × ロスター15人**のテストデータ: 既定では **`Config.SeedDemoTeamsOnStart = true`** により **リソース起動時に自動実行**（`sql/seed_test_5teams_15roster.sql`）。本番で不要なら `config.lua` で **false** にし、必要時のみ CLI で `mysql ... < sql/seed_test_5teams_15roster.sql`。
-3. `server.cfg` に `ensure oxmysql` のあと `ensure RefBoard`。
-4. 審判用プレイヤーに `add_ace identifier.license:xxxxxxxx refboard.referee allow` 等を付与。
-
-### よくあるエラー
-
-- **`Table '…​.teams' doesn't exist` / `…​matches` / `…​editor_locks`**: 上記 **手順 2 を未実施**か **DB 名の取り違え**。`install.sql` を oxmysql が使っている DB で再実行する。
-
-## 操作
-
-- ゲーム内: **`/refboard`** または **`F6`**（`config.lua` の `Config.OpenKey`）で NUI を開閉。
-
-## ドキュメント索引
-
-### 設計・アーキテクチャ
-
-| 文書 | 概要 |
+| 観点 | 内容 |
 |------|------|
-| [docs/01_database.md](docs/01_database.md) | DB 方針・テーブル関係。DDL の正は `sql/install.sql` |
-| [docs/02_server.md](docs/02_server.md) | FiveM サーバー Lua、`refboard:` NetEvent / ACK の流れ |
-| [docs/03_frontend.md](docs/03_frontend.md) | Vue 3 / Vite / NUI、`useNui` とルーティング |
-| [docs/04_design_mockup.md](docs/04_design_mockup.md) | 画面モック・情報設計のたたき台 |
-| [docs/error_handling.md](docs/error_handling.md) | エラーコード（`ErrorCodes` / `MakeError`）、`RefboardGuard`、`Logger`、NUI 側の扱い |
-| [docs/help_system_design.md](docs/help_system_design.md) | **v0.6.0 予定**: アプリ内ヘルプ（ツリー／逆引き／検索／コンテキスト `?`／Toast からエラー誘導）の設計 |
+| **プライバシー** | 試合データは **当該端末の `localStorage` のみ**。外部サーバや MySQL には送信しません。 |
+| **スタンドアロン** | **ESX / QBCore / oxmysql 非依存。** `ensure RefBoard` だけで動かせます。 |
+| **二言語 UI** | 日本語を既定に、英語に切り替え可能（`vue-i18n`）。 |
+| **現場志向** | 通常表示に加え **コンパクト（小窓）モード**、**PK 専用ドック**、コンテキスト別 **ヘルプ**（検索・逆引き付き）。 |
 
-### テスト・品質
+> **v0.4.0 の注意**  
+> データ管理画面および CSV / JSON エクスポートは **廃止**しました。バックアップはアプリ外でご自身の運用（スクリーンショット・手元メモ等）に委ねます。詳細は [CHANGELOG.md](./CHANGELOG.md) を参照してください。
 
-| 文書 | 概要 |
-|------|------|
-| [docs/testing/release_test_plan.md](docs/testing/release_test_plan.md) | リリース前の実機テスト計画（フェーズ・シナリオ） |
-| [docs/testing/test_results.md](docs/testing/test_results.md) | テスト実行結果の記録用テンプレート |
-| [docs/testing/known_issues.md](docs/testing/known_issues.md) | 既知の不具合・回避策の一覧 |
-| [docs/testing/transaction_test.md](docs/testing/transaction_test.md) | DB トランザクション検証手順（`Config.EnableTestCommands` 連動） |
+---
 
-### スプリント記録（変更の文脈）
+## 機能ハイライト
 
-| 文書 | 概要 |
-|------|------|
-| [docs/sprints/sprint_02.md](docs/sprints/sprint_02.md) | v0.2.0 相当：試合一覧・作成、ロック、オートセーブ |
-| [docs/sprints/sprint_03.md](docs/sprints/sprint_03.md) | v0.3.0 相当：`match:get` / スコア・選手・終了再編集 |
-| [docs/sprints/sprint_04.md](docs/sprints/sprint_04.md) | v0.4.0 相当：交代・カード・PK・プレゼンスフォーカス |
-| [docs/sprints/sprint_05.md](docs/sprints/sprint_05.md) | v0.5.0 相当：チーム／ロスター、データ管理、設定、PK 決着 UI |
-| [docs/sprints/sprint_06.md](docs/sprints/sprint_06.md) | v0.9.0 方面：実機検証・堅牢性などの計画 |
-| [docs/sprints/sprint_06_pretriage.md](docs/sprints/sprint_06_pretriage.md) | v0.5.1：実機前夜のトリアージ強化（観測・ガード・ヘルス等） |
-| [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md) | **v0.6.0 予定**: アプリ内ヘルプ実装スプリント（受け入れ基準・B 案ロードマップ） |
-| [docs/sprints/sprint_08_marquee.md](docs/sprints/sprint_08_marquee.md) | **v0.6.1**: マーキー基盤〜全域適用（Sprint 07 と別ノート・3 フェーズ PR 案） |
-| [docs/sprints/sprint_07_uiux_findings.md](docs/sprints/sprint_07_uiux_findings.md) | ヘルプ執筆中の UI/UX 気づき（v0.9.1 改善のタスク元） |
+- **試合** — 作成・一覧・詳細、試合時計、ゴールウィザード、手動スコア編集と履歴  
+- **選手** — ロスター連携、交代、イエロー／レッド、PK 記録（先攻／後攻を含む 3 列 UI）  
+- **チーム** — 登録・ロスター管理  
+- **ヘルプ** — 16 記事（日英）、Fuse.js 検索、画面ごとの `?`（試合詳細ではモーダル内で記事を完結）  
+- **開発支援** — 設定から **疑似データ**の投入・削除（本番ではオフ推奨）
 
-### 変更履歴・ユーザー向け
+---
 
-| 文書 | 概要 |
-|------|------|
-| [CHANGELOG.md](CHANGELOG.md) | バージョンごとの機能・修正の要約 |
-| [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | 審判・運営向け操作ガイド（日本語） |
-| [docs/USER_GUIDE.en.md](docs/USER_GUIDE.en.md) | 同上（English） |
+## クイックスタート（FiveM）
 
-## UI 開発
+1. 本リポジトリの **`RefBoard/`** フォルダを、サーバの `resources` 配下に配置（例: `resources/[local]/RefBoard`）。  
+2. `server.cfg` に **`ensure RefBoard`** を追記（**`oxmysql` は不要**）。  
+3. ゲーム内で **`F6`**（既定）または **`/refboard`** で NUI を開く。  
+4. 初回は **表示名**（任意）と **チーム** を整え、試合を作成して運用開始。
 
-```powershell
+キー割当は [`config.lua`](./config.lua) の `Config.OpenKey` / `Config.DefaultLocale` で変更できます。
+
+---
+
+## UI のビルド（開発者向け）
+
+```bash
 cd RefBoard/web
 npm install
-npm run dev
+npm run dev    # ブラウザで単体プレビュー
+npm run build  # 成果物 → web/dist（FiveM が読み込む）
+npx vue-tsc --noEmit
+npm test
 ```
 
-本番ビルド: `npm run build` → `web/dist` を FiveM が読み込みます。
+`fxmanifest.lua` は `web/dist/index.html` とアセットを参照します。配布前に必ず **`npm run build`** を実行してください。
 
-## ステータス
+---
 
-**v0.6.0（計画）** — アプリ内ヘルプ（項目ごと＋やりたいこと逆引き、検索、主要画面の `?`、エラーからヘルプへ）。設計は [docs/help_system_design.md](docs/help_system_design.md)、実装スプリントは [docs/sprints/sprint_07.md](docs/sprints/sprint_07.md)。**B 案**: ヘルプを先に仕上げてから本格の実機テストへ。
+## ドキュメント
 
-**v0.5.1** — 実機テスト向けトリアージ：`ErrorCodes` / `MakeError`、`Logger`、`RefboardGuard`、NUI 通信トレース、ヘルスチェック。詳細は `docs/error_handling.md` と `docs/sprints/sprint_06_pretriage.md`。
+| 文書 | 内容 |
+|------|------|
+| [**docs/HANDOVER.md**](docs/HANDOVER.md) | アーキテクチャ、ディレクトリ構成、既知 TODO、ロードマップ |
+| [**CHANGELOG.md**](CHANGELOG.md) | バージョン別の変更履歴（破壊的変更は冒頭に明記） |
+| [**docs/diary/**](docs/diary/) | 開発日記・リブート経緯 |
 
-**v0.5.0** — チーム管理（ロスター）、データ管理・CSV、設定画面、PK 決着後フロー、UX ポリッシュ、スクリーンショット・ユーザーガイド。`docs/sprints/sprint_05.md`。
+旧 **MySQL 連動版**（v0.8.x 系）の履歴や DDL は、リポジトリ外の素材庫 **`RefBoard_old/`**（`.gitignore`）を参照してください。現行 `RefBoard/` には **`sql/` や `docs/01_database.md` は含まれません**。
 
-**v0.3.0** — ゴール記録ウィザード、選手追加、スコア手動編集・履歴、試合終了／再編集、`match:get` / `match:state` 本番配線、Vite 単体用 NUI モック。`docs/sprints/sprint_03.md`。
-
-**v0.2.0** — 試合一覧・作成、`MatchDetail` モック、編集ロック、オートセーブ。`docs/sprints/sprint_02.md`。
-
-**v0.1.1** — プレゼンス（A 案）、設計書 04、試合メタ列。
-
-**v0.1.0** — 初回スキャフォールド。
+---
 
 ## ライセンス
 
-MIT — 詳細は [LICENSE](LICENSE)。
+**MIT** — リポジトリルートの [LICENSE](../LICENSE) を参照してください。
+
+---
+
+<div align="center">
+
+<sub>Built with discipline for Japanese FiveM communities · 問題や改善案は <strong>Issues</strong> / <strong>Pull requests</strong> へ</sub>
+
+</div>
