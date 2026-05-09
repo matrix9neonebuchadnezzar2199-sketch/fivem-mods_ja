@@ -81,6 +81,7 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 
 ## トラブルシュート
 
+- **`No such export useCamera in resource PolaPaint`**（`useItem` コールバック）… リソース名は **`polapaint`（全小文字）** に変更済みです。`ox_inventory` の `items.lua` で **`PolaPaint.useCamera` になっている箇所をすべて `polapaint.useCamera` に修正**し（`usePhoto`・`exports['polapaint']:openPhotoViewer` も同様）、**`restart ox_inventory`**（またはサーバ再起動）してください。エラーメッセージに **`PolaPaint`** と出ている時点で、まだ旧リソース名を参照しています。
 - **`Could not find dependency screenshot-basic`** … `screenshot-basic` フォルダがサーバの `resources` に無い、または名前が違う。本リポの **`screenshot-basic/` を polapaint と並べてコピー**し、`ensure screenshot-basic` を追加する。
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
