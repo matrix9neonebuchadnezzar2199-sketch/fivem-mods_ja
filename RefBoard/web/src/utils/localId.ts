@@ -24,6 +24,11 @@ const defaults: IdCounters = {
 
 let counters: IdCounters = { ...defaults, ...loadLocal<Partial<IdCounters>>(COUNTER_KEY, {}) }
 
+/** merge インポート等の前に、ディスク上の id_counters をメモリへ同期する */
+export function hydrateCountersFromDisk(): void {
+  counters = { ...defaults, ...loadLocal<Partial<IdCounters>>(COUNTER_KEY, {}) }
+}
+
 export function nextId(kind: IdKind): number {
   counters[kind] = (counters[kind] ?? defaults[kind]) + 1
   saveLocal(COUNTER_KEY, counters)

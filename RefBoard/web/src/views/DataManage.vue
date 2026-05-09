@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useMatchesStore } from '../stores/matches'
 import { useSettingsStore } from '../stores/settings'
 import { downloadFile, exportFullBackup, refboardFilename, toCSV } from '../utils/exporters'
+import { loadImportHistory, type ImportRecord } from '../utils/localImport'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import ImportBackupDialog from '../components/data/ImportBackupDialog.vue'
 import { formatDateJa } from '../utils/formatDate'
 
 const { t } = useI18n()
@@ -16,8 +18,21 @@ const settingsStore = useSettingsStore()
 
 const finished = computed(() => matchesStore.matches.filter((m) => m.status === 'finished'))
 
+const importDialogOpen = ref(false)
+const importHistory = ref<ImportRecord[]>([])
+
+function refreshImportHistory() {
+  importHistory.value = loadImportHistory()
+}
+
+function onImportDialogOpen(v: boolean) {
+  importDialogOpen.value = v
+  if (!v) refreshImportHistory()
+}
+
 onMounted(() => {
   settingsStore.load()
+  refreshImportHistory()
 })
 
 function openMatch(id: number) {
@@ -40,6 +55,10 @@ function exportFinishedCsv() {
 
 function fullBackup() {
   exportFullBackup()
+}
+
+function rowModeLabel(mode: ImportRecord['mode']) {
+  return mode === 'replace' ? t('data.import_history.mode_replace') : t('data.import_history.mode_merge')
 }
 </script>
 
@@ -64,6 +83,13 @@ function fullBackup() {
         </button>
         <button type="button" class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white" @click="fullBackup">
           {{ t('data.full_backup') }}
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border border-slate-500 bg-slate-800 px-3 py-2 text-sm text-slate-100 hover:bg-slate-800/90"
+          @click="importDialogOpen = true"
+        >
+          {{ t('data.import.open') }}
         </button>
       </div>
       <div class="overflow-x-auto rounded border border-slate-700">
@@ -96,5 +122,26 @@ function fullBackup() {
         </table>
       </div>
     </section>
+
+    <section class="rounded-lg border border-slate-700 bg-slate-900/70 p-4">
+      <h3 class="mb-2 text-sm font-semibold text-slate-200">{{ t('data.import_history.title') }}</h3>
+      <p v-if="!importHistory.length" class="text-sm text-slate-500">{{ t('data.import_history.empty') }}</p>
+      <ul v-else class="space-y-2 text-xs text-slate-300">
+        <li v-for="r in importHistory" :key="r.at + r.mode + r.by" class="rounded border border-slate-800 bg-slate-950/50 px-3 py-2">
+          {{
+            t('data.import_history.row', {
+              at: r.at,
+              by: r.by,
+              mode: rowModeLabel(r.mode),
+              teams: r.added.teams,
+              rosterMembers: r.added.rosterMembers,
+              matches: r.added.matches,
+            })
+          }}
+        </li>
+      </ul>
+    </section>
+
+    <ImportBackupDialog :open="importDialogOpen" @update:open="onImportDialogOpen" />
   </div>
 </template>

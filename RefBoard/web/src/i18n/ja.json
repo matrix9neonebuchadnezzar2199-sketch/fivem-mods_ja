@@ -380,7 +380,41 @@
     "col_editor": "編集者",
     "col_match": "対象試合",
     "col_change": "変更",
-    "log_editor": "編集者license"
+    "log_editor": "編集者license",
+    "import": {
+      "open": "JSON から取り込む",
+      "title": "JSON バックアップの取り込み",
+      "pick_file": "ファイルを選択",
+      "step_file": "バックアップ JSON ファイルを選んでください。",
+      "step_preview": "内容の確認",
+      "step_done": "取り込み完了",
+      "preview_summary": "チーム {teams} / ロスター {rosterMembers} / 試合 {matches}",
+      "exported_at": "書き出し日時",
+      "app_version": "書き出し時バージョン",
+      "schema_version": "スキーマ",
+      "mode_replace": "置換（既存データを削除して取り込む）",
+      "mode_replace_confirm": "本当に置換する",
+      "mode_merge": "追記（新しい ID を払って追加）",
+      "replace_warn": "既存の RefBoard ローカルデータはすべて削除されます。続行する場合のみ、下のボタンを押してください。",
+      "replace_abort": "戻る",
+      "cancel": "キャンセル",
+      "reload": "再読み込みして反映",
+      "reload_hint": "取り込み後は一覧・ストアが古いままになることがあります。反映には再読み込みが必要です。",
+      "close_without_reload": "閉じる（再読み込みしない）",
+      "result_replace": "置換で取り込みました",
+      "result_merge": "追記で取り込みました",
+      "by": "操作者",
+      "error_invalid_json": "JSON として読めませんでした",
+      "error_invalid_shape": "RefBoard のバックアップ形式ではありません",
+      "error_unsupported_schema": "このバージョンでは取り込めないスキーマです（schemaVersion={version}）"
+    },
+    "import_history": {
+      "title": "取り込み履歴",
+      "empty": "取り込み履歴はありません",
+      "mode_replace": "置換",
+      "mode_merge": "追記",
+      "row": "{at} · {by} · {mode} · チーム {teams} / ロスター {rosterMembers} / 試合 {matches}"
+    }
   },
   "settings": {
     "title": "設定",

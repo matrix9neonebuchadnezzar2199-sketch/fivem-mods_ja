@@ -55,19 +55,22 @@ RefBoard/
       │  ├─ localPersist.ts       localStorage ラッパ（v=1）
       │  ├─ localId.ts            ID カウンタ
       │  ├─ localMatchAdapter.ts  Match → MatchDetailModel ブリッジ
-      │  ├─ exporters.ts          CSV／全データ JSON バックアップ
+      │  ├─ exporters.ts          CSV／全データ JSON バックアップ／インポート用パース
+      │  ├─ localImport.ts        JSON インポート（replace／merge）と取り込み履歴
       │  └─ errorCodeMapper.ts    E2001/E3004/E3006 のみ
+      ├─ components/
+      │  └─ data/ImportBackupDialog.vue  JSON 取り込みウィザード
       ├─ views/
       │  ├─ Launcher.vue          表示名入力 → 試合一覧へ
       │  ├─ MainLayout.vue        sidebar + RouterView + ContextHelpPanel
       │  ├─ MatchList.vue         一覧／検索／削除／新規作成
       │  ├─ MatchDetail.vue       時計／ゴール／カード／交代／PK／手動編集／終了
       │  ├─ TeamManage.vue        チームとロスター
-      │  ├─ DataManage.vue        終了試合一覧、CSV、全データ JSON バックアップ
+      │  ├─ DataManage.vue        終了試合一覧、CSV、全データ JSON バックアップ／取り込み／履歴
       │  ├─ Settings.vue          表示名／locale／fontScale／marquee／背景
       │  └─ HelpView.vue          目次／逆引き／検索／コンテキスト
       ├─ help/
-      │  ├─ ja/articles/          15 本（intro 2／match 7／team 2／data 2／trouble 2 ※統合済）
+      │  ├─ ja/articles/          16 本（intro 2／match 7／team 2／data 3／trouble 2 ※統合済）
       │  ├─ en/articles/          同上
       │  ├─ ja|en/index.json      🔧 は trouble_undo_goal と trouble_e3006_player_has_events のみ
       │  ├─ ja|en/reverse_index.json
@@ -89,12 +92,13 @@ RefBoard/
 
 ## 5. 主要機構
 
-- **永続化**: `utils/localPersist.ts` がキーごとに `{ v: 1, data }` 形式で `localStorage` に書き、各ストアが `watch(deep)` で自動保存。`dumpAllLocal()` が全データ JSON バックアップの土台。
+- **永続化**: `utils/localPersist.ts` がキーごとに `{ version: 1, data }` 形式で `localStorage` に書き、各ストアが `watch(deep)` で自動保存。`dumpAllLocal()` が全データ JSON バックアップの土台。
+- **JSON インポート**: `utils/localImport.ts` が **置換**（`refboard_local_*` をクリア後にバックアップを流し込み、取り込み履歴は直前分を保持して先頭に新規追記）と **追記**（`nextId` で ID を払い直し teams／roster／matches のみマージ、`settings` は現端末のまま）を提供。完了後は **ページ再読み込み** で Pinia を再 hydrate。
 - **ID 採番**: `utils/localId.ts` が match/team/player/rosterMember/event/scoreHistory のカウンタを `id_counters` キーで管理。
 - **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
 - **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
-- **ヘルプ**: ja/en 各 15 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
+- **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 
 ## 6. 開発・ビルド・配布
 
@@ -110,7 +114,6 @@ npx vue-tsc --noEmit # 型チェック
 
 ## 7. 既知の TODO（v0.1.0 時点）
 
-- 全データ JSON の **インポート** UI（v0.1.0 はエクスポートのみ）。端末移行時に必要。
 - ロスタイム表記（`45+2`）の入力許容と表示整形。
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
 - ヘルプ Fuse.js のしきい値再評価（記事数が約 21 本相当から 15 本に減ったため）。
@@ -130,7 +133,7 @@ npx vue-tsc --noEmit # 型チェック
 
 ## 9. ロードマップ（v0.1.0 → v1.0.0）
 
-- **v0.1.x（短期）**: JSON インポート、`intro_setup` スクショ更新、ロスタイム入力。
+- **v0.1.x（短期）**: `intro_setup` スクショ更新、ロスタイム入力。
 - **v0.2.0（中期）**: 大会／リーグの集計、CSV 出力の項目拡充、コンパクト小窓モードの再評価。
 - **v0.3.0**: ヘルプ拡充（v0.1.0 では削った記事のうち再度必要になったものをローカル文脈で書き直し）、Fuse 再チューニング。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
@@ -141,13 +144,14 @@ npx vue-tsc --noEmit # 型チェック
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
 > 現状: v0.1.0（ローカル版リブート完了、4 連コミット済）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: JSON インポート UI、ロスタイム入力許容のいずれか。
+> 次着手候補: ロスタイム入力許容、PK キャンセル UI など §7 TODO のいずれか。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
-短縮フレーズ: `JSON インポートいって` / `ロスタイムいって`
+短縮フレーズ: `ロスタイムいって` / `PK キャンセルいって`
 
 ## 11. 改版履歴
 
 - 2026‑05‑09: 第 3 版起こし。v0.1.0（ローカル版リブート）に対応。旧版の §4〜§9（サーバ連動・編集ロック・実機テスト計画）を全面差し替え。
 - 2026‑05‑09: v0.1.0 の `web/package.json`・`package-lock.json`・`src/constants/version.ts`（`REFBOARD_UI_VERSION`）を 0.1.0 へ同期。HANDOVER §3 と §7 を整合修正（版数揃えの Git ハッシュは `git log -1 --oneline -- RefBoard/web/package.json` で確認）。
 - 2026‑05‑09: 試合詳細ヘッダに `selfName`（操作者）を表示。未設定時は Settings へ誘導するリンクを表示。小窓モードで `transparentChrome` のときはヘッダから非表示。
+- 2026‑05‑09: 全データ JSON の **インポート UI**（置換／追記、置換はダイアログ内二段確認）、`import_history` 最大 20 件、ヘルプ `data_import` 追加。完了後は `location.reload()` で反映。

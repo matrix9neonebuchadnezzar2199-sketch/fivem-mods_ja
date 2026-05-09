@@ -47,6 +47,51 @@ A. 画面・エクスポーター実装次第です。欠ける列がある場�
 - [データ管理で履歴を見る](#/workspace/help/article/data_view_history)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)（再編集後の履歴とエクスポートのズレに関する注意）
 `,e=`---
+title: JSON バックアップを取り込む
+category: data
+tags: ['data', 'backup', 'import', 'json']
+related: [data_export, data_view_history]
+shortcut: null
+actionUrl: "#/workspace/data"
+errorCode: null
+---
+
+# JSON バックアップを取り込む
+
+## このページでわかること
+
+- **データ管理** で書き出した **全データ JSON** を端末に戻す手順
+- **置換** と **追記** の違い
+- 取り込み後に **ページの再読み込み** が必要な理由
+- **取り込み履歴** はこのブラウザ／端末内だけに残ること
+
+## 前提条件
+
+- 対象は **RefBoard の全データバックアップ**（\`schemaVersion: 1\` の JSON）です。単試合の JSON や CSV はこの画面では取り込めません。
+- 破損した JSON を選んでも、プレビュー前に検証され、**localStorage は変わりません**。
+
+## 手順
+
+1. **データ管理** で「JSON から取り込む」を押します。
+2. バックアップ **.json** ファイルを選びます。件数プレビューが表示されたら内容を確認します。
+3. 取り込み方を選びます。
+   - **追記**: チーム・ロスター・試合を **新しい ID** で既存データに追加します。**設定（表示名など）はそのまま**です。
+   - **置換**: 既存の RefBoard ローカルデータを **すべて削除**してからファイルの内容で上書きします。誤操作防止のため、**二段階の確認**があります。取り込み履歴だけは直前の履歴とマージされ、新しい 1 件が先頭に付きます。
+4. 完了後、**再読み込みして反映** を押してページをリロードします。Pinia ストアのメモリが古いままなので、反映にはリロードが必要です。
+
+## やった後どうなる？
+
+- データ画面下部の **取り込み履歴** に、日時・操作者名・モード・件数が最大 20 件まで残ります（サーバには送られません）。
+- 別端末へ移すときは、まず **全データのバックアップ (JSON)** で書き出し、移行先でこの手順を使います。
+
+## よくある質問
+
+**Q. schemaVersion が違うと言われる**  
+A. このバージョンの RefBoard が対応しているスキーマ（現状は **1 のみ**）と一致している必要があります。将来スキーマが上がったら、アプリを更新してください。
+
+**Q. 再読み込みせずに閉じた**  
+A. 画面の一覧が古いままになることがあります。データ管理を開き直すか、ブラウザで再読み込みしてください。
+`,a=`---
 title: データ管理で履歴を見る
 category: data
 tags: [データ管理, 試合履歴, 統計, 編集ログ]
@@ -93,7 +138,7 @@ A. タブ表示は **開いているときのロード結果**です。最新化
 
 - [CSV でエクスポートする](#/workspace/help/article/data_export)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
-`,a=`---
+`,t=`---
 title: RefBoard をはじめて使う
 category: intro
 tags: [セットアップ, 表示名, チーム, 試合, localStorage, バックアップ]
@@ -120,7 +165,7 @@ RefBoard は **サーバ通信を行いません**。データはこの端末の
 
 - [RefBoard とは](#/workspace/help/article/intro_what_is_refboard)
 - [CSV でエクスポートする](#/workspace/help/article/data_export)
-`,t=`---
+`,r=`---
 title: RefBoard とは
 category: intro
 tags: [概要, 審判, 試合管理, FiveM, ローカル]
@@ -162,7 +207,7 @@ A. **データ**→**全データのバックアップ (JSON)** で書き出し�
 
 - [RefBoard をはじめて使う](#/workspace/help/article/intro_setup)
 - [新しい試合を作る](#/workspace/help/article/match_create_new)
-`,r=`---
+`,o=`---
 title: イエロー／レッドカードを記録する
 category: in_match
 tags: [イエロー, レッド, 警告, 退場, カード]
@@ -222,7 +267,7 @@ A. タイムラインに **取り消し（Undo）** が出る場合はそれを�
 
 - [選手を交代する](#/workspace/help/article/match_substitute_player)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,o=`---
+`,c=`---
 title: 新しい試合を作る
 category: match_prep
 tags: [試合作成, ホーム, アウェイ, 予約]
@@ -269,7 +314,7 @@ A. 一覧の **削除** が使える条件はサーバー・ロック状態に�
 
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,c=`---
+`,l=`---
 title: 試合を終了する／再編集する
 category: in_match
 tags: [終了, 再編集, reopen, 確定, finish]
@@ -349,7 +394,7 @@ A. 再編集で開け直し、PK イベントを最後まで記録するか、�
 - [PK 戦を進める](#/workspace/help/article/match_penalty_shootout)
 - [スコアを手で直す（手動編集）](#/workspace/help/article/match_manual_score_edit)
 - [間違えてゴールを記録してしまった](#/workspace/help/article/trouble_undo_goal)
-`,l=`---
+`,_=`---
 title: スコアを手で直す（手動編集）
 category: in_match
 tags: [手動, スコア, 修正, 理由, manual]
@@ -423,7 +468,7 @@ A. **できません**。\`match_score_history\` は append-only です。誤っ
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
 - [間違えてゴールを記録してしまった](#/workspace/help/article/trouble_undo_goal)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
-`,_=`---
+`,s=`---
 title: PK 戦を進める
 category: in_match
 tags: [PK, ペナルティ, シュートアウト, penalty, pk]
@@ -499,7 +544,7 @@ A. PK 内訳の手動編集 UI は **未実装**です。スコア手動編集�
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
 - [スコアを手で直す（手動編集）](#/workspace/help/article/match_manual_score_edit)
-`,s=`---
+`,i=`---
 title: ゴールを記録する
 category: in_match
 tags: [ゴール, 得点, シュート, G, アシスト]
@@ -579,7 +624,7 @@ A. 時間は **整数の分**（例: \`47\`）で入れてください。
 |------|------|
 | \`G\` | ゴール記録ウィザードを開く |
 | \`Esc\` | ウィザードを閉じる（未確定の入力は破棄） |
-`,i=`---
+`,h=`---
 title: 選手を交代する
 category: in_match
 tags: [交代, サブ, メンバー]
@@ -635,7 +680,7 @@ A. ダイアログ内の「ロスターから選ぶ」で見つからない場�
 
 - [イエロー／レッドカードを記録する](#/workspace/help/article/match_card)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,h=`---
+`,d=`---
 title: ロスターにメンバーを追加する
 category: team
 tags: [ロスター, メンバー, サーバーID, 背番号]
@@ -683,7 +728,7 @@ A. **いいえ**。ロスターは **登録プール**、出場は試合画面�
 
 - [チームを新規登録する](#/workspace/help/article/team_create)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,d=`---
+`,p=`---
 title: チームを新規登録する
 category: team
 tags: [チーム, 登録, 略称, カラー]
@@ -729,7 +774,7 @@ A. チーム詳細から **編集・削除** が可能な場合はそこから�
 
 - [ロスターにメンバーを追加する](#/workspace/help/article/team_add_roster_member)
 - [新しい試合を作る](#/workspace/help/article/match_create_new)
-`,p=`---
+`,m=`---
 title: 削除しようとした選手にイベント履歴がある（E3006）
 category: trouble
 tags: [選手削除, タイムライン, イベント, E3006, player_has_events, 下書き]
@@ -807,7 +852,7 @@ A. 削除は **誤って追加した直後の取り消し** を主眼に置い�
 - [間違えてゴールを記録してしまった](#/workspace/help/article/trouble_undo_goal)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
 - [スコアを手で直す（手動編集）](#/workspace/help/article/match_manual_score_edit)
-`,m=`---
+`,u=`---
 title: 間違えてゴールを記録してしまった
 category: trouble
 tags: [ゴール, 取消, Undo, ミス]
@@ -872,4 +917,4 @@ A: ゴールイベントに紐づくアシストは、ゴールの取り消し�
 ---
 
 （「スコアボードへ」ボタンは試合 ID が取れるときのみ有効化します）
-`;export{m as _,p as a,d as b,h as c,i as d,s as e,_ as f,l as g,c as h,o as i,r as j,t as k,a as l,e as m,n};
+`;export{u as _,m as a,p as b,d as c,h as d,i as e,s as f,_ as g,l as h,c as i,o as j,r as k,t as l,a as m,e as n,n as o};

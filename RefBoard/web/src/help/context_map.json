@@ -17,7 +17,8 @@
   ],
   "data_manage": [
     "data_view_history",
-    "data_export"
+    "data_export",
+    "data_import"
   ],
   "settings": [
     "intro_setup",

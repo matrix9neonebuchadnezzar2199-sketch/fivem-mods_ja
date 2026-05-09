@@ -77,6 +77,13 @@
           "article": "data_export.md",
           "tags": ["CSV", "Excel", "export", "BOM"],
           "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_import_rev",
+          "title": "Import JSON or restore a backup",
+          "article": "data_import.md",
+          "tags": ["import", "restore", "JSON", "backup", "migration"],
+          "actionUrl": "#/workspace/data"
         }
       ]
     },

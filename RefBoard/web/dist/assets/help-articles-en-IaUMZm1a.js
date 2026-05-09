@@ -47,6 +47,51 @@ A. Depends on exporter version; use **JSON export** from match detail if columns
 - [View history in Data](#/workspace/help/article/data_view_history)
 - [Finish or reopen a match](#/workspace/help/article/match_finish) (reopen vs exported snapshots)
 `,n=`---
+title: Import a JSON backup
+category: data
+tags: ['data', 'backup', 'import', 'json']
+related: [data_export, data_view_history]
+shortcut: null
+actionUrl: "#/workspace/data"
+errorCode: null
+---
+
+# Import a JSON backup
+
+## What this page covers
+
+- How to restore a **full-data JSON** backup from **Data**
+- The difference between **Replace** and **Merge**
+- Why you must **reload the page** after importing
+- **Import history** stays on this browser/device only
+
+## Prerequisites
+
+- The file must be a **RefBoard full backup** with \`schemaVersion: 1\`. Single-match JSON and CSV are not imported here.
+- Invalid or truncated JSON is rejected during preview; **localStorage is not changed** until you confirm an import.
+
+## Steps
+
+1. Open **Data** and choose **Import from JSON**.
+2. Pick the backup **.json** file. Review the counts shown in the preview.
+3. Choose how to import:
+   - **Merge**: Append teams, roster rows, and matches with **new IDs**. **Settings (display name, etc.) are kept** as on this device.
+   - **Replace**: **Delete all** existing RefBoard local data, then write the backup. There is a **two-step confirmation** to avoid mistakes. Prior import history rows are preserved and merged with a new head entry.
+4. After success, click **Reload to apply** so the page reloads. Pinia stores must rehydrate from disk.
+
+## After you import
+
+- **Import history** (up to 20 rows) lists time, operator label, mode, and counts. Nothing is sent to a server.
+- To move devices: export **Full data backup (JSON)** on the old device, then import on the new one.
+
+## FAQ
+
+**Q. “Unsupported schema”**  
+A. This build only accepts the schema version it was built for (currently **1**). Update the app if backups use a newer schema.
+
+**Q. I closed without reloading**  
+A. Lists may stay stale. Reload the browser or revisit Data after a full refresh.
+`,t=`---
 title: View history in Data
 category: data
 tags: [data, match history, stats, log]
@@ -93,7 +138,7 @@ A. View reflects **last load**; switch tabs or reopen to refresh (auto-poll may 
 
 - [Export to CSV](#/workspace/help/article/data_export)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
-`,t=`---
+`,a=`---
 title: Get started with RefBoard
 category: intro
 tags: [setup, display name, teams, match, localStorage, backup]
@@ -120,7 +165,7 @@ RefBoard **does not talk to a game server** for storage. Data lives in this brow
 
 - [What is RefBoard?](#/workspace/help/article/intro_what_is_refboard)
 - [Export to CSV](#/workspace/help/article/data_export)
-`,a=`---
+`,r=`---
 title: What is RefBoard?
 category: intro
 tags: [overview, referee, match, FiveM, local]
@@ -162,7 +207,7 @@ A. Use **Data** → **Full data backup (JSON)** and restore on the new machine.
 
 - [Get started with RefBoard](#/workspace/help/article/intro_setup)
 - [Create a new match](#/workspace/help/article/match_create_new)
-`,r=`---
+`,o=`---
 title: Record yellow and red cards
 category: in_match
 tags: [yellow, red, warning, send-off, card]
@@ -222,7 +267,7 @@ A. Use **Undo** on the timeline row when available; otherwise follow your staff 
 
 - [Substitute a player](#/workspace/help/article/match_substitute_player)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,o=`---
+`,s=`---
 title: Create a new match
 category: match_prep
 tags: [match, home, away, schedule]
@@ -269,7 +314,7 @@ A. Whether **Delete** is allowed depends on server rules and lock state. Follow 
 
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,s=`---
+`,i=`---
 title: Finish or reopen a match
 category: in_match
 tags: [finish, reopen, final]
@@ -341,7 +386,7 @@ A. Allowed; \`reopened_*\` stores **last** event only — use \`edit_logs\` for 
 - [Penalty shootout](#/workspace/help/article/match_penalty_shootout)
 - [Manual score edit](#/workspace/help/article/match_manual_score_edit)
 - [Wrong goal](#/workspace/help/article/trouble_undo_goal)
-`,i=`---
+`,l=`---
 title: Edit the score manually
 category: in_match
 tags: [manual, score, edit, reason]
@@ -408,7 +453,7 @@ A. **Append-only**. Add another manual edit with reason “Correction: …” if
 
 - [Record a goal](#/workspace/help/article/match_record_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
-`,l=`---
+`,c=`---
 title: Run a penalty shootout
 category: in_match
 tags: [PK, penalty, shootout]
@@ -467,7 +512,7 @@ A. **Not** via manual score edit (that is for regulation goals). Use PK event un
 - [Record a goal](#/workspace/help/article/match_record_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Edit the score manually](#/workspace/help/article/match_manual_score_edit)
-`,c=`---
+`,d=`---
 title: Record a goal
 category: in_match
 tags: [goal, score, shot, G, assist]
@@ -546,7 +591,7 @@ A. Use an **integer minute** (e.g. \`47\`), not \`45+2\` text.
 |-----|--------|
 | \`G\` | Open goal wizard |
 | \`Esc\` | Close wizard (discard unconfirmed) |
-`,d=`---
+`,h=`---
 title: Substitute a player
 category: in_match
 tags: [sub, substitution, bench]
@@ -601,7 +646,7 @@ A. Use **Add player** / roster flow first, then substitute.
 
 - [Yellow and red cards](#/workspace/help/article/match_card)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,h=`---
+`,m=`---
 title: Add a member to the roster
 category: team
 tags: [roster, member, server id, number]
@@ -649,7 +694,7 @@ A. Roster = **eligible pool**; on-pitch is **\`active\`** in match detail — di
 
 - [Register a new team](#/workspace/help/article/team_create)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,m=`---
+`,p=`---
 title: Register a new team
 category: team
 tags: [team, register, abbreviation, color]
@@ -773,7 +818,7 @@ A. Remove is intended for **undoing an accidental add right after it happens**. 
 - [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Manually edit the score](#/workspace/help/article/match_manual_score_edit)
-`,p=`---
+`,f=`---
 title: I recorded the wrong goal
 category: trouble
 tags: [goal, undo, mistake, G]
@@ -832,4 +877,4 @@ Use **Data** → **Full data backup (JSON)** to snapshot the current state, rest
 
 - \`G\` — goal wizard (match detail, when enabled)  
 - \`Esc\` — close dialog
-`;export{p as _,u as a,m as b,h as c,d,c as e,l as f,i as g,s as h,o as i,r as j,a as k,t as l,n as m,e as n};
+`;export{f as _,u as a,p as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,o as j,r as k,a as l,t as m,n,e as o};

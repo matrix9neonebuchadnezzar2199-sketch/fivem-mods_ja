@@ -380,7 +380,41 @@
     "col_editor": "Editor",
     "col_match": "Match",
     "col_change": "Change",
-    "log_editor": "Editor license"
+    "log_editor": "Editor license",
+    "import": {
+      "open": "Import from JSON",
+      "title": "Import JSON backup",
+      "pick_file": "Choose file",
+      "step_file": "Select a RefBoard full backup JSON file.",
+      "step_preview": "Review contents",
+      "step_done": "Import complete",
+      "preview_summary": "Teams {teams} / roster {rosterMembers} / matches {matches}",
+      "exported_at": "Exported at",
+      "app_version": "App version when exported",
+      "schema_version": "Schema",
+      "mode_replace": "Replace (delete existing data, then import)",
+      "mode_replace_confirm": "Yes, replace everything",
+      "mode_merge": "Merge (assign new IDs and append)",
+      "replace_warn": "All existing RefBoard data on this device will be removed. Only continue if you intend a full replace.",
+      "replace_abort": "Back",
+      "cancel": "Cancel",
+      "reload": "Reload to apply",
+      "reload_hint": "Lists and in-memory stores may stay stale until you reload the page.",
+      "close_without_reload": "Close without reloading",
+      "result_replace": "Imported with replace",
+      "result_merge": "Imported with merge",
+      "by": "Operator",
+      "error_invalid_json": "Could not parse as JSON",
+      "error_invalid_shape": "Not a RefBoard backup file",
+      "error_unsupported_schema": "Unsupported backup schema for this app (schemaVersion={version})"
+    },
+    "import_history": {
+      "title": "Import history",
+      "empty": "No import history yet",
+      "mode_replace": "Replace",
+      "mode_merge": "Merge",
+      "row": "{at} · {by} · {mode} · teams {teams} / roster {rosterMembers} / matches {matches}"
+    }
   },
   "settings": {
     "title": "Settings",

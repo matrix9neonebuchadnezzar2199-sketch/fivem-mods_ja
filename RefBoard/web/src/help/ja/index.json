@@ -90,6 +90,11 @@
           "id": "data_export",
           "title": "CSV でエクスポートする",
           "article": "data_export.md"
+        },
+        {
+          "id": "data_import",
+          "title": "JSON バックアップを取り込む",
+          "article": "data_import.md"
         }
       ]
     },

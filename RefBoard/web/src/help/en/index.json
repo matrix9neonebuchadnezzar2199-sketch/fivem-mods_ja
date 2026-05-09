@@ -90,6 +90,11 @@
           "id": "data_export",
           "title": "Export to CSV",
           "article": "data_export.md"
+        },
+        {
+          "id": "data_import",
+          "title": "Import a JSON backup",
+          "article": "data_import.md"
         }
       ]
     },

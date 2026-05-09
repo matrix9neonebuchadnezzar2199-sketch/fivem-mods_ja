@@ -1,5 +1,75 @@
 import type { MatchDetailModel, MatchEvent, ScoreHistoryRow } from '../types/match'
-import { dumpAllLocal } from './localPersist'
+import { dumpAllLocal, LOCAL_PERSIST_KEY_PREFIX, LOCAL_PERSIST_SCHEMA_VERSION } from './localPersist'
+
+export interface BackupFile {
+  schemaVersion: number
+  exportedAt: string
+  appVersion: string
+  data: Record<string, unknown>
+}
+
+export type ImportPreviewReason = 'invalid_json' | 'invalid_shape' | 'unsupported_schema'
+
+export interface ImportPreview {
+  ok: boolean
+  reason?: ImportPreviewReason
+  schemaVersion?: number
+  appVersion?: string
+  exportedAt?: string
+  counts: { teams: number; rosterMembers: number; matches: number }
+}
+
+export function parseBackupText(
+  text: string,
+):
+  | { ok: true; file: BackupFile }
+  | { ok: false; reason: ImportPreviewReason; badSchemaVersion?: number } {
+  let json: unknown
+  try {
+    json = JSON.parse(text) as unknown
+  } catch {
+    return { ok: false, reason: 'invalid_json' }
+  }
+  if (!json || typeof json !== 'object') return { ok: false, reason: 'invalid_shape' }
+  const f = json as Partial<BackupFile>
+  if (typeof f.schemaVersion !== 'number') return { ok: false, reason: 'invalid_shape' }
+  if (f.schemaVersion !== LOCAL_PERSIST_SCHEMA_VERSION) {
+    return { ok: false, reason: 'unsupported_schema', badSchemaVersion: f.schemaVersion }
+  }
+  if (!f.data || typeof f.data !== 'object') return { ok: false, reason: 'invalid_shape' }
+  return {
+    ok: true,
+    file: {
+      schemaVersion: f.schemaVersion,
+      exportedAt: typeof f.exportedAt === 'string' ? f.exportedAt : '',
+      appVersion: typeof f.appVersion === 'string' ? f.appVersion : '',
+      data: f.data as Record<string, unknown>,
+    },
+  }
+}
+
+function countPersistedEntities(data: Record<string, unknown>, shortKey: string): number {
+  const fullKey = LOCAL_PERSIST_KEY_PREFIX + shortKey
+  const raw = data[fullKey]
+  if (!raw || typeof raw !== 'object') return 0
+  const w = raw as { version?: number; data?: unknown }
+  if (w.version !== LOCAL_PERSIST_SCHEMA_VERSION || !Array.isArray(w.data)) return 0
+  return w.data.length
+}
+
+export function buildPreview(file: BackupFile): ImportPreview {
+  return {
+    ok: true,
+    schemaVersion: file.schemaVersion,
+    appVersion: file.appVersion,
+    exportedAt: file.exportedAt,
+    counts: {
+      teams: countPersistedEntities(file.data, 'teams'),
+      rosterMembers: countPersistedEntities(file.data, 'roster_members'),
+      matches: countPersistedEntities(file.data, 'matches'),
+    },
+  }
+}
 
 export function toCSV(rows: Record<string, unknown>[], columns: string[]): string {
   const escape = (v: unknown) => {

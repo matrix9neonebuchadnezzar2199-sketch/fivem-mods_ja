@@ -77,6 +77,13 @@
           "article": "data_export.md",
           "tags": ["CSV", "Excel", "エクスポート", "BOM"],
           "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_import_rev",
+          "title": "JSON やバックアップを取り込みたい",
+          "article": "data_import.md",
+          "tags": ["インポート", "取り込み", "JSON", "バックアップ", "端末移行"],
+          "actionUrl": "#/workspace/data"
         }
       ]
     },
