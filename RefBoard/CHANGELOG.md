@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.1 — 2026‑05‑10（テスト基盤導入）
+
+- vitest を devDependencies に追加。`npm test` で `src/**/*.test.ts` を実行。watch は `npm run test:watch`。
+- `utils/matchTime.ts` の単体テスト（25 件）を新設。`parseMinuteInput` の正常系・正規化・異常系と `formatMinute` / `formatMinuteForCsv` を網羅。
+
 ## v0.2.0 — 2026‑05‑09（運用品質）
 
 - ヘルプ検索 Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`minMatchCharLength` 2、`ignoreLocation` true、`keys` に `slug` 追加）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。`scripts/eval-help-fuse.mjs` で再評価可能。第九コミット `ce6f281`。

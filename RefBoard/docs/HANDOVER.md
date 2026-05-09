@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.2.0（ローカル専用・運用品質更新）
+- **対象バージョン**: v0.2.1（ローカル専用・運用品質更新）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.2.0）
+## 3. ディレクトリ構成（v0.2.1）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.2.0'
+├─ fxmanifest.lua          version '0.2.1'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.2.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.2.1（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
@@ -114,6 +114,8 @@ npm run build        # web/dist 出力（FiveM 配布物）
 npx vue-tsc --noEmit # 型チェック
 ```
 
+- `npm test`: vitest による単体テスト（v0.2.1〜）。`src/**/*.test.ts` を実行。watch は `npm run test:watch`。
+
 `fxmanifest.lua` は `web/dist/index.html` と `web/dist/**/*` をパッケージ。`server.cfg` には `ensure RefBoard` の 1 行のみ（`oxmysql` も ACE も不要）。`Config.OpenKey`（既定 F6）と `Config.DefaultLocale`（既定 `ja`）だけ設定可能。
 
 ## 7. 既知の TODO（v0.2.0 時点）
@@ -136,7 +138,7 @@ npx vue-tsc --noEmit # 型チェック
 ## 9. ロードマップ（v0.2.0 → v1.0.0）
 
 - **v0.2.0（完了・2026‑05‑09）**: ヘルプ Fuse 再調整、ロスタイム入力許容、JSON インポート部分マージ。
-- **v0.2.x（短期）**: コンパクト小窓モードの再評価、`intro_setup` スクショ更新、ロスタイム単体テスト導入（vitest 検討）。
+- **v0.2.x（短期）**: コンパクト小窓モードの再評価、`intro_setup` スクショ更新。
 - **v0.3.0（中期）**: 集計・大会／リーグ、CSV 拡充、ヘルプ拡充。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
@@ -145,7 +147,7 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.2.0（Fuse・ロスタイム入力・JSON 部分マージまで反映）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 現状: v0.2.1（vitest＋`matchTime` 単体テスト。Fuse・ロスタイム入力・JSON 部分マージは v0.2.0 まで反映）。`RefBoard_old/` は GitHub 非追跡の素材庫。
 > 次着手候補: PK キャンセル UI、コンパクト小窓再評価など §7 TODO のいずれか。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
@@ -160,3 +162,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑09: ヘルプ Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`keys` に `slug` 追加と重み付け変更）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。
 - 2026‑05‑09: イベント時刻に `45+2` 入力（`matchTime.ts` / `MinuteInput.vue`）、表示・CSV 整形、PK 中の保存ルール、ヘルプ記事・`reverse_index` 追従。版数 v0.2.0（`package.json` / `fxmanifest` / `REFBOARD_UI_VERSION`）。
 - 2026‑05‑09: JSON インポート **部分マージ**（`mergeImportPartial` / `ImportSelection`、`buildPreviewDetail`、履歴 `partial`）。
+- 2026‑05‑10: vitest を devDependencies に追加し、`utils/matchTime.ts` の単体テストを新設（`parseMinuteInput`／`formatMinute`／`formatMinuteForCsv`）。`npm test` / `npm run test:watch` を導入。版数 v0.2.1。
