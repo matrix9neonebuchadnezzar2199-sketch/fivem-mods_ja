@@ -456,10 +456,6 @@ onUnmounted(() => {
   window.removeEventListener('keydown', onDockKeydown, true)
 })
 
-async function toViewMode() {
-  toast(t('match_detail.view_mode_local_hint'), 'info', { ms: 4000 })
-}
-
 async function onCancel() {
   await router.push({ name: 'matches' })
 }
@@ -751,13 +747,6 @@ function onAddManual(p: { name: string; number: number | null }) {
               @click="enterCompactDock"
             >
               {{ t('match_detail.compact_mode') }}
-            </button>
-            <button
-              type="button"
-              class="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
-              @click="toViewMode"
-            >
-              [閲覧モード]
             </button>
             <button type="button" class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs text-slate-200" @click="onCancel">
               [キャンセル]

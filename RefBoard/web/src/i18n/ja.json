@@ -205,7 +205,6 @@
     "compact_restore_full": "全体UIに戻る",
     "compact_focus_ui": "Ctrl+B — 歩行（ゲーム操作）へ",
     "compact_focus_game": "B または Ctrl+B — 小窓を操作",
-    "view_mode_local_hint": "ローカル版に閲覧専用モードはありません（常にこの端末で編集できます）。",
     "pk_back_to_list": "試合一覧に戻る"
   },
   "score": {

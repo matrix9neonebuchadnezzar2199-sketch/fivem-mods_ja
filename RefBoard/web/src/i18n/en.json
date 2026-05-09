@@ -205,7 +205,6 @@
     "compact_restore_full": "Full UI",
     "compact_focus_ui": "Ctrl+B — walk / game controls",
     "compact_focus_game": "B or Ctrl+B — use the compact panel",
-    "view_mode_local_hint": "There is no read-only mode in the local build (you always edit on this device).",
     "pk_back_to_list": "Back to match list"
   },
   "score": {
