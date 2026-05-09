@@ -1,6 +1,7 @@
 {
   "app": { "title": "Soccer match control" },
   "toast": {
+    "local_feature_pending": "This will work after the next update (placeholder before local stores are wired).",
     "match_finished": "Match finished",
     "match_clock_failed": "Could not update the match clock.",
     "match_clock_timeout": "Match clock request timed out. Please reload.",
@@ -45,7 +46,11 @@
     "db_or_config_error": "Database is unreachable or tables are missing. Run sql/install.sql on the database oxmysql uses, then restart RefBoard (refresh on the server).",
     "lock_acquire_other": "Could not acquire the edit lock ({error}). Ask an admin to check server logs or see Help → Troubleshooting.",
     "debug_trace": "🐛 Enable debug NUI trace (reload)",
-    "back_to_game": "Return to game (close tool)"
+    "back_to_game": "Return to game (close tool)",
+    "local_intro": "Local-only build: data stays on this device (localStorage in the next update).",
+    "enter": "Go to matches",
+    "self_name_hint": "Set your display name in Settings first (required in the next update).",
+    "go_to_settings": "Open settings"
   },
   "sidebar": {
     "team_manage": "Teams",
@@ -187,7 +192,8 @@
     "restore_full_click": "Tap here to restore full view",
     "compact_restore_full": "Full UI",
     "compact_focus_ui": "Ctrl+B — walk / game controls",
-    "compact_focus_game": "B or Ctrl+B — use the compact panel"
+    "compact_focus_game": "B or Ctrl+B — use the compact panel",
+    "view_mode_local_hint": "There is no read-only mode in the local build (you always edit on this device)."
   },
   "score": {
     "edit_reason": "Reason (optional)",
@@ -240,7 +246,9 @@
     "submit": "Create"
   },
   "shell": {
-    "online": "Online"
+    "online": "Online",
+    "local_mode": "Local (no server)",
+    "close": "Close"
   },
   "match_status": {
     "title": "Match status",

@@ -1,33 +1,15 @@
-import { mockResponse, queueMockSideEffects } from '../mocks/nuiMock'
+import { ref } from 'vue'
 
-const TRACE_ENABLED = () =>
-  Boolean(import.meta.env.DEV) || (typeof localStorage !== 'undefined' && localStorage.getItem('refboard_trace') === '1')
+/** Lua `RegisterNUICallback` にそのまま POST するパス（v0.1.0 クライアントに残っているもの） */
+const LUA_NUI_CALLBACK_PATHS = new Set([
+  'close',
+  'compact_dock_state',
+  'compact_toggle_input',
+  'refboard:nui_focus_cursor',
+])
 
-let requestSeq = 0
-
-export function getResourceName(): string {
-  const w = window as unknown as { GetParentResourceName?: () => string }
-  if (typeof w.GetParentResourceName === 'function') {
-    return w.GetParentResourceName()
-  }
-  return 'RefBoard'
-}
-
-/** 小窓→全画面復帰時など、クライアントで NUI マウス／キーボードフォーカスを取り直す */
-export async function refboardRecaptureNuiFocus(): Promise<void> {
-  if (typeof (window as unknown as { GetParentResourceName?: () => string }).GetParentResourceName !== 'function') {
-    return
-  }
-  try {
-    await fetch(`https://${getResourceName()}/refboard:nui_focus_cursor`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-      body: '{}',
-    })
-  } catch {
-    /* ブラウザ単体開発時の 404 等 */
-  }
-}
+/** Lua `SendNUIMessage` のみで届くイベント（サーバー push ではない） */
+const LUA_WINDOW_MESSAGE_EVENTS = new Set(['refboard:compact_input_mode'])
 
 /** ブラウザ単体開発か FiveM NUI 内か */
 export function isInFiveM(): boolean {
@@ -35,78 +17,61 @@ export function isInFiveM(): boolean {
   return typeof w.invokeNative !== 'undefined' || typeof w.GetParentResourceName === 'function'
 }
 
-function useBrowserMock(): boolean {
-  return Boolean(import.meta.env.DEV) && !isInFiveM()
-}
-
-export function useNui() {
-  async function send<TRes>(path: string, data?: unknown): Promise<TRes> {
-    const id = ++requestSeq
-    const start = typeof performance !== 'undefined' ? performance.now() : 0
-    if (TRACE_ENABLED()) {
-      // eslint-disable-next-line no-console
-      console.groupCollapsed(`[NUI] → ${path} #${id}`)
-      // eslint-disable-next-line no-console
-      console.log('payload:', data)
-      // eslint-disable-next-line no-console
-      console.log('time:', new Date().toISOString())
-      // eslint-disable-next-line no-console
-      console.groupEnd()
-    }
-    if (useBrowserMock()) {
-      const res = mockResponse(path, data) as TRes
-      queueMockSideEffects(path, data)
-      if (TRACE_ENABLED()) {
-        const elapsed = (typeof performance !== 'undefined' ? performance.now() - start : 0).toFixed(1)
-        const ok = (res as { ok?: boolean })?.ok !== false
-        // eslint-disable-next-line no-console
-        console.groupCollapsed(`[NUI] ← ${path} #${id} ${ok ? '✓' : '✗'} (${elapsed}ms) [mock]`)
-        // eslint-disable-next-line no-console
-        console.log('response:', res)
-        // eslint-disable-next-line no-console
-        console.groupEnd()
-      }
-      return res
-    }
-    if (typeof (window as unknown as { GetParentResourceName?: () => string }).GetParentResourceName !== 'function') {
-      return { ok: false, error: 'no_nui' } as TRes
-    }
+export function getResourceName(): string {
+  const w = window as unknown as { GetParentResourceName?: () => string }
+  if (typeof w.GetParentResourceName === 'function') {
     try {
-      const res = await fetch(`https://${getResourceName()}/${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-        body: JSON.stringify(data ?? {}),
-      })
-      const json = (await res.json()) as TRes
-      if (TRACE_ENABLED()) {
-        const elapsed = (typeof performance !== 'undefined' ? performance.now() - start : 0).toFixed(1)
-        const r = json as { ok?: boolean; code?: string }
-        const ok = r?.ok !== false
-        // eslint-disable-next-line no-console
-        console.groupCollapsed(`[NUI] ← ${path} #${id} ${ok ? '✓' : '✗'} (${elapsed}ms)`)
-        // eslint-disable-next-line no-console
-        console.log('response:', json)
-        if (r?.code) {
-          // eslint-disable-next-line no-console
-          console.warn(`error code: ${r.code}`)
-        }
-        // eslint-disable-next-line no-console
-        console.groupEnd()
-      }
-      return json
-    } catch (e) {
-      const elapsed = (typeof performance !== 'undefined' ? performance.now() - start : 0).toFixed(1)
-      // eslint-disable-next-line no-console
-      console.error(`[NUI] ✗ ${path} #${id} EXCEPTION (${elapsed}ms)`, e)
-      throw e
+      return w.GetParentResourceName()
+    } catch {
+      return 'RefBoard'
     }
   }
+  return 'RefBoard'
+}
 
-  function on<T>(event: string, handler: (payload: T) => void): () => void {
+async function postToLua(path: string, data?: unknown): Promise<unknown> {
+  if (!isInFiveM()) {
+    return { ok: true }
+  }
+  try {
+    const res = await fetch(`https://${getResourceName()}/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify(data ?? {}),
+    })
+    return await res.json().catch(() => ({ ok: true }))
+  } catch {
+    return { ok: false }
+  }
+}
+
+/**
+ * 旧版互換のシグネチャだけ残した薄いラッパ。
+ * - `close` / 小窓系は Lua の RegisterNUICallback を叩く
+ * - それ以外は `{ ok: true }`（実体はローカルストアが直接処理する想定）
+ */
+export function useNui() {
+  async function send<TRes = { ok: boolean }>(path: string, data?: unknown): Promise<TRes> {
+    if (LUA_NUI_CALLBACK_PATHS.has(path)) {
+      return (await postToLua(path, data)) as TRes
+    }
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[useNui] send('${path}') はローカル版では無効化されています。ストア直叩きに置き換えてください。`,
+      )
+    }
+    return { ok: true } as TRes
+  }
+
+  function on<T>(_event: string, _handler: (payload: T) => void): () => void {
+    if (!LUA_WINDOW_MESSAGE_EVENTS.has(_event)) {
+      return () => {}
+    }
     const listener = (e: MessageEvent) => {
-      const d = e.data
-      if (d && d.type === event) {
-        handler(d.payload as T)
+      const d = e.data as { type?: string; payload?: T } | undefined
+      if (d?.type === _event) {
+        _handler((d.payload ?? d) as T)
       }
     }
     window.addEventListener('message', listener)
@@ -115,3 +80,5 @@ export function useNui() {
 
   return { send, on }
 }
+
+export const nuiReady = ref(true)

@@ -1,5 +1,6 @@
 import type { MatchDetailModel } from '../types/match'
 
+/** サーバー未取得時のプレースホルダ（第三コミットでストア駆動に置換） */
 export const mockMatchDetail: MatchDetailModel = {
   id: 1,
   team1Id: 1,
@@ -13,7 +14,6 @@ export const mockMatchDetail: MatchDetailModel = {
   away: { name: 'Vinewood United', short: 'VW', isHome: false },
   score: { home: 2, away: 1 },
   clockLabel: '試合終了',
-  /** サーバー慣例: 経過（mm:ss）。未開始は 0:00 → 残りは定尺いっぱい */
   clockMmSs: '0:00',
   clockAccumulatedMs: 0,
   clockRunning: false,

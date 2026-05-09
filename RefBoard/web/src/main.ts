@@ -13,9 +13,10 @@ import './styles/score-flash.css'
 
 /** Lua client/main.lua の SendNUIMessage({ type: 'refboard:setOpen', ... }) と同期 */
 window.addEventListener('message', (e: MessageEvent) => {
-  const d = e.data as { type?: string; payload?: { open?: boolean } } | undefined
+  const d = e.data as { type?: string; open?: boolean; payload?: { open?: boolean } } | undefined
   if (d?.type === 'refboard:setOpen') {
-    setNuiShellOpenFromLua(Boolean(d.payload?.open))
+    const open = typeof d.open === 'boolean' ? d.open : Boolean(d.payload?.open)
+    setNuiShellOpenFromLua(open)
   }
 })
 
@@ -51,7 +52,7 @@ window.addEventListener('unhandledrejection', (event) => {
   // eslint-disable-next-line no-console
   console.error('[RefBoard] unhandled rejection:', event.reason)
   try {
-    useToast().push('通信処理でエラーが発生しました', 'error', 4000)
+    useToast().push('予期しないエラーが発生しました', 'error', 4000)
   } catch {
     /* ignore */
   }

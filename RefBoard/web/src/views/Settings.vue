@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
-import { useSessionStore } from '../stores/session'
 import { useNui, getResourceName, isInFiveM } from '../composables/useNui'
 import { useToast } from '../composables/useToast'
 import MarqueeText from '../components/common/MarqueeText.vue'
@@ -11,8 +9,8 @@ import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
-const session = useSessionStore()
-const { isEditor } = storeToRefs(session)
+/** ローカル版では常に編集相当（サーバー側の閲覧モードなし） */
+const isEditor = true
 const { send, on } = useNui()
 const { push: toast } = useToast()
 
@@ -39,7 +37,6 @@ function closeDevModal() {
 
 const canSubmitDevConfirm = computed(() => devConfirmInput.value.trim() === 'YES')
 
-let unDbMeta: (() => void) | null = null
 let unDevAck: (() => void) | null = null
 
 function handleDevAck(p: {
@@ -79,7 +76,7 @@ async function submitDevAction() {
   if (!canSubmitDevConfirm.value || !devModal.value || devBusy.value) {
     return
   }
-  if (!isEditor.value) {
+  if (!isEditor) {
     toast(t('settings.dev_data.err_no_edit'), 'error')
     return
   }
@@ -90,24 +87,21 @@ async function submitDevAction() {
   } catch {
     devBusy.value = false
     toast(t('settings.dev_data.err_network'), 'error')
+    return
   }
+  devBusy.value = false
+  closeDevModal()
+  toast(t('toast.local_feature_pending'), 'info', { ms: 6000 })
 }
 
 onMounted(() => {
   settings.load()
   locale.value = settings.settings.locale
-  unDbMeta = on('refboard:data:db_meta:ack', (p: { schemaVersion?: string; resourceVersion?: string }) => {
-    unDbMeta?.()
-    unDbMeta = null
-    dbMeta.value = p
-  })
-  void send('data_db_meta', {})
-
+  dbMeta.value = { schemaVersion: 'local', resourceVersion: '0.1.0' }
   unDevAck = on('refboard:dev:data_action:ack', handleDevAck)
 })
 
 onUnmounted(() => {
-  unDbMeta?.()
   unDevAck?.()
 })
 
@@ -293,13 +287,6 @@ function syncLocale() {
         <div>Resource: {{ dbMeta?.resourceVersion || '—' }}</div>
         <div>getResourceName: {{ getResourceName() }}</div>
       </div>
-      <router-link
-        :to="{ name: 'health' }"
-        class="mt-3 inline-block text-xs font-medium text-primary underline decoration-primary/40 hover:decoration-primary"
-      >
-        {{ t('settings.health_link') }} →
-      </router-link>
-
       <div v-if="showDevDataPanel" class="mt-4 rounded-lg border border-amber-700/60 bg-amber-950/20 p-3">
         <h3 class="text-xs font-semibold text-amber-200">{{ t('settings.dev_data.title') }}</h3>
         <p class="mt-1 text-xs text-amber-100/90">{{ t('settings.dev_data.intro') }}</p>

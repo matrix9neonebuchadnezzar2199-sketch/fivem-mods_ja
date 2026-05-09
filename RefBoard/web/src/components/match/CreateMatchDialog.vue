@@ -3,6 +3,7 @@ import { computed, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { blockDateTimeFieldKeydown, openNativeDateTimePicker } from '../../composables/openNativeDateTimePicker'
 import { useNui } from '../../composables/useNui'
+import { useToast } from '../../composables/useToast'
 import type { TeamRow } from '../../types/match'
 
 const props = defineProps<{
@@ -13,7 +14,8 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:open': [boolean]; created: [number] }>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
+const { send } = useNui()
+const { push: toast } = useToast()
 
 const form = reactive({
   team1Id: '' as string | number,
@@ -39,13 +41,6 @@ async function submit() {
   if (!t1 || !t2 || t1 === t2) {
     return
   }
-  const un = on('refboard:match:create:ack', (p: { ok?: boolean; matchId?: number }) => {
-    un()
-    if (p?.ok && p.matchId) {
-      emit('created', p.matchId)
-      close()
-    }
-  })
   await send('match_create', {
     team1Id: t1,
     team2Id: t2,
@@ -54,6 +49,8 @@ async function submit() {
     matchDate: form.matchDate,
     kickoffTime: form.kickoffTime || null,
   })
+  close()
+  toast(t('toast.local_feature_pending'), 'info', { ms: 6000 })
 }
 </script>
 

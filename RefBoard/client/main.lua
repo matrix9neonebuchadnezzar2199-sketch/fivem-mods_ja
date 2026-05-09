@@ -45,10 +45,13 @@ end, false)
 
 RegisterKeyMapping('refboard', 'RefBoard を開閉', 'keyboard', Config.OpenKey or 'F6')
 
-RegisterNUICallback('refboard:close', function(_, cb)
+local function nuiClose(_, cb)
   setOpen(false)
   cb({ ok = true })
-end)
+end
+
+RegisterNUICallback('close', nuiClose)
+RegisterNUICallback('refboard:close', nuiClose)
 
 AddEventHandler('onClientResourceStart', function(res)
   if res ~= GetCurrentResourceName() then

@@ -5,26 +5,22 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../composables/useNui'
 import { useToast } from '../composables/useToast'
-import { useSessionStore } from '../stores/session'
 import { useSettingsStore } from '../stores/settings'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
-import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
 import { formatDateJa } from '../utils/formatDate'
 import { formatClockMs, parseEpochMsFromServer, remainingMsFromClock } from '../utils/matchClock'
 
 const { t } = useI18n()
 const router = useRouter()
-const session = useSessionStore()
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
 const { push: toast } = useToast()
 const { send, on } = useNui()
 
 const rows = ref<MatchListRow[]>([])
-/** 計測中の行の残り表示を 250ms で更新 */
 const listClockTick = ref(0)
 let listClockInterval: ReturnType<typeof setInterval> | null = null
 
@@ -61,18 +57,14 @@ function listRemainingTimeLabel(m: MatchListRow): string {
   )
   return formatClockMs(rem)
 }
+
 const teams = ref<TeamRow[]>([])
 const filter = ref<'all' | 'draft' | 'finished' | 'cancelled'>('all')
 const showCreate = ref(false)
-const showLock = ref(false)
-const lockPeer = ref('')
-const pendingOpenId = ref<number | null>(null)
 const showReopen = ref(false)
 const reopenId = ref<number | null>(null)
 const showDeleteConfirm = ref(false)
 const deleteId = ref<number | null>(null)
-/** 編集入室の二重クリックで enterEdit / トーストが二重に走らないようにする */
-const editEnterInFlight = ref(false)
 
 let offMatch: (() => void) | null = null
 let offTeam: (() => void) | null = null
@@ -126,42 +118,8 @@ function openDetail(id: number) {
   void router.push({ name: 'match-detail', params: { id: String(id) } })
 }
 
-async function openEdit(id: number) {
-  if (editEnterInFlight.value) return
-  editEnterInFlight.value = true
-  try {
-    const r = await session.enterEdit(id)
-    if (r.ok) {
-      void router.push({ name: 'match-detail', params: { id: String(id) } })
-      return
-    }
-    if (r.error === 'timeout') {
-      toast(t('launcher.lock_acquire_timeout'), 'error', { ms: 6000 })
-      return
-    }
-    if (isDbOrInfraAcquireError(r.error)) {
-      toast(t('launcher.db_or_config_error'), 'error', { ms: 14000 })
-      return
-    }
-    if (!isPeerLockHeldError(r.error)) {
-      toast(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', { ms: 8000 })
-      return
-    }
-    lockPeer.value = r.holder?.name || t('launcher.unknown_editor')
-    pendingOpenId.value = id
-    showLock.value = true
-  } finally {
-    editEnterInFlight.value = false
-  }
-}
-
-async function openPendingAsView() {
-  showLock.value = false
-  const id = pendingOpenId.value
-  pendingOpenId.value = null
-  if (id) {
-    void router.push({ name: 'match-detail', params: { id: String(id) } })
-  }
+function openEdit(id: number) {
+  void router.push({ name: 'match-detail', params: { id: String(id) } })
 }
 
 function askReopen(id: number) {
@@ -175,66 +133,18 @@ function askDelete(id: number) {
 }
 
 async function confirmDelete() {
-  const id = deleteId.value
-  if (!id) return
-  const un = on('refboard:match:delete:ack', (r: { ok?: boolean; error?: string }) => {
-    un()
-    showDeleteConfirm.value = false
-    deleteId.value = null
-    if (r?.ok) {
-      loadMatches()
-      return
-    }
-    if (r?.error === 'no_permission') {
-      toast(t('errors.E1001'), 'error', { ms: 6000, errorCode: 'E1001', errorKey: 'no_permission' })
-      return
-    }
-    if (r?.error === 'locked_by_other') {
-      toast(t('toast.match_delete_locked'), 'error')
-      return
-    }
-    toast(t('toast.match_delete_failed'), 'error')
-  })
-  await send('match_delete', { matchId: id })
+  showDeleteConfirm.value = false
+  deleteId.value = null
+  toast(t('toast.local_feature_pending'), 'info', { ms: 5000 })
 }
 
 async function confirmReopen() {
   const id = reopenId.value
-  if (!id || editEnterInFlight.value) return
-  editEnterInFlight.value = true
-  const er = await session.enterEdit(id).finally(() => {
-    editEnterInFlight.value = false
-  })
-  if (!er.ok) {
-    showReopen.value = false
-    reopenId.value = null
-    if (er.error === 'timeout') {
-      toast(t('launcher.lock_acquire_timeout'), 'error', { ms: 6000 })
-      return
-    }
-    if (isDbOrInfraAcquireError(er.error)) {
-      toast(t('launcher.db_or_config_error'), 'error', { ms: 14000 })
-      return
-    }
-    if (!isPeerLockHeldError(er.error)) {
-      toast(t('launcher.lock_acquire_other', { error: er.error ?? 'unknown' }), 'error', { ms: 8000 })
-      return
-    }
-    lockPeer.value = er.holder?.name || t('launcher.unknown_editor')
-    pendingOpenId.value = id
-    showLock.value = true
-    return
+  showReopen.value = false
+  reopenId.value = null
+  if (id) {
+    void router.push({ name: 'match-detail', params: { id: String(id) } })
   }
-  const un = on('refboard:match:reopen:ack', (r: { ok?: boolean }) => {
-    un()
-    if (r?.ok) {
-      showReopen.value = false
-      reopenId.value = null
-      loadMatches()
-      void router.push({ name: 'match-detail', params: { id: String(id) } })
-    }
-  })
-  await send('match_reopen', { matchId: id })
 }
 
 function onCreated(id: number) {
@@ -313,12 +223,7 @@ function onCreated(id: number) {
               >
                 {{ t('match_list.reopen') }}
               </button>
-              <button
-                v-if="session.isEditor"
-                type="button"
-                class="ml-2 text-rose-400 hover:underline"
-                @click="askDelete(m.id)"
-              >
+              <button type="button" class="ml-2 text-rose-400 hover:underline" @click="askDelete(m.id)">
                 {{ t('match_list.delete') }}
               </button>
             </td>
@@ -331,24 +236,6 @@ function onCreated(id: number) {
     </div>
 
     <CreateMatchDialog v-model:open="showCreate" :teams="teams" @created="onCreated" />
-
-    <div
-      v-if="showLock"
-      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-    >
-      <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-        <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('launcher.lock_title') }}</h2>
-        <p class="mb-4 text-sm text-slate-400">{{ t('launcher.lock_body', { name: lockPeer }) }}</p>
-        <div class="flex justify-end gap-2">
-          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="showLock = false">
-            {{ t('launcher.lock_back') }}
-          </button>
-          <button type="button" class="rounded-lg bg-warning/90 px-3 py-2 text-sm font-semibold text-white drop-shadow-sm" @click="openPendingAsView">
-            {{ t('launcher.lock_open_view') }}
-          </button>
-        </div>
-      </div>
-    </div>
 
     <div
       v-if="showDeleteConfirm"

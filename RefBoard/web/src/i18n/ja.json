@@ -1,6 +1,7 @@
 {
   "app": { "title": "サッカー試合管理" },
   "toast": {
+    "local_feature_pending": "ローカル版では次の更新で有効になります（ストア接続前のプレースホルダ）。",
     "match_finished": "試合を終了しました",
     "match_clock_failed": "試合時計の更新に失敗しました。",
     "match_clock_timeout": "試合時計の応答がタイムアウトしました。再読込してください。",
@@ -45,7 +46,11 @@
     "db_or_config_error": "データベースに接続できないか、テーブルが未作成です。oxmysql が使っている DB で sql/install.sql を実行し、サーバーで refresh してから RefBoard を再起動してください。",
     "lock_acquire_other": "編集ロックを取得できませんでした（{error}）。管理者にログを確認してもらうか、ヘルプのトラブルシューティングを参照してください。",
     "debug_trace": "🐛 デバッグログを有効化（再読込）",
-    "back_to_game": "ゲーム画面に戻る（ツールを閉じる）"
+    "back_to_game": "ゲーム画面に戻る（ツールを閉じる）",
+    "local_intro": "各監督が自分の端末で目盛るローカル版です。データはこの端末にだけ保存されます（次の更新で localStorage 連携）。",
+    "enter": "試合一覧へ",
+    "self_name_hint": "最初に設定で表示名を入力してください（次の更新で必須化予定）。",
+    "go_to_settings": "設定を開く"
   },
   "sidebar": {
     "team_manage": "チーム管理",
@@ -187,7 +192,8 @@
     "restore_full_click": "タップでも全画面に戻せます",
     "compact_restore_full": "全体UIに戻る",
     "compact_focus_ui": "Ctrl+B — 歩行（ゲーム操作）へ",
-    "compact_focus_game": "B または Ctrl+B — 小窓を操作"
+    "compact_focus_game": "B または Ctrl+B — 小窓を操作",
+    "view_mode_local_hint": "ローカル版に閲覧専用モードはありません（常にこの端末で編集できます）。"
   },
   "score": {
     "edit_reason": "変更理由（任意）",
@@ -240,7 +246,9 @@
     "submit": "作成"
   },
   "shell": {
-    "online": "接続中"
+    "online": "接続中",
+    "local_mode": "ローカル版（通信なし）",
+    "close": "閉じる"
   },
   "match_status": {
     "title": "試合ステータス",

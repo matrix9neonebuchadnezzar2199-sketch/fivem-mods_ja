@@ -6,7 +6,6 @@ import MatchDetail from '../views/MatchDetail.vue'
 import TeamManage from '../views/TeamManage.vue'
 import DataManage from '../views/DataManage.vue'
 import Settings from '../views/Settings.vue'
-import HealthCheck from '../views/HealthCheck.vue'
 import HelpView from '../views/HelpView.vue'
 
 export const router = createRouter({
@@ -23,7 +22,6 @@ export const router = createRouter({
         { path: 'teams', name: 'teams', component: TeamManage },
         { path: 'data', name: 'data', component: DataManage },
         { path: 'settings', name: 'settings', component: Settings },
-        { path: 'health', name: 'health', component: HealthCheck },
         { path: 'help', name: 'help', component: HelpView },
         { path: 'help/article/:slug', name: 'help-article', component: HelpView, props: true },
         { path: 'help/error/:code', name: 'help-error', component: HelpView, props: true },

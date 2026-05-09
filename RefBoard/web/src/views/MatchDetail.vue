@@ -1,26 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSessionStore } from '../stores/session'
-import { useAutosaveStore } from '../stores/autosave'
-import { usePresenceStore } from '../stores/presence'
-import { refboardRecaptureNuiFocus, useNui } from '../composables/useNui'
-import { useFocusTracker } from '../composables/useFocusTracker'
-import { mockMatchDetail } from '../mocks/matchDetail'
-import type { MatchClockAck, MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/match'
-import {
-  mapBreakdown,
-  mapEventsFromServer,
-  mapHistoryRows,
-  mapMatchGetAckToDetail,
-  mapPlayersForTeam,
-  mapUiStatusFromHalf,
-  type MatchGetAck,
-  type ServerBreakdown,
-  type ServerEventRow,
-  type ServerHistoryRow,
-  type ServerPlayerRow,
-} from '../utils/mapMatchFromServer'
+import { useNui } from '../composables/useNui'
+import { mockMatchDetail } from '../data/matchDetailSeed'
+import type { MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/match'
 import { downloadFile, exportMatchEventsToCSV, exportMatchToJSON, refboardFilename } from '../utils/exporters'
 import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
 import { getElapsedMsFromClockState, parseEpochMsFromServer } from '../utils/matchClock'
@@ -32,19 +15,16 @@ import EventTimelineCard from '../components/match/EventTimelineCard.vue'
 import PenaltyShootoutPanel from '../components/match/PenaltyShootoutPanel.vue'
 import SubstitutionDialog from '../components/match/SubstitutionDialog.vue'
 import CardIssueDialog from '../components/match/CardIssueDialog.vue'
-import AutosaveIndicator from '../components/AutosaveIndicator.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 import GoalRecordWizard from '../components/match/GoalRecordWizard.vue'
 import AddPlayerDialog from '../components/match/AddPlayerDialog.vue'
 import ScoreEditDialog from '../components/match/ScoreEditDialog.vue'
 import ScoreHistoryDialog from '../components/match/ScoreHistoryDialog.vue'
-import PresenceBadge from '../components/PresenceBadge.vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
 import { useToast } from '../composables/useToast'
-import { nuiShellOpenRef } from '../nuiShellVisibility'
 
 defineProps<{
   id?: string
@@ -52,11 +32,12 @@ defineProps<{
 
 const route = useRoute()
 const router = useRouter()
-const session = useSessionStore()
-const autosave = useAutosaveStore()
-const presence = usePresenceStore()
 const { send, on } = useNui()
-const { setFocus } = useFocusTracker()
+/** ローカル版では常に編集可能（閲覧モードなし） */
+const localEditor = true
+function setFocus(_section: string | null) {
+  void _section
+}
 const { t, te } = useI18n()
 const settings = useSettingsStore()
 const matchCompactDock = useMatchCompactDockStore()
@@ -75,7 +56,7 @@ function closeAllModals() {
 }
 
 useKeyboardShortcuts({
-  enabled: () => session.isEditor && detail.dbStatus === 'draft',
+  enabled: () => localEditor && detail.dbStatus === 'draft',
   onGoal: () => {
     showGoal.value = true
   },
@@ -88,7 +69,7 @@ useKeyboardShortcuts({
   onCloseModals: () => closeAllModals(),
 })
 
-const readonly = computed(() => !session.isEditor)
+const readonly = computed(() => false)
 
 /** カード不透明度（設定）。スコアボードは opacity 親を持たない（CEF で blur と合成すると霞み・クリック不能になり得る） */
 const cardDimStyle = computed(() => ({ opacity: settings.settings.cardOpacity / 100 }))
@@ -210,63 +191,39 @@ watch(
   },
 )
 
-function applyClockAck(r: MatchClockAck) {
-  if (r.clock_accumulated_ms !== undefined) {
-    detail.clockAccumulatedMs = Number(r.clock_accumulated_ms) || 0
-  }
-  if (r.clock_running !== undefined) {
-    detail.clockRunning = Number(r.clock_running) === 1
-  }
-  if (r.clock_started_at !== undefined) {
-    detail.clockStartedAtMs = parseEpochMsFromServer(r.clock_started_at)
+/** ローカル版: サーバー時計なし。経過は detail の clock_* のみ更新 */
+function callMatchClock(action: 'start' | 'stop' | 'clear' | 'adjust', deltaMs?: number): Promise<boolean> {
+  const now = Date.now()
+  const full = fullMatchDurationMs.value
+  if (action === 'start') {
+    if (!detail.clockRunning) {
+      detail.clockRunning = true
+      detail.clockStartedAtMs = now
+    }
+  } else if (action === 'stop') {
+    if (detail.clockRunning && detail.clockStartedAtMs != null) {
+      detail.clockAccumulatedMs =
+        (detail.clockAccumulatedMs || 0) + Math.max(0, now - detail.clockStartedAtMs)
+    }
+    detail.clockStartedAtMs = null
+    detail.clockRunning = false
+  } else if (action === 'clear') {
+    detail.clockAccumulatedMs = 0
+    detail.clockStartedAtMs = null
+    detail.clockRunning = false
+  } else if (action === 'adjust' && typeof deltaMs === 'number') {
+    let acc = detail.clockAccumulatedMs || 0
+    if (detail.clockRunning && detail.clockStartedAtMs != null) {
+      acc += now - detail.clockStartedAtMs
+      detail.clockStartedAtMs = now
+    }
+    acc = Math.max(0, Math.min(full, acc + deltaMs))
+    detail.clockAccumulatedMs = acc
   }
   reconcileRunningClockStarted(detail)
   detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
-}
-
-function callMatchClock(
-  action: 'start' | 'stop' | 'clear' | 'adjust',
-  deltaRemainingMs?: number,
-): Promise<boolean> {
-  return new Promise((resolve) => {
-    let settled = false
-    const un = on('refboard:match:clock:ack', (r: MatchClockAck) => {
-      const ackMid = r?.matchId != null ? Number(r.matchId) : NaN
-      if (Number.isFinite(ackMid) && ackMid !== Number(detail.id)) {
-        return
-      }
-      settled = true
-      un()
-      if (r?.ok) {
-        applyClockAck(r)
-        syncClockFromDetail()
-        resolve(true)
-        reloadMatch()
-      } else {
-        const msg = r?.error
-          ? t('toast.match_clock_error', { code: String(r.error) })
-          : t('toast.match_clock_failed')
-        toast(msg, 'error')
-        resolve(false)
-      }
-    })
-    void send('match_clock', { matchId: detail.id, action, deltaRemainingMs }).catch(() => {
-      if (!settled) {
-        settled = true
-        un()
-        toast(t('toast.match_clock_failed'), 'error')
-        resolve(false)
-      }
-    })
-    setTimeout(() => {
-      if (!settled) {
-        settled = true
-        un()
-        toast(t('toast.match_clock_timeout'), 'error')
-        resolve(false)
-      }
-    }, 8000)
-  })
+  syncClockFromDetail()
+  return Promise.resolve(true)
 }
 
 function toastIfReadonlyClock(): boolean {
@@ -306,80 +263,14 @@ const fullEditorAnchorRef = ref<HTMLElement | null>(null)
 
 const showFullEditor = computed(() => !compactDock.value || detail.serverHalf === 'pk')
 
-const editorFocus = computed(() => presence.editorFocus)
-const editorHereBasic = computed(() => editorFocus.value === 'basic_info')
-const editorHereScore = computed(() => editorFocus.value === 'score')
-const editorHereStatus = computed(() => editorFocus.value === 'status')
-const editorHereT1 = computed(() => editorFocus.value === 'team1_players')
-const editorHereT2 = computed(() => editorFocus.value === 'team2_players')
-const editorHereEvents = computed(() => editorFocus.value === 'events')
+const editorHereBasic = computed(() => false)
+const editorHereScore = computed(() => false)
+const editorHereStatus = computed(() => false)
+const editorHereT1 = computed(() => false)
+const editorHereT2 = computed(() => false)
+const editorHereEvents = computed(() => false)
 
-let loadMatchGen = 0
-
-let offState: (() => void) | null = null
-let offFinished: (() => void) | null = null
 let offCompactInputMode: (() => void) | null = null
-
-function applyState(p: {
-  matchId: number
-  team1_score: number
-  team2_score: number
-  status?: string
-  current_half?: string
-  pk_first_team_id?: number | null
-  clock_running?: number
-  clock_started_at?: number | null
-  clock_accumulated_ms?: number
-  breakdown?: ServerBreakdown
-  events?: ServerEventRow[]
-  players?: ServerPlayerRow[] | null
-  history?: ServerHistoryRow[]
-}) {
-  if (Number(p.matchId) !== Number(detail.id)) return
-  detail.score.home = p.team1_score
-  detail.score.away = p.team2_score
-  if (p.status === 'finished' || p.status === 'draft' || p.status === 'cancelled') {
-    detail.dbStatus = p.status
-  }
-  if (p.breakdown) {
-    detail.breakdown = mapBreakdown(p.breakdown, detail.breakdown)
-  }
-  if (p.current_half) {
-    detail.serverHalf = p.current_half
-    detail.uiStatus = mapUiStatusFromHalf(detail.dbStatus, p.current_half)
-  }
-  if (p.pk_first_team_id !== undefined && p.pk_first_team_id !== null) {
-    detail.pkFirstTeamId = Number(p.pk_first_team_id)
-  }
-  if (p.events) {
-    detail.events = mapEventsFromServer(p.events)
-  }
-  if (p.players != null) {
-    detail.homePlayers = mapPlayersForTeam(p.players, detail.team1Id)
-    detail.awayPlayers = mapPlayersForTeam(p.players, detail.team2Id)
-  }
-  if (p.history) {
-    historyRows.value = mapHistoryRows(p.history)
-  }
-  const clockPatch =
-    p.clock_accumulated_ms !== undefined ||
-    p.clock_running !== undefined ||
-    p.clock_started_at !== undefined
-  if (clockPatch) {
-    if (p.clock_accumulated_ms !== undefined) {
-      detail.clockAccumulatedMs = Number(p.clock_accumulated_ms) || 0
-    }
-    if (p.clock_running !== undefined) {
-      detail.clockRunning = Number(p.clock_running) === 1
-    }
-    if (p.clock_started_at !== undefined) {
-      detail.clockStartedAtMs = parseEpochMsFromServer(p.clock_started_at)
-    }
-    reconcileRunningClockStarted(detail)
-    detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
-    syncClockFromDetail()
-  }
-}
 
 function openCard(kind: 'yellow' | 'red') {
   cardPreset.value = kind
@@ -442,7 +333,7 @@ watch(compactDock, async (v, prev) => {
   }
   if (prev !== true) return
   await nextTick()
-  await refboardRecaptureNuiFocus()
+  await send('refboard:nui_focus_cursor', {})
   requestAnimationFrame(() => {
     fullEditorAnchorRef.value?.focus({ preventScroll: true })
   })
@@ -464,87 +355,27 @@ watch(
 async function loadMatch() {
   const id = Number(route.params.id)
   if (!id) return
-  const gen = ++loadMatchGen
-  detail.id = id
-  const un = on('refboard:match:get:ack', (ack: MatchGetAck) => {
-    un()
-    if (gen !== loadMatchGen) {
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.warn('[RefBoard] discard stale match_get:ack', { gen, current: loadMatchGen })
-      }
-      return
-    }
-    const mapped = mapMatchGetAckToDetail(ack)
-    if (mapped) {
-      Object.assign(detail, mapped)
-      reconcileRunningClockStarted(detail)
-      syncClockFromDetail()
-    }
-    historyRows.value = mapHistoryRows(ack.history)
-  })
-  try {
-    await send('match_get', { matchId: id })
-  } catch {
-    if (gen === loadMatchGen) {
-      un()
-    }
-  }
+  const seed = JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel
+  seed.id = id
+  Object.assign(detail, seed)
+  historyRows.value = []
+  reconcileRunningClockStarted(detail)
+  syncClockFromDetail()
+  void send('match_get', { matchId: id })
 }
 
 watch(
   () => route.params.id,
   () => {
     compactDock.value = false
-    const id = Number(route.params.id)
-    if (session.isEditor && id) {
-      void send('lock_acquire', { matchId: id })
-    }
     void loadMatch()
   },
   { immediate: true },
 )
 
-let deb: ReturnType<typeof setTimeout> | null = null
-watch(
-  () => detail,
-  () => {
-    if (readonly.value) {
-      return
-    }
-    if (deb) {
-      clearTimeout(deb)
-    }
-    deb = setTimeout(() => {
-      deb = null
-      autosave.markSaving()
-      void send('autosave_draft', { matchId: detail.id, state: detail })
-    }, 600)
-  },
-  { deep: true },
-)
-
-/** F6 で NUI を閉じたとき Lua がロック解放する。再オープン時は同一ルートのままなので onMounted が走らず lock が無いまま → 時計・カードが no_lock / タイムアウトになる。pending があれば enterEdit で取り直す */
-watch(nuiShellOpenRef, async (open, prevOpen) => {
-  if (!open || prevOpen !== false) return
-  const id = Number(route.params.id) || Number(detail.id)
-  if (!id) return
-  await session.tryRelockAfterShellOpen(id)
-  if (session.isEditor) {
-    void send('lock_acquire', { matchId: id })
-    void loadMatch()
-  }
-})
-
 onMounted(() => {
   settings.load()
   syncClockFromDetail()
-  offState = on('refboard:match:state', (p) => applyState(p as never))
-  offFinished = on('refboard:match:finished', (p: { matchId?: number }) => {
-    if (p?.matchId != null && Number(p.matchId) === Number(detail.id)) {
-      detail.dbStatus = 'finished'
-    }
-  })
   offCompactInputMode = on('refboard:compact_input_mode', (p: { game?: boolean }) => {
     compactGameInputActive.value = Boolean(p?.game)
   })
@@ -555,23 +386,19 @@ onUnmounted(() => {
   void send('compact_dock_state', { compact: false })
   matchCompactDock.setTransparentChrome(false)
   stopClockTickInterval()
-  offState?.()
-  offFinished?.()
   offCompactInputMode?.()
   window.removeEventListener('keydown', onDockKeydown, true)
 })
 
 async function toViewMode() {
-  await session.downgradeToView()
+  toast(t('match_detail.view_mode_local_hint'), 'info', { ms: 4000 })
 }
 
 async function onCancel() {
-  await send('lock_release', {})
   await router.push({ name: 'matches' })
 }
 
 async function onSave() {
-  await send('lock_release', {})
   await router.push({ name: 'matches' })
 }
 
@@ -580,7 +407,7 @@ function openAdd(teamId: number) {
   showAdd.value = true
 }
 
-const canRemoveMatchPlayers = computed(() => session.isEditor && detail.dbStatus === 'draft')
+const canRemoveMatchPlayers = computed(() => localEditor && detail.dbStatus === 'draft')
 
 function openRemovePlayerModal(teamId: number, player: MatchPlayer) {
   if (!canRemoveMatchPlayers.value) {
@@ -696,7 +523,6 @@ function onPkFinished() {
 }
 
 function reloadMatch() {
-  loadMatchGen++
   void loadMatch()
 }
 
@@ -752,11 +578,7 @@ function exportMatchEventsCsv() {
         <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
           <div class="flex flex-1 flex-wrap items-center gap-2 text-sm text-slate-200">
             <span class="font-semibold">試合詳細の編集</span>
-            <span v-if="session.isEditor" class="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">[編集中]</span>
-            <span v-else class="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-300">[閲覧モード]</span>
-          </div>
-          <div class="flex flex-1 justify-center">
-            <AutosaveIndicator />
+            <span v-if="localEditor" class="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">[編集中]</span>
           </div>
           <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
             <button
@@ -777,7 +599,7 @@ function exportMatchEventsCsv() {
               [キャンセル]
             </button>
             <button
-              v-if="session.isEditor && detail.dbStatus === 'draft'"
+              v-if="localEditor && detail.dbStatus === 'draft'"
               type="button"
               class="rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
               @click="showFinish = true"
@@ -877,9 +699,6 @@ function exportMatchEventsCsv() {
       v-if="compactDock && detail.serverHalf !== 'pk'"
       class="pointer-events-auto fixed bottom-4 left-0 right-0 z-[100] flex flex-col items-center gap-1.5 bg-transparent px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-0 sm:bottom-5"
     >
-      <div class="flex w-full max-w-6xl shrink-0 items-center justify-start px-0.5">
-        <PresenceBadge />
-      </div>
       <div
         class="relative w-full max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/95 p-2 pt-7 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] shadow-inner backdrop-blur-md md:max-h-[min(46vh,26rem)]"
       >

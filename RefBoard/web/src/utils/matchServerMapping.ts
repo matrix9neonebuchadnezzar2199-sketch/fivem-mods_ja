@@ -199,8 +199,7 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
   const acc = Number(m.clock_accumulated_ms) || 0
   const running = Number(m.clock_running) === 1
   const startedAt = parseEpochMsFromServer(m.clock_started_at)
-  const elapsedNow =
-    running && startedAt != null ? acc + Math.max(0, Date.now() - startedAt) : acc
+  const elapsedNow = running && startedAt != null ? acc + Math.max(0, Date.now() - startedAt) : acc
   const players = ack.players || []
   const status = m.status || 'draft'
   const half = m.current_half || '1st'

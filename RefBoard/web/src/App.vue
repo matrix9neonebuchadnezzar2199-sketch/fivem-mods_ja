@@ -1,18 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, watch, watchEffect } from 'vue'
+import { computed, onMounted, provide, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMatchCompactDockStore } from './stores/matchCompactDock'
-import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from './stores/settings'
-import { useSessionStore } from './stores/session'
-import { usePresenceStore, type PresenceUser } from './stores/presence'
-import { useAutosaveStore } from './stores/autosave'
-import { useNui, isInFiveM } from './composables/useNui'
-import { useToast } from './composables/useToast'
+import { isInFiveM } from './composables/useNui'
 import Toast from './components/Toast.vue'
 import appBackgroundUrl from '../image/back.jpg'
 import { nuiShellOpenRef } from './nuiShellVisibility'
-import { useRouter } from 'vue-router'
 
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
@@ -29,7 +23,6 @@ const appRootBgClass = computed(() => {
 
 provide('marqueeMode', marqueeMode)
 
-// ルート font-size を反映（FOUC は index.html の inline script で先回り済み）。
 watchEffect(() => {
   if (typeof document !== 'undefined') {
     document.documentElement.style.fontSize = `${rootFontScale.value}%`
@@ -42,47 +35,8 @@ const showNuiChrome = computed(() => {
   return nuiShellOpenRef.value
 })
 
-const router = useRouter()
-const session = useSessionStore()
-const presence = usePresenceStore()
-const autosave = useAutosaveStore()
-const { on } = useNui()
-const { t } = useI18n()
-const { push: toastPush } = useToast()
-
-watch(nuiShellOpenRef, (open, prev) => {
-  if (prev === true && open === false) {
-    const r = router.currentRoute.value
-    const mid =
-      r.name === 'match-detail' && r.params?.id != null && String(r.params.id) !== ''
-        ? Number(r.params.id)
-        : NaN
-    session.syncAfterNuiShellClosedByClient(Number.isFinite(mid) && mid > 0 ? mid : undefined)
-  }
-})
-
 onMounted(() => {
-  // Settings 画面以外から起動した場合に備え、App ルートでも load を保証（冪等）。
   settingsStore.load()
-  session.bindServerMessages()
-  on('refboard:presence:update', (p) => {
-    presence.applyUpdate(p as { users?: PresenceUser[] })
-  })
-  on('refboard:presence:list:ack', (p) => {
-    presence.applyUpdate(p as { users?: PresenceUser[] })
-  })
-  on('refboard:autosave:saved', (p: { savedAt?: number; error?: string }) => {
-    if (p?.error) {
-      autosave.markError()
-      toastPush(t('autosave.error'), 'error', {
-        ms: 8000,
-        errorCode: 'E4003',
-        errorKey: 'tx_failed',
-      })
-    } else if (p?.savedAt) {
-      autosave.markSaved(p.savedAt)
-    }
-  })
 })
 </script>
 
