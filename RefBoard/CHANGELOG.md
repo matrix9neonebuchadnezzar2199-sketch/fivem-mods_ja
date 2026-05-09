@@ -3,6 +3,11 @@
 ## v0.5.0（未リリース）
 
 - **ヘルプ（F-3）**: `npm run check:help` — `scripts/check-help-articles.mjs` で `index.json`／`reverse_index.json`／`articles/*.md`／`context_map.json` の整合と ja/en スラッグ対称、各記事フロントマター（`title`・`category` 必須）を検証。
+- **ヘルプ（F-2）**: 試合一覧・チーム管理・設定の「?」を **`HelpHoverDialog`（中央モーダル）** に統一。旧右スライドの `ContextHelpPanel`／`HelpTriggerButton`／`contextHelp` ストアを削除。`context_map.json` に **`match_list`** を追加し、**`settings`** の関連記事を拡充。
+
+### Future（v0.5.0 後に検討）
+
+- **F-1'**: `intro_setup` への **スクリーンショット新規追加**（記事内に既存画像が無かったため、当初 F-1「更新」はスコープ外。手元撮影可能になったら v0.5.1 等で対応）。
 
 ## v0.4.1 — 2026‑05‑09
 

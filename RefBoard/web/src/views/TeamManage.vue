@@ -6,7 +6,7 @@ import TeamDetail from '../components/team/TeamDetail.vue'
 import RosterList, { type RosterRow } from '../components/team/RosterList.vue'
 import CreateTeamDialog from '../components/team/CreateTeamDialog.vue'
 import AddRosterMemberDialog, { type RosterInitial } from '../components/team/AddRosterMemberDialog.vue'
-import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import HelpHoverDialog from '../components/help/HelpHoverDialog.vue'
 import { useTeamsStore } from '../stores/teams'
 import { useMatchesStore } from '../stores/matches'
 import { useDialogOverlay } from '../composables/useDialogOverlay'
@@ -70,6 +70,7 @@ const rosterInitial = ref<RosterInitial | null>(null)
 
 const showDeleteTeamConfirm = ref(false)
 const rosterRemoveTarget = ref<RosterRow | null>(null)
+const showHelpDialog = ref(false)
 
 function selectTeam(id: number) {
   selectedId.value = id
@@ -148,7 +149,15 @@ function onCreatedTeam(id: number) {
 <template>
   <div class="flex h-full min-h-0 flex-col gap-2 p-3">
     <div class="flex shrink-0 items-center justify-end">
-      <HelpTriggerButton context-id="team_manage" />
+      <button
+        type="button"
+        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 text-slate-200 hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+        :aria-label="t('help.context.open_aria')"
+        :title="t('help.context.open_title')"
+        @click="showHelpDialog = true"
+      >
+        <span aria-hidden="true" class="text-sm font-bold">?</span>
+      </button>
     </div>
     <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-2 lg:grid-cols-[30%_1fr]">
       <TeamList
@@ -213,5 +222,7 @@ function onCreatedTeam(id: number) {
         </div>
       </div>
     </div>
+
+    <HelpHoverDialog context-id="team_manage" :open="showHelpDialog" @close="showHelpDialog = false" />
   </div>
 </template>

@@ -1,4 +1,10 @@
 {
+  "match_list": [
+    "intro_setup",
+    "match_create_new",
+    "match_finish",
+    "troubleshooting_event_disappears"
+  ],
   "match_detail": [
     "match_create_new",
     "match_record_goal",
@@ -22,6 +28,8 @@
     "match_pk_recording"
   ],
   "settings": [
-    "intro_setup"
+    "intro_setup",
+    "intro_what_is_refboard",
+    "troubleshooting_event_disappears"
   ]
 }

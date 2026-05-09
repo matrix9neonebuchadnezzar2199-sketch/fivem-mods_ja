@@ -68,10 +68,10 @@ RefBoard/
       ├─ components/
       │  ├─ match/MinuteInput.vue  イベント時刻（分＋ロスタイム）入力
       │  ├─ match/CompactEventList.vue  小窓モード用・直近イベント（新しい順・スクロール）
-      │  └─ help/HelpHoverDialog.vue   試合詳細・記事一覧＋本文を同一モーダル内で表示（内部リンクは遷移しない）
+      │  └─ help/HelpHoverDialog.vue   試合一覧／試合詳細／チーム管理／設定の「?」— 記事一覧＋本文を同一モーダル内で表示（内部リンクは遷移しない）
       ├─ views/
       │  ├─ Launcher.vue          表示名入力 → 試合一覧へ
-      │  ├─ MainLayout.vue        sidebar + RouterView + ContextHelpPanel（データ管理リンクなし）
+      │  ├─ MainLayout.vue        sidebar + RouterView（データ管理リンクなし）
       │  ├─ MatchList.vue         一覧／検索／削除／新規作成
       │  ├─ MatchDetail.vue       時計／ゴール／カード／交代／PK／手動編集／終了
       │  ├─ TeamManage.vue        チームとロスター
@@ -108,7 +108,7 @@ RefBoard/
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
 - **小窓ドック直近イベント**: `MatchDetail.vue` の `compactDock && !isPkPhase` ブロック内で、`CompactEventList` を前後半カード列下に配置。PK 専用ドックでは直近イベントは出さず PK パネルに集約。
-- **ヘルプ**: ja/en 各 **16 本**（data カテゴリ 6 本削除）。**試合詳細**の「?」は `HelpHoverDialog`：一覧から記事を選ぶと **同一モーダル内**で本文表示し、記事内の `#/workspace/help/article/…` リンクも **画面遷移せず** slug を切替（←／Esc で一覧へ）。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
+- **ヘルプ**: ja/en 各 **16 本**（data カテゴリ 6 本削除）。**試合一覧・試合詳細・チーム管理・設定**の「?」はいずれも `HelpHoverDialog`（中央モーダル）：`context_map.json` のキー `match_list` / `match_detail` / `team_manage` / `settings` で関連記事スラッグを列挙。記事内の `#/workspace/help/article/…` リンクは **画面遷移せず** slug を切替（←／Esc で一覧へ）。全ヘルプ目次はサイドバー **ヘルプ** の `HelpView`。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定は従来どおり（`threshold: 0.35` 等）。評価クエリは `docs/testing/help_search_queries.md`（データ管理系クエリは削除）。`web/scripts/eval-help-fuse.mjs` で再評価可能。
 - **ヘルプ記事の整合検証（v0.5.0 作業 F-3）**: `npm run check:help`（`scripts/check-help-articles.mjs`）。**記事の追加・削除・リネームや `index.json` / `reverse_index.json` / `context_map.json` を編集したら必ず実行**し、インデックス↔ディスク↔逆引き↔コンテキストの参照欠落、ja/en スラッグ非対称、フロントマター欠落（`title`・`category` 必須）をローカルで検出する。失敗時は `[NG]` と件数で終了コード 1。
 - **試合時刻入力**: `parseMinuteInput` に加え、オープン時の既定値に `eventMinutePresetFromClock(match, clockNowMs)`（前半／後半で 45+α・90+β に分離、PK は 0/null）。ゴール／カード／交代ダイアログは `MinuteInput` を開いた時点でプリセット。
@@ -133,9 +133,8 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 
 ## 7. 既知の TODO（v0.4.0 時点）
 
-- チーム管理・設定の「?」を試合詳細同様 **モーダル内で記事閲覧**へ揃える（任意）。
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
-- `intro_setup` のスクリーンショット差し替え（任意）。
+- **F-1'（将来）**: `intro_setup` へのスクリーンショット **新規**追加（v0.5.0 時点で記事内に画像なしのため「更新」タスクはスコープ外とした。CHANGELOG の Future 参照）。
 - **v0.5.0 候補**: 大会／リーグ集計（旧 B2）、Fuse クエリの再チューニング（データ系記事削除により「CSV」等の短語が別記事に吸われる）。
 
 ## 8. 実機テストの始め方
@@ -153,13 +152,14 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 
 - **v0.2.0（完了・2026‑05‑09）**: ヘルプ Fuse 再調整、ロスタイム入力許容、JSON インポート部分マージ。
 - **v0.2.2（完了・2026‑05‑10）**: 小窓モード A（モーダル透過）、D‑1/D‑2（PK 表示・2 列 UI）、B（直近イベント）、C（小窓で操作者表示）、PK デモシード。Git タグ `v0.2.2`。
-- **v0.2.x 残り**: `intro_setup` スクショ差し替えのみ（任意）。
+- **v0.2.x 残り**: `intro_setup` スクショは **F-1'** として将来（記事に画像が無いため差し替えではなく新規追加）。
 - **v0.3.0（完了）**: **B1** CSV、**I** ヘルプ 22 本。タグ `v0.3.0`。
 - **v0.3.1（完了）**: 疑似データ `reload` 廃止＋Pinia 再 hydrate、`downloadFile` の DOM クリック改善、小窓 `CompactEventList` 配置。タグ `v0.3.1`。
 - **v0.3.2（完了）**: PK 中は下部固定 PK 専用ドック、試合詳細ヘルプを `HelpHoverDialog`、FiveM 向け CSV/JSON 不可の注意文。タグ `v0.3.2`。
 - **v0.4.0（完了）**: **データ管理画面・CSV/JSON 機能の全削除**（BREAKING）。PK ドック 3 列化、`HelpHoverDialog` 内で記事遷移、赤牌 `note` 表示修正、イベント時刻プリセット。タグ **`v0.4.0`**。
 - **v0.4.1（完了）**: 疑似データに **PK 進行中**試合「カップ戦 PK進行中（実機検証用）」を追加（live 3 件構成は維持）。タグ **`v0.4.1`**。
-- **v0.5.0（候補）**: 大会／リーグ集計（旧 B2）、他画面ヘルプのモーダル統一、`intro_setup` スクショ、Fuse 再調整。
+- **v0.5.0（作業中）**: F-2 完了で一覧／チーム／設定も `HelpHoverDialog` 統一。残り F-4〜F-5 等。当初 F-1（`intro_setup` スクショ**更新**）は対象画像が無いため **スコープ外** → **F-1'（新規画像）** は v0.5.0 後。
+- **v0.5.x 候補**: 大会／リーグ集計（旧 B2）、Fuse 再調整、F-1'。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -168,7 +168,7 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
 > 現状: v0.4.1。先端タグ `v0.4.1`（安定版 `v0.4.0` タグも維持）。バックアップ UI なし（`localStorage` のみ）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: §7 の PK キャンセル UI、v0.5.0 候補（集計・ヘルプ統一など）。
+> 次着手候補: §7 の PK キャンセル UI、v0.5.0 の F-4／F-5、将来 F-1'（intro_setup 画像新規）。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
 短縮フレーズ: `小窓モードいって` / `PK キャンセルいって`
@@ -194,3 +194,4 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 - 2026‑05‑10: **v0.3.2** PK 戦を常に下部固定の専用ドックで表示、`HelpHoverDialog`、データ管理に FiveM エクスポート不可の注記。Git タグ **`v0.3.2`**。
 - 2026‑05‑09: **v0.4.0** データ管理・CSV/JSON・関連ヘルプ削除（破壊的変更）。PK 3 列 UI、ヘルプモーダル内ナビ、赤牌表示、試合分プリセット、`eventMinutePresetFromClock` テスト追加。Git タグ **`v0.4.0`**。
 - 2026‑05‑09: **v0.4.1** PK 進行中のシード試合追加（`SeedMatch.pkInProgress`／`seedActions`）。版数と README バッジを 0.4.1 に同期。Git タグ **`v0.4.1`**。
+- 2026‑05‑09: **v0.5.0 作業** — F-1（intro_setup スクショ更新）は記事に画像が無いため **v0.5.0 スコープ外**、**F-1'** として CHANGELOG Future に記録。F-2: `MatchList`／`TeamManage`／`Settings` に `HelpHoverDialog` を展開し `ContextHelpPanel` 系を削除。`context_map.json` に `match_list`、`settings` の記事拡充。

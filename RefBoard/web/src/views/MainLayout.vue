@@ -7,8 +7,6 @@ import { REFBOARD_UI_VERSION } from '../constants/version'
 import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { useNui } from '../composables/useNui'
-import ContextHelpPanel from '../components/help/ContextHelpPanel.vue'
-
 const { t, locale } = useI18n()
 const settingsStore = useSettingsStore()
 const { send } = useNui()
@@ -90,7 +88,6 @@ async function closeApp() {
         </RouterView>
       </div>
     </div>
-    <ContextHelpPanel />
   </div>
 </template>
 

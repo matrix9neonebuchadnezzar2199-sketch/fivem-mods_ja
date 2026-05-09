@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { isInFiveM } from '../composables/useNui'
 import MarqueeText from '../components/common/MarqueeText.vue'
-import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import HelpHoverDialog from '../components/help/HelpHoverDialog.vue'
 import {
   isSeedInstalled,
   getSeedInstalledAt,
@@ -27,6 +27,7 @@ const seedInstalled = ref(false)
 const seedInstalledAt = ref<string | null>(null)
 const confirmAction = ref<null | 'install' | 'clear_match' | 'clear_all'>(null)
 const seedBusy = ref(false)
+const showHelpDialog = ref(false)
 
 /** 「テスト用データ操作パネル」チェック時のみ。FiveM 実機でも config.lua は不要。ブラウザ DEV は表示可 */
 const showDevDataPanel = computed(
@@ -99,7 +100,15 @@ function syncLocale() {
       <h1 class="min-w-0 flex-1 overflow-hidden text-lg font-bold text-slate-50">
         <MarqueeText :text="t('settings.title')" variant="default" />
       </h1>
-      <HelpTriggerButton context-id="settings" />
+      <button
+        type="button"
+        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 text-slate-200 hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+        :aria-label="t('help.context.open_aria')"
+        :title="t('help.context.open_title')"
+        @click="showHelpDialog = true"
+      >
+        <span aria-hidden="true" class="text-sm font-bold">?</span>
+      </button>
     </div>
 
     <section class="mb-6 rounded-lg border border-slate-700 bg-slate-900/70 p-4">
@@ -342,5 +351,7 @@ function syncLocale() {
         </div>
       </div>
     </Teleport>
+
+    <HelpHoverDialog context-id="settings" :open="showHelpDialog" @close="showHelpDialog = false" />
   </div>
 </template>

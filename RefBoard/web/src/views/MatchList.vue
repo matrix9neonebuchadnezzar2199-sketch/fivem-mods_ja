@@ -9,6 +9,7 @@ import { useTeamsStore } from '../stores/teams'
 import type { Match } from '../types/local'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
+import HelpHoverDialog from '../components/help/HelpHoverDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import { formatDateJa } from '../utils/formatDate'
@@ -35,6 +36,7 @@ const showReopen = ref(false)
 const reopenId = ref<number | null>(null)
 const showDeleteConfirm = ref(false)
 const deleteId = ref<number | null>(null)
+const showHelpDialog = ref(false)
 
 let stopAfterEach: (() => void) | undefined
 
@@ -187,13 +189,24 @@ function onCreated(id: number) {
   <div class="flex h-full min-h-0 flex-col gap-4 p-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <h2 class="text-lg font-semibold text-slate-50">{{ t('match_list.title') }}</h2>
-      <button
-        type="button"
-        class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:brightness-110"
-        @click="showCreate = true"
-      >
-        {{ t('match_list.new') }}
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 text-slate-200 hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+          :aria-label="t('help.context.open_aria')"
+          :title="t('help.context.open_title')"
+          @click="showHelpDialog = true"
+        >
+          <span aria-hidden="true" class="text-sm font-bold">?</span>
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:brightness-110"
+          @click="showCreate = true"
+        >
+          {{ t('match_list.new') }}
+        </button>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2 text-sm">
@@ -300,5 +313,7 @@ function onCreated(id: number) {
         </div>
       </div>
     </div>
+
+    <HelpHoverDialog context-id="match_list" :open="showHelpDialog" @close="showHelpDialog = false" />
   </div>
 </template>
