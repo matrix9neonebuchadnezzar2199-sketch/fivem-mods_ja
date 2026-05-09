@@ -14,6 +14,11 @@
           "id": "intro_setup",
           "title": "RefBoard をはじめて使う",
           "article": "intro_setup.md"
+        },
+        {
+          "id": "compact_dock_usage",
+          "title": "小窓（コンパクト）モード",
+          "article": "compact_dock_usage.md"
         }
       ]
     },
@@ -46,6 +51,11 @@
           "id": "match_penalty_shootout",
           "title": "PK 戦を進める",
           "article": "match_penalty_shootout.md"
+        },
+        {
+          "id": "match_pk_recording",
+          "title": "PK 戦を記録する（2 列 UI）",
+          "article": "match_pk_recording.md"
         },
         {
           "id": "match_manual_score_edit",
@@ -95,6 +105,21 @@
           "id": "data_import",
           "title": "JSON バックアップを取り込む",
           "article": "data_import.md"
+        },
+        {
+          "id": "data_csv_format",
+          "title": "CSV 出力の形式（v0.3.0）",
+          "article": "data_csv_format.md"
+        },
+        {
+          "id": "data_csv_excel_open",
+          "title": "Excel で CSV を開く",
+          "article": "data_csv_excel_open.md"
+        },
+        {
+          "id": "data_migration",
+          "title": "別の PC へデータを移す（JSON）",
+          "article": "data_migration.md"
         }
       ]
     },
@@ -112,6 +137,11 @@
           "id": "trouble_e3006",
           "title": "選手を削除できない（E3006）",
           "article": "trouble_e3006_player_has_events.md"
+        },
+        {
+          "id": "troubleshooting_event_disappears",
+          "title": "イベントが画面に出ない／消えたように見える",
+          "article": "troubleshooting_event_disappears.md"
         }
       ]
     }

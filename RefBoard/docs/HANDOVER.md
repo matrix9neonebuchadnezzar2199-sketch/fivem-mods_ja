@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.3.0（ローカル専用・CSV 拡充着手）
+- **対象バージョン**: v0.3.0（ローカル専用・CSV 拡充 + ヘルプ 22 本構成）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -78,7 +78,7 @@ RefBoard/
       │  ├─ Settings.vue          表示名／locale／fontScale／marquee／背景
       │  └─ HelpView.vue          目次／逆引き／検索／コンテキスト
       ├─ help/
-      │  ├─ ja/articles/          16 本（intro 2／match 7／team 2／data 3／trouble 2 ※統合済）
+      │  ├─ ja/articles/          22 本（intro 3／match 8／team 2／data 6／trouble 3）
       │  ├─ en/articles/          同上
       │  ├─ ja|en/index.json      🔧 は trouble_undo_goal と trouble_e3006_player_has_events のみ
       │  ├─ ja|en/reverse_index.json
@@ -109,7 +109,7 @@ RefBoard/
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
 - **小窓ドック直近イベント**: `MatchDetail.vue` の `compactDock && serverHalf !== 'pk'` ブロック内で、`detail.events` を `CompactEventList` に渡し **新しい順**（`reverse`）で表示。既定 `max-height: 8rem`、`overflow-y: auto`。PK 行も含む。クリックは無反応（編集は通常画面）。その上に **操作者**（`settings.selfName`、未設定は `match.operator_unset`）を 1 行表示。
-- **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
+- **ヘルプ**: ja/en 各 **22 本**（intro 3／match 8／team 2／data 6／trouble 3）。緊急度高（🆘）と診断（🩺）カテゴリは廃止済み。トラブルは `trouble_undo_goal`・`trouble_e3006_player_has_events`・`troubleshooting_event_disappears`。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
 - **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
 - **試合 CSV（B1・v0.3.0）**: `utils/exporters.ts` の `exportMatchSummaryToCSV`（9 列・試合 1 行）と `exportMatchEventsToCSV(match, { operator }, 'standard'|'detailed')`（イベント行・**13 / 26 列**）。`downloadMatchCsvPack` が約 200ms 間隔で `_summary.csv` と `_events.csv` を連続ダウンロード。正はローカル `Match` / `MatchEvent`（`voided`・`sub_in` は行として出力しない）。`event_text` は `localEventToRow` ベース。UI は `MatchDetail.vue` ヘッダと `DataManage.vue` 終了試合一覧（ドロップダウン＋ボタン）。旧 UI 専用 5 列のみの関数は `exportMatchEventsToCSVLegacy`。
@@ -133,6 +133,7 @@ npx vue-tsc --noEmit # 型チェック
 
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
 - `intro_setup` のスクリーンショット差し替え（旧版のままなら更新）。
+- 外部スクリプトで **旧 5 列イベント CSV** 前提の取り込みが無ければ、**v0.4.0** で `exportMatchEventsToCSVLegacy` の削除を検討（現状は保険として残置）。
 
 ## 8. 実機テストの始め方
 
@@ -151,7 +152,8 @@ npx vue-tsc --noEmit # 型チェック
 - **v0.2.0（完了・2026‑05‑09）**: ヘルプ Fuse 再調整、ロスタイム入力許容、JSON インポート部分マージ。
 - **v0.2.2（完了・2026‑05‑10）**: 小窓モード A（モーダル透過）、D‑1/D‑2（PK 表示・2 列 UI）、B（直近イベント）、C（小窓で操作者表示）、PK デモシード。Git タグ `v0.2.2`。
 - **v0.2.x 残り**: `intro_setup` スクショ差し替えのみ（任意）。
-- **v0.3.0（着手中）**: **B1** CSV 出力項目拡充（完了）。**I** ヘルプ拡充（新 CSV 説明含む・未）。大会／リーグ集計（旧 B2）は **v0.4.0** に延期。
+- **v0.3.0（完了）**: **B1** CSV 出力項目拡充、**I** ヘルプ 22 本構成（CSV／Excel／移行／PK 2 列／小窓／イベント表示トラブル）。Git タグ `v0.3.0`。
+- **v0.4.0（候補）**: 大会／リーグ集計（旧 B2）、CSV 複数試合 ZIP、ヘルプ `team_roster_management`／`data_full_backup_strategy` 等、`exportMatchEventsToCSVLegacy` 削除可否の判断。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -159,8 +161,8 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.3.0（B1 CSV 完了。I ヘルプ・Fuse 評価・タグは未）。v0.2.2 はタグ `v0.2.2` 済み。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: **I**（ヘルプ拡充・CSV 記事）、v0.3.0 タグ、または §7 の PK キャンセル UI など。
+> 現状: v0.3.0 完了（B1 + I）。タグ `v0.3.0`。v0.2.2 は `v0.2.2`。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 次着手候補: **v0.4.0** 候補の優先度決定（B2 集計／CSV ZIP／ヘルプ追補／Legacy CSV 削除）、または §7 の PK キャンセル UI など。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
 短縮フレーズ: `小窓モードいって` / `PK キャンセルいって`
@@ -181,3 +183,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑10: PK 入力 UI（D-2）。`PenaltyShootoutPanel` をホーム／アウェイ 2 列表示＋チーム別の選手選択・成功／失敗ボタンに変更。`localEventToRow` に `pkTeamId` 等を追加し `localMatchAdapter.test.ts` で PK 行を検証。
 - 2026‑05‑10: 小窓モードに `CompactEventList`（直近イベント・新しい順・8rem スクロール）と操作者 1 行（C）を追加。`SeedMatch.pkDemo` による PK デモ試合を疑似データに 1 件組み込み。Git タグ `v0.2.2`。
 - 2026‑05‑10: **B1** 試合 CSV 拡充（サマリ 9 列＋イベント標準 13 / 詳細 26 列、2 ファイル連続 DL）。版数 **v0.3.0**。`exporters.test.ts` 追加。
+- 2026‑05‑10: **I** ヘルプ 22 本化（`data_csv_format` / `data_csv_excel_open` / `data_migration` / `match_pk_recording` / `compact_dock_usage` / `troubleshooting_event_disappears`）。`index.json`・`reverse_index.json`・`context_map.json`・Fuse 評価クエリを更新。Git タグ **`v0.3.0`**。

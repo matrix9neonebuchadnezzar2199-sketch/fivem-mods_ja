@@ -99,9 +99,40 @@ const jaQueries = [
   'ロスタイム',
   '部分マージ',
   '選択取り込み',
+  'csv 形式',
+  'csv エクスポート',
+  'excel 文字化け',
+  'excel CSV',
+  'PK 入力',
+  'ペナルティ 戦',
+  '小窓 モード',
+  'compact dock',
+  'データ 移行',
+  'バックアップ 取り込み',
+  'イベント 消えた',
+  'event missing',
 ]
 
-const enQueries = ['goal', 'card', 'import', 'substitute', 'operator', 'stoppage', 'partial', 'selective']
+const enQueries = [
+  'goal',
+  'card',
+  'import',
+  'substitute',
+  'operator',
+  'stoppage',
+  'partial',
+  'selective',
+  'csv format',
+  'csv export',
+  'excel garbled',
+  'excel CSV',
+  'PK input',
+  'penalty shootout',
+  'compact dock',
+  'data migration',
+  'backup import',
+  'event missing',
+]
 
 for (const loc of ['ja', 'en']) {
   const fuse = new Fuse(buildEntries(loc), FUSE_OPTIONS)

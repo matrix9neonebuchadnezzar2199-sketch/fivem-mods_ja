@@ -16,6 +16,13 @@
           "title": "First-time steps",
           "article": "intro_setup.md",
           "tags": ["F6", "display name", "operator", "teams", "JSON", "first run", "setup"]
+        },
+        {
+          "id": "compact_dock_rev",
+          "title": "Use compact dock mode",
+          "article": "compact_dock_usage.md",
+          "tags": ["compact", "dock", "stadium", "clock", "score", "F6", "recent events", "small window"],
+          "actionUrl": "#/workspace/matches/:matchId"
         }
       ]
     },
@@ -35,6 +42,13 @@
           "title": "Cannot remove a player (E3006)",
           "article": "trouble_e3006_player_has_events.md",
           "tags": ["player remove", "timeline", "E3006", "player_has_events"]
+        },
+        {
+          "id": "troubleshooting_event_disappears_rev",
+          "title": "Events missing or not visible",
+          "article": "troubleshooting_event_disappears.md",
+          "tags": ["event", "missing", "display", "reload", "JSON", "timeline", "PK", "not showing", "event missing", "troubleshooting"],
+          "actionUrl": "#/workspace/matches/:matchId"
         }
       ]
     },
@@ -84,6 +98,27 @@
           "article": "data_import.md",
           "tags": ["import", "restore", "JSON", "backup", "migration", "partial merge", "selective", "partial"],
           "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_csv_format_rev",
+          "title": "Understand CSV columns and files",
+          "article": "data_csv_format.md",
+          "tags": ["csv", "format", "export", "standard", "detailed", "summary", "events", "13 columns", "26 columns", "v0.3", "match_id", "operator"],
+          "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_csv_excel_open_rev",
+          "title": "Open CSV in Excel / fix garbled text",
+          "article": "data_csv_excel_open.md",
+          "tags": ["Excel", "garbled", "BOM", "CSV", "text import", "delimiter", "apostrophe", "date", "45+2", "excel CSV"],
+          "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_migration_rev",
+          "title": "Move data to another PC",
+          "article": "data_migration.md",
+          "tags": ["migration", "another PC", "JSON", "backup", "replace", "merge", "display name", "selfName", "import", "data migration", "backup import"],
+          "actionUrl": "#/workspace/data"
         }
       ]
     },
@@ -131,7 +166,14 @@
           "id": "penalty_shootout",
           "title": "Run a penalty shootout",
           "article": "match_penalty_shootout.md",
-          "tags": ["PK", "penalty", "shootout"],
+          "tags": ["PK", "penalty", "shootout", "penalties", "kicks from the mark"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "match_pk_recording_rev",
+          "title": "Record PK with the two-column UI",
+          "article": "match_pk_recording.md",
+          "tags": ["two columns", "home", "away", "make", "miss", "input", "penalty shootout", "PK input", "shoot-out UI"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {

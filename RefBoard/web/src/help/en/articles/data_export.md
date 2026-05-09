@@ -1,8 +1,8 @@
 ---
 title: Export to CSV
 category: data
-tags: [CSV, export, BOM, Excel]
-related: [data_view_history, match_finish]
+tags: [CSV, export, BOM, Excel, csv export]
+related: [data_view_history, data_csv_format, data_csv_excel_open]
 shortcut: null
 actionUrl: "#/workspace/data"
 errorCode: null
@@ -27,11 +27,12 @@ errorCode: null
 
 ## From match detail (events)
 
-1. Header **CSV** downloads the **event list** for that match (JSON is separate).
+1. Pick **CSV format** (standard / detailed), then use **CSV** to download **summary** and **events** as **two files** ~200ms apart (v0.3.0+). See [CSV format](#/workspace/help/article/data_csv_format).
+2. **JSON** is a separate one-file export.
 
 ## After export
 
-- File saved locally; **BOM** helps Excel decode UTF-8.
+- Files saved locally; **BOM** helps Excel decode UTF-8. For Excel quirks see [Open CSV in Excel](#/workspace/help/article/data_csv_excel_open).
 - **No change** to database (read-only copy).
 
 ## FAQ
@@ -40,7 +41,7 @@ errorCode: null
 A. Use **Import** or ensure UTF-8 with BOM in import settings.
 
 **Q. Every column including PK?**  
-A. Depends on exporter version; use **JSON export** from match detail if columns are missing.
+A. **Detailed** mode includes PK result and `pk_shot_index`. See [CSV format](#/workspace/help/article/data_csv_format). Use **JSON export** if you need raw data.
 
 ## See also
 

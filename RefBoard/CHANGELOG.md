@@ -1,7 +1,8 @@
 # Changelog
 
-## v0.3.0 — 2026‑05‑10（CSV 出力拡充 B1）
+## v0.3.0 — 2026‑05‑10（CSV 出力拡充 B1 + ヘルプ I）
 
+- ヘルプを **16 → 22 本**に拡充（日英対称）。CSV 列説明・Excel 表示・JSON での別 PC 移行・PK 2 列 UI・小窓モード・イベントが見えないときの確認。`data_export` から新記事へリンク。`eval-help-fuse.mjs` / `help_search_queries.md` に評価クエリを追加（Fuse `threshold` は 0.35 据え置き）。
 - 試合単位の CSV を **サマリ 1 行**（9 列）と **イベント行**（標準 **13 列** / 詳細 **26 列**）の **2 ファイル**で出力（`refboard_m{id}_{日付}_summary.csv` / `_events.csv`）。BOM 付き UTF-8 は従来どおり。
 - 詳細列に `final_score`（PK 併記）、`minute_label`（`45+2'` / `PK`）、選手・アシスト、カード色、交代 in/out、PK 成否・チーム内 `pk_shot_index`、`event_text`、`recorded_at_iso`、各イベント行の `operator`（`settings.selfName`）を追加。
 - `MatchDetail.vue` と `DataManage.vue`（終了試合行）に **CSV 形式**のドロップダウンを追加。`utils/exporters.test.ts` で主要ケースを検証。

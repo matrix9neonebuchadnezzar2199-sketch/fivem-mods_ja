@@ -1,8 +1,8 @@
 ---
 title: CSV でエクスポートする
 category: data
-tags: [CSV, エクスポート, BOM, Excel, バックアップ]
-related: [data_view_history, match_detail]
+tags: [CSV, エクスポート, BOM, Excel, バックアップ, csv エクスポート]
+related: [data_view_history, data_csv_format, data_csv_excel_open]
 shortcut: null
 actionUrl: "#/workspace/data"
 errorCode: null
@@ -27,11 +27,12 @@ errorCode: null
 
 ## 手順 — 試合詳細（イベント CSV）
 
-1. 試合詳細ヘッダ右端の **CSV** ボタンで、**イベント一覧** を CSV 化してダウンロードします（JSON ボタンは別形式）。
+1. 試合詳細ヘッダで **CSV 形式**（標準 / 詳細）を選び、**CSV** 操作で **サマリ** と **イベント** の **2 ファイル**が、約 0.2 秒間隔で連続ダウンロードされます（v0.3.0〜）。列の意味は [CSV 出力の形式](#/workspace/help/article/data_csv_format) を参照。
+2. **JSON** ボタンは別形式（1 ファイル）です。
 
 ## やった後どうなる？
 
-- ローカルに `.csv` が保存されます。**先頭 BOM** により、Excel で文字化けしにくい構成です。
+- ローカルに `.csv` が保存されます。**先頭 BOM** により、Excel で文字化けしにくい構成です。Excel での注意は [Excel で CSV を開く](#/workspace/help/article/data_csv_excel_open) を参照。
 - DB 上のデータは **変わりません**（エクスポートは読み取りのコピー）。
 
 ## よくある質問
@@ -40,7 +41,7 @@ errorCode: null
 A. **ファイル → インポート** でアップロードするか、BOM 付き UTF-8 として扱われるようインポート設定を確認してください。
 
 **Q. PK 内訳まで CSV に全部入る？**  
-A. 画面・エクスポーター実装次第です。欠ける列がある場合は **試合詳細の JSON エクスポート** も併用してください。
+A. **詳細**形式なら PK 成否・`pk_shot_index` などが列に出ます。列一覧は [CSV 出力の形式](#/workspace/help/article/data_csv_format) を参照。さらに生データが必要なら **試合詳細の JSON エクスポート** も併用してください。
 
 ## 関連項目
 

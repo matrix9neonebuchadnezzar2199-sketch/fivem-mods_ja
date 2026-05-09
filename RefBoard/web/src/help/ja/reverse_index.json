@@ -16,6 +16,13 @@
           "title": "はじめて使う手順を知りたい",
           "article": "intro_setup.md",
           "tags": ["F6", "表示名", "チーム", "JSON", "初回", "セットアップ"]
+        },
+        {
+          "id": "compact_dock_rev",
+          "title": "小窓モードを使いたい",
+          "article": "compact_dock_usage.md",
+          "tags": ["小窓", "小窓モード", "コンパクト", "dock", "スタジアム", "時計", "スコア", "F6", "直近イベント", "compact", "モード"],
+          "actionUrl": "#/workspace/matches/:matchId"
         }
       ]
     },
@@ -35,6 +42,13 @@
           "title": "選手を削除できない（E3006）",
           "article": "trouble_e3006_player_has_events.md",
           "tags": ["選手削除", "タイムライン", "E3006", "player_has_events"]
+        },
+        {
+          "id": "troubleshooting_event_disappears_rev",
+          "title": "イベントが画面に出ない／消えた",
+          "article": "troubleshooting_event_disappears.md",
+          "tags": ["イベント", "表示", "消えた", "イベント 消えた", "イベント消えた", "missing", "リロード", "JSON", "タイムライン", "表示されない", "トラブル", "event missing", "出ない"],
+          "actionUrl": "#/workspace/matches/:matchId"
         }
       ]
     },
@@ -84,6 +98,27 @@
           "article": "data_import.md",
           "tags": ["インポート", "取り込み", "JSON", "バックアップ", "restore", "端末移行", "部分マージ", "選択取り込み", "partial", "selective"],
           "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_csv_format_rev",
+          "title": "CSV の列やファイル構成を知りたい",
+          "article": "data_csv_format.md",
+          "tags": ["csv", "形式", "csv形式", "csv エクスポート", "エクスポート", "標準", "詳細", "summary", "events", "13列", "26列", "v0.3", "match_id", "operator", "出力"],
+          "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_csv_excel_open_rev",
+          "title": "Excel で CSV を開く／文字化け対処",
+          "article": "data_csv_excel_open.md",
+          "tags": ["Excel", "文字化け", "BOM", "CSV", "データタブ", "区切り", "アポストロフィ", "日付", "45+2", "excel"],
+          "actionUrl": "#/workspace/data"
+        },
+        {
+          "id": "data_migration_rev",
+          "title": "別 PC へデータを移す",
+          "article": "data_migration.md",
+          "tags": ["移行", "migration", "別PC", "JSON", "バックアップ", "replace", "merge", "表示名", "selfName", "取り込み", "バックアップ 取り込み", "データ 移行"],
+          "actionUrl": "#/workspace/data"
         }
       ]
     },
@@ -131,7 +166,14 @@
           "id": "penalty_shootout",
           "title": "PK 戦を進めたい",
           "article": "match_penalty_shootout.md",
-          "tags": ["PK", "ペナルティ", "シュートアウト"],
+          "tags": ["PK", "ペナルティ", "シュートアウト", "PK戦", "ペナルティキック"],
+          "actionUrl": "#/workspace/matches/:matchId"
+        },
+        {
+          "id": "match_pk_recording_rev",
+          "title": "PK を 2 列 UI で記録したい",
+          "article": "match_pk_recording.md",
+          "tags": ["2列", "ホーム", "アウェイ", "成功", "失敗", "入力", "PK 入力", "ペナルティ 戦", "記録UI", "二列"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {

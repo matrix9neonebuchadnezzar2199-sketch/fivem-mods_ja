@@ -1,8 +1,94 @@
 const n=`---
+title: 小窓（コンパクト）モード
+category: intro
+tags: [小窓, コンパクト, compact, dock, スタジアム, F6, 時計, スコア, 操作者, 直近イベント, transparentChrome]
+related: [intro_setup, match_pk_recording]
+shortcut: null
+actionUrl: "#/workspace/matches/:matchId"
+errorCode: null
+---
+
+# 小窓（コンパクト）モード
+
+## このページでわかること
+
+- 試合詳細から **小窓モード**に入る方法
+- 画面に出る要素（時計・スコア・ステータス・操作者・直近イベント）
+- **PK 中**の挙動と **F6** の位置づけ
+
+## 入り方
+
+1. **試合詳細**（編集画面）を開く
+2. ヘッダ付近の **小窓モード** ボタンを押す
+
+メインのカード類は隠れ、画面下に **スコアボード（埋め込み）**・**試合ステータス**・**通常画面に戻る** などが並びます。ゲーム側の操作との切り替えは、環境によって **Ctrl+B**（歩行優先）などの案内が表示されます（NUI の実装に準拠）。
+
+## 表示されるもの
+
+- **残り時間・時計操作**（スコアボード内）
+- **試合ステータス**（ハーフ変更など）
+- **操作者**（設定の表示名。未設定のときは「未設定」）
+- **直近のイベント**（新しい順、スクロール可能。**PK 中は非表示**）
+
+モーダル背面は **透過**設定により、ゲーム画面が見えるようにできます（\`transparentChrome\`）。
+
+## PK 中
+
+PK フェーズに入ると、小窓ドックは **表示されず**、**通常の全画面レイアウト**で PK パネルが使えます。終了後に再び小窓へ戻る場合は、ハーフを PK 以外にしてから **小窓モード**を選び直してください。
+
+## F6 について
+
+**F6** は RefBoard の UI 自体を開閉するキーです（\`config.lua\` の \`OpenKey\` で変更可能）。小窓モード専用のキーではありませんが、試合中に UI を閉じてプレイに集中する動線として使われます。
+
+## 関連
+
+- 初回セットアップ: [#/workspace/help/article/intro_setup](#/workspace/help/article/intro_setup)
+- PK 記録: [#/workspace/help/article/match_pk_recording](#/workspace/help/article/match_pk_recording)
+`,e=`---
+title: Excel で CSV を開く
+category: data
+tags: [Excel, CSV, 文字化け, BOM, UTF-8, 日付, アポストロフィ, 45+2, データの取り込み]
+related: [data_export, data_csv_format]
+shortcut: null
+actionUrl: "#/workspace/data"
+errorCode: null
+---
+
+# Excel で CSV を開く
+
+## このページでわかること
+
+- RefBoard の CSV は **UTF-8 BOM 付き**で、通常は Excel で**文字化けしにくい**こと
+- **\`45+2'\`** のような分表記が **日付に化ける**ときの回避策
+
+## 文字化けしないように開く
+
+RefBoard v0.3.0 の試合 CSV は先頭に **BOM** があります。Windows の Excel では **ダブルクリックで開いても日本語が正しく表示される**ことが多いです。
+
+もし文字化けする場合:
+
+1. Excel で **データ** タブ → **テキストまたは CSV から** を選ぶ
+2. ファイルを指定し、文字コードを **65001: Unicode (UTF-8)** にする
+3. 区切り記号を **カンマ** に合わせて完了
+
+## \`45+2'\` が日付になる問題
+
+\`minute_label\` 列に **\`10'\`** や **\`45+2'\`** が入っていると、Excel が **日付や時刻**と誤認することがあります。
+
+**対処の例**
+
+- 列の書式を **文字列** に設定してからファイルを開き直す
+- **データの取り込み**で列の型を **テキスト** に指定する
+- 集計に使う列は **\`event_minute\`** / **\`event_stoppage\`**（数値列）を使う（詳細形式）
+
+## 関連
+
+- 列の意味全体: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)
+`,a='---\ntitle: CSV 出力の形式（v0.3.0）\ncategory: data\ntags: [CSV, エクスポート, 形式, 標準, 詳細, サマリ, イベント, BOM, UTF-8, csv形式, 13列, 26列]\nrelated: [data_export, data_import, data_csv_excel_open]\nshortcut: null\nactionUrl: "#/workspace/data"\nerrorCode: null\n---\n\n# CSV 出力の形式（v0.3.0）\n\n## このページでわかること\n\n- **サマリ** と **イベント** の **2 ファイル** が一度にダウンロードされること\n- **標準 13 列** と **詳細 26 列** の違い\n- ファイル名の付き方\n\n## 2 ファイル構成\n\n試合ごとに、約 0.2 秒間隔で次の 2 つが保存されます。\n\n1. **`refboard_m{試合ID}_{YYYY-MM-DD}_summary.csv`** … 試合メタ 1 行（**9 列**）\n2. **`refboard_m{試合ID}_{YYYY-MM-DD}_events.csv`** … イベント 1 行ずつ（**13 列 or 26 列**）\n\n**データ管理**（終了試合の行）または **試合詳細** ヘッダで、ドロップダウンから **標準** / **詳細** を選んでから CSV 操作を行います。\n\n## サマリ CSV（9 列）\n\n`match_id`, `match_title`, `match_date`, `home_team`, `away_team`, `final_score`, `match_status`, `operator`, `exported_at`\n\n- `match_id` は `m_42` のように **m\\_** 接頭辞付き\n- `final_score` は PK がある場合 `1-1 (PK 2-2)` のように併記\n- `operator` は設定の **表示名**（未設定なら空に近い値）\n\n## イベント CSV — 標準（13 列）\n\n`match_id`, `match_title`, `match_date`, `home_team`, `away_team`, `final_score`, `event_index`, `event_kind`, `event_team`, `minute_label`, `event_minute`, `event_text`, `recorded_at_iso`\n\n- `event_kind` は `goal`, `substitution`, `pk_goal`, `pk_miss`, `yellow`, `red` など\n- `minute_label` は `45+2\'` や `PK`（PK シュートは分欄は空）\n- `sub_in` だけの行は出さず、**交代は `sub_out` 1 行**にまとまります\n\n## イベント CSV — 詳細（26 列）\n\n標準 13 列に加え、`event_stoppage`, 選手名・背番号、アシスト、カード色、交代 in/out、PK 成否・**チーム内** `pk_shot_index`, `event_text`, `operator`（各行）などが付きます。\n\n## 関連\n\n- 概要の流れ: [#/workspace/help/article/data_export](#/workspace/help/article/data_export)\n- Excel での注意: [#/workspace/help/article/data_csv_excel_open](#/workspace/help/article/data_csv_excel_open)\n',t=`---
 title: CSV でエクスポートする
 category: data
-tags: [CSV, エクスポート, BOM, Excel, バックアップ]
-related: [data_view_history, match_detail]
+tags: [CSV, エクスポート, BOM, Excel, バックアップ, csv エクスポート]
+related: [data_view_history, data_csv_format, data_csv_excel_open]
 shortcut: null
 actionUrl: "#/workspace/data"
 errorCode: null
@@ -27,11 +113,12 @@ errorCode: null
 
 ## 手順 — 試合詳細（イベント CSV）
 
-1. 試合詳細ヘッダ右端の **CSV** ボタンで、**イベント一覧** を CSV 化してダウンロードします（JSON ボタンは別形式）。
+1. 試合詳細ヘッダで **CSV 形式**（標準 / 詳細）を選び、**CSV** 操作で **サマリ** と **イベント** の **2 ファイル**が、約 0.2 秒間隔で連続ダウンロードされます（v0.3.0〜）。列の意味は [CSV 出力の形式](#/workspace/help/article/data_csv_format) を参照。
+2. **JSON** ボタンは別形式（1 ファイル）です。
 
 ## やった後どうなる？
 
-- ローカルに \`.csv\` が保存されます。**先頭 BOM** により、Excel で文字化けしにくい構成です。
+- ローカルに \`.csv\` が保存されます。**先頭 BOM** により、Excel で文字化けしにくい構成です。Excel での注意は [Excel で CSV を開く](#/workspace/help/article/data_csv_excel_open) を参照。
 - DB 上のデータは **変わりません**（エクスポートは読み取りのコピー）。
 
 ## よくある質問
@@ -40,13 +127,13 @@ errorCode: null
 A. **ファイル → インポート** でアップロードするか、BOM 付き UTF-8 として扱われるようインポート設定を確認してください。
 
 **Q. PK 内訳まで CSV に全部入る？**  
-A. 画面・エクスポーター実装次第です。欠ける列がある場合は **試合詳細の JSON エクスポート** も併用してください。
+A. **詳細**形式なら PK 成否・\`pk_shot_index\` などが列に出ます。列一覧は [CSV 出力の形式](#/workspace/help/article/data_csv_format) を参照。さらに生データが必要なら **試合詳細の JSON エクスポート** も併用してください。
 
 ## 関連項目
 
 - [データ管理で履歴を見る](#/workspace/help/article/data_view_history)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)（再編集後の履歴とエクスポートのズレに関する注意）
-`,e=`---
+`,r=`---
 title: JSON バックアップを取り込む
 category: data
 tags: [data, backup, import, json, インポート, 取り込み, バックアップ, restore, 部分マージ, partial merge, selective]
@@ -93,7 +180,55 @@ A. このバージョンの RefBoard が対応しているスキーマ（現状�
 
 **Q. 再読み込みせずに閉じた**  
 A. 画面の一覧が古いままになることがあります。データ管理を開き直すか、ブラウザで再読み込みしてください。
-`,a=`---
+`,o=`---
+title: 別の PC へデータを移す（JSON）
+category: data
+tags: [移行, migration, バックアップ, JSON, 取り込み, replace, merge, 別PC, 端末, selfName, 部分マージ]
+related: [data_import, data_export, intro_setup]
+shortcut: null
+actionUrl: "#/workspace/data"
+errorCode: null
+---
+
+# 別の PC へデータを移す（JSON）
+
+## このページでわかること
+
+- **全データ JSON バックアップ**でチーム・試合を丸ごと持ち出す流れ
+- **置換（replace）** と **追記（merge）** の使い分け
+- **表示名（selfName）** は端末ごとに独立している点
+
+## 手順の概要
+
+### 1. 旧 PC でバックアップを作る
+
+1. **データ管理** を開く
+2. **全データのバックアップ (JSON)** を実行
+3. ダウンロードされた \`refboard_backup_*.json\` を USB やクラウドで新 PC にコピー
+
+### 2. 新 PC で取り込む
+
+1. RefBoard を開き、**データ管理** → **JSON から取り込む**
+2. モードを選ぶ  
+   - **置換**: この端末の既存データを消して、バックアップの内容だけにする（**初回移行向け**）  
+   - **追記**: 既存データを残しつつ ID を振り直してマージ（**別端末のデータを足したい**とき）
+3. 部分マージでは、チーム／ロスター／試合を個別に選べます。試合だけ取り込むと、関連チームは自動で同伴するオプションがあります。
+
+### 3. 取り込み後
+
+- 画面の指示どおり **ページを再読み込み** して Pinia を再読み込みします。
+- **表示名**は \`refboard_settings\` 側のため、新 PC では **設定**で再度入力が必要なことがあります（CSV の \`operator\` 列とは別レイヤーです）。
+
+## よくある質問
+
+**Q. CSV だけでは足りない？**  
+A. 列構造が決まっている CSV と、階層そのままの JSON では用途が違います。**丸ごと移行は JSON**、表計算用は **CSV（サマリ＋イベント）** を使うとよいです。
+
+## 関連
+
+- 取り込み UI の詳細: [#/workspace/help/article/data_import](#/workspace/help/article/data_import)
+- CSV の列: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)
+`,c=`---
 title: データ管理で履歴を見る
 category: data
 tags: [データ管理, 試合履歴, 統計, 編集ログ]
@@ -140,7 +275,7 @@ A. タブ表示は **開いているときのロード結果**です。最新化
 
 - [CSV でエクスポートする](#/workspace/help/article/data_export)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
-`,t=`---
+`,_=`---
 title: RefBoard をはじめて使う
 category: intro
 tags: [セットアップ, 表示名, チーム, 試合, localStorage, バックアップ]
@@ -167,7 +302,7 @@ RefBoard は **サーバ通信を行いません**。データはこの端末の
 
 - [RefBoard とは](#/workspace/help/article/intro_what_is_refboard)
 - [CSV でエクスポートする](#/workspace/help/article/data_export)
-`,r=`---
+`,l=`---
 title: RefBoard とは
 category: intro
 tags: [概要, 審判, 試合管理, FiveM, ローカル]
@@ -209,7 +344,7 @@ A. **データ**→**全データのバックアップ (JSON)** で書き出し�
 
 - [RefBoard をはじめて使う](#/workspace/help/article/intro_setup)
 - [新しい試合を作る](#/workspace/help/article/match_create_new)
-`,o=`---
+`,s=`---
 title: イエロー／レッドカードを記録する
 category: in_match
 tags: [イエロー, レッド, 黄色, 赤, 警告, 退場, カード, card, yellow, red, ロスタイム, stoppage, 45+2]
@@ -269,7 +404,7 @@ A. タイムラインに **取り消し（Undo）** が出る場合はそれを�
 
 - [選手を交代する](#/workspace/help/article/match_substitute_player)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,c=`---
+`,i=`---
 title: 新しい試合を作る
 category: match_prep
 tags: [試合作成, ホーム, アウェイ, 予約, ハーフ, ロスタイム, stoppage]
@@ -318,7 +453,7 @@ A. 一覧の **削除** が使える条件はサーバー・ロック状態に�
 
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,l=`---
+`,p=`---
 title: 試合を終了する／再編集する
 category: in_match
 tags: [終了, 再開, 再編集, reopen, 確定, finish, ハーフ, ロスタイム, stoppage]
@@ -400,7 +535,7 @@ A. 再編集で開け直し、PK イベントを最後まで記録するか、�
 - [PK 戦を進める](#/workspace/help/article/match_penalty_shootout)
 - [スコアを手で直す（手動編集）](#/workspace/help/article/match_manual_score_edit)
 - [間違えてゴールを記録してしまった](#/workspace/help/article/trouble_undo_goal)
-`,_=`---
+`,d=`---
 title: スコアを手で直す（手動編集）
 category: in_match
 tags: [手動, スコア, 修正, 理由, manual]
@@ -474,7 +609,7 @@ A. **できません**。\`match_score_history\` は append-only です。誤っ
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
 - [間違えてゴールを記録してしまった](#/workspace/help/article/trouble_undo_goal)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
-`,s=`---
+`,h=`---
 title: PK 戦を進める
 category: in_match
 tags: [PK, ペナルティ, シュートアウト, penalty, pk]
@@ -550,7 +685,50 @@ A. PK 内訳の手動編集 UI は **未実装**です。スコア手動編集�
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
 - [スコアを手で直す（手動編集）](#/workspace/help/article/match_manual_score_edit)
-`,i=`---
+`,m=`---
+title: PK 戦を記録する（2 列 UI）
+category: match
+tags: [PK, ペナルティ, シュートアウト, 入力, 記録, 成功, 失敗, ホーム, アウェイ, 2列, pk入力, キッカー]
+related: [match_penalty_shootout, match_finish]
+shortcut: null
+actionUrl: "#/workspace/matches/:matchId"
+errorCode: null
+---
+
+# PK 戦を記録する（2 列 UI）
+
+## このページでわかること
+
+- PK フェーズでの **ホーム左・アウェイ右** の 2 列表示
+- **今の番**のチームだけが操作できること
+- 成功・失敗と **PK スコア**の関係
+
+## 画面の構成
+
+- **左列**: ホームチーム名と、そのチームのキック履歴（上から順）
+- **右列**: アウェイチーム名と同様
+- 列の下に、**ホーム用**と**アウェイ用**の選手選択と **成功 / 失敗** ボタンがあります
+
+交互に蹴るルールはそのままなので、**今キックする側の行だけ**がハイライトされ、そちらだけボタンが有効になります。
+
+## 操作手順
+
+1. PK フェーズに入る（試合ステータスカードから PK 開始）
+2. **ハイライトされている側**でキッカーを選び、**成功** または **失敗** を押す
+3. もう一方の列に順番が回るまで待ち、同様に繰り返す
+4. 決着がつくと勝者表示のあと、試合終了の確認が出ます
+
+成功は **⚽**、失敗は **失敗**（英語 UI では **Miss**）として列に表示されます。詳しい列定義は CSV ヘルプも参照してください。
+
+## 小窓モードについて
+
+**小窓モード**中は PK のとき **全画面の PK パネル**が優先され、下部ドックの「直近イベント」は **非表示**になります。PK が終わり通常ハーフに戻れば、小窓でもイベント一覧が再び使えます。
+
+## 関連
+
+- PK の流れ全般: [#/workspace/help/article/match_penalty_shootout](#/workspace/help/article/match_penalty_shootout)
+- 小窓: [#/workspace/help/article/compact_dock_usage](#/workspace/help/article/compact_dock_usage)
+`,u=`---
 title: ゴールを記録する
 category: in_match
 tags: [ゴール, goal, 得点, シュート, G, アシスト, 記録, ロスタイム, stoppage, 45+2]
@@ -630,7 +808,7 @@ A. ウィザードの **試合内の時刻** に \`45+2\` のように **\`分+�
 |------|------|
 | \`G\` | ゴール記録ウィザードを開く |
 | \`Esc\` | ウィザードを閉じる（未確定の入力は破棄） |
-`,h=`---
+`,g=`---
 title: 選手を交代する
 category: in_match
 tags: [交代, サブ, メンバー, ロスタイム, stoppage, 45+2]
@@ -686,7 +864,7 @@ A. ダイアログ内の「ロスターから選ぶ」で見つからない場�
 
 - [イエロー／レッドカードを記録する](#/workspace/help/article/match_card)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,d=`---
+`,k=`---
 title: ロスターにメンバーを追加する
 category: team
 tags: [ロスター, メンバー, サーバーID, 背番号]
@@ -734,7 +912,7 @@ A. **いいえ**。ロスターは **登録プール**、出場は試合画面�
 
 - [チームを新規登録する](#/workspace/help/article/team_create)
 - [ゴールを記録する](#/workspace/help/article/match_record_goal)
-`,p=`---
+`,w=`---
 title: チームを新規登録する
 category: team
 tags: [チーム, チーム作成, 登録, 略称, カラー]
@@ -780,7 +958,7 @@ A. チーム詳細から **編集・削除** が可能な場合はそこから�
 
 - [ロスターにメンバーを追加する](#/workspace/help/article/team_add_roster_member)
 - [新しい試合を作る](#/workspace/help/article/match_create_new)
-`,m=`---
+`,v=`---
 title: 削除しようとした選手にイベント履歴がある（E3006）
 category: trouble
 tags: [選手削除, タイムライン, イベント, E3006, player_has_events, 下書き]
@@ -858,7 +1036,7 @@ A. 削除は **誤って追加した直後の取り消し** を主眼に置い�
 - [間違えてゴールを記録してしまった](#/workspace/help/article/trouble_undo_goal)
 - [試合を終了する／再編集する](#/workspace/help/article/match_finish)
 - [スコアを手で直す（手動編集）](#/workspace/help/article/match_manual_score_edit)
-`,u=`---
+`,f=`---
 title: 間違えてゴールを記録してしまった
 category: trouble
 tags: [取消, Undo, ミス, ゴール取消, やり直し]
@@ -923,4 +1101,54 @@ A: ゴールイベントに紐づくアシストは、ゴールの取り消し�
 ---
 
 （「スコアボードへ」ボタンは試合 ID が取れるときのみ有効化します）
-`;export{u as _,m as a,p as b,d as c,h as d,i as e,s as f,_ as g,l as h,c as i,o as j,r as k,t as l,a as m,e as n,n as o};
+`,C=`---
+title: イベントが画面に出ない／消えたように見える
+category: trouble
+tags: [イベント, 表示, 消えた, missing, リロード, JSON, タイムライン, PK, 記録, 確認, トラブル]
+related: [data_csv_format, match_pk_recording, trouble_undo_goal]
+shortcut: null
+actionUrl: "#/workspace/matches/:matchId"
+errorCode: null
+---
+
+# イベントが画面に出ない／消えたように見える
+
+## このページでわかること
+
+- 記録したはずのイベントが **一覧に出ない**ときに最初に確認すること
+- **PK** や **小窓モード** で見え方が変わるケース
+
+## チェックリスト
+
+### 1. ページを再読み込みする
+
+ブラウザや FiveM NUI の表示更新の遅れで、**リロード（F5）**すると直ることがあります。
+
+### 2. どの一覧を見ているか
+
+- **試合詳細のタイムライン** と **PK パネルの 2 列** は別物です。PK シュートは \`penalty\` としてタイムラインにも出ますが、**PK 専用列**では \`text\` 付きで表示されます。
+- **小窓モード**の「直近イベント」は **PK 中は非表示**です。PK 中は全画面の PK UI を確認してください。
+
+### 3. 生データで確認する
+
+1. 試合詳細から **JSON エクスポート** を取得し、\`events\` 配列に該当イベントがあるか見る
+2. または **CSV（詳細）** を出力し、\`event_index\` と \`event_text\` が増えているか確認する
+
+JSON / CSV にあって画面にだけ無いなら **表示バグの可能性**、どちらにも無いなら **保存されていない**可能性が高いです。
+
+### 4. 操作者名（表示名）
+
+CSV の **operator** 列は記録の有無とは無関係ですが、運用上だれが操作したか追うときに **設定の表示名**を入れておくと後から調べやすくなります。
+
+## それでもおかしいとき
+
+- 同じ操作を **別の試合**で再現できるか
+- **ゴール取消**や **void** 系の操作をしていないか
+
+改善が必要な挙動だと分かったら、再現手順をメモして開発者へ伝えてください。
+
+## 関連
+
+- PK の見え方: [#/workspace/help/article/match_pk_recording](#/workspace/help/article/match_pk_recording)
+- CSV の列: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)
+`;export{C as _,f as a,v as b,w as c,k as d,g as e,u as f,m as g,h,d as i,p as j,i as k,s as l,l as m,_ as n,c as o,o as p,r as q,t as r,a as s,e as t,n as u};

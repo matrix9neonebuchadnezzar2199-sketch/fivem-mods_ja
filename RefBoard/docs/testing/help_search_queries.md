@@ -18,15 +18,15 @@ Fuse.js の設定変更時は、`RefBoard/web` で `node scripts/eval-help-fuse.
 | 警告 | ja | match_card | match_card > team_add_roster_member | |
 | 退場 | ja | match_card, match_substitute_player | match_card > match_substitute_player > match_penalty_shootout | 順不同可 |
 | 交代 | ja | match_substitute_player（1位） | match_substitute_player > intro_setup > match_card | |
-| PK | ja | match_penalty_shootout（1位） | match_penalty_shootout > data_export > match_manual_score_edit | |
-| ペナルティ | ja | match_penalty_shootout | match_penalty_shootout | |
+| PK | ja | match_penalty_shootout（1位） | match_penalty_shootout > match_pk_recording > compact_dock_usage | `match_pk_recording` のタグから汎用 PK を外し逆引きで調整 |
+| ペナルティ | ja | match_penalty_shootout | match_penalty_shootout > match_pk_recording | 同上 |
 | 試合作成 | ja | match_create_new（1位） | match_create_new > team_create > intro_setup | |
 | 終了 | ja | match_finish（1位） | match_finish > match_create_new > data_view_history | |
 | 再開 | ja | match_finish | match_finish | `reverse_index` に「再開」タグ |
 | インポート | ja | data_import（1位） | data_import > intro_what_is_refboard > data_export | |
 | 取り込み | ja | data_import | data_import | |
 | バックアップ | ja | data_export, data_import | data_import > data_export > intro_setup | 上位3に両方 |
-| CSV | ja | data_export（1位） | data_export > intro_setup > data_view_history | |
+| CSV | ja | data_export または data_csv_format | data_csv_format > data_export > data_csv_excel_open | 短い語は形式記事が先に付きやすい |
 | 履歴 | ja | data_view_history（1位） | data_view_history > intro_what_is_refboard > trouble_undo_goal | |
 | チーム作成 | ja | team_create | team_create | `reverse_index` に「チーム作成」 |
 | ロスター | ja | team_add_roster_member（1位） | team_add_roster_member > team_create > match_substitute_player | |
@@ -46,6 +46,28 @@ Fuse.js の設定変更時は、`RefBoard/web` で `node scripts/eval-help-fuse.
 | 選択取り込み | ja | data_import（1位必須） | data_import | |
 | partial | en | data_import（1位必須） | data_import > intro_what_is_refboard > trouble_e3006_player_has_events | |
 | selective | en | data_import（1位必須） | data_import > team_add_roster_member > match_record_goal | |
+| csv 形式 | ja | data_csv_format | data_csv_format > data_export > data_csv_excel_open | v0.3.0 I |
+| csv エクスポート | ja | data_csv_format または data_export | data_csv_format > match_finish > intro_setup | 主目的は列説明なら format |
+| excel 文字化け | ja | data_csv_excel_open | data_csv_excel_open > data_export | |
+| excel CSV | ja | data_csv_excel_open | data_csv_excel_open > data_export > data_csv_format | |
+| PK 入力 | ja | match_pk_recording | match_pk_recording | |
+| ペナルティ 戦 | ja | match_pk_recording | match_pk_recording > match_penalty_shootout | |
+| 小窓 モード | ja | compact_dock_usage | compact_dock_usage > match_pk_recording > troubleshooting_event_disappears | |
+| compact dock | ja | compact_dock_usage | compact_dock_usage > match_pk_recording | |
+| データ 移行 | ja | data_migration | data_migration > match_manual_score_edit > intro_what_is_refboard | |
+| バックアップ 取り込み | ja | data_migration または data_import | data_migration > data_import | |
+| イベント 消えた | ja | troubleshooting_event_disappears | troubleshooting_event_disappears | `reverse_index` に「イベント 消えた」 |
+| event missing | ja | troubleshooting_event_disappears | troubleshooting_event_disappears | 英語クエリでも ja ロケールで評価可 |
+| csv format | en | data_csv_format | data_csv_format > data_export > match_pk_recording | |
+| csv export | en | data_csv_format または data_export | data_csv_format > data_view_history > data_export | |
+| excel garbled | en | data_csv_excel_open | data_csv_excel_open | |
+| excel CSV | en | data_csv_excel_open | data_csv_excel_open > data_export > data_csv_format | |
+| PK input | en | match_pk_recording | match_pk_recording > compact_dock_usage | |
+| penalty shootout | en | match_pk_recording | match_pk_recording > match_penalty_shootout > match_finish | 2 列 UI 記事を優先 |
+| compact dock | en | compact_dock_usage | compact_dock_usage > match_pk_recording > troubleshooting_event_disappears | |
+| data migration | en | data_migration | data_migration | |
+| backup import | en | data_migration | data_migration > trouble_e3006_player_has_events | |
+| event missing | en | troubleshooting_event_disappears | troubleshooting_event_disappears | |
 
 ## 旧設定（参考）
 

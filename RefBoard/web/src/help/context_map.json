@@ -5,10 +5,12 @@
     "match_substitute_player",
     "match_card",
     "match_penalty_shootout",
+    "match_pk_recording",
     "match_manual_score_edit",
     "match_finish",
     "trouble_undo_goal",
-    "trouble_e3006_player_has_events"
+    "trouble_e3006_player_has_events",
+    "troubleshooting_event_disappears"
   ],
   "team_manage": [
     "team_create",
@@ -18,7 +20,14 @@
   "data_manage": [
     "data_view_history",
     "data_export",
-    "data_import"
+    "data_import",
+    "data_csv_format",
+    "data_csv_excel_open",
+    "data_migration"
+  ],
+  "compact_dock": [
+    "compact_dock_usage",
+    "match_pk_recording"
   ],
   "settings": [
     "intro_setup",
