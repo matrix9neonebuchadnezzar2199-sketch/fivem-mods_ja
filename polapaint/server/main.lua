@@ -217,7 +217,7 @@ CreateThread(function()
         local method = (req.method or 'GET'):upper()
 
         if method == 'GET' then
-            local signed = rawPath:match('/photo/([^/%?]+)%.jpg')
+            local signed = pathForMatch:match('/photo/([^/]+)%.jpg$')
             if signed then
                 local id = PolaPaintStorage.verifySignedId(signed)
                 if not id then res.writeHead(403); res.send('forbidden'); return end
@@ -250,10 +250,32 @@ CreateThread(function()
         if method == 'POST' then
             local q = parseQueryFromReq(req)
             local hdr = req.headers or {}
+            local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
+            local hardCap = maxBytes * 2
+
             local expectedBody = tonumber(hdr['Content-Length'] or hdr['content-length'])
+            if expectedBody and expectedBody > hardCap then
+                res.writeHead(413); res.send('payload too large'); return
+            end
 
             local parts = {}
             local dispatched = false
+            local lastChunkAt = 0
+            local quietMs = 250
+            local quietThresholdMs = 240
+
+            local function partsTotalLen()
+                local t = 0
+                for i = 1, #parts do t = t + #parts[i] end
+                return t
+            end
+
+            local function refuseTooLarge()
+                if dispatched then return true end
+                dispatched = true
+                res.writeHead(413); res.send('payload too large')
+                return true
+            end
 
             local function dispatchUploadPost(body)
                 if dispatched then return end
@@ -311,7 +333,12 @@ CreateThread(function()
             req.setDataHandler(function(chunk)
                 if type(chunk) == 'string' and #chunk > 0 then
                     parts[#parts + 1] = chunk
+                    if partsTotalLen() > hardCap then
+                        refuseTooLarge()
+                        return
+                    end
                 end
+
                 local body = table.concat(parts)
 
                 if expectedBody and expectedBody > 0 then
@@ -323,9 +350,12 @@ CreateThread(function()
                     return
                 end
 
-                if #body > 0 then
-                    dispatchUploadPost(body)
-                end
+                lastChunkAt = now()
+                SetTimeout(quietMs, function()
+                    if dispatched then return end
+                    if now() - lastChunkAt < quietThresholdMs then return end
+                    dispatchUploadPost(table.concat(parts))
+                end)
             end)
             return
         end

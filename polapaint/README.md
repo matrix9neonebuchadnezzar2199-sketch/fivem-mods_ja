@@ -39,6 +39,33 @@ Embed の `image.url` に使う場合、その URL は **Discord のサーバー
 
 **ローカル NUI 内での写真表示だけが目的なら `publicBaseUrl` は空のままで構いません。**
 
+実装では埋め込み URL を `('%s/photo/<signed>.jpg'):format(publicBaseUrl, …)` の形で組み立てます（`server/webhook.lua` 経由の画像 URL 生成と同じパス規則）。
+
+| 例 | 結果 |
+|----|------|
+| `https://photos.example.com/polapaint` | `https://photos.example.com/polapaint/photo/<signed>.jpg`（意図どおり） |
+| `https://photos.example.com/polapaint/` | 末尾スラッシュはコード側で除去されるため **OK** |
+| `https://photos.example.com/` | リソース名パスが無く **`/photo/...` が想定とずれる** |
+| `https://photos.example.com/photo` | **`/photo/photo/...` になりやすい**（プロキシの `location` と混同しないこと） |
+
+リバースプロキシ例（ゲームサーバの `/polapaint/` を FiveM の同一リソースに渡す）:
+
+```nginx
+location /polapaint/ {
+    proxy_pass http://127.0.0.1:30120/polapaint/;
+    proxy_set_header Host $host;
+}
+```
+
+（ポートや upstream は環境に合わせて変更）
+
+## QBCore（qb-inventory）について
+
+ox_inventory の **`buttons`（コンテキストから「閲覧」）** に相当する機能は QB 標準に無いため、**チェキ風ビューワーだけ**を素の QB だけで出すことは難しいです。本リソースの QB 登録では **写真アイテムの USE → `requestEdit`（ペイント編集）** になります。
+
+- **閲覧のみ**が必要な場合: 自作の `RegisterCommand` / `exports` / qb-target から `exports['polapaint']:openPhotoViewer(slot)` を呼ぶ運用を検討してください。
+- **USE = 編集**・**閲覧は別導線**という前提を運営・プレイヤーに共有してください。
+
 ## 運用上の注意
 
 1. 写真ファイルは `polapaint/data/photos/<id>.jpg` に蓄積されます。容量管理は OS の `find` / タスクスケジューラ等での削除を推奨します。
