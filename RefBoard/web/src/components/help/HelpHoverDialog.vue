@@ -1,13 +1,27 @@
 <script setup lang="ts">
-import { computed, onUnmounted, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import contextMap from '../../help/context_map.json'
 import reverseIndexJa from '../../help/ja/reverse_index.json'
 import reverseIndexEn from '../../help/en/reverse_index.json'
 import MarqueeText from '../common/MarqueeText.vue'
 import { resolveHelpLocale } from '../../utils/helpLocale'
 import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const modulesJa = import.meta.glob<string>('../../help/ja/articles/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const modulesEn = import.meta.glob<string>('../../help/en/articles/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
 
 interface RevItem {
   id: string
@@ -34,6 +48,12 @@ const dialogOverlayClass = overlayRootClass('z-[185]', 'bg-black/50')
 
 const router = useRouter()
 const { t, locale } = useI18n()
+
+const dialogArticleSlug = ref<string | null>(null)
+
+const modules = computed(() =>
+  resolveHelpLocale(locale.value as string) === 'en' ? modulesEn : modulesJa,
+)
 
 const reverseIndex = computed(() =>
   resolveHelpLocale(locale.value as string) === 'en' ? reverseIndexEn : reverseIndexJa,
@@ -66,9 +86,50 @@ const items = computed(() =>
   }),
 )
 
-function openArticle(slug: string) {
-  emit('close')
-  void router.push({ name: 'help-article', params: { slug } })
+function pathForSlug(slug: string): string | undefined {
+  const suffix = `/articles/${slug}.md`
+  const map = modules.value
+  for (const k of Object.keys(map)) {
+    if (k.endsWith(suffix)) return k
+  }
+  return undefined
+}
+
+function stripFrontMatter(raw: string): string {
+  if (!raw.startsWith('---')) return raw
+  const end = raw.indexOf('\n---', 3)
+  if (end === -1) return raw
+  return raw.slice(end + 4).trimStart()
+}
+
+const articleHtml = computed(() => {
+  const slug = dialogArticleSlug.value
+  if (!slug) return ''
+  const p = pathForSlug(slug)
+  const raw = p ? modules.value[p] : ''
+  if (!raw) return `<p class="text-slate-400">${t('help.article_missing')}</p>`
+  const md = stripFrontMatter(raw)
+  const parsed = marked.parse(md, { async: false }) as string
+  return DOMPurify.sanitize(parsed)
+})
+
+function selectListArticle(slug: string) {
+  dialogArticleSlug.value = slug
+}
+
+function backToList() {
+  dialogArticleSlug.value = null
+}
+
+function onArticleBodyClick(ev: MouseEvent) {
+  const el = (ev.target as HTMLElement).closest('a')
+  if (!el) return
+  const href = el.getAttribute('href') || ''
+  const m = /#\/workspace\/help\/article\/([^)#]+)/.exec(href)
+  if (m) {
+    ev.preventDefault()
+    dialogArticleSlug.value = decodeURIComponent(m[1])
+  }
 }
 
 function openHelpRoot() {
@@ -77,8 +138,13 @@ function openHelpRoot() {
 }
 
 function onEsc(ev: KeyboardEvent) {
-  if (ev.key === 'Escape' && props.open) {
+  if (!props.open) return
+  if (ev.key === 'Escape') {
     ev.preventDefault()
+    if (dialogArticleSlug.value) {
+      backToList()
+      return
+    }
     emit('close')
   }
 }
@@ -87,6 +153,7 @@ watch(
   () => props.open,
   (v) => {
     if (v) {
+      dialogArticleSlug.value = null
       window.addEventListener('keydown', onEsc, true)
     } else {
       window.removeEventListener('keydown', onEsc, true)
@@ -122,12 +189,23 @@ onUnmounted(() => {
         @click.stop
       >
         <header class="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700 px-4 py-3">
-          <h2 class="text-sm font-semibold text-slate-100">
-            {{ t('help.context.title') }}
-          </h2>
+          <div class="flex min-w-0 flex-1 items-center gap-2">
+            <button
+              v-if="dialogArticleSlug"
+              type="button"
+              class="shrink-0 rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+              :aria-label="t('help.context.back_list_aria')"
+              @click="backToList"
+            >
+              ←
+            </button>
+            <h2 class="min-w-0 truncate text-sm font-semibold text-slate-100">
+              {{ t('help.context.title') }}
+            </h2>
+          </div>
           <button
             type="button"
-            class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            class="shrink-0 rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             :aria-label="t('help.context.close_aria')"
             @click="emit('close')"
           >
@@ -139,24 +217,32 @@ onUnmounted(() => {
         </p>
 
         <div class="min-h-0 flex-1 overflow-y-auto p-3">
-          <p v-if="items.length === 0" class="rounded border border-slate-700 bg-slate-950/40 p-3 text-xs text-slate-400">
-            {{ t('help.context.empty') }}
-          </p>
-          <ul v-else class="space-y-1">
-            <li v-for="it in items" :key="it.slug" class="min-w-0">
-              <button
-                type="button"
-                class="flex w-full min-w-0 items-center gap-2 rounded px-2 py-2 text-left text-xs text-slate-200 hover:bg-slate-800"
-                @click="openArticle(it.slug)"
-              >
-                <span class="shrink-0 text-base">{{ it.icon }}</span>
-                <span class="min-w-0 flex-1 overflow-hidden">
-                  <MarqueeText :text="it.title" variant="subtle" />
-                </span>
-                <span class="shrink-0 text-slate-500">›</span>
-              </button>
-            </li>
-          </ul>
+          <template v-if="!dialogArticleSlug">
+            <p v-if="items.length === 0" class="rounded border border-slate-700 bg-slate-950/40 p-3 text-xs text-slate-400">
+              {{ t('help.context.empty') }}
+            </p>
+            <ul v-else class="space-y-1">
+              <li v-for="it in items" :key="it.slug" class="min-w-0">
+                <button
+                  type="button"
+                  class="flex w-full min-w-0 items-center gap-2 rounded px-2 py-2 text-left text-xs text-slate-200 hover:bg-slate-800"
+                  @click="selectListArticle(it.slug)"
+                >
+                  <span class="shrink-0 text-base">{{ it.icon }}</span>
+                  <span class="min-w-0 flex-1 overflow-hidden">
+                    <MarqueeText :text="it.title" variant="subtle" />
+                  </span>
+                  <span class="shrink-0 text-slate-500">›</span>
+                </button>
+              </li>
+            </ul>
+          </template>
+          <article
+            v-else
+            class="help-md max-w-none text-xs text-slate-200"
+            @click="onArticleBodyClick"
+            v-html="articleHtml"
+          />
         </div>
 
         <footer class="shrink-0 border-t border-slate-700 px-3 py-2">

@@ -70,7 +70,7 @@ function reset() {
   teamId.value = null
   outId.value = null
   inId.value = null
-  eventTime.value = null
+  eventTime.value = props.model.serverHalf === 'pk' ? null : { ...props.suggestedEventTime }
 }
 
 watch(

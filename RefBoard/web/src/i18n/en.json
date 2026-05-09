@@ -312,6 +312,9 @@
   },
   "penalty": {
     "title": "Penalty shootout",
+    "column_index": "#",
+    "kicks_first": "First",
+    "kicks_second": "Second",
     "next_kicker": "Next kick: {team}",
     "pick_player": "Select player",
     "waiting_input": "Waiting for kick",
@@ -454,7 +457,8 @@
       "title": "Help for this screen",
       "subtitle": "Articles related to what you’re viewing.",
       "empty": "No curated articles for this screen yet. Use “Open full help” below.",
-      "open_all": "Open full help →"
+      "open_all": "Open full help →",
+      "back_list_aria": "Back to article list"
     }
   },
   "errors": {

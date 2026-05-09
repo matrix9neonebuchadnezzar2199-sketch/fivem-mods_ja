@@ -7,7 +7,7 @@ import type { MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/ma
 import type { Half } from '../types/local'
 import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
 import { getElapsedMsFromClockState, parseEpochMsFromServer } from '../utils/matchClock'
-import type { ParsedMinute } from '../utils/matchTime'
+import { eventMinutePresetFromClock, type ParsedMinute } from '../utils/matchTime'
 import { applyBasicInfoFromDetail, matchToDetailModel, scoreHistoryToRows, serverHalfStringToHalf } from '../utils/localMatchAdapter'
 import { useMatchesStore } from '../stores/matches'
 import { useTeamsStore } from '../stores/teams'
@@ -224,9 +224,9 @@ const elapsedMmSsLive = computed(() => {
 
 /** イベント時刻欄の既定（空欄確定時は試合時計からこの分・stoppage を採用） */
 const suggestedEventTime = computed((): ParsedMinute => {
-  const id = matchId.value
-  if (!id) return { minute: 0, stoppage: null }
-  return { minute: matchesStore.currentMinuteFromClock(id), stoppage: null }
+  const m = rawMatch.value
+  if (!m) return { minute: 0, stoppage: 0 }
+  return eventMinutePresetFromClock(m, matchesStore.clockNowMs(m))
 })
 
 function resolveEventTime(override: ParsedMinute | null | undefined): ParsedMinute {

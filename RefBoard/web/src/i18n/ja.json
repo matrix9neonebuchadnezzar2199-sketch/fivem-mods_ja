@@ -312,6 +312,9 @@
   },
   "penalty": {
     "title": "PK戦",
+    "column_index": "#",
+    "kicks_first": "先攻",
+    "kicks_second": "後攻",
     "next_kicker": "次のキッカー: {team}",
     "pick_player": "選手を選択",
     "waiting_input": "入力待ち",
@@ -454,7 +457,8 @@
       "title": "この画面のヘルプ",
       "subtitle": "現在表示中の画面に関連する記事です。",
       "empty": "この画面用の関連記事はまだ用意されていません。「すべてのヘルプ」から探してください。",
-      "open_all": "すべてのヘルプを開く →"
+      "open_all": "すべてのヘルプを開く →",
+      "back_list_aria": "記事一覧に戻る"
     }
   },
   "errors": {

@@ -1,3 +1,5 @@
+import type { Match } from '../types/local'
+
 export interface ParsedMinute {
   minute: number
   stoppage: number | null
@@ -51,4 +53,28 @@ export function formatMinute(minute: number, stoppage: number | null | undefined
 export function formatMinuteForCsv(minute: number, stoppage: number | null | undefined): string {
   if (stoppage == null) return String(Math.max(0, Math.floor(minute)))
   return `${Math.max(0, Math.floor(minute))}+${Math.max(0, Math.floor(stoppage))}`
+}
+
+/**
+ * 試合時計（経過 ms）からイベント記録用の分・ロスタイム初期値を求める。
+ * 経過分はハーフに応じて 45+α / 90+β に分離（PK 中は 0 / null）。
+ */
+export function eventMinutePresetFromClock(match: Match, clockNowMs: number): ParsedMinute {
+  const totalSec = Math.floor(Math.max(0, clockNowMs) / 1000)
+  const totalMin = Math.min(120, Math.floor(totalSec / 60))
+
+  if (match.currentHalf === 'PK') {
+    return { minute: 0, stoppage: null }
+  }
+
+  const h = match.halfMinutes ?? 45
+  const regEnd = h * 2
+
+  if (match.currentHalf === '1H' || match.currentHalf === 'HT') {
+    if (totalMin <= h) return { minute: totalMin, stoppage: 0 }
+    return { minute: h, stoppage: totalMin - h }
+  }
+
+  if (totalMin <= regEnd) return { minute: totalMin, stoppage: 0 }
+  return { minute: regEnd, stoppage: totalMin - regEnd }
 }

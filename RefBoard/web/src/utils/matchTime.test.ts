@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest'
-import { parseMinuteInput, formatMinute, formatMinuteForCsv } from './matchTime'
+import type { Match } from '../types/local'
+import { parseMinuteInput, formatMinute, formatMinuteForCsv, eventMinutePresetFromClock } from './matchTime'
+
+function testMatch(over: Partial<Match> & Pick<Match, 'currentHalf'>): Match {
+  return {
+    id: 1,
+    title: 'Test',
+    homeTeamId: 1,
+    awayTeamId: 2,
+    homeName: 'Home',
+    awayName: 'Away',
+    homeScore: 0,
+    awayScore: 0,
+    status: 'live',
+    halfMinutes: 45,
+    clockStartedAt: null,
+    clockAccumulatedMs: 0,
+    players: [],
+    events: [],
+    scoreHistory: [],
+    createdAt: '',
+    updatedAt: '',
+    ...over,
+  } as Match
+}
 
 describe('parseMinuteInput', () => {
   describe('正常系', () => {
@@ -92,5 +116,38 @@ describe('formatMinuteForCsv', () => {
     expect(formatMinuteForCsv(45, null)).toBe('45')
     expect(formatMinuteForCsv(45, 2)).toBe('45+2')
     expect(formatMinuteForCsv(45, 0)).toBe('45+0')
+  })
+})
+
+describe('eventMinutePresetFromClock', () => {
+  it('PK 中は 0 / null', () => {
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: 'PK' }), 120000)).toEqual({ minute: 0, stoppage: null })
+  })
+  it('前半 23 分経過 → 23, 0', () => {
+    const ms = 23 * 60 * 1000 + 45000
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: '1H' }), ms)).toEqual({ minute: 23, stoppage: 0 })
+  })
+  it('前半 47 分相当 → 45+2', () => {
+    const ms = 47 * 60 * 1000
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: '1H' }), ms)).toEqual({ minute: 45, stoppage: 2 })
+  })
+  it('ハーフタイムでも前半と同様に分離する', () => {
+    const ms = 47 * 60 * 1000
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: 'HT' }), ms)).toEqual({ minute: 45, stoppage: 2 })
+  })
+  it('後半 55 分経過（連続計時）→ 55, 0', () => {
+    const ms = 55 * 60 * 1000
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: '2H' }), ms)).toEqual({ minute: 55, stoppage: 0 })
+  })
+  it('後半 95 分経過 → 90+5', () => {
+    const ms = 95 * 60 * 1000
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: '2H' }), ms)).toEqual({ minute: 90, stoppage: 5 })
+  })
+  it('0 ms は 0, 0', () => {
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: '1H' }), 0)).toEqual({ minute: 0, stoppage: 0 })
+  })
+  it('120 分を上限として扱う', () => {
+    const ms = 200 * 60 * 1000
+    expect(eventMinutePresetFromClock(testMatch({ currentHalf: '2H' }), ms)).toEqual({ minute: 90, stoppage: 30 })
   })
 })

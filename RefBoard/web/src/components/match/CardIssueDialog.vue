@@ -69,7 +69,7 @@ watch(
       cardKind.value = null
       showSecondYellow.value = false
       redFromSecondYellow.value = false
-      eventTime.value = null
+      eventTime.value = props.model.serverHalf === 'pk' ? null : { ...props.suggestedEventTime }
     }
   },
 )

@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
-import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel, MatchEvent, MatchPlayer } from '../../types/match'
 import { useDialogOverlay } from '../../composables/useDialogOverlay'
-import { useMatchCompactDockStore } from '../../stores/matchCompactDock'
-
 const { overlayRootClassFlexCol, overlayRootClass } = useDialogOverlay()
 const pkWinnerOverlayClass = overlayRootClassFlexCol('z-[400]', 'bg-black/80')
 const pkFinishAskOverlayClass = overlayRootClass('z-[410]', 'bg-black/60')
-
-const { transparentChrome } = storeToRefs(useMatchCompactDockStore())
 
 const props = defineProps<{
   model: MatchDetailModel
@@ -25,8 +20,9 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const homePlayerId = ref<string | null>(null)
-const awayPlayerId = ref<string | null>(null)
+/** 先攻列・後攻列の選手選択（列は pkFirst と一致し、ホーム／アウェイとは限らない） */
+const firstKickerPlayerId = ref<string | null>(null)
+const secondKickerPlayerId = ref<string | null>(null)
 
 const showWinnerOverlay = ref(false)
 const showFinishAsk = ref(false)
@@ -40,16 +36,38 @@ const pkEvents = computed(() =>
     .sort((a, b) => Number(a.id) - Number(b.id)),
 )
 
-const pkHomeShots = computed(() =>
-  pkEvents.value.filter((e) => e.pkTeamId != null && e.pkTeamId === props.model.team1Id),
+const firstTeamId = computed(() => props.model.pkFirstTeamId ?? props.model.team1Id)
+
+const secondTeamId = computed(() =>
+  firstTeamId.value === props.model.team1Id ? props.model.team2Id : props.model.team1Id,
 )
 
-const pkAwayShots = computed(() =>
-  pkEvents.value.filter((e) => e.pkTeamId != null && e.pkTeamId === props.model.team2Id),
+const firstTeamName = computed(() =>
+  firstTeamId.value === props.model.team1Id ? props.model.home.name : props.model.away.name,
 )
 
-const pkGridClass = computed(() =>
-  transparentChrome.value ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2',
+const secondTeamName = computed(() =>
+  secondTeamId.value === props.model.team1Id ? props.model.home.name : props.model.away.name,
+)
+
+const pkColFirstShots = computed(() =>
+  pkEvents.value.filter((e) => e.pkTeamId != null && e.pkTeamId === firstTeamId.value),
+)
+
+const pkColSecondShots = computed(() =>
+  pkEvents.value.filter((e) => e.pkTeamId != null && e.pkTeamId === secondTeamId.value),
+)
+
+const pkFirstScore = computed(() =>
+  firstTeamId.value === props.model.team1Id ? pkHome.value : pkAway.value,
+)
+
+const pkSecondScore = computed(() =>
+  secondTeamId.value === props.model.team1Id ? pkHome.value : pkAway.value,
+)
+
+const displayRows = computed(() =>
+  Math.max(5, pkColFirstShots.value.length, pkColSecondShots.value.length),
 )
 
 const nextTeamId = computed(() => {
@@ -65,6 +83,14 @@ const rosterHome = computed((): MatchPlayer[] =>
 
 const rosterAway = computed((): MatchPlayer[] =>
   props.model.awayPlayers.filter((p) => p.status !== 'sent_off' && p.status !== 'subbed_out'),
+)
+
+const rosterFirstKicker = computed((): MatchPlayer[] =>
+  firstTeamId.value === props.model.team1Id ? rosterHome.value : rosterAway.value,
+)
+
+const rosterSecondKicker = computed((): MatchPlayer[] =>
+  secondTeamId.value === props.model.team1Id ? rosterHome.value : rosterAway.value,
 )
 
 const pkHome = computed(() => props.model.breakdown.pk.home)
@@ -127,11 +153,11 @@ function shotRowLabel(row: MatchEvent) {
 
 async function record(tid: number, success: boolean) {
   if (pkDecided.value || tid !== nextTeamId.value) return
-  const pid = tid === props.model.team1Id ? homePlayerId.value : awayPlayerId.value
+  const pid = tid === firstTeamId.value ? firstKickerPlayerId.value : secondKickerPlayerId.value
   if (!pid) return
   emit('pk-shot', { teamId: tid, playerId: Number(pid), success })
-  if (tid === props.model.team1Id) homePlayerId.value = null
-  else awayPlayerId.value = null
+  if (tid === firstTeamId.value) firstKickerPlayerId.value = null
+  else secondKickerPlayerId.value = null
   await nextTick()
   maybeShowWinnerOverlay()
 }
@@ -164,124 +190,148 @@ function inputRowClass(tid: number) {
       {{ t('penalty.decided') }}
     </div>
 
-    <div class="mb-4 grid gap-3" :class="pkGridClass">
-      <!-- ホーム列（左／通常時は sm 以上で左） -->
-      <div class="min-w-0 rounded-lg border border-slate-600/40 bg-slate-900/25 p-3">
-        <div class="mb-2 border-b border-slate-600/40 pb-2">
-          <div class="truncate text-sm font-semibold text-slate-100">{{ model.home.name }}</div>
-          <div class="text-lg font-bold tabular-nums text-slate-50">{{ pkHome }}</div>
-        </div>
-        <ol class="max-h-40 space-y-1.5 overflow-y-auto text-xs">
-          <li
-            v-for="(row, idx) in pkHomeShots"
-            :key="row.id"
-            class="flex min-w-0 items-center gap-2 text-slate-200"
-          >
-            <span class="w-5 shrink-0 tabular-nums text-slate-500">{{ idx + 1 }}.</span>
-            <span
-              v-if="row.penaltySuccess === true"
-              class="shrink-0 text-emerald-400"
-              aria-hidden="true"
-            >{{ shotRowLabel(row) }}</span>
-            <span v-else class="shrink-0 font-bold text-rose-400">{{ shotRowLabel(row) }}</span>
-            <span v-if="row.pkPlayerNumber != null" class="w-8 shrink-0 tabular-nums text-slate-500">#{{ row.pkPlayerNumber }}</span>
-            <span class="min-w-0 truncate">{{ row.pkPlayerName ?? '—' }}</span>
-          </li>
-        </ol>
-        <div v-if="!readonly && !pkDecided" class="mt-2 border-t border-slate-700/50 pt-2 text-xs">
-          <span v-if="nextTeamId === model.team1Id" class="font-medium text-amber-300">{{ t('penalty.waiting_input') }}</span>
-          <span v-else class="text-slate-600">—</span>
-        </div>
+    <div
+      class="mb-4 grid max-h-[min(24rem,55vh)] grid-cols-[2.25rem_minmax(0,1fr)_minmax(0,1fr)] gap-x-2 gap-y-1 overflow-y-auto text-xs"
+    >
+      <div class="sticky top-0 z-[1] bg-violet-950/95 pb-1 font-semibold text-slate-400">{{ t('penalty.column_index') }}</div>
+      <div class="sticky top-0 z-[1] min-w-0 bg-violet-950/95 pb-1 font-semibold text-slate-200">
+        <span class="truncate">{{ firstTeamName }}</span>
+        <span class="text-slate-500"> · {{ t('penalty.kicks_first') }}</span>
+      </div>
+      <div class="sticky top-0 z-[1] min-w-0 bg-violet-950/95 pb-1 font-semibold text-slate-200">
+        <span class="truncate">{{ secondTeamName }}</span>
+        <span class="text-slate-500"> · {{ t('penalty.kicks_second') }}</span>
       </div>
 
-      <!-- アウェイ列 -->
-      <div class="min-w-0 rounded-lg border border-slate-600/40 bg-slate-900/25 p-3">
-        <div class="mb-2 border-b border-slate-600/40 pb-2">
-          <div class="truncate text-sm font-semibold text-slate-100">{{ model.away.name }}</div>
-          <div class="text-lg font-bold tabular-nums text-slate-50">{{ pkAway }}</div>
-        </div>
-        <ol class="max-h-40 space-y-1.5 overflow-y-auto text-xs">
-          <li
-            v-for="(row, idx) in pkAwayShots"
-            :key="row.id"
-            class="flex min-w-0 items-center gap-2 text-slate-200"
-          >
-            <span class="w-5 shrink-0 tabular-nums text-slate-500">{{ idx + 1 }}.</span>
-            <span
-              v-if="row.penaltySuccess === true"
-              class="shrink-0 text-emerald-400"
-              aria-hidden="true"
-            >{{ shotRowLabel(row) }}</span>
-            <span v-else class="shrink-0 font-bold text-rose-400">{{ shotRowLabel(row) }}</span>
-            <span v-if="row.pkPlayerNumber != null" class="w-8 shrink-0 tabular-nums text-slate-500">#{{ row.pkPlayerNumber }}</span>
-            <span class="min-w-0 truncate">{{ row.pkPlayerName ?? '—' }}</span>
-          </li>
-        </ol>
-        <div v-if="!readonly && !pkDecided" class="mt-2 border-t border-slate-700/50 pt-2 text-xs">
-          <span v-if="nextTeamId === model.team2Id" class="font-medium text-amber-300">{{ t('penalty.waiting_input') }}</span>
-          <span v-else class="text-slate-600">—</span>
-        </div>
-      </div>
-    </div>
+      <div class="tabular-nums text-slate-600"></div>
+      <div class="text-lg font-bold tabular-nums text-slate-50">{{ pkFirstScore }}</div>
+      <div class="text-lg font-bold tabular-nums text-slate-50">{{ pkSecondScore }}</div>
 
-    <div v-if="!readonly" class="space-y-3 border-t border-violet-500/20 pt-3">
-      <div class="rounded-lg border p-3 transition-colors" :class="inputRowClass(model.team1Id)">
-        <p class="mb-2 text-xs font-medium text-slate-200">{{ model.home.name }}</p>
-        <select
-          v-model="homePlayerId"
-          :disabled="!canInputForTeam(model.team1Id)"
-          class="mb-2 w-full rounded border border-slate-600 bg-slate-900 px-2 py-2 text-sm text-slate-100 disabled:opacity-40"
+      <template v-for="ri in displayRows" :key="ri">
+        <div class="border-t border-slate-700/40 pt-1 tabular-nums text-slate-500">{{ ri }}.</div>
+        <div
+          class="min-w-0 border-t border-slate-700/40 pt-1"
+          :class="pkColFirstShots[ri - 1] ? 'text-slate-200' : 'text-slate-600'"
         >
-          <option disabled value="">{{ t('penalty.pick_player') }}</option>
-          <option v-for="p in rosterHome" :key="p.id" :value="p.id">{{ p.number }} {{ p.name }}</option>
-        </select>
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
-            :disabled="!canInputForTeam(model.team1Id) || !homePlayerId"
-            @click="record(model.team1Id, true)"
+          <template v-if="pkColFirstShots[ri - 1]">
+            <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+              <span
+                v-if="pkColFirstShots[ri - 1]!.penaltySuccess === true"
+                class="shrink-0 text-emerald-400"
+                aria-hidden="true"
+              >{{ shotRowLabel(pkColFirstShots[ri - 1]!) }}</span>
+              <span v-else class="shrink-0 font-bold text-rose-400">{{ shotRowLabel(pkColFirstShots[ri - 1]!) }}</span>
+              <span
+                v-if="pkColFirstShots[ri - 1]!.pkPlayerNumber != null"
+                class="shrink-0 tabular-nums text-slate-500"
+              >#{{ pkColFirstShots[ri - 1]!.pkPlayerNumber }}</span>
+              <span class="min-w-0 truncate">{{ pkColFirstShots[ri - 1]!.pkPlayerName ?? '—' }}</span>
+            </div>
+          </template>
+          <template v-else>—</template>
+        </div>
+        <div
+          class="min-w-0 border-t border-slate-700/40 pt-1"
+          :class="pkColSecondShots[ri - 1] ? 'text-slate-200' : 'text-slate-600'"
+        >
+          <template v-if="pkColSecondShots[ri - 1]">
+            <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+              <span
+                v-if="pkColSecondShots[ri - 1]!.penaltySuccess === true"
+                class="shrink-0 text-emerald-400"
+                aria-hidden="true"
+              >{{ shotRowLabel(pkColSecondShots[ri - 1]!) }}</span>
+              <span v-else class="shrink-0 font-bold text-rose-400">{{ shotRowLabel(pkColSecondShots[ri - 1]!) }}</span>
+              <span
+                v-if="pkColSecondShots[ri - 1]!.pkPlayerNumber != null"
+                class="shrink-0 tabular-nums text-slate-500"
+              >#{{ pkColSecondShots[ri - 1]!.pkPlayerNumber }}</span>
+              <span class="min-w-0 truncate">{{ pkColSecondShots[ri - 1]!.pkPlayerName ?? '—' }}</span>
+            </div>
+          </template>
+          <template v-else>—</template>
+        </div>
+      </template>
+
+      <div class="border-t border-slate-700/50 pt-2 text-slate-600"></div>
+      <div class="border-t border-slate-700/50 pt-2">
+        <div
+          v-if="!readonly && !pkDecided && nextTeamId === firstTeamId"
+          class="mb-1 text-[0.625rem] font-medium text-amber-300"
+        >
+          {{ t('penalty.waiting_input') }}
+        </div>
+        <div
+          v-if="!readonly"
+          class="rounded-lg border p-2 transition-colors"
+          :class="inputRowClass(firstTeamId)"
+        >
+          <select
+            v-model="firstKickerPlayerId"
+            :disabled="!canInputForTeam(firstTeamId)"
+            class="mb-2 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 disabled:opacity-40"
           >
-            {{ t('penalty.success') }}
-          </button>
-          <button
-            type="button"
-            class="rounded-lg bg-slate-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
-            :disabled="!canInputForTeam(model.team1Id) || !homePlayerId"
-            @click="record(model.team1Id, false)"
-          >
-            {{ t('penalty.miss') }}
-          </button>
+            <option disabled value="">{{ t('penalty.pick_player') }}</option>
+            <option v-for="p in rosterFirstKicker" :key="p.id" :value="p.id">{{ p.number }} {{ p.name }}</option>
+          </select>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              class="rounded-md bg-emerald-600 px-2 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+              :disabled="!canInputForTeam(firstTeamId) || !firstKickerPlayerId"
+              @click="record(firstTeamId, true)"
+            >
+              {{ t('penalty.success') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-md bg-slate-600 px-2 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+              :disabled="!canInputForTeam(firstTeamId) || !firstKickerPlayerId"
+              @click="record(firstTeamId, false)"
+            >
+              {{ t('penalty.miss') }}
+            </button>
+          </div>
         </div>
       </div>
-
-      <div class="rounded-lg border p-3 transition-colors" :class="inputRowClass(model.team2Id)">
-        <p class="mb-2 text-xs font-medium text-slate-200">{{ model.away.name }}</p>
-        <select
-          v-model="awayPlayerId"
-          :disabled="!canInputForTeam(model.team2Id)"
-          class="mb-2 w-full rounded border border-slate-600 bg-slate-900 px-2 py-2 text-sm text-slate-100 disabled:opacity-40"
+      <div class="border-t border-slate-700/50 pt-2">
+        <div
+          v-if="!readonly && !pkDecided && nextTeamId === secondTeamId"
+          class="mb-1 text-[0.625rem] font-medium text-amber-300"
         >
-          <option disabled value="">{{ t('penalty.pick_player') }}</option>
-          <option v-for="p in rosterAway" :key="p.id" :value="p.id">{{ p.number }} {{ p.name }}</option>
-        </select>
-        <div class="flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
-            :disabled="!canInputForTeam(model.team2Id) || !awayPlayerId"
-            @click="record(model.team2Id, true)"
+          {{ t('penalty.waiting_input') }}
+        </div>
+        <div
+          v-if="!readonly"
+          class="rounded-lg border p-2 transition-colors"
+          :class="inputRowClass(secondTeamId)"
+        >
+          <select
+            v-model="secondKickerPlayerId"
+            :disabled="!canInputForTeam(secondTeamId)"
+            class="mb-2 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 disabled:opacity-40"
           >
-            {{ t('penalty.success') }}
-          </button>
-          <button
-            type="button"
-            class="rounded-lg bg-slate-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
-            :disabled="!canInputForTeam(model.team2Id) || !awayPlayerId"
-            @click="record(model.team2Id, false)"
-          >
-            {{ t('penalty.miss') }}
-          </button>
+            <option disabled value="">{{ t('penalty.pick_player') }}</option>
+            <option v-for="p in rosterSecondKicker" :key="p.id" :value="p.id">{{ p.number }} {{ p.name }}</option>
+          </select>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              class="rounded-md bg-emerald-600 px-2 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+              :disabled="!canInputForTeam(secondTeamId) || !secondKickerPlayerId"
+              @click="record(secondTeamId, true)"
+            >
+              {{ t('penalty.success') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-md bg-slate-600 px-2 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+              :disabled="!canInputForTeam(secondTeamId) || !secondKickerPlayerId"
+              @click="record(secondTeamId, false)"
+            >
+              {{ t('penalty.miss') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
