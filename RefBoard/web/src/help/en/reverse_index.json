@@ -74,55 +74,6 @@
       ]
     },
     {
-      "id": "data_off",
-      "icon": "📊",
-      "title": "Data & history",
-      "items": [
-        {
-          "id": "data_history_rev",
-          "title": "View past matches and stats",
-          "article": "data_view_history.md",
-          "tags": ["data", "history", "stats", "log"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_csv_rev",
-          "title": "Download as CSV",
-          "article": "data_export.md",
-          "tags": ["CSV", "Excel", "export", "BOM", "backup"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_import_rev",
-          "title": "Import JSON or restore a backup",
-          "article": "data_import.md",
-          "tags": ["import", "restore", "JSON", "backup", "migration", "partial merge", "selective", "partial"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_csv_format_rev",
-          "title": "Understand CSV columns and files",
-          "article": "data_csv_format.md",
-          "tags": ["csv", "format", "export", "standard", "detailed", "summary", "events", "13 columns", "26 columns", "v0.3", "match_id", "operator"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_csv_excel_open_rev",
-          "title": "Open CSV in Excel / fix garbled text",
-          "article": "data_csv_excel_open.md",
-          "tags": ["Excel", "garbled", "BOM", "CSV", "text import", "delimiter", "apostrophe", "date", "45+2", "excel CSV"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_migration_rev",
-          "title": "Move data to another PC",
-          "article": "data_migration.md",
-          "tags": ["migration", "another PC", "JSON", "backup", "replace", "merge", "display name", "selfName", "import", "data migration", "backup import"],
-          "actionUrl": "#/workspace/data"
-        }
-      ]
-    },
-    {
       "id": "before_match",
       "icon": "🗓️",
       "title": "Before the match",

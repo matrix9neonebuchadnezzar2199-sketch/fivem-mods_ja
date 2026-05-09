@@ -1,8 +1,8 @@
 ---
 title: Get started with RefBoard
 category: intro
-tags: [setup, display name, teams, match, localStorage, backup]
-related: [intro_what_is_refboard, data_export]
+tags: [setup, display name, teams, match, localStorage]
+related: [intro_what_is_refboard, match_create_new]
 shortcut: null
 actionUrl: null
 errorCode: null
@@ -15,13 +15,12 @@ errorCode: null
 3. In **Team management**, create **at least two** teams you will use.
 4. Go to **Matches** → **New** and create a match.
 5. On the **match detail** screen, start the clock and record goals, cards, and substitutions.
-6. On the **Data** screen, export a backup as **CSV** or **JSON**.
 
 ## Important
 
-RefBoard **does not talk to a game server** for storage. Data lives in this browser’s **`localStorage`**. When you move to another PC, use **Data** → **Full data backup (JSON)** to write a file you can carry over.
+RefBoard **does not talk to a game server** for storage. Data lives in this browser’s **`localStorage`**. **Clearing site data** or using **Clear all data** in settings removes everything with **no recovery**. Keep any records you need elsewhere (notes, screenshots, etc.).
 
 ## See also
 
 - [What is RefBoard?](#/workspace/help/article/intro_what_is_refboard)
-- [Export to CSV](#/workspace/help/article/data_export)
+- [Create a new match](#/workspace/help/article/match_create_new)

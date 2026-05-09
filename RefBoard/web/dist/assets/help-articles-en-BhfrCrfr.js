@@ -45,241 +45,10 @@ In PK phase the dock **does not show**; use the **full PK panel** instead. To us
 - First-time setup: [#/workspace/help/article/intro_setup](#/workspace/help/article/intro_setup)
 - PK recording: [#/workspace/help/article/match_pk_recording](#/workspace/help/article/match_pk_recording)
 `,n=`---
-title: Open CSV in Excel
-category: data
-tags: [Excel, CSV, encoding, BOM, UTF-8, date, apostrophe, import, garbled]
-related: [data_export, data_csv_format]
-shortcut: null
-actionUrl: "#/workspace/data"
-errorCode: null
----
-
-# Open CSV in Excel
-
-## What this page covers
-
-- RefBoard CSV is **UTF-8 with BOM**, which Excel usually reads correctly
-- When values like **\`45+2'\`** are mistaken for **dates**
-
-## Avoiding mojibake
-
-Match CSV files include a **BOM**. Double-clicking in Excel often shows Japanese text correctly.
-
-If characters are wrong:
-
-1. In Excel: **Data** → **From Text/CSV**
-2. Pick the file and set encoding to **65001: Unicode (UTF-8)**
-3. Use **comma** as the delimiter and finish
-
-## \`45+2'\` turning into a date
-
-Excel may auto-convert **\`10'\`** or **\`45+2'\`** in \`minute_label\` to a date/time.
-
-**Mitigations**
-
-- Set the column format to **Text** before or after import
-- In **Get Data**, set the column type to **Text**
-- For analysis, prefer numeric **\`event_minute\`** / **\`event_stoppage\`** (detailed export)
-
-## See also
-
-- Column reference: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)
-`,t='---\ntitle: CSV export format (v0.3.0)\ncategory: data\ntags: [CSV, export, format, standard, detailed, summary, events, BOM, UTF-8, columns]\nrelated: [data_export, data_import, data_csv_excel_open]\nshortcut: null\nactionUrl: "#/workspace/data"\nerrorCode: null\n---\n\n# CSV export format (v0.3.0)\n\n## What this page covers\n\n- **Summary** and **events** delivered as **two files**\n- **Standard (13 columns)** vs **detailed (26 columns)**\n- How filenames are built\n\n## Two files per export\n\nFor each match, two downloads run about **0.2 s** apart:\n\n1. **`refboard_m{id}_{YYYY-MM-DD}_summary.csv`** — one metadata row (**9 columns**)\n2. **`refboard_m{id}_{YYYY-MM-DD}_events.csv`** — one row per event (**13 or 26 columns**)\n\nIn **Data** (finished match row) or **Match detail** header, choose **Standard** / **Detailed** in the dropdown, then export.\n\n## Summary CSV (9 columns)\n\n`match_id`, `match_title`, `match_date`, `home_team`, `away_team`, `final_score`, `match_status`, `operator`, `exported_at`\n\n- `match_id` uses an **`m_`** prefix (e.g. `m_42`)\n- `final_score` can include PK, e.g. `1-1 (PK 2-2)`\n- `operator` is **Settings display name** (may be empty if unset)\n\n## Events CSV — standard (13 columns)\n\n`match_id`, `match_title`, `match_date`, `home_team`, `away_team`, `final_score`, `event_index`, `event_kind`, `event_team`, `minute_label`, `event_minute`, `event_text`, `recorded_at_iso`\n\n- `event_kind` values include `goal`, `substitution`, `pk_goal`, `pk_miss`, `yellow`, `red`, …\n- `minute_label` uses display form e.g. `45+2\'` or `PK` for shootout kicks\n- Substitutions use a **single `sub_out` row** (no separate `sub_in` row)\n\n## Events CSV — detailed (26 columns)\n\nAdds stoppage, player/assist numbers and names, card colour, sub in/out, PK result and per-team `pk_shot_index`, `operator` on each row, etc.\n\n## See also\n\n- Flow overview: [#/workspace/help/article/data_export](#/workspace/help/article/data_export)\n- Excel tips: [#/workspace/help/article/data_csv_excel_open](#/workspace/help/article/data_csv_excel_open)\n',a=`---
-title: Export to CSV
-category: data
-tags: [CSV, export, BOM, Excel, csv export]
-related: [data_view_history, data_csv_format, data_csv_excel_open]
-shortcut: null
-actionUrl: "#/workspace/data"
-errorCode: null
----
-
-# Export to CSV
-
-## What you will learn
-
-- Export from **Data** and **match detail**
-- **UTF-8 BOM** for Excel-friendly open
-
-## Prerequisites
-
-- NUI allows **blob download**.
-- Referee permissions for the dataset.
-
-## From Data
-
-1. On a tab, use **Export CSV** when shown.
-2. Filename usually includes date/type (per \`refboard_filename\` helper).
-
-## From match detail (events)
-
-1. Pick **CSV format** (standard / detailed), then use **CSV** to download **summary** and **events** as **two files** ~200ms apart (v0.3.0+). See [CSV format](#/workspace/help/article/data_csv_format).
-2. **JSON** is a separate one-file export.
-
-## After export
-
-- Files saved locally; **BOM** helps Excel decode UTF-8. For Excel quirks see [Open CSV in Excel](#/workspace/help/article/data_csv_excel_open).
-- **No change** to database (read-only copy).
-
-## FAQ
-
-**Q. Google Sheets**  
-A. Use **Import** or ensure UTF-8 with BOM in import settings.
-
-**Q. Every column including PK?**  
-A. **Detailed** mode includes PK result and \`pk_shot_index\`. See [CSV format](#/workspace/help/article/data_csv_format). Use **JSON export** if you need raw data.
-
-## See also
-
-- [View history in Data](#/workspace/help/article/data_view_history)
-- [Finish or reopen a match](#/workspace/help/article/match_finish) (reopen vs exported snapshots)
-`,o=`---
-title: Import a JSON backup
-category: data
-tags: [data, backup, import, json, restore, migration, 取り込み, partial merge, selective]
-related: [data_export, data_view_history]
-shortcut: null
-actionUrl: "#/workspace/data"
-errorCode: null
----
-
-# Import a JSON backup
-
-## What this page covers
-
-- How to restore a **full-data JSON** backup from **Data**
-- The difference between **Replace** and **Merge**, and **selective merge** (pick teams / roster / matches)
-- Why you must **reload the page** after importing
-- **Import history** stays on this browser/device only
-
-## Prerequisites
-
-- The file must be a **RefBoard full backup** with \`schemaVersion: 1\`. Single-match JSON and CSV are not imported here.
-- Invalid or truncated JSON is rejected during preview; **localStorage is not changed** until you confirm an import.
-
-## Steps
-
-1. Open **Data** and choose **Import from JSON**.
-2. Pick the backup **.json** file. Review the counts and the **lists of teams, roster rows, and matches** from the file.
-3. Understand **Replace** vs **Merge**:
-   - **Replace**: **Deletes everything** locally, then writes the backup. There is **no per-entity selection** (full file only). A **two-step confirmation** reduces mistakes. Import history is preserved and merged with a new head entry.
-   - **Merge**: Append teams, roster rows, and matches with **new IDs**. **Settings (display name, etc.) stay** on this device.
-4. When **Merge** is selected, you can **check teams, roster rows, and matches individually** (v0.2.0). Use **Select all / Clear** per section.
-5. **When a match is selected, also include related teams and roster** (default **on**): home/away teams for checked matches and any **rosterMemberId** referenced by those matches’ players are auto-checked. Turn it **off** only if you intend to select everything manually; validation blocks confirm until home/away teams and required roster rows are covered.
-6. After success, click **Reload to apply** so the page reloads. Pinia stores must rehydrate from disk.
-
-## After you import
-
-- **Import history** (up to 20 rows) lists time, operator label, mode, and counts. **Partial merge** rows are labeled accordingly. Nothing is sent to a server.
-- To move devices: export **Full data backup (JSON)** on the old device, then import on the new one.
-
-## FAQ
-
-**Q. “Unsupported schema”**  
-A. This build only accepts the schema version it was built for (currently **1**). Update the app if backups use a newer schema.
-
-**Q. I closed without reloading**  
-A. Lists may stay stale. Reload the browser or revisit Data after a full refresh.
-`,r=`---
-title: Move data to another PC (JSON)
-category: data
-tags: [migration, backup, JSON, import, replace, merge, device, selfName, partial]
-related: [data_import, data_export, intro_setup]
-shortcut: null
-actionUrl: "#/workspace/data"
-errorCode: null
----
-
-# Move data to another PC (JSON)
-
-## What this page covers
-
-- Exporting **full JSON backup** and restoring on another machine
-- **Replace** vs **merge**
-- **Display name (selfName)** is per-device
-
-## Overview
-
-### 1. Export on the old PC
-
-1. Open **Data**
-2. Run **Full data backup (JSON)**
-3. Copy \`refboard_backup_*.json\` to the new PC (USB, cloud, etc.)
-
-### 2. Import on the new PC
-
-1. Open **Data** → **Import from JSON**
-2. Choose mode  
-   - **Replace**: wipe this device and use only the backup (**first-time migration**)  
-   - **Merge**: keep existing data and reassign IDs (**add** another device’s data)
-3. Partial merge lets you pick teams / rosters / matches. Importing matches can auto-include related teams.
-
-### 3. After import
-
-- **Reload the page** as prompted so Pinia reloads.
-- **Display name** lives in \`refboard_settings\`; you may need to set it again in **Settings** (separate from CSV \`operator\`).
-
-## FAQ
-
-**Q. Isn’t CSV enough?**  
-A. CSV is flat columns; JSON keeps the full structure. Use **JSON for full moves**, **CSV (summary + events)** for spreadsheets.
-
-## See also
-
-- Import UI: [#/workspace/help/article/data_import](#/workspace/help/article/data_import)
-- CSV columns: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)
-`,s=`---
-title: View history in Data
-category: data
-tags: [data, match history, stats, log]
-related: [data_export, match_finish]
-shortcut: null
-actionUrl: "#/workspace/data"
-errorCode: null
----
-
-# View history in Data
-
-## What you will learn
-
-- **Data** tabs: matches, teams, players, logs
-- Filters and opening a match from the table
-
-## Prerequisites
-
-- **\`refboard.referee\` ACE** (server enforces access).
-
-## Steps
-
-1. Open **Data** from the sidebar.
-2. Pick a tab:
-   - **Matches**: filters by date, team, status, etc.
-   - **Teams / Players**: aggregate rows (columns per build).
-   - **Logs**: audit \`edit_logs\` excerpts when available.
-3. From **Matches**, use **Open** (or equivalent) to jump to match detail.
-
-## Behavior
-
-- Tabs are **read-heavy**; editing happens in match detail, not here.
-- Changing filters **re-queries** the server.
-
-## FAQ
-
-**Q. Numbers differ from match detail**  
-A. Filters or **reopen** state may differ — open the match and compare timeline.
-
-**Q. Live updates**  
-A. View reflects **last load**; switch tabs or reopen to refresh (auto-poll may be absent).
-
-## See also
-
-- [Export to CSV](#/workspace/help/article/data_export)
-- [Finish or reopen a match](#/workspace/help/article/match_finish)
-`,i=`---
 title: Get started with RefBoard
 category: intro
-tags: [setup, display name, teams, match, localStorage, backup]
-related: [intro_what_is_refboard, data_export]
+tags: [setup, display name, teams, match, localStorage]
+related: [intro_what_is_refboard, match_create_new]
 shortcut: null
 actionUrl: null
 errorCode: null
@@ -292,17 +61,16 @@ errorCode: null
 3. In **Team management**, create **at least two** teams you will use.
 4. Go to **Matches** → **New** and create a match.
 5. On the **match detail** screen, start the clock and record goals, cards, and substitutions.
-6. On the **Data** screen, export a backup as **CSV** or **JSON**.
 
 ## Important
 
-RefBoard **does not talk to a game server** for storage. Data lives in this browser’s **\`localStorage\`**. When you move to another PC, use **Data** → **Full data backup (JSON)** to write a file you can carry over.
+RefBoard **does not talk to a game server** for storage. Data lives in this browser’s **\`localStorage\`**. **Clearing site data** or using **Clear all data** in settings removes everything with **no recovery**. Keep any records you need elsewhere (notes, screenshots, etc.).
 
 ## See also
 
 - [What is RefBoard?](#/workspace/help/article/intro_what_is_refboard)
-- [Export to CSV](#/workspace/help/article/data_export)
-`,l=`---
+- [Create a new match](#/workspace/help/article/match_create_new)
+`,t=`---
 title: What is RefBoard?
 category: intro
 tags: [overview, referee, match, FiveM, local]
@@ -344,7 +112,7 @@ A. Use **Data** → **Full data backup (JSON)** and restore on the new machine.
 
 - [Get started with RefBoard](#/workspace/help/article/intro_setup)
 - [Create a new match](#/workspace/help/article/match_create_new)
-`,c=`---
+`,a=`---
 title: Record yellow and red cards
 category: in_match
 tags: [yellow, red, warning, send-off, card, YC, RC, stoppage, additional time, 45+2]
@@ -404,7 +172,7 @@ A. Use **Undo** on the timeline row when available; otherwise follow your staff 
 
 - [Substitute a player](#/workspace/help/article/match_substitute_player)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,d=`---
+`,o=`---
 title: Create a new match
 category: match_prep
 tags: [match, home, away, schedule, half, stoppage, additional time]
@@ -453,7 +221,7 @@ A. Whether **Delete** is allowed depends on server rules and lock state. Follow 
 
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,h=`---
+`,r=`---
 title: Finish or reopen a match
 category: in_match
 tags: [finish, reopen, resume, final, half, stoppage, additional time]
@@ -527,7 +295,7 @@ A. Allowed; \`reopened_*\` stores **last** event only — use \`edit_logs\` for 
 - [Penalty shootout](#/workspace/help/article/match_penalty_shootout)
 - [Manual score edit](#/workspace/help/article/match_manual_score_edit)
 - [Wrong goal](#/workspace/help/article/trouble_undo_goal)
-`,m=`---
+`,s=`---
 title: Edit the score manually
 category: in_match
 tags: [manual, score, edit, reason]
@@ -594,7 +362,7 @@ A. **Append-only**. Add another manual edit with reason “Correction: …” if
 
 - [Record a goal](#/workspace/help/article/match_record_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
-`,p=`---
+`,i=`---
 title: Run a penalty shootout
 category: in_match
 tags: [PK, penalty, shootout]
@@ -653,7 +421,7 @@ A. **Not** via manual score edit (that is for regulation goals). Use PK event un
 - [Record a goal](#/workspace/help/article/match_record_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Edit the score manually](#/workspace/help/article/match_manual_score_edit)
-`,u=`---
+`,l=`---
 title: Record a penalty shootout (two-column UI)
 category: match
 tags: [PK, penalty, shootout, record, goal, miss, home, away, kicker, input, two-column]
@@ -696,7 +464,7 @@ In **compact dock** mode, during PK the **full PK panel** is shown and the dock�
 
 - General PK flow: [#/workspace/help/article/match_penalty_shootout](#/workspace/help/article/match_penalty_shootout)
 - Compact dock: [#/workspace/help/article/compact_dock_usage](#/workspace/help/article/compact_dock_usage)
-`,_=`---
+`,c=`---
 title: Record a goal
 category: in_match
 tags: [goal, score, shot, G, assist, record, stoppage, additional time, 45+2]
@@ -775,7 +543,7 @@ A. In the wizard’s **match minute** field, enter **\`45+2\`** style (\`minute+
 |-----|--------|
 | \`G\` | Open goal wizard |
 | \`Esc\` | Close wizard (discard unconfirmed) |
-`,g=`---
+`,d=`---
 title: Substitute a player
 category: in_match
 tags: [sub, substitution, bench, stoppage, additional time, 45+2]
@@ -830,7 +598,7 @@ A. Use **Add player** / roster flow first, then substitute.
 
 - [Yellow and red cards](#/workspace/help/article/match_card)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,f=`---
+`,h=`---
 title: Add a member to the roster
 category: team
 tags: [roster, member, server id, number]
@@ -878,7 +646,7 @@ A. Roster = **eligible pool**; on-pitch is **\`active\`** in match detail — di
 
 - [Register a new team](#/workspace/help/article/team_create)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,w=`---
+`,m=`---
 title: Register a new team
 category: team
 tags: [team, create team, register, abbreviation, color]
@@ -924,7 +692,7 @@ A. Use team **edit/delete** when the server allows; FKs may block delete.
 
 - [Add roster member](#/workspace/help/article/team_add_roster_member)
 - [Create a new match](#/workspace/help/article/match_create_new)
-`,y=`---
+`,u=`---
 title: Player has timeline events (E3006)
 category: trouble
 tags: [player remove, timeline, events, E3006, player_has_events, draft]
@@ -1002,7 +770,7 @@ A. Remove is intended for **undoing an accidental add right after it happens**. 
 - [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Manually edit the score](#/workspace/help/article/match_manual_score_edit)
-`,v=`---
+`,p=`---
 title: I recorded the wrong goal
 category: trouble
 tags: [undo, mistake, G, wrong goal, take back]
@@ -1061,11 +829,11 @@ Use **Data** → **Full data backup (JSON)** to snapshot the current state, rest
 
 - \`G\` — goal wizard (match detail, when enabled)  
 - \`Esc\` — close dialog
-`,b=`---
+`,g=`---
 title: Events missing or not visible
 category: trouble
-tags: [event, missing, display, reload, JSON, timeline, PK, troubleshooting, record]
-related: [data_csv_format, match_pk_recording, trouble_undo_goal]
+tags: [event, missing, display, reload, timeline, PK, troubleshooting, record]
+related: [match_pk_recording, trouble_undo_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
 errorCode: null
@@ -1086,19 +854,16 @@ Press **F5** (or reload NUI). Sometimes the view lags behind the store.
 
 ### 2. Which list you are looking at
 
-- **Match detail timeline** and the **PK two-column list** are different surfaces. PK shots still appear in the timeline as penalty rows; the PK panel shows structured rows.
+- **Match detail timeline** and the **PK panel** are different surfaces. PK shots still appear in the timeline as penalty rows; the PK UI shows structured rows.
 - In **compact dock**, **recent events are hidden during PK**. Use the full PK UI instead.
 
-### 3. Inspect raw data
+### 3. Tell saved vs display
 
-1. Export **match JSON** and check the \`events\` array.
-2. Or export **detailed CSV** and verify \`event_index\` / \`event_text\` increased.
-
-If data exists in JSON/CSV but not on screen, suspect a **UI refresh** issue. If absent everywhere, the event may **not have been saved**.
+The app **does not offer export/backup UI**. If you can inspect **\`localStorage\`** with devtools, check whether the match blob’s \`events\` array contains the row. Missing there means it likely **never saved**; present there but not on screen points to a **UI refresh** issue.
 
 ### 4. Operator name
 
-The CSV **operator** column does not control visibility, but setting **Settings → display name** helps auditing who exported or operated.
+Setting **Settings → display name** helps auditing who operated, even though it does not control visibility.
 
 ## Still wrong?
 
@@ -1110,5 +875,4 @@ Note steps and tell the maintainer if it looks like a bug.
 ## See also
 
 - PK UI: [#/workspace/help/article/match_pk_recording](#/workspace/help/article/match_pk_recording)
-- CSV columns: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)
-`;export{b as _,v as a,y as b,w as c,f as d,g as e,_ as f,u as g,p as h,m as i,h as j,d as k,c as l,l as m,i as n,s as o,r as p,o as q,a as r,t as s,n as t,e as u};
+`;export{g as _,p as a,u as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,r as j,o as k,a as l,t as m,n,e as o};

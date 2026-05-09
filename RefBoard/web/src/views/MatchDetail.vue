@@ -5,7 +5,6 @@ import { useNui } from '../composables/useNui'
 import { mockMatchDetail } from '../data/matchDetailSeed'
 import type { MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/match'
 import type { Half } from '../types/local'
-import { downloadFile, downloadMatchCsvPack, exportMatchToJSON, refboardFilename, type CsvColumnSet } from '../utils/exporters'
 import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
 import { getElapsedMsFromClockState, parseEpochMsFromServer } from '../utils/matchClock'
 import type { ParsedMinute } from '../utils/matchTime'
@@ -58,8 +57,6 @@ const { push: toast } = useToast()
 
 const operatorName = computed(() => String(settings.settings.selfName ?? '').trim())
 const operatorIsSet = computed(() => operatorName.value.length > 0)
-
-const matchCsvColumnSet = ref<CsvColumnSet>('standard')
 
 const matchId = computed(() => Number(route.params.id))
 const rawMatch = computed(() => (matchId.value ? matchesStore.find(matchId.value) : null))
@@ -698,19 +695,6 @@ function onAddManual(p: { name: string; number: number | null }) {
   syncDetail()
 }
 
-function exportMatchJson() {
-  downloadFile(
-    exportMatchToJSON(detail, historyRows.value),
-    refboardFilename('refboard_match', 'json'),
-    'application/json;charset=utf-8',
-  )
-}
-
-function exportMatchEventsCsv() {
-  const m = rawMatch.value
-  if (!m) return
-  downloadMatchCsvPack(m, { operator: operatorName.value }, matchCsvColumnSet.value)
-}
 </script>
 
 <template>
@@ -789,33 +773,6 @@ function exportMatchEventsCsv() {
             <button type="button" class="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:brightness-110" @click="onSave">
               [保存する]
             </button>
-            <button
-              type="button"
-              class="rounded-lg border border-slate-600 px-2 py-1.5 text-xs text-slate-200"
-              :title="t('match_detail.export_json')"
-              @click="exportMatchJson"
-            >
-              JSON
-            </button>
-            <div class="flex flex-wrap items-center gap-1.5">
-              <label class="sr-only" for="match-csv-column-set">{{ t('data.csv_column_set') }}</label>
-              <select
-                id="match-csv-column-set"
-                v-model="matchCsvColumnSet"
-                class="max-w-[11rem] rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
-              >
-                <option value="standard">{{ t('data.csv_standard') }}</option>
-                <option value="detailed">{{ t('data.csv_detailed') }}</option>
-              </select>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-600 px-2 py-1.5 text-xs text-slate-200"
-                :title="t('match_detail.export_events_csv')"
-                @click="exportMatchEventsCsv"
-              >
-                CSV
-              </button>
-            </div>
             <button
               type="button"
               class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 text-slate-200 hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary"

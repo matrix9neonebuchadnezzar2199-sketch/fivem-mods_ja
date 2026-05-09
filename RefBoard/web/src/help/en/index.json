@@ -87,43 +87,6 @@
       ]
     },
     {
-      "id": "data",
-      "icon": "📊",
-      "title": "Data",
-      "children": [
-        {
-          "id": "data_view_history",
-          "title": "View history in Data",
-          "article": "data_view_history.md"
-        },
-        {
-          "id": "data_export",
-          "title": "Export to CSV",
-          "article": "data_export.md"
-        },
-        {
-          "id": "data_import",
-          "title": "Import a JSON backup",
-          "article": "data_import.md"
-        },
-        {
-          "id": "data_csv_format",
-          "title": "CSV export format (v0.3.0)",
-          "article": "data_csv_format.md"
-        },
-        {
-          "id": "data_csv_excel_open",
-          "title": "Open CSV in Excel",
-          "article": "data_csv_excel_open.md"
-        },
-        {
-          "id": "data_migration",
-          "title": "Move data to another PC (JSON)",
-          "article": "data_migration.md"
-        }
-      ]
-    },
-    {
       "id": "trouble",
       "icon": "🔧",
       "title": "Troubleshooting",

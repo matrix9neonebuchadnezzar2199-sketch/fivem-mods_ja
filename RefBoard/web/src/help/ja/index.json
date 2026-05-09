@@ -87,43 +87,6 @@
       ]
     },
     {
-      "id": "data",
-      "icon": "📊",
-      "title": "データ管理",
-      "children": [
-        {
-          "id": "data_view_history",
-          "title": "データ管理で履歴を見る",
-          "article": "data_view_history.md"
-        },
-        {
-          "id": "data_export",
-          "title": "CSV でエクスポートする",
-          "article": "data_export.md"
-        },
-        {
-          "id": "data_import",
-          "title": "JSON バックアップを取り込む",
-          "article": "data_import.md"
-        },
-        {
-          "id": "data_csv_format",
-          "title": "CSV 出力の形式（v0.3.0）",
-          "article": "data_csv_format.md"
-        },
-        {
-          "id": "data_csv_excel_open",
-          "title": "Excel で CSV を開く",
-          "article": "data_csv_excel_open.md"
-        },
-        {
-          "id": "data_migration",
-          "title": "別の PC へデータを移す（JSON）",
-          "article": "data_migration.md"
-        }
-      ]
-    },
-    {
       "id": "trouble",
       "icon": "🔧",
       "title": "トラブルシューティング",

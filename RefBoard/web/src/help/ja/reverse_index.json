@@ -74,55 +74,6 @@
       ]
     },
     {
-      "id": "data_off",
-      "icon": "📊",
-      "title": "データ・履歴",
-      "items": [
-        {
-          "id": "data_history_rev",
-          "title": "過去の試合や統計を見たい",
-          "article": "data_view_history.md",
-          "tags": ["データ管理", "履歴", "集計", "ログ"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_csv_rev",
-          "title": "CSV でダウンロードしたい",
-          "article": "data_export.md",
-          "tags": ["CSV", "Excel", "エクスポート", "BOM", "バックアップ"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_import_rev",
-          "title": "JSON やバックアップを取り込みたい",
-          "article": "data_import.md",
-          "tags": ["インポート", "取り込み", "JSON", "バックアップ", "restore", "端末移行", "部分マージ", "選択取り込み", "partial", "selective"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_csv_format_rev",
-          "title": "CSV の列やファイル構成を知りたい",
-          "article": "data_csv_format.md",
-          "tags": ["csv", "形式", "csv形式", "csv エクスポート", "エクスポート", "標準", "詳細", "summary", "events", "13列", "26列", "v0.3", "match_id", "operator", "出力"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_csv_excel_open_rev",
-          "title": "Excel で CSV を開く／文字化け対処",
-          "article": "data_csv_excel_open.md",
-          "tags": ["Excel", "文字化け", "BOM", "CSV", "データタブ", "区切り", "アポストロフィ", "日付", "45+2", "excel"],
-          "actionUrl": "#/workspace/data"
-        },
-        {
-          "id": "data_migration_rev",
-          "title": "別 PC へデータを移す",
-          "article": "data_migration.md",
-          "tags": ["移行", "migration", "別PC", "JSON", "バックアップ", "replace", "merge", "表示名", "selfName", "取り込み", "バックアップ 取り込み", "データ 移行"],
-          "actionUrl": "#/workspace/data"
-        }
-      ]
-    },
-    {
       "id": "before_match",
       "icon": "🗓️",
       "title": "試合の準備",

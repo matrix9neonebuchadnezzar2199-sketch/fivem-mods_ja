@@ -1,8 +1,8 @@
 ---
 title: イベントが画面に出ない／消えたように見える
 category: trouble
-tags: [イベント, 表示, 消えた, missing, リロード, JSON, タイムライン, PK, 記録, 確認, トラブル]
-related: [data_csv_format, match_pk_recording, trouble_undo_goal]
+tags: [イベント, 表示, 消えた, missing, リロード, タイムライン, PK, 記録, 確認, トラブル]
+related: [match_pk_recording, trouble_undo_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
 errorCode: null
@@ -23,19 +23,16 @@ errorCode: null
 
 ### 2. どの一覧を見ているか
 
-- **試合詳細のタイムライン** と **PK パネルの 2 列** は別物です。PK シュートは `penalty` としてタイムラインにも出ますが、**PK 専用列**では `text` 付きで表示されます。
+- **試合詳細のタイムライン** と **PK パネル** は別の表示です。PK シュートは `penalty` としてタイムラインにも出ますが、**PK 専用 UI**では行ごとに整理されます。
 - **小窓モード**の「直近イベント」は **PK 中は非表示**です。PK 中は全画面の PK UI を確認してください。
 
-### 3. 生データで確認する
+### 3. 保存の有無を切り分ける
 
-1. 試合詳細から **JSON エクスポート** を取得し、`events` 配列に該当イベントがあるか見る
-2. または **CSV（詳細）** を出力し、`event_index` と `event_text` が増えているか確認する
-
-JSON / CSV にあって画面にだけ無いなら **表示バグの可能性**、どちらにも無いなら **保存されていない**可能性が高いです。
+アプリは **ファイル書き出しやバックアップ UI を提供しません**。開発者向けにブラウザの開発者ツールで `localStorage` を確認できる場合は、試合データ内の `events` に該当行があるか見てください。無い場合は **保存されていない**可能性が高く、あるのに画面に無いなら **表示の更新**を疑ってください。
 
 ### 4. 操作者名（表示名）
 
-CSV の **operator** 列は記録の有無とは無関係ですが、運用上だれが操作したか追うときに **設定の表示名**を入れておくと後から調べやすくなります。
+記録の有無とは無関係ですが、運用上だれが操作したか追うときに **設定の表示名**を入れておくと後から調べやすくなります。
 
 ## それでもおかしいとき
 
@@ -47,4 +44,3 @@ CSV の **operator** 列は記録の有無とは無関係ですが、運用上�
 ## 関連
 
 - PK の見え方: [#/workspace/help/article/match_pk_recording](#/workspace/help/article/match_pk_recording)
-- CSV の列: [#/workspace/help/article/data_csv_format](#/workspace/help/article/data_csv_format)

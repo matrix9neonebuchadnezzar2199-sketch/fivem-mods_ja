@@ -17,20 +17,11 @@
     "team_add_roster_member",
     "intro_setup"
   ],
-  "data_manage": [
-    "data_view_history",
-    "data_export",
-    "data_import",
-    "data_csv_format",
-    "data_csv_excel_open",
-    "data_migration"
-  ],
   "compact_dock": [
     "compact_dock_usage",
     "match_pk_recording"
   ],
   "settings": [
-    "intro_setup",
-    "data_export"
+    "intro_setup"
   ]
 }
