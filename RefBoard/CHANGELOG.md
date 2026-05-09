@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.0 — 2026‑05‑09（BREAKING: データ管理・エクスポート削除）
+
+- **削除（破壊的変更）**: データ管理画面（`/workspace/data`）、試合詳細の JSON/CSV ボタン、`exporters` / `localImport` / `ImportBackupDialog`、関連単体テスト、i18n の `data.*` 一式、ヘルプ記事 6 本（`data_view_history` / `data_export` / `data_import` / `data_csv_format` / `data_csv_excel_open` / `data_migration`）と `index.json` の data カテゴリ・`reverse_index` の `data_off`・`context_map` の `data_manage`。
+- **PK 戦**: `PenaltyShootoutPanel` を **3 列**（通し番号・先攻・後攻）に再配置。入力 UI は各キック順列の下に配置。先攻は `pkFirstTeamId`（未設定時はホーム）。
+- **ヘルプ（試合詳細）**: `HelpHoverDialog` で記事本文を **モーダル内**に表示。記事内リンクは `router.push` せず slug を切替（←／Esc で一覧へ）。
+- **表示**: 赤牌イベントの内部的な `note`（`red_card` / `second_yellow`）がタイムラインにそのまま出ていた問題を修正（`localEventToRow`）。
+- **UX**: ゴール／カード／交代ダイアログで、試合時計に基づく分・ロスタイムを `eventMinutePresetFromClock` で **初期プリセット**（PK 中は従来どおり除外）。
+- **テスト**: `eventMinutePresetFromClock` のケースを `matchTime.test.ts` に追加（計 **37** 件）。
+- **注意**: 永続化は `localStorage` のみ。アプリからのバックアップ手段はない。
+- **保持**: 設定の開発者向け **疑似データ投入／試合系削除／全削除** は従来どおり。
+- 版数: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.4.0** に同期。
+
 ## v0.3.2 — 2026‑05‑10
 
 - **PK 戦**: `serverHalf === 'pk'` の間は小窓フラグに依存せず、**画面下部固定の PK 専用ドック**のみ表示（通常の試合編集 UI は非表示）。操作者行・「試合一覧に戻る」・`PenaltyShootoutPanel` を同梱。小窓と同寸法・`transparentChrome`／`compact_dock_state` は PK 中も有効化。

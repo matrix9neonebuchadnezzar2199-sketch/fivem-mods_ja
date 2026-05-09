@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.3.2（ローカル専用・PK 専用ドック／試合詳細ヘルプモーダル）
+- **対象バージョン**: v0.4.0（ローカル専用・データ管理廃止・PK 3 列ドック）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.3.2）
+## 3. ディレクトリ構成（v0.4.0）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.3.2'
+├─ fxmanifest.lua          version '0.4.0'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,13 +37,13 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.3.2（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.4.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
       ├─ main.ts           refboard:setOpen 受信、未処理例外トースト
       ├─ App.vue           settings.load() のみ
-      ├─ router/index.ts
+      ├─ router/index.ts   `/workspace/data` なし
       ├─ types/local.ts    Match/Team/Player/Event/ScoreHistory 型
       ├─ stores/
       │  ├─ matches.ts     試合 CRUD、時計、イベント、PK、手動編集、終了/再開
@@ -58,33 +58,29 @@ RefBoard/
       ├─ utils/
       │  ├─ localPersist.ts       localStorage ラッパ（v=1）
       │  ├─ localId.ts            ID カウンタ
-      │  ├─ matchTime.ts          イベント時刻 `45+2` パース／表示／CSV 用整形
+      │  ├─ matchTime.ts          イベント時刻 `45+2` パース／表示・`eventMinutePresetFromClock`
       │  ├─ localMatchAdapter.ts  Match → MatchDetailModel ブリッジ
-      │  ├─ exporters.ts          CSV（サマリ＋イベント標準13/詳細26列）／全データ JSON／`buildPreviewDetail`
-      │  ├─ exporters.test.ts     CSV 列数・PK・交代・エスケープ等
-      │  ├─ localImport.ts        JSON インポート（replace／merge／部分 merge）と取り込み履歴
+      │  ├─ matchTime.test.ts     parseMinute / preset 時計 等
       │  └─ errorCodeMapper.ts    E2001/E3004/E3006 のみ
       ├─ components/
       │  ├─ match/MinuteInput.vue  イベント時刻（分＋ロスタイム）入力
       │  ├─ match/CompactEventList.vue  小窓モード用・直近イベント（新しい順・スクロール）
-      │  ├─ help/HelpHoverDialog.vue   試合詳細など・コンテキストヘルプを中央モーダル表示
-      │  └─ data/ImportBackupDialog.vue  JSON 取り込みウィザード
+      │  └─ help/HelpHoverDialog.vue   試合詳細・記事一覧＋本文を同一モーダル内で表示（内部リンクは遷移しない）
       ├─ views/
       │  ├─ Launcher.vue          表示名入力 → 試合一覧へ
-      │  ├─ MainLayout.vue        sidebar + RouterView + ContextHelpPanel
+      │  ├─ MainLayout.vue        sidebar + RouterView + ContextHelpPanel（データ管理リンクなし）
       │  ├─ MatchList.vue         一覧／検索／削除／新規作成
       │  ├─ MatchDetail.vue       時計／ゴール／カード／交代／PK／手動編集／終了
       │  ├─ TeamManage.vue        チームとロスター
-      │  ├─ DataManage.vue        終了試合一覧、CSV、全データ JSON バックアップ／取り込み／履歴
       │  ├─ Settings.vue          表示名／locale／fontScale／marquee／背景
       │  └─ HelpView.vue          目次／逆引き／検索／コンテキスト
       ├─ help/
-      │  ├─ ja/articles/          22 本（intro 3／match 8／team 2／data 6／trouble 3）
+      │  ├─ ja/articles/          16 本（intro 3／match 8／team 2／trouble 3）※ data カテゴリ削除
       │  ├─ en/articles/          同上
-      │  ├─ ja|en/index.json      🔧 は trouble_undo_goal と trouble_e3006_player_has_events のみ
-      │  ├─ ja|en/reverse_index.json
-      │  └─ context_map.json
-      └─ i18n/{ja,en}.json        presence/autosave/lock/health/session 系は削除済み
+      │  ├─ ja|en/index.json
+      │  ├─ ja|en/reverse_index.json（data_off カテゴリ削除済み）
+      │  └─ context_map.json（data_manage キー削除）
+      └─ i18n/{ja,en}.json        `data.*` 系キー削除済み
 ```
 
 ## 4. リリース履歴
@@ -101,21 +97,19 @@ RefBoard/
 
 ## 5. 主要機構
 
-- **永続化**: `utils/localPersist.ts` がキーごとに `{ version: 1, data }` 形式で `localStorage` に書き、各ストアが `watch(deep)` で自動保存。`dumpAllLocal()` が全データ JSON バックアップの土台。
-- **JSON インポート**: `replace`（全削除→全書き込み）と `merge`（`nextId` で ID を払い直し追記、`settings` は現端末のまま）。`merge` ではチーム／ロスター／試合の 3 系列を個別選択でき、試合を選ぶとホーム/アウェイチームと登場ロスターが自動同伴（`autoIncludeRelated`、既定 ON）。取り込み履歴は端末内 20 件まで保持し、`partial` フラグで部分マージを区別。UI は `components/data/ImportBackupDialog.vue`、プレビュー詳細は `exporters.buildPreviewDetail`。完了後は **ページ再読み込み** で Pinia を再 hydrate。
+- **永続化**: `utils/localPersist.ts` がキーごとに `{ version: 1, data }` 形式で `localStorage` に書き、各ストアが `watch(deep)` で自動保存。**アプリ内の CSV／JSON エクスポート・バックアップ UI は v0.4.0 で削除**。ブラウザのサイトデータ削除や設定の「全データ削除」で失われたデータは復旧できない。
 - **ID 採番**: `utils/localId.ts` が match/team/player/rosterMember/event/scoreHistory のカウンタを `id_counters` キーで管理。
 - **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
 - **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
-- **PK 表示（v0.3.2）**: `serverHalf === 'pk'` の間は **通常の試合編集 UI を出さず**、画面**下部固定**の PK 専用ドックに `PenaltyShootoutPanel` のみ（小窓 ON/OFF に依存しない）。`compact_dock_state` と `transparentChrome` は **PK 中も true**（ゲーム視界優先）。`pk-shot` → `addEvent` 等のデータ経路は従来どおり。UI 用 `MatchEvent` は `localEventToRow` が `kind: 'penalty'`・`penaltySuccess`・**非空 `text`**・**`pkTeamId` / `pkPlayerNumber` / `pkPlayerName`**。パネルは **左＝ホーム・右＝アウェイ** の 2 列（`transparentChrome` 時は 1 列縮退）。
+- **PK 表示（v0.4.0）**: `serverHalf === 'pk'` の間は **通常の試合編集 UI を出さず**、画面**下部固定**の PK 専用ドックに `PenaltyShootoutPanel` のみ。`PenaltyShootoutPanel` は **3 列**（通し番号・先攻キック順・後攻）グリッド。入力（選手選択・成功／失敗）は **各チーム列の下**に配置。先攻／後攻は `pkFirstTeamId`（未設定時はホーム）基準。`pk-shot` → `addEvent` の経路は従来どおり。表示用 `MatchEvent` は `localEventToRow` が `text`・`pkTeamId` 等を付与。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
-- **小窓ドック直近イベント**: `MatchDetail.vue` の `compactDock && !isPkPhase` ブロック内で、`CompactEventList` を前後半カード列下に配置（v0.3.1〜）。PK 専用ドックでは直近イベントは出さず PK パネルに集約。
-- **ヘルプ**: ja/en 各 **22 本**。**試合詳細**の「?」は `HelpHoverDialog`（中央モーダル・`ContextHelpPanel` と同じ `context_map` 由来の一覧）。他画面は従来どおり `ContextHelpPanel` スライド（v0.4.0 で他画面のモーダル化を検討可）。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
-- **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
-- **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
-- **試合 CSV（B1・v0.3.0）**: `utils/exporters.ts` の `exportMatchSummaryToCSV`（9 列・試合 1 行）と `exportMatchEventsToCSV(match, { operator }, 'standard'|'detailed')`（イベント行・**13 / 26 列**）。`downloadMatchCsvPack` が約 200ms 間隔で `_summary.csv` と `_events.csv` を連続ダウンロード。正はローカル `Match` / `MatchEvent`（`voided`・`sub_in` は行として出力しない）。`event_text` は `localEventToRow` ベース。UI は `MatchDetail.vue` ヘッダと `DataManage.vue` 終了試合一覧（ドロップダウン＋ボタン）。旧 UI 専用 5 列のみの関数は `exportMatchEventsToCSVLegacy`。
-- **CSV/JSON ダウンロードと FiveM CEF（制約）**: **ブラウザ**（`npm run dev` または通常のタブで同一 `localStorage` を開く）では Blob 経由のダウンロードが動作する。**FiveM NUI（CEF）内では保存不可**が現状の前提。データ管理に `data.fivem_export_note` を表示。ゲーム内で完結させるには **v0.4.0** で NUI→Lua のファイル書き込みブリッジが必要。
-- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（またはブラウザ `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` と `localId` のバッチ永続化で `localPersist` へ一括書き込みし、**ページリロードなし**で `teams.reload()` / `matches.reload()` / `settings.load()` により Pinia を再 hydrate（v0.3.1〜。FiveM CEF での `location.reload` 起因の NUI フォーカス問題を回避）。10 チーム × 13 名・20 試合（終了／進行中 3／下書き 5）。**進行中のうち 1 件が PK デモ**。全削除時は `refboard_local_*` に加え `refboard_settings` と `refboard-locale` も除去。
+- **小窓ドック直近イベント**: `MatchDetail.vue` の `compactDock && !isPkPhase` ブロック内で、`CompactEventList` を前後半カード列下に配置。PK 専用ドックでは直近イベントは出さず PK パネルに集約。
+- **ヘルプ**: ja/en 各 **16 本**（data カテゴリ 6 本削除）。**試合詳細**の「?」は `HelpHoverDialog`：一覧から記事を選ぶと **同一モーダル内**で本文表示し、記事内の `#/workspace/help/article/…` リンクも **画面遷移せず** slug を切替（←／Esc で一覧へ）。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
+- **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定は従来どおり（`threshold: 0.35` 等）。評価クエリは `docs/testing/help_search_queries.md`（データ管理系クエリは削除）。`web/scripts/eval-help-fuse.mjs` で再評価可能。
+- **試合時刻入力**: `parseMinuteInput` に加え、オープン時の既定値に `eventMinutePresetFromClock(match, clockNowMs)`（前半／後半で 45+α・90+β に分離、PK は 0/null）。ゴール／カード／交代ダイアログは `MinuteInput` を開いた時点でプリセット。
+- **カード表示**: 赤牌イベントの `note` に保存する内部的な `red_card` / `second_yellow` は、タイムライン表示テキストにそのまま出さない（`localEventToRow`）。
+- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（または `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` で一括書き込みし **ページリロードなし**で Pinia を再 hydrate。10 チーム × 13 名・20 試合。**進行中のうち 1 件が PK デモ**。
 
 ## 6. 開発・ビルド・配布
 
@@ -127,17 +121,16 @@ npm run build        # web/dist 出力（FiveM 配布物）
 npx vue-tsc --noEmit # 型チェック
 ```
 
-- `npm test`: vitest による単体テスト（v0.2.1〜）。`src/**/*.test.ts` を実行。watch は `npm run test:watch`。
+- `npm test`: vitest による単体テスト。`matchTime.test.ts` 等（v0.4.0 時点 **37** 件）。watch は `npm run test:watch`。
 
 `fxmanifest.lua` は `web/dist/index.html` と `web/dist/**/*` をパッケージ。`server.cfg` には `ensure RefBoard` の 1 行のみ（`oxmysql` も ACE も不要）。`Config.OpenKey`（既定 F6）と `Config.DefaultLocale`（既定 `ja`）だけ設定可能。
 
-## 7. 既知の TODO（v0.3.2 時点）
+## 7. 既知の TODO（v0.4.0 時点）
 
-- **v0.4.0 最優先候補**: FiveM CEF 向け **CSV/JSON の NUI→Lua ファイル保存ブリッジ**（保存先・ファイル名・案内 UI の設計が必要）。
-- データ管理・チーム管理・設定の「?」を試合詳細同様の **モーダル化**（任意・要望次第）。
+- チーム管理・設定の「?」を試合詳細同様 **モーダル内で記事閲覧**へ揃える（任意）。
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
-- `intro_setup` のスクリーンショット差し替え（旧版のままなら更新）。
-- 外部スクリプトで **旧 5 列イベント CSV** 前提の取り込みが無ければ、**v0.4.0** で `exportMatchEventsToCSVLegacy` の削除を検討（現状は保険として残置）。
+- `intro_setup` のスクリーンショット差し替え（任意）。
+- **v0.5.0 候補**: 大会／リーグ集計（旧 B2）、Fuse クエリの再チューニング（データ系記事削除により「CSV」等の短語が別記事に吸われる）。
 
 ## 8. 実機テストの始め方
 
@@ -147,9 +140,8 @@ npx vue-tsc --noEmit # 型チェック
 4. チーム管理で 2 チーム以上作成、各チームにロスターを 5〜11 名追加。
 5. 試合管理 → 新規作成 → ハーフ分数を 1 分などに短縮して時計動作を確認。
 6. ゴール／カード／交代／PK／手動スコア／終了／再開を一通り確認。
-7. データ → CSV と全データ JSON バックアップを取得。
-8. F5 でリロードしてデータが永続していることを確認。
-9. 不具合は `RefBoard/docs/diary/` にその日のファイルを起こして記録。
+7. F5 でリロードしてデータが永続していることを確認。
+8. 不具合は `RefBoard/docs/diary/` にその日のファイルを起こして記録。
 
 ## 9. ロードマップ（v0.2.0 → v1.0.0）
 
@@ -159,7 +151,8 @@ npx vue-tsc --noEmit # 型チェック
 - **v0.3.0（完了）**: **B1** CSV、**I** ヘルプ 22 本。タグ `v0.3.0`。
 - **v0.3.1（完了）**: 疑似データ `reload` 廃止＋Pinia 再 hydrate、`downloadFile` の DOM クリック改善、小窓 `CompactEventList` 配置。タグ `v0.3.1`。
 - **v0.3.2（完了）**: PK 中は下部固定 PK 専用ドック、試合詳細ヘルプを `HelpHoverDialog`、FiveM 向け CSV/JSON 不可の注意文。タグ `v0.3.2`。
-- **v0.4.0（候補）**: **FiveM 内ファイルエクスポート（NUI→Lua）**、JSON インポート完了後の `location.reload` 置換、大会／リーグ集計（旧 B2）、CSV ZIP、ヘルプ追補・他画面ヘルプモーダル化、`exportMatchEventsToCSVLegacy` 削除可否。
+- **v0.4.0（完了）**: **データ管理画面・CSV/JSON 機能の全削除**（BREAKING）。PK ドック 3 列化、`HelpHoverDialog` 内で記事遷移、赤牌 `note` 表示修正、イベント時刻プリセット。タグ **`v0.4.0`**。
+- **v0.5.0（候補）**: 大会／リーグ集計（旧 B2）、他画面ヘルプのモーダル統一、`intro_setup` スクショ、Fuse 再調整。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -167,8 +160,8 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.3.2。タグ `v0.3.2`。FiveM 内 CSV/JSON は未対応（ブラウザでエクスポート）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: **v0.4.0** の NUI→Lua エクスポート設計、その他ロードマップ候補の優先度、§7 の PK キャンセル UI など。
+> 現状: v0.4.0。タグ `v0.4.0`。バックアップ UI なし（`localStorage` のみ）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 次着手候補: §7 の PK キャンセル UI、v0.5.0 候補（集計・ヘルプ統一など）。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
 短縮フレーズ: `小窓モードいって` / `PK キャンセルいって`
@@ -192,3 +185,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑10: **I** ヘルプ 22 本化（`data_csv_format` / `data_csv_excel_open` / `data_migration` / `match_pk_recording` / `compact_dock_usage` / `troubleshooting_event_disappears`）。`index.json`・`reverse_index.json`・`context_map.json`・Fuse 評価クエリを更新。Git タグ **`v0.3.0`**（コミット `5c456d8`）。
 - 2026‑05‑10: **v0.3.1** 疑似データ操作から `location.reload` を除去し Pinia 再 hydrate、`localPersist.saveLocalBatch` と `localId` バッチ、`downloadFile` の DOM 追加クリック、小窓の直近イベントを前後半カード列下へ。Git タグ **`v0.3.1`**。
 - 2026‑05‑10: **v0.3.2** PK 戦を常に下部固定の専用ドックで表示、`HelpHoverDialog`、データ管理に FiveM エクスポート不可の注記。Git タグ **`v0.3.2`**。
+- 2026‑05‑09: **v0.4.0** データ管理・CSV/JSON・関連ヘルプ削除（破壊的変更）。PK 3 列 UI、ヘルプモーダル内ナビ、赤牌表示、試合分プリセット、`eventMinutePresetFromClock` テスト追加。Git タグ **`v0.4.0`**。
