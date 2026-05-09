@@ -17,9 +17,51 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
 
 1. `PolaPaint` を `resources` 配下に配置する。
 2. `config.lua` の `Config.DiscordWebhook` に、Discord サーバーで発行した **Incoming Webhook の完全な URL** を設定する（`?wait=true` はサーバー側で自動付与されます）。
-3. `ox_inventory` の `items.lua` に、`snippets/ox_inventory_items.lua.example` を参考にアイテムを追加する（アイテム名は `config.lua` の `Config.Items` と一致させる）。
-4. スロット用アイコンは **`assets/inventory_icons/polaroid_camera.png` と `polaroid_photo.png`** を `ox_inventory/web/images/` にコピーする（リポに同梱済み。割当が逆なら README.txt の追記を参照）。
+3. `ox_inventory` の `data/items.lua`（または運用中の items 定義）に、**下記「アイテム設定コード」**を追記する。キー名は `config.lua` の `Config.Items.camera` / `Config.Items.photo` と一致させる（既定は `polaroid_camera` / `polaroid_photo`）。
+4. スロット用アイコンは **`assets/inventory_icons/polaroid_camera.png` と `polaroid_photo.png`** を `ox_inventory/web/images/` にコピーする（リポに同梱済み。割当が逆なら `assets/inventory_icons/README.txt` を参照）。
 5. `refresh` 後、`ensure PolaPaint` で起動確認する。
+
+## ox_inventory アイテム設定（items.lua 追記例）
+
+`ox_inventory/web/images/` に `polaroid_camera.png` と `polaroid_photo.png` を置いたうえで、items 定義へ以下を追加する（`image` は拡張子なしのベース名）。
+
+```lua
+['polaroid_camera'] = {
+    label = 'ポラロイドカメラ',
+    weight = 400,
+    stack = true,
+    consume = 0,
+    close = true,
+    description = '画面を撮影してチェキアイテムを作成する',
+    client = {
+        image = 'polaroid_camera',
+        export = 'PolaPaint.useCamera',
+    },
+},
+
+['polaroid_photo'] = {
+    label = 'チェキ（写真）',
+    weight = 50,
+    stack = false,
+    consume = 0,
+    close = true,
+    description = '使用: 落書き編集 / 右クリックメニュー「チェキを見る」: 閲覧のみ',
+    client = {
+        image = 'polaroid_photo',
+        export = 'PolaPaint.usePhoto',
+    },
+    buttons = {
+        {
+            label = 'チェキを見る',
+            action = function(slot)
+                exports['PolaPaint']:openPhotoViewer(slot)
+            end,
+        },
+    },
+},
+```
+
+同一内容のファイル: `snippets/ox_inventory_items.lua.example`（コメント付き）。
 
 Webhook の実トークンをリポジトリにコミットしないこと。ローカル用のメモファイルは `.gitignore` で除外する運用を推奨します。
 
