@@ -13,7 +13,7 @@
     client = {
         -- 128×128 透過 PNG を assets/inventory_icons/ で作成し、ox_inventory/web/images/ にコピーしたうえでベース名を指定（拡張子なし）
         image = 'polaroid_camera',
-        export = 'PolaPaint.useCamera',
+        export = 'polapaint.useCamera',
     },
 },
 
@@ -26,13 +26,13 @@
     description = '使用: 落書き編集 / 右クリックメニュー「チェキを見る」: 閲覧のみ',
     client = {
         image = 'polaroid_photo',
-        export = 'PolaPaint.usePhoto',
+        export = 'polapaint.usePhoto',
     },
     buttons = {
         {
             label = 'チェキを見る',
             action = function(slot)
-                exports['PolaPaint']:openPhotoViewer(slot)
+                exports['polapaint']:openPhotoViewer(slot)
             end,
         },
     },

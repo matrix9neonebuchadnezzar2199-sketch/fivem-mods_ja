@@ -46,7 +46,7 @@ CreateThread(function()
     end
 end)
 
-RegisterNetEvent('PolaPaint:client:notify', function(msg)
+RegisterNetEvent('polapaint:client:notify', function(msg)
     if type(msg) == 'string' and msg ~= '' then
         notify(msg)
     end
@@ -76,17 +76,17 @@ local function isScreenshotBasicReady()
     return GetResourceState('screenshot-basic') == 'started'
 end
 
--- ox_inventory items.lua: client.export = 'PolaPaint.useCamera'
+-- ox_inventory items.lua: client.export = 'polapaint.useCamera'
 exports('useCamera', function(_, _)
     if uiOpen or captureBusy then return end
     if not isScreenshotBasicReady() then
         notify(L('notify_screenshot_basic_missing'))
         return
     end
-    TriggerServerEvent('PolaPaint:server:requestCapture')
+    TriggerServerEvent('polapaint:server:requestCapture')
 end)
 
-RegisterNetEvent('PolaPaint:client:doCapture', function()
+RegisterNetEvent('polapaint:client:doCapture', function()
     if captureBusy or uiOpen then return end
     if not isScreenshotBasicReady() then
         notify(L('notify_screenshot_basic_missing'))
@@ -126,13 +126,13 @@ RegisterNetEvent('PolaPaint:client:doCapture', function()
     if not ok then
         captureBusy = false
         if Config.Debug then
-            print(('[PolaPaint] requestScreenshot failed: %s'):format(tostring(err)))
+            print(('[polapaint] requestScreenshot failed: %s'):format(tostring(err)))
         end
         notify(L('notify_capture_fail'))
     end
 end)
 
--- ox_inventory: client.export = 'PolaPaint.usePhoto'（編集）
+-- ox_inventory: client.export = 'polapaint.usePhoto'（編集）
 exports('usePhoto', function(data, slot)
     if uiOpen or captureBusy then return end
     local url = slotPhotoUrl(data, slot)
@@ -157,7 +157,7 @@ exports('usePhoto', function(data, slot)
     })
 end)
 
--- ox_inventory items.lua の buttons から: exports.PolaPaint:openPhotoViewer(slot)
+-- ox_inventory items.lua の buttons から: exports['polapaint']:openPhotoViewer(slot)
 ---@param slotId number inventory スロット番号
 exports('openPhotoViewer', function(slotId)
     if uiOpen or captureBusy then return end
@@ -213,7 +213,7 @@ RegisterNUICallback('captureWithName', function(data, cb)
         return
     end
     closeUi()
-    TriggerServerEvent('PolaPaint:server:submitCapture', b64, name)
+    TriggerServerEvent('polapaint:server:submitCapture', b64, name)
 end)
 
 RegisterNUICallback('savePaint', function(data, cb)
@@ -230,5 +230,5 @@ RegisterNUICallback('savePaint', function(data, cb)
         notify(L('notify_edit_fail'))
         return
     end
-    TriggerServerEvent('PolaPaint:server:submitEdited', slot, b64)
+    TriggerServerEvent('polapaint:server:submitEdited', slot, b64)
 end)

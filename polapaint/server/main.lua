@@ -14,7 +14,7 @@ end
 ---@param msg string
 local function dbg(msg)
     if Config.Debug then
-        print(('[PolaPaint] %s'):format(msg))
+        print(('[polapaint] %s'):format(msg))
     end
 end
 
@@ -136,7 +136,7 @@ local function discordUploadJpeg(b64, cb)
         cb(nil, 'decode')
         return
     end
-    local boundary = '----PolaPaintBoundary' .. tostring(math.random(100000000, 999999999))
+    local boundary = '----polapaintBoundary' .. tostring(math.random(100000000, 999999999))
     local crlf = '\r\n'
     local head = table.concat({
         '--',
@@ -184,10 +184,10 @@ end
 
 ---@param src number
 local function notify(src, key)
-    TriggerClientEvent('PolaPaint:client:notify', src, L(key))
+    TriggerClientEvent('polapaint:client:notify', src, L(key))
 end
 
-RegisterNetEvent('PolaPaint:server:requestCapture', function()
+RegisterNetEvent('polapaint:server:requestCapture', function()
     local src = source
     if not checkCooldown(src, 'capture', Config.CaptureCooldownSec or 4) then
         notify(src, 'notify_capture_cooldown')
@@ -204,12 +204,12 @@ RegisterNetEvent('PolaPaint:server:requestCapture', function()
         notify(src, 'notify_no_camera')
         return
     end
-    TriggerClientEvent('PolaPaint:client:doCapture', src)
+    TriggerClientEvent('polapaint:client:doCapture', src)
 end)
 
 ---@param b64Payload string|nil
 ---@param photoLabel string|nil
-RegisterNetEvent('PolaPaint:server:submitCapture', function(b64Payload, photoLabel)
+RegisterNetEvent('polapaint:server:submitCapture', function(b64Payload, photoLabel)
     local src = source
     if type(b64Payload) ~= 'string' then return end
     b64Payload = b64Payload:gsub('^%s+', ''):gsub('%s+$', '')
@@ -251,7 +251,7 @@ end)
 
 ---@param slot number|nil
 ---@param b64Payload string|nil
-RegisterNetEvent('PolaPaint:server:submitEdited', function(slot, b64Payload)
+RegisterNetEvent('polapaint:server:submitEdited', function(slot, b64Payload)
     local src = source
     slot = tonumber(slot)
     if not slot or type(b64Payload) ~= 'string' then return end

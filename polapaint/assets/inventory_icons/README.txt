@@ -1,4 +1,4 @@
-PolaPaint — ox_inventory スロット用アイコン素材置き場
+polapaint — ox_inventory スロット用アイコン素材置き場
 
 【画像生成プロンプト案】
 - `IMAGE_PROMPTS.md`（AI 生成・外注用の日本語/英語プロンプト例）
@@ -23,4 +23,4 @@ PolaPaint — ox_inventory スロット用アイコン素材置き場
 1. 上記 PNG を ox_inventory の web/images/（環境によっては同様の画像フォルダ）へコピーする
 2. data/items.lua 側では image は「拡張子なし」のベース名で書くのが一般的です（.png を二重に付けない）
 
-※ このフォルダの画像は PolaPaint の NUI からは参照しません。インベントリ表示専用の保管・差し替え用です。
+※ このフォルダの画像は polapaint の NUI からは参照しません。インベントリ表示専用の保管・差し替え用です。

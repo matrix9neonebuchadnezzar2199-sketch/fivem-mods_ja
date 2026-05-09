@@ -49,7 +49,7 @@
   const MAX_UNDO = 28;
 
   function resourceName() {
-    return typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'PolaPaint';
+    return typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'polapaint';
   }
 
   function postNui(endpoint, data) {

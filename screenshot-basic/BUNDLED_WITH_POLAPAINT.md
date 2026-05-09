@@ -4,7 +4,7 @@
 
 ## 運用
 
-- サーバの `resources`（例: `[jp-mods]`）に **`screenshot-basic` フォルダごと**配置し、`server.cfg` で **`ensure screenshot-basic`** を **`ensure PolaPaint` より前**に書いてください。
+- サーバの `resources`（例: `[jp-mods]`）に **`screenshot-basic` フォルダごと**配置し、`server.cfg` で **`ensure screenshot-basic`** を **`ensure polapaint` より前**に書いてください。
 - 本同梱版は **事前ビルド済み**のため、元リポジトリの `dependency 'yarn'` / `webpack` は **不要**です（`fxmanifest.lua` を差し替え済み）。
 
 ## 再ビルド（メンテナンス用）

@@ -1,25 +1,25 @@
-# PolaPaint
+# polapaint（拡張ポラロイドカメラ）
 
 FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し、Discord Incoming Webhook で画像 URL を発行、`ox_inventory` のメタデータに保存します。写真アイテムは NUI で落書きし、再アップロードして同じスロットの `metadata.url` を上書きできます。
 
 ## ライセンス
 
-本ディレクトリ配下のコードは **GNU General Public License v3.0**（`LICENSE` 参照）です。リポジトリ他部分が別ライセンスでも、PolaPaint サブツリーは GPL-3.0 が適用されます。
+本ディレクトリ配下のコードは **GNU General Public License v3.0**（`LICENSE` 参照）です。リポジトリ他部分が別ライセンスでも、polapaint サブツリーは GPL-3.0 が適用されます。
 
 ## 依存リソース
 
 - [ox_inventory](https://github.com/overextended/ox_inventory) … **必須**（`fxmanifest` の `dependency`）
-- **screenshot-basic** … **撮影に必須**。本リポの **ルート直下 `screenshot-basic/`** に MIT ライセンスのもと**ビルド済み同梱**（`LICENSE` / `BUNDLED_WITH_POLAPAINT.md` 参照）。サーバの `resources` に **PolaPaint と同じ階層**でフォルダごとコピーし、`server.cfg` で **`ensure screenshot-basic` を `ensure PolaPaint` より前**に書く。
+- **screenshot-basic** … **撮影に必須**。本リポの **ルート直下 `screenshot-basic/`** に MIT ライセンスのもと**ビルド済み同梱**（`LICENSE` / `BUNDLED_WITH_POLAPAINT.md` 参照）。サーバの `resources` に **polapaint と同じ階層**でフォルダごとコピーし、`server.cfg` で **`ensure screenshot-basic` を `ensure polapaint` より前**に書く。
 
-`server.cfg` では、`ox_inventory` と `screenshot-basic` の **後** に `ensure PolaPaint` するようにしてください。
+`server.cfg` では、`ox_inventory` と `screenshot-basic` の **後** に `ensure polapaint` するようにしてください。
 
 ## 導入手順
 
-1. `PolaPaint` と **`screenshot-basic`**（リポルートのフォルダ）を `resources` 配下に**同じ階層で**配置する（例: `[jp-mods]/PolaPaint` と `[jp-mods]/screenshot-basic`）。
+1. `polapaint` と **`screenshot-basic`**（リポルートのフォルダ）を `resources` 配下に**同じ階層で**配置する（例: `[jp-mods]/polapaint` と `[jp-mods]/screenshot-basic`）。
 2. `config.lua` の `Config.DiscordWebhook` に、Discord サーバーで発行した **Incoming Webhook の完全な URL** を設定する（`?wait=true` はサーバー側で自動付与されます）。
 3. `ox_inventory` の `data/items.lua`（または運用中の items 定義）に、**下記「アイテム設定コード」**を追記する。キー名は `config.lua` の `Config.Items.camera` / `Config.Items.photo` と一致させる（既定は `polaroid_camera` / `polaroid_photo`）。
 4. スロット用アイコンは **`assets/inventory_icons/polaroid_camera.png` と `polaroid_photo.png`** を `ox_inventory/web/images/` にコピーする（リポに同梱済み。割当が逆なら `assets/inventory_icons/README.txt` を参照）。
-5. `refresh` 後、`ensure PolaPaint` で起動確認する。
+5. `refresh` 後、`ensure polapaint` で起動確認する。
 
 ## ox_inventory アイテム設定（items.lua 追記例）
 
@@ -35,7 +35,7 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
     description = '画面を撮影してチェキアイテムを作成する',
     client = {
         image = 'polaroid_camera',
-        export = 'PolaPaint.useCamera',
+        export = 'polapaint.useCamera',
     },
 },
 
@@ -48,13 +48,13 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
     description = '使用: 落書き編集 / 右クリックメニュー「チェキを見る」: 閲覧のみ',
     client = {
         image = 'polaroid_photo',
-        export = 'PolaPaint.usePhoto',
+        export = 'polapaint.usePhoto',
     },
     buttons = {
         {
             label = 'チェキを見る',
             action = function(slot)
-                exports['PolaPaint']:openPhotoViewer(slot)
+                exports['polapaint']:openPhotoViewer(slot)
             end,
         },
     },
@@ -81,12 +81,12 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 
 ## トラブルシュート
 
-- **`Could not find dependency screenshot-basic`** … `screenshot-basic` フォルダがサーバの `resources` に無い、または名前が違う。本リポの **`screenshot-basic/` を PolaPaint と並べてコピー**し、`ensure screenshot-basic` を追加する。
+- **`Could not find dependency screenshot-basic`** … `screenshot-basic` フォルダがサーバの `resources` に無い、または名前が違う。本リポの **`screenshot-basic/` を polapaint と並べてコピー**し、`ensure screenshot-basic` を追加する。
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
 - **ペイント保存で真っ黒・失敗** … 外部画像の CORS により Canvas が汚染されている可能性があります。Discord CDN の URL で通常は問題ありません。
 
 ## 開発メモ
 
-- イベント名は `PolaPaint:server:*` / `PolaPaint:client:*` です。
+- イベント名は `polapaint:server:*` / `polapaint:client:*` です。
 - 文字コードは **UTF-8（BOM なし）** で保存してください。

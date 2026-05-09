@@ -3,7 +3,7 @@ game 'gta5'
 lua54 'yes'
 
 author 'JP-Mods'
-description '拡張ポラロイドカメラ — 撮影・Discord Webhook 保存・NUI で落書きして再アップロード（ox_inventory / screenshot-basic）'
+description 'polapaint — 拡張ポラロイドカメラ（撮影・Discord Webhook・NUI 編集 / ox_inventory + screenshot-basic）'
 version '1.0.0'
 license 'GPL-3.0'
 

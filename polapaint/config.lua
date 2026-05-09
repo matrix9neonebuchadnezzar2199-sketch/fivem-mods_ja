@@ -5,7 +5,7 @@ Config.Locale = 'ja'
 
 --[[ Discord Incoming Webhook の完全な URL（https://discord.com/api/webhooks/...）
      配布時はダミーのまま。運営環境では実 URL に差し替えること。
-     実トークンはリポに含めない（例: PolaPaint/ウェブフックキー.txt は .gitignore 済み）。 ]]
+     実トークンはリポに含めない（例: polapaint/ウェブフックキー.txt は .gitignore 済み）。 ]]
 Config.DiscordWebhook = 'https://discord.com/api/webhooks/000000000000000000/REPLACE_ME'
 
 --[[ ox_inventory の items.lua で定義するアイテム名（キーと一致させる）
