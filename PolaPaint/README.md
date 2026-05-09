@@ -8,10 +8,10 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
 
 ## 依存リソース
 
-- [ox_inventory](https://github.com/overextended/ox_inventory)
-- [screenshot-basic](https://github.com/citizenfx/screenshot-basic)
+- [ox_inventory](https://github.com/overextended/ox_inventory) … **必須**（`fxmanifest` の `dependency`）
+- [screenshot-basic](https://github.com/citizenfx/screenshot-basic) … **撮影に必須**だが、未導入でもリソースは起動する（カメラ使用時に不足通知）。導入する場合は `server.cfg` で **`ensure screenshot-basic` を PolaPaint より前**に書く。
 
-`server.cfg` では、上記の **後** に `ensure PolaPaint` するようにしてください。
+`server.cfg` では、`ox_inventory` と（使うなら）`screenshot-basic` の **後** に `ensure PolaPaint` するようにしてください。
 
 ## 導入手順
 
@@ -81,6 +81,7 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 
 ## トラブルシュート
 
+- **`Could not find dependency screenshot-basic`**（旧バージョン）… 現行版では `screenshot-basic` は必須依存ではない。撮影だけ使うなら [screenshot-basic](https://github.com/citizenfx/screenshot-basic) を `resources` に入れ、`ensure screenshot-basic` を追加する。
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
 - **ペイント保存で真っ黒・失敗** … 外部画像の CORS により Canvas が汚染されている可能性があります。Discord CDN の URL で通常は問題ありません。

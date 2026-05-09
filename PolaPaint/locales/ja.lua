@@ -6,6 +6,7 @@ Locales.ja = {
     notify_capture_fail = '撮影の保存に失敗しました。',
     notify_capture_cooldown = '少し待ってからもう一度撮影してください。',
     notify_no_camera = 'ポラロイドカメラを持っていません。',
+    notify_screenshot_basic_missing = '撮影には screenshot-basic が必要です。リソースを追加し server.cfg で ensure screenshot-basic を実行してください。',
     notify_webhook_not_configured = 'サーバー側の Webhook が未設定です（config.lua）。',
     notify_photo_no_url = 'この写真には画像 URL がありません。',
     notify_edit_saved = '編集を保存しました。',

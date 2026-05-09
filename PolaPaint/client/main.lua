@@ -71,14 +71,27 @@ local function getSlotItem(slotNum)
     return inv[slotNum]
 end
 
+---@return boolean
+local function isScreenshotBasicReady()
+    return GetResourceState('screenshot-basic') == 'started'
+end
+
 -- ox_inventory items.lua: client.export = 'PolaPaint.useCamera'
 exports('useCamera', function(_, _)
     if uiOpen or captureBusy then return end
+    if not isScreenshotBasicReady() then
+        notify(L('notify_screenshot_basic_missing'))
+        return
+    end
     TriggerServerEvent('PolaPaint:server:requestCapture')
 end)
 
 RegisterNetEvent('PolaPaint:client:doCapture', function()
     if captureBusy or uiOpen then return end
+    if not isScreenshotBasicReady() then
+        notify(L('notify_screenshot_basic_missing'))
+        return
+    end
     captureBusy = true
     notify(L('notify_capture_started'))
     local enc = 'jpg'
