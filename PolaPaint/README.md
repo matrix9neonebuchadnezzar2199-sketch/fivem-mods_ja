@@ -23,11 +23,17 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
 
 Webhook の実トークンをリポジトリにコミットしないこと。ローカル用のメモファイルは `.gitignore` で除外する運用を推奨します。
 
+## 設計メモ
+
+- **カメラ**: `items.lua` では **`stack = true`** 推奨（複数台を同一スロットにまとめる）。撮影してもカメラは消費しません（`consume = 0`）。
+- **写真**: 撮影後に NUI で **名前を入力** → 付与される `polaroid_photo` の **`metadata.label`** にその名前が入ります（長さは `Config.MaxPhotoNameLength` でサーバー検証）。
+- **アイコン素材用プロンプト**: `assets/inventory_icons/IMAGE_PROMPTS.md` を参照。
+
 ## 操作
 
 | 操作 | 内容 |
 | --- | --- |
-| ポラロイドカメラを使用 | 撮影 → 最大幅 `Config.MaxImageWidth` に縮小 → Webhook 経由でアップロード → `polaroid_photo` を 1 枚付与 |
+| ポラロイドカメラを使用 | 撮影 → 名前入力ウィンドウ → 最大幅 `Config.MaxImageWidth` に縮小済み画像を Webhook へ → `polaroid_photo` を 1 枚付与（指定名をメタデータに保存） |
 | 写真アイテムを使用 | ペイント NUI（保存で同じスロットの URL を更新） |
 | インベントリのコンテキスト「チェキを見る」 | チェキ風フレームの閲覧のみ NUI |
 

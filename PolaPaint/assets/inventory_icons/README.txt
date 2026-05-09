@@ -1,5 +1,8 @@
 PolaPaint — ox_inventory スロット用アイコン素材置き場
 
+【画像生成プロンプト案】
+- `IMAGE_PROMPTS.md`（AI 生成・外注用の日本語/英語プロンプト例）
+
 【推奨仕様】
 - サイズ: 128×128 px
 - 形式: PNG

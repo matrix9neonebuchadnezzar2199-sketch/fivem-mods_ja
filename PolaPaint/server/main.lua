@@ -54,6 +54,19 @@ end
 
 ---@param url string
 ---@return boolean
+---@param label string|nil
+---@return string|nil
+local function normalizePhotoLabel(label)
+    local maxLen = Config.MaxPhotoNameLength or 40
+    if type(label) ~= 'string' then return nil end
+    label = label:gsub('^%s+', ''):gsub('%s+$', '')
+    local len = utf8.len(label)
+    if not len or len < 1 or len > maxLen then
+        return nil
+    end
+    return label
+end
+
 local function isDiscordAttachmentUrl(url)
     if type(url) ~= 'string' or not url:match('^https://') then return false end
     if url:match('^https://cdn%.discordapp%.com/attachments/') then return true end
@@ -195,13 +208,19 @@ RegisterNetEvent('PolaPaint:server:requestCapture', function()
 end)
 
 ---@param b64Payload string|nil
-RegisterNetEvent('PolaPaint:server:submitCapture', function(b64Payload)
+---@param photoLabel string|nil
+RegisterNetEvent('PolaPaint:server:submitCapture', function(b64Payload, photoLabel)
     local src = source
     if type(b64Payload) ~= 'string' then return end
     b64Payload = b64Payload:gsub('^%s+', ''):gsub('%s+$', '')
     local maxLen = Config.MaxBase64PayloadLength or 4500000
     if #b64Payload > maxLen then
         notify(src, 'notify_payload_too_large')
+        return
+    end
+    local labelOk = normalizePhotoLabel(photoLabel)
+    if not labelOk then
+        notify(src, 'notify_photo_name_invalid')
         return
     end
     local cam = Config.Items and Config.Items.camera
@@ -219,7 +238,7 @@ RegisterNetEvent('PolaPaint:server:submitCapture', function(b64Payload)
         end
         local meta = {
             url = url,
-            label = L('meta_photo_label'),
+            label = labelOk,
         }
         local ok = ox:AddItem(src, photo, 1, meta)
         if not ok then

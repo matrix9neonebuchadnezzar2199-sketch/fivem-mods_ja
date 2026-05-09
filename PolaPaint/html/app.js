@@ -30,8 +30,14 @@
   const btnClear = document.getElementById('btn-clear');
   const btnSave = document.getElementById('btn-save');
   const editorClose = document.getElementById('editor-close');
+  const nameOverlay = document.getElementById('name-overlay');
+  const nameTitle = document.getElementById('name-title');
+  const nameInput = document.getElementById('name-input');
+  const nameConfirm = document.getElementById('name-confirm');
+  const nameCancel = document.getElementById('name-cancel');
 
   let jpegQuality = 0.85;
+  let pendingCaptureB64 = null;
   let paintSlot = null;
   let drawCtx = null;
   let drawing = false;
@@ -90,13 +96,50 @@
 
   function hideAll() {
     app.classList.add('hidden');
+    nameOverlay.classList.add('hidden');
     viewer.classList.add('hidden');
     editor.classList.add('hidden');
     viewerImg.removeAttribute('src');
+    pendingCaptureB64 = null;
+    nameInput.value = '';
     paintSlot = null;
     undoStack = [];
     drawing = false;
     strokeDirty = false;
+  }
+
+  function openCaptureNameDialog(b64, nameDialog, maxNameLen) {
+    pendingCaptureB64 = b64;
+    const nd = nameDialog || {};
+    nameTitle.textContent = nd.title || '';
+    nameInput.placeholder = nd.placeholder || '';
+    nameConfirm.textContent = nd.confirm || 'OK';
+    nameCancel.textContent = nd.cancel || 'Cancel';
+    const cap = typeof maxNameLen === 'number' && maxNameLen > 0 ? maxNameLen : 40;
+    nameInput.maxLength = Math.min(128, cap * 2);
+    nameInput.value = '';
+    app.classList.remove('hidden');
+    nameOverlay.classList.remove('hidden');
+    viewer.classList.add('hidden');
+    editor.classList.add('hidden');
+    setTimeout(function () {
+      nameInput.focus();
+    }, 50);
+  }
+
+  function submitCaptureName() {
+    if (!pendingCaptureB64) return;
+    const raw = nameInput.value.trim();
+    if (!raw) return;
+    postNui('captureWithName', { base64: pendingCaptureB64, name: raw });
+    pendingCaptureB64 = null;
+    nameInput.value = '';
+  }
+
+  function cancelCaptureName() {
+    pendingCaptureB64 = null;
+    nameInput.value = '';
+    postNui('close', {});
   }
 
   function openViewerMode(payload) {
@@ -105,6 +148,7 @@
     viewerTitle.textContent = strings.title || '';
     viewerClose.textContent = strings.close || '閉じる';
     viewerImg.src = url;
+    nameOverlay.classList.add('hidden');
     app.classList.remove('hidden');
     viewer.classList.remove('hidden');
     editor.classList.add('hidden');
@@ -173,6 +217,7 @@
     btnSave.textContent = strings.save || '保存';
     editorClose.textContent = strings.close || '閉じる';
 
+    nameOverlay.classList.add('hidden');
     app.classList.remove('hidden');
     editor.classList.remove('hidden');
     viewer.classList.add('hidden');
@@ -297,6 +342,19 @@
     savePaint();
   });
 
+  nameCancel.addEventListener('click', function () {
+    cancelCaptureName();
+  });
+  nameConfirm.addEventListener('click', function () {
+    submitCaptureName();
+  });
+  nameInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitCaptureName();
+    }
+  });
+
   cvDraw.addEventListener('mousedown', onDrawDown);
   window.addEventListener('mousemove', onDrawMove);
   window.addEventListener('mouseup', onDrawUp);
@@ -311,10 +369,14 @@
     if (msg.action === 'downscaleScreenshot') {
       downscaleDataUri(msg.dataUri, msg.maxWidth || 2560, msg.quality || 0.85)
         .then(function (b64) {
-          postNui('captureDownscaled', { base64: b64 });
+          if (!b64) {
+            postNui('close', {});
+            return;
+          }
+          openCaptureNameDialog(b64, msg.nameDialog, msg.maxNameLength);
         })
         .catch(function () {
-          postNui('captureDownscaled', { base64: '' });
+          postNui('close', {});
         });
       return;
     }

@@ -8,6 +8,17 @@
 </head>
 <body>
   <div id="app" class="hidden">
+    <div id="name-overlay" class="name-overlay hidden">
+      <div class="name-dialog">
+        <h2 id="name-title" class="name-title"></h2>
+        <input type="text" id="name-input" class="name-input" autocomplete="off" />
+        <div class="btn-row name-actions">
+          <button type="button" id="name-cancel" class="btn"></button>
+          <button type="button" id="name-confirm" class="btn primary"></button>
+        </div>
+      </div>
+    </div>
+
     <div id="viewer" class="panel hidden">
       <div class="cheki">
         <div class="cheki-photo-wrap">

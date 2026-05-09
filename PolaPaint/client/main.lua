@@ -93,11 +93,20 @@ RegisterNetEvent('PolaPaint:client:doCapture', function()
                 notify(L('notify_capture_fail'))
                 return
             end
+            uiOpen = true
+            SetNuiFocus(true, true)
             SendNUIMessage({
                 action = 'downscaleScreenshot',
                 dataUri = dataUri,
                 maxWidth = Config.MaxImageWidth or 2560,
                 quality = q,
+                maxNameLength = Config.MaxPhotoNameLength or 40,
+                nameDialog = {
+                    title = L('nui_capture_name_title'),
+                    placeholder = L('nui_capture_name_placeholder'),
+                    confirm = L('nui_capture_confirm'),
+                    cancel = L('nui_capture_cancel'),
+                },
             })
         end)
     end)
@@ -156,12 +165,14 @@ exports('openPhotoViewer', function(slotId)
         notify(L('notify_photo_no_url'))
         return
     end
+    local meta = item.metadata or {}
+    local cap = type(meta.label) == 'string' and meta.label ~= '' and meta.label or L('nui_viewer_title')
     openUi({
         action = 'openViewer',
         imageUrl = url,
         strings = {
             close = L('nui_close'),
-            title = L('nui_viewer_title'),
+            title = cap,
         },
     })
 end)
@@ -171,7 +182,7 @@ RegisterNUICallback('close', function(_, cb)
     cb('ok')
 end)
 
-RegisterNUICallback('captureDownscaled', function(data, cb)
+RegisterNUICallback('captureWithName', function(data, cb)
     cb('ok')
     if type(data) == 'string' then
         local ok, decoded = pcall(json.decode, data)
@@ -180,11 +191,16 @@ RegisterNUICallback('captureDownscaled', function(data, cb)
         end
     end
     local b64 = data and data.base64
+    local name = data and data.name
+    if type(name) ~= 'string' then name = '' end
+    name = name:gsub('^%s+', ''):gsub('%s+$', '')
     if type(b64) ~= 'string' or b64 == '' then
+        closeUi()
         notify(L('notify_capture_fail'))
         return
     end
-    TriggerServerEvent('PolaPaint:server:submitCapture', b64)
+    closeUi()
+    TriggerServerEvent('PolaPaint:server:submitCapture', b64, name)
 end)
 
 RegisterNUICallback('savePaint', function(data, cb)

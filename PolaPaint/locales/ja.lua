@@ -14,6 +14,7 @@ Locales.ja = {
     notify_slot_invalid = 'アイテムが見つかりません。',
     notify_payload_too_large = '画像データが大きすぎます。解像度や品質を下げてください。',
     notify_upload_http_error = '画像のアップロードに失敗しました（HTTP）。',
+    notify_photo_name_invalid = '写真の名前が無効です（空・長すぎ・使用できない文字）。config の MaxPhotoNameLength を確認してください。',
 
     nui_close = '閉じる',
     nui_save = '保存',
@@ -21,6 +22,10 @@ Locales.ja = {
     nui_undo = '戻す',
     nui_pen_size = '太さ',
     nui_viewer_title = 'チェキ',
+    nui_capture_name_title = 'このチェキの名前',
+    nui_capture_name_placeholder = '例: 海辺の夕焼け',
+    nui_capture_confirm = 'この名前で作成',
+    nui_capture_cancel = 'やめる',
 
     meta_photo_label = 'チェキ',
 }
