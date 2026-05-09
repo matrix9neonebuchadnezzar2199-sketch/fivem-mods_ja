@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.0 — 2026‑05‑09（ローカル版リブート）
+
+サーバ連動版（旧 v0.8.6）からローカル単体版へ刷新した最初のリリース。oxmysql 依存・編集ロック・プレゼンス・オートセーブ・ヘルスチェックを全廃し、データは端末の `localStorage` のみ。詳細は 4 連コミット（`571cfdd` / `767dd35` / `c89256a` ＋初回コミット）と `docs/diary/2026-05-09_local_reboot.md`、`docs/HANDOVER.md` 第 3 版を参照。
+
 ## v0.9.2 — 2026-05-09
 
 - **feat（設定）**: 全体フォント倍率に **250% / 300%** を追加（`rootFontScale`・`index.html` FOUC 先読み・`sanitizeRootFontScale` を同期）。
