@@ -2,20 +2,6 @@
   交代・カード・PK（match_events + match_players 更新）
 ]]
 
-local function assertEditorLock(src, matchId)
-  local r = MySQL.single.await(
-    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
-  )
-  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
-    return false
-  end
-  local mid = r.match_id and tonumber(r.match_id)
-  if not mid or mid ~= tonumber(matchId) then
-    return false
-  end
-  return true
-end
-
 local function eventHalfFromMatch(h)
   if h == 'halftime' then
     return '1st'
@@ -126,7 +112,7 @@ RegisterNetEvent('refboard:event:substitute', function(payload)
     TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'bad_args' })
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'no_lock' })
     return
   end
@@ -193,7 +179,7 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
     TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_args' })
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'no_lock' })
     return
   end
@@ -310,7 +296,7 @@ RegisterNetEvent('refboard:event:record_penalty', function(payload)
     TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'bad_args' })
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'no_lock' })
     return
   end

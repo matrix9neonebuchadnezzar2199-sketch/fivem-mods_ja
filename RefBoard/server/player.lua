@@ -2,20 +2,6 @@
   選手解決・追加・オンライン一覧（設計書 2.4.4）
 ]]
 
-local function assertEditorLock(src, matchId)
-  local r = MySQL.single.await(
-    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
-  )
-  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
-    return false
-  end
-  local mid = r.match_id and tonumber(r.match_id)
-  if not mid or mid ~= tonumber(matchId) then
-    return false
-  end
-  return true
-end
-
 RegisterNetEvent('refboard:player:online_list', function()
   local src = source
   if not RefboardRequireEdit(src) then
@@ -87,7 +73,7 @@ RegisterNetEvent('refboard:player:add', function(payload)
     TriggerClientEvent('refboard:player:add:ack', src, { ok = false, error = 'bad_args' })
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:player:add:ack', src, { ok = false, error = 'no_lock' })
     return
   end
@@ -164,7 +150,7 @@ RegisterNetEvent('refboard:player:add_from_roster', function(payload)
     TriggerClientEvent('refboard:player:add_from_roster:ack', src, { ok = false, error = 'bad_args' })
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:player:add_from_roster:ack', src, { ok = false, error = 'no_lock' })
     return
   end
@@ -267,7 +253,7 @@ RegisterNetEvent('refboard:player:remove', function(payload)
       TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.BAD_ARGS))
       return
     end
-    if not assertEditorLock(src, matchId) then
+    if not RefboardAssertEditorLockForMatch(src, matchId) then
       TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.NO_LOCK))
       return
     end
@@ -287,17 +273,27 @@ RegisterNetEvent('refboard:player:remove', function(payload)
       return
     end
 
-    local evCount = MySQL.scalar.await(
-      [[SELECT COUNT(*) FROM match_events
-        WHERE match_id = ? AND voided_at IS NULL AND (
-          player_id = ? OR assist_player_id = ? OR sub_in_player_id = ? OR sub_out_player_id = ?
-        )]],
-      { matchId, playerId, playerId, playerId, playerId }
+    -- タイムラインのイベント行は残し、当該選手への FK のみ外す（試合終了まで履歴として保持）
+    MySQL.update.await(
+      [[UPDATE match_events SET player_id = NULL
+        WHERE match_id = ? AND voided_at IS NULL AND player_id = ?]],
+      { matchId, playerId }
     )
-    if evCount and tonumber(evCount) > 0 then
-      TriggerClientEvent('refboard:player:remove:ack', src, MakeError(ErrorCodes.PLAYER_HAS_EVENTS))
-      return
-    end
+    MySQL.update.await(
+      [[UPDATE match_events SET assist_player_id = NULL
+        WHERE match_id = ? AND voided_at IS NULL AND assist_player_id = ?]],
+      { matchId, playerId }
+    )
+    MySQL.update.await(
+      [[UPDATE match_events SET sub_in_player_id = NULL
+        WHERE match_id = ? AND voided_at IS NULL AND sub_in_player_id = ?]],
+      { matchId, playerId }
+    )
+    MySQL.update.await(
+      [[UPDATE match_events SET sub_out_player_id = NULL
+        WHERE match_id = ? AND voided_at IS NULL AND sub_out_player_id = ?]],
+      { matchId, playerId }
+    )
 
     local n = MySQL.update.await(
       'DELETE FROM match_players WHERE id = ? AND match_id = ? AND team_id = ?',

@@ -41,7 +41,7 @@
 
 ## 再発調査のチェックリスト
 
-1. `editor_locks` 1 行目: `holder_server_id` / `holder_license` / `last_heartbeat`  
+1. `editor_locks` 1 行目: `holder_server_id` / `holder_license` / **`match_id`（NULL のままだと時計等が `no_lock`）** / `last_heartbeat`  
 2. サーバログ: `net:lock:release` / `net:session:leave` / `playerDropped`  
 3. NUI: Close が `useRefboardClose` を通っているか、単独 `router.push` していないか  
 4. 別審判が掴んでいないか（別 `license` では reclaim 不可）

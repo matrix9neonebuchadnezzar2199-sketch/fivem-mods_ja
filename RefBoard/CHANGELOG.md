@@ -8,6 +8,7 @@
 - **fix（試合時計）**: `clock_started_at` が JSON で省略／解釈不能なとき走行中でも経過 0 になり残りが定尺に戻る問題を、`reconcileRunningClockStarted`・`watch`・Lua ACK／`match:state` の `RefboardParseEpochMs` 正規化で修正。一時停止で 90:00 に戻る症状の主因を潰す。
 - **fix（カード）**: `playerId` を文字列でも受理（Lua `parsePayloadId`）、交代出場が `bench` 表示でも選択可能に、INSERT 失敗は `db_insert_failed` + ログ。トーストに `tx_failed` の `detail` を短縮表示。
 - **fix（試合詳細）**: 遅い `match_get:ack` が時計操作・イベント後に届き **古いスナップショットで上書き**するレースを、`reloadMatch` で `loadMatchGen++` して進行中の取得を捨てる／時計 ACK 成功後も `reloadMatch()` で再取得するように修正。ゴール・交代は `playerId` を文字列送信＋サーバ `RefboardParsePayloadPositiveId` 共通化。
+- **fix（編集ロック）**: ランチャーで `enterEdit` した直後は `lock_acquire` が **matchId なし**で `editor_locks.match_id` が NULL のままになり、時計・スコア・イベントがすべて `no_lock` になる問題に対し、`RefboardAssertEditorLockForMatch` で **保持者かつ match_id が NULL ならリクエストの試合 ID にバインド**してから検証する（clock / score / event / player / match の各 assert を置換）。
 
 ## v0.9.1 — 2026-05-09
 

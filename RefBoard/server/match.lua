@@ -10,20 +10,6 @@ local function lockRowStale(row)
   return (os.time() - lh) > timeout
 end
 
-local function assertEditorLock(src, matchId)
-  local r = MySQL.single.await(
-    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
-  )
-  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
-    return false
-  end
-  local mid = r.match_id and tonumber(r.match_id)
-  if not mid or mid ~= tonumber(matchId) then
-    return false
-  end
-  return true
-end
-
 local function kickoffToUi(v)
   if type(v) ~= 'string' or v == '' then
     return ''
@@ -412,7 +398,7 @@ RegisterNetEvent('refboard:match:finish', function(payload)
     return
   end
   local matchId = payload and tonumber(payload.matchId)
-  if not matchId or not assertEditorLock(src, matchId) then
+  if not matchId or not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:match:finish:ack', src, { ok = false, error = 'no_lock' })
     return
   end
@@ -456,7 +442,7 @@ RegisterNetEvent('refboard:match:reopen', function(payload)
     return
   end
   local matchId = payload and tonumber(payload.matchId)
-  if not matchId or not assertEditorLock(src, matchId) then
+  if not matchId or not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:match:reopen:ack', src, { ok = false, error = 'no_lock' })
     return
   end
@@ -552,7 +538,7 @@ RegisterNetEvent('refboard:match:set_half', function(payload)
   end
   local matchId = payload and tonumber(payload.matchId)
   local half = payload and payload.half
-  if not matchId or not assertEditorLock(src, matchId) then
+  if not matchId or not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:match:set_half:ack', src, { ok = false, error = 'no_lock' })
     return
   end

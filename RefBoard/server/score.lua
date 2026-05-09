@@ -2,20 +2,6 @@
   スコア更新 + match_score_history（設計書 2.5.3）
 ]]
 
-local function assertEditorLock(src, matchId)
-  local r = MySQL.single.await(
-    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
-  )
-  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
-    return false
-  end
-  local mid = r.match_id and tonumber(r.match_id)
-  if not mid or mid ~= tonumber(matchId) then
-    return false
-  end
-  return true
-end
-
 local function eventHalfFromMatch(h)
   if h == 'halftime' then
     return '1st'
@@ -56,7 +42,7 @@ RegisterNetEvent('refboard:score:goal', function(payload)
     TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.BAD_ARGS))
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.NO_LOCK))
     return
   end
@@ -179,7 +165,7 @@ RegisterNetEvent('refboard:score:manual_edit', function(payload)
     TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(errEntry))
     return
   end
-  if not assertEditorLock(src, matchId) then
+  if not RefboardAssertEditorLockForMatch(src, matchId) then
     TriggerClientEvent('refboard:score:manual_edit:ack', src, MakeError(ErrorCodes.NO_LOCK))
     return
   end

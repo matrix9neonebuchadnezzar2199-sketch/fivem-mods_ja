@@ -128,7 +128,20 @@ RegisterNetEvent('refboard:lock:release', function()
     TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'db_error' })
     return
   end
-  if not r or not r.holder_server_id or tonumber(r.holder_server_id) ~= tonumber(src) then
+  -- 既に空なら冪等 OK（二重解放・session:leave 先行で消えた直後など）
+  if not r or not r.holder_server_id or r.holder_server_id == '' then
+    TriggerClientEvent('refboard:lock:ack', src, { ok = true })
+    return
+  end
+  local heldBy = tonumber(r.holder_server_id)
+  local srcNum = tonumber(src)
+  local license = GetPlayerIdentifierByType(src, 'license') or ''
+  local sameSrc = heldBy and srcNum and heldBy == srcNum
+  local sameLicense = license ~= '' and r.holder_license and r.holder_license == license
+  if not sameSrc and sameLicense then
+    Logger.info('net:lock:release', 'same_license_release', { src = srcNum, rowHolder = heldBy })
+  end
+  if not sameSrc and not sameLicense then
     TriggerClientEvent('refboard:lock:ack', src, { ok = false, error = 'not_holder' })
     return
   end
@@ -201,6 +214,42 @@ function RefboardLockReleaseIfHeldBy(holderSrc)
   TriggerEvent('refboard:presence:setMode', holderSrc, 'view')
   broadcastLock(nil)
   return true
+end
+
+--- 試合更新用: 保持者が src かつ editor_locks.match_id が一致、または **NULL のときだけ** payload の試合 ID にバインドする。
+--- ランチャーで enterEdit すると lock_acquire が matchId なしになり match_id が NULL のまま → 時計等が no_lock になるのを防ぐ。
+--- 既に別試合にロック済みのときは false（奪い合い防止）。
+function RefboardAssertEditorLockForMatch(src, matchId)
+  matchId = tonumber(matchId)
+  local srcNum = tonumber(src)
+  if not matchId or not srcNum then
+    return false
+  end
+  local okRead, r = pcall(readRow)
+  if not okRead or not r then
+    return false
+  end
+  if tonumber(r.holder_server_id) ~= srcNum then
+    return false
+  end
+  local mid = r.match_id ~= nil and tonumber(r.match_id) or nil
+  if mid == matchId then
+    return true
+  end
+  if mid == nil then
+    local okUpd, err = pcall(function()
+      MySQL.update.await(
+        'UPDATE editor_locks SET match_id = ? WHERE id = 1 AND holder_server_id = ?',
+        { matchId, srcNum }
+      )
+    end)
+    if not okUpd then
+      Logger.warn('lock', 'bind match_id failed', { src = srcNum, matchId = matchId, err = tostring(err) })
+      return false
+    end
+    return true
+  end
+  return false
 end
 
 AddEventHandler('onResourceStart', function(resName)

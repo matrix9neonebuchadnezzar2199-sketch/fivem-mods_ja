@@ -3,21 +3,6 @@
   経過 ms は event.lua / score.lua と同じ RefboardMatchTimeMsFromRow 定義。
 ]]
 
-local function assertEditorLock(src, matchId)
-  local r = MySQL.single.await(
-    'SELECT match_id, holder_server_id FROM editor_locks WHERE id = 1'
-  )
-  if not r or tonumber(r.holder_server_id) ~= tonumber(src) then
-    return false
-  end
-  local mid = r.match_id and tonumber(r.match_id)
-  if not mid or mid ~= tonumber(matchId) then
-    return false
-  end
-  return true
-end
-
-
 local function readClockRow(matchId)
   return MySQL.single.await(
     [[SELECT clock_running, clock_started_at, clock_accumulated_ms
@@ -59,7 +44,7 @@ RegisterNetEvent('refboard:match:clock', function(payload)
       TriggerClientEvent('refboard:match:clock:ack', src, { ok = false, error = 'bad_payload', matchId = matchId })
       return
     end
-    if not assertEditorLock(src, matchId) then
+    if not RefboardAssertEditorLockForMatch(src, matchId) then
       TriggerClientEvent('refboard:match:clock:ack', src, { ok = false, error = 'no_lock', matchId = matchId })
       return
     end
