@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { useSessionStore } from '../stores/session'
 import { useNui, getResourceName, isInFiveM } from '../composables/useNui'
-import { REFBOARD_UI_VERSION } from '../constants/version'
 import { useToast } from '../composables/useToast'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
@@ -18,12 +17,15 @@ const { send, on } = useNui()
 const { push: toast } = useToast()
 
 const dbMeta = ref<{ schemaVersion?: string; resourceVersion?: string } | null>(null)
-const serverTestCommands = ref<boolean | null>(null)
 const devBusy = ref(false)
 const devModal = ref<'fixture' | 'wipe' | null>(null)
 const devConfirmInput = ref('')
 
-const showDevDataPanel = computed(() => isInFiveM() && serverTestCommands.value === true)
+/** 「テスト用DB操作パネル」チェック時のみ。FiveM 実機でも config.lua は不要。ブラウザ DEV はモック動作 */
+const showDevDataPanel = computed(
+  () =>
+    settings.settings.showTestCommandsHint === true && (isInFiveM() === true || import.meta.env.DEV === true),
+)
 
 function openDevModal(kind: 'fixture' | 'wipe') {
   devModal.value = kind
@@ -38,7 +40,6 @@ function closeDevModal() {
 const canSubmitDevConfirm = computed(() => devConfirmInput.value.trim() === 'YES')
 
 let unDbMeta: (() => void) | null = null
-let unHealth: (() => void) | null = null
 let unDevAck: (() => void) | null = null
 
 function handleDevAck(p: {
@@ -102,17 +103,11 @@ onMounted(() => {
   })
   void send('data_db_meta', {})
 
-  unHealth = on('refboard:health:check:ack', (h: { enableTestCommands?: boolean }) => {
-    serverTestCommands.value = h.enableTestCommands === true
-  })
-  void send('health_check', { clientVersion: REFBOARD_UI_VERSION })
-
   unDevAck = on('refboard:dev:data_action:ack', handleDevAck)
 })
 
 onUnmounted(() => {
   unDbMeta?.()
-  unHealth?.()
   unDevAck?.()
 })
 
@@ -309,15 +304,7 @@ function syncLocale() {
         <h3 class="text-xs font-semibold text-amber-200">{{ t('settings.dev_data.title') }}</h3>
         <p class="mt-1 text-xs text-amber-100/90">{{ t('settings.dev_data.intro') }}</p>
         <p v-if="!isEditor" class="mt-2 text-xs font-medium text-amber-300">{{ t('settings.dev_data.need_edit') }}</p>
-        <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            class="rounded-lg border border-amber-600/80 bg-amber-900/40 px-3 py-2 text-left text-xs font-medium text-amber-50 hover:bg-amber-900/60 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="!isEditor || devBusy"
-            @click="openDevModal('fixture')"
-          >
-            {{ t('settings.dev_data.btn_fixture') }}
-          </button>
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button
             type="button"
             class="rounded-lg border border-red-700/70 bg-red-950/30 px-3 py-2 text-left text-xs font-medium text-red-100 hover:bg-red-950/50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -325,6 +312,14 @@ function syncLocale() {
             @click="openDevModal('wipe')"
           >
             {{ t('settings.dev_data.btn_wipe') }}
+          </button>
+          <button
+            type="button"
+            class="rounded-lg border border-amber-600/80 bg-amber-900/40 px-3 py-2 text-left text-xs font-medium text-amber-50 hover:bg-amber-900/60 disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!isEditor || devBusy"
+            @click="openDevModal('fixture')"
+          >
+            {{ t('settings.dev_data.btn_fixture') }}
           </button>
         </div>
       </div>
@@ -337,7 +332,6 @@ function syncLocale() {
         class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4"
         role="dialog"
         aria-modal="true"
-        @click.self="closeDevModal"
       >
         <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 p-4 shadow-xl">
           <h3 class="text-base font-semibold text-slate-50">

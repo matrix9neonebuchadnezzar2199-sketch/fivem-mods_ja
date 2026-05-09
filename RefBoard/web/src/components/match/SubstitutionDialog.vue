@@ -90,7 +90,6 @@ async function submit() {
   <div
     v-if="open"
     class="fixed inset-0 z-[155] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-    @click.self="close"
   >
     <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">{{ t('substitution.title') }}</h2>

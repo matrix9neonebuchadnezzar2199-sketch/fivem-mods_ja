@@ -268,6 +268,7 @@ RegisterNetEvent('refboard:match:list', function(payload)
     sql = [[
       SELECT m.id, m.team1_id, m.team2_id, m.team1_score, m.team2_score, m.status, m.current_half,
              m.match_date, m.match_name, m.venue, m.kickoff_time,
+             m.clock_running, m.clock_started_at, m.clock_accumulated_ms,
              t1.name AS team1_name, t2.name AS team2_name
       FROM matches m
       INNER JOIN teams t1 ON t1.id = m.team1_id
@@ -281,6 +282,7 @@ RegisterNetEvent('refboard:match:list', function(payload)
     sql = [[
       SELECT m.id, m.team1_id, m.team2_id, m.team1_score, m.team2_score, m.status, m.current_half,
              m.match_date, m.match_name, m.venue, m.kickoff_time,
+             m.clock_running, m.clock_started_at, m.clock_accumulated_ms,
              t1.name AS team1_name, t2.name AS team2_name
       FROM matches m
       INNER JOIN teams t1 ON t1.id = m.team1_id

@@ -2,22 +2,21 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
-import { useRouter, RouterLink, RouterView } from 'vue-router'
-import { useSessionStore, DEFAULT_EDIT_PASSWORD } from '../stores/session'
+import { RouterLink, RouterView } from 'vue-router'
 import { REFBOARD_UI_VERSION } from '../constants/version'
 import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
-import { getResourceName, useNui } from '../composables/useNui'
+import { useNui } from '../composables/useNui'
+import { useRefboardClose } from '../composables/useRefboardClose'
 import PresenceBadge from '../components/PresenceBadge.vue'
 import ContextHelpPanel from '../components/help/ContextHelpPanel.vue'
 import { useHeartbeat } from '../composables/useHeartbeat'
 
 const { t, locale } = useI18n()
-const router = useRouter()
-const session = useSessionStore()
 const settingsStore = useSettingsStore()
 const { send } = useNui()
 const { transparentChrome } = storeToRefs(useMatchCompactDockStore())
+const { closeApp } = useRefboardClose()
 
 useHeartbeat()
 
@@ -26,25 +25,6 @@ onMounted(() => {
   locale.value = settingsStore.settings.locale
   void send('presence_list', {})
 })
-
-async function closeApp() {
-  try {
-    await session.leave()
-  } catch {
-    /* NUI 送信失敗時もフォーカス解除は続行 */
-  }
-  try {
-    await fetch(`https://${getResourceName()}/refboard:close`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-      body: '{}',
-    })
-  } catch {
-    /* ブラウザ単体開発時の 404 等 */
-  }
-  session.editPassword = DEFAULT_EDIT_PASSWORD
-  await router.push({ name: 'launcher' })
-}
 
 function toggleLocale() {
   const next = locale.value === 'ja' ? 'en' : 'ja'
@@ -122,12 +102,17 @@ function toggleLocale() {
       </button>
     </aside>
     <div class="main flex min-h-0 min-w-0 flex-col border-r border-slate-700/80 bg-slate-900/90">
-      <header class="main-header flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 px-4 py-2">
+      <header
+        v-if="!transparentChrome"
+        class="main-header flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 px-4 py-2"
+      >
         <PresenceBadge />
         <button type="button" class="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-200" @click="closeApp">Close</button>
       </header>
-      <div class="min-h-0 flex-1 overflow-hidden">
-        <RouterView />
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <RouterView v-slot="{ Component }">
+          <component :is="Component" class="flex min-h-0 flex-1 flex-col overflow-hidden" />
+        </RouterView>
       </div>
     </div>
     <ContextHelpPanel />
@@ -155,11 +140,5 @@ function toggleLocale() {
   background-color: transparent;
   border-color: transparent;
   pointer-events: none;
-}
-.layout--stadium-compact .main-header {
-  pointer-events: auto;
-  background-color: transparent;
-  border-bottom-color: transparent;
-  backdrop-filter: none;
 }
 </style>

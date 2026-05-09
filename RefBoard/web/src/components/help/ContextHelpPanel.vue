@@ -103,11 +103,7 @@ watch(
       enter-from-class="opacity-0"
       leave-to-class="opacity-0"
     >
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-[180] bg-black/40"
-        @click="store.close()"
-      />
+      <div v-if="isOpen" class="fixed inset-0 z-[180] bg-black/40" />
     </Transition>
     <Transition
       enter-active-class="transition-transform duration-200 ease-out"

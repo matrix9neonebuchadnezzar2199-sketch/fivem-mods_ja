@@ -1,10 +1,11 @@
 --[[
   集計・データ管理 API（v0.5.0）
+  閲覧セッション（RefboardCanRead）で参照可。編集モード必須ではない。
 ]]
 
 RegisterNetEvent('refboard:data:team_stats', function()
   local src = source
-  if not RefboardRequireEdit(src) then
+  if not RefboardCanRead(src) then
     TriggerClientEvent('refboard:data:team_stats:ack', src, { rows = {} })
     return
   end
@@ -12,15 +13,15 @@ RegisterNetEvent('refboard:data:team_stats', function()
     [[SELECT
         t.id, t.name, t.short_name, t.color, t.emblem_emoji,
         COUNT(DISTINCT m.id) AS matches_played,
-        SUM(CASE
+        COALESCE(SUM(CASE
           WHEN (m.team1_id = t.id AND m.team1_score > m.team2_score)
-            OR (m.team2_id = t.id AND m.team2_score > m.team1_score) THEN 1 ELSE 0 END) AS wins,
-        SUM(CASE WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) AS draws,
-        SUM(CASE
+            OR (m.team2_id = t.id AND m.team2_score > m.team1_score) THEN 1 ELSE 0 END), 0) AS wins,
+        COALESCE(SUM(CASE WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END), 0) AS draws,
+        COALESCE(SUM(CASE
           WHEN (m.team1_id = t.id AND m.team1_score < m.team2_score)
-            OR (m.team2_id = t.id AND m.team2_score < m.team1_score) THEN 1 ELSE 0 END) AS losses,
-        SUM(CASE WHEN m.team1_id = t.id THEN m.team1_score ELSE m.team2_score END) AS goals_for,
-        SUM(CASE WHEN m.team1_id = t.id THEN m.team2_score ELSE m.team1_score END) AS goals_against
+            OR (m.team2_id = t.id AND m.team2_score < m.team1_score) THEN 1 ELSE 0 END), 0) AS losses,
+        COALESCE(SUM(CASE WHEN m.team1_id = t.id THEN m.team1_score ELSE m.team2_score END), 0) AS goals_for,
+        COALESCE(SUM(CASE WHEN m.team1_id = t.id THEN m.team2_score ELSE m.team1_score END), 0) AS goals_against
       FROM teams t
       LEFT JOIN matches m
         ON (m.team1_id = t.id OR m.team2_id = t.id) AND m.status = 'finished'
@@ -33,7 +34,7 @@ end)
 
 RegisterNetEvent('refboard:data:player_stats', function()
   local src = source
-  if not RefboardRequireEdit(src) then
+  if not RefboardCanRead(src) then
     TriggerClientEvent('refboard:data:player_stats:ack', src, { rows = {} })
     return
   end
@@ -78,7 +79,7 @@ end)
 
 RegisterNetEvent('refboard:data:score_edit_log', function(payload)
   local src = source
-  if not RefboardRequireEdit(src) then
+  if not RefboardCanRead(src) then
     TriggerClientEvent('refboard:data:score_edit_log:ack', src, { rows = {} })
     return
   end
@@ -143,7 +144,7 @@ end)
 
 RegisterNetEvent('refboard:data:match_history', function(payload)
   local src = source
-  if not RefboardRequireEdit(src) then
+  if not RefboardCanRead(src) then
     TriggerClientEvent('refboard:data:match_history:ack', src, { rows = {} })
     return
   end
@@ -215,7 +216,7 @@ end)
 
 RegisterNetEvent('refboard:data:db_meta', function()
   local src = source
-  if not RefboardRequireEdit(src) then
+  if not RefboardCanRead(src) then
     TriggerClientEvent('refboard:data:db_meta:ack', src, {
       schemaVersion = '',
       resourceVersion = GetResourceMetadata(GetCurrentResourceName(), 'version', 0) or '',

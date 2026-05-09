@@ -34,6 +34,15 @@ const logMatchId = ref<number | ''>('')
 
 const teamsPick = ref<{ id: number; name: string }[]>([])
 
+/** リストを左右2列に分割（チーム統計・選手統計用） */
+function splitRowsForTwoColumns(rows: Record<string, unknown>[]) {
+  const mid = Math.ceil(rows.length / 2)
+  return [rows.slice(0, mid), rows.slice(mid)] as [Record<string, unknown>[], Record<string, unknown>[]]
+}
+
+const teamStatsColumns = computed(() => splitRowsForTwoColumns(teamStats.value))
+const playerStatsColumns = computed(() => splitRowsForTwoColumns(playerStats.value))
+
 const dateRange = computed(() => {
   const now = new Date()
   const y = now.getFullYear()
@@ -46,7 +55,9 @@ const dateRange = computed(() => {
   }
   if (period.value === 'this_month') {
     const start = new Date(y, m, 1)
-    return { from: fmt(start), to: fmt(now) }
+    const endOfMonth = new Date(y, m + 1, 0)
+    /* 月末まで含める（「今日」までだと同月の予定日付シードが欠ける） */
+    return { from: fmt(start), to: fmt(endOfMonth) }
   }
   if (period.value === 'last_month') {
     const start = new Date(y, m - 1, 1)
@@ -54,7 +65,8 @@ const dateRange = computed(() => {
     return { from: fmt(start), to: fmt(end) }
   }
   const start = new Date(y, m - 2, 1)
-  return { from: fmt(start), to: fmt(now) }
+  const endOfMonth = new Date(y, m + 1, 0)
+  return { from: fmt(start), to: fmt(endOfMonth) }
 })
 
 async function loadTeamsPick() {
@@ -169,8 +181,8 @@ function openMatch(id: number) {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col gap-2 p-3">
-    <div class="flex flex-wrap items-center gap-1 border-b border-slate-700 pb-2 text-xs">
+  <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-3">
+    <div class="flex shrink-0 flex-wrap items-center gap-1 border-b border-slate-700 pb-2 text-xs">
       <button
         v-for="x in [
           ['matches', t('data.tabs.matches')],
@@ -300,75 +312,87 @@ function openMatch(id: number) {
       </div>
     </div>
 
-    <div v-else-if="tab === 'teams'" class="min-h-0 flex-1 space-y-2 overflow-auto">
-      <div class="flex justify-end gap-2">
+    <div v-else-if="tab === 'teams'" class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+      <div class="flex shrink-0 justify-end gap-2">
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="loadTeamStats">{{ t('data.reload') }}</button>
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="exportTeamStatsCsv">{{ t('data.export_csv') }}</button>
       </div>
-      <div class="min-w-0 overflow-auto rounded border border-slate-700">
-        <table class="w-full min-w-[520px] table-fixed border-collapse text-left text-xs">
-          <thead class="bg-slate-900 text-slate-400">
-            <tr>
-              <th class="min-w-0 p-2">{{ t('team.name') }}</th>
-              <th class="w-10 shrink-0 p-2">MP</th>
-              <th class="w-8 shrink-0 p-2">W</th>
-              <th class="w-8 shrink-0 p-2">D</th>
-              <th class="w-8 shrink-0 p-2">L</th>
-              <th class="w-10 shrink-0 p-2">GF</th>
-              <th class="w-10 shrink-0 p-2">GA</th>
-              <th class="w-10 shrink-0 p-2">GD</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in teamStats" :key="String(r.id)" class="border-t border-slate-800 text-slate-200">
-              <td class="min-w-0 overflow-hidden p-2">
-                <MarqueeText :text="String(r.name ?? '')" variant="subtle" />
-              </td>
-              <td class="p-2">{{ r.matches_played }}</td>
-              <td class="p-2">{{ r.wins }}</td>
-              <td class="p-2">{{ r.draws }}</td>
-              <td class="p-2">{{ r.losses }}</td>
-              <td class="p-2">{{ r.goals_for }}</td>
-              <td class="p-2">{{ r.goals_against }}</td>
-              <td class="p-2">{{ Number(r.goals_for) - Number(r.goals_against) }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-start">
+        <div
+          v-for="(chunk, colIdx) in teamStatsColumns"
+          :key="'team-stats-col-' + colIdx"
+          class="min-h-0 min-w-0 overflow-auto rounded border border-slate-700"
+        >
+          <table class="w-full min-w-0 table-fixed border-collapse text-left text-xs">
+            <thead class="bg-slate-900 text-slate-400">
+              <tr>
+                <th class="min-w-0 p-2">{{ t('team.name') }}</th>
+                <th class="w-10 shrink-0 p-2">MP</th>
+                <th class="w-8 shrink-0 p-2">W</th>
+                <th class="w-8 shrink-0 p-2">D</th>
+                <th class="w-8 shrink-0 p-2">L</th>
+                <th class="w-10 shrink-0 p-2">GF</th>
+                <th class="w-10 shrink-0 p-2">GA</th>
+                <th class="w-10 shrink-0 p-2">GD</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="r in chunk" :key="String(r.id)" class="border-t border-slate-800 text-slate-200">
+                <td class="min-w-0 overflow-hidden p-2">
+                  <MarqueeText :text="String(r.name ?? '')" variant="subtle" />
+                </td>
+                <td class="p-2">{{ r.matches_played }}</td>
+                <td class="p-2">{{ r.wins }}</td>
+                <td class="p-2">{{ r.draws }}</td>
+                <td class="p-2">{{ r.losses }}</td>
+                <td class="p-2">{{ r.goals_for }}</td>
+                <td class="p-2">{{ r.goals_against }}</td>
+                <td class="p-2">{{ Number(r.goals_for) - Number(r.goals_against) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div v-else-if="tab === 'players'" class="min-h-0 flex-1 space-y-2 overflow-auto">
-      <div class="flex justify-end gap-2">
+    <div v-else-if="tab === 'players'" class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+      <div class="flex shrink-0 justify-end gap-2">
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="loadPlayerStats">{{ t('data.reload') }}</button>
         <button type="button" class="rounded border border-slate-600 px-2 py-1 text-xs" @click="exportPlayerStatsCsv">{{ t('data.export_csv') }}</button>
       </div>
-      <div class="min-w-0 overflow-auto rounded border border-slate-700">
-        <table class="w-full min-w-[480px] table-fixed border-collapse text-left text-xs">
-          <thead class="bg-slate-900 text-slate-400">
-            <tr>
-              <th class="min-w-0 p-2">{{ t('data.col_player') }}</th>
-              <th class="w-16 shrink-0 p-2">{{ t('data.col_guest') }}</th>
-              <th class="w-10 shrink-0 p-2">MP</th>
-              <th class="w-8 shrink-0 p-2">G</th>
-              <th class="w-8 shrink-0 p-2">A</th>
-              <th class="w-8 shrink-0 p-2">🟨</th>
-              <th class="w-8 shrink-0 p-2">🟥</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(r, idx) in playerStats" :key="String(r.grp_key ?? idx)" class="border-t border-slate-800 text-slate-200">
-              <td class="min-w-0 overflow-hidden p-2">
-                <MarqueeText :text="String(r.player_name ?? '')" variant="subtle" />
-              </td>
-              <td class="p-2">{{ Number(r.has_license) === 0 ? t('data.guest') : '—' }}</td>
-              <td class="p-2">{{ r.matches_played }}</td>
-              <td class="p-2">{{ r.goals }}</td>
-              <td class="p-2">{{ r.assists }}</td>
-              <td class="p-2">{{ r.yellows }}</td>
-              <td class="p-2">{{ r.reds }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2 sm:items-start">
+        <div
+          v-for="(chunk, colIdx) in playerStatsColumns"
+          :key="'player-stats-col-' + colIdx"
+          class="min-h-0 min-w-0 overflow-auto rounded border border-slate-700"
+        >
+          <table class="w-full min-w-0 table-fixed border-collapse text-left text-xs">
+            <thead class="bg-slate-900 text-slate-400">
+              <tr>
+                <th class="min-w-0 p-2">{{ t('data.col_player') }}</th>
+                <th class="w-16 shrink-0 p-2">{{ t('data.col_guest') }}</th>
+                <th class="w-10 shrink-0 p-2">MP</th>
+                <th class="w-8 shrink-0 p-2">G</th>
+                <th class="w-8 shrink-0 p-2">A</th>
+                <th class="w-8 shrink-0 p-2">🟨</th>
+                <th class="w-8 shrink-0 p-2">🟥</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(r, idx) in chunk" :key="String(r.grp_key ?? colIdx + '-' + idx)" class="border-t border-slate-800 text-slate-200">
+                <td class="min-w-0 overflow-hidden p-2">
+                  <MarqueeText :text="String(r.player_name ?? '')" variant="subtle" />
+                </td>
+                <td class="p-2">{{ Number(r.has_license) === 0 ? t('data.guest') : '—' }}</td>
+                <td class="p-2">{{ r.matches_played }}</td>
+                <td class="p-2">{{ r.goals }}</td>
+                <td class="p-2">{{ r.assists }}</td>
+                <td class="p-2">{{ r.yellows }}</td>
+                <td class="p-2">{{ r.reds }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 

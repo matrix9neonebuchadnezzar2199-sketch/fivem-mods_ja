@@ -136,7 +136,6 @@ function enableDebugTrace() {
     <div
       v-if="showLockDialog"
       class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-      @click.self="closeDialog"
     >
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('launcher.lock_title') }}</h2>

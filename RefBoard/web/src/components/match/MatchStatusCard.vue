@@ -151,7 +151,6 @@ function confirmPk() {
     <div
       v-if="showPkConfirm"
       class="fixed inset-0 z-[160] flex items-center justify-center bg-black/55 p-4"
-      @click.self="cancelPk"
     >
       <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-5 shadow-xl">
         <h4 class="mb-2 font-semibold text-slate-50">{{ t('match_status.pk_confirm_title') }}</h4>

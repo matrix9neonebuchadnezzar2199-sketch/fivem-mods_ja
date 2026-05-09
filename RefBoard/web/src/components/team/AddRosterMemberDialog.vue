@@ -86,7 +86,6 @@ async function submit() {
   <div
     v-if="open"
     class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-    @click.self="close"
   >
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">
@@ -117,8 +116,17 @@ async function submit() {
           </button>
         </div>
         <label class="block text-slate-400">
-          {{ t('team_manage.license_optional') }}
-          <input v-model="form.license" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
+          <span>{{ t('team_manage.license_label') }}</span>
+          <p id="roster-license-hint" class="mt-1 text-xs leading-relaxed text-slate-500">
+            {{ t('team_manage.license_hint') }}
+          </p>
+          <input
+            v-model="form.license"
+            class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 font-mono text-sm text-slate-100"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="roster-license-hint"
+          />
         </label>
       </div>
       <div class="mt-4 flex justify-end gap-2">

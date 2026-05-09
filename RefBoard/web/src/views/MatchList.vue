@@ -1,24 +1,69 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../composables/useNui'
 import { useToast } from '../composables/useToast'
 import { useSessionStore } from '../stores/session'
+import { useSettingsStore } from '../stores/settings'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
 import { formatDateJa } from '../utils/formatDate'
+import { formatClockMs, remainingMsFromClock } from '../utils/matchClock'
 
 const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
+const settingsStore = useSettingsStore()
+const { settings } = storeToRefs(settingsStore)
 const { push: toast } = useToast()
 const { send, on } = useNui()
 
 const rows = ref<MatchListRow[]>([])
+/** 計測中の行の残り表示を 250ms で更新 */
+const listClockTick = ref(0)
+let listClockInterval: ReturnType<typeof setInterval> | null = null
+
+function fullMatchDurationMs(): number {
+  return Math.max(60_000, settings.value.defaultHalfMinutes * 2 * 60 * 1000)
+}
+
+function anyListRowClockRunning(): boolean {
+  return rows.value.some((m) => Number(m.clock_running) === 1)
+}
+
+function syncListClockInterval() {
+  if (listClockInterval != null) {
+    clearInterval(listClockInterval)
+    listClockInterval = null
+  }
+  if (anyListRowClockRunning()) {
+    listClockInterval = setInterval(() => {
+      listClockTick.value++
+    }, 250)
+  }
+}
+
+function listRemainingTimeLabel(m: MatchListRow): string {
+  if (Number(m.clock_running) !== 1) return '-'
+  void listClockTick.value
+  const started =
+    m.clock_started_at != null && String(m.clock_started_at) !== ''
+      ? Number(m.clock_started_at)
+      : null
+  const rem = remainingMsFromClock(
+    fullMatchDurationMs(),
+    Number(m.clock_accumulated_ms) || 0,
+    true,
+    started != null && Number.isFinite(started) ? started : null,
+    Date.now(),
+  )
+  return formatClockMs(rem)
+}
 const teams = ref<TeamRow[]>([])
 const filter = ref<'all' | 'draft' | 'finished' | 'cancelled'>('all')
 const showCreate = ref(false)
@@ -39,8 +84,10 @@ function loadMatches() {
 }
 
 onMounted(() => {
+  settingsStore.load()
   offMatch = on('refboard:match:list:ack', (p: { matches?: MatchListRow[] }) => {
     rows.value = p.matches || []
+    syncListClockInterval()
   })
   offTeam = on('refboard:team:list:ack', (p: { teams?: TeamRow[] }) => {
     teams.value = p.teams || []
@@ -58,11 +105,23 @@ onUnmounted(() => {
   offMatch?.()
   offTeam?.()
   stopAfterEach?.()
+  if (listClockInterval != null) {
+    clearInterval(listClockInterval)
+    listClockInterval = null
+  }
 })
 
 watch(filter, () => {
   loadMatches()
 })
+
+watch(
+  rows,
+  () => {
+    syncListClockInterval()
+  },
+  { deep: true },
+)
 
 function openDetail(id: number) {
   void router.push({ name: 'match-detail', params: { id: String(id) } })
@@ -201,13 +260,14 @@ function onCreated(id: number) {
     </div>
 
     <div class="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-700 bg-slate-900/60">
-      <table class="w-full min-w-[760px] table-fixed border-collapse text-left text-sm">
+      <table class="w-full min-w-[860px] table-fixed border-collapse text-left text-sm">
         <thead class="sticky top-0 bg-slate-900/95 text-xs uppercase text-slate-500">
           <tr>
             <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_date') }}</th>
             <th class="min-w-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_match_name') }}</th>
             <th class="min-w-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_teams') }}</th>
             <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_score') }}</th>
+            <th class="w-24 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_remaining_time') }}</th>
             <th class="w-28 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_status') }}</th>
             <th class="w-56 shrink-0 border-b border-slate-700 px-3 py-2">{{ t('match_list.col_actions') }}</th>
           </tr>
@@ -230,6 +290,7 @@ function onCreated(id: number) {
               </div>
             </td>
             <td class="px-3 py-2 font-mono text-slate-200">{{ m.team1_score }} - {{ m.team2_score }}</td>
+            <td class="px-3 py-2 font-mono tabular-nums text-slate-300">{{ listRemainingTimeLabel(m) }}</td>
             <td class="px-3 py-2">
               <MatchStatusBadge :status="m.status" />
             </td>
@@ -255,7 +316,7 @@ function onCreated(id: number) {
             </td>
           </tr>
           <tr v-if="!rows.length">
-            <td colspan="6" class="px-3 py-8 text-center text-slate-500">{{ t('match_list.empty') }}</td>
+            <td colspan="7" class="px-3 py-8 text-center text-slate-500">{{ t('match_list.empty') }}</td>
           </tr>
         </tbody>
       </table>
@@ -266,7 +327,6 @@ function onCreated(id: number) {
     <div
       v-if="showLock"
       class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-      @click.self="showLock = false"
     >
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('launcher.lock_title') }}</h2>
@@ -285,7 +345,6 @@ function onCreated(id: number) {
     <div
       v-if="showDeleteConfirm"
       class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-      @click.self="showDeleteConfirm = false"
     >
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_list.delete_title') }}</h2>
@@ -304,7 +363,6 @@ function onCreated(id: number) {
     <div
       v-if="showReopen"
       class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-      @click.self="showReopen = false"
     >
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_list.reopen_title') }}</h2>

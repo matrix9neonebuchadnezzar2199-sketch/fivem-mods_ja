@@ -50,7 +50,6 @@ function line(prev: ScoreHistoryRow | null, cur: ScoreHistoryRow): string {
   <div
     v-if="open"
     class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-    @click.self="close"
   >
     <div class="flex max-h-[85vh] w-full max-w-lg flex-col rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
       <div class="border-b border-slate-700 px-4 py-3">

@@ -129,7 +129,7 @@ local function runChecks(src, payload)
     'config',
     'test_commands',
     (Config.EnableTestCommands and 'warning') or 'ok',
-    Config.EnableTestCommands and 'true (Settings: dev fixture / wipe)' or 'false'
+    Config.EnableTestCommands and 'true (transaction_test / demo seed flags)' or 'false'
   )
 
   return {

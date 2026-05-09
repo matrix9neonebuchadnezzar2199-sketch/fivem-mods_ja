@@ -10,6 +10,8 @@ import {
   MOCK_AUDIT,
   clearMockStorage,
   loadMockState,
+  seedEmptyAfterWipeState,
+  seedInitialState,
   type MockPersistenceState,
   type PersistedListRow,
   type PersistedTeam,
@@ -66,12 +68,178 @@ function flushPersistence() {
   rebuildLocalViews()
 }
 
-/** 試合一覧 `mockListRows` の score を `liveDetail` に合わせる（ゴール後に一覧へ戻ったときのズレ防止） */
-function syncMockListRowScoresFromLive() {
+/** 試合一覧行を `liveDetail` に合わせる（スコア・時計。一覧の残り時間表示のズレ防止） */
+function syncMockListRowFromLive() {
   const row = mockListRows.find((r) => r.id === liveDetail.id)
   if (!row) return
   row.team1_score = liveDetail.score.home
   row.team2_score = liveDetail.score.away
+  row.clock_running = liveDetail.clockRunning ? 1 : 0
+  row.clock_started_at = liveDetail.clockStartedAtMs
+  row.clock_accumulated_ms = liveDetail.clockAccumulatedMs
+}
+
+type MockDataMatchHistoryPayload = {
+  status?: string
+  teamId?: number | null
+  from?: string | null
+  to?: string | null
+  sort?: string
+}
+
+function filterMockMatchHistoryRows(p: MockDataMatchHistoryPayload): PersistedListRow[] {
+  let rows = mockListRows.map((r) => ({ ...r }))
+  const st = p.status
+  if (st && st !== 'all') {
+    rows = rows.filter((r) => r.status === st)
+  }
+  const tid = p.teamId
+  if (tid != null && Number.isFinite(Number(tid))) {
+    const id = Number(tid)
+    rows = rows.filter((r) => r.team1_id === id || r.team2_id === id)
+  }
+  if (p.from) {
+    rows = rows.filter((r) => String(r.match_date) >= String(p.from))
+  }
+  if (p.to) {
+    rows = rows.filter((r) => String(r.match_date) <= String(p.to))
+  }
+  const sort = p.sort
+  if (sort === 'spread') {
+    rows.sort((a, b) => {
+      const da = Math.abs(Number(a.team1_score) - Number(a.team2_score))
+      const db = Math.abs(Number(b.team1_score) - Number(b.team2_score))
+      return db - da || String(b.match_date).localeCompare(String(a.match_date))
+    })
+  } else if (sort === 'goals') {
+    rows.sort((a, b) => {
+      const ga = Number(a.team1_score) + Number(a.team2_score)
+      const gb = Number(b.team1_score) + Number(b.team2_score)
+      return gb - ga || String(b.match_date).localeCompare(String(a.match_date))
+    })
+  } else {
+    rows.sort((a, b) => String(b.match_date).localeCompare(String(a.match_date)) || b.id - a.id)
+  }
+  return rows
+}
+
+function computeMockTeamStatsRows(): Record<string, unknown>[] {
+  const teams = activeTeams()
+  const agg = new Map<number, { mp: number; w: number; d: number; l: number; gf: number; ga: number }>()
+  for (const t of teams) {
+    agg.set(t.id, { mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0 })
+  }
+  for (const m of mockListRows) {
+    if (m.status !== 'finished') continue
+    const s1 = Number(m.team1_score)
+    const s2 = Number(m.team2_score)
+    const t1 = m.team1_id
+    const t2 = m.team2_id
+    const a1 = agg.get(t1)
+    const a2 = agg.get(t2)
+    if (!a1 || !a2) continue
+    a1.mp++
+    a2.mp++
+    a1.gf += s1
+    a1.ga += s2
+    a2.gf += s2
+    a2.ga += s1
+    if (s1 === s2) {
+      a1.d++
+      a2.d++
+    } else if (s1 > s2) {
+      a1.w++
+      a2.l++
+    } else {
+      a1.l++
+      a2.w++
+    }
+  }
+  return teams.map((t) => {
+    const x = agg.get(t.id)!
+    return {
+      id: t.id,
+      name: t.name,
+      short_name: t.short_name,
+      color: t.color,
+      emblem_emoji: t.emblem_emoji ?? (t.id === 1 ? '🔵' : '⚪'),
+      matches_played: x.mp,
+      wins: x.w,
+      draws: x.d,
+      losses: x.l,
+      goals_for: x.gf,
+      goals_against: x.ga,
+    }
+  })
+}
+
+function eventTouchesPlayer(ev: { kind?: string; text?: string }, pl: MatchPlayer): boolean {
+  if (!ev.text) return false
+  const nt = String(pl.number)
+  return ev.text.includes(nt) && ev.text.includes(pl.name)
+}
+
+function mockPlayerGrpKey(pl: MatchPlayer): string {
+  const m = String(pl.id).match(/-r(\d+)$/)
+  if (m) return `roster:${m[1]}`
+  return String(pl.id)
+}
+
+function computeMockPlayerStatsRows(): Record<string, unknown>[] {
+  type Agg = {
+    grp_key: string
+    player_name: string
+    has_license: number
+    matchIds: Set<number>
+    goals: number
+    assists: number
+    yellows: number
+    reds: number
+  }
+  const byKey = new Map<string, Agg>()
+  for (const row of mockListRows) {
+    if (row.status !== 'finished') continue
+    const det = mockDb.matchDetails[String(row.id)]
+    if (!det) continue
+    const walk = (pl: MatchPlayer) => {
+      const grp = mockPlayerGrpKey(pl)
+      let a = byKey.get(grp)
+      if (!a) {
+        a = {
+          grp_key: grp,
+          player_name: pl.name,
+          has_license: 0,
+          matchIds: new Set(),
+          goals: 0,
+          assists: 0,
+          yellows: 0,
+          reds: 0,
+        }
+        byKey.set(grp, a)
+      }
+      a.matchIds.add(row.id)
+      for (const ev of det.events ?? []) {
+        if (ev.kind === 'goal' && eventTouchesPlayer(ev, pl)) a.goals++
+        if (ev.kind === 'yellow' && eventTouchesPlayer(ev, pl)) a.yellows++
+        if (ev.kind === 'red' && eventTouchesPlayer(ev, pl)) a.reds++
+      }
+    }
+    det.homePlayers?.forEach(walk)
+    det.awayPlayers?.forEach(walk)
+  }
+  return [...byKey.values()]
+    .map((a) => ({
+      grp_key: a.grp_key,
+      player_name: a.player_name,
+      has_license: a.has_license,
+      matches_played: a.matchIds.size,
+      appearances: a.matchIds.size,
+      goals: a.goals,
+      assists: a.assists,
+      yellows: a.yellows,
+      reds: a.reds,
+    }))
+    .sort((x, y) => Number(y.goals) - Number(x.goals) || Number(y.matches_played) - Number(x.matches_played))
 }
 
 function formatElapsedClock(ms: number): string {
@@ -123,12 +291,35 @@ function mockTimelineReferencesPlayer(player: MatchPlayer, events: { text?: stri
   return events.some((e) => Boolean(e.text && re.test(e.text)))
 }
 
+/**
+ * モックの MatchPlayer.id（数値文字列 / m{mid}-t{tid}-r{rid} / タイムスタンプ等）を
+ * match_players.id 相当の一意な正の整数に変換する。Number(p.id)||0 だと複合IDが全員 0 になるバグの修正。
+ */
+function mockNumericPlayerRowId(p: MatchPlayer): number {
+  const s = String(p.id ?? '').trim()
+  const c = /^m(\d+)-t(\d+)-r(\d+)$/i.exec(s)
+  if (c) {
+    const mid = Number(c[1])
+    const rid = Number(c[3])
+    if (Number.isFinite(mid) && mid > 0 && Number.isFinite(rid) && rid > 0) {
+      return mid * 1_000_000 + rid
+    }
+  }
+  const n = Number(s)
+  if (Number.isFinite(n) && n > 0) return Math.trunc(n)
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) >>> 0
+  const v = h >>> 0
+  return v > 0 ? v : 1
+}
+
 function toMockServerPlayer(p: MatchPlayer, teamId: number) {
   const out = p.status === 'subbed_out' || p.status === 'sent_off'
+  const rowId = mockNumericPlayerRowId(p)
   return {
-    id: Number(p.id) || 0,
+    id: rowId,
     team_id: teamId,
-    server_id: Number(p.id) || 0,
+    server_id: rowId,
     license: `mock:${teamId}:${p.id}`,
     player_name: p.name,
     jersey_number: p.number,
@@ -161,9 +352,11 @@ function applyHalfToLive(half: string, pkFirst?: number) {
 
 function findPlayerByNumericId(id: number): { side: 'home' | 'away'; idx: number } | null {
   const sid = String(id)
-  const hi = liveDetail.homePlayers.findIndex((x) => String(x.id) === sid || Number(x.id) === id)
+  const match = (x: MatchPlayer) =>
+    String(x.id) === sid || (Number.isFinite(Number(x.id)) && Number(x.id) === id) || mockNumericPlayerRowId(x) === id
+  const hi = liveDetail.homePlayers.findIndex(match)
   if (hi >= 0) return { side: 'home', idx: hi }
-  const ai = liveDetail.awayPlayers.findIndex((x) => String(x.id) === sid || Number(x.id) === id)
+  const ai = liveDetail.awayPlayers.findIndex(match)
   if (ai >= 0) return { side: 'away', idx: ai }
   return null
 }
@@ -374,7 +567,13 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         postNui('refboard:dev:data_action:ack', { ok: false, error: 'bad_confirm' })
         return
       }
-      postNui('refboard:dev:data_action:ack', { ok: false, error: 'test_commands_disabled' })
+      mockDb = path === 'dev_wipe_all' ? seedEmptyAfterWipeState() : seedInitialState()
+      saveMockState(mockDb)
+      hydrateFromDisk()
+      postNui('refboard:dev:data_action:ack', {
+        ok: true,
+        action: path === 'dev_wipe_all' ? 'wipe_all' : 'apply_fixture',
+      })
     }
     if (path === 'health_check') {
       const cv = (data as { clientVersion?: string })?.clientVersion ?? ''
@@ -588,56 +787,19 @@ export function queueMockSideEffects(path: string, data: unknown): void {
     }
     if (path === 'data_team_stats') {
       postNui('refboard:data:team_stats:ack', {
-        rows: activeTeams().map((t) => ({
-          id: t.id,
-          name: t.name,
-          short_name: t.short_name,
-          color: t.color,
-          emblem_emoji: t.emblem_emoji ?? (t.id === 1 ? '🔵' : '⚪'),
-          matches_played: 8,
-          wins: 5,
-          draws: 1,
-          losses: 2,
-          goals_for: 14,
-          goals_against: 9,
-        })),
+        rows: computeMockTeamStatsRows(),
       })
     }
     if (path === 'data_player_stats') {
       postNui('refboard:data:player_stats:ack', {
-        rows: [
-          {
-            grp_key: 'mock:license:1',
-            player_name: 'Mock Player',
-            has_license: 1,
-            matches_played: 3,
-            appearances: 3,
-            goals: 2,
-            assists: 1,
-            yellows: 0,
-            reds: 0,
-          },
-          {
-            grp_key: '__guest__|Guest|9',
-            player_name: 'Guest',
-            has_license: 0,
-            matches_played: 1,
-            appearances: 1,
-            goals: 0,
-            assists: 0,
-            yellows: 1,
-            reds: 0,
-          },
-        ],
+        rows: computeMockPlayerStatsRows(),
       })
     }
     if (path === 'data_score_edit_log') {
       postNui('refboard:data:score_edit_log:ack', { rows: [...mockDb.scoreHistory].reverse().slice(0, 1000) })
     }
     if (path === 'data_match_history') {
-      const st = (data as { status?: string })?.status
-      const rows =
-        st && st !== 'all' ? mockListRows.filter((r) => r.status === st) : mockListRows
+      const rows = filterMockMatchHistoryRows((data ?? {}) as MockDataMatchHistoryPayload)
       postNui('refboard:data:match_history:ack', { rows })
     }
     if (path === 'data_db_meta') {
@@ -698,6 +860,9 @@ export function queueMockSideEffects(path: string, data: unknown): void {
           match_name: matchName,
           venue,
           kickoff_time: kickoffTime.length >= 5 ? `${kickoffTime.slice(0, 5)}:00` : '',
+          clock_running: 0,
+          clock_started_at: null,
+          clock_accumulated_ms: 0,
         })
         const detail = newEmptyMatchDetail(id, t1, t2, matchDate, matchName, venue, kickoffTime)
         mockDb.matchDetails[String(id)] = detail
@@ -846,6 +1011,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
           }
         }
         syncLiveDetailClockMmSs()
+        syncMockListRowFromLive()
         flushPersistence()
         postNui('refboard:match:clock:ack', {
           ok: true,
@@ -941,7 +1107,9 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const tid = Number(d.teamId)
       const wantId = Number(d.playerId)
       const allPlayers = [...liveDetail.homePlayers, ...liveDetail.awayPlayers]
-      const target = allPlayers.find((x) => Number.isFinite(wantId) && Number(x.id) === wantId)
+      const target = allPlayers.find(
+        (x) => Number.isFinite(wantId) && (Number(x.id) === wantId || mockNumericPlayerRowId(x) === wantId),
+      )
       if (target && mockTimelineReferencesPlayer(target, liveDetail.events)) {
         postNui('refboard:player:remove:ack', {
           ok: false,
@@ -951,7 +1119,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         return
       }
       const filter = (xs: MatchPlayer[]) =>
-        xs.filter((x) => !(Number.isFinite(wantId) && Number(x.id) === wantId))
+        xs.filter((x) => !(Number.isFinite(wantId) && (Number(x.id) === wantId || mockNumericPlayerRowId(x) === wantId)))
       if (tid === liveDetail.team1Id) {
         liveDetail.homePlayers = filter(liveDetail.homePlayers)
       } else if (tid === liveDetail.team2Id) {
@@ -1009,7 +1177,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         team1_name: liveDetail.home.name,
         team2_name: liveDetail.away.name,
       })
-      syncMockListRowScoresFromLive()
+      syncMockListRowFromLive()
       flushPersistence()
       postNui('refboard:score:goal:ack', { ok: true })
       postNui('refboard:match:state', {
@@ -1044,7 +1212,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         team1_name: liveDetail.home.name,
         team2_name: liveDetail.away.name,
       })
-      syncMockListRowScoresFromLive()
+      syncMockListRowFromLive()
       flushPersistence()
       postNui('refboard:score:manual_edit:ack', { ok: true })
       postNui('refboard:match:state', {
@@ -1065,6 +1233,7 @@ export function queueMockSideEffects(path: string, data: unknown): void {
         liveDetail.clockStartedAtMs = null
       }
       syncLiveDetailClockMmSs()
+      syncMockListRowFromLive()
       flushPersistence()
       postNui('refboard:match:finish:ack', { ok: true })
       postNui('refboard:match:finished', { matchId: liveDetail.id })

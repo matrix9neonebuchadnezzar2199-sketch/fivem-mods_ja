@@ -36,6 +36,7 @@ import GoalRecordWizard from '../components/match/GoalRecordWizard.vue'
 import AddPlayerDialog from '../components/match/AddPlayerDialog.vue'
 import ScoreEditDialog from '../components/match/ScoreEditDialog.vue'
 import ScoreHistoryDialog from '../components/match/ScoreHistoryDialog.vue'
+import PresenceBadge from '../components/PresenceBadge.vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
@@ -753,8 +754,11 @@ function exportMatchEventsCsv() {
 
     <div
       v-if="compactDock && detail.serverHalf !== 'pk'"
-      class="pointer-events-auto fixed bottom-4 left-0 right-0 z-[100] flex justify-center bg-transparent px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-0 sm:bottom-5"
+      class="pointer-events-auto fixed bottom-4 left-0 right-0 z-[100] flex flex-col items-center gap-1.5 bg-transparent px-2 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-0 sm:bottom-5"
     >
+      <div class="flex w-full max-w-6xl shrink-0 items-center justify-start px-0.5">
+        <PresenceBadge />
+      </div>
       <div
         class="relative w-full max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/95 p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] shadow-inner backdrop-blur-md md:max-h-[min(46vh,26rem)]"
       >
@@ -813,7 +817,6 @@ function exportMatchEventsCsv() {
       <div
         v-if="showFinish"
         class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
-        @click.self="showFinish = false"
       >
         <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
           <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_finish.title') }}</h2>

@@ -22,8 +22,8 @@ Config.OpenKey = 'F6'
 -- 既定ロケール（クライアントで上書き可）
 Config.DefaultLocale = 'ja'
 
--- サーバー上のトランザクション検証コマンド・設定の「疑似データ投入／全データ初期化」（本番では false 推奨）
-Config.EnableTestCommands = false
+-- サーバー上のトランザクション検証コマンド等（refboard_test_transaction）。設定画面の SQL 完全初期化／疑似データは本フラグに依存しない（編集モード＋NUI のチェックで実行）
+Config.EnableTestCommands = true
 
 -- サーバーログレベル（Logger 用）: DEBUG / INFO / WARN / ERROR
 Config.LogLevel = 'INFO'
@@ -38,3 +38,7 @@ Config.AutoCreateSchema = true
 -- true: リソース起動時に sql/seed_test_5teams_15roster.sql を実行（5チーム×ロスター15人・再実行安全）
 -- 本番でデモチーム名を入れたくない場合は false（手動で SQL を流す運用でも可）
 Config.SeedDemoTeamsOnStart = true
+
+-- true: 起動時に sql/dev_seed_20matches.sql を実行（上記5チーム前提の開発用試合20件・再実行安全）
+-- チームが無いと INSERT 0 件になるため、通常は SeedDemoTeamsOnStart とセットで true
+Config.SeedDemoMatchesOnStart = true

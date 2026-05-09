@@ -374,7 +374,6 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="score-clock-clear-title"
-        @click.self="cancelClockClear"
       >
         <div class="max-w-sm rounded-xl border border-amber-600/50 bg-slate-900 p-5 shadow-2xl">
           <h2 id="score-clock-clear-title" class="mb-2 text-base font-semibold text-amber-100">

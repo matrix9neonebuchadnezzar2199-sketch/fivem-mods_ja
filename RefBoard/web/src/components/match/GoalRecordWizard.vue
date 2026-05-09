@@ -125,7 +125,6 @@ async function record() {
   <div
     v-if="open"
     class="fixed inset-0 z-[160] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
-    @click.self="close"
   >
     <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
       <div class="border-b border-slate-700 px-4 py-3 text-xs text-slate-500">

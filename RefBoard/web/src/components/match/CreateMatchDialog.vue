@@ -61,7 +61,6 @@ async function submit() {
   <div
     v-if="open"
     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-    @click.self="close"
   >
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-4 text-lg font-bold text-slate-50">{{ t('create_match.title') }}</h2>

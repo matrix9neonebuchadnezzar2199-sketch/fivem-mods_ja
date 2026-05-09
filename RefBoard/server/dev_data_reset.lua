@@ -1,6 +1,7 @@
 --[[
   開発用: 全データ削除、または wipe + 5 チームロスター + 試合 20 件の疑似データ投入。
-  Config.EnableTestCommands == true かつ編集モード入室済みの審判のみ。payload.confirm == 'YES' 必須。
+  編集モード入室済みの審判のみ。payload.confirm == 'YES' 必須。
+  （UI の「テスト用DB操作パネル」表示は NUI 設定で制御。サーバーは編集権＋確認のみ検証）
 ]]
 
 local RESOURCE = GetCurrentResourceName()
@@ -71,10 +72,6 @@ local function ack(src, body)
 end
 
 local function validateRequest(src, payload)
-  if Config.EnableTestCommands ~= true then
-    ack(src, { ok = false, error = 'test_commands_disabled' })
-    return false
-  end
   if type(payload) ~= 'table' or payload.confirm ~= 'YES' then
     ack(src, { ok = false, error = 'bad_confirm' })
     return false

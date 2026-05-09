@@ -114,6 +114,10 @@ export type MatchListRow = {
   match_name?: string | null
   venue?: string | null
   kickoff_time?: string | null
+  /** DB: 計測中のみ一覧で残り時間をライブ表示 */
+  clock_running?: number
+  clock_started_at?: number | null
+  clock_accumulated_ms?: number
 }
 
 export type TeamRow = {

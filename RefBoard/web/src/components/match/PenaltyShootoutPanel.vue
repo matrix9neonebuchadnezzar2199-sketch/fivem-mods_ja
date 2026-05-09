@@ -193,7 +193,6 @@ function laterFinish() {
     <div
       v-if="showFinishAsk && !readonly"
       class="fixed inset-0 z-[410] flex items-center justify-center bg-black/60 p-4"
-      @click.self="laterFinish"
     >
       <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-6 shadow-2xl">
         <h3 class="mb-2 text-lg font-semibold text-slate-50">{{ t('penalty.finish_title') }}</h3>
