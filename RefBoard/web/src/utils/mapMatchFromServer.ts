@@ -10,6 +10,7 @@ import type {
   ScoreHistoryRow,
 } from '../types/match'
 import { toDateInputString } from './formatDate'
+import { parseEpochMsFromServer } from './matchClock'
 
 export type ServerBreakdown = {
   firstHalf: { home: number; away: number }
@@ -197,12 +198,9 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
   const awayScore = Number(m.team2_score) || 0
   const acc = Number(m.clock_accumulated_ms) || 0
   const running = Number(m.clock_running) === 1
-  const startedAt =
-    m.clock_started_at != null && String(m.clock_started_at).length > 0 ? Number(m.clock_started_at) : null
+  const startedAt = parseEpochMsFromServer(m.clock_started_at)
   const elapsedNow =
-    running && startedAt != null && Number.isFinite(startedAt)
-      ? acc + Math.max(0, Date.now() - startedAt)
-      : acc
+    running && startedAt != null ? acc + Math.max(0, Date.now() - startedAt) : acc
   const players = ack.players || []
   const status = m.status || 'draft'
   const half = m.current_half || '1st'
@@ -226,7 +224,7 @@ export function mapMatchGetAckToDetail(ack: MatchGetAck): MatchDetailModel | nul
     clockMmSs: clockMmSs(elapsedNow),
     clockAccumulatedMs: acc,
     clockRunning: running,
-    clockStartedAtMs: startedAt != null && Number.isFinite(startedAt) ? startedAt : null,
+    clockStartedAtMs: startedAt,
     breakdown: mapBreakdown(ack.breakdown, defaultBreakdown(homeScore, awayScore)),
     serverHalf: half,
     pkFirstTeamId: m.pk_first_team_id != null ? Number(m.pk_first_team_id) : null,

@@ -9,7 +9,12 @@
     "match_delete_locked": "Another user is editing this match; delete is blocked.",
     "card_issue_incomplete": "Pick team, player, and card type again.",
     "card_issue_timeout": "No response for card registration. Check connection and edit lock.",
-    "card_issue_failed": "Could not register the card ({code})."
+    "card_issue_failed": "Could not register the card ({code}).",
+    "card_issue_bad_player": "Player data is out of sync with the server. Reload the match and try again.",
+    "card_issue_bad_phase": "Cards cannot be registered in this phase (e.g. during a penalty shootout).",
+    "player_remove_timeout": "Player removal timed out. Check connection and edit lock.",
+    "match_finish_failed": "Could not finalize the match.",
+    "goal_record_timeout": "No response when recording the goal. Check connection and edit lock."
   },
   "presence": {
     "online": "Online",
@@ -111,7 +116,8 @@
     "list_actions": "Actions",
     "list_remove": "Remove",
     "list_remove_aria": "Remove this player from the match roster",
-    "remove_confirm": "Remove “{name}” from this match roster? (Players referenced on the timeline cannot be removed.)",
+    "remove_modal_title": "Remove from match roster",
+    "remove_confirm": "Remove “{name}” from this match roster? Timeline rows stay, but links to this player are cleared (finished-match stats won’t attribute to the removed row).",
     "remove_draft_only": "Players can only be removed while the match is a draft.",
     "remove_failed": "Could not remove the player."
   },
@@ -522,7 +528,8 @@
     "E3003": "Team not found",
     "E3004": "Match status does not allow this operation",
     "E3005": "Player is not in an active state",
-    "E3006": "This player cannot be removed because they appear on the match timeline (void related events first, if applicable).",
+    "E3006": "(Legacy) This player could not be removed because of timeline references.",
+    "E3007": "A rostered player was removed in team management but is still on this match. Restore the roster entry or remove them from the match before finishing.",
     "E4001": "Database connection lost",
     "E4002": "Database operation failed",
     "E4003": "Transaction failed",

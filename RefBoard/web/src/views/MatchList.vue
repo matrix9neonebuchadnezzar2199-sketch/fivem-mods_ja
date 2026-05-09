@@ -13,7 +13,7 @@ import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
 import { formatDateJa } from '../utils/formatDate'
-import { formatClockMs, remainingMsFromClock } from '../utils/matchClock'
+import { formatClockMs, parseEpochMsFromServer, remainingMsFromClock } from '../utils/matchClock'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -51,15 +51,12 @@ function syncListClockInterval() {
 function listRemainingTimeLabel(m: MatchListRow): string {
   if (Number(m.clock_running) !== 1) return '-'
   void listClockTick.value
-  const started =
-    m.clock_started_at != null && String(m.clock_started_at) !== ''
-      ? Number(m.clock_started_at)
-      : null
+  const started = parseEpochMsFromServer(m.clock_started_at)
   const rem = remainingMsFromClock(
     fullMatchDurationMs(),
     Number(m.clock_accumulated_ms) || 0,
     true,
-    started != null && Number.isFinite(started) ? started : null,
+    started,
     Date.now(),
   )
   return formatClockMs(rem)
@@ -74,6 +71,8 @@ const showReopen = ref(false)
 const reopenId = ref<number | null>(null)
 const showDeleteConfirm = ref(false)
 const deleteId = ref<number | null>(null)
+/** 編集入室の二重クリックで enterEdit / トーストが二重に走らないようにする */
+const editEnterInFlight = ref(false)
 
 let offMatch: (() => void) | null = null
 let offTeam: (() => void) | null = null
@@ -128,26 +127,32 @@ function openDetail(id: number) {
 }
 
 async function openEdit(id: number) {
-  const r = await session.enterEdit(id)
-  if (r.ok) {
-    void router.push({ name: 'match-detail', params: { id: String(id) } })
-    return
+  if (editEnterInFlight.value) return
+  editEnterInFlight.value = true
+  try {
+    const r = await session.enterEdit(id)
+    if (r.ok) {
+      void router.push({ name: 'match-detail', params: { id: String(id) } })
+      return
+    }
+    if (r.error === 'timeout') {
+      toast(t('launcher.lock_acquire_timeout'), 'error', { ms: 6000 })
+      return
+    }
+    if (isDbOrInfraAcquireError(r.error)) {
+      toast(t('launcher.db_or_config_error'), 'error', { ms: 14000 })
+      return
+    }
+    if (!isPeerLockHeldError(r.error)) {
+      toast(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', { ms: 8000 })
+      return
+    }
+    lockPeer.value = r.holder?.name || t('launcher.unknown_editor')
+    pendingOpenId.value = id
+    showLock.value = true
+  } finally {
+    editEnterInFlight.value = false
   }
-  if (r.error === 'timeout') {
-    toast(t('launcher.lock_acquire_timeout'), 'error', { ms: 6000 })
-    return
-  }
-  if (isDbOrInfraAcquireError(r.error)) {
-    toast(t('launcher.db_or_config_error'), 'error', { ms: 14000 })
-    return
-  }
-  if (!isPeerLockHeldError(r.error)) {
-    toast(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', { ms: 8000 })
-    return
-  }
-  lockPeer.value = r.holder?.name || t('launcher.unknown_editor')
-  pendingOpenId.value = id
-  showLock.value = true
 }
 
 async function openPendingAsView() {
@@ -195,8 +200,11 @@ async function confirmDelete() {
 
 async function confirmReopen() {
   const id = reopenId.value
-  if (!id) return
-  const er = await session.enterEdit(id)
+  if (!id || editEnterInFlight.value) return
+  editEnterInFlight.value = true
+  const er = await session.enterEdit(id).finally(() => {
+    editEnterInFlight.value = false
+  })
   if (!er.ok) {
     showReopen.value = false
     reopenId.value = null

@@ -26,17 +26,6 @@ local function eventHalfFromMatch(h)
   return '1st'
 end
 
-local function matchTimeMs(m)
-  local acc = tonumber(m.clock_accumulated_ms) or 0
-  if tonumber(m.clock_running) == 1 and m.clock_started_at then
-    local st = tonumber(m.clock_started_at)
-    if st then
-      return acc + (os.time() * 1000 - st)
-    end
-  end
-  return acc
-end
-
 local function withTransaction(fn)
   MySQL.query.await('START TRANSACTION')
   local ok, err = pcall(fn)
@@ -117,7 +106,7 @@ RegisterNetEvent('refboard:score:goal', function(payload)
     end
 
     local half = eventHalfFromMatch(m.current_half)
-    local mt = matchTimeMs(m)
+    local mt = math.floor(RefboardMatchTimeMsFromRow(m))
 
     local evId = MySQL.insert.await(
       [[INSERT INTO match_events
@@ -206,7 +195,7 @@ RegisterNetEvent('refboard:score:manual_edit', function(payload)
       error('no_match')
     end
     local half = eventHalfFromMatch(m.current_half)
-    local mt = matchTimeMs(m)
+    local mt = math.floor(RefboardMatchTimeMsFromRow(m))
 
     MySQL.insert.await(
       [[INSERT INTO match_score_history

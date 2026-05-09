@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
 import { useToast } from '../../composables/useToast'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
+import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 
 const props = defineProps<{
   open: boolean
@@ -124,14 +125,14 @@ async function record() {
     toast(t('toast.card_issue_incomplete'), 'error', 5000)
     return
   }
-  const pid = Number(playerId.value)
-  if (!Number.isFinite(pid) || pid <= 0) {
+  const pid = resolveMatchPlayerRowId(playerId.value)
+  if (pid == null || pid <= 0) {
     toast(t('toast.card_issue_incomplete'), 'error', 5000)
     return
   }
   let settled = false
   let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:event:issue_card:ack', (r: { ok?: boolean; error?: string }) => {
+  const un = on('refboard:event:issue_card:ack', (r: { ok?: boolean; error?: string; detail?: string }) => {
     if (settled) return
     settled = true
     if (timeoutId != null) window.clearTimeout(timeoutId)
@@ -146,6 +147,17 @@ async function record() {
       return
     }
     const code = r?.error ?? 'unknown'
+    if (code === 'bad_player') {
+      toast(t('toast.card_issue_bad_player'), 'error', 8000)
+      return
+    }
+    if (code === 'bad_phase') {
+      toast(t('toast.card_issue_bad_phase'), 'error', 8000)
+      return
+    }
+    if (code === 'tx_failed' && r?.detail && import.meta.env.DEV) {
+      console.warn('[RefBoard] issue_card tx_failed', r.detail)
+    }
     toast(t('toast.card_issue_failed', { code }), 'error', 8000)
   })
   timeoutId = window.setTimeout(() => {

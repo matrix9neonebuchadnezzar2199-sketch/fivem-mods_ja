@@ -1,6 +1,6 @@
 --[[
   試合時計（matches.clock_*）。編集ロック保持者のみ更新可。
-  経過 ms は event.lua / score.lua の matchTimeMs と同じ定義。
+  経過 ms は event.lua / score.lua と同じ RefboardMatchTimeMsFromRow 定義。
 ]]
 
 local function assertEditorLock(src, matchId)
@@ -17,16 +17,6 @@ local function assertEditorLock(src, matchId)
   return true
 end
 
-local function matchTimeMs(m)
-  local acc = tonumber(m.clock_accumulated_ms) or 0
-  if tonumber(m.clock_running) == 1 and m.clock_started_at then
-    local st = tonumber(m.clock_started_at)
-    if st then
-      return acc + (os.time() * 1000 - st)
-    end
-  end
-  return acc
-end
 
 local function readClockRow(matchId)
   return MySQL.single.await(
@@ -97,7 +87,7 @@ RegisterNetEvent('refboard:match:clock', function(payload)
         ackClock(src, matchId)
         return
       end
-      local elapsed = math.floor(matchTimeMs(m))
+      local elapsed = math.floor(RefboardMatchTimeMsFromRow(m))
       MySQL.update.await(
         [[UPDATE matches SET clock_running = 0, clock_started_at = NULL,
             clock_accumulated_ms = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?]],
@@ -111,7 +101,7 @@ RegisterNetEvent('refboard:match:clock', function(payload)
       )
     elseif action == 'adjust' then
       local delta = tonumber(payload.deltaRemainingMs) or 0
-      local cur = math.floor(matchTimeMs(m))
+      local cur = math.floor(RefboardMatchTimeMsFromRow(m))
       local newElapsed = math.max(0, cur - delta)
       if tonumber(m.clock_running) == 1 then
         local nowMs = os.time() * 1000

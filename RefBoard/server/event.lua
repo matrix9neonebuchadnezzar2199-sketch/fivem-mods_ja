@@ -26,17 +26,6 @@ local function eventHalfFromMatch(h)
   return '1st'
 end
 
-local function matchTimeMs(m)
-  local acc = tonumber(m.clock_accumulated_ms) or 0
-  if tonumber(m.clock_running) == 1 and m.clock_started_at then
-    local st = tonumber(m.clock_started_at)
-    if st then
-      return acc + (os.time() * 1000 - st)
-    end
-  end
-  return acc
-end
-
 local function withTransaction(fn)
   MySQL.query.await('START TRANSACTION')
   local ok, err = pcall(fn)
@@ -164,7 +153,7 @@ RegisterNetEvent('refboard:event:substitute', function(payload)
       error('bad_in')
     end
     local half = eventHalfFromMatch(m.current_half)
-    local mt = matchTimeMs(m)
+    local mt = math.floor(RefboardMatchTimeMsFromRow(m))
     MySQL.insert.await(
       [[INSERT INTO match_events
           (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
@@ -224,7 +213,7 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
       error('bad_player')
     end
     local half = eventHalfFromMatch(m.current_half)
-    local mt = matchTimeMs(m)
+    local mt = math.floor(RefboardMatchTimeMsFromRow(m))
 
     if cardType == 'yellow_card' then
       local yc = tonumber(pl.yellow_cards) or 0
@@ -256,11 +245,21 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
   end)
 
   if not okTx then
-    if txErr and tostring(txErr):find('second_yellow_confirm', 1, true) then
+    local es = txErr and tostring(txErr) or ''
+    if es:find('second_yellow_confirm', 1, true) then
       TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'second_yellow_confirm' })
       return
     end
-    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'tx_failed', detail = tostring(txErr) })
+    if es:find('bad_player', 1, true) then
+      TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_player' })
+      return
+    end
+    if es:find('bad_phase', 1, true) then
+      TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_phase' })
+      return
+    end
+    Logger.warn('net:event:issue_card', 'transaction_failed', { matchId = matchId, detail = es })
+    TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'tx_failed', detail = es })
     return
   end
 
@@ -307,7 +306,7 @@ RegisterNetEvent('refboard:event:record_penalty', function(payload)
     if not pl then
       error('bad_player')
     end
-    local mt = matchTimeMs(m)
+    local mt = math.floor(RefboardMatchTimeMsFromRow(m))
     MySQL.insert.await(
       [[INSERT INTO match_events
           (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,

@@ -86,3 +86,36 @@ function RefboardGuard(src, ackEvent, tag, fn)
     )
   end
 end
+
+--- BIGINT / 文字列 / 秒単位の誤保存を吸収し、試合時計用の epoch ミリ秒を返す（解釈不能なら nil）。
+function RefboardParseEpochMs(v)
+  if v == nil then
+    return nil
+  end
+  local n = tonumber(v)
+  if n == nil and type(v) == 'string' then
+    n = tonumber((v:match('^%s*([%d%.]+)%s*$')))
+  end
+  if n == nil or n ~= n then
+    return nil
+  end
+  if n > 1e12 then
+    return math.floor(n)
+  end
+  if n > 1e9 then
+    return math.floor(n * 1000)
+  end
+  return nil
+end
+
+--- matches 行から「現在の経過 ms」（clock_running / clock_started_at / clock_accumulated_ms）。
+function RefboardMatchTimeMsFromRow(m)
+  local acc = tonumber(m and m.clock_accumulated_ms) or 0
+  if m and tonumber(m.clock_running) == 1 then
+    local st = RefboardParseEpochMs(m.clock_started_at)
+    if st then
+      return acc + math.max(0, (os.time() * 1000) - st)
+    end
+  end
+  return acc
+end

@@ -22,6 +22,8 @@ import {
   type ServerPlayerRow,
 } from '../utils/mapMatchFromServer'
 import { downloadFile, exportMatchEventsToCSV, exportMatchToJSON, refboardFilename } from '../utils/exporters'
+import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
+import { getElapsedMsFromClockState, parseEpochMsFromServer } from '../utils/matchClock'
 import BasicInfoCard from '../components/match/BasicInfoCard.vue'
 import ScoreBoardCard from '../components/match/ScoreBoardCard.vue'
 import MatchStatusCard from '../components/match/MatchStatusCard.vue'
@@ -55,7 +57,7 @@ const autosave = useAutosaveStore()
 const presence = usePresenceStore()
 const { send, on } = useNui()
 const { setFocus } = useFocusTracker()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const settings = useSettingsStore()
 const matchCompactDock = useMatchCompactDockStore()
 const { push: toast } = useToast()
@@ -68,6 +70,8 @@ function closeAllModals() {
   showFinish.value = false
   showSub.value = false
   showCard.value = false
+  showRemovePlayerModal.value = false
+  pendingRemovePlayer.value = null
 }
 
 useKeyboardShortcuts({
@@ -101,6 +105,9 @@ const showFinish = ref(false)
 const showSub = ref(false)
 const showCard = ref(false)
 const cardPreset = ref<'yellow' | 'red' | null>(null)
+const showRemovePlayerModal = ref(false)
+const pendingRemovePlayer = ref<{ teamId: number; player: MatchPlayer } | null>(null)
+const removePlayerBusy = ref(false)
 /** 小窓モードで Lua が SetNuiFocus(false) にしているとき true（歩行優先） */
 const compactGameInputActive = ref(false)
 
@@ -142,13 +149,8 @@ function getElapsedMsFromDetail(): number {
     typeof detail.clockAccumulatedMs === 'number'
       ? detail.clockAccumulatedMs
       : parseClockMmSsToMs(detail.clockMmSs)
-  if (detail.clockRunning === true && detail.clockStartedAtMs != null) {
-    const st = Number(detail.clockStartedAtMs)
-    if (Number.isFinite(st)) {
-      return acc + Math.max(0, Date.now() - st)
-    }
-  }
-  return acc
+  const st = parseEpochMsFromServer(detail.clockStartedAtMs)
+  return getElapsedMsFromClockState(acc, detail.clockRunning === true, st, Date.now())
 }
 
 const elapsedMmSsLive = computed(() => {
@@ -191,8 +193,7 @@ function applyClockAck(r: MatchClockAck) {
     detail.clockRunning = Number(r.clock_running) === 1
   }
   if (r.clock_started_at !== undefined) {
-    const v = r.clock_started_at
-    detail.clockStartedAtMs = v != null && String(v) !== '' ? Number(v) : null
+    detail.clockStartedAtMs = parseEpochMsFromServer(r.clock_started_at)
   }
   detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
 }
@@ -286,6 +287,8 @@ const editorHereT1 = computed(() => editorFocus.value === 'team1_players')
 const editorHereT2 = computed(() => editorFocus.value === 'team2_players')
 const editorHereEvents = computed(() => editorFocus.value === 'events')
 
+let loadMatchGen = 0
+
 let offState: (() => void) | null = null
 let offFinished: (() => void) | null = null
 let offCompactInputMode: (() => void) | null = null
@@ -343,8 +346,7 @@ function applyState(p: {
       detail.clockRunning = Number(p.clock_running) === 1
     }
     if (p.clock_started_at !== undefined) {
-      const v = p.clock_started_at
-      detail.clockStartedAtMs = v != null && String(v) !== '' ? Number(v) : null
+      detail.clockStartedAtMs = parseEpochMsFromServer(p.clock_started_at)
     }
     detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
     syncClockFromDetail()
@@ -434,9 +436,11 @@ watch(
 async function loadMatch() {
   const id = Number(route.params.id)
   if (!id) return
+  const gen = ++loadMatchGen
   detail.id = id
   const un = on('refboard:match:get:ack', (ack: MatchGetAck) => {
     un()
+    if (gen !== loadMatchGen) return
     const mapped = mapMatchGetAckToDetail(ack)
     if (mapped) {
       Object.assign(detail, mapped)
@@ -444,7 +448,13 @@ async function loadMatch() {
     }
     historyRows.value = mapHistoryRows(ack.history)
   })
-  await send('match_get', { matchId: id })
+  try {
+    await send('match_get', { matchId: id })
+  } catch {
+    if (gen === loadMatchGen) {
+      un()
+    }
+  }
 }
 
 watch(
@@ -479,14 +489,16 @@ watch(
   { deep: true },
 )
 
-/** F6 で NUI を閉じたとき Lua がロック解放する。再オープン時は同一ルートのままなので onMounted が走らず lock が無いまま → 時計が no_lock で失敗する。ここで取り直す */
-watch(nuiShellOpenRef, (open, prevOpen) => {
+/** F6 で NUI を閉じたとき Lua がロック解放する。再オープン時は同一ルートのままなので onMounted が走らず lock が無いまま → 時計・カードが no_lock / タイムアウトになる。pending があれば enterEdit で取り直す */
+watch(nuiShellOpenRef, async (open, prevOpen) => {
   if (!open || prevOpen !== false) return
-  if (!session.isEditor) return
-  const id = Number(detail.id)
+  const id = Number(route.params.id) || Number(detail.id)
   if (!id) return
-  void send('lock_acquire', { matchId: id })
-  void loadMatch()
+  await session.tryRelockAfterShellOpen(id)
+  if (session.isEditor) {
+    void send('lock_acquire', { matchId: id })
+    void loadMatch()
+  }
 })
 
 onMounted(() => {
@@ -535,40 +547,112 @@ function openAdd(teamId: number) {
 
 const canRemoveMatchPlayers = computed(() => session.isEditor && detail.dbStatus === 'draft')
 
-async function onRemoveMatchPlayer(teamId: number, player: MatchPlayer) {
+function openRemovePlayerModal(teamId: number, player: MatchPlayer) {
   if (!canRemoveMatchPlayers.value) {
     toast(t('player.remove_draft_only'), 'info', { ms: 5000 })
     return
   }
-  if (!confirm(t('player.remove_confirm', { name: player.name }))) return
-  const pid = Number(player.id)
-  if (!Number.isFinite(pid)) {
+  pendingRemovePlayer.value = { teamId, player }
+  showRemovePlayerModal.value = true
+}
+
+function closeRemovePlayerModal() {
+  if (removePlayerBusy.value) return
+  showRemovePlayerModal.value = false
+  pendingRemovePlayer.value = null
+}
+
+async function confirmRemovePlayer() {
+  const ctx = pendingRemovePlayer.value
+  if (!ctx || removePlayerBusy.value) return
+  const pid = resolveMatchPlayerRowId(ctx.player.id)
+  if (pid == null) {
     toast(t('player.remove_failed'), 'error')
     return
   }
+  removePlayerBusy.value = true
+  let settled = false
+  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
   const un = on('refboard:player:remove:ack', (r: { ok?: boolean; error?: string; code?: string }) => {
+    if (settled) return
+    settled = true
+    if (timeoutId != null) window.clearTimeout(timeoutId)
     un()
+    removePlayerBusy.value = false
+    showRemovePlayerModal.value = false
+    pendingRemovePlayer.value = null
     if (r?.ok) {
       void loadMatch()
       return
     }
     const code = r?.code
-    const msg = code ? t(`errors.${code}`) : t('player.remove_failed')
+    const msg =
+      code && te(`errors.${code}`)
+        ? t(`errors.${code}`)
+        : r?.error === 'no_lock'
+          ? t('errors.E1005')
+          : t('player.remove_failed')
     toast(msg, 'error', { ms: 7000, errorCode: code, errorKey: r?.error })
   })
-  await send('player_remove', { matchId: detail.id, teamId, playerId: pid })
+  timeoutId = window.setTimeout(() => {
+    if (settled) return
+    settled = true
+    un()
+    removePlayerBusy.value = false
+    showRemovePlayerModal.value = false
+    pendingRemovePlayer.value = null
+    toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
+  }, 8000)
+  try {
+    await send('player_remove', { matchId: detail.id, teamId: ctx.teamId, playerId: pid })
+  } catch {
+    if (!settled) {
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      removePlayerBusy.value = false
+      showRemovePlayerModal.value = false
+      pendingRemovePlayer.value = null
+      toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
+    }
+  }
 }
 
 async function onFinishConfirm() {
-  const un = on('refboard:match:finish:ack', (r: { ok?: boolean }) => {
+  let settled = false
+  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
+  const un = on('refboard:match:finish:ack', (r: { ok?: boolean; error?: string; code?: string }) => {
+    if (settled) return
+    settled = true
+    if (timeoutId != null) window.clearTimeout(timeoutId)
     un()
     if (r?.ok) {
       detail.dbStatus = 'finished'
       showFinish.value = false
       toast(t('toast.match_finished'), 'success')
+      return
     }
+    const code = r?.code
+    const msg =
+      code && te(`errors.${code}`) ? t(`errors.${code}`) : t('toast.match_finish_failed')
+    toast(msg, 'error', { ms: 9000, errorCode: code, errorKey: r?.error })
   })
-  await send('match_finish', { matchId: detail.id })
+  timeoutId = window.setTimeout(() => {
+    if (settled) return
+    settled = true
+    un()
+    toast(t('toast.match_finish_failed'), 'error', { ms: 8000 })
+  }, 12000)
+  try {
+    await send('match_finish', { matchId: detail.id })
+  } catch {
+    if (!settled) {
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      toast(t('toast.match_finish_failed'), 'error')
+    }
+  }
 }
 
 function onPkFinished() {
@@ -611,6 +695,7 @@ function exportMatchEventsCsv() {
         <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20 text-4xl shadow-lg">⚽</div>
         <div class="text-2xl font-bold tracking-tight text-slate-50">サッカー試合管理ツール</div>
         <div class="text-sm text-slate-400">RefBoard — スタジアムモード</div>
+        <div class="text-xs tracking-wide text-slate-500">by eiho</div>
       </div>
     </div>
 
@@ -722,7 +807,7 @@ function exportMatchEventsCsv() {
                 :editor-here="editorHereT1"
                 @history="showHistory = true"
                 @add="openAdd"
-                @remove="(p) => onRemoveMatchPlayer(detail.team1Id, p)"
+                @remove="(p) => openRemovePlayerModal(detail.team1Id, p)"
               />
             </div>
             <div @pointerenter="setFocus('team2_players')" @pointerleave="setFocus(null)">
@@ -735,7 +820,7 @@ function exportMatchEventsCsv() {
                 :editor-here="editorHereT2"
                 @history="showHistory = true"
                 @add="openAdd"
-                @remove="(p) => onRemoveMatchPlayer(detail.team2Id, p)"
+                @remove="(p) => openRemovePlayerModal(detail.team2Id, p)"
               />
             </div>
           </div>
@@ -760,8 +845,14 @@ function exportMatchEventsCsv() {
         <PresenceBadge />
       </div>
       <div
-        class="relative w-full max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/95 p-2 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] shadow-inner backdrop-blur-md md:max-h-[min(46vh,26rem)]"
+        class="relative w-full max-h-[min(52vh,28rem)] max-w-6xl overflow-y-auto rounded-t-xl border border-slate-600/70 bg-slate-900/95 p-2 pt-7 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] shadow-inner backdrop-blur-md md:max-h-[min(46vh,26rem)]"
       >
+        <div
+          class="pointer-events-none absolute right-3 top-2 z-10 text-xs tracking-wide text-slate-500"
+          aria-hidden="true"
+        >
+          by eiho
+        </div>
         <div class="flex flex-col gap-2 md:flex-row md:items-stretch md:gap-3">
           <div class="min-h-0 min-w-0 flex-1 md:max-w-[58%]" @pointerenter="setFocus('score')" @pointerleave="setFocus(null)">
             <ScoreBoardCard
@@ -813,6 +904,36 @@ function exportMatchEventsCsv() {
       <AddPlayerDialog v-model:open="showAdd" :match-id="detail.id" :team-id="addTeamId" @added="reloadMatch" />
       <ScoreEditDialog v-model:open="showScoreEdit" :model="detail" @saved="reloadMatch" />
       <ScoreHistoryDialog v-model:open="showHistory" :rows="historyRows" />
+
+      <div
+        v-if="showRemovePlayerModal && pendingRemovePlayer"
+        class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
+      >
+        <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+          <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('player.remove_modal_title') }}</h2>
+          <p class="mb-4 text-sm text-slate-300">
+            {{ t('player.remove_confirm', { name: pendingRemovePlayer.player.name }) }}
+          </p>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-slate-600 px-3 py-2 text-sm"
+              :disabled="removePlayerBusy"
+              @click="closeRemovePlayerModal"
+            >
+              {{ t('dialog.no') }}
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              :disabled="removePlayerBusy"
+              @click="confirmRemovePlayer"
+            >
+              {{ t('dialog.yes') }}
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div
         v-if="showFinish"
