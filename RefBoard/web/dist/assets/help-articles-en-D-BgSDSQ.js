@@ -49,7 +49,7 @@ A. Depends on exporter version; use **JSON export** from match detail if columns
 `,n=`---
 title: Import a JSON backup
 category: data
-tags: ['data', 'backup', 'import', 'json']
+tags: [data, backup, import, json, restore, migration, 取り込み]
 related: [data_export, data_view_history]
 shortcut: null
 actionUrl: "#/workspace/data"
@@ -210,7 +210,7 @@ A. Use **Data** → **Full data backup (JSON)** and restore on the new machine.
 `,o=`---
 title: Record yellow and red cards
 category: in_match
-tags: [yellow, red, warning, send-off, card]
+tags: [yellow, red, warning, send-off, card, YC, RC]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -317,7 +317,7 @@ A. Whether **Delete** is allowed depends on server rules and lock state. Follow 
 `,i=`---
 title: Finish or reopen a match
 category: in_match
-tags: [finish, reopen, final]
+tags: [finish, reopen, resume, final]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -515,7 +515,7 @@ A. **Not** via manual score edit (that is for regulation goals). Use PK event un
 `,d=`---
 title: Record a goal
 category: in_match
-tags: [goal, score, shot, G, assist]
+tags: [goal, score, shot, G, assist, record]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"
@@ -697,7 +697,7 @@ A. Roster = **eligible pool**; on-pitch is **\`active\`** in match detail — di
 `,p=`---
 title: Register a new team
 category: team
-tags: [team, register, abbreviation, color]
+tags: [team, create team, register, abbreviation, color]
 related: [team_add_roster_member, match_create_new]
 shortcut: null
 actionUrl: "#/workspace/teams"
@@ -821,7 +821,7 @@ A. Remove is intended for **undoing an accidental add right after it happens**. 
 `,f=`---
 title: I recorded the wrong goal
 category: trouble
-tags: [goal, undo, mistake, G]
+tags: [undo, mistake, G, wrong goal, take back]
 related: [match_record_goal, match_manual_score_edit]
 shortcut: G
 ---

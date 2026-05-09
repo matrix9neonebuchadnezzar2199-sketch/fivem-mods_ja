@@ -1,7 +1,7 @@
 ---
 title: Finish or reopen a match
 category: in_match
-tags: [finish, reopen, final]
+tags: [finish, reopen, resume, final]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"

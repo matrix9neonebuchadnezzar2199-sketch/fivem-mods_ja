@@ -16,13 +16,15 @@ export interface HelpSearchEntry {
   categoryId?: string
 }
 
+/** 記事 16 本規模向け。誤ヒットより取りこぼしを抑えるため閾値はやや厳しめ。評価は docs/testing/help_search_queries.md。 */
 const FUSE_OPTIONS: IFuseOptions<HelpSearchEntry> = {
   keys: [
-    { name: 'title', weight: 0.7 },
-    { name: 'tags', weight: 0.2 },
+    { name: 'title', weight: 0.5 },
+    { name: 'tags', weight: 0.3 },
+    { name: 'slug', weight: 0.1 },
     { name: 'body', weight: 0.1 },
   ],
-  threshold: 0.4,
+  threshold: 0.35,
   ignoreLocation: true,
   includeMatches: false,
   includeScore: true,

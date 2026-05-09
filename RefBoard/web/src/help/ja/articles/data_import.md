@@ -1,7 +1,7 @@
 ---
 title: JSON バックアップを取り込む
 category: data
-tags: ['data', 'backup', 'import', 'json']
+tags: [data, backup, import, json, インポート, 取り込み, バックアップ, restore]
 related: [data_export, data_view_history]
 shortcut: null
 actionUrl: "#/workspace/data"

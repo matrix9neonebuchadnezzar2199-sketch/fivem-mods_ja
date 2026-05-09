@@ -1,7 +1,7 @@
 ---
 title: Record a goal
 category: in_match
-tags: [goal, score, shot, G, assist]
+tags: [goal, score, shot, G, assist, record]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"

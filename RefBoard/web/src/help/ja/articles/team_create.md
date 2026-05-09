@@ -1,7 +1,7 @@
 ---
 title: チームを新規登録する
 category: team
-tags: [チーム, 登録, 略称, カラー]
+tags: [チーム, チーム作成, 登録, 略称, カラー]
 related: [team_add_roster_member, match_create_new]
 shortcut: null
 actionUrl: "#/workspace/teams"

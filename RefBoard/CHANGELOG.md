@@ -7,6 +7,7 @@
 - 2026‑05‑09 追記: `web/package.json`・`package-lock.json`・`REFBOARD_UI_VERSION` を 0.1.0 に同期（`fxmanifest.lua` と整合）。
 - 2026‑05‑09 追記: 試合詳細ヘッダに操作者名（`selfName`）を表示。未設定時は Settings への誘導リンク。
 - 2026‑05‑09 追記: JSON バックアップのインポート UI（置換／追記）と取り込み履歴（直近 20 件）を追加。`schemaVersion=1` のみ対応。
+- 2026‑05‑09 追記: ヘルプ検索 Fuse.js のしきい値とキー重み付けを 16 本構成向けに再調整。評価クエリリストを `docs/testing/help_search_queries.md` に追加。
 
 ## v0.9.2 — 2026-05-09
 

@@ -1,7 +1,7 @@
 ---
 title: ゴールを記録する
 category: in_match
-tags: [ゴール, 得点, シュート, G, アシスト]
+tags: [ゴール, goal, 得点, シュート, G, アシスト, 記録]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"

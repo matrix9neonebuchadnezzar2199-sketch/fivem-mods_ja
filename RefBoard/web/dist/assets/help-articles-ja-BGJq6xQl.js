@@ -1,7 +1,7 @@
 const n=`---
 title: CSV でエクスポートする
 category: data
-tags: [CSV, エクスポート, BOM, Excel]
+tags: [CSV, エクスポート, BOM, Excel, バックアップ]
 related: [data_view_history, match_detail]
 shortcut: null
 actionUrl: "#/workspace/data"
@@ -49,7 +49,7 @@ A. 画面・エクスポーター実装次第です。欠ける列がある場�
 `,e=`---
 title: JSON バックアップを取り込む
 category: data
-tags: ['data', 'backup', 'import', 'json']
+tags: [data, backup, import, json, インポート, 取り込み, バックアップ, restore]
 related: [data_export, data_view_history]
 shortcut: null
 actionUrl: "#/workspace/data"
@@ -210,7 +210,7 @@ A. **データ**→**全データのバックアップ (JSON)** で書き出し�
 `,o=`---
 title: イエロー／レッドカードを記録する
 category: in_match
-tags: [イエロー, レッド, 警告, 退場, カード]
+tags: [イエロー, レッド, 黄色, 赤, 警告, 退場, カード, card, yellow, red]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -317,7 +317,7 @@ A. 一覧の **削除** が使える条件はサーバー・ロック状態に�
 `,l=`---
 title: 試合を終了する／再編集する
 category: in_match
-tags: [終了, 再編集, reopen, 確定, finish]
+tags: [終了, 再開, 再編集, reopen, 確定, finish]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
@@ -547,7 +547,7 @@ A. PK 内訳の手動編集 UI は **未実装**です。スコア手動編集�
 `,i=`---
 title: ゴールを記録する
 category: in_match
-tags: [ゴール, 得点, シュート, G, アシスト]
+tags: [ゴール, goal, 得点, シュート, G, アシスト, 記録]
 related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"
@@ -731,7 +731,7 @@ A. **いいえ**。ロスターは **登録プール**、出場は試合画面�
 `,p=`---
 title: チームを新規登録する
 category: team
-tags: [チーム, 登録, 略称, カラー]
+tags: [チーム, チーム作成, 登録, 略称, カラー]
 related: [team_add_roster_member, match_create_new]
 shortcut: null
 actionUrl: "#/workspace/teams"
@@ -855,7 +855,7 @@ A. 削除は **誤って追加した直後の取り消し** を主眼に置い�
 `,u=`---
 title: 間違えてゴールを記録してしまった
 category: trouble
-tags: [ゴール, 取消, Undo, ミス]
+tags: [取消, Undo, ミス, ゴール取消, やり直し]
 related: [match_record_goal, match_manual_score_edit]
 shortcut: G
 ---

@@ -1,7 +1,7 @@
 ---
 title: Record yellow and red cards
 category: in_match
-tags: [yellow, red, warning, send-off, card]
+tags: [yellow, red, warning, send-off, card, YC, RC]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"

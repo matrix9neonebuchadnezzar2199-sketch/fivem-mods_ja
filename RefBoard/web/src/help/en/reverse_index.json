@@ -15,7 +15,7 @@
           "id": "intro_setup_rev",
           "title": "First-time steps",
           "article": "intro_setup.md",
-          "tags": ["F6", "display name", "teams", "backup", "JSON"]
+          "tags": ["F6", "display name", "operator", "teams", "JSON", "first run", "setup"]
         }
       ]
     },
@@ -28,7 +28,7 @@
           "id": "undo_goal",
           "title": "I recorded the wrong goal",
           "article": "trouble_undo_goal.md",
-          "tags": ["goal", "undo", "mistake", "G"]
+          "tags": ["undo", "mistake", "wrong goal", "take back"]
         },
         {
           "id": "e3006",
@@ -47,7 +47,7 @@
           "id": "team_create_rev",
           "title": "Register a team",
           "article": "team_create.md",
-          "tags": ["team", "new", "abbreviation", "color"],
+          "tags": ["team", "create team", "new", "abbreviation", "color"],
           "actionUrl": "#/workspace/teams"
         },
         {
@@ -75,7 +75,7 @@
           "id": "data_csv_rev",
           "title": "Download as CSV",
           "article": "data_export.md",
-          "tags": ["CSV", "Excel", "export", "BOM"],
+          "tags": ["CSV", "Excel", "export", "BOM", "backup"],
           "actionUrl": "#/workspace/data"
         },
         {
@@ -110,14 +110,14 @@
           "id": "record_goal",
           "title": "Record a goal",
           "article": "match_record_goal.md",
-          "tags": ["goal", "score", "shot", "G", "assist"],
+          "tags": ["goal", "score", "shot", "G", "assist", "record"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
           "id": "substitute_player",
           "title": "Make a substitution",
           "article": "match_substitute_player.md",
-          "tags": ["sub", "substitution", "bench"],
+          "tags": ["sub", "substitution", "substitute", "bench"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -145,7 +145,7 @@
           "id": "match_finish",
           "title": "Finish or reopen the match",
           "article": "match_finish.md",
-          "tags": ["finish", "reopen", "final"],
+          "tags": ["finish", "reopen", "resume", "final"],
           "actionUrl": "#/workspace/matches/:matchId"
         }
       ]

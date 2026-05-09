@@ -1,7 +1,7 @@
 ---
 title: Register a new team
 category: team
-tags: [team, register, abbreviation, color]
+tags: [team, create team, register, abbreviation, color]
 related: [team_add_roster_member, match_create_new]
 shortcut: null
 actionUrl: "#/workspace/teams"

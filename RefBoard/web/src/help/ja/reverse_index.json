@@ -15,7 +15,7 @@
           "id": "intro_setup_rev",
           "title": "はじめて使う手順を知りたい",
           "article": "intro_setup.md",
-          "tags": ["F6", "表示名", "チーム", "バックアップ", "JSON"]
+          "tags": ["F6", "表示名", "チーム", "JSON", "初回", "セットアップ"]
         }
       ]
     },
@@ -28,7 +28,7 @@
           "id": "undo_goal",
           "title": "間違えてゴールを記録してしまった",
           "article": "trouble_undo_goal.md",
-          "tags": ["ゴール", "取消", "Undo", "ミス"]
+          "tags": ["取消", "Undo", "ミス", "ゴール取消", "やり直し"]
         },
         {
           "id": "e3006",
@@ -47,7 +47,7 @@
           "id": "team_create_rev",
           "title": "チームを登録したい",
           "article": "team_create.md",
-          "tags": ["チーム", "新規", "略称", "カラー"],
+          "tags": ["チーム", "チーム作成", "新規", "略称", "カラー"],
           "actionUrl": "#/workspace/teams"
         },
         {
@@ -75,14 +75,14 @@
           "id": "data_csv_rev",
           "title": "CSV でダウンロードしたい",
           "article": "data_export.md",
-          "tags": ["CSV", "Excel", "エクスポート", "BOM"],
+          "tags": ["CSV", "Excel", "エクスポート", "BOM", "バックアップ"],
           "actionUrl": "#/workspace/data"
         },
         {
           "id": "data_import_rev",
           "title": "JSON やバックアップを取り込みたい",
           "article": "data_import.md",
-          "tags": ["インポート", "取り込み", "JSON", "バックアップ", "端末移行"],
+          "tags": ["インポート", "取り込み", "JSON", "バックアップ", "restore", "端末移行"],
           "actionUrl": "#/workspace/data"
         }
       ]
@@ -110,7 +110,7 @@
           "id": "record_goal",
           "title": "ゴールを記録したい",
           "article": "match_record_goal.md",
-          "tags": ["ゴール", "得点", "シュート", "G", "アシスト"],
+          "tags": ["ゴール", "goal", "得点", "シュート", "G", "アシスト", "記録"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -124,7 +124,7 @@
           "id": "match_card_rev",
           "title": "イエロー／レッドを出したい",
           "article": "match_card.md",
-          "tags": ["イエロー", "レッド", "警告", "退場", "カード"],
+          "tags": ["イエロー", "レッド", "黄色", "赤", "警告", "退場", "カード", "card", "yellow", "red"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -145,7 +145,7 @@
           "id": "match_finish",
           "title": "試合を終了したい／再編集したい",
           "article": "match_finish.md",
-          "tags": ["終了", "再編集", "reopen", "確定"],
+          "tags": ["終了", "再開", "再編集", "reopen", "確定"],
           "actionUrl": "#/workspace/matches/:matchId"
         }
       ]

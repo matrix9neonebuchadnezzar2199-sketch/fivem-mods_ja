@@ -1,7 +1,7 @@
 ---
 title: CSV でエクスポートする
 category: data
-tags: [CSV, エクスポート, BOM, Excel]
+tags: [CSV, エクスポート, BOM, Excel, バックアップ]
 related: [data_view_history, match_detail]
 shortcut: null
 actionUrl: "#/workspace/data"

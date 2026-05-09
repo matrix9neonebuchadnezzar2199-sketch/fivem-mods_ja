@@ -1,7 +1,7 @@
 ---
 title: 間違えてゴールを記録してしまった
 category: trouble
-tags: [ゴール, 取消, Undo, ミス]
+tags: [取消, Undo, ミス, ゴール取消, やり直し]
 related: [match_record_goal, match_manual_score_edit]
 shortcut: G
 ---

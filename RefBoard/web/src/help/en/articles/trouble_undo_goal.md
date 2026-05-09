@@ -1,7 +1,7 @@
 ---
 title: I recorded the wrong goal
 category: trouble
-tags: [goal, undo, mistake, G]
+tags: [undo, mistake, G, wrong goal, take back]
 related: [match_record_goal, match_manual_score_edit]
 shortcut: G
 ---

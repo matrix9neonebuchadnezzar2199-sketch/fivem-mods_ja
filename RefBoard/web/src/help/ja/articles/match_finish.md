@@ -1,7 +1,7 @@
 ---
 title: 試合を終了する／再編集する
 category: in_match
-tags: [終了, 再編集, reopen, 確定, finish]
+tags: [終了, 再開, 再編集, reopen, 確定, finish]
 related: [match_penalty_shootout, match_manual_score_edit, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"

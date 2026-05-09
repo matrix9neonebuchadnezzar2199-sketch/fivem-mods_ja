@@ -1,7 +1,7 @@
 ---
 title: イエロー／レッドカードを記録する
 category: in_match
-tags: [イエロー, レッド, 警告, 退場, カード]
+tags: [イエロー, レッド, 黄色, 赤, 警告, 退場, カード, card, yellow, red]
 related: [match_substitute_player, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"

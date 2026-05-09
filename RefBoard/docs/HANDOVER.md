@@ -99,6 +99,7 @@ RefBoard/
 - **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
+- **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
 
 ## 6. 開発・ビルド・配布
 
@@ -116,7 +117,6 @@ npx vue-tsc --noEmit # 型チェック
 
 - ロスタイム表記（`45+2`）の入力許容と表示整形。
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
-- ヘルプ Fuse.js のしきい値再評価（記事数が約 21 本相当から 15 本に減ったため）。
 - `intro_setup` のスクリーンショット差し替え（旧版のままなら更新）。
 
 ## 8. 実機テストの始め方
@@ -135,7 +135,7 @@ npx vue-tsc --noEmit # 型チェック
 
 - **v0.1.x（短期）**: `intro_setup` スクショ更新、ロスタイム入力。
 - **v0.2.0（中期）**: 大会／リーグの集計、CSV 出力の項目拡充、コンパクト小窓モードの再評価。
-- **v0.3.0**: ヘルプ拡充（v0.1.0 では削った記事のうち再度必要になったものをローカル文脈で書き直し）、Fuse 再チューニング。
+- **v0.3.0**: ヘルプ拡充（v0.1.0 では削った記事のうち再度必要になったものをローカル文脈で書き直し）。Fuse しきい値の再調整は v0.2.0 第九コミットで実施済み。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -155,3 +155,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑09: v0.1.0 の `web/package.json`・`package-lock.json`・`src/constants/version.ts`（`REFBOARD_UI_VERSION`）を 0.1.0 へ同期。HANDOVER §3 と §7 を整合修正（版数揃えの Git ハッシュは `git log -1 --oneline -- RefBoard/web/package.json` で確認）。
 - 2026‑05‑09: 試合詳細ヘッダに `selfName`（操作者）を表示。未設定時は Settings へ誘導するリンクを表示。小窓モードで `transparentChrome` のときはヘッダから非表示。
 - 2026‑05‑09: 全データ JSON の **インポート UI**（置換／追記、置換はダイアログ内二段確認）、`import_history` 最大 20 件、ヘルプ `data_import` 追加。完了後は `location.reload()` で反映。
+- 2026‑05‑09: ヘルプ Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`keys` に `slug` 追加と重み付け変更）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。
