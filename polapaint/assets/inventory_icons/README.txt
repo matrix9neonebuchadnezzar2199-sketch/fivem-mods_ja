@@ -22,6 +22,6 @@ polapaint — ox_inventory スロット用アイコン素材置き場
 【本番への反映（どちらか）】
 A. **推奨**: `polapaint/html/images/` に同名 PNG を置き（リポでは `assets` からコピー済み）、`items.lua` の `client.image` を  
    `nui://polapaint/html/images/polaroid_camera.png`（写真は `polaroid_photo.png`）にする → **ox 側へのコピー不要**。
-B. 従来どおり: 上記 PNG を `ox_inventory/web/images/` へコピーし、`image = 'polaroid_camera'` のように拡張子なしベース名で指定する。
+B. `ox_inventory/web/images/` へコピーする場合（ox 2.4x）: `items.lua` では **`client.image = 'polaroid_camera.png'`**（.png 付き）にするか **`client.image` を省略**する。`polaroid_camera` だけだと Web が `.png` を付けず表示されないことがあります。
 
 ※ `assets/inventory_icons/` は差し替え・生成用の置き場。実行時は `html/images/` か ox の `web/images/` が参照先になります。

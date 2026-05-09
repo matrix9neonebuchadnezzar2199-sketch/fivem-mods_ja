@@ -1,8 +1,11 @@
 --[[
   ox_inventory の data/items.lua（または分割ファイル）へ追記する例。
 
-  画像（推奨）: polapaint リソース内の NUI ファイルを参照する（ox_inventory/web/images/ への手動コピー不要）。
-  代替: polaroid_*.png を ox_inventory/web/images/ に置き、image = 'polaroid_camera' のように拡張子なしベース名だけでも可。
+  画像（推奨）: nui://polapaint/html/images/...png（polapaint v1.0.1+ の files 同梱。ox の web/images へコピー不要）。
+
+  ox の web/images/ に PNG を置く場合の注意（2.4x Web）:
+  - client.image = 'polaroid_camera' だけだと URL に .png が付かず表示されないことがある。
+  - client.image = 'polaroid_camera.png' と書くか、client.image 行を省略してアイテム名.png に任せる。
 ]]
 
 ['polaroid_camera'] = {

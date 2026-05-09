@@ -41,4 +41,4 @@
 ## 仕上げのコツ
 
 - 生成後に **128×128 にリサイズ**し、必要なら **アウトラインを 1px 強調**するとスロットで潰れにくいです。
-- ox_inventory ではファイル名（拡張子なし）と `client.image` を一致させます。
+- ox_inventory 2.4x Web: `web/images/polaroid_camera.png` を置く場合は `items.lua` で **`client.image = 'polaroid_camera.png'`**（.png 付き）か **`client.image` 省略**（`アイテム名.png` が自動）を推奨。`polaroid_camera` だけだと表示されないことがあります。
