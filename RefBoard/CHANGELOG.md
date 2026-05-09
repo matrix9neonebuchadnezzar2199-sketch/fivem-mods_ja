@@ -4,6 +4,7 @@
 
 - ヘルプ検索 Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`minMatchCharLength` 2、`ignoreLocation` true、`keys` に `slug` 追加）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。`scripts/eval-help-fuse.mjs` で再評価可能。第九コミット `ce6f281`。
 - 試合イベントの時刻入力に `45+2` 表記を許容。`web/src/utils/matchTime.ts` 新設、`MinuteInput.vue` をゴール／カード／交代ダイアログで採用。表示・CSV の分列は `formatMinute` / `formatMinuteForCsv` で統一。PK 中は保存値 `minute=0` / `stoppage=null`、表示は `PK` のみ。
+- JSON インポートに部分マージを追加。チーム／ロスター／試合を個別選択でき、試合選択時は関連チームとロスターを自動同伴（既定 ON）。取り込み履歴に `partial` フラグ追加。`data_import` ヘルプを v0.2.0 仕様に更新。
 
 ## v0.1.0 — 2026‑05‑09（ローカル版リブート）
 

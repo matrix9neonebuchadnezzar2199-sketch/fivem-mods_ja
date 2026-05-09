@@ -1,4 +1,5 @@
 import type { MatchDetailModel, MatchEvent, ScoreHistoryRow } from '../types/match'
+import type { Match, RosterMember, Team } from '../types/local'
 import { formatMinuteForCsv } from './matchTime'
 import { dumpAllLocal, LOCAL_PERSIST_KEY_PREFIX, LOCAL_PERSIST_SCHEMA_VERSION } from './localPersist'
 
@@ -18,6 +19,29 @@ export interface ImportPreview {
   appVersion?: string
   exportedAt?: string
   counts: { teams: number; rosterMembers: number; matches: number }
+}
+
+/** 部分マージ UI 用。`buildPreview` の集計に加え、バックアップ内の一覧を返す */
+export type ImportPreviewMatchRow = {
+  id: number
+  title: string
+  homeTeamId: number
+  awayTeamId: number
+  homeName: string
+  awayName: string
+  status: Match['status']
+  scheduledAt: string | null
+  finishedAt: string | null
+  playerCount: number
+  eventCount: number
+  /** 試合の players から収集（検証・自動同伴用） */
+  playerRosterIds: number[]
+}
+
+export type ImportPreviewDetail = ImportPreview & {
+  teams: Array<Pick<Team, 'id' | 'name' | 'shortName' | 'colorHex'>>
+  rosterMembers: Array<Pick<RosterMember, 'id' | 'teamId' | 'name' | 'number' | 'position'>>
+  matches: ImportPreviewMatchRow[]
 }
 
 export function parseBackupText(
@@ -69,6 +93,61 @@ export function buildPreview(file: BackupFile): ImportPreview {
       rosterMembers: countPersistedEntities(file.data, 'roster_members'),
       matches: countPersistedEntities(file.data, 'matches'),
     },
+  }
+}
+
+function unwrapPersistedForPreview<T>(data: Record<string, unknown>, shortKey: string): T[] {
+  const fullKey = LOCAL_PERSIST_KEY_PREFIX + shortKey
+  const raw = data[fullKey]
+  if (!raw || typeof raw !== 'object') return []
+  const w = raw as { version?: number; data?: unknown }
+  if (w.version !== LOCAL_PERSIST_SCHEMA_VERSION || !Array.isArray(w.data)) return []
+  return w.data as T[]
+}
+
+export function buildPreviewDetail(file: BackupFile): ImportPreviewDetail {
+  const base = buildPreview(file)
+
+  const teams = unwrapPersistedForPreview<Team>(file.data, 'teams')
+  const roster = unwrapPersistedForPreview<RosterMember>(file.data, 'roster_members')
+  const matches = unwrapPersistedForPreview<Match>(file.data, 'matches')
+
+  return {
+    ...base,
+    ok: true,
+    teams: teams.map((t) => ({
+      id: t.id,
+      name: t.name,
+      shortName: t.shortName ?? null,
+      colorHex: t.colorHex ?? null,
+    })),
+    rosterMembers: roster.map((r) => ({
+      id: r.id,
+      teamId: r.teamId,
+      name: r.name,
+      number: r.number ?? null,
+      position: r.position ?? null,
+    })),
+    matches: matches.map((m) => {
+      const rosterSet = new Set<number>()
+      for (const p of m.players ?? []) {
+        if (p.rosterMemberId != null && p.rosterMemberId !== undefined) rosterSet.add(p.rosterMemberId)
+      }
+      return {
+        id: m.id,
+        title: m.title,
+        homeTeamId: m.homeTeamId,
+        awayTeamId: m.awayTeamId,
+        homeName: m.homeName,
+        awayName: m.awayName,
+        status: m.status,
+        scheduledAt: m.scheduledAt ?? null,
+        finishedAt: m.finishedAt ?? null,
+        playerCount: m.players?.length ?? 0,
+        eventCount: m.events?.length ?? 0,
+        playerRosterIds: [...rosterSet],
+      }
+    }),
   }
 }
 

@@ -403,9 +403,20 @@
       "exported_at": "Exported at",
       "app_version": "App version when exported",
       "schema_version": "Schema",
+      "mode_legend": "Import mode",
       "mode_replace": "Replace (delete existing data, then import)",
       "mode_replace_confirm": "Yes, replace everything",
       "mode_merge": "Merge (assign new IDs and append)",
+      "select_section_teams": "Teams",
+      "select_section_rosters": "Roster",
+      "select_section_matches": "Matches",
+      "select_all": "Select all",
+      "select_none": "Clear selection",
+      "selected_of_total": "{selected} / {total}",
+      "auto_include_related": "When a match is selected, also include its home/away teams and roster rows used by players",
+      "validation_match_missing_team": "Match “{title}” requires team ID {missingTeamId}, which is not selected",
+      "validation_match_missing_roster": "Match “{title}” requires roster member ID {missingRosterMemberId}. Turn on auto-include or select that roster row",
+      "merge_confirm_button": "Merge teams {teams} / roster {rosterMembers} / matches {matches}",
       "replace_warn": "All existing RefBoard data on this device will be removed. Only continue if you intend a full replace.",
       "replace_abort": "Back",
       "cancel": "Cancel",
@@ -414,6 +425,7 @@
       "close_without_reload": "Close without reloading",
       "result_replace": "Imported with replace",
       "result_merge": "Imported with merge",
+      "result_merge_partial": "Imported with partial merge",
       "by": "Operator",
       "error_invalid_json": "Could not parse as JSON",
       "error_invalid_shape": "Not a RefBoard backup file",
@@ -424,7 +436,8 @@
       "empty": "No import history yet",
       "mode_replace": "Replace",
       "mode_merge": "Merge",
-      "row": "{at} · {by} · {mode} · teams {teams} / roster {rosterMembers} / matches {matches}"
+      "row": "{at} · {by} · {mode} · teams {teams} / roster {rosterMembers} / matches {matches}",
+      "row_partial": "{at} · {by} · {mode} (partial) · teams {teams} / roster {rosterMembers} / matches {matches}"
     }
   },
   "settings": {

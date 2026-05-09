@@ -129,14 +129,23 @@ function rowModeLabel(mode: ImportRecord['mode']) {
       <ul v-else class="space-y-2 text-xs text-slate-300">
         <li v-for="r in importHistory" :key="r.at + r.mode + r.by" class="rounded border border-slate-800 bg-slate-950/50 px-3 py-2">
           {{
-            t('data.import_history.row', {
-              at: r.at,
-              by: r.by,
-              mode: rowModeLabel(r.mode),
-              teams: r.counts.teams,
-              rosterMembers: r.counts.rosterMembers,
-              matches: r.counts.matches,
-            })
+            r.partial
+              ? t('data.import_history.row_partial', {
+                  at: r.at,
+                  by: r.by,
+                  mode: rowModeLabel(r.mode),
+                  teams: r.counts.teams,
+                  rosterMembers: r.counts.rosterMembers,
+                  matches: r.counts.matches,
+                })
+              : t('data.import_history.row', {
+                  at: r.at,
+                  by: r.by,
+                  mode: rowModeLabel(r.mode),
+                  teams: r.counts.teams,
+                  rosterMembers: r.counts.rosterMembers,
+                  matches: r.counts.matches,
+                })
           }}
         </li>
       </ul>

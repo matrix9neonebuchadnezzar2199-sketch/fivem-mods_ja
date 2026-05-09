@@ -56,8 +56,8 @@ RefBoard/
       │  ├─ localId.ts            ID カウンタ
       │  ├─ matchTime.ts          イベント時刻 `45+2` パース／表示／CSV 用整形
       │  ├─ localMatchAdapter.ts  Match → MatchDetailModel ブリッジ
-      │  ├─ exporters.ts          CSV／全データ JSON バックアップ／インポート用パース
-      │  ├─ localImport.ts        JSON インポート（replace／merge）と取り込み履歴
+      │  ├─ exporters.ts          CSV／全データ JSON バックアップ／`buildPreviewDetail`
+      │  ├─ localImport.ts        JSON インポート（replace／merge／部分 merge）と取り込み履歴
       │  └─ errorCodeMapper.ts    E2001/E3004/E3006 のみ
       ├─ components/
       │  ├─ match/MinuteInput.vue  イベント時刻（分＋ロスタイム）入力
@@ -95,7 +95,7 @@ RefBoard/
 ## 5. 主要機構
 
 - **永続化**: `utils/localPersist.ts` がキーごとに `{ version: 1, data }` 形式で `localStorage` に書き、各ストアが `watch(deep)` で自動保存。`dumpAllLocal()` が全データ JSON バックアップの土台。
-- **JSON インポート**: `utils/localImport.ts` が **置換**（`refboard_local_*` をクリア後にバックアップを流し込み、取り込み履歴は直前分を保持して先頭に新規追記）と **追記**（`nextId` で ID を払い直し teams／roster／matches のみマージ、`settings` は現端末のまま）を提供。完了後は **ページ再読み込み** で Pinia を再 hydrate。
+- **JSON インポート**: `replace`（全削除→全書き込み）と `merge`（`nextId` で ID を払い直し追記、`settings` は現端末のまま）。`merge` ではチーム／ロスター／試合の 3 系列を個別選択でき、試合を選ぶとホーム/アウェイチームと登場ロスターが自動同伴（`autoIncludeRelated`、既定 ON）。取り込み履歴は端末内 20 件まで保持し、`partial` フラグで部分マージを区別。UI は `components/data/ImportBackupDialog.vue`、プレビュー詳細は `exporters.buildPreviewDetail`。完了後は **ページ再読み込み** で Pinia を再 hydrate。
 - **ID 採番**: `utils/localId.ts` が match/team/player/rosterMember/event/scoreHistory のカウンタを `id_counters` キーで管理。
 - **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
 - **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
@@ -135,9 +135,9 @@ npx vue-tsc --noEmit # 型チェック
 
 ## 9. ロードマップ（v0.2.0 → v1.0.0）
 
-- **v0.1.x（短期）**: `intro_setup` スクショ更新。
-- **v0.2.0（中期・進行中）**: Fuse 再調整／評価クエリ、ロスタイム入力と表示・CSV 整形、JSON インポートの部分マージ（第十一コミット予定）。
-- **v0.3.0 以降**: 大会／リーグの集計、CSV 出力の項目拡充、コンパクト小窓モードの再評価。ヘルプ拡充（v0.1.0 で削った記事のうち再び必要になったものをローカル文脈で書き直し）。
+- **v0.2.0（完了・2026‑05‑09）**: ヘルプ Fuse 再調整、ロスタイム入力許容、JSON インポート部分マージ。
+- **v0.2.x（短期）**: コンパクト小窓モードの再評価、`intro_setup` スクショ更新、ロスタイム単体テスト導入（vitest 検討）。
+- **v0.3.0（中期）**: 集計・大会／リーグ、CSV 拡充、ヘルプ拡充。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -145,11 +145,11 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.2.0（ロスタイム入力・Fuse 評価基盤まで反映）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: JSON インポート部分マージ（第十一コミット）、PK キャンセル UI など §7 TODO のいずれか。
+> 現状: v0.2.0（Fuse・ロスタイム入力・JSON 部分マージまで反映）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 次着手候補: PK キャンセル UI、コンパクト小窓再評価など §7 TODO のいずれか。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
-短縮フレーズ: `インポート部分マージいって` / `PK キャンセルいって`
+短縮フレーズ: `小窓モードいって` / `PK キャンセルいって`
 
 ## 11. 改版履歴
 
@@ -159,3 +159,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑09: 全データ JSON の **インポート UI**（置換／追記、置換はダイアログ内二段確認）、`import_history` 最大 20 件、ヘルプ `data_import` 追加。完了後は `location.reload()` で反映。
 - 2026‑05‑09: ヘルプ Fuse.js を 16 本構成向けに再調整（`threshold` 0.4→0.35、`keys` に `slug` 追加と重み付け変更）。評価クエリリストを `docs/testing/help_search_queries.md` に新設。
 - 2026‑05‑09: イベント時刻に `45+2` 入力（`matchTime.ts` / `MinuteInput.vue`）、表示・CSV 整形、PK 中の保存ルール、ヘルプ記事・`reverse_index` 追従。版数 v0.2.0（`package.json` / `fxmanifest` / `REFBOARD_UI_VERSION`）。
+- 2026‑05‑09: JSON インポート **部分マージ**（`mergeImportPartial` / `ImportSelection`、`buildPreviewDetail`、履歴 `partial`）。

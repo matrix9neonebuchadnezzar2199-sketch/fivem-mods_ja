@@ -42,6 +42,10 @@ Fuse.js の設定変更時は、`RefBoard/web` で `node scripts/eval-help-fuse.
 | substitute | en | match_substitute_player | match_substitute_player > match_card > trouble_e3006_player_has_events | `substitute` を tags に追加 |
 | operator | en | intro_setup | intro_setup > data_import | `operator` を intro tags に追加 |
 | stoppage | en | match_record_goal, match_card, match_substitute_player（順不同） | match_substitute_player > match_card > match_record_goal | `match_create_new` / `match_finish` の `reverse_index` から `stoppage` タグを外し本文マッチに寄せない |
+| 部分マージ | ja | data_import（1位必須） | data_import | |
+| 選択取り込み | ja | data_import（1位必須） | data_import | |
+| partial | en | data_import（1位必須） | data_import > intro_what_is_refboard > trouble_e3006_player_has_events | |
+| selective | en | data_import（1位必須） | data_import > team_add_roster_member > match_record_goal | |
 
 ## 旧設定（参考）
 

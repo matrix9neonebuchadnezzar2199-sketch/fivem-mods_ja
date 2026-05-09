@@ -82,7 +82,7 @@
           "id": "data_import_rev",
           "title": "Import JSON or restore a backup",
           "article": "data_import.md",
-          "tags": ["import", "restore", "JSON", "backup", "migration"],
+          "tags": ["import", "restore", "JSON", "backup", "migration", "partial merge", "selective", "partial"],
           "actionUrl": "#/workspace/data"
         }
       ]

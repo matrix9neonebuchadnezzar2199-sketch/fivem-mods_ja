@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../../stores/settings'
 import type { BackupFile } from '../../utils/exporters'
-import { buildPreview, parseBackupText, type ImportPreview } from '../../utils/exporters'
-import { importBackup, type ImportResult } from '../../utils/localImport'
+import { buildPreview, buildPreviewDetail, parseBackupText, type ImportPreview, type ImportPreviewDetail } from '../../utils/exporters'
+import {
+  buildAllSelected,
+  buildEmptySelection,
+  importBackup,
+  validateSelection,
+  type ImportResult,
+  type ImportSelection,
+} from '../../utils/localImport'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ 'update:open': [boolean] }>()
@@ -21,10 +28,26 @@ const fileErrorKey = ref<string | null>(null)
 const fileErrorBadSchema = ref<number | undefined>(undefined)
 const parsedFile = ref<BackupFile | null>(null)
 const preview = ref<ImportPreview | null>(null)
+const previewDetail = ref<ImportPreviewDetail | null>(null)
+const importMode = ref<'replace' | 'merge'>('merge')
+const selection = shallowRef<ImportSelection>(buildEmptySelection())
 const importResult = ref<ImportResult | null>(null)
 const byLabel = ref('')
 const replaceConfirmVisible = ref(false)
 const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function cloneSel(base: ImportSelection): ImportSelection {
+  return {
+    teamIds: new Set(base.teamIds),
+    rosterMemberIds: new Set(base.rosterMemberIds),
+    matchIds: new Set(base.matchIds),
+    autoIncludeRelated: base.autoIncludeRelated,
+  }
+}
+
+function setSelection(next: ImportSelection) {
+  selection.value = cloneSel(next)
+}
 
 function close() {
   emit('update:open', false)
@@ -36,6 +59,9 @@ function resetState() {
   fileErrorBadSchema.value = undefined
   parsedFile.value = null
   preview.value = null
+  previewDetail.value = null
+  importMode.value = 'merge'
+  setSelection(buildEmptySelection())
   importResult.value = null
   replaceConfirmVisible.value = false
   if (fileInputRef.value) fileInputRef.value.value = ''
@@ -49,6 +75,39 @@ watch(
       settingsStore.load()
     }
   },
+)
+
+const teamNameById = computed(() => {
+  const d = previewDetail.value
+  if (!d) return new Map<number, string>()
+  return new Map(d.teams.map((x) => [x.id, x.name]))
+})
+
+const validation = computed(() => {
+  const d = previewDetail.value
+  if (!d) return { ok: true as const, errors: [] as ReturnType<typeof validateSelection>['errors'] }
+  return validateSelection(d, selection.value)
+})
+
+const selectedCounts = computed(() => ({
+  teams: selection.value.teamIds.size,
+  rosterMembers: selection.value.rosterMemberIds.size,
+  matches: selection.value.matchIds.size,
+}))
+
+const mergeConfirmDisabled = computed(() => {
+  if (importMode.value !== 'merge') return false
+  if (!validation.value.ok) return true
+  const c = selectedCounts.value
+  return c.teams + c.rosterMembers + c.matches === 0
+})
+
+const mergeConfirmLabel = computed(() =>
+  t('data.import.merge_confirm_button', {
+    teams: selectedCounts.value.teams,
+    rosterMembers: selectedCounts.value.rosterMembers,
+    matches: selectedCounts.value.matches,
+  }),
 )
 
 function onPickFile() {
@@ -70,6 +129,9 @@ async function onFileChange(ev: Event) {
   }
   parsedFile.value = r.file
   preview.value = buildPreview(r.file)
+  const detail = buildPreviewDetail(r.file)
+  previewDetail.value = detail
+  setSelection(buildAllSelected(detail))
   step.value = 'preview'
 }
 
@@ -85,11 +147,11 @@ function abortReplaceConfirm() {
   replaceConfirmVisible.value = false
 }
 
-function runMerge() {
-  if (!parsedFile.value) return
+function runMergeConfirmed() {
+  if (!parsedFile.value || mergeConfirmDisabled.value) return
   const by = (settings.value.selfName || '').trim() || '(unset)'
   byLabel.value = by
-  importResult.value = importBackup(parsedFile.value, 'merge', by)
+  importResult.value = importBackup(parsedFile.value, 'merge', by, selection.value)
   step.value = 'done'
 }
 
@@ -100,6 +162,120 @@ function runReplaceConfirmed() {
   importResult.value = importBackup(parsedFile.value, 'replace', by)
   step.value = 'done'
   replaceConfirmVisible.value = false
+}
+
+function selectAllTeams() {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  for (const t of d.teams) s.teamIds.add(t.id)
+  setSelection(s)
+}
+
+function selectNoTeams() {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  for (const t of d.teams) s.teamIds.delete(t.id)
+  setSelection(s)
+}
+
+function selectAllRosters() {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  for (const r of d.rosterMembers) {
+    if (s.teamIds.has(r.teamId)) s.rosterMemberIds.add(r.id)
+  }
+  setSelection(s)
+}
+
+function selectNoRosters() {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  for (const r of d.rosterMembers) s.rosterMemberIds.delete(r.id)
+  setSelection(s)
+}
+
+function selectAllMatches() {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  for (const m of d.matches) {
+    applyMatchWithState(s, m.id, true)
+  }
+  setSelection(s)
+}
+
+function applyMatchWithState(s: ImportSelection, matchId: number, checked: boolean) {
+  const d = previewDetail.value
+  if (!d) return
+  if (checked) {
+    s.matchIds.add(matchId)
+    if (s.autoIncludeRelated) {
+      const m = d.matches.find((x) => x.id === matchId)
+      if (m) {
+        s.teamIds.add(m.homeTeamId)
+        s.teamIds.add(m.awayTeamId)
+        for (const rid of m.playerRosterIds) s.rosterMemberIds.add(rid)
+      }
+    }
+  } else {
+    s.matchIds.delete(matchId)
+  }
+}
+
+function selectNoMatches() {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  s.matchIds.clear()
+  setSelection(s)
+}
+
+function toggleTeam(id: number, checked: boolean) {
+  const s = cloneSel(selection.value)
+  if (checked) s.teamIds.add(id)
+  else s.teamIds.delete(id)
+  setSelection(s)
+}
+
+function toggleRoster(id: number, checked: boolean) {
+  const s = cloneSel(selection.value)
+  if (checked) s.rosterMemberIds.add(id)
+  else s.rosterMemberIds.delete(id)
+  setSelection(s)
+}
+
+function toggleMatchRow(id: number, checked: boolean) {
+  const d = previewDetail.value
+  if (!d) return
+  const s = cloneSel(selection.value)
+  applyMatchWithState(s, id, checked)
+  setSelection(s)
+}
+
+function toggleAutoInclude(v: boolean) {
+  const s = cloneSel(selection.value)
+  s.autoIncludeRelated = v
+  setSelection(s)
+  if (v) {
+    const d = previewDetail.value
+    if (!d) return
+    for (const mid of s.matchIds) {
+      const m = d.matches.find((x) => x.id === mid)
+      if (!m) continue
+      s.teamIds.add(m.homeTeamId)
+      s.teamIds.add(m.awayTeamId)
+      for (const rid of m.playerRosterIds) s.rosterMemberIds.add(rid)
+    }
+    setSelection(s)
+  }
+}
+
+function rosterRowDimmed(teamId: number): boolean {
+  return !selection.value.teamIds.has(teamId)
 }
 
 function doReload() {
@@ -114,7 +290,7 @@ function doReload() {
     role="dialog"
     aria-modal="true"
   >
-    <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
+    <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">{{ t('data.import.title') }}</h2>
 
       <div v-if="step === 'file'" class="space-y-3 text-sm">
@@ -131,7 +307,7 @@ function doReload() {
         </div>
       </div>
 
-      <div v-else-if="step === 'preview' && preview?.ok && parsedFile" class="space-y-3 text-sm">
+      <div v-else-if="step === 'preview' && preview?.ok && parsedFile && previewDetail" class="space-y-4 text-sm">
         <p class="font-medium text-slate-200">{{ t('data.import.step_preview') }}</p>
         <ul class="list-inside list-disc space-y-1 text-slate-300">
           <li>
@@ -147,6 +323,125 @@ function doReload() {
           <li v-if="parsedFile.appVersion">{{ t('data.import.app_version') }}: {{ parsedFile.appVersion }}</li>
           <li>{{ t('data.import.schema_version') }}: {{ preview.schemaVersion }}</li>
         </ul>
+
+        <fieldset class="space-y-2 rounded-lg border border-slate-700 p-3">
+          <legend class="px-1 text-xs font-medium text-slate-400">{{ t('data.import.mode_legend') }}</legend>
+          <label class="flex cursor-pointer items-center gap-2 text-slate-200">
+            <input v-model="importMode" type="radio" value="merge" class="text-primary" />
+            {{ t('data.import.mode_merge') }}
+          </label>
+          <label class="flex cursor-pointer items-center gap-2 text-slate-200">
+            <input v-model="importMode" type="radio" value="replace" class="text-red-400" />
+            {{ t('data.import.mode_replace') }}
+          </label>
+        </fieldset>
+
+        <div v-if="importMode === 'merge'" class="space-y-4 rounded-lg border border-slate-700/80 bg-slate-950/40 p-3">
+          <section class="space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('data.import.select_section_teams') }}</h3>
+              <div class="flex gap-2">
+                <button type="button" class="text-xs text-primary hover:underline" @click="selectAllTeams">{{ t('data.import.select_all') }}</button>
+                <button type="button" class="text-xs text-slate-500 hover:underline" @click="selectNoTeams">{{ t('data.import.select_none') }}</button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">
+              {{ t('data.import.selected_of_total', { selected: selectedCounts.teams, total: previewDetail.teams.length }) }}
+            </p>
+            <ul class="max-h-36 space-y-1 overflow-y-auto rounded border border-slate-800 p-2">
+              <li v-for="team in previewDetail.teams" :key="team.id" class="flex items-center gap-2 text-slate-200">
+                <input
+                  type="checkbox"
+                  class="rounded border-slate-600"
+                  :checked="selection.teamIds.has(team.id)"
+                  @change="toggleTeam(team.id, ($event.target as HTMLInputElement).checked)"
+                />
+                <span>{{ team.name }} <span v-if="team.shortName" class="text-slate-500">({{ team.shortName }})</span></span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('data.import.select_section_rosters') }}</h3>
+              <div class="flex gap-2">
+                <button type="button" class="text-xs text-primary hover:underline" @click="selectAllRosters">{{ t('data.import.select_all') }}</button>
+                <button type="button" class="text-xs text-slate-500 hover:underline" @click="selectNoRosters">{{ t('data.import.select_none') }}</button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">
+              {{ t('data.import.selected_of_total', { selected: selectedCounts.rosterMembers, total: previewDetail.rosterMembers.length }) }}
+            </p>
+            <ul class="max-h-36 space-y-1 overflow-y-auto rounded border border-slate-800 p-2">
+              <li
+                v-for="r in previewDetail.rosterMembers"
+                :key="r.id"
+                class="flex items-center gap-2"
+                :class="rosterRowDimmed(r.teamId) ? 'text-slate-600' : 'text-slate-200'"
+              >
+                <input
+                  type="checkbox"
+                  class="rounded border-slate-600"
+                  :disabled="rosterRowDimmed(r.teamId)"
+                  :checked="selection.rosterMemberIds.has(r.id)"
+                  @change="toggleRoster(r.id, ($event.target as HTMLInputElement).checked)"
+                />
+                <span
+                  >{{ r.name }}
+                  <span class="text-slate-500">#{{ r.number ?? '—' }} · {{ teamNameById.get(r.teamId) ?? r.teamId }}</span></span
+                >
+              </li>
+            </ul>
+          </section>
+
+          <section class="space-y-2">
+            <label class="flex cursor-pointer items-start gap-2 text-xs text-slate-300">
+              <input
+                type="checkbox"
+                class="mt-0.5 rounded border-slate-600"
+                :checked="selection.autoIncludeRelated"
+                @change="toggleAutoInclude(($event.target as HTMLInputElement).checked)"
+              />
+              <span>{{ t('data.import.auto_include_related') }}</span>
+            </label>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t('data.import.select_section_matches') }}</h3>
+              <div class="flex gap-2">
+                <button type="button" class="text-xs text-primary hover:underline" @click="selectAllMatches">{{ t('data.import.select_all') }}</button>
+                <button type="button" class="text-xs text-slate-500 hover:underline" @click="selectNoMatches">{{ t('data.import.select_none') }}</button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500">
+              {{ t('data.import.selected_of_total', { selected: selectedCounts.matches, total: previewDetail.matches.length }) }}
+            </p>
+            <ul class="max-h-40 space-y-2 overflow-y-auto rounded border border-slate-800 p-2">
+              <li v-for="m in previewDetail.matches" :key="m.id" class="flex items-start gap-2 text-slate-200">
+                <input
+                  type="checkbox"
+                  class="mt-1 rounded border-slate-600"
+                  :checked="selection.matchIds.has(m.id)"
+                  @change="toggleMatchRow(m.id, ($event.target as HTMLInputElement).checked)"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="font-medium">{{ m.title }}</div>
+                  <div class="text-xs text-slate-400">{{ m.homeName }} vs {{ m.awayName }} · {{ m.status }}</div>
+                  <div v-if="m.scheduledAt" class="text-xs text-slate-500">{{ m.scheduledAt.slice(0, 10) }}</div>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <div v-if="importMode === 'merge' && validation.errors.length" class="rounded-lg border border-amber-600/40 bg-amber-950/30 p-3 text-xs text-amber-100">
+          <p v-for="(err, idx) in validation.errors" :key="idx" class="mb-1 last:mb-0">
+            <template v-if="err.kind === 'match_missing_team'">
+              {{ t('data.import.validation_match_missing_team', { title: err.matchTitle, missingTeamId: err.missingTeamId }) }}
+            </template>
+            <template v-else>
+              {{ t('data.import.validation_match_missing_roster', { title: err.matchTitle, missingRosterMemberId: err.missingRosterMemberId }) }}
+            </template>
+          </p>
+        </div>
 
         <div v-if="replaceConfirmVisible" class="rounded-lg border border-red-500/40 bg-red-950/40 p-3 text-xs text-red-100">
           <p class="mb-2 font-semibold">{{ t('data.import.replace_warn') }}</p>
@@ -168,16 +463,25 @@ function doReload() {
         </div>
 
         <div v-else class="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            class="rounded-lg border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-200 hover:bg-red-500/25"
-            @click="beginReplace"
-          >
-            {{ t('data.import.mode_replace') }}
-          </button>
-          <button type="button" class="rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200" @click="runMerge">
-            {{ t('data.import.mode_merge') }}
-          </button>
+          <template v-if="importMode === 'replace'">
+            <button
+              type="button"
+              class="rounded-lg border border-red-500/60 bg-red-500/15 px-3 py-2 text-sm font-semibold text-red-200 hover:bg-red-500/25"
+              @click="beginReplace"
+            >
+              {{ t('data.import.mode_replace') }}
+            </button>
+          </template>
+          <template v-else>
+            <button
+              type="button"
+              class="rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 disabled:opacity-40"
+              :disabled="mergeConfirmDisabled"
+              @click="runMergeConfirmed"
+            >
+              {{ mergeConfirmLabel }}
+            </button>
+          </template>
           <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-300" @click="cancelPreview">
             {{ t('data.import.cancel') }}
           </button>
@@ -186,7 +490,9 @@ function doReload() {
 
       <div v-else-if="step === 'done' && importResult" class="space-y-3 text-sm">
         <p class="font-medium text-emerald-200">
-          {{ importResult.mode === 'replace' ? t('data.import.result_replace') : t('data.import.result_merge') }}
+          <template v-if="importResult.mode === 'replace'">{{ t('data.import.result_replace') }}</template>
+          <template v-else-if="importResult.partial">{{ t('data.import.result_merge_partial') }}</template>
+          <template v-else>{{ t('data.import.result_merge') }}</template>
         </p>
         <p class="text-slate-300">
           {{ t('data.import.preview_summary', importResult.counts) }}

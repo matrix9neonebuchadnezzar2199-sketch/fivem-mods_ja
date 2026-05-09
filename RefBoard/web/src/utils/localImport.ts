@@ -7,6 +7,8 @@ import {
 } from './localPersist'
 import { hydrateCountersFromDisk, nextId } from './localId'
 import type { BackupFile } from './exporters'
+import type { ImportPreviewDetail } from './exporters'
+import { buildPreviewDetail } from './exporters'
 import type { Match, MatchEvent, MatchPlayer, RosterMember, ScoreHistoryEntry, Team } from '../types/local'
 
 export type ImportMode = 'replace' | 'merge'
@@ -20,12 +22,101 @@ export interface ImportRecord {
   mode: ImportMode
   sourceAppVersion: string
   counts: { teams: number; rosterMembers: number; matches: number }
+  /** 部分マージで実際に書き込んだ件数がファイル全件未満のとき true */
+  partial?: boolean
 }
 
 export interface ImportResult {
   mode: ImportMode
   counts: { teams: number; rosterMembers: number; matches: number }
   at: string
+  partial?: boolean
+}
+
+export interface ImportSelection {
+  /** バックアップ内の旧 ID */
+  teamIds: Set<number>
+  rosterMemberIds: Set<number>
+  matchIds: Set<number>
+  /** 試合選択時にホーム/アウェイチームと players の rosterMemberId を同伴 */
+  autoIncludeRelated: boolean
+}
+
+export function buildAllSelected(detail: ImportPreviewDetail): ImportSelection {
+  return {
+    teamIds: new Set(detail.teams.map((t) => t.id)),
+    rosterMemberIds: new Set(detail.rosterMembers.map((r) => r.id)),
+    matchIds: new Set(detail.matches.map((m) => m.id)),
+    autoIncludeRelated: true,
+  }
+}
+
+export function buildEmptySelection(): ImportSelection {
+  return { teamIds: new Set(), rosterMemberIds: new Set(), matchIds: new Set(), autoIncludeRelated: true }
+}
+
+/** 試合選択に基づきチーム ID を同伴（ロスターは mergeImportPartial 内で補完） */
+export function expandSelection(detail: ImportPreviewDetail, base: ImportSelection): ImportSelection {
+  const out: ImportSelection = {
+    teamIds: new Set(base.teamIds),
+    rosterMemberIds: new Set(base.rosterMemberIds),
+    matchIds: new Set(base.matchIds),
+    autoIncludeRelated: base.autoIncludeRelated,
+  }
+  if (!base.autoIncludeRelated) return out
+  const matchById = new Map(detail.matches.map((m) => [m.id, m]))
+  for (const mid of out.matchIds) {
+    const m = matchById.get(mid)
+    if (!m) continue
+    out.teamIds.add(m.homeTeamId)
+    out.teamIds.add(m.awayTeamId)
+  }
+  return out
+}
+
+export type SelectionValidationError =
+  | { kind: 'match_missing_team'; matchId: number; matchTitle: string; missingTeamId: number }
+  | { kind: 'match_missing_roster'; matchId: number; matchTitle: string; missingRosterMemberId: number }
+
+export interface SelectionValidation {
+  ok: boolean
+  errors: SelectionValidationError[]
+}
+
+/** 展開後の teamIds / rosterIds で検証（autoIncludeRelated 時は試合から同伴した ID を含める） */
+export function validateSelection(detail: ImportPreviewDetail, sel: ImportSelection): SelectionValidation {
+  const errors: SelectionValidationError[] = []
+  let teamIds = new Set(sel.teamIds)
+  let rosterIds = new Set(sel.rosterMemberIds)
+
+  if (sel.autoIncludeRelated) {
+    for (const m of detail.matches) {
+      if (!sel.matchIds.has(m.id)) continue
+      teamIds.add(m.homeTeamId)
+      teamIds.add(m.awayTeamId)
+      for (const rid of m.playerRosterIds) rosterIds.add(rid)
+    }
+  }
+
+  for (const mid of sel.matchIds) {
+    const m = detail.matches.find((x) => x.id === mid)
+    if (!m) continue
+    if (!teamIds.has(m.homeTeamId)) {
+      errors.push({ kind: 'match_missing_team', matchId: m.id, matchTitle: m.title, missingTeamId: m.homeTeamId })
+    }
+    if (!teamIds.has(m.awayTeamId)) {
+      errors.push({ kind: 'match_missing_team', matchId: m.id, matchTitle: m.title, missingTeamId: m.awayTeamId })
+    }
+    if (!sel.autoIncludeRelated) {
+      for (const rid of m.playerRosterIds) {
+        if (!rosterIds.has(rid)) {
+          errors.push({ kind: 'match_missing_roster', matchId: m.id, matchTitle: m.title, missingRosterMemberId: rid })
+        }
+      }
+    }
+  }
+
+  return { ok: errors.length === 0, errors }
 }
 
 function unwrapPersistedArray<T>(data: Record<string, unknown>, shortKey: string): T[] {
@@ -59,11 +150,19 @@ export function loadImportHistory(): ImportRecord[] {
     mode: r.mode,
     sourceAppVersion: r.sourceAppVersion ?? '',
     counts: r.counts ?? r.added ?? { teams: 0, rosterMembers: 0, matches: 0 },
+    partial: r.partial === true,
   }))
 }
 
-export function importBackup(file: BackupFile, mode: ImportMode, by: string): ImportResult {
+export function importBackup(
+  file: BackupFile,
+  mode: ImportMode,
+  by: string,
+  /** `merge` のときのみ。未指定ならファイル全件を追記相当 */
+  mergeSelection?: ImportSelection,
+): ImportResult {
   if (mode === 'replace') return replaceImport(file, by)
+  if (mergeSelection) return mergeImportPartial(file, mergeSelection, by)
   return mergeImport(file, by)
 }
 
@@ -90,23 +189,54 @@ function replaceImport(file: BackupFile, by: string): ImportResult {
     mode: 'replace',
     sourceAppVersion: file.appVersion || '',
     counts,
+    partial: false,
   }
   appendImportHistory(prevHistory, rec)
-  return { mode: 'replace', counts, at: rec.at }
+  return { mode: 'replace', counts, at: rec.at, partial: false }
 }
 
 function mergeImport(file: BackupFile, by: string): ImportResult {
+  const detail = buildPreviewDetail(file)
+  return mergeImportPartial(file, buildAllSelected(detail), by)
+}
+
+/**
+ * 選択されたチーム／ロスター／試合だけを新 ID で追記。`autoIncludeRelated` が true のとき、
+ * 選択試合のホーム・アウェイ・players の rosterMemberId を同伴して取り込む。
+ */
+export function mergeImportPartial(file: BackupFile, sel: ImportSelection, by: string): ImportResult {
   hydrateCountersFromDisk()
 
-  const teamsIn = unwrapPersistedArray<Team>(file.data, 'teams')
-  const rosterIn = unwrapPersistedArray<RosterMember>(file.data, 'roster_members')
-  const matchesIn = unwrapPersistedArray<Match>(file.data, 'matches')
+  const teamsAll = unwrapPersistedArray<Team>(file.data, 'teams')
+  const rosterAll = unwrapPersistedArray<RosterMember>(file.data, 'roster_members')
+  const matchesAll = unwrapPersistedArray<Match>(file.data, 'matches')
+
+  let teamIds = new Set(sel.teamIds)
+  let rosterIds = new Set(sel.rosterMemberIds)
+  const matchIds = new Set(sel.matchIds)
+
+  if (sel.autoIncludeRelated) {
+    for (const m of matchesAll) {
+      if (!matchIds.has(m.id)) continue
+      teamIds.add(m.homeTeamId)
+      teamIds.add(m.awayTeamId)
+      for (const p of m.players ?? []) {
+        if (p.rosterMemberId != null && p.rosterMemberId !== undefined) rosterIds.add(p.rosterMemberId)
+      }
+    }
+  }
+
+  const teamsSel = teamsAll.filter((t) => teamIds.has(t.id))
+  const rosterSel = rosterAll.filter((r) => rosterIds.has(r.id) && teamIds.has(r.teamId))
+  const matchesSel = matchesAll.filter(
+    (m) => matchIds.has(m.id) && teamIds.has(m.homeTeamId) && teamIds.has(m.awayTeamId),
+  )
 
   const teamIdMap = new Map<number, number>()
   const rosterIdMap = new Map<number, number>()
 
   const curTeams = [...loadLocal<Team[]>('teams', [])]
-  for (const t of teamsIn) {
+  for (const t of teamsSel) {
     const newId = nextId('team')
     teamIdMap.set(t.id, newId)
     curTeams.push({ ...t, id: newId })
@@ -114,7 +244,7 @@ function mergeImport(file: BackupFile, by: string): ImportResult {
   saveLocal('teams', curTeams)
 
   const curRoster = [...loadLocal<RosterMember[]>('roster_members', [])]
-  for (const r of rosterIn) {
+  for (const r of rosterSel) {
     const newId = nextId('rosterMember')
     rosterIdMap.set(r.id, newId)
     const mappedTeam = teamIdMap.get(r.teamId)
@@ -127,7 +257,7 @@ function mergeImport(file: BackupFile, by: string): ImportResult {
   saveLocal('roster_members', curRoster)
 
   const curMatches = [...loadLocal<Match[]>('matches', [])]
-  for (const m of matchesIn) {
+  for (const m of matchesSel) {
     const newMatchId = nextId('match')
     const playerIdMap = new Map<number, number>()
 
@@ -187,10 +317,15 @@ function mergeImport(file: BackupFile, by: string): ImportResult {
   }
   saveLocal('matches', curMatches)
 
+  const partial =
+    teamsSel.length !== teamsAll.length ||
+    rosterSel.length !== rosterAll.length ||
+    matchesSel.length !== matchesAll.length
+
   const counts = {
-    teams: teamsIn.length,
-    rosterMembers: rosterIn.length,
-    matches: matchesIn.length,
+    teams: teamsSel.length,
+    rosterMembers: rosterSel.length,
+    matches: matchesSel.length,
   }
   const rec: ImportRecord = {
     at: new Date().toISOString(),
@@ -198,7 +333,8 @@ function mergeImport(file: BackupFile, by: string): ImportResult {
     mode: 'merge',
     sourceAppVersion: file.appVersion || '',
     counts,
+    partial,
   }
   appendImportHistory(loadLocal<ImportRecord[]>(IMPORT_HISTORY_KEY, []), rec)
-  return { mode: 'merge', counts, at: rec.at }
+  return { mode: 'merge', counts, at: rec.at, partial }
 }

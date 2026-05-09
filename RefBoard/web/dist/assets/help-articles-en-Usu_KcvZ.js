@@ -49,7 +49,7 @@ A. Depends on exporter version; use **JSON export** from match detail if columns
 `,n=`---
 title: Import a JSON backup
 category: data
-tags: [data, backup, import, json, restore, migration, 取り込み]
+tags: [data, backup, import, json, restore, migration, 取り込み, partial merge, selective]
 related: [data_export, data_view_history]
 shortcut: null
 actionUrl: "#/workspace/data"
@@ -61,7 +61,7 @@ errorCode: null
 ## What this page covers
 
 - How to restore a **full-data JSON** backup from **Data**
-- The difference between **Replace** and **Merge**
+- The difference between **Replace** and **Merge**, and **selective merge** (pick teams / roster / matches)
 - Why you must **reload the page** after importing
 - **Import history** stays on this browser/device only
 
@@ -73,15 +73,17 @@ errorCode: null
 ## Steps
 
 1. Open **Data** and choose **Import from JSON**.
-2. Pick the backup **.json** file. Review the counts shown in the preview.
-3. Choose how to import:
-   - **Merge**: Append teams, roster rows, and matches with **new IDs**. **Settings (display name, etc.) are kept** as on this device.
-   - **Replace**: **Delete all** existing RefBoard local data, then write the backup. There is a **two-step confirmation** to avoid mistakes. Prior import history rows are preserved and merged with a new head entry.
-4. After success, click **Reload to apply** so the page reloads. Pinia stores must rehydrate from disk.
+2. Pick the backup **.json** file. Review the counts and the **lists of teams, roster rows, and matches** from the file.
+3. Understand **Replace** vs **Merge**:
+   - **Replace**: **Deletes everything** locally, then writes the backup. There is **no per-entity selection** (full file only). A **two-step confirmation** reduces mistakes. Import history is preserved and merged with a new head entry.
+   - **Merge**: Append teams, roster rows, and matches with **new IDs**. **Settings (display name, etc.) stay** on this device.
+4. When **Merge** is selected, you can **check teams, roster rows, and matches individually** (v0.2.0). Use **Select all / Clear** per section.
+5. **When a match is selected, also include related teams and roster** (default **on**): home/away teams for checked matches and any **rosterMemberId** referenced by those matches’ players are auto-checked. Turn it **off** only if you intend to select everything manually; validation blocks confirm until home/away teams and required roster rows are covered.
+6. After success, click **Reload to apply** so the page reloads. Pinia stores must rehydrate from disk.
 
 ## After you import
 
-- **Import history** (up to 20 rows) lists time, operator label, mode, and counts. Nothing is sent to a server.
+- **Import history** (up to 20 rows) lists time, operator label, mode, and counts. **Partial merge** rows are labeled accordingly. Nothing is sent to a server.
 - To move devices: export **Full data backup (JSON)** on the old device, then import on the new one.
 
 ## FAQ
@@ -165,7 +167,7 @@ RefBoard **does not talk to a game server** for storage. Data lives in this brow
 
 - [What is RefBoard?](#/workspace/help/article/intro_what_is_refboard)
 - [Export to CSV](#/workspace/help/article/data_export)
-`,o=`---
+`,r=`---
 title: What is RefBoard?
 category: intro
 tags: [overview, referee, match, FiveM, local]
@@ -207,7 +209,7 @@ A. Use **Data** → **Full data backup (JSON)** and restore on the new machine.
 
 - [Get started with RefBoard](#/workspace/help/article/intro_setup)
 - [Create a new match](#/workspace/help/article/match_create_new)
-`,r=`---
+`,o=`---
 title: Record yellow and red cards
 category: in_match
 tags: [yellow, red, warning, send-off, card, YC, RC, stoppage, additional time, 45+2]
@@ -881,4 +883,4 @@ Use **Data** → **Full data backup (JSON)** to snapshot the current state, rest
 
 - \`G\` — goal wizard (match detail, when enabled)  
 - \`Esc\` — close dialog
-`;export{f as _,u as a,p as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,r as j,o as k,a as l,t as m,n,e as o};
+`;export{f as _,u as a,p as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,o as j,r as k,a as l,t as m,n,e as o};

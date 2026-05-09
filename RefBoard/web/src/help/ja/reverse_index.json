@@ -82,7 +82,7 @@
           "id": "data_import_rev",
           "title": "JSON やバックアップを取り込みたい",
           "article": "data_import.md",
-          "tags": ["インポート", "取り込み", "JSON", "バックアップ", "restore", "端末移行"],
+          "tags": ["インポート", "取り込み", "JSON", "バックアップ", "restore", "端末移行", "部分マージ", "選択取り込み", "partial", "selective"],
           "actionUrl": "#/workspace/data"
         }
       ]

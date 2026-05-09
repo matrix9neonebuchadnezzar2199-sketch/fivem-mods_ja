@@ -403,9 +403,20 @@
       "exported_at": "書き出し日時",
       "app_version": "書き出し時バージョン",
       "schema_version": "スキーマ",
+      "mode_legend": "取り込み方法",
       "mode_replace": "置換（既存データを削除して取り込む）",
       "mode_replace_confirm": "本当に置換する",
       "mode_merge": "追記（新しい ID を払って追加）",
+      "select_section_teams": "チーム",
+      "select_section_rosters": "ロスター",
+      "select_section_matches": "試合",
+      "select_all": "全選択",
+      "select_none": "全解除",
+      "selected_of_total": "{selected} / {total} 件",
+      "auto_include_related": "試合を選んだら関連チームとロスターも自動で含める",
+      "validation_match_missing_team": "試合「{title}」のチーム（ID {missingTeamId}）が選択されていません",
+      "validation_match_missing_roster": "試合「{title}」のロスター（ID {missingRosterMemberId}）が選択されていません（自動同伴をオンにするか、該当ロスターを選択してください）",
+      "merge_confirm_button": "チーム {teams} / ロスター {rosterMembers} / 試合 {matches} を追記する",
       "replace_warn": "既存の RefBoard ローカルデータはすべて削除されます。続行する場合のみ、下のボタンを押してください。",
       "replace_abort": "戻る",
       "cancel": "キャンセル",
@@ -414,6 +425,7 @@
       "close_without_reload": "閉じる（再読み込みしない）",
       "result_replace": "置換で取り込みました",
       "result_merge": "追記で取り込みました",
+      "result_merge_partial": "部分マージで取り込みました",
       "by": "操作者",
       "error_invalid_json": "JSON として読めませんでした",
       "error_invalid_shape": "RefBoard のバックアップ形式ではありません",
@@ -424,7 +436,8 @@
       "empty": "取り込み履歴はありません",
       "mode_replace": "置換",
       "mode_merge": "追記",
-      "row": "{at} · {by} · {mode} · チーム {teams} / ロスター {rosterMembers} / 試合 {matches}"
+      "row": "{at} · {by} · {mode} · チーム {teams} / ロスター {rosterMembers} / 試合 {matches}",
+      "row_partial": "{at} · {by} · {mode}（部分）· チーム {teams} / ロスター {rosterMembers} / 試合 {matches}"
     }
   },
   "settings": {
