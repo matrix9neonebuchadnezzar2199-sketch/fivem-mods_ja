@@ -1,0 +1,36 @@
+--[[
+  ox_inventory の data/items.lua（または分割ファイル）へ追記する例。
+  画像ファイルは ox_inventory/web/images/ に配置し、.png で保存する（キーに .png は付けない）。
+]]
+
+['polaroid_camera'] = {
+    label = 'ポラロイドカメラ',
+    weight = 400,
+    stack = false,
+    consume = 0,
+    close = true,
+    description = '画面を撮影してチェキアイテムを作成する',
+    client = {
+        export = 'PolaPaint.useCamera',
+    },
+},
+
+['polaroid_photo'] = {
+    label = 'チェキ（写真）',
+    weight = 50,
+    stack = false,
+    consume = 0,
+    close = true,
+    description = '使用: 落書き編集 / 右クリックメニュー「チェキを見る」: 閲覧のみ',
+    client = {
+        export = 'PolaPaint.usePhoto',
+    },
+    buttons = {
+        {
+            label = 'チェキを見る',
+            action = function(slot)
+                exports['PolaPaint']:openPhotoViewer(slot)
+            end,
+        },
+    },
+},
