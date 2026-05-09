@@ -6,7 +6,7 @@ author 'JP-Mods (polapaint contributors)'
 description 'polapaint v2 - Polaroid camera with NUI paint editor (local storage)'
 version '2.0.0'
 license 'GPL-3.0-or-later'
-repository 'https://github.com/JP-Mods/polapaint'
+repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
 
 shared_scripts {
     'config.lua',
