@@ -8,8 +8,8 @@ version '1.0.0'
 license 'GPL-3.0'
 
 dependency 'ox_inventory'
---[[ screenshot-basic は必須依存にしない（未導入サーバーでも PolaPaint を起動可能にする）。
-     撮影には別途インストールし server.cfg で ensure すること。未起動時はクライアントが通知する。 ]]
+--[[ screenshot-basic はリポ同梱（ルートの screenshot-basic/）。撮影前に未起動ならクライアントが通知。 ]]
+dependency 'screenshot-basic'
 
 shared_scripts {
     'config.lua',
