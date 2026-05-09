@@ -15,17 +15,20 @@ end
 ---@param msg string
 local function notify(msg)
     if type(msg) ~= 'string' or msg == '' then return end
-    -- ox_lib（ox_inventory と併用されることが多い）があれば確実に表示される
+    -- F8 には必ず出す（画面通知が出ない環境の切り分け用）
+    print(('^3[polapaint]^7 %s'):format(msg))
+    -- ox_lib は RegisterNetEvent('ox_lib:notify', …) のため、クライアントからは TriggerEvent が正しい
     if GetResourceState('ox_lib') == 'started' then
-        local ok = pcall(function()
-            exports.ox_lib:notify({
+        pcall(function()
+            TriggerEvent('ox_lib:notify', {
                 title = 'polapaint',
                 description = msg,
-                duration = 7500,
+                duration = 8000,
                 position = 'top-right',
+                type = 'warning',
             })
         end)
-        if ok then return end
+        return
     end
     -- ネイティブは長文・日本語で出ない環境があるため短くし、KeyboardDisplay を使う
     local short = msg
