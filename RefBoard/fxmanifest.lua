@@ -4,46 +4,15 @@ lua54 'yes'
 
 name 'RefBoard'
 author 'matrix9neonebuchadnezzar2199-sketch'
-version '0.9.2'
-description 'RefBoard — FiveM 向けサッカー試合管理（改ざん防止履歴・編集ロック・i18n）'
-
-dependencies {
-  'oxmysql',
-  '/server:7290',
-}
+version '0.1.0'
+description 'RefBoard — 各監督が端末で目盛るサッカー試合管理（ローカル専用・通信なし）'
 
 shared_scripts {
-    'config.lua',
-    'shared/constants.lua',
-    'shared/error_codes.lua',
-    'locales/*.lua',
-}
-
-server_scripts {
-  '@oxmysql/lib/MySQL.lua',
-  'server/util.lua',
-  'server/db.lua',
-  'server/schema_bootstrap.lua',
-    'server/demo_seed.lua',
-    'server/dev_data_reset.lua',
-  'server/presence.lua',
-  'server/permission.lua',
-  'server/lock.lua',
-  'server/autosave.lua',
-  'server/team.lua',
-  'server/data.lua',
-  'server/match.lua',
-  'server/player.lua',
-  'server/score.lua',
-  'server/clock.lua',
-  'server/event.lua',
-  'server/health.lua',
-  'server/test/transaction_test.lua',
-  'server/main.lua',
+  'config.lua',
+  'shared/constants.lua',
 }
 
 client_scripts {
-  'client/nui_callback.lua',
   'client/main.lua',
 }
 
@@ -52,6 +21,4 @@ ui_page 'web/dist/index.html'
 files {
   'web/dist/index.html',
   'web/dist/**/*',
-  'sql/seed_test_5teams_15roster.sql',
-  'sql/dev_seed_20matches.sql',
 }
