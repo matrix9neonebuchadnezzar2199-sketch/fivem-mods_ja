@@ -76,9 +76,15 @@ export const useTeamsStore = defineStore('teams', () => {
     rosters.value = rosters.value.filter((r) => r.id !== id)
   }
 
+  function reload() {
+    teams.value = loadLocal<Team[]>(KEY_TEAMS, [])
+    rosters.value = loadLocal<RosterMember[]>(KEY_ROSTER, [])
+  }
+
   return {
     teams,
     rosters,
+    reload,
     createTeam,
     updateTeam,
     deleteTeam,

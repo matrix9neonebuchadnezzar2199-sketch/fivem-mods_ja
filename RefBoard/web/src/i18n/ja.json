@@ -490,7 +490,12 @@
       "installed_at": "最終投入: {at}",
       "confirm_install": "既存の試合・チーム・ロスターをすべて削除し、10 チーム × 13 名・20 試合の疑似データを投入します。よろしいですか？",
       "confirm_clear_match": "試合・チーム・ロスターをすべて削除します（設定と表示名・取り込み履歴は残ります）。よろしいですか？",
-      "confirm_clear_all": "設定・表示名・取り込み履歴を含む全データを削除します。よろしいですか？"
+      "confirm_clear_all": "設定・表示名・取り込み履歴を含む全データを削除します。よろしいですか？",
+      "processing": "処理中…",
+      "toast_installed": "疑似データを投入しました",
+      "toast_cleared_match": "試合・チーム・ロスターを削除しました",
+      "toast_cleared_all": "全データを削除しました",
+      "toast_error": "データ操作に失敗しました"
     },
     "marquee_mode": {
       "label": "テキストスクロール",

@@ -922,12 +922,19 @@ function exportMatchEventsCsv() {
             />
           </div>
           <div
-            class="min-h-0 min-w-0 flex-1"
+            class="flex min-h-0 min-w-0 flex-1 flex-col gap-2"
             :style="cardDimStyle"
             @pointerenter="setFocus('status')"
             @pointerleave="setFocus(null)"
           >
             <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed @set-half="onSetHalf" />
+            <div class="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 px-0.5 text-xs text-slate-500">
+              <span>{{ t('match.operator_label') }}:</span>
+              <span v-if="operatorIsSet" class="font-medium text-slate-300">{{ operatorName }}</span>
+              <span v-else>{{ t('match.operator_unset') }}</span>
+            </div>
+            <div class="px-0.5 text-xs font-medium text-slate-400">{{ t('compact.recent_events') }}</div>
+            <CompactEventList class="min-h-0 shrink" :events="detail.events" max-height="6rem" />
           </div>
           <div
             class="flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-slate-600/40 pt-2 md:min-w-[min(22rem,40vw)] md:border-l md:border-t-0 md:pl-3 md:pt-0"
@@ -944,16 +951,6 @@ function exportMatchEventsCsv() {
               {{ t('match_detail.compact_restore_full') }}
             </button>
           </div>
-        </div>
-
-        <div class="mt-3 border-t border-slate-600/50 pt-2">
-          <div class="mb-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-xs text-slate-500">
-            <span>{{ t('match.operator_label') }}:</span>
-            <span v-if="operatorIsSet" class="font-medium text-slate-300">{{ operatorName }}</span>
-            <span v-else>{{ t('match.operator_unset') }}</span>
-          </div>
-          <div class="mb-1 text-xs font-medium text-slate-400">{{ t('compact.recent_events') }}</div>
-          <CompactEventList :events="detail.events" />
         </div>
       </div>
     </div>

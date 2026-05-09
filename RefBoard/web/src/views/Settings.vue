@@ -1,22 +1,32 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSettingsStore } from '../stores/settings'
 import { isInFiveM } from '../composables/useNui'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
-import { isSeedInstalled, getSeedInstalledAt, installSeedData, clearMatchData, clearAllData } from '../dev/seedActions'
+import {
+  isSeedInstalled,
+  getSeedInstalledAt,
+  installSeedData,
+  clearMatchData,
+  clearAllData,
+  rehydrateStoresAfterLocalStorageMutation,
+} from '../dev/seedActions'
 import { useDialogOverlay } from '../composables/useDialogOverlay'
+import { useToast } from '../composables/useToast'
 
 const { overlayRootClass } = useDialogOverlay()
 const settingsSeedConfirmOverlayClass = overlayRootClass('z-[200]', 'bg-black/60')
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
+const toast = useToast()
 
 const seedInstalled = ref(false)
 const seedInstalledAt = ref<string | null>(null)
 const confirmAction = ref<null | 'install' | 'clear_match' | 'clear_all'>(null)
+const seedBusy = ref(false)
 
 /** 「テスト用データ操作パネル」チェック時のみ。FiveM 実機でも config.lua は不要。ブラウザ DEV は表示可 */
 const showDevDataPanel = computed(
@@ -48,13 +58,26 @@ function cancelConfirm() {
   confirmAction.value = null
 }
 
-function executeConfirmed() {
+async function executeConfirmed() {
   const a = confirmAction.value
-  if (a === 'install') installSeedData()
-  else if (a === 'clear_match') clearMatchData()
-  else if (a === 'clear_all') clearAllData()
   confirmAction.value = null
-  location.reload()
+  seedBusy.value = true
+  await nextTick()
+  try {
+    if (a === 'install') installSeedData()
+    else if (a === 'clear_match') clearMatchData()
+    else if (a === 'clear_all') clearAllData()
+    rehydrateStoresAfterLocalStorageMutation()
+    refreshSeedStatus()
+    locale.value = settings.settings.locale
+    if (a === 'install') toast.push(t('settings.dev_seed.toast_installed'), 'success')
+    else if (a === 'clear_match') toast.push(t('settings.dev_seed.toast_cleared_match'), 'success')
+    else if (a === 'clear_all') toast.push(t('settings.dev_seed.toast_cleared_all'), 'success')
+  } catch {
+    toast.push(t('settings.dev_seed.toast_error'), 'error')
+  } finally {
+    seedBusy.value = false
+  }
 }
 
 const confirmExecuteClass = computed(() => {
@@ -261,21 +284,24 @@ function syncLocale() {
           <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button
               type="button"
-              class="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500"
+              class="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500 disabled:opacity-50"
+              :disabled="seedBusy"
               @click="askInstall"
             >
               {{ t('settings.dev_seed.install_button') }}
             </button>
             <button
               type="button"
-              class="rounded bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-500"
+              class="rounded bg-rose-600 px-3 py-1.5 text-sm text-white hover:bg-rose-500 disabled:opacity-50"
+              :disabled="seedBusy"
               @click="askClearMatch"
             >
               {{ t('settings.dev_seed.clear_match_button') }}
             </button>
             <button
               type="button"
-              class="rounded bg-rose-900 px-3 py-1.5 text-sm text-white hover:bg-rose-800"
+              class="rounded bg-rose-900 px-3 py-1.5 text-sm text-white hover:bg-rose-800 disabled:opacity-50"
+              :disabled="seedBusy"
               @click="askClearAll"
             >
               {{ t('settings.dev_seed.clear_all_button') }}
@@ -297,18 +323,20 @@ function syncLocale() {
           <div class="mt-4 flex justify-end gap-2">
             <button
               type="button"
-              class="rounded bg-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-600"
+              class="rounded bg-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-600 disabled:opacity-50"
+              :disabled="seedBusy"
               @click="cancelConfirm"
             >
               {{ t('common.cancel') }}
             </button>
             <button
               type="button"
-              class="rounded px-3 py-1.5 text-sm font-medium text-white"
+              class="rounded px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
               :class="confirmExecuteClass"
+              :disabled="seedBusy"
               @click="executeConfirmed"
             >
-              {{ t('common.execute') }}
+              {{ seedBusy ? t('settings.dev_seed.processing') : t('common.execute') }}
             </button>
           </div>
         </div>

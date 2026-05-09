@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
 - **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.3.0（ローカル専用・CSV 拡充 + ヘルプ 22 本構成）
+- **対象バージョン**: v0.3.1（ローカル専用・v0.3.0 + 実機ホットフィックス）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.3.0）
+## 3. ディレクトリ構成（v0.3.1）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.3.0'
+├─ fxmanifest.lua          version '0.3.1'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.3.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.3.1（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
@@ -113,7 +113,7 @@ RefBoard/
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
 - **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
 - **試合 CSV（B1・v0.3.0）**: `utils/exporters.ts` の `exportMatchSummaryToCSV`（9 列・試合 1 行）と `exportMatchEventsToCSV(match, { operator }, 'standard'|'detailed')`（イベント行・**13 / 26 列**）。`downloadMatchCsvPack` が約 200ms 間隔で `_summary.csv` と `_events.csv` を連続ダウンロード。正はローカル `Match` / `MatchEvent`（`voided`・`sub_in` は行として出力しない）。`event_text` は `localEventToRow` ベース。UI は `MatchDetail.vue` ヘッダと `DataManage.vue` 終了試合一覧（ドロップダウン＋ボタン）。旧 UI 専用 5 列のみの関数は `exportMatchEventsToCSVLegacy`。
-- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（またはブラウザ `npm run dev` 時）、`dev/sampleData.ts` 固定データを `localPersist` へ書き込み `location.reload()` で反映。10 チーム × 13 名・20 試合（終了／進行中 3／下書き 5）。**進行中のうち 1 件が PK デモ**（`SeedMatch.pkDemo`・1-1・PK 2-2 同点・未決着、`seedActions.buildMatchFromSeed` が `pk_goal`/`pk_miss` を生成）。全削除時は `refboard_local_*` に加え `refboard_settings` と `refboard-locale` も除去。
+- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（またはブラウザ `npm run dev` 時）、`dev/seedActions.ts` が `saveLocalBatch` と `localId` のバッチ永続化で `localPersist` へ一括書き込みし、**ページリロードなし**で `teams.reload()` / `matches.reload()` / `settings.load()` により Pinia を再 hydrate（v0.3.1〜。FiveM CEF での `location.reload` 起因の NUI フォーカス問題を回避）。10 チーム × 13 名・20 試合（終了／進行中 3／下書き 5）。**進行中のうち 1 件が PK デモ**。全削除時は `refboard_local_*` に加え `refboard_settings` と `refboard-locale` も除去。
 
 ## 6. 開発・ビルド・配布
 
@@ -129,7 +129,7 @@ npx vue-tsc --noEmit # 型チェック
 
 `fxmanifest.lua` は `web/dist/index.html` と `web/dist/**/*` をパッケージ。`server.cfg` には `ensure RefBoard` の 1 行のみ（`oxmysql` も ACE も不要）。`Config.OpenKey`（既定 F6）と `Config.DefaultLocale`（既定 `ja`）だけ設定可能。
 
-## 7. 既知の TODO（v0.3.0 時点）
+## 7. 既知の TODO（v0.3.1 時点）
 
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
 - `intro_setup` のスクリーンショット差し替え（旧版のままなら更新）。
@@ -152,8 +152,9 @@ npx vue-tsc --noEmit # 型チェック
 - **v0.2.0（完了・2026‑05‑09）**: ヘルプ Fuse 再調整、ロスタイム入力許容、JSON インポート部分マージ。
 - **v0.2.2（完了・2026‑05‑10）**: 小窓モード A（モーダル透過）、D‑1/D‑2（PK 表示・2 列 UI）、B（直近イベント）、C（小窓で操作者表示）、PK デモシード。Git タグ `v0.2.2`。
 - **v0.2.x 残り**: `intro_setup` スクショ差し替えのみ（任意）。
-- **v0.3.0（完了）**: **B1** CSV 出力項目拡充、**I** ヘルプ 22 本構成（CSV／Excel／移行／PK 2 列／小窓／イベント表示トラブル）。Git タグ `v0.3.0`。
-- **v0.4.0（候補）**: 大会／リーグ集計（旧 B2）、CSV 複数試合 ZIP、ヘルプ `team_roster_management`／`data_full_backup_strategy` 等、`exportMatchEventsToCSVLegacy` 削除可否の判断。
+- **v0.3.0（完了）**: **B1** CSV、**I** ヘルプ 22 本。タグ `v0.3.0`。
+- **v0.3.1（完了）**: 疑似データ `reload` 廃止＋Pinia 再 hydrate、`downloadFile` の CEF 互換、小窓 `CompactEventList` 配置。タグ `v0.3.1`。
+- **v0.4.0（候補）**: JSON インポート完了後の `location.reload` 置換（Pinia 再 hydrate）、大会／リーグ集計（旧 B2）、CSV ZIP、ヘルプ追補、`exportMatchEventsToCSVLegacy` 削除可否。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -161,7 +162,7 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.3.0 完了（B1 + I）。タグ `v0.3.0`。v0.2.2 は `v0.2.2`。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 現状: v0.3.1（実機ホットフィックス）。タグ `v0.3.1`。v0.3.0 は `v0.3.0`。`RefBoard_old/` は GitHub 非追跡の素材庫。
 > 次着手候補: **v0.4.0** 候補の優先度決定（B2 集計／CSV ZIP／ヘルプ追補／Legacy CSV 削除）、または §7 の PK キャンセル UI など。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
@@ -184,3 +185,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑10: 小窓モードに `CompactEventList`（直近イベント・新しい順・8rem スクロール）と操作者 1 行（C）を追加。`SeedMatch.pkDemo` による PK デモ試合を疑似データに 1 件組み込み。Git タグ `v0.2.2`。
 - 2026‑05‑10: **B1** 試合 CSV 拡充（サマリ 9 列＋イベント標準 13 / 詳細 26 列、2 ファイル連続 DL）。版数 **v0.3.0**。`exporters.test.ts` 追加。
 - 2026‑05‑10: **I** ヘルプ 22 本化（`data_csv_format` / `data_csv_excel_open` / `data_migration` / `match_pk_recording` / `compact_dock_usage` / `troubleshooting_event_disappears`）。`index.json`・`reverse_index.json`・`context_map.json`・Fuse 評価クエリを更新。Git タグ **`v0.3.0`**（コミット `5c456d8`）。
+- 2026‑05‑10: **v0.3.1** 疑似データ操作から `location.reload` を除去し Pinia 再 hydrate、`localPersist.saveLocalBatch` と `localId` バッチ、`downloadFile` の DOM 追加クリック、小窓の直近イベントを前後半カード列下へ。Git タグ **`v0.3.1`**。

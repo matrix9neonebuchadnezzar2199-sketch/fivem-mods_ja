@@ -24,6 +24,26 @@ const defaults: IdCounters = {
 
 let counters: IdCounters = { ...defaults, ...loadLocal<Partial<IdCounters>>(COUNTER_KEY, {}) }
 
+/** `nextId` / `resetIdCounters` のディスク書き込みを抑止（疑似データ一括投入など） */
+let idCounterPersistDepth = 0
+
+export function beginIdCounterBatch(): void {
+  idCounterPersistDepth += 1
+}
+
+export function endIdCounterBatch(): void {
+  idCounterPersistDepth = Math.max(0, idCounterPersistDepth - 1)
+  if (idCounterPersistDepth === 0) {
+    saveLocal(COUNTER_KEY, counters)
+  }
+}
+
+function persistCountersIfNeeded(): void {
+  if (idCounterPersistDepth === 0) {
+    saveLocal(COUNTER_KEY, counters)
+  }
+}
+
 /** merge インポート等の前に、ディスク上の id_counters をメモリへ同期する */
 export function hydrateCountersFromDisk(): void {
   counters = { ...defaults, ...loadLocal<Partial<IdCounters>>(COUNTER_KEY, {}) }
@@ -31,7 +51,7 @@ export function hydrateCountersFromDisk(): void {
 
 export function nextId(kind: IdKind): number {
   counters[kind] = (counters[kind] ?? defaults[kind]) + 1
-  saveLocal(COUNTER_KEY, counters)
+  persistCountersIfNeeded()
   return counters[kind]
 }
 
@@ -41,5 +61,10 @@ export function peekIdCounters(): Readonly<IdCounters> {
 
 export function resetIdCounters(): void {
   counters = { ...defaults }
-  saveLocal(COUNTER_KEY, counters)
+  persistCountersIfNeeded()
+}
+
+/** バッチ中のみ。ディスクには `endIdCounterBatch` まで書かない */
+export function resetCountersMemoryOnly(): void {
+  counters = { ...defaults }
 }

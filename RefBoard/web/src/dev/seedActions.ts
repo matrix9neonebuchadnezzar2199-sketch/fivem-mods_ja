@@ -1,5 +1,15 @@
-import { saveLocal, clearAllLocal, loadLocal, removeLocal } from '../utils/localPersist'
-import { resetIdCounters, nextId } from '../utils/localId'
+import { saveLocalBatch, clearAllLocal, loadLocal, removeLocal } from '../utils/localPersist'
+import {
+  resetIdCounters,
+  resetCountersMemoryOnly,
+  nextId,
+  beginIdCounterBatch,
+  endIdCounterBatch,
+  hydrateCountersFromDisk,
+} from '../utils/localId'
+import { useTeamsStore } from '../stores/teams'
+import { useMatchesStore } from '../stores/matches'
+import { useSettingsStore } from '../stores/settings'
 import { SEED_TEAMS, SEED_MATCHES, buildSeedRoster } from './sampleData'
 import type { Match, MatchEvent, MatchPlayer, ScoreHistoryEntry, RosterMember, Team, Half } from '../types/local'
 
@@ -25,9 +35,11 @@ export function getSeedInstalledAt(): string | null {
 
 /** 試合・チーム・ロスターのみ削除（設定・selfName・取り込み履歴は保持） */
 export function clearMatchData(): void {
-  saveLocal<Team[]>('teams', [])
-  saveLocal<RosterMember[]>('roster_members', [])
-  saveLocal<Match[]>('matches', [])
+  saveLocalBatch({
+    teams: [] as Team[],
+    roster_members: [] as RosterMember[],
+    matches: [] as Match[],
+  })
   removeLocal(SEED_FLAG_KEY)
   resetIdCounters()
 }
@@ -44,44 +56,66 @@ export function clearAllData(): void {
   }
 }
 
-/** 投入：必ず先に clearMatchData してからシード */
+/** 投入：空にしてからシード（`location.reload` なし・ID 採番はバッチでディスク 1 回） */
 export function installSeedData(): void {
-  clearMatchData()
+  beginIdCounterBatch()
+  try {
+    saveLocalBatch({
+      teams: [] as Team[],
+      roster_members: [] as RosterMember[],
+      matches: [] as Match[],
+    })
+    removeLocal(SEED_FLAG_KEY)
+    resetCountersMemoryOnly()
 
-  const nowMs = Date.now()
-  const nowIso = new Date(nowMs).toISOString()
+    const nowMs = Date.now()
+    const nowIso = new Date(nowMs).toISOString()
 
-  const teams: Team[] = SEED_TEAMS.map((s) => ({
-    id: nextId('team'),
-    name: s.name,
-    shortName: s.shortName,
-    colorHex: s.colorHex,
-    createdAt: nowIso,
-    updatedAt: nowIso,
-  }))
-  saveLocal('teams', teams)
+    const teams: Team[] = SEED_TEAMS.map((s) => ({
+      id: nextId('team'),
+      name: s.name,
+      shortName: s.shortName,
+      colorHex: s.colorHex,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    }))
 
-  const rosters: RosterMember[] = []
-  for (let i = 0; i < SEED_TEAMS.length; i++) {
-    const team = teams[i]
-    const seed = SEED_TEAMS[i]
-    for (const row of buildSeedRoster(seed)) {
-      rosters.push({
-        id: nextId('rosterMember'),
-        teamId: team.id,
-        name: row.name,
-        number: row.number,
-        position: row.position,
-        note: null,
-      })
+    const rosters: RosterMember[] = []
+    for (let i = 0; i < SEED_TEAMS.length; i++) {
+      const team = teams[i]
+      const seed = SEED_TEAMS[i]
+      for (const row of buildSeedRoster(seed)) {
+        rosters.push({
+          id: nextId('rosterMember'),
+          teamId: team.id,
+          name: row.name,
+          number: row.number,
+          position: row.position,
+          note: null,
+        })
+      }
     }
+
+    const matches: Match[] = SEED_MATCHES.map((s) => buildMatchFromSeed(s, teams, rosters, nowMs))
+
+    saveLocalBatch({
+      teams,
+      roster_members: rosters,
+      matches,
+      [SEED_FLAG_KEY]: { installedAt: nowIso } satisfies SeedState,
+    })
+  } finally {
+    endIdCounterBatch()
+    hydrateCountersFromDisk()
   }
-  saveLocal('roster_members', rosters)
+}
 
-  const matches: Match[] = SEED_MATCHES.map((s) => buildMatchFromSeed(s, teams, rosters, nowMs))
-  saveLocal('matches', matches)
-
-  saveLocal<SeedState>(SEED_FLAG_KEY, { installedAt: nowIso })
+/** 疑似データ操作後に Pinia を `localStorage` から再読込（ページリロード不要） */
+export function rehydrateStoresAfterLocalStorageMutation(): void {
+  hydrateCountersFromDisk()
+  useTeamsStore().reload()
+  useMatchesStore().reload()
+  useSettingsStore().load()
 }
 
 function buildMatchFromSeed(

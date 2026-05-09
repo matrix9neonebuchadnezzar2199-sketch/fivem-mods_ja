@@ -172,8 +172,11 @@ export function downloadFile(content: string, filename: string, mime: string) {
   const a = document.createElement('a')
   a.href = url
   a.download = filename
+  a.style.display = 'none'
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 250)
 }
 
 /** 試合イベント CSV の列セット（標準 13 / 詳細 26） */
@@ -500,7 +503,7 @@ export function exportMatchToJSON(match: MatchDetailModel, history: ScoreHistory
       events: match.events,
       score_history: history,
       exported_at: new Date().toISOString(),
-      exporter_version: '0.3.0',
+      exporter_version: '0.3.1',
     },
     null,
     2,
@@ -519,15 +522,9 @@ export function exportFullBackup(): void {
   const payload = {
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
-    appVersion: '0.3.0',
+    appVersion: '0.3.1',
     data: dumpAllLocal(),
   }
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
   const ts = new Date().toISOString().slice(0, 19).replace(/\D/g, '').slice(0, 13)
-  a.href = url
-  a.download = `refboard_backup_${ts}.json`
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadFile(JSON.stringify(payload, null, 2), `refboard_backup_${ts}.json`, 'application/json;charset=utf-8')
 }

@@ -490,7 +490,12 @@
       "installed_at": "Last installed: {at}",
       "confirm_install": "Delete all matches, teams, and roster, then install sample data (10 teams × 13 players, 20 matches). Continue?",
       "confirm_clear_match": "Delete all matches, teams, and roster. Settings, display name, and import history stay. Continue?",
-      "confirm_clear_all": "Delete all local data including settings, display name, and import history. Continue?"
+      "confirm_clear_all": "Delete all local data including settings, display name, and import history. Continue?",
+      "processing": "Working…",
+      "toast_installed": "Sample data installed",
+      "toast_cleared_match": "Matches, teams, and roster cleared",
+      "toast_cleared_all": "All local data cleared",
+      "toast_error": "Data operation failed"
     },
     "marquee_mode": {
       "label": "Text scroll",

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.1 — 2026‑05‑10（実機ホットフィックス）
+
+- **疑似データ（設定）**: `location.reload()` を廃止し、`localStorage` 書き込み後に `teams` / `matches` / `settings` の Pinia を再読込。`id_counters` は `beginIdCounterBatch` / `endIdCounterBatch` でシード構築中のディスク書き込みを抑制。`saveLocalBatch` で配列キーをまとめて保存。FiveM CEF での NUI フォーカス滞留・クラッシュ回避。
+- **ダウンロード**: `downloadFile` で `<a>` を `document.body` に一時追加し、`click` 後に除去・`revokeObjectURL` を遅延。`exportFullBackup` も同経路に統一（CSV / JSON / 試合パックの各ボタンが CEF で動作しやすくなる想定）。
+- **小窓**: `CompactEventList` を前後半カード列（`MatchStatusCard` と同じ grid セル）の下に移動し、高さ既定を `6rem`。
+- 版数: `package.json` / `fxmanifest` / `REFBOARD_UI_VERSION` / エクスポート JSON の `appVersion`・`exporter_version` を **0.3.1** に同期。
+
 ## v0.3.0 — 2026‑05‑10（CSV 出力拡充 B1 + ヘルプ I）
 
 - ヘルプを **16 → 22 本**に拡充（日英対称）。CSV 列説明・Excel 表示・JSON での別 PC 移行・PK 2 列 UI・小窓モード・イベントが見えないときの確認。`data_export` から新記事へリンク。`eval-help-fuse.mjs` / `help_search_queries.md` に評価クエリを追加（Fuse `threshold` は 0.35 据え置き）。

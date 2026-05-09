@@ -235,8 +235,13 @@ export const useMatchesStore = defineStore('matches', () => {
     patch(matchId, {})
   }
 
+  function reload() {
+    matches.value = loadLocal<Match[]>(KEY, [])
+  }
+
   return {
     matches,
+    reload,
     find,
     createMatch,
     deleteMatch,

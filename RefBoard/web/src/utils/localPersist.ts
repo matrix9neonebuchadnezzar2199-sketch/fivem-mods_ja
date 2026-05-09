@@ -37,6 +37,19 @@ export function saveLocal<T>(key: string, data: T): void {
   }
 }
 
+/** 複数キーを連続 `setItem`（Vue watch を挟まない疑似データ投入など向け） */
+export function saveLocalBatch(entries: Record<string, unknown>): void {
+  if (typeof localStorage === 'undefined') return
+  for (const [key, data] of Object.entries(entries)) {
+    try {
+      const payload: PersistedShape<unknown> = { version: SCHEMA_VERSION, data }
+      localStorage.setItem(KEY_PREFIX + key, JSON.stringify(payload))
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 export function removeLocal(key: string): void {
   if (typeof localStorage === 'undefined') return
   try {

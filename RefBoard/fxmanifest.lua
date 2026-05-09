@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'RefBoard'
 author 'matrix9neonebuchadnezzar2199-sketch'
-version '0.3.0'
+version '0.3.1'
 description 'RefBoard — 各監督が端末で目盛るサッカー試合管理（ローカル専用・通信なし）'
 
 shared_scripts {
