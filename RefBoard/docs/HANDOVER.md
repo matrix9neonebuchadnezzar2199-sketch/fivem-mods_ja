@@ -110,7 +110,6 @@ npx vue-tsc --noEmit # 型チェック
 
 ## 7. 既知の TODO（v0.1.0 時点）
 
-- `selfName` を試合詳細ヘッダに表示（操作者の判別に使用）。
 - 全データ JSON の **インポート** UI（v0.1.0 はエクスポートのみ）。端末移行時に必要。
 - ロスタイム表記（`45+2`）の入力許容と表示整形。
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
@@ -131,7 +130,7 @@ npx vue-tsc --noEmit # 型チェック
 
 ## 9. ロードマップ（v0.1.0 → v1.0.0）
 
-- **v0.1.x（短期）**: JSON インポート、`selfName` のヘッダ表示、`intro_setup` スクショ更新、ロスタイム入力。
+- **v0.1.x（短期）**: JSON インポート、`intro_setup` スクショ更新、ロスタイム入力。
 - **v0.2.0（中期）**: 大会／リーグの集計、CSV 出力の項目拡充、コンパクト小窓モードの再評価。
 - **v0.3.0**: ヘルプ拡充（v0.1.0 では削った記事のうち再度必要になったものをローカル文脈で書き直し）、Fuse 再チューニング。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
@@ -142,12 +141,13 @@ npx vue-tsc --noEmit # 型チェック
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
 > 現状: v0.1.0（ローカル版リブート完了、4 連コミット済）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: JSON インポート UI、`selfName` ヘッダ表示、ロスタイム入力許容のいずれか。
+> 次着手候補: JSON インポート UI、ロスタイム入力許容のいずれか。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
-短縮フレーズ: `JSON インポートいって` / `selfName ヘッダいって` / `ロスタイムいって`
+短縮フレーズ: `JSON インポートいって` / `ロスタイムいって`
 
 ## 11. 改版履歴
 
 - 2026‑05‑09: 第 3 版起こし。v0.1.0（ローカル版リブート）に対応。旧版の §4〜§9（サーバ連動・編集ロック・実機テスト計画）を全面差し替え。
 - 2026‑05‑09: v0.1.0 の `web/package.json`・`package-lock.json`・`src/constants/version.ts`（`REFBOARD_UI_VERSION`）を 0.1.0 へ同期。HANDOVER §3 と §7 を整合修正（版数揃えの Git ハッシュは `git log -1 --oneline -- RefBoard/web/package.json` で確認）。
+- 2026‑05‑09: 試合詳細ヘッダに `selfName`（操作者）を表示。未設定時は Settings へ誘導するリンクを表示。小窓モードで `transparentChrome` のときはヘッダから非表示。

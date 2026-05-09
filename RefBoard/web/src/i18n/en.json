@@ -67,7 +67,10 @@
       "live": "Live",
       "finished": "Finished",
       "cancelled": "Cancelled"
-    }
+    },
+    "operator_label": "Operator",
+    "operator_unset": "not set",
+    "operator_set_in_settings": "Set your name in Settings"
   },
   "tabs": {
     "score_record": "Score",
@@ -384,6 +387,7 @@
     "section_general": "General",
     "self_name": "Display name",
     "self_name_hint": "Saved in localStorage on this device for future use in headers.",
+    "self_name_header_hint": "Shown as operator in the match detail header.",
     "section_match": "Match",
     "section_display": "Display",
     "section_dev": "Developer",

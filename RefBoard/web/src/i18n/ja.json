@@ -67,7 +67,10 @@
       "live": "進行中",
       "finished": "試合終了",
       "cancelled": "中止"
-    }
+    },
+    "operator_label": "操作者",
+    "operator_unset": "未設定",
+    "operator_set_in_settings": "設定で表示名を入力"
   },
   "tabs": {
     "score_record": "スコア記録",
@@ -384,6 +387,7 @@
     "section_general": "一般",
     "self_name": "表示名",
     "self_name_hint": "試合画面のヘッダ等に使う予定です。この端末の localStorage に保存されます。",
+    "self_name_header_hint": "試合詳細ヘッダに操作者として表示されます。",
     "section_match": "試合管理",
     "section_display": "表示",
     "section_dev": "開発者向け",

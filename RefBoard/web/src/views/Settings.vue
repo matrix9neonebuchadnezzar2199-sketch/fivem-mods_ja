@@ -133,6 +133,7 @@ function syncLocale() {
             :placeholder="t('launcher.self_name_placeholder')"
           />
           <span class="mt-1 block text-xs text-slate-500">{{ t('settings.self_name_hint') }}</span>
+          <p class="mt-1 text-xs text-slate-400">{{ t('settings.self_name_header_hint') }}</p>
         </label>
         <label class="block text-slate-400">
           {{ t('settings.locale') }}

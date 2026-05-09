@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useNui } from '../composables/useNui'
 import { mockMatchDetail } from '../data/matchDetailSeed'
 import type { MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/match'
@@ -48,6 +48,9 @@ const { t, te } = useI18n()
 const settings = useSettingsStore()
 const matchCompactDock = useMatchCompactDockStore()
 const { push: toast } = useToast()
+
+const operatorName = computed(() => String(settings.settings.selfName ?? '').trim())
+const operatorIsSet = computed(() => operatorName.value.length > 0)
 
 const matchId = computed(() => Number(route.params.id))
 const rawMatch = computed(() => (matchId.value ? matchesStore.find(matchId.value) : null))
@@ -711,9 +714,26 @@ function exportMatchEventsCsv() {
       />
       <div v-if="detail.serverHalf !== 'pk'">
         <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
-          <div class="flex flex-1 flex-wrap items-center gap-2 text-sm text-slate-200">
-            <span class="font-semibold">試合詳細の編集</span>
-            <span v-if="localEditor" class="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">[編集中]</span>
+          <div class="flex flex-1 flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-200">
+            <div class="flex min-w-0 flex-wrap items-center gap-2">
+              <span class="font-semibold">試合詳細の編集</span>
+              <span v-if="localEditor" class="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-300">[編集中]</span>
+            </div>
+            <div
+              v-if="!matchCompactDock.transparentChrome"
+              class="flex min-w-0 flex-shrink-0 items-center gap-1 text-xs text-slate-300/80"
+            >
+              <span>{{ t('match.operator_label') }}:</span>
+              <span v-if="operatorIsSet" class="font-medium text-emerald-300">{{ operatorName }}</span>
+              <RouterLink
+                v-else
+                :to="{ name: 'settings' }"
+                class="text-slate-400 underline-offset-2 hover:text-emerald-300 hover:underline"
+                :title="t('match.operator_set_in_settings')"
+              >
+                {{ t('match.operator_unset') }}
+              </RouterLink>
+            </div>
           </div>
           <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
             <button
