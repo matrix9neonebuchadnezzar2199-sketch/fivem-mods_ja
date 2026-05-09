@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         （npm の `version` は未同期で 0.9.2 のまま。リリース版の版数は fxmanifest の 0.1.0 が正）
+   ├─ package.json         version 0.1.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    └─ src/
@@ -110,7 +110,6 @@ npx vue-tsc --noEmit # 型チェック
 
 ## 7. 既知の TODO（v0.1.0 時点）
 
-- `web/package.json` の `version` を `0.1.0` に同期（現状 `0.9.2`。`fxmanifest.lua` と表記を揃える）。
 - `selfName` を試合詳細ヘッダに表示（操作者の判別に使用）。
 - 全データ JSON の **インポート** UI（v0.1.0 はエクスポートのみ）。端末移行時に必要。
 - ロスタイム表記（`45+2`）の入力許容と表示整形。
@@ -151,3 +150,4 @@ npx vue-tsc --noEmit # 型チェック
 ## 11. 改版履歴
 
 - 2026‑05‑09: 第 3 版起こし。v0.1.0（ローカル版リブート）に対応。旧版の §4〜§9（サーバ連動・編集ロック・実機テスト計画）を全面差し替え。
+- 2026‑05‑09: v0.1.0 の `web/package.json`・`package-lock.json`・`src/constants/version.ts`（`REFBOARD_UI_VERSION`）を 0.1.0 へ同期（コミット `3c7761b`）。HANDOVER §3 と §7 を整合修正。
