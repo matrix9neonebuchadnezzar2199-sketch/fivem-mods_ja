@@ -18,7 +18,7 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
 1. `PolaPaint` を `resources` 配下に配置する。
 2. `config.lua` の `Config.DiscordWebhook` に、Discord サーバーで発行した **Incoming Webhook の完全な URL** を設定する（`?wait=true` はサーバー側で自動付与されます）。
 3. `ox_inventory` の `items.lua` に、`snippets/ox_inventory_items.lua.example` を参考にアイテムを追加する（アイテム名は `config.lua` の `Config.Items` と一致させる）。
-4. スロット用アイコンは `assets/inventory_icons/README.txt` のとおり **128×128 透過 PNG** を用意し、`ox_inventory/web/images/` に配置する（ファイル名は README 参照）。
+4. スロット用アイコンは **`assets/inventory_icons/polaroid_camera.png` と `polaroid_photo.png`** を `ox_inventory/web/images/` にコピーする（リポに同梱済み。割当が逆なら README.txt の追記を参照）。
 5. `refresh` 後、`ensure PolaPaint` で起動確認する。
 
 Webhook の実トークンをリポジトリにコミットしないこと。ローカル用のメモファイルは `.gitignore` で除外する運用を推奨します。

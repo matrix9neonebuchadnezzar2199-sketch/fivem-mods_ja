@@ -12,6 +12,11 @@ PolaPaint — ox_inventory スロット用アイコン素材置き場
 - polaroid_camera.png … ポラロイドカメラ
 - polaroid_photo.png … チェキ（写真）
 
+【2026-05-10 追記・差し替え元】
+- ユーザー素材 `VaciKjQ3.png` → `polaroid_camera.png` にリネーム済み
+- ユーザー素材 `edfVWep8.png` → `polaroid_photo.png` にリネーム済み
+スロットでカメラ／写真が逆に見える場合は、上記 2 ファイルの**中身を入れ替え**るか、ファイル名だけ交換してください。
+
 アイテム名を config で変えた場合は、ここと同じベース名の PNG にリネームするか、items.lua の client.image を合わせてください。
 
 【本番への反映】
