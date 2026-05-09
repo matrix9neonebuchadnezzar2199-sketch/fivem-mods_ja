@@ -189,7 +189,7 @@ function doReload() {
           {{ importResult.mode === 'replace' ? t('data.import.result_replace') : t('data.import.result_merge') }}
         </p>
         <p class="text-slate-300">
-          {{ t('data.import.preview_summary', importResult.added) }}
+          {{ t('data.import.preview_summary', importResult.counts) }}
         </p>
         <p class="text-slate-400">
           {{ t('data.import.by') }}: {{ byLabel }}

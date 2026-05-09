@@ -133,9 +133,9 @@ function rowModeLabel(mode: ImportRecord['mode']) {
               at: r.at,
               by: r.by,
               mode: rowModeLabel(r.mode),
-              teams: r.added.teams,
-              rosterMembers: r.added.rosterMembers,
-              matches: r.added.matches,
+              teams: r.counts.teams,
+              rosterMembers: r.counts.rosterMembers,
+              matches: r.counts.matches,
             })
           }}
         </li>

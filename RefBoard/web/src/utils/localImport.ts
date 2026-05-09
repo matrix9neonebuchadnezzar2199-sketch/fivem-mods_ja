@@ -19,12 +19,12 @@ export interface ImportRecord {
   by: string
   mode: ImportMode
   sourceAppVersion: string
-  added: { teams: number; rosterMembers: number; matches: number }
+  counts: { teams: number; rosterMembers: number; matches: number }
 }
 
 export interface ImportResult {
   mode: ImportMode
-  added: { teams: number; rosterMembers: number; matches: number }
+  counts: { teams: number; rosterMembers: number; matches: number }
   at: string
 }
 
@@ -52,7 +52,14 @@ function appendImportHistory(prev: ImportRecord[], rec: ImportRecord): void {
 }
 
 export function loadImportHistory(): ImportRecord[] {
-  return loadLocal<ImportRecord[]>(IMPORT_HISTORY_KEY, [])
+  const rows = loadLocal<Array<ImportRecord & { added?: ImportRecord['counts'] }>>(IMPORT_HISTORY_KEY, [])
+  return rows.map((r) => ({
+    at: r.at,
+    by: r.by,
+    mode: r.mode,
+    sourceAppVersion: r.sourceAppVersion ?? '',
+    counts: r.counts ?? r.added ?? { teams: 0, rosterMembers: 0, matches: 0 },
+  }))
 }
 
 export function importBackup(file: BackupFile, mode: ImportMode, by: string): ImportResult {
@@ -72,7 +79,7 @@ function replaceImport(file: BackupFile, by: string): ImportResult {
       /* quota */
     }
   }
-  const added = {
+  const counts = {
     teams: countInFile(file, 'teams'),
     rosterMembers: countInFile(file, 'roster_members'),
     matches: countInFile(file, 'matches'),
@@ -82,10 +89,10 @@ function replaceImport(file: BackupFile, by: string): ImportResult {
     by,
     mode: 'replace',
     sourceAppVersion: file.appVersion || '',
-    added,
+    counts,
   }
   appendImportHistory(prevHistory, rec)
-  return { mode: 'replace', added, at: rec.at }
+  return { mode: 'replace', counts, at: rec.at }
 }
 
 function mergeImport(file: BackupFile, by: string): ImportResult {
@@ -180,7 +187,7 @@ function mergeImport(file: BackupFile, by: string): ImportResult {
   }
   saveLocal('matches', curMatches)
 
-  const added = {
+  const counts = {
     teams: teamsIn.length,
     rosterMembers: rosterIn.length,
     matches: matchesIn.length,
@@ -190,8 +197,8 @@ function mergeImport(file: BackupFile, by: string): ImportResult {
     by,
     mode: 'merge',
     sourceAppVersion: file.appVersion || '',
-    added,
+    counts,
   }
   appendImportHistory(loadLocal<ImportRecord[]>(IMPORT_HISTORY_KEY, []), rec)
-  return { mode: 'merge', added, at: rec.at }
+  return { mode: 'merge', counts, at: rec.at }
 }
