@@ -3,7 +3,7 @@ game 'gta5'
 
 name 'screenshot-basic'
 author 'CitizenFX (vendored in fivem-mods_ja)'
-version '1.0.0'
+version '1.0.1'
 license 'MIT'
 description 'Prebuilt screenshot-basic for FiveM. Original: https://github.com/citizenfx/screenshot-basic — MIT License, see LICENSE'
 
