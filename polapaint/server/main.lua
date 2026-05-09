@@ -128,11 +128,22 @@ local function handleUploadEdit(src, body, token, slotStr)
     return true, nil
 end
 
-local function parseQuery(path)
-    local q = path and path:match('%?(.*)$')
-    if not q then return {} end
+--- req.path にクエリが無く req.url 側だけにあるランタイムへの対応
+local function getQueryString(req)
+    local q
+    if type(req.path) == 'string' then
+        q = req.path:match('%?(.*)$')
+    end
+    if (not q or q == '') and type(req.url) == 'string' then
+        q = req.url:match('%?(.*)$')
+    end
+    return q
+end
+
+local function parseQueryParams(queryStr)
+    if not queryStr or queryStr == '' then return {} end
     local out = {}
-    for kv in (q .. '&'):gmatch('([^&]+)&') do
+    for kv in (queryStr .. '&'):gmatch('([^&]+)&') do
         local k, v = kv:match('^([^=]+)=(.*)$')
         if k then
             v = v or ''
@@ -142,6 +153,15 @@ local function parseQuery(path)
         end
     end
     return out
+end
+
+local function parseQueryFromReq(req)
+    return parseQueryParams(getQueryString(req))
+end
+
+local function pathWithoutQuery(p)
+    if type(p) ~= 'string' then return '' end
+    return (p:match('^([^%?]+)') or p)
 end
 
 local function handleRequestCapture(src)
@@ -192,11 +212,12 @@ CreateThread(function()
     PolaPaintStorage.init()
 
     SetHttpHandler(function(req, res)
-        local path = req.path or ''
+        local rawPath = req.path or ''
+        local pathForMatch = pathWithoutQuery(rawPath)
         local method = (req.method or 'GET'):upper()
 
         if method == 'GET' then
-            local signed = path:match('/photo/([^/%?]+)%.jpg')
+            local signed = rawPath:match('/photo/([^/%?]+)%.jpg')
             if signed then
                 local id = PolaPaintStorage.verifySignedId(signed)
                 if not id then res.writeHead(403); res.send('forbidden'); return end
@@ -212,12 +233,40 @@ CreateThread(function()
             res.writeHead(404); res.send('not found'); return
         end
 
+        if method == 'OPTIONS' then
+            if pathForMatch:find('uploadCapture', 1, true) or pathForMatch:find('uploadEdit', 1, true) then
+                res.writeHead(204, {
+                    ['Access-Control-Allow-Origin']  = '*',
+                    ['Access-Control-Allow-Methods']   = 'POST, OPTIONS',
+                    ['Access-Control-Allow-Headers']   = 'Content-Type',
+                })
+                res.send('')
+                return
+            end
+            res.writeHead(404); res.send('')
+            return
+        end
+
         if method == 'POST' then
-            req.setDataHandler(function(body)
-                local q = parseQuery(path)
-                if path:find('uploadCapture', 1, true) then
+            local q = parseQueryFromReq(req)
+            local hdr = req.headers or {}
+            local expectedBody = tonumber(hdr['Content-Length'] or hdr['content-length'])
+
+            local parts = {}
+            local dispatched = false
+
+            local function dispatchUploadPost(body)
+                if dispatched then return end
+                dispatched = true
+                if type(body) ~= 'string' then body = '' end
+
+                if pathForMatch:find('uploadCapture', 1, true) then
                     local token = q.token
                     local name = q.name or ''
+                    if Config.Debug then
+                        print(('[polapaint] capture upload received: bytes=%d token=%s'):format(
+                            #body, tostring(token)))
+                    end
                     if not token then res.writeHead(400); res.send('bad'); return end
                     local foundSrc
                     for s, st in pairs(pendingCapture) do
@@ -234,9 +283,12 @@ CreateThread(function()
                     return
                 end
 
-                if path:find('uploadEdit', 1, true) then
+                if pathForMatch:find('uploadEdit', 1, true) then
                     local token = q.token
                     local slotStr = q.slot or ''
+                    if Config.Debug then
+                        print(('[polapaint] edit upload received: bytes=%d'):format(#body))
+                    end
                     if not token then res.writeHead(400); res.send('bad'); return end
                     local foundSrc
                     for s, st in pairs(pendingEdit) do
@@ -254,6 +306,26 @@ CreateThread(function()
                 end
 
                 res.writeHead(404); res.send('not found')
+            end
+
+            req.setDataHandler(function(chunk)
+                if type(chunk) == 'string' and #chunk > 0 then
+                    parts[#parts + 1] = chunk
+                end
+                local body = table.concat(parts)
+
+                if expectedBody and expectedBody > 0 then
+                    if #body < expectedBody then return end
+                    if #body > expectedBody then
+                        body = body:sub(1, expectedBody)
+                    end
+                    dispatchUploadPost(body)
+                    return
+                end
+
+                if #body > 0 then
+                    dispatchUploadPost(body)
+                end
             end)
             return
         end

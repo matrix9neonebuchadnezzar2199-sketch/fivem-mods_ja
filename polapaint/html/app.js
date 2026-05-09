@@ -32,7 +32,6 @@
     undoStack: [],
     activeColor: COLORS[0],
     maxNameLen: 40,
-    httpUploadBase: '',
   };
 
   const RES = () => (typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'polapaint');
@@ -46,13 +45,12 @@
   }
 
   function postNuiBinary(endpoint, blob, queryObj) {
-    const base = state.httpUploadBase || '';
     const qs = queryObj
       ? '?' + Object.entries(queryObj).map(([k, v]) =>
           `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`
         ).join('&')
       : '';
-    const url = `${base.replace(/\/$/, '')}/${endpoint}${qs}`;
+    const url = `https://${RES()}/${endpoint}${qs}`;
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'image/jpeg' },
@@ -114,7 +112,6 @@
     state.undoStack = [];
     state.drawing = false;
     state.strokeDirty = false;
-    state.httpUploadBase = '';
     els.nameInput.value = '';
   }
 
@@ -327,10 +324,6 @@
   window.addEventListener('message', (ev) => {
     const msg = ev.data; if (!msg || !msg.action) return;
     if (msg.action === 'setMode' && msg.mode === 'hidden') return hideAll();
-
-    if (typeof msg.httpUploadBase === 'string') {
-      state.httpUploadBase = msg.httpUploadBase;
-    }
 
     if (msg.action === 'prepareCapture') {
       dataUriToScaledBlob(msg.dataUri, msg.maxWidth || 2560, msg.quality || 0.85)

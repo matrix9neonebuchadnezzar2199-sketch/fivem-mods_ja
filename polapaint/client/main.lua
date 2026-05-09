@@ -31,10 +31,6 @@ local function resolvePhotoUrl(url)
     return ('https://%s/photo/%s.jpg'):format(GetCurrentResourceName(), signed)
 end
 
-local function httpUploadBase()
-    return ('http://%s/%s'):format(GetCurrentServerEndpoint(), GetCurrentResourceName())
-end
-
 local function closeUi()
     uiOpen = false
     SetNuiFocus(false, false)
@@ -45,9 +41,6 @@ end
 local function openUi(payload)
     if type(payload) == 'table' and type(payload.imageUrl) == 'string' then
         payload.imageUrl = resolvePhotoUrl(payload.imageUrl)
-    end
-    if type(payload) == 'table' then
-        payload.httpUploadBase = httpUploadBase()
     end
     uiOpen = true
     SetNuiFocus(true, true)
