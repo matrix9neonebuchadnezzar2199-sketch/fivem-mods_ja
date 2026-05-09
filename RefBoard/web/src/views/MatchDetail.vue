@@ -30,6 +30,11 @@ import { useSettingsStore } from '../stores/settings'
 import { useMatchCompactDockStore } from '../stores/matchCompactDock'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
 import { useToast } from '../composables/useToast'
+import { useDialogOverlay } from '../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const matchDetailRemovePlayerOverlayClass = overlayRootClass('z-[170]', 'bg-black/55')
+const matchDetailFinishOverlayClass = overlayRootClass('z-[170]', 'bg-black/55')
 
 defineProps<{
   id?: string
@@ -967,10 +972,7 @@ function exportMatchEventsCsv() {
       <ScoreEditDialog v-model:open="showScoreEdit" :model="detail" @manual-score="onManualScore" @saved="reloadMatch" />
       <ScoreHistoryDialog v-model:open="showHistory" :rows="historyRows" />
 
-      <div
-        v-if="showRemovePlayerModal && pendingRemovePlayer"
-        class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
-      >
+      <div v-if="showRemovePlayerModal && pendingRemovePlayer" :class="matchDetailRemovePlayerOverlayClass">
         <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
           <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('player.remove_modal_title') }}</h2>
           <p class="mb-4 text-sm text-slate-300">
@@ -997,10 +999,7 @@ function exportMatchEventsCsv() {
         </div>
       </div>
 
-      <div
-        v-if="showFinish"
-        class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
-      >
+      <div v-if="showFinish" :class="matchDetailFinishOverlayClass">
         <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
           <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_finish.title') }}</h2>
           <p class="mb-1 text-sm text-slate-300">

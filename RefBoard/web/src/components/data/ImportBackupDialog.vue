@@ -13,6 +13,10 @@ import {
   type ImportResult,
   type ImportSelection,
 } from '../../utils/localImport'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const importBackupOverlayClass = overlayRootClass('z-[100]', 'bg-black/60 backdrop-blur-sm')
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ 'update:open': [boolean] }>()
@@ -284,12 +288,7 @@ function doReload() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-    role="dialog"
-    aria-modal="true"
-  >
+  <div v-if="open" :class="importBackupOverlayClass" role="dialog" aria-modal="true">
     <div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">{{ t('data.import.title') }}</h2>
 

@@ -2,6 +2,10 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel, MatchUiStatus } from '../../types/match'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const pkConfirmOverlayClass = overlayRootClass('z-[160]', 'bg-black/55')
 
 const props = withDefaults(
   defineProps<{
@@ -150,10 +154,7 @@ function confirmPk() {
       </div>
     </div>
 
-    <div
-      v-if="showPkConfirm"
-      class="fixed inset-0 z-[160] flex items-center justify-center bg-black/55 p-4"
-    >
+    <div v-if="showPkConfirm" :class="pkConfirmOverlayClass">
       <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-5 shadow-xl">
         <h4 class="mb-2 font-semibold text-slate-50">{{ t('match_status.pk_confirm_title') }}</h4>
         <p class="mb-2 text-sm text-slate-300">

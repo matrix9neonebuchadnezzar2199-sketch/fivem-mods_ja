@@ -9,6 +9,11 @@ import AddRosterMemberDialog, { type RosterInitial } from '../components/team/Ad
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 import { useTeamsStore } from '../stores/teams'
 import { useMatchesStore } from '../stores/matches'
+import { useDialogOverlay } from '../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const teamDeleteOverlayClass = overlayRootClass('z-[170]', 'bg-black/55')
+const rosterRemoveOverlayClass = overlayRootClass('z-[170]', 'bg-black/55')
 
 const { t } = useI18n()
 const teamsStore = useTeamsStore()
@@ -179,10 +184,7 @@ function onCreatedTeam(id: number) {
       @saved="() => {}"
     />
 
-    <div
-      v-if="showDeleteTeamConfirm"
-      class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
-    >
+    <div v-if="showDeleteTeamConfirm" :class="teamDeleteOverlayClass">
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <p class="mb-4 text-sm text-slate-300">{{ t('team_manage.delete_confirm') }}</p>
         <div class="flex justify-end gap-2">
@@ -196,10 +198,7 @@ function onCreatedTeam(id: number) {
       </div>
     </div>
 
-    <div
-      v-if="rosterRemoveTarget"
-      class="fixed inset-0 z-[170] flex items-center justify-center bg-black/55 p-4"
-    >
+    <div v-if="rosterRemoveTarget" :class="rosterRemoveOverlayClass">
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <p class="mb-4 text-sm text-slate-300">
           {{ t('team_manage.roster_remove_confirm', { name: rosterRemoveTarget.player_name }) }}

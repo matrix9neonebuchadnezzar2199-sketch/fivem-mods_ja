@@ -5,6 +5,7 @@
 - 設定画面下部の SQL／DB メタ表示（schemaVersion / resourceVersion 等）を削除。ローカル版で参照されない情報の整理。
 - Settings の Development セクションに「疑似データを投入」「試合・チーム・ロスターを削除」「全データを削除（設定含む）」の 3 ボタンを追加（「開発用データ操作パネルを表示」がオンのとき、または `npm run dev` 時に表示）。
 - 投入データは `src/dev/sampleData.ts` の固定配列。10 チーム（欧州風架空名・国籍別の姓名プール）× 13 名 = 130 名のロスター、20 試合（finished 12 / live 3 / draft 5）。`src/dev/seedActions.ts` が `localStorage` を書き換えたあと `location.reload()` で反映。旧サーバ向け SQL 疑似投入 UI は撤去。
+- コンパクト小窓モード（`transparentChrome`）時、`Teleport` 系モーダルの背後オーバーレイを透過しゲーム画面が見えるようにした（`composables/useDialogOverlay.ts`）。
 
 ## v0.2.1 — 2026‑05‑10（テスト基盤導入）
 

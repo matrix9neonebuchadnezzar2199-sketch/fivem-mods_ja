@@ -3,6 +3,10 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MarqueeText from '../common/MarqueeText.vue'
 import type { MatchDetailModel } from '../../types/match'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const clockClearOverlayClass = overlayRootClass('z-[210]', 'bg-black/55')
 
 const props = withDefaults(
   defineProps<{
@@ -370,7 +374,7 @@ function onScoreFlashAnimEnd(side: 'home' | 'away', ev: AnimationEvent) {
     <Teleport to="body">
       <div
         v-if="showClearConfirm"
-        class="fixed inset-0 z-[210] flex items-center justify-center bg-black/55 p-4"
+        :class="clockClearOverlayClass"
         role="dialog"
         aria-modal="true"
         aria-labelledby="score-clock-clear-title"

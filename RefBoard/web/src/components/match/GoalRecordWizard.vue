@@ -6,6 +6,11 @@ import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 import type { ParsedMinute } from '../../utils/matchTime'
 import MinuteInput from './MinuteInput.vue'
 import PlayerSelectGrid from './PlayerSelectGrid.vue'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass, overlayInnerClass } = useDialogOverlay()
+const goalOverlayClass = overlayRootClass('z-[160]', 'bg-black/65 backdrop-blur-sm')
+const goalEscOverlayClass = overlayInnerClass('z-[1]', 'bg-black/50')
 
 const props = defineProps<{
   open: boolean
@@ -160,14 +165,8 @@ function record() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="relative fixed inset-0 z-[160] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
-  >
-    <div
-      v-if="showEscConfirm"
-      class="absolute inset-0 z-[1] flex items-center justify-center bg-black/50 p-4"
-    >
+  <div v-if="open" :class="goalOverlayClass">
+    <div v-if="showEscConfirm" :class="goalEscOverlayClass">
       <div class="max-w-sm rounded-xl border border-slate-600 bg-slate-900 p-5 shadow-xl">
         <p class="mb-4 text-sm text-slate-200">{{ t('goal_wizard.esc_confirm') }}</p>
         <div class="flex justify-end gap-2">

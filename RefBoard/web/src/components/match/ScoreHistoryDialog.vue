@@ -3,6 +3,10 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { ScoreHistoryRow } from '../../types/match'
 import { formatDateTimeJa } from '../../utils/formatDate'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const scoreHistoryOverlayClass = overlayRootClass('z-[150]', 'bg-black/60 backdrop-blur-sm')
 
 const props = defineProps<{
   open: boolean
@@ -47,10 +51,7 @@ function line(prev: ScoreHistoryRow | null, cur: ScoreHistoryRow): string {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-  >
+  <div v-if="open" :class="scoreHistoryOverlayClass">
     <div class="flex max-h-[85vh] w-full max-w-lg flex-col rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
       <div class="border-b border-slate-700 px-4 py-3">
         <h2 class="text-lg font-bold text-slate-50">{{ t('score_history.title') }}</h2>

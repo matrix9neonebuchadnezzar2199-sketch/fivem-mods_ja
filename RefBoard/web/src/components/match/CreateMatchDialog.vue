@@ -7,6 +7,10 @@ import { useToast } from '../../composables/useToast'
 import { useSettingsStore } from '../../stores/settings'
 import { useMatchesStore } from '../../stores/matches'
 import type { TeamRow } from '../../types/match'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const createMatchOverlayClass = overlayRootClass('z-[100]', 'bg-black/60 backdrop-blur-sm')
 
 const props = defineProps<{
   open: boolean
@@ -92,10 +96,7 @@ function submit() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-  >
+  <div v-if="open" :class="createMatchOverlayClass">
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-4 text-lg font-bold text-slate-50">{{ t('create_match.title') }}</h2>
       <div class="space-y-3 text-sm">

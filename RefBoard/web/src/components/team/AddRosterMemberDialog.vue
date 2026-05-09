@@ -2,6 +2,10 @@
 import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTeamsStore } from '../../stores/teams'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const rosterMemberOverlayClass = overlayRootClass('z-[200]', 'bg-black/60 backdrop-blur-sm')
 
 export type RosterInitial = {
   player_name: string
@@ -68,10 +72,7 @@ function submit() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-  >
+  <div v-if="open" :class="rosterMemberOverlayClass">
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">
         {{ editId ? t('team_manage.roster_edit') : t('team_manage.roster_add') }}

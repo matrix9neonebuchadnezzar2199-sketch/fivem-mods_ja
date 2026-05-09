@@ -5,6 +5,10 @@ import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 import type { ParsedMinute } from '../../utils/matchTime'
 import MinuteInput from './MinuteInput.vue'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const substitutionOverlayClass = overlayRootClass('z-[155]', 'bg-black/60 backdrop-blur-sm')
 
 const props = defineProps<{
   open: boolean
@@ -92,10 +96,7 @@ function submit() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[155] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-  >
+  <div v-if="open" :class="substitutionOverlayClass">
     <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">{{ t('substitution.title') }}</h2>
 

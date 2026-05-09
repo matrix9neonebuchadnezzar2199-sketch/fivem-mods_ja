@@ -2,6 +2,11 @@
 import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClassFlexCol, overlayRootClass } = useDialogOverlay()
+const pkWinnerOverlayClass = overlayRootClassFlexCol('z-[400]', 'bg-black/80')
+const pkFinishAskOverlayClass = overlayRootClass('z-[410]', 'bg-black/60')
 
 const props = defineProps<{
   model: MatchDetailModel
@@ -168,18 +173,12 @@ function laterFinish() {
       </div>
     </div>
 
-    <div
-      v-if="showWinnerOverlay"
-      class="fixed inset-0 z-[400] flex flex-col items-center justify-center bg-black/80 p-6 text-center"
-    >
+    <div v-if="showWinnerOverlay" :class="pkWinnerOverlayClass">
       <div class="text-sm font-semibold text-violet-200">{{ t('penalty.winner_title') }}</div>
       <div class="mt-2 text-3xl font-black text-white">{{ t('penalty.winner_line', { team: winnerName }) }}</div>
     </div>
 
-    <div
-      v-if="showFinishAsk && !readonly"
-      class="fixed inset-0 z-[410] flex items-center justify-center bg-black/60 p-4"
-    >
+    <div v-if="showFinishAsk && !readonly" :class="pkFinishAskOverlayClass">
       <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-6 shadow-2xl">
         <h3 class="mb-2 text-lg font-semibold text-slate-50">{{ t('penalty.finish_title') }}</h3>
         <p class="mb-4 text-sm text-slate-400">{{ t('match_finish.note') }}</p>

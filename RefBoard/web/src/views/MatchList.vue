@@ -13,6 +13,11 @@ import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import { formatDateJa } from '../utils/formatDate'
 import { formatClockMs, parseEpochMsFromServer, remainingMsFromClock } from '../utils/matchClock'
+import { useDialogOverlay } from '../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const matchListDeleteOverlayClass = overlayRootClass('z-[200]', 'bg-black/55')
+const matchListReopenOverlayClass = overlayRootClass('z-[200]', 'bg-black/55')
 
 const { t } = useI18n()
 const router = useRouter()
@@ -266,10 +271,7 @@ function onCreated(id: number) {
 
     <CreateMatchDialog v-model:open="showCreate" :teams="teams" @created="onCreated" />
 
-    <div
-      v-if="showDeleteConfirm"
-      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-    >
+    <div v-if="showDeleteConfirm" :class="matchListDeleteOverlayClass">
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_list.delete_title') }}</h2>
         <p class="mb-4 text-sm text-slate-400">{{ t('match_list.delete_body') }}</p>
@@ -284,10 +286,7 @@ function onCreated(id: number) {
       </div>
     </div>
 
-    <div
-      v-if="showReopen"
-      class="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4"
-    >
+    <div v-if="showReopen" :class="matchListReopenOverlayClass">
       <div class="max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
         <h2 class="mb-2 text-lg font-semibold text-slate-50">{{ t('match_list.reopen_title') }}</h2>
         <p class="mb-4 text-sm text-slate-400">{{ t('match_list.reopen_body') }}</p>

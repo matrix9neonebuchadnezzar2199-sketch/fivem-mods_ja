@@ -9,6 +9,10 @@ import reverseIndexJa from '../../help/ja/reverse_index.json'
 import reverseIndexEn from '../../help/en/reverse_index.json'
 import MarqueeText from '../common/MarqueeText.vue'
 import { resolveHelpLocale } from '../../utils/helpLocale'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayScrimClass } = useDialogOverlay()
+const helpScrimClass = overlayScrimClass('z-[180]', 'bg-black/40')
 
 interface RevItem {
   id: string
@@ -103,7 +107,7 @@ watch(
       enter-from-class="opacity-0"
       leave-to-class="opacity-0"
     >
-      <div v-if="isOpen" class="fixed inset-0 z-[180] bg-black/40" />
+      <div v-if="isOpen" :class="helpScrimClass" />
     </Transition>
     <Transition
       enter-active-class="transition-transform duration-200 ease-out"

@@ -3,6 +3,10 @@ import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../../composables/useToast'
 import { useTeamsStore } from '../../stores/teams'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const createTeamOverlayClass = overlayRootClass('z-[200]', 'bg-black/60 backdrop-blur-sm')
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ 'update:open': [boolean]; created: [number] }>()
@@ -50,10 +54,7 @@ function submit() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-  >
+  <div v-if="open" :class="createTeamOverlayClass">
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-3 text-lg font-bold text-slate-50">{{ t('team_manage.create_title') }}</h2>
       <div class="space-y-2 text-sm">

@@ -6,6 +6,10 @@ import { isInFiveM } from '../composables/useNui'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
 import { isSeedInstalled, getSeedInstalledAt, installSeedData, clearMatchData, clearAllData } from '../dev/seedActions'
+import { useDialogOverlay } from '../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const settingsSeedConfirmOverlayClass = overlayRootClass('z-[200]', 'bg-black/60')
 
 const { t, locale } = useI18n()
 const settings = useSettingsStore()
@@ -285,12 +289,7 @@ function syncLocale() {
     </section>
 
     <Teleport to="body">
-      <div
-        v-if="confirmAction"
-        class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4"
-        role="dialog"
-        aria-modal="true"
-      >
+      <div v-if="confirmAction" :class="settingsSeedConfirmOverlayClass" role="dialog" aria-modal="true">
         <div class="max-w-md rounded-lg border border-slate-600 bg-slate-800 p-4 shadow-lg">
           <p class="text-sm text-slate-200">
             {{ t(`settings.dev_seed.confirm_${confirmAction}`) }}

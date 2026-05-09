@@ -2,6 +2,10 @@
 import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel } from '../../types/match'
+import { useDialogOverlay } from '../../composables/useDialogOverlay'
+
+const { overlayRootClass } = useDialogOverlay()
+const scoreEditOverlayClass = overlayRootClass('z-[150]', 'bg-black/60 backdrop-blur-sm')
 
 const props = defineProps<{
   open: boolean
@@ -57,10 +61,7 @@ function save() {
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-  >
+  <div v-if="open" :class="scoreEditOverlayClass">
     <div class="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
       <h2 class="mb-2 text-lg font-bold text-slate-50">{{ t('score_manual.title') }}</h2>
       <p class="mb-3 text-sm text-slate-400">

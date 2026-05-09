@@ -51,6 +51,7 @@ RefBoard/
       │  ├─ settings.ts    selfName, locale, fontScale, marquee 等
       │  └─ matchCompactDock.ts
       ├─ composables/useNui.ts    close/コンパクト関連のみ POST、他はダミー
+      ├─ composables/useDialogOverlay.ts  小窓時はモーダル背後を透過（`transparentChrome`）
       ├─ dev/
       │  ├─ sampleData.ts         開発用疑似データの固定配列（チーム・試合シード）
       │  └─ seedActions.ts        投入／試合データのみ削除／全削除＋`location.reload()`
@@ -103,6 +104,7 @@ RefBoard/
 - **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
 - **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
+- **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
 - **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
 - **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
@@ -168,3 +170,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑09: JSON インポート **部分マージ**（`mergeImportPartial` / `ImportSelection`、`buildPreviewDetail`、履歴 `partial`）。
 - 2026‑05‑10: vitest を devDependencies に追加し、`utils/matchTime.ts` の単体テストを新設（`parseMinuteInput`／`formatMinute`／`formatMinuteForCsv`）。`npm test` / `npm run test:watch` を導入。版数 v0.2.1。
 - 2026‑05‑10: Settings の SQL／DB メタ表示を撤去。`dev/sampleData.ts` / `dev/seedActions.ts` によるローカル疑似データ投入・削除（版数 v0.2.2）。
+- 2026‑05‑10: コンパクト小窓時のモーダル背後透過（A）。`useDialogOverlay.ts` を追加し各種ダイアログのオーバーレイに適用。
