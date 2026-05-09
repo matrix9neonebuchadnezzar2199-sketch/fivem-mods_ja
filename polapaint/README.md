@@ -91,6 +91,7 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
 - **「Discord Webhook が HTTP エラー（HTTP …）」** … **v1.0.4** 以降は括弧内に **ステータスコード** が出ます。**404** は URL 誤り／Webhook 削除、**401/403** は無効トークン／権限、**413** は画像が大きすぎ、**429** はレート制限、**0 や負**はサーバから HTTPS が届いていない可能性があります。
+- **HTTP 400（Bad Request）** … 多くは **multipart の形式**が Discord の要求と合っていないときです。**v1.0.7** で `payload_json` + `attachments`（`files[0]` 対応）を付与済み。まだ 400 のときは Webhook URL の **前後空白・BOM** を疑い、`config.lua` の URL を貼り直してください。
 - **通知が画面に出ない** … **v1.0.6** 以降、**F8 コンソールに `[polapaint]` 行が必ず出ます**（画面と独立）。`ox_lib` があるときは **`TriggerEvent('ox_lib:notify', …)`** で表示（`exports` だけだと出ない版があり得る）。無い場合は従来のヘルプ通知にフォールバックします。
 - **ペイント保存で真っ黒・失敗** … 外部画像の CORS により Canvas が汚染されている可能性があります。Discord CDN の URL で通常は問題ありません。
 

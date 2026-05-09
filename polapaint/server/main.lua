@@ -134,11 +134,24 @@ local function webhookWithWait(webhookUrl)
     return webhookUrl .. '?wait=true'
 end
 
+---@param url string|nil
+---@return string|nil
+local function trimWebhookUrl(url)
+    if type(url) ~= 'string' then return nil end
+    url = url:gsub('^%s+', ''):gsub('%s+$', '')
+    -- UTF-8 BOM（先頭のみ）を除去（コピペで混入すると https が壊れる）
+    if url:sub(1, 3) == '\239\187\191' then
+        url = url:sub(4)
+    end
+    return url
+end
+
 ---@param b64 string
 ---@param cb fun(url: string?, err: string?, httpStatus: number|nil)
 local function discordUploadJpeg(b64, cb)
-    local webhook = webhookWithWait(Config.DiscordWebhook)
-    if isPlaceholderWebhook(Config.DiscordWebhook) or not isDiscordWebhookUrl(Config.DiscordWebhook) then
+    local wraw = trimWebhookUrl(Config.DiscordWebhook)
+    local webhook = webhookWithWait(wraw or '')
+    if not wraw or isPlaceholderWebhook(wraw) or not isDiscordWebhookUrl(wraw) then
         cb(nil, 'webhook')
         return
     end
@@ -152,9 +165,23 @@ local function discordUploadJpeg(b64, cb)
         cb(nil, 'decode')
         return
     end
+    -- multipart では files[n] と対応する attachments を payload_json に書く必要がある（無いと Discord が 400 を返すことが多い）
+    local payloadJson = '{"attachments":[{"id":0,"filename":"polapaint.jpg"}]}'
     local boundary = '----polapaintBoundary' .. tostring(math.random(100000000, 999999999))
     local crlf = '\r\n'
-    local head = table.concat({
+    local partMeta = table.concat({
+        '--',
+        boundary,
+        crlf,
+        'Content-Disposition: form-data; name="payload_json"',
+        crlf,
+        'Content-Type: application/json',
+        crlf,
+        crlf,
+        payloadJson,
+        crlf,
+    })
+    local partFile = table.concat({
         '--',
         boundary,
         crlf,
@@ -165,7 +192,7 @@ local function discordUploadJpeg(b64, cb)
         crlf,
     })
     local tail = crlf .. '--' .. boundary .. '--' .. crlf
-    local body = head .. bin .. tail
+    local body = partMeta .. partFile .. bin .. tail
     local headers = {
         ['Content-Type'] = 'multipart/form-data; boundary=' .. boundary,
     }
@@ -226,7 +253,8 @@ RegisterNetEvent('polapaint:server:requestCapture', function()
         notify(src, 'notify_capture_cooldown')
         return
     end
-    if isPlaceholderWebhook(Config.DiscordWebhook) or not isDiscordWebhookUrl(Config.DiscordWebhook) then
+    local wcheck = trimWebhookUrl(Config.DiscordWebhook)
+    if not wcheck or isPlaceholderWebhook(wcheck) or not isDiscordWebhookUrl(wcheck) then
         notify(src, 'notify_webhook_not_configured')
         return
     end
