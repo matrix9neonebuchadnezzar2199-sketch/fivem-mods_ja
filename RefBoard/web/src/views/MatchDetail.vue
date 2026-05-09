@@ -4,9 +4,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useNui } from '../composables/useNui'
 import { mockMatchDetail } from '../data/matchDetailSeed'
 import type { MatchDetailModel, MatchPlayer, ScoreHistoryRow } from '../types/match'
+import type { Half } from '../types/local'
 import { downloadFile, exportMatchEventsToCSV, exportMatchToJSON, refboardFilename } from '../utils/exporters'
 import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
 import { getElapsedMsFromClockState, parseEpochMsFromServer } from '../utils/matchClock'
+import { applyBasicInfoFromDetail, matchToDetailModel, scoreHistoryToRows, serverHalfStringToHalf } from '../utils/localMatchAdapter'
+import { useMatchesStore } from '../stores/matches'
+import { useTeamsStore } from '../stores/teams'
 import BasicInfoCard from '../components/match/BasicInfoCard.vue'
 import ScoreBoardCard from '../components/match/ScoreBoardCard.vue'
 import MatchStatusCard from '../components/match/MatchStatusCard.vue'
@@ -33,6 +37,8 @@ defineProps<{
 const route = useRoute()
 const router = useRouter()
 const { send, on } = useNui()
+const matchesStore = useMatchesStore()
+const teamsStore = useTeamsStore()
 /** ローカル版では常に編集可能（閲覧モードなし） */
 const localEditor = true
 function setFocus(_section: string | null) {
@@ -42,6 +48,11 @@ const { t, te } = useI18n()
 const settings = useSettingsStore()
 const matchCompactDock = useMatchCompactDockStore()
 const { push: toast } = useToast()
+
+const matchId = computed(() => Number(route.params.id))
+const rawMatch = computed(() => (matchId.value ? matchesStore.find(matchId.value) : null))
+const displayTick = ref(0)
+let displayTickInterval: ReturnType<typeof setInterval> | null = null
 
 function closeAllModals() {
   showGoal.value = false
@@ -56,7 +67,7 @@ function closeAllModals() {
 }
 
 useKeyboardShortcuts({
-  enabled: () => localEditor && detail.dbStatus === 'draft',
+  enabled: () => localEditor && rawMatch.value != null && rawMatch.value.status !== 'finished',
   onGoal: () => {
     showGoal.value = true
   },
@@ -77,9 +88,50 @@ const cardDimStyle = computed(() => ({ opacity: settings.settings.cardOpacity / 
 const detail = reactive<MatchDetailModel>(JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel)
 const historyRows = ref<ScoreHistoryRow[]>([])
 
+function syncDetail() {
+  const id = matchId.value
+  if (!id) return
+  const m = matchesStore.find(id)
+  if (!m) {
+    void router.push({ name: 'matches' })
+    return
+  }
+  const elapsed = matchesStore.clockNowMs(m)
+  Object.assign(detail, matchToDetailModel(m, elapsed))
+  historyRows.value = scoreHistoryToRows(m)
+  reconcileRunningClockStarted(detail)
+  syncClockFromDetail()
+}
+
+let basicInfoDebounce: ReturnType<typeof setTimeout> | null = null
+watch(
+  () => [detail.matchName, detail.venue, detail.matchDate, detail.kickoffTime] as const,
+  () => {
+    const id = matchId.value
+    const m = matchesStore.find(id)
+    if (!m) return
+    if (basicInfoDebounce) clearTimeout(basicInfoDebounce)
+    basicInfoDebounce = setTimeout(() => {
+      basicInfoDebounce = null
+      matchesStore.patch(id, applyBasicInfoFromDetail(m, detail))
+      syncDetail()
+    }, 350)
+  },
+)
+
 const showGoal = ref(false)
 const showAdd = ref(false)
 const addTeamId = ref(0)
+
+const addDialogRosterRows = computed(() => {
+  if (!addTeamId.value) return []
+  return teamsStore.rosterFor(addTeamId.value).map((r) => ({
+    id: r.id,
+    name: r.name,
+    number: r.number ?? null,
+    position: r.position ?? null,
+  }))
+})
 const showScoreEdit = ref(false)
 const showHistory = ref(false)
 const showFinish = ref(false)
@@ -117,9 +169,10 @@ function formatClockMs(ms: number): string {
 }
 
 /** 試合全体の定尺（前半×2、分→ms）。クリア時の残り 90:00 等はここから */
-const fullMatchDurationMs = computed(
-  () => Math.max(60_000, settings.settings.defaultHalfMinutes * 2 * 60 * 1000),
-)
+const fullMatchDurationMs = computed(() => {
+  const hm = rawMatch.value?.halfMinutes ?? settings.settings.defaultHalfMinutes
+  return Math.max(60_000, hm * 2 * 60 * 1000)
+})
 
 const clockUiTick = ref(0)
 const clockLiveDisplay = ref('0:00')
@@ -154,7 +207,10 @@ function reconcileRunningClockStarted(m: MatchDetailModel) {
 
 const elapsedMmSsLive = computed(() => {
   void clockUiTick.value
-  return formatClockMs(getElapsedMsFromDetail())
+  void displayTick.value
+  const m = rawMatch.value
+  if (!m) return '0:00'
+  return formatClockMs(matchesStore.clockNowMs(m))
 })
 
 const clockPhaseLabel = computed(() =>
@@ -169,8 +225,10 @@ function stopClockTickInterval() {
 }
 
 function refreshClockLiveDisplay() {
+  void displayTick.value
   const full = fullMatchDurationMs.value
-  const elapsed = getElapsedMsFromDetail()
+  const m = rawMatch.value
+  const elapsed = m ? matchesStore.clockNowMs(m) : getElapsedMsFromDetail()
   const rem = Math.max(0, Math.min(full, full - elapsed))
   clockLiveDisplay.value = formatClockMs(rem)
   clockUiTick.value++
@@ -191,38 +249,15 @@ watch(
   },
 )
 
-/** ローカル版: サーバー時計なし。経過は detail の clock_* のみ更新 */
+/** ローカル版: Pinia matches ストアの clock_* を正とする */
 function callMatchClock(action: 'start' | 'stop' | 'clear' | 'adjust', deltaMs?: number): Promise<boolean> {
-  const now = Date.now()
-  const full = fullMatchDurationMs.value
-  if (action === 'start') {
-    if (!detail.clockRunning) {
-      detail.clockRunning = true
-      detail.clockStartedAtMs = now
-    }
-  } else if (action === 'stop') {
-    if (detail.clockRunning && detail.clockStartedAtMs != null) {
-      detail.clockAccumulatedMs =
-        (detail.clockAccumulatedMs || 0) + Math.max(0, now - detail.clockStartedAtMs)
-    }
-    detail.clockStartedAtMs = null
-    detail.clockRunning = false
-  } else if (action === 'clear') {
-    detail.clockAccumulatedMs = 0
-    detail.clockStartedAtMs = null
-    detail.clockRunning = false
-  } else if (action === 'adjust' && typeof deltaMs === 'number') {
-    let acc = detail.clockAccumulatedMs || 0
-    if (detail.clockRunning && detail.clockStartedAtMs != null) {
-      acc += now - detail.clockStartedAtMs
-      detail.clockStartedAtMs = now
-    }
-    acc = Math.max(0, Math.min(full, acc + deltaMs))
-    detail.clockAccumulatedMs = acc
-  }
-  reconcileRunningClockStarted(detail)
-  detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
-  syncClockFromDetail()
+  const id = matchId.value
+  if (!id) return Promise.resolve(false)
+  if (action === 'start') matchesStore.clockStart(id)
+  else if (action === 'stop') matchesStore.clockPause(id)
+  else if (action === 'clear') matchesStore.clockReset(id)
+  else if (action === 'adjust' && typeof deltaMs === 'number') matchesStore.clockAdjust(id, deltaMs)
+  syncDetail()
   return Promise.resolve(true)
 }
 
@@ -276,12 +311,6 @@ function openCard(kind: 'yellow' | 'red') {
   cardPreset.value = kind
   showCard.value = true
 }
-
-watch(showCard, (v) => {
-  if (!v) {
-    cardPreset.value = null
-  }
-})
 
 function editableTarget(el: EventTarget | null): boolean {
   const t = el as HTMLElement | null
@@ -352,30 +381,34 @@ watch(
   { immediate: true },
 )
 
-async function loadMatch() {
-  const id = Number(route.params.id)
-  if (!id) return
-  const seed = JSON.parse(JSON.stringify(mockMatchDetail)) as MatchDetailModel
-  seed.id = id
-  Object.assign(detail, seed)
-  historyRows.value = []
-  reconcileRunningClockStarted(detail)
-  syncClockFromDetail()
-  void send('match_get', { matchId: id })
+function loadMatch() {
+  compactDock.value = false
+  syncDetail()
 }
 
 watch(
   () => route.params.id,
   () => {
     compactDock.value = false
-    void loadMatch()
+    loadMatch()
   },
   { immediate: true },
+)
+
+watch(
+  () => matchesStore.matches,
+  () => {
+    syncDetail()
+  },
+  { deep: true },
 )
 
 onMounted(() => {
   settings.load()
   syncClockFromDetail()
+  displayTickInterval = window.setInterval(() => {
+    displayTick.value++
+  }, 250)
   offCompactInputMode = on('refboard:compact_input_mode', (p: { game?: boolean }) => {
     compactGameInputActive.value = Boolean(p?.game)
   })
@@ -386,6 +419,10 @@ onUnmounted(() => {
   void send('compact_dock_state', { compact: false })
   matchCompactDock.setTransparentChrome(false)
   stopClockTickInterval()
+  if (displayTickInterval != null) {
+    clearInterval(displayTickInterval)
+    displayTickInterval = null
+  }
   offCompactInputMode?.()
   window.removeEventListener('keydown', onDockKeydown, true)
 })
@@ -399,6 +436,9 @@ async function onCancel() {
 }
 
 async function onSave() {
+  const id = matchId.value
+  const m = matchesStore.find(id)
+  if (m) matchesStore.patch(id, applyBasicInfoFromDetail(m, detail))
   await router.push({ name: 'matches' })
 }
 
@@ -407,7 +447,7 @@ function openAdd(teamId: number) {
   showAdd.value = true
 }
 
-const canRemoveMatchPlayers = computed(() => localEditor && detail.dbStatus === 'draft')
+const canRemoveMatchPlayers = computed(() => localEditor && rawMatch.value != null && rawMatch.value.status !== 'finished')
 
 function openRemovePlayerModal(teamId: number, player: MatchPlayer) {
   if (!canRemoveMatchPlayers.value) {
@@ -424,7 +464,7 @@ function closeRemovePlayerModal() {
   pendingRemovePlayer.value = null
 }
 
-async function confirmRemovePlayer() {
+function confirmRemovePlayer() {
   const ctx = pendingRemovePlayer.value
   if (!ctx || removePlayerBusy.value) return
   const pid = resolveMatchPlayerRowId(ctx.player.id)
@@ -433,97 +473,192 @@ async function confirmRemovePlayer() {
     return
   }
   removePlayerBusy.value = true
-  let settled = false
-  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:player:remove:ack', (r: { ok?: boolean; error?: string; code?: string }) => {
-    if (settled) return
-    settled = true
-    if (timeoutId != null) window.clearTimeout(timeoutId)
-    un()
-    removePlayerBusy.value = false
-    showRemovePlayerModal.value = false
-    pendingRemovePlayer.value = null
-    if (r?.ok) {
-      void loadMatch()
-      return
-    }
-    const code = r?.code
-    const msg =
-      code && te(`errors.${code}`)
-        ? t(`errors.${code}`)
-        : r?.error === 'no_lock'
-          ? t('errors.E1005')
-          : t('player.remove_failed')
-    toast(msg, 'error', { ms: 7000, errorCode: code, errorKey: r?.error })
-  })
-  timeoutId = window.setTimeout(() => {
-    if (settled) return
-    settled = true
-    un()
-    removePlayerBusy.value = false
-    showRemovePlayerModal.value = false
-    pendingRemovePlayer.value = null
-    toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
-  }, 8000)
-  try {
-    await send('player_remove', { matchId: detail.id, teamId: ctx.teamId, playerId: pid })
-  } catch {
-    if (!settled) {
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      removePlayerBusy.value = false
-      showRemovePlayerModal.value = false
-      pendingRemovePlayer.value = null
-      toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
-    }
+  const r = matchesStore.removePlayer(matchId.value, pid)
+  removePlayerBusy.value = false
+  showRemovePlayerModal.value = false
+  pendingRemovePlayer.value = null
+  if (r.ok) {
+    syncDetail()
+    return
   }
+  const code = r.error === 'player_has_events' ? 'E3006' : undefined
+  const msg =
+    r.error === 'player_has_events' && te('errors.E3006')
+      ? t('errors.E3006')
+      : t('player.remove_failed')
+  toast(msg, 'error', { ms: 7000, errorCode: code, errorKey: r.error })
 }
 
-async function onFinishConfirm() {
-  let settled = false
-  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:match:finish:ack', (r: { ok?: boolean; error?: string; code?: string }) => {
-    if (settled) return
-    settled = true
-    if (timeoutId != null) window.clearTimeout(timeoutId)
-    un()
-    if (r?.ok) {
-      detail.dbStatus = 'finished'
-      showFinish.value = false
-      toast(t('toast.match_finished'), 'success')
-      return
-    }
-    const code = r?.code
-    const msg =
-      code && te(`errors.${code}`) ? t(`errors.${code}`) : t('toast.match_finish_failed')
-    toast(msg, 'error', { ms: 9000, errorCode: code, errorKey: r?.error })
-  })
-  timeoutId = window.setTimeout(() => {
-    if (settled) return
-    settled = true
-    un()
-    toast(t('toast.match_finish_failed'), 'error', { ms: 8000 })
-  }, 12000)
-  try {
-    await send('match_finish', { matchId: detail.id })
-  } catch {
-    if (!settled) {
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      toast(t('toast.match_finish_failed'), 'error')
-    }
-  }
+function onFinishConfirm() {
+  matchesStore.finishMatch(matchId.value)
+  showFinish.value = false
+  syncDetail()
+  toast(t('toast.match_finished'), 'success')
 }
 
-function onPkFinished() {
-  detail.dbStatus = 'finished'
+function onPkPanelFinishMatch() {
+  matchesStore.finishMatch(matchId.value)
+  syncDetail()
   toast(t('toast.match_finished'), 'success')
 }
 
 function reloadMatch() {
-  void loadMatch()
+  syncDetail()
+}
+
+function currentHalf(): Half {
+  return serverHalfStringToHalf(detail.serverHalf)
+}
+
+function onSetHalf(p: { matchId: number; half: string; pkFirstTeamId?: number }) {
+  void p.pkFirstTeamId
+  matchesStore.setHalf(p.matchId, serverHalfStringToHalf(p.half))
+  syncDetail()
+}
+
+function onRecordGoal(payload: { teamId: number; scorerPlayerId: number; assistPlayerId: number | null }) {
+  const id = matchId.value
+  const half = currentHalf()
+  const minute = matchesStore.currentMinuteFromClock(id)
+  matchesStore.addEvent(id, {
+    kind: 'goal',
+    half,
+    minute,
+    stoppage: null,
+    teamId: payload.teamId,
+    playerId: payload.scorerPlayerId,
+    assistPlayerId: payload.assistPlayerId,
+    subInPlayerId: null,
+    subOutPlayerId: null,
+    note: null,
+    voided: false,
+  })
+  syncDetail()
+}
+
+function onManualScore(p: { homeScore: number; awayScore: number; reason: string }) {
+  matchesStore.manualScoreEdit(matchId.value, p)
+  syncDetail()
+}
+
+function onSubstitute(p: { teamId: number; outPlayerId: number; inPlayerId: number }) {
+  const id = matchId.value
+  const half = currentHalf()
+  const minute = matchesStore.currentMinuteFromClock(id)
+  matchesStore.addEvent(id, {
+    kind: 'sub_out',
+    half,
+    minute,
+    stoppage: null,
+    teamId: p.teamId,
+    playerId: p.outPlayerId,
+    assistPlayerId: null,
+    subInPlayerId: p.inPlayerId,
+    subOutPlayerId: p.outPlayerId,
+    note: null,
+    voided: false,
+  })
+  matchesStore.addEvent(id, {
+    kind: 'sub_in',
+    half,
+    minute,
+    stoppage: null,
+    teamId: p.teamId,
+    playerId: p.inPlayerId,
+    assistPlayerId: null,
+    subInPlayerId: p.inPlayerId,
+    subOutPlayerId: p.outPlayerId,
+    note: null,
+    voided: false,
+  })
+  matchesStore.setPlayerStatus(id, p.outPlayerId, 'subbed_out')
+  matchesStore.setPlayerStatus(id, p.inPlayerId, 'playing')
+  syncDetail()
+}
+
+function onIssueCard(payload: {
+  teamId: number
+  playerId: number
+  cardType: 'yellow_card' | 'red_card'
+  ejectionReason?: 'second_yellow' | 'red_card'
+}) {
+  const id = matchId.value
+  const half = currentHalf()
+  const minute = matchesStore.currentMinuteFromClock(id)
+  if (payload.cardType === 'yellow_card') {
+    matchesStore.addEvent(id, {
+      kind: 'yellow',
+      half,
+      minute,
+      stoppage: null,
+      teamId: payload.teamId,
+      playerId: payload.playerId,
+      assistPlayerId: null,
+      subInPlayerId: null,
+      subOutPlayerId: null,
+      note: null,
+      voided: false,
+    })
+    matchesStore.setPlayerStatus(id, payload.playerId, 'warning')
+  } else {
+    matchesStore.addEvent(id, {
+      kind: 'red',
+      half,
+      minute,
+      stoppage: null,
+      teamId: payload.teamId,
+      playerId: payload.playerId,
+      assistPlayerId: null,
+      subInPlayerId: null,
+      subOutPlayerId: null,
+      note: payload.ejectionReason ?? null,
+      voided: false,
+    })
+    matchesStore.setPlayerStatus(id, payload.playerId, 'ejected')
+  }
+  syncDetail()
+}
+
+function onPkShot(payload: { teamId: number; playerId: number; success: boolean }) {
+  const id = matchId.value
+  const half: Half = 'PK'
+  const minute = matchesStore.currentMinuteFromClock(id)
+  const kind = payload.success ? 'pk_goal' : 'pk_miss'
+  matchesStore.addEvent(id, {
+    kind,
+    half,
+    minute,
+    stoppage: null,
+    teamId: payload.teamId,
+    playerId: payload.playerId,
+    assistPlayerId: null,
+    subInPlayerId: null,
+    subOutPlayerId: null,
+    note: null,
+    voided: false,
+  })
+  syncDetail()
+}
+
+function onAddFromRoster(p: { rosterMemberId: number }) {
+  const r = teamsStore.rosters.find((x) => x.id === p.rosterMemberId)
+  if (!r) return
+  matchesStore.addPlayer(matchId.value, {
+    teamId: addTeamId.value,
+    name: r.name,
+    number: r.number ?? undefined,
+    rosterMemberId: r.id,
+  })
+  syncDetail()
+}
+
+function onAddManual(p: { name: string; number: number | null }) {
+  matchesStore.addPlayer(matchId.value, {
+    teamId: addTeamId.value,
+    name: p.name,
+    number: p.number ?? undefined,
+  })
+  syncDetail()
 }
 
 function exportMatchJson() {
@@ -571,8 +706,8 @@ function exportMatchEventsCsv() {
         v-if="detail.serverHalf === 'pk'"
         :model="detail"
         :readonly="readonly"
-        @recorded="reloadMatch"
-        @finished="onPkFinished"
+        @pk-shot="onPkShot"
+        @finish-match="onPkPanelFinishMatch"
       />
       <div v-if="detail.serverHalf !== 'pk'">
         <header class="mb-4 flex flex-wrap items-center gap-3 border-b border-slate-700/80 pb-3">
@@ -649,7 +784,7 @@ function exportMatchEventsCsv() {
             />
           </div>
           <div class="min-w-0" :style="cardDimStyle" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
-            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" />
+            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" @set-half="onSetHalf" />
           </div>
         </div>
 
@@ -731,7 +866,7 @@ function exportMatchEventsCsv() {
             @pointerenter="setFocus('status')"
             @pointerleave="setFocus(null)"
           >
-            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed />
+            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed @set-half="onSetHalf" />
           </div>
           <div
             class="flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-slate-600/40 pt-2 md:min-w-[min(22rem,40vw)] md:border-l md:border-t-0 md:pl-3 md:pt-0"
@@ -753,11 +888,25 @@ function exportMatchEventsCsv() {
     </div>
 
     <div class="pointer-events-auto">
-      <GoalRecordWizard v-model:open="showGoal" :model="detail" @recorded="reloadMatch" />
-      <SubstitutionDialog v-model:open="showSub" :model="detail" :match-time-mm-ss="elapsedMmSsLive" @done="reloadMatch" />
-      <CardIssueDialog v-model:open="showCard" :model="detail" :preset-kind="cardPreset" @done="reloadMatch" />
-      <AddPlayerDialog v-model:open="showAdd" :match-id="detail.id" :team-id="addTeamId" @added="reloadMatch" />
-      <ScoreEditDialog v-model:open="showScoreEdit" :model="detail" @saved="reloadMatch" />
+      <GoalRecordWizard v-model:open="showGoal" :model="detail" @record-goal="onRecordGoal" @recorded="reloadMatch" />
+      <SubstitutionDialog
+        v-model:open="showSub"
+        :model="detail"
+        :match-time-mm-ss="elapsedMmSsLive"
+        @substitute="onSubstitute"
+        @done="reloadMatch"
+      />
+      <CardIssueDialog v-model:open="showCard" :model="detail" :preset-kind="cardPreset" @issue-card="onIssueCard" @done="reloadMatch" />
+      <AddPlayerDialog
+        v-model:open="showAdd"
+        :match-id="detail.id"
+        :team-id="addTeamId"
+        :roster-rows="addDialogRosterRows"
+        @add-from-roster="onAddFromRoster"
+        @add-manual="onAddManual"
+        @added="reloadMatch"
+      />
+      <ScoreEditDialog v-model:open="showScoreEdit" :model="detail" @manual-score="onManualScore" @saved="reloadMatch" />
       <ScoreHistoryDialog v-model:open="showHistory" :rows="historyRows" />
 
       <div

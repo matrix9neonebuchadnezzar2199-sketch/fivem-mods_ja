@@ -1,12 +1,21 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { useNui } from '../composables/useNui'
+import { useSettingsStore } from '../stores/settings'
 import { REFBOARD_UI_VERSION } from '../constants/version'
 
 const { t } = useI18n()
 const router = useRouter()
 const { send } = useNui()
+const settingsStore = useSettingsStore()
+const { settings } = storeToRefs(settingsStore)
+
+onMounted(() => {
+  settingsStore.load()
+})
 
 async function enter() {
   await router.push({ name: 'matches' })
@@ -24,6 +33,15 @@ async function backToGame() {
       <p class="mt-2 text-sm text-slate-400">RefBoard v{{ REFBOARD_UI_VERSION }}</p>
       <p class="mt-4 max-w-md text-sm text-slate-400">{{ t('launcher.local_intro') }}</p>
     </div>
+    <label class="flex w-full max-w-md flex-col gap-1 text-left text-sm text-slate-300">
+      <span>{{ t('launcher.self_name_label') }}</span>
+      <input
+        v-model="settings.selfName"
+        type="text"
+        class="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
+        :placeholder="t('launcher.self_name_placeholder')"
+      />
+    </label>
     <button
       type="button"
       class="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:brightness-110"
@@ -31,7 +49,6 @@ async function backToGame() {
     >
       {{ t('launcher.enter') }}
     </button>
-    <p class="text-xs text-slate-500">{{ t('launcher.self_name_hint') }}</p>
     <router-link to="/workspace/settings" class="text-sm text-primary underline">
       {{ t('launcher.go_to_settings') }}
     </router-link>

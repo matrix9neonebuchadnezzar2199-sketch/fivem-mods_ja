@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 
 const props = defineProps<{
@@ -9,10 +8,13 @@ const props = defineProps<{
   readonly: boolean
 }>()
 
-const emit = defineEmits<{ recorded: []; finished: [] }>()
+const emit = defineEmits<{
+  finished: []
+  'pk-shot': [{ teamId: number; playerId: number; success: boolean }]
+  'finish-match': []
+}>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
 
 const playerId = ref<string | null>(null)
 
@@ -20,7 +22,6 @@ const showWinnerOverlay = ref(false)
 const showFinishAsk = ref(false)
 const winnerName = ref('')
 
-let offPk: (() => void) | null = null
 let winTimer: number | null = null
 
 const pkEvents = computed(() =>
@@ -78,58 +79,43 @@ function winnerLabelForTeam(teamId: number) {
   return ''
 }
 
-onMounted(() => {
-  offPk = on(
-    'refboard:event:pk_decided',
-    (p: { matchId?: number; winnerTeamId?: number; finalPkScore?: { team1: number; team2: number } }) => {
-      if (!p?.matchId || p.matchId !== props.model.id) return
-      const wid = p.winnerTeamId
-      if (!wid) return
-      winnerName.value = winnerLabelForTeam(wid)
-      showWinnerOverlay.value = true
-      if (winTimer) window.clearTimeout(winTimer)
-      winTimer = window.setTimeout(() => {
-        showWinnerOverlay.value = false
-        showFinishAsk.value = true
-        winTimer = null
-      }, 3000)
-    },
-  )
-})
-
-onUnmounted(() => {
-  offPk?.()
+function maybeShowWinnerOverlay() {
+  if (!pkDecided.value) return
+  const ev = pkEvents.value
+  let tFirst = 0
+  let tSecond = 0
+  for (let i = 0; i < ev.length; i++) {
+    if (ev[i].penaltySuccess !== true) continue
+    if (i % 2 === 0) tFirst++
+    else tSecond++
+  }
+  const first = props.model.pkFirstTeamId ?? props.model.team1Id
+  const second = first === props.model.team1Id ? props.model.team2Id : props.model.team1Id
+  const wid = tFirst > tSecond ? first : second
+  winnerName.value = winnerLabelForTeam(wid)
+  showWinnerOverlay.value = true
   if (winTimer) window.clearTimeout(winTimer)
-})
+  winTimer = window.setTimeout(() => {
+    showWinnerOverlay.value = false
+    showFinishAsk.value = true
+    winTimer = null
+  }, 3000)
+}
 
 async function record(success: boolean) {
   const tid = nextTeamId.value
   const pid = playerId.value
   if (!tid || !pid) return
-  const un = on('refboard:event:record_penalty:ack', (r: { ok?: boolean }) => {
-    un()
-    if (r?.ok) {
-      emit('recorded')
-      playerId.value = null
-    }
-  })
-  await send('event_record_penalty', {
-    matchId: props.model.id,
-    teamId: tid,
-    playerId: Number(pid),
-    success,
-  })
+  emit('pk-shot', { teamId: tid, playerId: Number(pid), success })
+  playerId.value = null
+  await nextTick()
+  maybeShowWinnerOverlay()
 }
 
-async function confirmFinishMatch() {
-  const un = on('refboard:match:finish:ack', (r: { ok?: boolean }) => {
-    un()
-    if (r?.ok) {
-      showFinishAsk.value = false
-      emit('finished')
-    }
-  })
-  await send('match_finish', { matchId: props.model.id })
+function confirmFinishMatch() {
+  emit('finish-match')
+  showFinishAsk.value = false
+  emit('finished')
 }
 
 function laterFinish() {

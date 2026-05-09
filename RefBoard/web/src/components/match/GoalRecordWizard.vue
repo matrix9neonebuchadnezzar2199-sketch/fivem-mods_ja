@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
-import { useToast } from '../../composables/useToast'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 import PlayerSelectGrid from './PlayerSelectGrid.vue'
@@ -12,12 +10,13 @@ const props = defineProps<{
   model: MatchDetailModel
 }>()
 
-const emit = defineEmits<{ 'update:open': [boolean]; recorded: [] }>()
+const emit = defineEmits<{
+  'update:open': [boolean]
+  recorded: []
+  'record-goal': [{ teamId: number; scorerPlayerId: number; assistPlayerId: number | null }]
+}>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
-const { push: toast } = useToast()
-
 const step = ref(1)
 const teamId = ref<number | null>(null)
 const scorerId = ref<string | null>(null)
@@ -125,51 +124,18 @@ function back() {
   if (step.value > 1) step.value -= 1
 }
 
-async function record() {
+function record() {
   if (!teamId.value || !scorerId.value) return
   const scorerPid = resolveMatchPlayerRowId(scorerId.value)
   if (scorerPid == null) return
   const assistPid = assistId.value ? resolveMatchPlayerRowId(assistId.value) : null
-  let settled = false
-  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on(
-    'refboard:score:goal:ack',
-    (r: { ok?: boolean; error?: string; code?: string; detail?: string }) => {
-      if (settled) return
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      if (r?.ok) {
-        emit('recorded')
-        close()
-        return
-      }
-      const code = (r?.error as string | undefined) ?? (r?.code as string | undefined) ?? 'unknown'
-      const detail = r?.detail ? ` ${String(r.detail).slice(0, 120)}` : ''
-      toast(t('toast.goal_record_failed', { code: String(code) }) + detail, 'error', { ms: 10000 })
-    },
-  )
-  timeoutId = window.setTimeout(() => {
-    if (settled) return
-    settled = true
-    un()
-    toast(t('toast.goal_record_timeout'), 'error', { ms: 8000 })
-  }, 8000)
-  try {
-    await send('score_goal', {
-      matchId: props.model.id,
-      teamId: teamId.value,
-      scorerPlayerId: String(scorerPid),
-      assistPlayerId: assistPid != null ? String(assistPid) : null,
-    })
-  } catch {
-    if (!settled) {
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      toast(t('toast.goal_record_timeout'), 'error', { ms: 8000 })
-    }
-  }
+  emit('record-goal', {
+    teamId: teamId.value,
+    scorerPlayerId: scorerPid,
+    assistPlayerId: assistPid,
+  })
+  emit('recorded')
+  close()
 }
 </script>
 

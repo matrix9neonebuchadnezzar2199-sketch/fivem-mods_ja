@@ -125,6 +125,16 @@ function syncLocale() {
         <MarqueeText :text="t('settings.section_general')" variant="subtle" />
       </h2>
       <div class="grid gap-3 md:grid-cols-2">
+        <label class="block text-slate-400 md:col-span-2">
+          {{ t('settings.self_name') }}
+          <input
+            v-model="settings.settings.selfName"
+            type="text"
+            class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+            :placeholder="t('launcher.self_name_placeholder')"
+          />
+          <span class="mt-1 block text-xs text-slate-500">{{ t('settings.self_name_hint') }}</span>
+        </label>
         <label class="block text-slate-400">
           {{ t('settings.locale') }}
           <select

@@ -6,6 +6,8 @@ export type RootFontScale = 100 | 150 | 200 | 250 | 300
 
 export type RefboardSettings = {
   locale: 'ja' | 'en'
+  /** 表示名（端末内のみ保存・通信なし） */
+  selfName: string
   timeFormat: 'mm:ss' | 'mm.ss'
   timezone: string
   defaultHalfMinutes: number
@@ -36,6 +38,7 @@ function prefersReducedMotion(): boolean {
 
 const defaults: RefboardSettings = {
   locale: 'ja',
+  selfName: '',
   timeFormat: 'mm:ss',
   timezone: 'Asia/Tokyo',
   defaultHalfMinutes: 45,

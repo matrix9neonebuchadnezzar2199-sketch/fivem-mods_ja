@@ -1,28 +1,62 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../composables/useNui'
-import { useToast } from '../composables/useToast'
 import TeamList, { type ManageTeamRow } from '../components/team/TeamList.vue'
 import TeamDetail from '../components/team/TeamDetail.vue'
 import RosterList, { type RosterRow } from '../components/team/RosterList.vue'
 import CreateTeamDialog from '../components/team/CreateTeamDialog.vue'
 import AddRosterMemberDialog, { type RosterInitial } from '../components/team/AddRosterMemberDialog.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
+import { useTeamsStore } from '../stores/teams'
+import { useMatchesStore } from '../stores/matches'
 
 const { t } = useI18n()
-const { send, on } = useNui()
-const { push: toast } = useToast()
+const teamsStore = useTeamsStore()
+const matchesStore = useMatchesStore()
 
-const teams = ref<ManageTeamRow[]>([])
 const search = ref('')
 const selectedId = ref<number | null>(null)
-const team = ref<ManageTeamRow | null>(null)
-const stats = ref<Record<string, number> | null>(null)
-const roster = ref<RosterRow[]>([])
 
-/** 古い team:detail:ack でフォームが上書きされるのを防ぐ */
-let teamDetailSeq = 0
+const teams = computed((): ManageTeamRow[] => {
+  const q = search.value.trim().toLowerCase()
+  return teamsStore.teams
+    .filter((x) => !q || x.name.toLowerCase().includes(q))
+    .map((x) => ({
+      id: x.id,
+      name: x.name,
+      short_name: x.shortName ?? null,
+      color: x.colorHex ?? null,
+      emblem_emoji: null,
+      roster_count: teamsStore.rosterFor(x.id).length,
+      last_match_date: null,
+    }))
+})
+
+const team = computed(() => {
+  if (!selectedId.value) return null
+  const x = teamsStore.getTeam(selectedId.value)
+  if (!x) return null
+  return {
+    id: x.id,
+    name: x.name,
+    short_name: x.shortName ?? null,
+    color: x.colorHex ?? null,
+    emblem_emoji: null as string | null,
+  }
+})
+
+const stats = computed((): Record<string, number> | null => null)
+
+const roster = computed((): RosterRow[] => {
+  if (!selectedId.value) return []
+  return teamsStore.rosterFor(selectedId.value).map((r) => ({
+    id: r.id,
+    jersey_number: r.number ?? null,
+    player_name: r.name,
+    position: r.position ?? null,
+    license: r.note ?? null,
+  }))
+})
 
 const showCreate = ref(false)
 const showRoster = ref(false)
@@ -32,73 +66,24 @@ const rosterInitial = ref<RosterInitial | null>(null)
 const showDeleteTeamConfirm = ref(false)
 const rosterRemoveTarget = ref<RosterRow | null>(null)
 
-async function refreshList() {
-  const un = on('refboard:team:manage_list:ack', (p: { teams?: ManageTeamRow[] }) => {
-    un()
-    teams.value = p.teams ?? []
-  })
-  await send('team_manage_list', { q: search.value.trim() })
-}
-
-async function loadDetail(id: number) {
-  const seq = ++teamDetailSeq
-  const un = on('refboard:team:detail:ack', (p: { team?: ManageTeamRow | null; stats?: Record<string, unknown> | null }) => {
-    un()
-    if (seq !== teamDetailSeq) return
-    team.value = p.team ?? null
-    stats.value = (p.stats as Record<string, number> | null) ?? null
-  })
-  await send('team_detail', { teamId: id })
-}
-
-async function loadRoster(id: number) {
-  const un = on('refboard:team:roster:list:ack', (p: { rows?: RosterRow[] }) => {
-    un()
-    roster.value = p.rows ?? []
-  })
-  await send('team_roster_list', { teamId: id })
-}
-
 function selectTeam(id: number) {
   selectedId.value = id
-  void loadDetail(id)
-  void loadRoster(id)
 }
 
-onMounted(() => {
-  void refreshList()
-})
-
-async function onUpdate(payload: {
+function onUpdate(payload: {
   teamId: number
   name: string
   shortName: string | null
   color: string | null
   emblemEmoji: string | null
 }) {
-  const un = on('refboard:team:update:ack', (p: { ok?: boolean }) => {
-    un()
-    if (p?.ok) {
-      if (team.value?.id === payload.teamId) {
-        team.value = {
-          ...team.value,
-          name: payload.name,
-          short_name: payload.shortName,
-          color: payload.color,
-          emblem_emoji: payload.emblemEmoji,
-        }
-      }
-      void refreshList()
-      void loadDetail(payload.teamId)
-    }
-  })
-  await send('team_update', {
-    teamId: payload.teamId,
+  void payload.emblemEmoji
+  teamsStore.updateTeam(payload.teamId, {
     name: payload.name,
     shortName: payload.shortName,
-    color: payload.color,
-    emblemEmoji: payload.emblemEmoji,
+    colorHex: payload.color,
   })
+  matchesStore.refreshTeamNames(payload.teamId, payload.name.trim())
 }
 
 function requestDeleteTeam() {
@@ -110,41 +95,11 @@ function closeDeleteTeamConfirm() {
   showDeleteTeamConfirm.value = false
 }
 
-async function confirmDeleteTeam() {
+function confirmDeleteTeam() {
   if (!selectedId.value) return
   showDeleteTeamConfirm.value = false
-  const id = selectedId.value
-  let settled = false
-  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:team:delete:ack', (p: { ok?: boolean }) => {
-    if (settled) return
-    settled = true
-    if (timeoutId != null) window.clearTimeout(timeoutId)
-    un()
-    if (p?.ok) {
-      selectedId.value = null
-      team.value = null
-      stats.value = null
-      roster.value = []
-      void refreshList()
-    }
-  })
-  timeoutId = window.setTimeout(() => {
-    if (settled) return
-    settled = true
-    un()
-    toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
-  }, 8000)
-  try {
-    await send('team_delete', { teamId: id })
-  } catch {
-    if (!settled) {
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
-    }
-  }
+  teamsStore.deleteTeam(selectedId.value)
+  selectedId.value = null
 }
 
 function openRosterAdd() {
@@ -172,40 +127,15 @@ function closeRosterRemoveConfirm() {
   rosterRemoveTarget.value = null
 }
 
-async function confirmRemoveRoster() {
+function confirmRemoveRoster() {
   const r = rosterRemoveTarget.value
-  if (!r || !selectedId.value) return
+  if (!r) return
   rosterRemoveTarget.value = null
-  const teamId = selectedId.value
-  let settled = false
-  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:team:roster:remove:ack', (p: { ok?: boolean }) => {
-    if (settled) return
-    settled = true
-    if (timeoutId != null) window.clearTimeout(timeoutId)
-    un()
-    if (p?.ok) void loadRoster(teamId)
-  })
-  timeoutId = window.setTimeout(() => {
-    if (settled) return
-    settled = true
-    un()
-    toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
-  }, 8000)
-  try {
-    await send('team_roster_remove', { teamId, rosterId: r.id })
-  } catch {
-    if (!settled) {
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      toast(t('toast.player_remove_timeout'), 'error', { ms: 8000 })
-    }
-  }
+  teamsStore.removeRosterMember(r.id)
 }
 
-async function onCreatedTeam(id: number) {
-  await refreshList()
+function onCreatedTeam(id: number) {
+  showCreate.value = false
   selectTeam(id)
 }
 </script>
@@ -220,12 +150,7 @@ async function onCreatedTeam(id: number) {
         :search="search"
         :teams="teams"
         :selected-id="selectedId"
-        @update:search="
-          (v) => {
-            search = v
-            void refreshList()
-          }
-        "
+        @update:search="(v) => (search = v)"
         @select="selectTeam"
         @open-create="showCreate = true"
       />
@@ -251,7 +176,7 @@ async function onCreatedTeam(id: number) {
       :team-id="selectedId || 0"
       :edit-id="rosterEditId"
       :initial="rosterInitial"
-      @saved="selectedId ? loadRoster(selectedId) : undefined"
+      @saved="() => {}"
     />
 
     <div

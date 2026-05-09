@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
+import { useTeamsStore } from '../../stores/teams'
 
 export type RosterInitial = {
   player_name: string
@@ -14,7 +14,7 @@ const props = defineProps<{ open: boolean; teamId: number; editId: number | null
 const emit = defineEmits<{ 'update:open': [boolean]; saved: [] }>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
+const teamsStore = useTeamsStore()
 
 const form = reactive({
   playerName: '',
@@ -45,40 +45,25 @@ function close() {
   emit('update:open', false)
 }
 
-async function submit() {
+function submit() {
   if (!props.teamId || !form.playerName.trim()) return
   if (props.editId) {
-    const un = on('refboard:team:roster:update:ack', (p: { ok?: boolean }) => {
-      un()
-      if (p?.ok) {
-        emit('saved')
-        close()
-      }
-    })
-    await send('team_roster_update', {
-      rosterId: props.editId,
-      teamId: props.teamId,
-      playerName: form.playerName.trim(),
-      jerseyNumber: form.jerseyNumber,
+    teamsStore.updateRosterMember(props.editId, {
+      name: form.playerName.trim(),
+      number: form.jerseyNumber,
       position: form.position,
-      license: form.license.trim() || null,
+      note: form.license.trim() || undefined,
     })
   } else {
-    const un = on('refboard:team:roster:add:ack', (p: { ok?: boolean }) => {
-      un()
-      if (p?.ok) {
-        emit('saved')
-        close()
-      }
-    })
-    await send('team_roster_add', {
-      teamId: props.teamId,
-      playerName: form.playerName.trim(),
-      jerseyNumber: form.jerseyNumber,
+    teamsStore.addRosterMember(props.teamId, {
+      name: form.playerName.trim(),
+      number: form.jerseyNumber ?? undefined,
       position: form.position,
-      license: form.license.trim() || null,
+      note: form.license.trim() || undefined,
     })
   }
+  emit('saved')
+  close()
 }
 </script>
 
@@ -100,9 +85,7 @@ async function submit() {
           {{ t('player.jersey_optional') }}
           <input v-model.number="form.jerseyNumber" type="number" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
         </label>
-        <label class="block text-slate-400">
-          {{ t('player.position') }}
-        </label>
+        <div class="text-slate-400">{{ t('player.position') }}</div>
         <div class="flex flex-wrap gap-1">
           <button
             v-for="p in ['GK', 'DF', 'MF', 'FW'] as const"
@@ -116,20 +99,11 @@ async function submit() {
           </button>
         </div>
         <label class="block text-slate-400">
-          <span>{{ t('team_manage.license_label') }}</span>
-          <p id="roster-license-hint" class="mt-1 text-xs leading-relaxed text-slate-500">
-            {{ t('team_manage.license_hint') }}
-          </p>
-          <input
-            v-model="form.license"
-            class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 font-mono text-sm text-slate-100"
-            autocomplete="off"
-            spellcheck="false"
-            aria-describedby="roster-license-hint"
-          />
+          {{ t('player.license_optional') }}
+          <input v-model="form.license" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
         </label>
       </div>
-      <div class="mt-4 flex justify-end gap-2">
+      <div class="mt-5 flex justify-end gap-2">
         <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="close">{{ t('dialog.no') }}</button>
         <button type="button" class="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white" @click="submit">
           {{ t('dialog.yes') }}

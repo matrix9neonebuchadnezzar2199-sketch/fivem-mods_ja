@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel } from '../../types/match'
 
 const props = defineProps<{
@@ -9,10 +8,13 @@ const props = defineProps<{
   model: MatchDetailModel
 }>()
 
-const emit = defineEmits<{ 'update:open': [boolean]; saved: [] }>()
+const emit = defineEmits<{
+  'update:open': [boolean]
+  saved: []
+  'manual-score': [{ homeScore: number; awayScore: number; reason: string }]
+}>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
 
 const form = reactive({
   s1: 0,
@@ -42,21 +44,15 @@ function close() {
   emit('update:open', false)
 }
 
-async function save() {
+function save() {
   if (!reasonOk.value) return
-  const un = on('refboard:score:manual_edit:ack', (r: { ok?: boolean }) => {
-    un()
-    if (r?.ok) {
-      emit('saved')
-      close()
-    }
-  })
-  await send('score_manual_edit', {
-    matchId: props.model.id,
-    team1Score: form.s1,
-    team2Score: form.s2,
+  emit('manual-score', {
+    homeScore: form.s1,
+    awayScore: form.s2,
     reason: form.reason.trim(),
   })
+  emit('saved')
+  close()
 }
 </script>
 

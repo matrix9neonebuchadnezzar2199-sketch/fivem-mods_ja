@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel, MatchUiStatus } from '../../types/match'
 
 const props = withDefaults(
@@ -16,7 +15,10 @@ const props = withDefaults(
 )
 
 const { t } = useI18n()
-const { send } = useNui()
+
+const emit = defineEmits<{
+  'set-half': [payload: { matchId: number; half: string; pkFirstTeamId?: number }]
+}>()
 
 const showPkConfirm = ref(false)
 const pkFirstTeamId = ref<number>(1)
@@ -77,7 +79,7 @@ function onSelectChange(ev: Event) {
     el.value = props.model.uiStatus
     return
   }
-  void send('match_set_half', { matchId: props.model.id, half })
+  emit('set-half', { matchId: props.model.id, half })
 }
 
 function cancelPk() {
@@ -86,7 +88,7 @@ function cancelPk() {
 
 function confirmPk() {
   showPkConfirm.value = false
-  void send('match_set_half', {
+  emit('set-half', {
     matchId: props.model.id,
     half: 'pk',
     pkFirstTeamId: pkFirstTeamId.value,

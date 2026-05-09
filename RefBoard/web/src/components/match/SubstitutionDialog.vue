@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 
@@ -12,10 +11,13 @@ const props = defineProps<{
   matchTimeMmSs?: string
 }>()
 
-const emit = defineEmits<{ 'update:open': [boolean]; done: [] }>()
+const emit = defineEmits<{
+  'update:open': [boolean]
+  done: []
+  substitute: [{ teamId: number; outPlayerId: number; inPlayerId: number }]
+}>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
 
 const step = ref(1)
 const teamId = ref<number | null>(null)
@@ -69,24 +71,14 @@ function close() {
   emit('update:open', false)
 }
 
-async function submit() {
+function submit() {
   if (!teamId.value || !outId.value || !inId.value) return
   const outPid = resolveMatchPlayerRowId(outId.value)
   const inPid = resolveMatchPlayerRowId(inId.value)
   if (outPid == null || inPid == null || outPid <= 0 || inPid <= 0) return
-  const un = on('refboard:event:substitute:ack', (r: { ok?: boolean }) => {
-    un()
-    if (r?.ok) {
-      emit('done')
-      close()
-    }
-  })
-  await send('event_substitute', {
-    matchId: props.model.id,
-    teamId: teamId.value,
-    outPlayerId: String(outPid),
-    inPlayerId: String(inPid),
-  })
+  emit('substitute', { teamId: teamId.value, outPlayerId: outPid, inPlayerId: inPid })
+  emit('done')
+  close()
 }
 </script>
 

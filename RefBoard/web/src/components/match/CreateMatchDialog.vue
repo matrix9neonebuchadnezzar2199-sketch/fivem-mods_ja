@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
 import { blockDateTimeFieldKeydown, openNativeDateTimePicker } from '../../composables/openNativeDateTimePicker'
-import { useNui } from '../../composables/useNui'
 import { useToast } from '../../composables/useToast'
+import { useSettingsStore } from '../../stores/settings'
+import { useMatchesStore } from '../../stores/matches'
 import type { TeamRow } from '../../types/match'
 
 const props = defineProps<{
@@ -14,8 +16,10 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:open': [boolean]; created: [number] }>()
 
 const { t } = useI18n()
-const { send } = useNui()
 const { push: toast } = useToast()
+const settingsStore = useSettingsStore()
+const { settings } = storeToRefs(settingsStore)
+const matchesStore = useMatchesStore()
 
 const form = reactive({
   team1Id: '' as string | number,
@@ -24,7 +28,23 @@ const form = reactive({
   venue: '',
   matchDate: new Date().toISOString().slice(0, 10),
   kickoffTime: '',
+  halfMinutes: settings.value.defaultHalfMinutes,
 })
+
+watch(
+  () => props.open,
+  (v) => {
+    if (v) {
+      form.team1Id = ''
+      form.team2Id = ''
+      form.matchName = ''
+      form.venue = ''
+      form.matchDate = new Date().toISOString().slice(0, 10)
+      form.kickoffTime = ''
+      form.halfMinutes = settings.value.defaultHalfMinutes
+    }
+  },
+)
 
 const team2Options = computed(() => {
   const a = Number(form.team1Id)
@@ -35,22 +55,39 @@ function close() {
   emit('update:open', false)
 }
 
-async function submit() {
+function submit() {
   const t1 = Number(form.team1Id)
   const t2 = Number(form.team2Id)
   if (!t1 || !t2 || t1 === t2) {
+    toast(t('create_match.validation_teams'), 'error', { ms: 5000 })
     return
   }
-  await send('match_create', {
-    team1Id: t1,
-    team2Id: t2,
-    matchName: form.matchName || null,
-    venue: form.venue || null,
-    matchDate: form.matchDate,
-    kickoffTime: form.kickoffTime || null,
-  })
-  close()
-  toast(t('toast.local_feature_pending'), 'info', { ms: 6000 })
+  const home = props.teams.find((x) => x.id === t1)
+  const away = props.teams.find((x) => x.id === t2)
+  const title =
+    (form.matchName && form.matchName.trim()) ||
+    (home && away ? `${home.name} vs ${away.name}` : t('create_match.default_title'))
+  const scheduled =
+    form.matchDate && form.kickoffTime
+      ? `${form.matchDate}T${form.kickoffTime.length === 5 ? form.kickoffTime : form.kickoffTime.slice(0, 5)}:00`
+      : form.matchDate
+        ? `${form.matchDate}T12:00:00`
+        : null
+  try {
+    const m = matchesStore.createMatch({
+      title,
+      homeTeamId: t1,
+      awayTeamId: t2,
+      halfMinutes: Number(form.halfMinutes) || settings.value.defaultHalfMinutes,
+      scheduledAt: scheduled ?? undefined,
+      venue: form.venue?.trim() || undefined,
+    })
+    emit('created', m.id)
+    close()
+  } catch (e) {
+    toast(t('create_match.create_failed'), 'error', { ms: 6000 })
+    void e
+  }
 }
 </script>
 
@@ -79,6 +116,16 @@ async function submit() {
         <label class="block text-slate-400">
           {{ t('create_match.match_name') }}
           <input v-model="form.matchName" type="text" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100" />
+        </label>
+        <label class="block text-slate-400">
+          {{ t('create_match.half_minutes') }}
+          <input
+            v-model.number="form.halfMinutes"
+            type="number"
+            min="1"
+            max="120"
+            class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-slate-100"
+          />
         </label>
         <label class="block text-slate-400">
           {{ t('create_match.venue') }}

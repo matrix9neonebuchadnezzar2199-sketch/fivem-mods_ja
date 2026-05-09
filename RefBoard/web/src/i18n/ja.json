@@ -47,9 +47,10 @@
     "lock_acquire_other": "編集ロックを取得できませんでした（{error}）。管理者にログを確認してもらうか、ヘルプのトラブルシューティングを参照してください。",
     "debug_trace": "🐛 デバッグログを有効化（再読込）",
     "back_to_game": "ゲーム画面に戻る（ツールを閉じる）",
-    "local_intro": "各監督が自分の端末で目盛るローカル版です。データはこの端末にだけ保存されます（次の更新で localStorage 連携）。",
+    "local_intro": "表示名は端末内に保存されます。通信は行いません。",
     "enter": "試合一覧へ",
-    "self_name_hint": "最初に設定で表示名を入力してください（次の更新で必須化予定）。",
+    "self_name_label": "表示名（任意）",
+    "self_name_placeholder": "例: 審判 山田",
     "go_to_settings": "設定を開く"
   },
   "sidebar": {
@@ -72,7 +73,8 @@
     "back": "戻る",
     "next": "次へ",
     "status": {
-      "draft": "予約・進行中",
+      "draft": "予約・進行前",
+      "live": "進行中",
       "finished": "試合終了",
       "cancelled": "中止"
     }
@@ -106,7 +108,10 @@
   "player": {
     "add_mode_server": "サーバーIDから追加（その場で）",
     "add_mode_roster": "チームのロスターから選ぶ",
+    "add_mode_manual": "名前を手入力",
     "add_from_roster": "ロスターから追加",
+    "roster_empty_hint": "このチームのロスターが空です。チーム管理で登録するか、手入力で追加してください。",
+    "license_optional": "メモ（任意）",
     "enter_server_id": "今日の番号（サーバーID）",
     "resolve_fail": "サーバーID {id} のプレイヤーが見つかりません",
     "server_id_ph": "例: 15",
@@ -232,7 +237,8 @@
     "delete_title": "試合を削除",
     "delete_body": "この試合と関連データ（選手・イベント・スコア履歴など）をすべて削除します。元に戻せません。続行しますか？",
     "delete_confirm": "削除する",
-    "empty": "試合がありません。チームを登録してから作成してください。"
+    "empty": "試合がありません。チームを登録してから作成してください。",
+    "cta_first_match": "最初の試合を作成"
   },
   "create_match": {
     "title": "新しい試合",
@@ -240,10 +246,14 @@
     "team2": "アウェイチーム",
     "select": "選択してください",
     "match_name": "試合名（任意）",
+    "half_minutes": "ハーフ時間（分）",
     "venue": "会場（任意）",
     "date": "日付",
     "kickoff": "開始時刻（任意）",
-    "submit": "作成"
+    "submit": "作成",
+    "validation_teams": "ホームとアウェイに異なるチームを選んでください。",
+    "default_title": "試合",
+    "create_failed": "試合を作成できませんでした。"
   },
   "shell": {
     "online": "接続中",
@@ -350,6 +360,12 @@
     "license_hint": "FiveM が付与するオンライン本人の一意な文字列です。多くのサーバーでは Rockstar アカウント由来の「license:…」形式で表示されます。試合メンバーにサーバー上のプレイヤーを取り込むときの照合や、通算成績の集計に使います。不要・不明なら空欄で構いません。"
   },
   "data": {
+    "title": "データ管理",
+    "finished_section": "終了済み試合",
+    "finished_hint": "この端末に保存された試合のうち、終了ステータスのものです。",
+    "export_finished_csv": "終了済みを CSV エクスポート",
+    "full_backup": "全データのバックアップ (JSON)",
+    "no_finished": "終了済みの試合はまだありません。",
     "tabs": {
       "matches": "試合履歴",
       "teams": "チーム統計",
@@ -384,6 +400,8 @@
   "settings": {
     "title": "設定",
     "section_general": "一般",
+    "self_name": "表示名",
+    "self_name_hint": "試合画面のヘッダ等に使う予定です。この端末の localStorage に保存されます。",
     "section_match": "試合管理",
     "section_display": "表示",
     "section_dev": "開発者向け",

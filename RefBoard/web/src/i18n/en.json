@@ -47,9 +47,10 @@
     "lock_acquire_other": "Could not acquire the edit lock ({error}). Ask an admin to check server logs or see Help → Troubleshooting.",
     "debug_trace": "🐛 Enable debug NUI trace (reload)",
     "back_to_game": "Return to game (close tool)",
-    "local_intro": "Local-only build: data stays on this device (localStorage in the next update).",
+    "local_intro": "Your display name is saved on this device only. No network sync.",
     "enter": "Go to matches",
-    "self_name_hint": "Set your display name in Settings first (required in the next update).",
+    "self_name_label": "Display name (optional)",
+    "self_name_placeholder": "e.g. Ref Smith",
     "go_to_settings": "Open settings"
   },
   "sidebar": {
@@ -72,7 +73,8 @@
     "back": "Back",
     "next": "Next",
     "status": {
-      "draft": "Scheduled / Live",
+      "draft": "Scheduled / pre-match",
+      "live": "Live",
       "finished": "Finished",
       "cancelled": "Cancelled"
     }
@@ -106,7 +108,10 @@
   "player": {
     "add_mode_server": "Add by server ID (live lookup)",
     "add_mode_roster": "Pick from team roster",
+    "add_mode_manual": "Enter name manually",
     "add_from_roster": "Add from roster",
+    "roster_empty_hint": "This team has no roster yet. Add members in Team manage, or use manual entry.",
+    "license_optional": "Note (optional)",
     "enter_server_id": "Server ID (today's number)",
     "resolve_fail": "No player for server id {id}",
     "server_id_ph": "e.g. 15",
@@ -232,7 +237,8 @@
     "delete_title": "Delete match",
     "delete_body": "This will permanently remove the match and related data (players, events, score history, etc.). This cannot be undone. Continue?",
     "delete_confirm": "Delete",
-    "empty": "No matches yet. Seed teams in MySQL, then create a match."
+    "empty": "No matches yet. Create teams first, then add a match.",
+    "cta_first_match": "Create your first match"
   },
   "create_match": {
     "title": "New match",
@@ -240,10 +246,14 @@
     "team2": "Away team",
     "select": "Select…",
     "match_name": "Match name (optional)",
+    "half_minutes": "Half length (minutes)",
     "venue": "Venue (optional)",
     "date": "Date",
     "kickoff": "Kickoff (optional)",
-    "submit": "Create"
+    "submit": "Create",
+    "validation_teams": "Choose two different teams for home and away.",
+    "default_title": "Match",
+    "create_failed": "Could not create the match."
   },
   "shell": {
     "online": "Online",
@@ -350,6 +360,12 @@
     "license_hint": "A unique id FiveM assigns to a real online player (on many servers this is the Rockstar-linked string starting with license:). Used to match roster rows to live players and to roll up stats across matches. Leave blank if you do not need it or do not know it."
   },
   "data": {
+    "title": "Data",
+    "finished_section": "Finished matches",
+    "finished_hint": "Matches stored on this device with status finished.",
+    "export_finished_csv": "Export finished to CSV",
+    "full_backup": "Full data backup (JSON)",
+    "no_finished": "No finished matches yet.",
     "tabs": {
       "matches": "Match history",
       "teams": "Team stats",
@@ -384,6 +400,8 @@
   "settings": {
     "title": "Settings",
     "section_general": "General",
+    "self_name": "Display name",
+    "self_name_hint": "Saved in localStorage on this device for future use in headers.",
     "section_match": "Match",
     "section_display": "Display",
     "section_dev": "Developer",

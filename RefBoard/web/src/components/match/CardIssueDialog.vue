@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../../composables/useNui'
 import { useToast } from '../../composables/useToast'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
 import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
@@ -13,10 +12,20 @@ const props = defineProps<{
   presetKind?: 'yellow' | 'red' | null
 }>()
 
-const emit = defineEmits<{ 'update:open': [boolean]; done: [] }>()
+const emit = defineEmits<{
+  'update:open': [boolean]
+  done: []
+  'issue-card': [
+    {
+      teamId: number
+      playerId: number
+      cardType: 'yellow_card' | 'red_card'
+      ejectionReason?: 'second_yellow' | 'red_card'
+    },
+  ]
+}>()
 
 const { t } = useI18n()
-const { send, on } = useNui()
 const { push: toast } = useToast()
 
 const step = ref(1)
@@ -123,7 +132,7 @@ function goBackFromConfirm() {
   step.value = props.presetKind ? 2 : 3
 }
 
-async function record() {
+function record() {
   if (!teamId.value || !playerId.value || !cardKind.value) {
     toast(t('toast.card_issue_incomplete'), 'error', 5000)
     return
@@ -133,76 +142,15 @@ async function record() {
     toast(t('toast.card_issue_incomplete'), 'error', 5000)
     return
   }
-  let settled = false
-  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on(
-    'refboard:event:issue_card:ack',
-    (r: { ok?: boolean; error?: string; detail?: string }) => {
-    if (settled) return
-    settled = true
-    if (timeoutId != null) window.clearTimeout(timeoutId)
-    un()
-    if (r?.ok) {
-      emit('done')
-      close()
-      return
-    }
-    if (r?.error === 'second_yellow_confirm') {
-      showSecondYellow.value = true
-      return
-    }
-    const code = r?.error ?? 'unknown'
-    if (code === 'no_lock') {
-      toast(t('toast.card_issue_no_lock'), 'error', 10000)
-      return
-    }
-    if (code === 'bad_player') {
-      toast(t('toast.card_issue_bad_player'), 'error', 8000)
-      return
-    }
-    if (code === 'bad_phase') {
-      toast(t('toast.card_issue_bad_phase'), 'error', 8000)
-      return
-    }
-    if (code === 'db_insert_failed') {
-      const d = (r?.detail ?? '').slice(0, 200)
-      toast(d ? t('toast.card_issue_db_insert', { detail: d }) : t('toast.card_issue_failed', { code }), 'error', 12000)
-      return
-    }
-    if (code === 'tx_failed' && r?.detail) {
-      if (import.meta.env.DEV) {
-        // eslint-disable-next-line no-console
-        console.warn('[RefBoard] issue_card tx_failed', r.detail)
-      }
-      toast(t('toast.card_issue_tx_detail', { detail: String(r.detail).slice(0, 160) }), 'error', 12000)
-      return
-    }
-    toast(t('toast.card_issue_failed', { code }), 'error', 8000)
-    },
-  )
-  timeoutId = window.setTimeout(() => {
-    if (settled) return
-    settled = true
-    un()
-    toast(t('toast.card_issue_timeout'), 'error', 8000)
-  }, 8000)
-  try {
-    await send('event_issue_card', {
-      matchId: props.model.id,
-      teamId: teamId.value,
-      playerId: String(pid),
-      cardType: cardKind.value === 'yellow' ? 'yellow_card' : 'red_card',
-      ejectionReason:
-        cardKind.value === 'red' ? (redFromSecondYellow.value ? 'second_yellow' : 'red_card') : undefined,
-    })
-  } catch {
-    if (!settled) {
-      settled = true
-      if (timeoutId != null) window.clearTimeout(timeoutId)
-      un()
-      toast(t('toast.card_issue_timeout'), 'error', 8000)
-    }
-  }
+  emit('issue-card', {
+    teamId: teamId.value,
+    playerId: pid,
+    cardType: cardKind.value === 'yellow' ? 'yellow_card' : 'red_card',
+    ejectionReason:
+      cardKind.value === 'red' ? (redFromSecondYellow.value ? 'second_yellow' : 'red_card') : undefined,
+  })
+  emit('done')
+  close()
 }
 </script>
 

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useNui } from '../composables/useNui'
-import { useToast } from '../composables/useToast'
 import { useSettingsStore } from '../stores/settings'
+import { useMatchesStore } from '../stores/matches'
+import { useTeamsStore } from '../stores/teams'
+import type { Match } from '../types/local'
 import type { MatchListRow, TeamRow } from '../types/match'
 import CreateMatchDialog from '../components/match/CreateMatchDialog.vue'
 import MatchStatusBadge from '../components/match/MatchStatusBadge.vue'
@@ -17,19 +18,68 @@ const { t } = useI18n()
 const router = useRouter()
 const settingsStore = useSettingsStore()
 const { settings } = storeToRefs(settingsStore)
-const { push: toast } = useToast()
-const { send, on } = useNui()
+const matchesStore = useMatchesStore()
+const teamsStore = useTeamsStore()
 
-const rows = ref<MatchListRow[]>([])
 const listClockTick = ref(0)
 let listClockInterval: ReturnType<typeof setInterval> | null = null
 
-function fullMatchDurationMs(): number {
-  return Math.max(60_000, settings.value.defaultHalfMinutes * 2 * 60 * 1000)
+const filter = ref<'all' | 'draft' | 'finished' | 'cancelled'>('all')
+const showCreate = ref(false)
+const showReopen = ref(false)
+const reopenId = ref<number | null>(null)
+const showDeleteConfirm = ref(false)
+const deleteId = ref<number | null>(null)
+
+let stopAfterEach: (() => void) | undefined
+
+const teams = computed<TeamRow[]>(() =>
+  teamsStore.teams.map((x) => ({
+    id: x.id,
+    name: x.name,
+    short_name: x.shortName ?? null,
+    color: x.colorHex ?? null,
+    emblem_emoji: null,
+  })),
+)
+
+const filteredMatches = computed(() => {
+  let ms = matchesStore.matches.slice()
+  if (filter.value === 'finished') ms = ms.filter((m) => m.status === 'finished')
+  else if (filter.value === 'draft') ms = ms.filter((m) => m.status === 'draft' || m.status === 'live')
+  else if (filter.value === 'cancelled') ms = []
+  return ms
+})
+
+function toListRow(m: Match): MatchListRow {
+  const dateSrc = m.scheduledAt || m.createdAt
+  return {
+    id: m.id,
+    team1_id: m.homeTeamId,
+    team2_id: m.awayTeamId,
+    team1_name: m.homeName,
+    team2_name: m.awayName,
+    team1_score: m.homeScore,
+    team2_score: m.awayScore,
+    status: m.status === 'live' ? 'live' : m.status === 'finished' ? 'finished' : 'draft',
+    match_date: dateSrc.slice(0, 10),
+    match_name: m.title,
+    venue: m.venue ?? null,
+    kickoff_time: m.scheduledAt && m.scheduledAt.length >= 16 ? m.scheduledAt.slice(11, 16) : null,
+    clock_running: m.clockStartedAt ? 1 : 0,
+    clock_started_at: m.clockStartedAt ?? null,
+    clock_accumulated_ms: m.clockAccumulatedMs,
+  }
+}
+
+const rows = computed(() => filteredMatches.value.map(toListRow))
+
+function fullMatchDurationMsFor(m: Match): number {
+  return Math.max(60_000, (m.halfMinutes ?? settings.value.defaultHalfMinutes) * 2 * 60 * 1000)
 }
 
 function anyListRowClockRunning(): boolean {
-  return rows.value.some((m) => Number(m.clock_running) === 1)
+  return filteredMatches.value.some((m) => m.clockStartedAt != null)
 }
 
 function syncListClockInterval() {
@@ -47,9 +97,12 @@ function syncListClockInterval() {
 function listRemainingTimeLabel(m: MatchListRow): string {
   if (Number(m.clock_running) !== 1) return '-'
   void listClockTick.value
+  const raw = matchesStore.find(m.id)
+  if (!raw) return '-'
+  const full = fullMatchDurationMsFor(raw)
   const started = parseEpochMsFromServer(m.clock_started_at)
   const rem = remainingMsFromClock(
-    fullMatchDurationMs(),
+    full,
     Number(m.clock_accumulated_ms) || 0,
     true,
     started,
@@ -58,43 +111,17 @@ function listRemainingTimeLabel(m: MatchListRow): string {
   return formatClockMs(rem)
 }
 
-const teams = ref<TeamRow[]>([])
-const filter = ref<'all' | 'draft' | 'finished' | 'cancelled'>('all')
-const showCreate = ref(false)
-const showReopen = ref(false)
-const reopenId = ref<number | null>(null)
-const showDeleteConfirm = ref(false)
-const deleteId = ref<number | null>(null)
-
-let offMatch: (() => void) | null = null
-let offTeam: (() => void) | null = null
-let stopAfterEach: (() => void) | undefined
-
-function loadMatches() {
-  void send('match_list', { status: filter.value })
-}
-
 onMounted(() => {
   settingsStore.load()
-  offMatch = on('refboard:match:list:ack', (p: { matches?: MatchListRow[] }) => {
-    rows.value = p.matches || []
-    syncListClockInterval()
-  })
-  offTeam = on('refboard:team:list:ack', (p: { teams?: TeamRow[] }) => {
-    teams.value = p.teams || []
-  })
-  void send('team_list', {})
-  loadMatches()
+  syncListClockInterval()
   stopAfterEach = router.afterEach((to, from) => {
     if (to.name === 'matches' && from.name === 'match-detail') {
-      loadMatches()
+      syncListClockInterval()
     }
   })
 })
 
 onUnmounted(() => {
-  offMatch?.()
-  offTeam?.()
   stopAfterEach?.()
   if (listClockInterval != null) {
     clearInterval(listClockInterval)
@@ -102,12 +129,8 @@ onUnmounted(() => {
   }
 })
 
-watch(filter, () => {
-  loadMatches()
-})
-
 watch(
-  rows,
+  () => matchesStore.matches,
   () => {
     syncListClockInterval()
   },
@@ -132,24 +155,25 @@ function askDelete(id: number) {
   showDeleteConfirm.value = true
 }
 
-async function confirmDelete() {
+function confirmDelete() {
+  const id = deleteId.value
   showDeleteConfirm.value = false
   deleteId.value = null
-  toast(t('toast.local_feature_pending'), 'info', { ms: 5000 })
+  if (id) matchesStore.deleteMatch(id)
 }
 
-async function confirmReopen() {
+function confirmReopen() {
   const id = reopenId.value
   showReopen.value = false
   reopenId.value = null
   if (id) {
+    matchesStore.reopenMatch(id)
     void router.push({ name: 'match-detail', params: { id: String(id) } })
   }
 }
 
 function onCreated(id: number) {
   showCreate.value = false
-  loadMatches()
   void router.push({ name: 'match-detail', params: { id: String(id) } })
 }
 </script>
@@ -229,7 +253,12 @@ function onCreated(id: number) {
             </td>
           </tr>
           <tr v-if="!rows.length">
-            <td colspan="7" class="px-3 py-8 text-center text-slate-500">{{ t('match_list.empty') }}</td>
+            <td colspan="7" class="px-3 py-8 text-center text-slate-500">
+              <p class="mb-3">{{ t('match_list.empty') }}</p>
+              <button type="button" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white" @click="showCreate = true">
+                {{ t('match_list.cta_first_match') }}
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>

@@ -110,7 +110,7 @@ export type MatchListRow = {
   team2_name?: string
   team1_score: number
   team2_score: number
-  status: MatchDbStatus
+  status: MatchDbStatus | 'live'
   match_date: string
   match_name?: string | null
   venue?: string | null

@@ -1,4 +1,5 @@
 import type { MatchDetailModel, MatchEvent, ScoreHistoryRow } from '../types/match'
+import { dumpAllLocal } from './localPersist'
 
 export function toCSV(rows: Record<string, unknown>[], columns: string[]): string {
   const escape = (v: unknown) => {
@@ -75,4 +76,21 @@ export function refboardFilename(prefix: string, ext: string) {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${prefix}_${y}-${m}-${day}.${ext}`
+}
+
+export function exportFullBackup(): void {
+  const payload = {
+    schemaVersion: 1,
+    exportedAt: new Date().toISOString(),
+    appVersion: '0.1.0',
+    data: dumpAllLocal(),
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  const ts = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 13)
+  a.href = url
+  a.download = `refboard_backup_${ts}.json`
+  a.click()
+  URL.revokeObjectURL(url)
 }
