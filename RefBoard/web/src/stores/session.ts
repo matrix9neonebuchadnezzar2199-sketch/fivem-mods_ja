@@ -17,6 +17,12 @@ export const useSessionStore = defineStore('session', () => {
   /** 編集モード入室用（ランチャーで入力。試合一覧からの編集入室でも再利用） */
   const editPassword = ref(DEFAULT_EDIT_PASSWORD)
 
+  /**
+   * F6 閉鎖直前に試合詳細で編集中だった場合、再オープン時に enterEdit でロック・match_id を取り直す。
+   * （閉じたあと mode が null になり、MatchDetail の lock_acquire ガードが通らない問題の対策）
+   */
+  const pendingRelockMatchId = ref<number | null>(null)
+
   const isEditor = computed(() => mode.value === 'edit')
 
   function bindServerMessages() {
@@ -97,11 +103,46 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   async function leave() {
-    await send('lock_release', {})
-    await send('session_leave', {})
+    // pendingRelock は App.vue の refboard:setOpen(false) ウォッチで立てる。ここで先に消すと Close 直後の再ロック意図が潰れる。
+    try {
+      await send('session_leave', {})
+    } catch {
+      /* fetch 失敗時も lock 掃除を続ける */
+    }
+    try {
+      await send('lock_release', {})
+    } catch {
+      /* session_leave で解放済みのことが多い */
+    }
     mode.value = null
     lockHolder.value = null
     editPassword.value = DEFAULT_EDIT_PASSWORD
+  }
+
+  /**
+   * Lua が NUI を閉じた直後の Pinia 同期。
+   * @param matchId 試合詳細ルート上で閉じたときのみ渡す（再オープン時の自動ロック取り直し用）
+   */
+  function syncAfterNuiShellClosedByClient(matchId?: number) {
+    if (mode.value === 'edit' && typeof matchId === 'number' && matchId > 0) {
+      pendingRelockMatchId.value = matchId
+    } else {
+      pendingRelockMatchId.value = null
+    }
+    mode.value = null
+    lockHolder.value = null
+  }
+
+  /** NUI 再表示後、試合詳細で pending があれば session_enter + lock_acquire をやり直す */
+  async function tryRelockAfterShellOpen(matchId: number): Promise<void> {
+    const pending = pendingRelockMatchId.value
+    if (pending == null) return
+    if (pending !== matchId) {
+      pendingRelockMatchId.value = null
+      return
+    }
+    pendingRelockMatchId.value = null
+    await enterEdit(matchId)
   }
 
   return {
@@ -116,5 +157,7 @@ export const useSessionStore = defineStore('session', () => {
     enterView,
     downgradeToView,
     leave,
+    syncAfterNuiShellClosedByClient,
+    tryRelockAfterShellOpen,
   }
 })

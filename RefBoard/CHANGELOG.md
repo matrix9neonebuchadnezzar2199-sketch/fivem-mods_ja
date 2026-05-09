@@ -4,6 +4,7 @@
 
 - **feat（設定）**: 全体フォント倍率に **250% / 300%** を追加（`rootFontScale`・`index.html` FOUC 先読み・`sanitizeRootFontScale` を同期）。
 - **fix（表示）**: `text-[10px]` / `text-[11px]` / `text-[22px]` 等の **ピクセル固定**を `rem` 指定に変更し、ルート倍率変更で **補助ラベルやトーストのエラー行も追従**するようにした。
+- **fix（編集ロック）**: Close / ランチャー「ゲームへ戻る」で **`refboard:close`（Lua による `session:leave` + `lock:release`）を `session.leave()` より先**に実行。`session.leave()` 先頭の `pendingRelock` 全消しをやめ、意図的閉じでもサーバ解放が確実になるよう整理。経路一覧は `docs/editor_lock_release_flows.md`。
 
 ## v0.9.1 — 2026-05-09
 

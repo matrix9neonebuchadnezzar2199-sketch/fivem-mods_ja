@@ -184,7 +184,7 @@ Sprint 09 完了後、運用上見つかった重大不具合への即応とし�
 
 **編集ロック（v0.6.3 / v0.7.1 / v0.7.2 / v0.7.5 で完成形）**: `editor_locks.holder_server_id` は数値統一（`tonumber()` 比較）。同 license で再接続したらロックを奪い返す（幽霊ロック防止）。`session:leave` でも保持者なら必ず解放。`playerDropped` で `readRow` が落ちても `holder_server_id = source` 行を直 UPDATE。`lock.lua` の DB 操作はすべて `pcall` で包む。NUI 側はハートビートを `MainLayout` で送る（試合詳細以外でも 30 秒タイムアウトでロックが切れない）。NUI 再表示時とルート切替時に `lock_acquire` + `match_get` を再送する。
 
-**フォーカス／シェル（v0.6.2 〜 v0.6.4）**: `html` / `body` は透明、シェル背景は `App.vue` 表示中のみ。`onClientResourceStart` で `setOpen(false)` を必ず実行。F6 / `refboard:close` で `lock_release` + `session_leave` を必ず送る。
+**フォーカス／シェル（v0.6.2 〜 v0.6.4）**: `html` / `body` は透明、シェル背景は `App.vue` 表示中のみ。`onClientResourceStart` で `setOpen(false)` を必ず実行。F6 / `refboard:close` で `lock_release` + `session_leave` を必ず送る。**Close ボタンは `fetchRefboardCloseNui` を `session.leave` より先に実行**（NUI fetch 固着時でも Lua が先にサーバ解放する）。解放経路の一覧は `docs/editor_lock_release_flows.md`。
 
 **マーキー（Sprint 08）**: 常時マーキーで全文表示（`text-overflow: ellipsis` は使わない）が確定方針。複数行同時マーキーは設計意図として明文化済み。`flex` / `grid` 配下では必ず `min-w-0`、親に `overflow-hidden`、固定幅要素に `shrink-0`。詳細は `docs/sprints/sprint_08_marquee.md`。
 

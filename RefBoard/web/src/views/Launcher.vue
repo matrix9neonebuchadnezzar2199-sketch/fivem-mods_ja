@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session'
 import { useToast } from '../composables/useToast'
 import { REFBOARD_UI_VERSION } from '../constants/version'
-import { getResourceName } from '../composables/useNui'
+import { fetchRefboardCloseNui } from '../composables/refboardCloseLua'
 import { DEFAULT_EDIT_PASSWORD } from '../stores/session'
 import { isDbOrInfraAcquireError, isPeerLockHeldError } from '../utils/lockAcquireErrors'
 
@@ -18,39 +18,46 @@ const { push: toastPush } = useToast()
 
 const showLockDialog = ref(false)
 const lockPeerName = ref('')
+const editEnterInFlight = ref(false)
 
 async function goEdit() {
-  const r = await session.enterEdit()
-  if (r.ok) {
-    await router.push({ name: 'matches' })
-    return
+  if (editEnterInFlight.value) return
+  editEnterInFlight.value = true
+  try {
+    const r = await session.enterEdit()
+    if (r.ok) {
+      await router.push({ name: 'matches' })
+      return
+    }
+    if (r.error === 'bad_password') {
+      toastPush(t('launcher.bad_password'), 'error', 4000)
+      return
+    }
+    if (r.error === 'session_timeout' || r.error === 'session_failed') {
+      toastPush(t('launcher.session_failed'), 'error', 4000)
+      return
+    }
+    if (r.error === 'timeout') {
+      toastPush(t('launcher.lock_acquire_timeout'), 'error', 6000)
+      return
+    }
+    if (isDbOrInfraAcquireError(r.error)) {
+      toastPush(t('launcher.db_or_config_error'), 'error', 14000)
+      return
+    }
+    if (!isPeerLockHeldError(r.error)) {
+      toastPush(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', 8000)
+      return
+    }
+    if (r.holder?.name) {
+      lockPeerName.value = r.holder.name
+    } else {
+      lockPeerName.value = t('launcher.unknown_editor')
+    }
+    showLockDialog.value = true
+  } finally {
+    editEnterInFlight.value = false
   }
-  if (r.error === 'bad_password') {
-    toastPush(t('launcher.bad_password'), 'error', 4000)
-    return
-  }
-  if (r.error === 'session_timeout' || r.error === 'session_failed') {
-    toastPush(t('launcher.session_failed'), 'error', 4000)
-    return
-  }
-  if (r.error === 'timeout') {
-    toastPush(t('launcher.lock_acquire_timeout'), 'error', 6000)
-    return
-  }
-  if (isDbOrInfraAcquireError(r.error)) {
-    toastPush(t('launcher.db_or_config_error'), 'error', 14000)
-    return
-  }
-  if (!isPeerLockHeldError(r.error)) {
-    toastPush(t('launcher.lock_acquire_other', { error: r.error ?? 'unknown' }), 'error', 8000)
-    return
-  }
-  if (r.holder?.name) {
-    lockPeerName.value = r.holder.name
-  } else {
-    lockPeerName.value = t('launcher.unknown_editor')
-  }
-  showLockDialog.value = true
 }
 
 async function goView() {
@@ -70,17 +77,12 @@ function closeDialog() {
 
 /** ゲーム画面へ戻す（NUI フォーカス解除。クライアント Lua がロック／セッションも解放） */
 async function backToGame() {
+  await fetchRefboardCloseNui()
   try {
-    await fetch(`https://${getResourceName()}/refboard:close`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-      body: '{}',
-    })
+    await session.leave()
   } catch {
-    /* ブラウザ単体開発時の 404 等 */
+    /* fetch 失敗時もローカル状態は揃える */
   }
-  session.mode = null
-  session.lockHolder = null
   session.editPassword = DEFAULT_EDIT_PASSWORD
 }
 

@@ -29,8 +29,11 @@ local function setOpen(state)
   isOpen = state
   -- NUI を閉じるときはサーバ側のロック／プレゼンスも必ず外す（F6 閉じ・Close ・ランチャーからの戻りで統一）
   if wasOpen and not state then
-    TriggerServerEvent('refboard:lock:release')
+    -- session:leave … RefboardLockReleaseIfHeldBy（holder_server_id == src のみ）
+    -- lock:release … 同一 license で src が変わった幽霊行の解放も可
+    -- 強制終了時はここは呼ばれず playerDropped（lock.lua）に依存する
     TriggerServerEvent('refboard:session:leave')
+    TriggerServerEvent('refboard:lock:release')
   end
   if not state then
     compactDockActive = false
