@@ -18,12 +18,12 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
 1. `polapaint` と **`screenshot-basic`**（リポルートのフォルダ）を `resources` 配下に**同じ階層で**配置する（例: `[jp-mods]/polapaint` と `[jp-mods]/screenshot-basic`）。
 2. `config.lua` の `Config.DiscordWebhook` に、Discord サーバーで発行した **Incoming Webhook の完全な URL** を設定する（`?wait=true` はサーバー側で自動付与されます）。
 3. `ox_inventory` の `data/items.lua`（または運用中の items 定義）に、**下記「アイテム設定コード」**を追記する。キー名は `config.lua` の `Config.Items.camera` / `Config.Items.photo` と一致させる（既定は `polaroid_camera` / `polaroid_photo`）。
-4. スロット用アイコンは **`assets/inventory_icons/polaroid_camera.png` と `polaroid_photo.png`** を `ox_inventory/web/images/` にコピーする（リポに同梱済み。割当が逆なら `assets/inventory_icons/README.txt` を参照）。
+4. **インベントリ画像（推奨）**: 下記 `items.lua` 例のとおり **`nui://polapaint/html/images/...png`** を指定すれば、**`polapaint` の `fxmanifest` の `files` に含まれる PNG** がそのまま使われます（`ox_inventory/web/images/` へのコピーは不要）。従来どおり ox 側に置く場合は PNG を `ox_inventory/web/images/` にコピーし、`image = 'polaroid_camera'`（拡張子なし）でも可。
 5. `refresh` 後、`ensure polapaint` で起動確認する。
 
 ## ox_inventory アイテム設定（items.lua 追記例）
 
-`ox_inventory/web/images/` に `polaroid_camera.png` と `polaroid_photo.png` を置いたうえで、items 定義へ以下を追加する（`image` は拡張子なしのベース名）。
+items 定義へ以下を追加する（**カメラと写真の両方**が必要です。`polaroid_photo` が無いと撮影後の `AddItem` が失敗します）。
 
 ```lua
 ['polaroid_camera'] = {
@@ -34,7 +34,7 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
     close = true,
     description = '画面を撮影してチェキアイテムを作成する',
     client = {
-        image = 'polaroid_camera',
+        image = 'nui://polapaint/html/images/polaroid_camera.png',
         export = 'polapaint.useCamera',
     },
 },
@@ -47,7 +47,7 @@ FiveM 用の拡張ポラロイドカメラ MOD。`screenshot-basic` で撮影し
     close = true,
     description = '使用: 落書き編集 / 右クリックメニュー「チェキを見る」: 閲覧のみ',
     client = {
-        image = 'polaroid_photo',
+        image = 'nui://polapaint/html/images/polaroid_photo.png',
         export = 'polapaint.usePhoto',
     },
     buttons = {
@@ -84,6 +84,8 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 - **`No such export useCamera in resource PolaPaint`**（`useItem` コールバック）… リソース名は **`polapaint`（全小文字）** に変更済みです。`ox_inventory` の `items.lua` で **`PolaPaint.useCamera` になっている箇所をすべて `polapaint.useCamera` に修正**し（`usePhoto`・`exports['polapaint']:openPhotoViewer` も同様）、**`restart ox_inventory`**（またはサーバ再起動）してください。エラーメッセージに **`PolaPaint`** と出ている時点で、まだ旧リソース名を参照しています。
 - **`Could not find dependency screenshot-basic`** … `screenshot-basic` フォルダがサーバの `resources` に無い、または名前が違う。本リポの **`screenshot-basic/` を polapaint と並べてコピー**し、`ensure screenshot-basic` を追加する。
 - **Mixed Content / `Failed to fetch`（`http://screenshot-basic/screenshot_created`）** … 新しい CEF では NUI が HTTPS のため、上流の **`http://` コールバック URL** がブロックされます。本リポ同梱の **`screenshot-basic` v1.0.1** では `dist/client.js` を **`https://`** に修正済みです。古い同梱版を手元で直す場合は `screenshot-basic/BUNDLED_WITH_POLAPAINT.md` を参照。
+- **インベントリでカメラ／チェキの絵が出ない** … `items.lua` の `client.image` を **`nui://polapaint/html/images/polaroid_camera.png`**（写真は `polaroid_photo.png`）にするか、`ox_inventory/web/images/` に同名 PNG を置いて **`restart ox_inventory`** してください。
+- **名前を付けても写真が増えない** … **`polaroid_photo` が `items.lua` に未定義**だと `AddItem` が `invalid_item` で失敗します（カメラだけ追加していないか確認）。**インベントリ満杯・重量オーバー**でも同様です。`config.lua` の **`Config.DiscordWebhook`** が正しいか、F8／サーバーログも併せて確認してください。
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
 - **ペイント保存で真っ黒・失敗** … 外部画像の CORS により Canvas が汚染されている可能性があります。Discord CDN の URL で通常は問題ありません。

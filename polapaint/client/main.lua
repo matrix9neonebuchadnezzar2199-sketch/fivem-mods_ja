@@ -52,6 +52,21 @@ RegisterNetEvent('polapaint:client:notify', function(msg)
     end
 end)
 
+-- NUI からの軽量通知（postNui の fetch 失敗・画像加工失敗など）
+RegisterNUICallback('ppNuiAlert', function(data, cb)
+    cb('ok')
+    if type(data) == 'string' then
+        local ok, decoded = pcall(json.decode, data)
+        if ok and type(decoded) == 'table' then
+            data = decoded
+        end
+    end
+    local key = data and data.key
+    if type(key) == 'string' and key ~= '' then
+        notify(L(key))
+    end
+end)
+
 ---@param data table|nil
 ---@param slot table|nil
 local function slotPhotoUrl(data, slot)

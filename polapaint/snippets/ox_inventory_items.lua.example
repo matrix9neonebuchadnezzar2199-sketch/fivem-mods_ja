@@ -1,6 +1,8 @@
 --[[
   ox_inventory の data/items.lua（または分割ファイル）へ追記する例。
-  画像ファイルは ox_inventory/web/images/ に配置し、.png で保存する（キーに .png は付けない）。
+
+  画像（推奨）: polapaint リソース内の NUI ファイルを参照する（ox_inventory/web/images/ への手動コピー不要）。
+  代替: polaroid_*.png を ox_inventory/web/images/ に置き、image = 'polaroid_camera' のように拡張子なしベース名だけでも可。
 ]]
 
 ['polaroid_camera'] = {
@@ -11,8 +13,7 @@
     close = true,
     description = '画面を撮影してチェキアイテムを作成する',
     client = {
-        -- 128×128 透過 PNG を assets/inventory_icons/ で作成し、ox_inventory/web/images/ にコピーしたうえでベース名を指定（拡張子なし）
-        image = 'polaroid_camera',
+        image = 'nui://polapaint/html/images/polaroid_camera.png',
         export = 'polapaint.useCamera',
     },
 },
@@ -25,7 +26,7 @@
     close = true,
     description = '使用: 落書き編集 / 右クリックメニュー「チェキを見る」: 閲覧のみ',
     client = {
-        image = 'polaroid_photo',
+        image = 'nui://polapaint/html/images/polaroid_photo.png',
         export = 'polapaint.usePhoto',
     },
     buttons = {

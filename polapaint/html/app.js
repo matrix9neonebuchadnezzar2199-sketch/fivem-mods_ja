@@ -52,12 +52,22 @@
     return typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'polapaint';
   }
 
+  function nuiNotifyKey(key) {
+    fetch('https://' + resourceName() + '/ppNuiAlert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify({ key: key }),
+    }).catch(function () {});
+  }
+
   function postNui(endpoint, data) {
-    fetch('https://' + resourceName() + '/' + endpoint, {
+    return fetch('https://' + resourceName() + '/' + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8' },
       body: JSON.stringify(data || {}),
-    }).catch(function () {});
+    }).catch(function () {
+      nuiNotifyKey('notify_nui_fetch_failed');
+    });
   }
 
   function stripBase64Prefix(dataUrl) {
@@ -370,12 +380,14 @@
       downscaleDataUri(msg.dataUri, msg.maxWidth || 2560, msg.quality || 0.85)
         .then(function (b64) {
           if (!b64) {
+            nuiNotifyKey('notify_nui_image_prepare_fail');
             postNui('close', {});
             return;
           }
           openCaptureNameDialog(b64, msg.nameDialog, msg.maxNameLength);
         })
         .catch(function () {
+          nuiNotifyKey('notify_nui_image_prepare_fail');
           postNui('close', {});
         });
       return;

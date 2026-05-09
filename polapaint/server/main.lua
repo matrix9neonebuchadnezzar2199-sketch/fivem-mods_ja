@@ -240,9 +240,18 @@ RegisterNetEvent('polapaint:server:submitCapture', function(b64Payload, photoLab
             url = url,
             label = labelOk,
         }
-        local ok = ox:AddItem(src, photo, 1, meta)
-        if not ok then
-            notify(src, 'notify_capture_fail')
+        local added, addReason = ox:AddItem(src, photo, 1, meta)
+        if not added then
+            dbg('AddItem failed: ' .. tostring(addReason))
+            local key = 'notify_capture_fail'
+            if addReason == 'invalid_item' then
+                key = 'notify_capture_item_not_defined'
+            elseif addReason == 'inventory_full' then
+                key = 'notify_capture_inventory_full'
+            elseif addReason == 'cannot_carry' or addReason == 'cannot_carry_other' then
+                key = 'notify_capture_weight_limit'
+            end
+            notify(src, key)
             return
         end
         notify(src, 'notify_capture_ok')
