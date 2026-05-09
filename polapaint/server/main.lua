@@ -248,12 +248,14 @@ CreateThread(function()
         end
 
         if method == 'POST' then
+            print('[polapaint] DEBUG: POST received path=' .. tostring(rawPath))
             local q = parseQueryFromReq(req)
             local hdr = req.headers or {}
             local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
             local hardCap = maxBytes * 2
 
             local expectedBody = tonumber(hdr['Content-Length'] or hdr['content-length'])
+            print('[polapaint] DEBUG: expectedBody=' .. tostring(expectedBody))
             if expectedBody and expectedBody > hardCap then
                 res.writeHead(413); res.send('payload too large'); return
             end
@@ -278,6 +280,9 @@ CreateThread(function()
             end
 
             local function dispatchUploadPost(body)
+                print('[polapaint] DEBUG: dispatchUploadPost called, dispatched=' ..
+                    tostring(dispatched) .. ' body_type=' .. type(body) ..
+                    ' body_len=' .. tostring(type(body) == 'string' and #body or '--'))
                 if dispatched then return end
                 dispatched = true
                 if type(body) ~= 'string' then body = '' end
@@ -331,6 +336,8 @@ CreateThread(function()
             end
 
             req.setDataHandler(function(chunk)
+                print('[polapaint] DEBUG: chunk received, type=' .. type(chunk) ..
+                    ' len=' .. tostring(type(chunk) == 'string' and #chunk or 'n/a'))
                 if type(chunk) == 'string' and #chunk > 0 then
                     parts[#parts + 1] = chunk
                     if partsTotalLen() > hardCap then
@@ -340,6 +347,7 @@ CreateThread(function()
                 end
 
                 local body = table.concat(parts)
+                print('[polapaint] DEBUG: body so far=' .. #body .. ' / expected=' .. tostring(expectedBody))
 
                 if expectedBody and expectedBody > 0 then
                     if #body < expectedBody then return end
