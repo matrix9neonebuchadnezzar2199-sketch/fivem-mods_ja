@@ -91,7 +91,6 @@ async function submitDevAction() {
   }
   devBusy.value = false
   closeDevModal()
-  toast(t('toast.local_feature_pending'), 'info', { ms: 6000 })
 }
 
 onMounted(() => {

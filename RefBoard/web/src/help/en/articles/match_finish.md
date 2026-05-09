@@ -59,8 +59,8 @@ errorCode: null
 
 ## FAQ
 
-**Q. Lock stuck after finish**  
-A. Locks should clear; if not, see [E1003](#/workspace/help/article/trouble_e1003_lock_held).
+**Q. Match looks stuck after finish**  
+A. The local build has **no edit locks**. Reload the page or reopen the match from the list.
 
 **Q. Multiple reopens**  
 A. Allowed; `reopened_*` stores **last** event only — use `edit_logs` for history.

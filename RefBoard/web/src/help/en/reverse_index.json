@@ -9,44 +9,26 @@
           "id": "intro_what",
           "title": "What is RefBoard?",
           "article": "intro_what_is_refboard.md",
-          "tags": ["overview", "referee", "MySQL", "lock"]
+          "tags": ["overview", "referee", "match", "local", "localStorage"]
         },
         {
           "id": "intro_setup_rev",
-          "title": "First-time setup",
+          "title": "First-time steps",
           "article": "intro_setup.md",
-          "tags": ["install", "SQL", "ACE", "password", "oxmysql"]
+          "tags": ["F6", "display name", "teams", "backup", "JSON"]
         }
       ]
     },
     {
-      "id": "urgent",
-      "icon": "🆘",
-      "title": "High urgency",
+      "id": "trouble",
+      "icon": "🔧",
+      "title": "Troubleshooting",
       "items": [
         {
           "id": "undo_goal",
           "title": "I recorded the wrong goal",
           "article": "trouble_undo_goal.md",
           "tags": ["goal", "undo", "mistake", "G"]
-        },
-        {
-          "id": "e1003",
-          "title": "Another referee is editing (E1003)",
-          "article": "trouble_e1003_lock_held.md",
-          "tags": ["lock", "edit", "E1003", "lock_held"]
-        },
-        {
-          "id": "connection",
-          "title": "Lost connection — is my data OK?",
-          "article": "trouble_connection_lost.md",
-          "tags": ["connection", "disconnect", "autosave"]
-        },
-        {
-          "id": "autosave_fail",
-          "title": "When autosave fails",
-          "article": "trouble_autosave_failed.md",
-          "tags": ["autosave", "save", "E4003", "tx_failed"]
         },
         {
           "id": "e3006",
@@ -72,7 +54,7 @@
           "id": "team_roster_rev",
           "title": "Add a player to the roster",
           "article": "team_add_roster_member.md",
-          "tags": ["roster", "server id", "number"],
+          "tags": ["roster", "number", "member"],
           "actionUrl": "#/workspace/teams"
         }
       ]
@@ -121,14 +103,7 @@
           "id": "record_goal",
           "title": "Record a goal",
           "article": "match_record_goal.md",
-          "tags": ["goal", "score", "shot", "G"],
-          "actionUrl": "#/workspace/matches/:matchId"
-        },
-        {
-          "id": "record_assist",
-          "title": "Add an assist (now or later)",
-          "article": "match_record_assist.md",
-          "tags": ["assist", "score"],
+          "tags": ["goal", "score", "shot", "G", "assist"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -139,17 +114,10 @@
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
-          "id": "yellow_card",
-          "title": "Issue a yellow card",
-          "article": "match_yellow_card.md",
-          "tags": ["yellow", "warning", "card"],
-          "actionUrl": "#/workspace/matches/:matchId"
-        },
-        {
-          "id": "red_card",
-          "title": "Issue a red card (send-off)",
-          "article": "match_red_card.md",
-          "tags": ["red", "send-off", "card", "second yellow"],
+          "id": "match_card_rev",
+          "title": "Issue yellow or red",
+          "article": "match_card.md",
+          "tags": ["yellow", "red", "warning", "send-off", "card"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -172,20 +140,6 @@
           "article": "match_finish.md",
           "tags": ["finish", "reopen", "final"],
           "actionUrl": "#/workspace/matches/:matchId"
-        }
-      ]
-    },
-    {
-      "id": "diagnostics",
-      "icon": "🩺",
-      "title": "Diagnostics",
-      "items": [
-        {
-          "id": "health_check_guide",
-          "title": "Read the health check report",
-          "article": "trouble_health_check_guide.md",
-          "tags": ["health", "DB", "permission", "diagnostics"],
-          "actionUrl": "#/workspace/health"
         }
       ]
     }

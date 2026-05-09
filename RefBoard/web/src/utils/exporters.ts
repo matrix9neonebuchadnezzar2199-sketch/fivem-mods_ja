@@ -88,7 +88,7 @@ export function exportFullBackup(): void {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  const ts = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 13)
+  const ts = new Date().toISOString().slice(0, 19).replace(/\D/g, '').slice(0, 13)
   a.href = url
   a.download = `refboard_backup_${ts}.json`
   a.click()

@@ -1,7 +1,6 @@
 {
   "app": { "title": "サッカー試合管理" },
   "toast": {
-    "local_feature_pending": "ローカル版では次の更新で有効になります（ストア接続前のプレースホルダ）。",
     "match_finished": "試合を終了しました",
     "match_clock_failed": "試合時計の更新に失敗しました。",
     "match_clock_timeout": "試合時計の応答がタイムアウトしました。再読込してください。",
@@ -20,15 +19,6 @@
     "goal_record_timeout": "ゴール記録の応答がありません。接続と編集ロックを確認してください。",
     "goal_record_failed": "ゴールを記録できませんでした（{code}）。",
     "card_issue_no_lock": "編集ロックがこの試合に紐づいていません。試合一覧から当該試合を開き直すか、F6で閉じて編集で入り直してください。"
-  },
-  "presence": {
-    "online": "接続中",
-    "users_online": "{count}人がツールを開いています",
-    "you_are_editing": "あなたが編集中",
-    "editor_is": "{name} さんが編集中",
-    "viewing": "閲覧中",
-    "editing": "編集中",
-    "all_users": "接続中のユーザー"
   },
   "launcher": {
     "edit_password_hint": "編集モード用パスワード（config.lua の EditPassword と一致）",
@@ -205,13 +195,6 @@
     "edited_by": "編集者: {name}",
     "history": "編集履歴"
   },
-  "autosave": {
-    "saving": "保存中...",
-    "saved_seconds": "自動保存: {n}秒前",
-    "saved_minutes": "自動保存: {n}分前",
-    "error": "保存に失敗しました",
-    "retry": "再試行"
-  },
   "match_list": {
     "title": "試合一覧",
     "new": "+ 新しい試合を作成",
@@ -256,7 +239,6 @@
     "create_failed": "試合を作成できませんでした。"
   },
   "shell": {
-    "online": "接続中",
     "local_mode": "ローカル版（通信なし）",
     "close": "閉じる"
   },
@@ -420,7 +402,6 @@
     "nui_mock": "NUIモック有効化",
     "nui_mock_note": "ブラウザ開発時は自動でモックが有効です。",
     "show_test_commands": "テスト用DB操作パネルを表示（オンで SQL 完全初期化・疑似データ流し込みが利用可。オフ推奨の共有端末）",
-    "health_link": "ヘルスチェック（実機テスト前）",
     "dev_data": {
       "title": "SQL完全初期化・疑似データ（テスト）",
       "intro": "上の「テスト用DB操作パネルを表示」がオンのときだけ、この枠とボタンが出ます（config.lua は不要）。編集モードの審判のみ実行可。「SQL完全初期化」は関連テーブルを空にします。「疑似データ（テスト）流し込み」は一度空にしたうえで、同梱サンプルのチーム5件・各ロスター15人・試合20件を DB に登録します。",
@@ -475,7 +456,7 @@
     "reverse_tab": "やりたいことから",
     "tree_tab": "目次（トピック順）",
     "pick_article": "左の一覧から記事を選んでください。",
-    "error_article_missing": "エラー {code} 用のヘルプ記事はまだありません。一覧から近い項目を選ぶか、設定のヘルスチェックを確認してください。",
+    "error_article_missing": "エラー {code} 用のヘルプ記事はまだありません。一覧から近い項目を選んでください。",
     "article_missing": "記事ファイルが見つかりません。",
     "toast_open_solution": "解決方法を見る",
     "search": {
@@ -496,48 +477,6 @@
       "subtitle": "現在表示中の画面に関連する記事です。",
       "empty": "この画面用の関連記事はまだ用意されていません。「すべてのヘルプ」から探してください。",
       "open_all": "すべてのヘルプを開く →"
-    }
-  },
-  "health": {
-    "title": "ヘルスチェック",
-    "subtitle": "サーバー・DB・権限・ロックの状態を一覧します。",
-    "recheck": "再チェック",
-    "copy_markdown": "レポートをコピー（Markdown）",
-    "checking": "確認中…",
-    "copied": "クリップボードにコピーしました",
-    "copy_failed": "コピーに失敗しました",
-    "categories": {
-      "server": "サーバー",
-      "db": "データベース",
-      "auth": "認証",
-      "presence": "プレゼンス",
-      "lock": "ロック",
-      "config": "設定"
-    },
-    "rows": {
-      "server": {
-        "ping": "接続",
-        "version": "バージョン"
-      },
-      "db": {
-        "connection": "DB接続",
-        "schema": "スキーマ（テーブル数）",
-        "migration_roster": "マイグレーション（team_roster）"
-      },
-      "auth": {
-        "license": "ライセンス",
-        "referee_permission": "審判権限（ACE）"
-      },
-      "presence": {
-        "self_registration": "自分の登録"
-      },
-      "lock": {
-        "current_editor": "現在の編集者"
-      },
-      "config": {
-        "log_level": "ログレベル",
-        "test_commands": "テストコマンド"
-      }
     }
   },
   "errors": {

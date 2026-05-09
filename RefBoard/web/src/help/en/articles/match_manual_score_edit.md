@@ -50,8 +50,8 @@ See [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal) firs
 | Code | Meaning | Fix |
 |------|---------|-----|
 | `E2005` | reason too short | Use **5+ characters**. |
-| `E1002` | not_editor | Acquire edit lock. |
-| `E4003` | tx_failed | Retry; if persistent see [Autosave failed](#/workspace/help/article/trouble_autosave_failed). |
+| `E1002` | not_editor | Reload or reopen the match detail screen. |
+| `E4003` | tx_failed | Save failed — retry; if it persists check browser storage / extensions. |
 
 ## FAQ
 

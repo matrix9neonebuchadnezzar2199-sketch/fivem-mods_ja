@@ -94,62 +94,36 @@ A. View reflects **last load**; switch tabs or reopen to refresh (auto-poll may 
 - [Export to CSV](#/workspace/help/article/data_export)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 `,t=`---
-title: First-time setup (admins & referees)
+title: Get started with RefBoard
 category: intro
-tags: [install, ACE, password, oxmysql, SQL]
-related: [intro_what_is_refboard, trouble_health_check_guide]
+tags: [setup, display name, teams, match, localStorage, backup]
+related: [intro_what_is_refboard, data_export]
 shortcut: null
 actionUrl: null
 errorCode: null
 ---
 
-# First-time setup (admins & referees)
+# Get started with RefBoard
 
-## What you will learn
+1. Open the UI with **F6** or the **\`/refboard\`** chat command.
+2. Enter your **display name** (saved on this device only; no network calls).
+3. In **Team management**, create **at least two** teams you will use.
+4. Go to **Matches** → **New** and create a match.
+5. On the **match detail** screen, start the clock and record goals, cards, and substitutions.
+6. On the **Data** screen, export a backup as **CSV** or **JSON**.
 
-- One-time **server admin** tasks (DB, resource, permissions)
-- **Referee** tasks in-game (open tool, edit mode)
+## Important
 
-## Prerequisites
-
-- **MySQL** and **oxmysql** on the server, with a chosen database.
-
-## Steps — server admin
-
-1. Run **\`sql/install.sql\`** against the **same database oxmysql uses** (running it on another DB causes \`Table doesn't exist\`).
-2. Apply **\`sql/migration_*.sql\`** as needed for your environment.
-3. In \`server.cfg\`, **\`ensure oxmysql\`** then **\`ensure RefBoard\`** (match the folder name).
-4. Grant ACE to referees, e.g.  
-   \`add_ace identifier.license:xxxxxxxx refboard.referee allow\`
-5. Share **\`Config.EditPassword\`** from **\`config.lua\`** with staff (used when entering edit mode from the launcher).
-
-## Steps — referee (in-game)
-
-1. Open NUI with **\`/refboard\`** or **\`F6\`** (\`Config.OpenKey\` in \`config.lua\`).
-2. On first launch, pick **View** or **Edit** in the launcher; **Edit** requires the password above.
-3. Use the sidebar to open **Matches**, **Teams**, etc.
-
-## After setup
-
-- After SQL succeeds, team/match/lock tables are available and APIs work from NUI.
-- After ACE is granted, only players with \`refboard.referee\` can access protected actions.
-
-## FAQ
-
-**Q. \`Table '….teams' doesn't exist\`**  
-A. **install.sql** was not run on the connected DB. Check the README install section.
-
-**Q. I cannot get the edit lock (E1003)**  
-A. Another referee is editing that match. See [Another referee is editing (E1003)](#/workspace/help/article/trouble_e1003_lock_held).
+RefBoard **does not talk to a game server** for storage. Data lives in this browser’s **\`localStorage\`**. When you move to another PC, use **Data** → **Full data backup (JSON)** to write a file you can carry over.
 
 ## See also
 
 - [What is RefBoard?](#/workspace/help/article/intro_what_is_refboard)
-- [How to read the health check](#/workspace/help/article/trouble_health_check_guide)
+- [Export to CSV](#/workspace/help/article/data_export)
 `,a=`---
 title: What is RefBoard?
 category: intro
-tags: [overview, referee, match, FiveM, MySQL]
+tags: [overview, referee, match, FiveM, local]
 related: [intro_setup, match_create_new]
 shortcut: null
 actionUrl: null
@@ -160,39 +134,95 @@ errorCode: null
 
 ## What you will learn
 
-- What RefBoard is for, and how server vs client roles differ
-- Why edit locks, history, and autosave exist
+- What RefBoard is for (staff / referee match logging)
+- Where data is stored in **v0.1.0 local mode**
 
 ## About RefBoard
 
-RefBoard is an **NUI tool for FiveM** for **managing football matches**. Referees (staff) record **scores, timeline events, and lineups**; **MySQL is the single source of truth** shared across clients.
+RefBoard is an **NUI tool for FiveM** to **manage football matches** — scores, timeline events, and lineups.
 
-- **Framework-agnostic**: no ESX/QBCore dependency. Players with the \`refboard.referee\` ACE can use it.
-- **Single edit lock**: only **one person** can edit a given match at a time. Others can open in view mode.
-- **History**: manual score edits are stored **with reasons** in \`match_score_history\` (see each action’s help).
+In **v0.1.0**, data is **not sent to a game database**: it is kept in the browser’s **\`localStorage\`** only. There is no automatic sync across PCs — use **Data** exports for backups.
 
-## Prerequisites (users)
-
-- The **RefBoard resource**, **oxmysql**, and **initial SQL (\`sql/install.sql\`)** are applied on the server.
-- Your identifier has the **\`refboard.referee\` ACE** (view-only usage depends on your server rules).
+- **Framework-agnostic**: no ESX/QBCore dependency.
+- **History**: manual score changes are kept in on-device history (see each task’s help article).
 
 ## After reading
 
-This article explains concepts only. Use **Matches**, **Teams**, and **Data** screens for real actions.
+Concepts only. Use **Matches**, **Teams**, and **Data** for real actions.
 
 ## FAQ
 
-**Q. Can every player use it?**  
-A. Normally it is **for staff/referees**. Players without the ACE are rejected on the server.
+**Q. Offline?**  
+A. It still runs as FiveM NUI, but **no external DB** is required; data stays on the device.
 
-**Q. Does it work offline?**  
-A. **No**. It runs as NUI on a FiveM client connected to the server and DB.
+**Q. Moving to another PC**  
+A. Use **Data** → **Full data backup (JSON)** and restore on the new machine.
 
 ## See also
 
-- [First-time setup](#/workspace/help/article/intro_setup)
+- [Get started with RefBoard](#/workspace/help/article/intro_setup)
 - [Create a new match](#/workspace/help/article/match_create_new)
 `,r=`---
+title: Record yellow and red cards
+category: in_match
+tags: [yellow, red, warning, send-off, card]
+related: [match_substitute_player, match_record_goal]
+shortcut: null
+actionUrl: "#/workspace/matches/:matchId"
+errorCode: null
+---
+
+# Record yellow and red cards
+
+## What you will learn
+
+- How to record a **yellow** (caution) or **red** (send-off)
+- **Second yellow** → treated as red
+- What changes after a send-off
+
+## Prerequisites
+
+- You are on the match detail screen.
+- The player is **on the pitch** for this match (already sent-off players cannot receive another card).
+
+## Yellow card
+
+1. **Card** on the player row, or **event menu → Card**.
+2. Choose **Yellow**.
+3. Optional **minute** and short **reason**.
+4. Confirm.
+
+## Straight red
+
+1. Open **Card**.
+2. Choose **Red**.
+3. Optional minute / reason.
+4. Confirm the **send-off** dialog.
+
+## Second yellow → red
+
+If a player already has one yellow and you issue **yellow** again, the UI explains that this becomes a **red**. Confirm to apply warning count and send-off together.
+
+## After issuing
+
+- Timeline rows show \`🟨\` / \`🟥\` (or combined notation for second yellow).
+- Player row shows **caution** / **sent off**.
+- **Sent-off players cannot return** via substitution (no “re-enter” flow).
+
+## Tournament totals
+
+RefBoard tracks **yellows in this match only**. Season suspensions are **out of scope**.
+
+## FAQ
+
+**Q. Wrong card**  
+A. Use **Undo** on the timeline row when available; otherwise follow your staff policy and consider [manual score edit](#/workspace/help/article/match_manual_score_edit) if scores must align.
+
+## See also
+
+- [Substitute a player](#/workspace/help/article/match_substitute_player)
+- [Record a goal](#/workspace/help/article/match_record_goal)
+`,o=`---
 title: Create a new match
 category: match_prep
 tags: [match, home, away, schedule]
@@ -239,7 +269,7 @@ A. Whether **Delete** is allowed depends on server rules and lock state. Follow 
 
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,o=`---
+`,s=`---
 title: Finish or reopen a match
 category: in_match
 tags: [finish, reopen, final]
@@ -300,8 +330,8 @@ errorCode: null
 
 ## FAQ
 
-**Q. Lock stuck after finish**  
-A. Locks should clear; if not, see [E1003](#/workspace/help/article/trouble_e1003_lock_held).
+**Q. Match looks stuck after finish**  
+A. The local build has **no edit locks**. Reload the page or reopen the match from the list.
 
 **Q. Multiple reopens**  
 A. Allowed; \`reopened_*\` stores **last** event only — use \`edit_logs\` for history.
@@ -311,7 +341,7 @@ A. Allowed; \`reopened_*\` stores **last** event only — use \`edit_logs\` for 
 - [Penalty shootout](#/workspace/help/article/match_penalty_shootout)
 - [Manual score edit](#/workspace/help/article/match_manual_score_edit)
 - [Wrong goal](#/workspace/help/article/trouble_undo_goal)
-`,s=`---
+`,i=`---
 title: Edit the score manually
 category: in_match
 tags: [manual, score, edit, reason]
@@ -363,8 +393,8 @@ See [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal) firs
 | Code | Meaning | Fix |
 |------|---------|-----|
 | \`E2005\` | reason too short | Use **5+ characters**. |
-| \`E1002\` | not_editor | Acquire edit lock. |
-| \`E4003\` | tx_failed | Retry; if persistent see [Autosave failed](#/workspace/help/article/trouble_autosave_failed). |
+| \`E1002\` | not_editor | Reload or reopen the match detail screen. |
+| \`E4003\` | tx_failed | Save failed — retry; if it persists check browser storage / extensions. |
 
 ## FAQ
 
@@ -378,7 +408,7 @@ A. **Append-only**. Add another manual edit with reason “Correction: …” if
 
 - [Record a goal](#/workspace/help/article/match_record_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
-`,i=`---
+`,l=`---
 title: Run a penalty shootout
 category: in_match
 tags: [PK, penalty, shootout]
@@ -437,61 +467,11 @@ A. **Not** via manual score edit (that is for regulation goals). Use PK event un
 - [Record a goal](#/workspace/help/article/match_record_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Edit the score manually](#/workspace/help/article/match_manual_score_edit)
-`,l=`---
-title: Add or change an assist
-category: in_match
-tags: [assist, score, edit]
-related: [match_record_goal, trouble_undo_goal]
-shortcut: null
-actionUrl: "#/workspace/matches/:matchId"
-errorCode: null
----
-
-# Add or change an assist
-
-## What you will learn
-
-- How to attach an assist when recording a goal
-- How to fix assist **after** the goal (current limitations)
-- When player **A** stats update
-
-## Prerequisites
-
-- Match in **edit mode**.
-- Assist candidate is on the **same team** as the scorer and on the pitch.
-
-## During goal recording
-
-1. After picking the scorer, use **\`PlayerSelectGrid\`** for the assist.
-2. Or choose **no assist** and confirm.
-
-## After the goal (change assist)
-
-There is **no dedicated “edit assist only” UI** yet. Use one of:
-
-1. **Undo and re-record (recommended)**: timeline → **Undo** on that goal → record goal again (net score unchanged).
-2. **Ops note**: if you must log a correction without re-recording, follow your staff policy (e.g. \`edit_logs\` / admin).
-
-## After a successful assist
-
-- Player **A** column +1.
-- Timeline text includes assist when applicable.
-- Data views aggregate assists in real time.
-
-## FAQ
-
-**Q. Double assist?**  
-A. Only **one** assist is supported today.
-
-## See also
-
-- [Record a goal](#/workspace/help/article/match_record_goal)
-- [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal)
 `,c=`---
 title: Record a goal
 category: in_match
-tags: [goal, score, shot, G]
-related: [match_record_assist, match_manual_score_edit, trouble_undo_goal]
+tags: [goal, score, shot, G, assist]
+related: [match_manual_score_edit, trouble_undo_goal, match_card]
 shortcut: G
 actionUrl: "#/workspace/matches/:matchId"
 errorCode: null
@@ -502,124 +482,75 @@ errorCode: null
 ## What you will learn
 
 - How to record a goal during a match
-- How to pick scorer and assist, and where to fix mistakes
-- What updates on screen and in the database
+- How to attach an **assist**, and how to fix mistakes later
+- What updates on screen (local build)
 
 ## Prerequisites
 
-- The match is open in **edit mode** (you hold the lock). View-only referees cannot record.
-- The scorer is **registered on the scoring team** for this match. Add the player from the event menu if needed.
+- You are on the **match detail** screen.
+- The scorer is **on the match roster** for the scoring team.
 
 ## Steps
 
-1. From the **event menu** under the scoreboard, choose **Goal** (shortcut **\`G\`**).
+1. Under the scoreboard, open the **event menu** → **Goal** (shortcut **\`G\`**).
 2. Pick **home or away**.
-3. Select the **scorer** from \`PlayerSelectGrid\` (on-pitch players only).
-4. Optionally select an **assist**, or leave **no assist**.
-5. Adjust **minute** and **half** if needed (defaults match current play).
+3. Select the **scorer** (on-pitch players only).
+4. Optionally pick an **assist**, or leave **no assist**.
+5. Adjust **minute** / **half** if needed.
 6. Confirm in the dialog.
+
+## Assists
+
+### During goal entry
+
+After the scorer, pick an assist from the grid or choose **no assist**.
+
+### After the goal (change assist)
+
+There is **no “edit assist only” UI**. Use one of:
+
+1. **Undo and re-record (recommended)**: timeline **Undo** on that goal → record again (net score unchanged).
+2. **Manual totals only**: [Edit the score manually](#/workspace/help/article/match_manual_score_edit) with a **reason ≥ 5 characters** (timeline text may not match).
+
+Only **one** assist is supported (no double assist).
 
 ## After recording
 
-- Scoreboard **+1** with a score flash (increment only).
-- Timeline shows \`⚽ Scorer (Assist)\`.
-- Player table: **G** +1 for scorer, **A** +1 if assist set.
-- Other referees receive updates via \`refboard:match:state\`.
-- DB updates \`match_events\`, \`match_score_history\`, and \`matches\` in **one transaction** (rollback on failure).
+- Scoreboard **+1** with a highlight flash.
+- Timeline row for the goal.
+- Player table: scorer +1 goals; assist +1 if set.
+- Data is saved to this device’s **\`localStorage\`**.
 
 ## If you made a mistake
 
-- **Right after recording**: use **Undo** on the timeline row when available. See [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal).
+- **Right after recording**: use timeline **Undo** when available — see [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal).
 - **Wrong scorer**: undo and re-record is safest.
-- **Change numbers only**: [Edit the score manually](#/workspace/help/article/match_manual_score_edit) — **reason must be 5+ characters**.
+- **Numbers only**: [manual score edit](#/workspace/help/article/match_manual_score_edit).
 
 ## FAQ
 
-**Q. A player not on the pitch is missing from the list**  
-A. Add them to the pitch or substitute them in first.
-
 **Q. Own goals**  
-A. Record as the **opponent’s goal** and add a note in comments/timeline. No dedicated own-goal flow yet.
+A. Record as the **opponent’s goal** and add a note.
 
 **Q. Stoppage time**  
 A. Use an **integer minute** (e.g. \`47\`), not \`45+2\` text.
 
 ## See also
 
-- [Add or change an assist](#/workspace/help/article/match_record_assist)
+- [Yellow and red cards](#/workspace/help/article/match_card)
 - [Edit the score manually](#/workspace/help/article/match_manual_score_edit)
 
 ## Shortcuts
 
-| Key | Action        |
-|-----|---------------|
+| Key | Action |
+|-----|--------|
 | \`G\` | Open goal wizard |
 | \`Esc\` | Close wizard (discard unconfirmed) |
 `,d=`---
-title: Issue a red card (send-off)
-category: in_match
-tags: [red, send-off, card, ejected]
-related: [match_yellow_card, match_substitute_player]
-shortcut: null
-actionUrl: "#/workspace/matches/:matchId"
-errorCode: null
----
-
-# Issue a red card (send-off)
-
-## What you will learn
-
-- Straight red flow
-- Second yellow → red
-- What you cannot do after send-off
-
-## Prerequisites
-
-- Match in **edit mode**.
-- Player is **active**. Already sent-off players cannot receive another red.
-
-## Straight red
-
-1. **Card** → **Red**.
-2. Optional minute / reason.
-3. Confirm the **warning dialog** (send-off is high impact).
-
-## Second yellow → red
-
-1. Issue **yellow** to a player who already has one yellow.
-2. UI explains **second yellow = red**.
-3. Confirm: **\`yellow_cards\` +1** and **\`ejected_*\`** apply in **one transaction**.
-
-## After send-off
-
-- State **sent off**; timeline \`🟥\` (or combined notation for 2× yellow).
-- Team “available players” count may drop.
-- Player **cannot** return as a sub IN.
-- Stats: \`red_cards\` increments.
-
-## Undo mistakes
-
-- Timeline **Undo** restores flags and returns player to **active** when applicable.
-- Undoing a **second-yellow red** removes **both** the second yellow and the send-off; **first yellow remains**.
-
-## FAQ
-
-**Q. Staff/coach send-off**  
-A. RefBoard models **players only** — note bench staff in comments if needed.
-
-**Q. Forfeit / abandoned**  
-A. You can still **finish** the match in RefBoard; document in Data if required.
-
-## See also
-
-- [Yellow card](#/workspace/help/article/match_yellow_card)
-- [Substitute a player](#/workspace/help/article/match_substitute_player)
-- [Finish or reopen a match](#/workspace/help/article/match_finish)
-`,h=`---
 title: Substitute a player
 category: in_match
 tags: [sub, substitution, bench]
-related: [match_yellow_card, match_red_card, match_record_goal]
+related: [match_card, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
 errorCode: null
@@ -635,7 +566,7 @@ errorCode: null
 
 ## Prerequisites
 
-- Match in **edit mode**.
+- You are on the **match detail** screen.
 - **OUT** player is currently **active** on the pitch.
 - **IN** player is on the team roster (or add them first) and not yet on the pitch.
 
@@ -656,7 +587,7 @@ errorCode: null
 ## Cards and send-offs
 
 - **One yellow**: substitution still OK.
-- **Second yellow / straight red**: player is **sent off**; you **cannot** bring them back as IN. See [Red card](#/workspace/help/article/match_red_card).
+- **Second yellow / straight red**: player is **sent off**; you **cannot** bring them back as IN. See [Yellow and red cards](#/workspace/help/article/match_card).
 
 ## FAQ
 
@@ -668,62 +599,9 @@ A. Use **Add player** / roster flow first, then substitute.
 
 ## See also
 
-- [Yellow card](#/workspace/help/article/match_yellow_card)
-- [Red card](#/workspace/help/article/match_red_card)
-`,u=`---
-title: Issue a yellow card
-category: in_match
-tags: [yellow, warning, card]
-related: [match_red_card, match_substitute_player]
-shortcut: null
-actionUrl: "#/workspace/matches/:matchId"
-errorCode: null
----
-
-# Issue a yellow card
-
-## What you will learn
-
-- How to record a yellow card
-- **Second yellow** → treated as red
-- What is tracked across matches vs one match only
-
-## Prerequisites
-
-- Match in **edit mode**.
-- Player is **on the pitch** for this match (\`active\` or similar).
-
-## Steps
-
-1. **Card** on the player row, or **event menu → Card**.
-2. Choose **Yellow**.
-3. Optional **minute** and **short reason**.
-4. Confirm.
-
-## After issuing
-
-- Player **\`yellow_cards\`** +1.
-- Timeline: \`🟨 Name (reason)\`.
-- Badge shows warning count.
-- **Second yellow** on the same player triggers a confirmation, then **auto red** / send-off. See [Red card](#/workspace/help/article/match_red_card).
-
-## Tournament totals
-
-- RefBoard tracks **yellows in this match only**. Season suspensions are **out of scope** — use Data stats + your house rules.
-
-## FAQ
-
-**Q. Wrong yellow**  
-A. **Undo** on the timeline row reverses the count (audit log remains).
-
-**Q. Card after send-off**  
-A. Recording may still be allowed as a factual note; competitive effect is already applied.
-
-## See also
-
-- [Red card](#/workspace/help/article/match_red_card)
-- [Substitute a player](#/workspace/help/article/match_substitute_player)
-`,m=`---
+- [Yellow and red cards](#/workspace/help/article/match_card)
+- [Record a goal](#/workspace/help/article/match_record_goal)
+`,h=`---
 title: Add a member to the roster
 category: team
 tags: [roster, member, server id, number]
@@ -771,7 +649,7 @@ A. Roster = **eligible pool**; on-pitch is **\`active\`** in match detail — di
 
 - [Register a new team](#/workspace/help/article/team_create)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,p=`---
+`,m=`---
 title: Register a new team
 category: team
 tags: [team, register, abbreviation, color]
@@ -817,168 +695,7 @@ A. Use team **edit/delete** when the server allows; FKs may block delete.
 
 - [Add roster member](#/workspace/help/article/team_add_roster_member)
 - [Create a new match](#/workspace/help/article/match_create_new)
-`,f=`---
-title: When autosave fails
-category: urgent
-tags: [autosave, save, DB, error]
-related: [trouble_connection_lost]
-errorCode: E4003
-errorKey: tx_failed
----
-
-# When autosave fails
-
-Autosave shows an error, or the ACK includes \`error: 'tx_failed'\` / **\`E4003\`** (also used for some main score transaction failures).
-
-## What happened
-
-A recent **DB write** (draft save, score update, etc.) failed. Common causes:
-
-- MySQL glitch  
-- Deadlock / timeout  
-- Validation / integrity error  
-
-## What to do
-
-### Step 1 — Retry
-
-Use **Retry** if shown; otherwise **repeat** the action.
-
-### Step 2 — Pause and retry
-
-If it keeps failing, wait **seconds to tens of seconds**, then try again.
-
-### Step 3 — Health check
-
-**Settings → Health check** for DB and schema.
-
-### Step 4 — Logs
-
-Give admins **Logger ERROR** lines and, if possible, NUI trace (\`refboard_trace\`).
-
-## After retry
-
-- **Success**: indicator returns to saved.  
-- **Still failing**: treat as **unsaved** — do not assume progress; fix infra first.
-
-## FAQ
-
-**Q. UI shows new score but server disagrees**  
-A. Could be optimistic UI — **reload** and trust server state.
-
-**Q. \`tx_failed\` vs \`db_query_failed\`**  
-A. Both are DB-layer failures — diagnose via health + logs.
-
-## See also
-
-- [Lost connection](#/workspace/help/article/trouble_connection_lost)
-`,_=`---
-title: Lost connection — is my data OK?
-category: urgent
-tags: [connection, disconnect, autosave]
-related: [trouble_autosave_failed]
----
-
-# Lost connection — is my data OK?
-
-**Short answer:** the server’s **MySQL** is the source of truth. **What the server accepted is saved.** The client is for display and input.
-
-## Why
-
-- Actions go over NetEvents; on success the DB updates.  
-- **Autosave** (\`match_drafts\`) backs up in-progress UI state.  
-- After disconnect, data remains **as of the last successful server commit**.
-
-## Scenarios
-
-### FiveM client crashed
-
-- Lock **times out** and releases.  
-- Reconnect, reopen the match, re-acquire lock if needed.
-
-### Brief network blip
-
-- Retry the action; check toasts.  
-- For traces: \`localStorage.refboard_trace = '1'\`, reload, watch F8 (see internal sprint docs).
-
-### Server or DB down
-
-- Use **Health check** after recovery.
-
-## Recovery
-
-1. Reconnect.  
-2. Open the match from the list.  
-3. Re-acquire edit lock if editing.  
-4. Run **Health check** if unsure.
-
-## After recovery
-
-- You should see everything **committed before** the drop.  
-- **Unsent** client-only input may be **lost** — confirm success toasts after important actions.
-
-## FAQ
-
-**Q. Autosave checkmark before crash**  
-A. If the server never ACK’d, the action may not exist server-side — **repeat** it.
-
-## See also
-
-- [When autosave fails](#/workspace/help/article/trouble_autosave_failed)
-`,g=`---
-title: Another referee is editing (E1003)
-category: trouble
-tags: [lock, edit, E1003, lock_held]
-related: [trouble_undo_goal, trouble_connection_lost]
-errorCode: E1003
-errorKey: lock_held
----
-
-# Another referee is editing (E1003)
-
-## What is happening
-
-Another referee holds the **edit lock** for this match. Only **one editor** per match is allowed. Others can use **view** mode.
-
-Server \`error\` key: **\`lock_held\`**, code: **\`E1003\`**.
-
-## How to fix
-
-### 1. Contact the editor (recommended)
-
-1. Check presence / lock UI for the name.  
-2. Reach them on voice/Discord/in-game.  
-3. When they release the lock, you can acquire it.
-
-### 2. Wait for timeout
-
-If heartbeats stop for **\`Config.LockTimeoutSec\`** (default **30s**), the lock auto-releases (disconnect, crash, etc.).
-
-### 3. Open in view mode
-
-If you only need to read, use **View** from the launcher.
-
-## After resolution
-
-- When the lock is free, try **edit** again.
-- In view mode you still receive \`refboard:match:state\` updates.
-
-**You cannot** force-take a lock from the UI.
-
-## Still stuck?
-
-- Run **Settings → Health check**.
-- Admins may reset \`editor_locks\` on restart per policy.
-
-## See also
-
-- [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal)
-- [Lost connection](#/workspace/help/article/trouble_connection_lost)
-
-## Shortcuts
-
-- \`Esc\` closes dialogs where applicable.
-`,y=`---
+`,u=`---
 title: Player has timeline events (E3006)
 category: trouble
 tags: [player remove, timeline, events, E3006, player_has_events, draft]
@@ -991,9 +708,9 @@ errorKey: player_has_events
 
 ## What is happening
 
-You tried to remove a player from the match roster, and the server returned **\`E3006\`** (\`player_has_events\`). The player is referenced by **at least one non-voided event** on the timeline.
+You tried to remove a player from the match roster, and the app returned **\`E3006\`** (\`player_has_events\`). The player is referenced by **at least one non-voided event** on the timeline.
 
-The server checks \`match_events\` rows where \`voided_at IS NULL\` and the player appears as any of:
+The client checks timeline rows that are not voided and the player appears as any of:
 
 - Scorer (\`player_id\`)
 - Assist (\`assist_player_id\`)
@@ -1005,8 +722,7 @@ This is a data-integrity guard so a player cannot vanish from the roster while s
 
 ## Prerequisites
 
-- Match status must be **\`draft\`** (in-progress). Removing players from a finished match is rejected with **\`E3004\`** (\`bad_status\` — see \`shared/error_codes.lua\` / \`MATCH_ALREADY_FINISHED\`).
-- You must hold the **edit lock**.
+- Match status must be **\`draft\`** (in-progress). Removing players from a finished match is rejected with **\`E3004\`** (\`bad_status\`).
 - The player must not appear in any non-voided event (this article).
 
 ## How to fix
@@ -1024,22 +740,22 @@ From the **Match progress** tab, void each event that mentions the player (\`voi
 
 If you noticed midway that "it was actually a different person," it is usually cleaner to **add the correct player and use a substitution event to swap them in**. If the wrong player has no real on-field events, voiding them and then removing also works.
 
-### 3. DB-side correction (last resort)
+### 3. Restore from JSON backup (last resort)
 
-If voiding would falsify a public match record, an admin can set \`match_events.voided_at\` directly in the DB or write a corrective entry into \`edit_logs\`. **The UI does not expose this path.**
+If you need to roll back a messy state, use **Data** → **Full data backup (JSON)** and restore from a snapshot.
 
 ## After resolution
 
-- After step 1, \`match_players\` is **physically DELETEd** and the action is recorded in \`edit_logs\`. The \`E3006\` warning itself is not logged.
-- After step 2, both players remain in \`match_players\` as part of history.
-- After step 3, leave a \`note\` in \`edit_logs\` explaining the correction.
+- After step 1, the roster row is removed from **local storage** once all references are voided.
+- After step 2, both players remain on the roster as part of history.
+- After step 3, rely on your backup policy and keep regular exports.
 
 **You cannot** remove a player while keeping their non-voided events.
 
 ## FAQ
 
 **Q. Why don't voided events count toward E3006?**  
-A. The server query only counts rows where \`voided_at IS NULL\` (see \`server/player.lua\`). Voided events are excluded.
+A. Only **non-voided** events count. Voided events are excluded.
 
 **Q. The match is already finished and I want to remove a player.**  
 A. Removal on a finished match is rejected with **\`E3004\`** (\`bad_status\`). **Reopen** the match to return it to \`draft\`, then follow step 1.
@@ -1049,68 +765,19 @@ A. Remove is intended for **undoing an accidental add right after it happens**. 
 
 ## Still stuck?
 
-- Run **Settings → Health check** to verify DB / edit lock state.
-- Inspect \`edit_logs\` for add/void history of the player to see which events remain.
+- Re-scan the timeline top-to-bottom for any row that still names the player.  
+- Take a **JSON backup** on the **Data** screen, restart the client, and try again.
 
 ## See also
 
 - [I recorded the wrong goal](#/workspace/help/article/trouble_undo_goal)
 - [Finish or reopen a match](#/workspace/help/article/match_finish)
 - [Manually edit the score](#/workspace/help/article/match_manual_score_edit)
-`,w=`---
-title: How to read the health check
-category: trouble
-tags: [health, DB, permission, lock, diagnostics]
-related: [trouble_autosave_failed, trouble_connection_lost, intro_setup]
-shortcut: null
-actionUrl: "#/workspace/health"
-errorCode: null
----
-
-# How to read the health check
-
-## What you will learn
-
-- How rows are grouped (**server / db / auth / presence / lock / config**)
-- **Re-run** and **Copy Markdown** for sharing with staff
-
-## Prerequisites
-
-- Open **Settings** and follow the **Health check** link (or \`#/workspace/health\`).
-
-## Steps
-
-1. Open **Health check**.
-2. **Re-check** sends \`refboard:health:check\` (or equivalent) and refreshes the table.
-3. Review rows:
-   - **DB**: connectivity, schema/table counts, migration hints.
-   - **auth**: license + referee ACE.
-   - **lock**: stray \`editor_locks\` rows.
-4. For incidents, **Copy report (Markdown)** and send to admins.
-
-## After reading
-
-- Snapshot is **point in time** — re-run after config changes.
-- Failed rows may show hints in **detail** / toasts.
-
-## FAQ
-
-**Q. All green but save still fails**  
-A. Health is broad; per-event errors need toasts/F8 and [Autosave failed](#/workspace/help/article/trouble_autosave_failed).
-
-**Q. Browser dev without FiveM**  
-A. NUI mock may return canned OK — verify **inside FiveM** for production-like checks.
-
-## See also
-
-- [Lost connection](#/workspace/help/article/trouble_connection_lost)
-- [When autosave fails](#/workspace/help/article/trouble_autosave_failed)
-- [First-time setup](#/workspace/help/article/intro_setup)
-`,v=`---
+`,p=`---
 title: I recorded the wrong goal
-category: urgent
+category: trouble
 tags: [goal, undo, mistake, G]
-related: [trouble_e1003_lock_held]
+related: [match_record_goal, match_manual_score_edit]
 shortcut: G
 ---
 
@@ -1133,9 +800,9 @@ If undo is not enough:
 3. **Reason ≥ 5 characters** (e.g. “Correcting mistaken goal”).  
 4. Confirm.
 
-### 3. Admin / policy
+### 3. Restore from backup
 
-Complex cases may need server-side fixes per your rules.
+If many mistakes stack up, consider restoring from a recent **JSON backup** (**Data** screen).
 
 ## After fix
 
@@ -1154,14 +821,15 @@ A. Depends how the goal was removed; manual number-only edit may leave old event
 
 ## If still wrong
 
-Run **Health check** and share server logs with admins.
+Use **Data** → **Full data backup (JSON)** to snapshot the current state, restart the client, and reopen the match. If it persists, restore from backup.
 
 ## See also
 
-- [Another referee is editing (E1003)](#/workspace/help/article/trouble_e1003_lock_held)
+- [Record a goal](#/workspace/help/article/match_record_goal)
+- [Edit the score manually](#/workspace/help/article/match_manual_score_edit)
 
 ## Shortcuts
 
 - \`G\` — goal wizard (match detail, when enabled)  
 - \`Esc\` — close dialog
-`;export{v as _,w as a,y as b,g as c,_ as d,f as e,p as f,m as g,u as h,h as i,d as j,c as k,l,i as m,s as n,o,r as p,a as q,t as r,n as s,e as t};
+`;export{p as _,u as a,m as b,h as c,d,c as e,l as f,i as g,s as h,o as i,r as j,a as k,t as l,n as m,e as n};

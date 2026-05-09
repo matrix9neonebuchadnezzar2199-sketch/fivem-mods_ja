@@ -9,44 +9,26 @@
           "id": "intro_what",
           "title": "RefBoard って何？",
           "article": "intro_what_is_refboard.md",
-          "tags": ["概要", "審判", "MySQL", "ロック"]
+          "tags": ["概要", "審判", "試合管理", "ローカル", "localStorage"]
         },
         {
           "id": "intro_setup_rev",
-          "title": "初回セットアップをしたい",
+          "title": "はじめて使う手順を知りたい",
           "article": "intro_setup.md",
-          "tags": ["インストール", "SQL", "ACE", "パスワード"]
+          "tags": ["F6", "表示名", "チーム", "バックアップ", "JSON"]
         }
       ]
     },
     {
-      "id": "urgent",
-      "icon": "🆘",
-      "title": "緊急度高",
+      "id": "trouble",
+      "icon": "🔧",
+      "title": "トラブルシューティング",
       "items": [
         {
           "id": "undo_goal",
           "title": "間違えてゴールを記録してしまった",
           "article": "trouble_undo_goal.md",
           "tags": ["ゴール", "取消", "Undo", "ミス"]
-        },
-        {
-          "id": "e1003",
-          "title": "他の審判が編集中（E1003）",
-          "article": "trouble_e1003_lock_held.md",
-          "tags": ["ロック", "編集権限", "E1003", "lock_held"]
-        },
-        {
-          "id": "connection",
-          "title": "接続が切れた、データは大丈夫？",
-          "article": "trouble_connection_lost.md",
-          "tags": ["接続", "切断", "オートセーブ"]
-        },
-        {
-          "id": "autosave_fail",
-          "title": "オートセーブが失敗した時",
-          "article": "trouble_autosave_failed.md",
-          "tags": ["オートセーブ", "保存", "E4003", "tx_failed"]
         },
         {
           "id": "e3006",
@@ -72,7 +54,7 @@
           "id": "team_roster_rev",
           "title": "ロスターに選手を足したい",
           "article": "team_add_roster_member.md",
-          "tags": ["ロスター", "サーバーID", "背番号"],
+          "tags": ["ロスター", "背番号", "メンバー"],
           "actionUrl": "#/workspace/teams"
         }
       ]
@@ -121,14 +103,7 @@
           "id": "record_goal",
           "title": "ゴールを記録したい",
           "article": "match_record_goal.md",
-          "tags": ["ゴール", "得点", "シュート", "G"],
-          "actionUrl": "#/workspace/matches/:matchId"
-        },
-        {
-          "id": "record_assist",
-          "title": "アシストを付けたい／後から追加したい",
-          "article": "match_record_assist.md",
-          "tags": ["アシスト", "得点", "後追い"],
+          "tags": ["ゴール", "得点", "シュート", "G", "アシスト"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -139,17 +114,10 @@
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
-          "id": "yellow_card",
-          "title": "イエローカードを出したい",
-          "article": "match_yellow_card.md",
-          "tags": ["イエロー", "警告", "カード"],
-          "actionUrl": "#/workspace/matches/:matchId"
-        },
-        {
-          "id": "red_card",
-          "title": "レッドカードを出したい（退場）",
-          "article": "match_red_card.md",
-          "tags": ["レッド", "退場", "カード", "2枚目イエロー"],
+          "id": "match_card_rev",
+          "title": "イエロー／レッドを出したい",
+          "article": "match_card.md",
+          "tags": ["イエロー", "レッド", "警告", "退場", "カード"],
           "actionUrl": "#/workspace/matches/:matchId"
         },
         {
@@ -172,20 +140,6 @@
           "article": "match_finish.md",
           "tags": ["終了", "再編集", "reopen", "確定"],
           "actionUrl": "#/workspace/matches/:matchId"
-        }
-      ]
-    },
-    {
-      "id": "diagnostics",
-      "icon": "🩺",
-      "title": "診断",
-      "items": [
-        {
-          "id": "health_check_guide",
-          "title": "ヘルスチェックの結果を読みたい",
-          "article": "trouble_health_check_guide.md",
-          "tags": ["ヘルスチェック", "DB", "権限", "診断", "Markdown"],
-          "actionUrl": "#/workspace/health"
         }
       ]
     }

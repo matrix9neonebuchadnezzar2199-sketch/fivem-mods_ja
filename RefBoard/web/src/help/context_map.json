@@ -2,16 +2,12 @@
   "match_detail": [
     "match_create_new",
     "match_record_goal",
-    "match_record_assist",
     "match_substitute_player",
-    "match_yellow_card",
-    "match_red_card",
+    "match_card",
     "match_penalty_shootout",
     "match_manual_score_edit",
     "match_finish",
     "trouble_undo_goal",
-    "trouble_e1003_lock_held",
-    "trouble_autosave_failed",
     "trouble_e3006_player_has_events"
   ],
   "team_manage": [
@@ -24,8 +20,7 @@
     "data_export"
   ],
   "settings": [
-    "trouble_health_check_guide",
-    "trouble_connection_lost",
-    "trouble_autosave_failed"
+    "intro_setup",
+    "data_export"
   ]
 }

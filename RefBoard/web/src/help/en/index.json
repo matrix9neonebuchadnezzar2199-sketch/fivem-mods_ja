@@ -12,7 +12,7 @@
         },
         {
           "id": "intro_setup",
-          "title": "First-time setup (admins & referees)",
+          "title": "Get started with RefBoard",
           "article": "intro_setup.md"
         }
       ]
@@ -33,24 +33,14 @@
           "article": "match_record_goal.md"
         },
         {
-          "id": "match_record_assist",
-          "title": "Add or change an assist",
-          "article": "match_record_assist.md"
-        },
-        {
           "id": "match_substitute_player",
           "title": "Substitute a player",
           "article": "match_substitute_player.md"
         },
         {
-          "id": "match_yellow_card",
-          "title": "Issue a yellow card",
-          "article": "match_yellow_card.md"
-        },
-        {
-          "id": "match_red_card",
-          "title": "Issue a red card (send-off)",
-          "article": "match_red_card.md"
+          "id": "match_card",
+          "title": "Yellow and red cards",
+          "article": "match_card.md"
         },
         {
           "id": "match_penalty_shootout",
@@ -109,29 +99,9 @@
       "title": "Troubleshooting",
       "children": [
         {
-          "id": "trouble_e1003",
-          "title": "Another referee is editing (E1003)",
-          "article": "trouble_e1003_lock_held.md"
-        },
-        {
           "id": "trouble_undo_goal",
           "title": "I recorded the wrong goal",
           "article": "trouble_undo_goal.md"
-        },
-        {
-          "id": "trouble_connection",
-          "title": "I lost connection — is my data OK?",
-          "article": "trouble_connection_lost.md"
-        },
-        {
-          "id": "trouble_autosave",
-          "title": "When autosave fails",
-          "article": "trouble_autosave_failed.md"
-        },
-        {
-          "id": "trouble_health_check_guide",
-          "title": "How to read the health check",
-          "article": "trouble_health_check_guide.md"
         },
         {
           "id": "trouble_e3006",

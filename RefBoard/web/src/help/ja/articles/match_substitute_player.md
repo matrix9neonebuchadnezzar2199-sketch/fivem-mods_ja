@@ -2,7 +2,7 @@
 title: 選手を交代する
 category: in_match
 tags: [交代, サブ, メンバー]
-related: [match_yellow_card, match_red_card, match_record_goal]
+related: [match_card, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
 errorCode: null
@@ -18,7 +18,7 @@ errorCode: null
 
 ## 前提条件
 
-- 対象の試合が **編集モード**で開かれている。
+- **試合詳細**を開いていること。
 - **OUT 選手**が現在ピッチに出場中（`active`）であること。
 - **IN 選手**が同じチームのロスター（または既追加）で、まだ出場していないこと。
 
@@ -35,22 +35,22 @@ errorCode: null
 - OUT 選手の状態が **`subbed_out`**、IN 選手の状態が **`active`** になります。
 - イベントタイムラインに `🔁 OUT → IN` の行が追加。
 - 選手一覧の並び順は **出場中 → 退場 / 交代済み** の順で再描画されます（`position` カラムで管理）。
-- サーバー側は `Event.substitute` がトランザクションで `match_events` + 各選手レコードの `state` を同時更新するため、**片方だけ反映**は発生しません。
+- 端末内のデータが一括で更新され、タイムラインと選手一覧が矛盾しないよう同期されます。
 
 ## カード・退場との組み合わせ
 
 - **イエロー 1 枚の選手を交代**: 問題ありません。次節以降の累積はサーバー側で管理外（手運用）。
-- **2 枚目イエロー / 一発レッド**: 退場処理（`ejected_*`）が先に走ると、その選手は **「交代では戻せません」**。代わりに「人数不足」のままチームを進行してください。詳細: [レッドカードを出す（退場）](#/workspace/help/article/match_red_card)。
+- **2 枚目イエロー / 一発レッド**: 退場処理が先に走ると、その選手は **「交代では戻せません」**。人数不足のまま進行してください。詳細: [イエロー／レッドカードを記録する](#/workspace/help/article/match_card)。
 
 ## よくある質問
 
 **Q. 一度交代した選手をもう一度ピッチに戻せますか？**  
-A. RefBoard では **再出場の専用フローはありません**。競技規則上禁止される運用が一般的なため、現仕様では `subbed_out` から `active` への戻しは UI を提供していません。どうしても必要な場合はサーバー管理者が `edit_logs` 付きで DB 更新してください。
+A. RefBoard では **再出場の専用フローはありません**。競技規則上禁止される運用が一般的なため、交代済みからの戻しは UI を提供していません。
 
 **Q. ロスター外の選手をその場で追加して交代に入れたい。**  
 A. ダイアログ内の「ロスターから選ぶ」で見つからない場合、いったん `AddPlayerDialog` で出場登録してから交代に進んでください。
 
 ## 関連項目
 
-- [イエローカードを出す](#/workspace/help/article/match_yellow_card)
-- [レッドカードを出す（退場）](#/workspace/help/article/match_red_card)
+- [イエロー／レッドカードを記録する](#/workspace/help/article/match_card)
+- [ゴールを記録する](#/workspace/help/article/match_record_goal)

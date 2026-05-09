@@ -1,7 +1,6 @@
 {
   "app": { "title": "Soccer match control" },
   "toast": {
-    "local_feature_pending": "This will work after the next update (placeholder before local stores are wired).",
     "match_finished": "Match finished",
     "match_clock_failed": "Could not update the match clock.",
     "match_clock_timeout": "Match clock request timed out. Please reload.",
@@ -20,15 +19,6 @@
     "goal_record_timeout": "No response when recording the goal. Check connection and edit lock.",
     "goal_record_failed": "Could not record the goal ({code}).",
     "card_issue_no_lock": "The edit lock is not bound to this match. Re-open the match from the list, or close with F6 and enter as editor again."
-  },
-  "presence": {
-    "online": "Online",
-    "users_online": "{count} users have the tool open",
-    "you_are_editing": "You are editing",
-    "editor_is": "{name} is editing",
-    "viewing": "Viewing",
-    "editing": "Editing",
-    "all_users": "Connected users"
   },
   "launcher": {
     "edit_password_hint": "Edit mode password (must match Config.EditPassword on server)",
@@ -205,13 +195,6 @@
     "edited_by": "Editor: {name}",
     "history": "Score history"
   },
-  "autosave": {
-    "saving": "Saving...",
-    "saved_seconds": "Auto-saved {n}s ago",
-    "saved_minutes": "Auto-saved {n}m ago",
-    "error": "Save failed",
-    "retry": "Retry"
-  },
   "match_list": {
     "title": "Matches",
     "new": "+ New match",
@@ -256,7 +239,6 @@
     "create_failed": "Could not create the match."
   },
   "shell": {
-    "online": "Online",
     "local_mode": "Local (no server)",
     "close": "Close"
   },
@@ -420,7 +402,6 @@
     "nui_mock": "Enable NUI mock",
     "nui_mock_note": "Browser dev uses mock automatically.",
     "show_test_commands": "Show test DB actions panel (enables SQL reset & test fixture; keep off on shared PCs)",
-    "health_link": "Health check (pre-flight)",
     "dev_data": {
       "title": "SQL reset & test fixture",
       "intro": "This block appears only when “Show test DB actions panel” above is on (no config.lua needed). Editors in Edit mode may run actions. “Full SQL reset” empties related tables. “Load test fixture” wipes first, then inserts bundled sample teams (5), roster members (15 each), and matches (20).",
@@ -475,7 +456,7 @@
     "reverse_tab": "Task index",
     "tree_tab": "Browse by topic",
     "pick_article": "Choose an article from the list on the left.",
-    "error_article_missing": "No help article for {code} yet. Pick a related topic or run Health check in Settings.",
+    "error_article_missing": "No help article for {code} yet. Pick a related topic from the list.",
     "article_missing": "Article file not found.",
     "toast_open_solution": "How to fix",
     "search": {
@@ -496,48 +477,6 @@
       "subtitle": "Articles related to what you’re viewing.",
       "empty": "No curated articles for this screen yet. Use “Open full help” below.",
       "open_all": "Open full help →"
-    }
-  },
-  "health": {
-    "title": "Health check",
-    "subtitle": "Server, DB, permissions, and lock status at a glance.",
-    "recheck": "Run again",
-    "copy_markdown": "Copy report (Markdown)",
-    "checking": "Checking…",
-    "copied": "Copied to clipboard",
-    "copy_failed": "Copy failed",
-    "categories": {
-      "server": "Server",
-      "db": "Database",
-      "auth": "Auth",
-      "presence": "Presence",
-      "lock": "Lock",
-      "config": "Config"
-    },
-    "rows": {
-      "server": {
-        "ping": "Connectivity",
-        "version": "Version"
-      },
-      "db": {
-        "connection": "DB connection",
-        "schema": "Schema (table count)",
-        "migration_roster": "Migration (team_roster)"
-      },
-      "auth": {
-        "license": "License",
-        "referee_permission": "Referee ACE"
-      },
-      "presence": {
-        "self_registration": "Your session"
-      },
-      "lock": {
-        "current_editor": "Current editor"
-      },
-      "config": {
-        "log_level": "Log level",
-        "test_commands": "Test commands"
-      }
     }
   },
   "errors": {

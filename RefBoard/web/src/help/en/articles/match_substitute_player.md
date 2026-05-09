@@ -2,7 +2,7 @@
 title: Substitute a player
 category: in_match
 tags: [sub, substitution, bench]
-related: [match_yellow_card, match_red_card, match_record_goal]
+related: [match_card, match_record_goal]
 shortcut: null
 actionUrl: "#/workspace/matches/:matchId"
 errorCode: null
@@ -18,7 +18,7 @@ errorCode: null
 
 ## Prerequisites
 
-- Match in **edit mode**.
+- You are on the **match detail** screen.
 - **OUT** player is currently **active** on the pitch.
 - **IN** player is on the team roster (or add them first) and not yet on the pitch.
 
@@ -39,7 +39,7 @@ errorCode: null
 ## Cards and send-offs
 
 - **One yellow**: substitution still OK.
-- **Second yellow / straight red**: player is **sent off**; you **cannot** bring them back as IN. See [Red card](#/workspace/help/article/match_red_card).
+- **Second yellow / straight red**: player is **sent off**; you **cannot** bring them back as IN. See [Yellow and red cards](#/workspace/help/article/match_card).
 
 ## FAQ
 
@@ -51,5 +51,5 @@ A. Use **Add player** / roster flow first, then substitute.
 
 ## See also
 
-- [Yellow card](#/workspace/help/article/match_yellow_card)
-- [Red card](#/workspace/help/article/match_red_card)
+- [Yellow and red cards](#/workspace/help/article/match_card)
+- [Record a goal](#/workspace/help/article/match_record_goal)

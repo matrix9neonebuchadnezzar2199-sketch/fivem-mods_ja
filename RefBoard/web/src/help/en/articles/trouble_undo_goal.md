@@ -1,8 +1,8 @@
 ---
 title: I recorded the wrong goal
-category: urgent
+category: trouble
 tags: [goal, undo, mistake, G]
-related: [trouble_e1003_lock_held]
+related: [match_record_goal, match_manual_score_edit]
 shortcut: G
 ---
 
@@ -25,9 +25,9 @@ If undo is not enough:
 3. **Reason ≥ 5 characters** (e.g. “Correcting mistaken goal”).  
 4. Confirm.
 
-### 3. Admin / policy
+### 3. Restore from backup
 
-Complex cases may need server-side fixes per your rules.
+If many mistakes stack up, consider restoring from a recent **JSON backup** (**Data** screen).
 
 ## After fix
 
@@ -46,11 +46,12 @@ A. Depends how the goal was removed; manual number-only edit may leave old event
 
 ## If still wrong
 
-Run **Health check** and share server logs with admins.
+Use **Data** → **Full data backup (JSON)** to snapshot the current state, restart the client, and reopen the match. If it persists, restore from backup.
 
 ## See also
 
-- [Another referee is editing (E1003)](#/workspace/help/article/trouble_e1003_lock_held)
+- [Record a goal](#/workspace/help/article/match_record_goal)
+- [Edit the score manually](#/workspace/help/article/match_manual_score_edit)
 
 ## Shortcuts
 

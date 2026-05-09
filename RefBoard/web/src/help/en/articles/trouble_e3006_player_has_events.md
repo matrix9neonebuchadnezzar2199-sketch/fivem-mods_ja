@@ -11,9 +11,9 @@ errorKey: player_has_events
 
 ## What is happening
 
-You tried to remove a player from the match roster, and the server returned **`E3006`** (`player_has_events`). The player is referenced by **at least one non-voided event** on the timeline.
+You tried to remove a player from the match roster, and the app returned **`E3006`** (`player_has_events`). The player is referenced by **at least one non-voided event** on the timeline.
 
-The server checks `match_events` rows where `voided_at IS NULL` and the player appears as any of:
+The client checks timeline rows that are not voided and the player appears as any of:
 
 - Scorer (`player_id`)
 - Assist (`assist_player_id`)
@@ -25,8 +25,7 @@ This is a data-integrity guard so a player cannot vanish from the roster while s
 
 ## Prerequisites
 
-- Match status must be **`draft`** (in-progress). Removing players from a finished match is rejected with **`E3004`** (`bad_status` — see `shared/error_codes.lua` / `MATCH_ALREADY_FINISHED`).
-- You must hold the **edit lock**.
+- Match status must be **`draft`** (in-progress). Removing players from a finished match is rejected with **`E3004`** (`bad_status`).
 - The player must not appear in any non-voided event (this article).
 
 ## How to fix
@@ -44,22 +43,22 @@ From the **Match progress** tab, void each event that mentions the player (`void
 
 If you noticed midway that "it was actually a different person," it is usually cleaner to **add the correct player and use a substitution event to swap them in**. If the wrong player has no real on-field events, voiding them and then removing also works.
 
-### 3. DB-side correction (last resort)
+### 3. Restore from JSON backup (last resort)
 
-If voiding would falsify a public match record, an admin can set `match_events.voided_at` directly in the DB or write a corrective entry into `edit_logs`. **The UI does not expose this path.**
+If you need to roll back a messy state, use **Data** → **Full data backup (JSON)** and restore from a snapshot.
 
 ## After resolution
 
-- After step 1, `match_players` is **physically DELETEd** and the action is recorded in `edit_logs`. The `E3006` warning itself is not logged.
-- After step 2, both players remain in `match_players` as part of history.
-- After step 3, leave a `note` in `edit_logs` explaining the correction.
+- After step 1, the roster row is removed from **local storage** once all references are voided.
+- After step 2, both players remain on the roster as part of history.
+- After step 3, rely on your backup policy and keep regular exports.
 
 **You cannot** remove a player while keeping their non-voided events.
 
 ## FAQ
 
 **Q. Why don't voided events count toward E3006?**  
-A. The server query only counts rows where `voided_at IS NULL` (see `server/player.lua`). Voided events are excluded.
+A. Only **non-voided** events count. Voided events are excluded.
 
 **Q. The match is already finished and I want to remove a player.**  
 A. Removal on a finished match is rejected with **`E3004`** (`bad_status`). **Reopen** the match to return it to `draft`, then follow step 1.
@@ -69,8 +68,8 @@ A. Remove is intended for **undoing an accidental add right after it happens**. 
 
 ## Still stuck?
 
-- Run **Settings → Health check** to verify DB / edit lock state.
-- Inspect `edit_logs` for add/void history of the player to see which events remain.
+- Re-scan the timeline top-to-bottom for any row that still names the player.  
+- Take a **JSON backup** on the **Data** screen, restart the client, and try again.
 
 ## See also
 

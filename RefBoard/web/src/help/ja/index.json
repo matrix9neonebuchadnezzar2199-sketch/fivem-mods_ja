@@ -12,7 +12,7 @@
         },
         {
           "id": "intro_setup",
-          "title": "はじめてのセットアップ（運営・審判向け）",
+          "title": "RefBoard をはじめて使う",
           "article": "intro_setup.md"
         }
       ]
@@ -33,24 +33,14 @@
           "article": "match_record_goal.md"
         },
         {
-          "id": "match_record_assist",
-          "title": "アシストを付ける／後から追加する",
-          "article": "match_record_assist.md"
-        },
-        {
           "id": "match_substitute_player",
           "title": "選手を交代する",
           "article": "match_substitute_player.md"
         },
         {
-          "id": "match_yellow_card",
-          "title": "イエローカードを出す",
-          "article": "match_yellow_card.md"
-        },
-        {
-          "id": "match_red_card",
-          "title": "レッドカードを出す（退場）",
-          "article": "match_red_card.md"
+          "id": "match_card",
+          "title": "イエロー／レッドカードを記録する",
+          "article": "match_card.md"
         },
         {
           "id": "match_penalty_shootout",
@@ -109,29 +99,9 @@
       "title": "トラブルシューティング",
       "children": [
         {
-          "id": "trouble_e1003",
-          "title": "他の審判が編集中（E1003）",
-          "article": "trouble_e1003_lock_held.md"
-        },
-        {
           "id": "trouble_undo_goal",
           "title": "間違えてゴールを記録してしまった",
           "article": "trouble_undo_goal.md"
-        },
-        {
-          "id": "trouble_connection",
-          "title": "接続が切れた、データは大丈夫？",
-          "article": "trouble_connection_lost.md"
-        },
-        {
-          "id": "trouble_autosave",
-          "title": "オートセーブが失敗した時",
-          "article": "trouble_autosave_failed.md"
-        },
-        {
-          "id": "trouble_health_check_guide",
-          "title": "ヘルスチェックの見方",
-          "article": "trouble_health_check_guide.md"
         },
         {
           "id": "trouble_e3006",
