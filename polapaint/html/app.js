@@ -44,7 +44,7 @@
     }).catch(() => nuiAlert('notify_nui_fetch_failed'));
   }
 
-  function postNuiBinary(endpoint, blob, queryObj) {
+  function postNuiBinary(endpoint, body, queryObj) {
     const qs = queryObj
       ? '?' + Object.entries(queryObj).map(([k, v]) =>
           `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`
@@ -54,11 +54,12 @@
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'image/jpeg' },
-      body: blob,
+      body: body,
     }).then((r) => {
-      if (!r.ok && r.status !== 204) throw new Error('http');
+      if (!r.ok && r.status !== 204) throw new Error('http_' + r.status);
       return r;
-    }).catch(() => {
+    }).catch((e) => {
+      nuiAlert('debug_fetch_err_' + (e && e.message ? e.message : 'unknown'));
       nuiAlert('notify_nui_fetch_failed');
       return Promise.reject(new Error('fail'));
     });
@@ -133,7 +134,7 @@
     setTimeout(() => els.nameInput.focus(), 50);
   }
 
-  function submitCaptureName() {
+  async function submitCaptureName() {
     if (!state.pendingCaptureBlob || !state.captureToken) return;
     const raw = els.nameInput.value.trim();
     if (!raw) return;
@@ -141,7 +142,15 @@
       nuiAlert('notify_photo_name_too_long');
       return;
     }
-    postNuiBinary('uploadCapture', state.pendingCaptureBlob, {
+    let buf;
+    try {
+      buf = await state.pendingCaptureBlob.arrayBuffer();
+    } catch {
+      nuiAlert('notify_nui_image_prepare_fail');
+      postNui('close', {});
+      return;
+    }
+    postNuiBinary('uploadCapture', buf, {
       token: state.captureToken,
       name: raw,
     }).catch(() => {});
@@ -278,7 +287,8 @@
       x.drawImage(els.cvBg, 0, 0);
       x.drawImage(els.cvDraw, 0, 0);
       const blob = await canvasToJpegBlob(out, state.jpegQuality);
-      await postNuiBinary('uploadEdit', blob, {
+      const buf = await blob.arrayBuffer();
+      await postNuiBinary('uploadEdit', buf, {
         token: state.paintEditToken,
         slot: String(state.paintSlot),
       });
