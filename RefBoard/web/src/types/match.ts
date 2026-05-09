@@ -51,6 +51,12 @@ export type MatchEvent = {
   text: string
   /** PK 記録時のみ */
   penaltySuccess?: boolean
+  /** PK 行: ローカル `teamId`（ホーム／アウェイ列の振り分け） */
+  pkTeamId?: number | null
+  /** PK 行: 背番号（`PenaltyShootoutPanel` 等の個別描画用。CSV は `text` を使用） */
+  pkPlayerNumber?: number | null
+  /** PK 行: 選手名 */
+  pkPlayerName?: string | null
 }
 
 export type HalfScoreBreakdown = {

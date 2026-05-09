@@ -312,6 +312,8 @@
     "title": "PK戦",
     "next_kicker": "次のキッカー: {team}",
     "pick_player": "選手を選択",
+    "waiting_input": "入力待ち",
+    "miss_result": "失敗",
     "success": "⚽ 成功",
     "miss": "❌ 失敗",
     "decided": "決着",

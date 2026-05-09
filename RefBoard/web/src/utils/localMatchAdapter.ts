@@ -71,7 +71,7 @@ function localKindToOld(k: LocalMatchEvent['kind']): MatchEvent['kind'] {
   return 'other'
 }
 
-function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[]): MatchEvent {
+export function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[]): MatchEvent {
   const scorer = e.playerId != null ? players.find((p) => p.id === e.playerId) : null
   const assist = e.assistPlayerId != null ? players.find((p) => p.id === e.assistPlayerId) : null
   let text = e.note || ''
@@ -108,6 +108,9 @@ function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[]): Match
     kind: localKindToOld(e.kind),
     text,
     penaltySuccess: e.kind === 'pk_goal' || e.kind === 'pk_miss' ? (e.kind === 'pk_goal' ? true : false) : undefined,
+    pkTeamId: isPkShot ? (e.teamId ?? null) : undefined,
+    pkPlayerNumber: isPkShot ? (scorer?.number ?? null) : undefined,
+    pkPlayerName: isPkShot ? (scorer?.name ?? null) : undefined,
   }
 }
 

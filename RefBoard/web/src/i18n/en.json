@@ -312,6 +312,8 @@
     "title": "Penalty shootout",
     "next_kicker": "Next kick: {team}",
     "pick_player": "Select player",
+    "waiting_input": "Waiting for kick",
+    "miss_result": "Miss",
     "success": "⚽ Scored",
     "miss": "❌ Missed",
     "decided": "Decided",

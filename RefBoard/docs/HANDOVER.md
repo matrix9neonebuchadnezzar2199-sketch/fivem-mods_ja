@@ -103,7 +103,7 @@ RefBoard/
 - **ID 採番**: `utils/localId.ts` が match/team/player/rosterMember/event/scoreHistory のカウンタを `id_counters` キーで管理。
 - **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
 - **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
-- **PK 表示**: `MatchDetail.vue` が `PenaltyShootoutPanel` の `pk-shot` を受け `addEvent`（`half: 'PK'`, `minute: 0`, `kind: 'pk_goal'|'pk_miss'`）へ渡す。UI 用の `MatchEvent`（`types/match.ts`）へは `localEventToRow` が `kind: 'penalty'`・`penaltySuccess`・**非空の `text`**（成功は `⚽ 番号 氏名`、失敗は `失敗 番号 氏名`）を付与。`breakdown.pk` は `homePkScore`/`awayPkScore` のスナップショット。
+- **PK 表示**: `MatchDetail.vue` が `PenaltyShootoutPanel` の `pk-shot` を受け `addEvent`（`half: 'PK'`, `minute: 0`, `kind: 'pk_goal'|'pk_miss'`、`teamId` 付き）へ渡す。UI 用の `MatchEvent`（`types/match.ts`）へは `localEventToRow` が `kind: 'penalty'`・`penaltySuccess`・**非空の `text`**（タイムライン／CSV 用。成功は `⚽ 番号 氏名`、失敗は `失敗 番号 氏名`）に加え、2 列 PK パネル用に **`pkTeamId` / `pkPlayerNumber` / `pkPlayerName`** を付与。パネルは **左＝ホーム（`team1Id`）・右＝アウェイ（`team2Id`）** にキックを縦積み（テレビ中継型）。交互の蹴り順・勝敗判定は従来どおり時系列の `pkEvents` インデックスで計算。`matchCompactDock.transparentChrome` のときは PK グリッドを **1 列**に縮退。`breakdown.pk` は `homePkScore`/`awayPkScore` のスナップショット。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
 - **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
@@ -173,3 +173,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑10: Settings の SQL／DB メタ表示を撤去。`dev/sampleData.ts` / `dev/seedActions.ts` によるローカル疑似データ投入・削除（版数 v0.2.2）。
 - 2026‑05‑10: コンパクト小窓時のモーダル背後透過（A）。`useDialogOverlay.ts` を追加し各種ダイアログのオーバーレイに適用。
 - 2026‑05‑10: PK 記録の表示不具合（D-1）。`stores/matches.ts::addEvent` は従来どおり `pk_goal` / `pk_miss` を保持するが、`utils/localMatchAdapter.ts::localEventToRow` が `text` を空のまま返していたため `PenaltyShootoutPanel` の記録リストと `EventTimelineCard` が空行に見えていた。PK 行に `⚽`／`失敗` と背番号・氏名（またはラベルのみ）を付与して修正。
+- 2026‑05‑10: PK 入力 UI（D-2）。`PenaltyShootoutPanel` をホーム／アウェイ 2 列表示＋チーム別の選手選択・成功／失敗ボタンに変更。`localEventToRow` に `pkTeamId` 等を追加し `localMatchAdapter.test.ts` で PK 行を検証。
