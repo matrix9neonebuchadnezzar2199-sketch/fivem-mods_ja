@@ -4,7 +4,14 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useMatchesStore } from '../stores/matches'
 import { useSettingsStore } from '../stores/settings'
-import { downloadFile, exportFullBackup, refboardFilename, toCSV } from '../utils/exporters'
+import {
+  downloadFile,
+  downloadMatchCsvPack,
+  exportFullBackup,
+  refboardFilename,
+  toCSV,
+  type CsvColumnSet,
+} from '../utils/exporters'
 import { loadImportHistory, type ImportRecord } from '../utils/localImport'
 import MarqueeText from '../components/common/MarqueeText.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
@@ -20,6 +27,7 @@ const finished = computed(() => matchesStore.matches.filter((m) => m.status === 
 
 const importDialogOpen = ref(false)
 const importHistory = ref<ImportRecord[]>([])
+const finishedCsvColumnSet = ref<CsvColumnSet>('standard')
 
 function refreshImportHistory() {
   importHistory.value = loadImportHistory()
@@ -53,6 +61,11 @@ function exportFinishedCsv() {
   downloadFile(toCSV(rows, cols), refboardFilename('refboard_finished_matches', 'csv'), 'text/csv;charset=utf-8')
 }
 
+function exportFinishedMatchPack(m: (typeof finished.value)[number]) {
+  const op = String(settingsStore.settings.selfName ?? '').trim()
+  downloadMatchCsvPack(m, { operator: op }, finishedCsvColumnSet.value)
+}
+
 function fullBackup() {
   exportFullBackup()
 }
@@ -72,7 +85,17 @@ function rowModeLabel(mode: ImportRecord['mode']) {
     <section class="rounded-lg border border-slate-700 bg-slate-900/70 p-4">
       <h3 class="mb-2 text-sm font-semibold text-slate-200">{{ t('data.finished_section') }}</h3>
       <p class="mb-3 text-xs text-slate-500">{{ t('data.finished_hint') }}</p>
-      <div class="mb-3 flex flex-wrap gap-2">
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <label class="flex items-center gap-2 text-xs text-slate-400">
+          <span>{{ t('data.csv_column_set') }}</span>
+          <select
+            v-model="finishedCsvColumnSet"
+            class="rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-slate-200"
+          >
+            <option value="standard">{{ t('data.csv_standard') }}</option>
+            <option value="detailed">{{ t('data.csv_detailed') }}</option>
+          </select>
+        </label>
         <button
           type="button"
           class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-200"
@@ -112,7 +135,17 @@ function rowModeLabel(mode: ImportRecord['mode']) {
               <td class="px-3 py-2 text-slate-200">{{ m.homeName }} vs {{ m.awayName }}</td>
               <td class="px-3 py-2 font-mono">{{ m.homeScore }} - {{ m.awayScore }}</td>
               <td class="px-3 py-2">
-                <button type="button" class="text-primary hover:underline" @click="openMatch(m.id)">{{ t('match_list.detail') }}</button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" class="text-primary hover:underline" @click="openMatch(m.id)">{{ t('match_list.detail') }}</button>
+                  <button
+                    type="button"
+                    class="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-300 hover:bg-slate-800"
+                    :title="t('data.export_match_csv_pack_hint')"
+                    @click="exportFinishedMatchPack(m)"
+                  >
+                    {{ t('data.export_match_csv_pack') }}
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="!finished.length">

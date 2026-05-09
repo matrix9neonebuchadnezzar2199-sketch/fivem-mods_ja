@@ -200,7 +200,7 @@
   "match_detail": {
     "finish": "[End match]",
     "export_json": "Export match as JSON",
-    "export_events_csv": "Export events as CSV",
+    "export_events_csv": "Download match CSV (summary + events, two files)",
     "section_roster_suffix": "Roster",
     "compact_mode": "Compact view",
     "restore_ui_hint": "Restore full UI: Ctrl+V",
@@ -370,6 +370,13 @@
     "finished_section": "Finished matches",
     "finished_hint": "Matches stored on this device with status finished.",
     "export_finished_csv": "Export finished to CSV",
+    "csv_column_set": "CSV format",
+    "csv_standard": "Standard (13 cols)",
+    "csv_detailed": "Detailed (26 cols)",
+    "csv_summary_suffix": "_summary",
+    "csv_events_suffix": "_events",
+    "export_match_csv_pack": "CSV summary + events",
+    "export_match_csv_pack_hint": "Downloads two files: one-line summary and event rows",
     "full_backup": "Full data backup (JSON)",
     "no_finished": "No finished matches yet.",
     "tabs": {

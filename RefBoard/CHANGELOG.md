@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0 — 2026‑05‑10（CSV 出力拡充 B1）
+
+- 試合単位の CSV を **サマリ 1 行**（9 列）と **イベント行**（標準 **13 列** / 詳細 **26 列**）の **2 ファイル**で出力（`refboard_m{id}_{日付}_summary.csv` / `_events.csv`）。BOM 付き UTF-8 は従来どおり。
+- 詳細列に `final_score`（PK 併記）、`minute_label`（`45+2'` / `PK`）、選手・アシスト、カード色、交代 in/out、PK 成否・チーム内 `pk_shot_index`、`event_text`、`recorded_at_iso`、各イベント行の `operator`（`settings.selfName`）を追加。
+- `MatchDetail.vue` と `DataManage.vue`（終了試合行）に **CSV 形式**のドロップダウンを追加。`utils/exporters.test.ts` で主要ケースを検証。
+- 版数: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.3.0** に同期。
+
 ## v0.2.2 — 2026‑05‑10（疑似データ投入機能）
 
 - 設定画面下部の SQL／DB メタ表示（schemaVersion / resourceVersion 等）を削除。ローカル版で参照されない情報の整理。

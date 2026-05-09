@@ -200,7 +200,7 @@
   "match_detail": {
     "finish": "[試合終了]",
     "export_json": "試合データを JSON でエクスポート",
-    "export_events_csv": "イベント一覧を CSV でエクスポート",
+    "export_events_csv": "試合 CSV（サマリ 1 行＋イベント行の 2 ファイル）をダウンロード",
     "section_roster_suffix": "選手",
     "compact_mode": "小窓モード",
     "restore_ui_hint": "UIの復帰は Ctrl+V",
@@ -370,6 +370,13 @@
     "finished_section": "終了済み試合",
     "finished_hint": "この端末に保存された試合のうち、終了ステータスのものです。",
     "export_finished_csv": "終了済みを CSV エクスポート",
+    "csv_column_set": "CSV 形式",
+    "csv_standard": "標準（13 列）",
+    "csv_detailed": "詳細（26 列）",
+    "csv_summary_suffix": "_summary",
+    "csv_events_suffix": "_events",
+    "export_match_csv_pack": "CSV サマリ+イベント",
+    "export_match_csv_pack_hint": "サマリ 1 行とイベント行の 2 ファイルをダウンロードします",
     "full_backup": "全データのバックアップ (JSON)",
     "no_finished": "終了済みの試合はまだありません。",
     "tabs": {
