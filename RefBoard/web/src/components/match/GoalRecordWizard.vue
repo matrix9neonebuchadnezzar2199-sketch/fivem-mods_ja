@@ -2,7 +2,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
+import { useToast } from '../../composables/useToast'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
+import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 import PlayerSelectGrid from './PlayerSelectGrid.vue'
 
 const props = defineProps<{
@@ -14,11 +16,13 @@ const emit = defineEmits<{ 'update:open': [boolean]; recorded: [] }>()
 
 const { t } = useI18n()
 const { send, on } = useNui()
+const { push: toast } = useToast()
 
 const step = ref(1)
 const teamId = ref<number | null>(null)
 const scorerId = ref<string | null>(null)
 const assistId = ref<string | null>(null)
+const showEscConfirm = ref(false)
 
 const teamPlayers = computed(() => {
   if (!teamId.value) return [] as MatchPlayer[]
@@ -55,24 +59,43 @@ function reset() {
 watch(
   () => props.open,
   (v) => {
-    if (v) reset()
+    if (v) {
+      reset()
+      showEscConfirm.value = false
+    }
   },
 )
 
 function close() {
+  showEscConfirm.value = false
   emit('update:open', false)
+}
+
+function tryClose() {
+  if (step.value > 1 && step.value < 5) {
+    showEscConfirm.value = true
+    return
+  }
+  close()
+}
+
+function confirmEscClose() {
+  showEscConfirm.value = false
+  close()
+}
+
+function cancelEscClose() {
+  showEscConfirm.value = false
 }
 
 function onKey(ev: KeyboardEvent) {
   if (!props.open) return
   if (ev.key === 'Escape') {
-    if (step.value > 1 && step.value < 5) {
-      if (window.confirm(t('goal_wizard.esc_confirm'))) {
-        close()
-      }
-    } else {
-      close()
+    if (showEscConfirm.value) {
+      cancelEscClose()
+      return
     }
+    tryClose()
   }
 }
 
@@ -104,28 +127,66 @@ function back() {
 
 async function record() {
   if (!teamId.value || !scorerId.value) return
-  const assistNum = assistId.value ? Number(assistId.value) : null
+  const scorerPid = resolveMatchPlayerRowId(scorerId.value)
+  if (scorerPid == null) return
+  const assistPid = assistId.value ? resolveMatchPlayerRowId(assistId.value) : null
+  let settled = false
+  let timeoutId: ReturnType<typeof window.setTimeout> | null = null
   const un = on('refboard:score:goal:ack', (r: { ok?: boolean; error?: string }) => {
+    if (settled) return
+    settled = true
+    if (timeoutId != null) window.clearTimeout(timeoutId)
     un()
     if (r?.ok) {
       emit('recorded')
       close()
     }
   })
-  await send('score_goal', {
-    matchId: props.model.id,
-    teamId: teamId.value,
-    scorerPlayerId: Number(scorerId.value),
-    assistPlayerId: assistNum,
-  })
+  timeoutId = window.setTimeout(() => {
+    if (settled) return
+    settled = true
+    un()
+    toast(t('toast.goal_record_timeout'), 'error', { ms: 8000 })
+  }, 8000)
+  try {
+    await send('score_goal', {
+      matchId: props.model.id,
+      teamId: teamId.value,
+      scorerPlayerId: String(scorerPid),
+      assistPlayerId: assistPid != null ? String(assistPid) : null,
+    })
+  } catch {
+    if (!settled) {
+      settled = true
+      if (timeoutId != null) window.clearTimeout(timeoutId)
+      un()
+      toast(t('toast.goal_record_timeout'), 'error', { ms: 8000 })
+    }
+  }
 }
 </script>
 
 <template>
   <div
     v-if="open"
-    class="fixed inset-0 z-[160] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+    class="relative fixed inset-0 z-[160] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
   >
+    <div
+      v-if="showEscConfirm"
+      class="absolute inset-0 z-[1] flex items-center justify-center bg-black/50 p-4"
+    >
+      <div class="max-w-sm rounded-xl border border-slate-600 bg-slate-900 p-5 shadow-xl">
+        <p class="mb-4 text-sm text-slate-200">{{ t('goal_wizard.esc_confirm') }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded-lg border border-slate-600 px-3 py-2 text-sm" @click="cancelEscClose">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white" @click="confirmEscClose">
+            {{ t('dialog.yes') }}
+          </button>
+        </div>
+      </div>
+    </div>
     <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl">
       <div class="border-b border-slate-700 px-4 py-3 text-xs text-slate-500">
         {{ t('goal_wizard.breadcrumb') }}
@@ -214,7 +275,7 @@ async function record() {
         </Transition>
       </div>
       <div class="flex justify-end border-t border-slate-700 px-4 py-2">
-        <button type="button" class="text-xs text-slate-500 hover:text-slate-300" @click="close">{{ t('dialog.no') }}</button>
+        <button type="button" class="text-xs text-slate-500 hover:text-slate-300" @click="tryClose">{{ t('dialog.no') }}</button>
       </div>
     </div>
   </div>

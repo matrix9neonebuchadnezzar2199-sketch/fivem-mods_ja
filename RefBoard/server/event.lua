@@ -37,25 +37,6 @@ local function withTransaction(fn)
   return false, err
 end
 
---- NUI JSON からの id（数値／文字列）を match_players.id 用に正規化
-local function parsePayloadId(v)
-  if v == nil then
-    return nil
-  end
-  if type(v) == 'number' then
-    local n = math.floor(v)
-    return n > 0 and n or nil
-  end
-  if type(v) == 'string' then
-    local s = v:match('^%s*(%d+)%s*$')
-    if not s then
-      return nil
-    end
-    return tonumber(s)
-  end
-  return tonumber(v)
-end
-
 --- PK 戦の決着判定（先攻は matches.pk_first_team_id、なければ team1）
 local function evaluatePenaltyShootout(matchId)
   matchId = tonumber(matchId)
@@ -139,8 +120,8 @@ RegisterNetEvent('refboard:event:substitute', function(payload)
   end
   local matchId = tonumber(payload.matchId)
   local teamId = tonumber(payload.teamId)
-  local outId = tonumber(payload.outPlayerId)
-  local inId = tonumber(payload.inPlayerId)
+  local outId = RefboardParsePayloadPositiveId(payload.outPlayerId)
+  local inId = RefboardParsePayloadPositiveId(payload.inPlayerId)
   if not matchId or not teamId or not outId or not inId or outId == inId then
     TriggerClientEvent('refboard:event:substitute:ack', src, { ok = false, error = 'bad_args' })
     return
@@ -206,7 +187,7 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
   end
   local matchId = tonumber(payload.matchId)
   local teamId = tonumber(payload.teamId)
-  local playerId = parsePayloadId(payload.playerId)
+  local playerId = RefboardParsePayloadPositiveId(payload.playerId)
   local cardType = payload.cardType
   if not matchId or not teamId or not playerId or (cardType ~= 'yellow_card' and cardType ~= 'red_card') then
     TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_args' })
@@ -323,7 +304,7 @@ RegisterNetEvent('refboard:event:record_penalty', function(payload)
   end
   local matchId = tonumber(payload.matchId)
   local teamId = tonumber(payload.teamId)
-  local playerId = tonumber(payload.playerId)
+  local playerId = RefboardParsePayloadPositiveId(payload.playerId)
   local success = payload.success == true
   if not matchId or not teamId or not playerId then
     TriggerClientEvent('refboard:event:record_penalty:ack', src, { ok = false, error = 'bad_args' })

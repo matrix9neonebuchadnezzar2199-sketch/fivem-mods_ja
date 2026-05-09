@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNui } from '../../composables/useNui'
 import type { MatchDetailModel, MatchPlayer } from '../../types/match'
+import { resolveMatchPlayerRowId } from '../../utils/matchPlayerRowId'
 
 const props = defineProps<{
   open: boolean
@@ -70,6 +71,9 @@ function close() {
 
 async function submit() {
   if (!teamId.value || !outId.value || !inId.value) return
+  const outPid = resolveMatchPlayerRowId(outId.value)
+  const inPid = resolveMatchPlayerRowId(inId.value)
+  if (outPid == null || inPid == null || outPid <= 0 || inPid <= 0) return
   const un = on('refboard:event:substitute:ack', (r: { ok?: boolean }) => {
     un()
     if (r?.ok) {
@@ -80,8 +84,8 @@ async function submit() {
   await send('event_substitute', {
     matchId: props.model.id,
     teamId: teamId.value,
-    outPlayerId: Number(outId.value),
-    inPlayerId: Number(inId.value),
+    outPlayerId: String(outPid),
+    inPlayerId: String(inPid),
   })
 }
 </script>

@@ -7,6 +7,7 @@
 - **fix（編集ロック）**: Close / ランチャー「ゲームへ戻る」で **`refboard:close`（Lua による `session:leave` + `lock:release`）を `session.leave()` より先**に実行。`session.leave()` 先頭の `pendingRelock` 全消しをやめ、意図的閉じでもサーバ解放が確実になるよう整理。経路一覧は `docs/editor_lock_release_flows.md`。
 - **fix（試合時計）**: `clock_started_at` が JSON で省略／解釈不能なとき走行中でも経過 0 になり残りが定尺に戻る問題を、`reconcileRunningClockStarted`・`watch`・Lua ACK／`match:state` の `RefboardParseEpochMs` 正規化で修正。一時停止で 90:00 に戻る症状の主因を潰す。
 - **fix（カード）**: `playerId` を文字列でも受理（Lua `parsePayloadId`）、交代出場が `bench` 表示でも選択可能に、INSERT 失敗は `db_insert_failed` + ログ。トーストに `tx_failed` の `detail` を短縮表示。
+- **fix（試合詳細）**: 遅い `match_get:ack` が時計操作・イベント後に届き **古いスナップショットで上書き**するレースを、`reloadMatch` で `loadMatchGen++` して進行中の取得を捨てる／時計 ACK 成功後も `reloadMatch()` で再取得するように修正。ゴール・交代は `playerId` を文字列送信＋サーバ `RefboardParsePayloadPositiveId` 共通化。
 
 ## v0.9.1 — 2026-05-09
 

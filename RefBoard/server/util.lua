@@ -108,6 +108,25 @@ function RefboardParseEpochMs(v)
   return nil
 end
 
+--- NUI JSON の id（number / 数字のみの string）。大きい BIGINT は string で送る想定。
+function RefboardParsePayloadPositiveId(v)
+  if v == nil then
+    return nil
+  end
+  if type(v) == 'number' then
+    local n = math.floor(v)
+    return n > 0 and n or nil
+  end
+  if type(v) == 'string' then
+    local s = v:match('^%s*(%d+)%s*$')
+    if not s then
+      return nil
+    end
+    return tonumber(s)
+  end
+  return tonumber(v)
+end
+
 --- matches 行から「現在の経過 ms」（clock_running / clock_started_at / clock_accumulated_ms）。
 function RefboardMatchTimeMsFromRow(m)
   local acc = tonumber(m and m.clock_accumulated_ms) or 0

@@ -241,6 +241,7 @@ function callMatchClock(
         applyClockAck(r)
         syncClockFromDetail()
         resolve(true)
+        reloadMatch()
       } else {
         const msg = r?.error
           ? t('toast.match_clock_error', { code: String(r.error) })
@@ -467,7 +468,13 @@ async function loadMatch() {
   detail.id = id
   const un = on('refboard:match:get:ack', (ack: MatchGetAck) => {
     un()
-    if (gen !== loadMatchGen) return
+    if (gen !== loadMatchGen) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('[RefBoard] discard stale match_get:ack', { gen, current: loadMatchGen })
+      }
+      return
+    }
     const mapped = mapMatchGetAckToDetail(ack)
     if (mapped) {
       Object.assign(detail, mapped)
@@ -689,6 +696,7 @@ function onPkFinished() {
 }
 
 function reloadMatch() {
+  loadMatchGen++
   void loadMatch()
 }
 

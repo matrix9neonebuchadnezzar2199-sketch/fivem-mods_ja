@@ -50,8 +50,8 @@ RegisterNetEvent('refboard:score:goal', function(payload)
   end
   local matchId = tonumber(payload.matchId)
   local teamId = tonumber(payload.teamId)
-  local scorerPlayerId = tonumber(payload.scorerPlayerId)
-  local assistPlayerId = payload.assistPlayerId ~= nil and tonumber(payload.assistPlayerId) or nil
+  local scorerPlayerId = RefboardParsePayloadPositiveId(payload.scorerPlayerId)
+  local assistPlayerId = payload.assistPlayerId ~= nil and RefboardParsePayloadPositiveId(payload.assistPlayerId) or nil
   if not matchId or not teamId or not scorerPlayerId then
     TriggerClientEvent('refboard:score:goal:ack', src, MakeError(ErrorCodes.BAD_ARGS))
     return
