@@ -12,6 +12,8 @@
     "card_issue_failed": "カードを登録できませんでした（{code}）。",
     "card_issue_bad_player": "選手情報がサーバーと一致しません。再読み込みしてからやり直してください。",
     "card_issue_bad_phase": "このフェーズ（PK 中など）ではカードを登録できません。",
+    "card_issue_db_insert": "DB 登録に失敗しました: {detail}",
+    "card_issue_tx_detail": "カード登録エラー: {detail}",
     "player_remove_timeout": "選手削除の応答がありません。接続と編集ロックを確認してください。",
     "match_finish_failed": "試合終了を確定できませんでした。",
     "goal_record_timeout": "ゴール記録の応答がありません。接続と編集ロックを確認してください。"

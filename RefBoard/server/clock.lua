@@ -32,11 +32,12 @@ local function ackClock(src, matchId)
     TriggerClientEvent('refboard:match:clock:ack', src, { ok = false, error = 'no_match', matchId = matchId })
     return
   end
+  local stOut = RefboardParseEpochMs(row.clock_started_at)
   TriggerClientEvent('refboard:match:clock:ack', src, {
     ok = true,
     matchId = matchId,
     clock_running = tonumber(row.clock_running) or 0,
-    clock_started_at = row.clock_started_at,
+    clock_started_at = stOut,
     clock_accumulated_ms = tonumber(row.clock_accumulated_ms) or 0,
   })
 end
@@ -88,6 +89,14 @@ RegisterNetEvent('refboard:match:clock', function(payload)
         return
       end
       local elapsed = math.floor(RefboardMatchTimeMsFromRow(m))
+      if elapsed <= 0 and tonumber(m.clock_running) == 1 then
+        Logger.warn('net:match:clock', 'stop_zero_elapsed', {
+          matchId = matchId,
+          acc = tostring(m.clock_accumulated_ms),
+          started = tostring(m.clock_started_at),
+          parsed = tostring(RefboardParseEpochMs(m.clock_started_at)),
+        })
+      end
       MySQL.update.await(
         [[UPDATE matches SET clock_running = 0, clock_started_at = NULL,
             clock_accumulated_ms = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?]],

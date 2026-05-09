@@ -12,6 +12,8 @@
     "card_issue_failed": "Could not register the card ({code}).",
     "card_issue_bad_player": "Player data is out of sync with the server. Reload the match and try again.",
     "card_issue_bad_phase": "Cards cannot be registered in this phase (e.g. during a penalty shootout).",
+    "card_issue_db_insert": "Database insert failed: {detail}",
+    "card_issue_tx_detail": "Card registration error: {detail}",
     "player_remove_timeout": "Player removal timed out. Check connection and edit lock.",
     "match_finish_failed": "Could not finalize the match.",
     "goal_record_timeout": "No response when recording the goal. Check connection and edit lock."

@@ -2,7 +2,8 @@
 
 /** oxmysql / JSON 経由の BIGINT・秒単位の値を epoch ms に正規化（解釈不能なら null）。 */
 export function parseEpochMsFromServer(v: unknown): number | null {
-  if (v == null) return null
+  if (v === null || v === undefined) return null
+  if (v === false) return null
   if (typeof v === 'bigint') {
     const bn = Number(v)
     if (!Number.isFinite(bn)) return null
@@ -13,6 +14,21 @@ export function parseEpochMsFromServer(v: unknown): number | null {
   let n: number
   if (typeof v === 'number') {
     n = v
+  } else if (typeof v === 'string') {
+    let s = v.trim().replace(/^["']|["']$/g, '').replace(/,/g, '')
+    if (s === '') return null
+    if (/^\d+$/.test(s) && s.length > 15) {
+      try {
+        const bi = BigInt(s)
+        const asNum = Number(bi)
+        if (!Number.isFinite(asNum)) return null
+        n = asNum
+      } catch {
+        return null
+      }
+    } else {
+      n = Number(s)
+    }
   } else {
     const s = String(v).trim()
     if (s === '') return null

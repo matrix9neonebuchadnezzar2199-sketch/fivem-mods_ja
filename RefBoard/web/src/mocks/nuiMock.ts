@@ -18,6 +18,7 @@ import {
   type RosterRow,
   saveMockState,
 } from './mockPersistence'
+import { resolveMatchPlayerRowId } from '../utils/matchPlayerRowId'
 
 function clone<T>(x: T): T {
   return JSON.parse(JSON.stringify(x)) as T
@@ -278,44 +279,9 @@ function postNui(type: string, payload: unknown) {
   window.postMessage({ type, payload }, '*')
 }
 
-/** DEV モック: イベント行テキストに「背番号 + 名前」が出ている＝タイムライン参照ありとみなす（本番の match_events 判定に相当） */
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function mockTimelineReferencesPlayer(player: MatchPlayer, events: { text?: string }[] | undefined): boolean {
-  if (!events?.length) return false
-  const n = Number(player.number)
-  if (!Number.isFinite(n)) return false
-  const re = new RegExp(`\\b${n}\\s+${escapeRegExp(player.name)}\\b`)
-  return events.some((e) => Boolean(e.text && re.test(e.text)))
-}
-
-/**
- * モックの MatchPlayer.id（数値文字列 / m{mid}-t{tid}-r{rid} / タイムスタンプ等）を
- * match_players.id 相当の一意な正の整数に変換する。Number(p.id)||0 だと複合IDが全員 0 になるバグの修正。
- */
-function mockNumericPlayerRowId(p: MatchPlayer): number {
-  const s = String(p.id ?? '').trim()
-  const c = /^m(\d+)-t(\d+)-r(\d+)$/i.exec(s)
-  if (c) {
-    const mid = Number(c[1])
-    const rid = Number(c[3])
-    if (Number.isFinite(mid) && mid > 0 && Number.isFinite(rid) && rid > 0) {
-      return mid * 1_000_000 + rid
-    }
-  }
-  const n = Number(s)
-  if (Number.isFinite(n) && n > 0) return Math.trunc(n)
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) >>> 0
-  const v = h >>> 0
-  return v > 0 ? v : 1
-}
-
 function toMockServerPlayer(p: MatchPlayer, teamId: number) {
   const out = p.status === 'subbed_out' || p.status === 'sent_off'
-  const rowId = mockNumericPlayerRowId(p)
+  const rowId = resolveMatchPlayerRowId(p.id) ?? 1
   return {
     id: rowId,
     team_id: teamId,
@@ -350,10 +316,23 @@ function applyHalfToLive(half: string, pkFirst?: number) {
   }
 }
 
+function mockMatchPlayerRosterRevoked(p: MatchPlayer, teamId: number): boolean {
+  const s = String(p.id ?? '').trim()
+  const c = /^m(\d+)-t(\d+)-r(\d+)$/i.exec(s)
+  if (!c) return false
+  const tid = Number(c[2])
+  const rid = Number(c[3])
+  if (tid !== teamId) return false
+  const list = mockRosterByTeam[teamId]
+  return !list?.some((x) => x.id === rid)
+}
+
 function findPlayerByNumericId(id: number): { side: 'home' | 'away'; idx: number } | null {
   const sid = String(id)
   const match = (x: MatchPlayer) =>
-    String(x.id) === sid || (Number.isFinite(Number(x.id)) && Number(x.id) === id) || mockNumericPlayerRowId(x) === id
+    String(x.id) === sid ||
+    (Number.isFinite(Number(x.id)) && Number(x.id) === id) ||
+    resolveMatchPlayerRowId(x.id) === id
   const hi = liveDetail.homePlayers.findIndex(match)
   if (hi >= 0) return { side: 'home', idx: hi }
   const ai = liveDetail.awayPlayers.findIndex(match)
@@ -1106,20 +1085,14 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const d = data as { matchId?: number; teamId?: number; playerId?: number }
       const tid = Number(d.teamId)
       const wantId = Number(d.playerId)
-      const allPlayers = [...liveDetail.homePlayers, ...liveDetail.awayPlayers]
-      const target = allPlayers.find(
-        (x) => Number.isFinite(wantId) && (Number(x.id) === wantId || mockNumericPlayerRowId(x) === wantId),
-      )
-      if (target && mockTimelineReferencesPlayer(target, liveDetail.events)) {
-        postNui('refboard:player:remove:ack', {
-          ok: false,
-          error: 'player_has_events',
-          code: 'E3006',
-        })
-        return
-      }
       const filter = (xs: MatchPlayer[]) =>
-        xs.filter((x) => !(Number.isFinite(wantId) && (Number(x.id) === wantId || mockNumericPlayerRowId(x) === wantId)))
+        xs.filter(
+          (x) =>
+            !(
+              Number.isFinite(wantId) &&
+              (Number(x.id) === wantId || resolveMatchPlayerRowId(x.id) === wantId)
+            ),
+        )
       if (tid === liveDetail.team1Id) {
         liveDetail.homePlayers = filter(liveDetail.homePlayers)
       } else if (tid === liveDetail.team2Id) {
@@ -1146,8 +1119,11 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       } else if (tid === liveDetail.team2Id) {
         liveDetail.score.away += 1
       }
+      const wantScorer = Number(d.scorerPlayerId)
       const scorer = [...liveDetail.homePlayers, ...liveDetail.awayPlayers].find(
-        (x) => String(x.id) === String(d.scorerPlayerId),
+        (x) =>
+          (Number.isFinite(wantScorer) && resolveMatchPlayerRowId(x.id) === wantScorer) ||
+          String(x.id) === String(d.scorerPlayerId),
       )
       const label = scorer ? `${scorer.number} ${scorer.name}` : '得点'
       liveDetail.events = [
@@ -1224,6 +1200,17 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       })
     }
     if (path === 'match_finish') {
+      const rosterRevoked =
+        liveDetail.homePlayers.some((p) => mockMatchPlayerRosterRevoked(p, liveDetail.team1Id)) ||
+        liveDetail.awayPlayers.some((p) => mockMatchPlayerRosterRevoked(p, liveDetail.team2Id))
+      if (rosterRevoked) {
+        postNui('refboard:match:finish:ack', {
+          ok: false,
+          error: 'roster_source_revoked',
+          code: 'E3007',
+        })
+        return
+      }
       const row = mockListRows.find((r) => r.id === liveDetail.id)
       if (row) row.status = 'finished'
       liveDetail.dbStatus = 'finished'
@@ -1318,12 +1305,14 @@ export function queueMockSideEffects(path: string, data: unknown): void {
       const d = data as {
         matchId?: number
         teamId?: number
-        playerId?: number
+        playerId?: number | string
         cardType?: string
         ejectionReason?: string
       }
-      if (d.matchId !== liveDetail.id || !d.playerId || !d.teamId) return
-      const hit = findPlayerByNumericId(d.playerId)
+      const pid =
+        typeof d.playerId === 'string' ? Number(String(d.playerId).trim()) : Number(d.playerId)
+      if (d.matchId !== liveDetail.id || !Number.isFinite(pid) || pid <= 0 || !d.teamId) return
+      const hit = findPlayerByNumericId(pid)
       if (!hit) return
       const pl =
         hit.side === 'home' ? liveDetail.homePlayers[hit.idx] : liveDetail.awayPlayers[hit.idx]

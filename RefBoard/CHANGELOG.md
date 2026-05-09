@@ -5,6 +5,8 @@
 - **feat（設定）**: 全体フォント倍率に **250% / 300%** を追加（`rootFontScale`・`index.html` FOUC 先読み・`sanitizeRootFontScale` を同期）。
 - **fix（表示）**: `text-[10px]` / `text-[11px]` / `text-[22px]` 等の **ピクセル固定**を `rem` 指定に変更し、ルート倍率変更で **補助ラベルやトーストのエラー行も追従**するようにした。
 - **fix（編集ロック）**: Close / ランチャー「ゲームへ戻る」で **`refboard:close`（Lua による `session:leave` + `lock:release`）を `session.leave()` より先**に実行。`session.leave()` 先頭の `pendingRelock` 全消しをやめ、意図的閉じでもサーバ解放が確実になるよう整理。経路一覧は `docs/editor_lock_release_flows.md`。
+- **fix（試合時計）**: `clock_started_at` が JSON で省略／解釈不能なとき走行中でも経過 0 になり残りが定尺に戻る問題を、`reconcileRunningClockStarted`・`watch`・Lua ACK／`match:state` の `RefboardParseEpochMs` 正規化で修正。一時停止で 90:00 に戻る症状の主因を潰す。
+- **fix（カード）**: `playerId` を文字列でも受理（Lua `parsePayloadId`）、交代出場が `bench` 表示でも選択可能に、INSERT 失敗は `db_insert_failed` + ログ。トーストに `tx_failed` の `detail` を短縮表示。
 
 ## v0.9.1 — 2026-05-09
 

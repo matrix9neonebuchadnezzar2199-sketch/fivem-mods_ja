@@ -32,7 +32,10 @@ const teamPlayers = computed(() => {
   return teamId.value === props.model.team1Id ? props.model.homePlayers : props.model.awayPlayers
 })
 
-const fieldPlayers = computed(() => teamPlayers.value.filter((p) => p.status === 'playing'))
+/** 交代で出た選手は ui_status が bench のままになり得るが is_active=1 のためサーバでは登録可 */
+const fieldPlayers = computed(() =>
+  teamPlayers.value.filter((p) => p.status !== 'sent_off' && p.status !== 'subbed_out'),
+)
 
 const sel = computed(() => teamPlayers.value.find((p) => p.id === playerId.value))
 
@@ -132,7 +135,9 @@ async function record() {
   }
   let settled = false
   let timeoutId: ReturnType<typeof window.setTimeout> | null = null
-  const un = on('refboard:event:issue_card:ack', (r: { ok?: boolean; error?: string; detail?: string }) => {
+  const un = on(
+    'refboard:event:issue_card:ack',
+    (r: { ok?: boolean; error?: string; detail?: string }) => {
     if (settled) return
     settled = true
     if (timeoutId != null) window.clearTimeout(timeoutId)
@@ -155,11 +160,22 @@ async function record() {
       toast(t('toast.card_issue_bad_phase'), 'error', 8000)
       return
     }
-    if (code === 'tx_failed' && r?.detail && import.meta.env.DEV) {
-      console.warn('[RefBoard] issue_card tx_failed', r.detail)
+    if (code === 'db_insert_failed') {
+      const d = (r?.detail ?? '').slice(0, 200)
+      toast(d ? t('toast.card_issue_db_insert', { detail: d }) : t('toast.card_issue_failed', { code }), 'error', 12000)
+      return
+    }
+    if (code === 'tx_failed' && r?.detail) {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.warn('[RefBoard] issue_card tx_failed', r.detail)
+      }
+      toast(t('toast.card_issue_tx_detail', { detail: String(r.detail).slice(0, 160) }), 'error', 12000)
+      return
     }
     toast(t('toast.card_issue_failed', { code }), 'error', 8000)
-  })
+    },
+  )
   timeoutId = window.setTimeout(() => {
     if (settled) return
     settled = true
@@ -170,7 +186,7 @@ async function record() {
     await send('event_issue_card', {
       matchId: props.model.id,
       teamId: teamId.value,
-      playerId: pid,
+      playerId: String(pid),
       cardType: cardKind.value === 'yellow' ? 'yellow_card' : 'red_card',
       ejectionReason:
         cardKind.value === 'red' ? (redFromSecondYellow.value ? 'second_yellow' : 'red_card') : undefined,

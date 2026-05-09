@@ -153,6 +153,24 @@ function getElapsedMsFromDetail(): number {
   return getElapsedMsFromClockState(acc, detail.clockRunning === true, st, Date.now())
 }
 
+/**
+ * 走行中なのに clock_started_at が無い／JSON でキー省略された場合の救済。
+ * 一時停止で経過が 0 扱いになり残りが定尺いっぱいに戻る不具合の主因を防ぐ。
+ */
+function reconcileRunningClockStarted(m: MatchDetailModel) {
+  if (!m.clockRunning) {
+    m.clockStartedAtMs = null
+    return
+  }
+  if (m.clockStartedAtMs == null) {
+    m.clockStartedAtMs = Date.now()
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn('[RefBoard] clock: running without valid clockStartedAtMs; using client Date.now()')
+    }
+  }
+}
+
 const elapsedMmSsLive = computed(() => {
   void clockUiTick.value
   return formatClockMs(getElapsedMsFromDetail())
@@ -185,6 +203,13 @@ function syncClockFromDetail() {
   }
 }
 
+watch(
+  () => [detail.clockRunning, detail.clockStartedAtMs, detail.clockAccumulatedMs] as const,
+  () => {
+    syncClockFromDetail()
+  },
+)
+
 function applyClockAck(r: MatchClockAck) {
   if (r.clock_accumulated_ms !== undefined) {
     detail.clockAccumulatedMs = Number(r.clock_accumulated_ms) || 0
@@ -195,6 +220,7 @@ function applyClockAck(r: MatchClockAck) {
   if (r.clock_started_at !== undefined) {
     detail.clockStartedAtMs = parseEpochMsFromServer(r.clock_started_at)
   }
+  reconcileRunningClockStarted(detail)
   detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
 }
 
@@ -348,6 +374,7 @@ function applyState(p: {
     if (p.clock_started_at !== undefined) {
       detail.clockStartedAtMs = parseEpochMsFromServer(p.clock_started_at)
     }
+    reconcileRunningClockStarted(detail)
     detail.clockMmSs = formatClockMs(getElapsedMsFromDetail())
     syncClockFromDetail()
   }
@@ -444,6 +471,7 @@ async function loadMatch() {
     const mapped = mapMatchGetAckToDetail(ack)
     if (mapped) {
       Object.assign(detail, mapped)
+      reconcileRunningClockStarted(detail)
       syncClockFromDetail()
     }
     historyRows.value = mapHistoryRows(ack.history)

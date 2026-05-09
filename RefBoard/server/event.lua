@@ -37,6 +37,25 @@ local function withTransaction(fn)
   return false, err
 end
 
+--- NUI JSON からの id（数値／文字列）を match_players.id 用に正規化
+local function parsePayloadId(v)
+  if v == nil then
+    return nil
+  end
+  if type(v) == 'number' then
+    local n = math.floor(v)
+    return n > 0 and n or nil
+  end
+  if type(v) == 'string' then
+    local s = v:match('^%s*(%d+)%s*$')
+    if not s then
+      return nil
+    end
+    return tonumber(s)
+  end
+  return tonumber(v)
+end
+
 --- PK 戦の決着判定（先攻は matches.pk_first_team_id、なければ team1）
 local function evaluatePenaltyShootout(matchId)
   matchId = tonumber(matchId)
@@ -187,7 +206,7 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
   end
   local matchId = tonumber(payload.matchId)
   local teamId = tonumber(payload.teamId)
-  local playerId = tonumber(payload.playerId)
+  local playerId = parsePayloadId(payload.playerId)
   local cardType = payload.cardType
   if not matchId or not teamId or not playerId or (cardType ~= 'yellow_card' and cardType ~= 'red_card') then
     TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_args' })
@@ -210,6 +229,13 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
       { playerId, matchId, teamId }
     )
     if not pl or tonumber(pl.is_active) ~= 1 then
+      Logger.warn('net:event:issue_card', 'bad_player_row', {
+        matchId = matchId,
+        teamId = teamId,
+        playerId = playerId,
+        found = pl ~= nil,
+        is_active = pl and tonumber(pl.is_active),
+      })
       error('bad_player')
     end
     local half = eventHalfFromMatch(m.current_half)
@@ -220,23 +246,33 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
       if yc >= 1 then
         error('second_yellow_confirm')
       end
-      MySQL.insert.await(
-        [[INSERT INTO match_events
-            (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
-             penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
-          VALUES (?, 'yellow_card', ?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?)]],
-        { matchId, teamId, playerId, half, mt, license, name }
-      )
+      local insOk, insErr = pcall(function()
+        MySQL.insert.await(
+          [[INSERT INTO match_events
+              (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
+               penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
+            VALUES (?, 'yellow_card', ?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?)]],
+          { matchId, teamId, playerId, half, mt, license, name }
+        )
+      end)
+      if not insOk then
+        error('mysql_insert:' .. tostring(insErr))
+      end
       MySQL.update.await('UPDATE match_players SET yellow_cards = yellow_cards + 1 WHERE id = ?', { playerId })
     else
       local reason = type(payload.ejectionReason) == 'string' and payload.ejectionReason or 'red_card'
-      MySQL.insert.await(
-        [[INSERT INTO match_events
-            (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
-             penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
-          VALUES (?, 'red_card', ?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?)]],
-        { matchId, teamId, playerId, half, mt, license, name }
-      )
+      local insOkR, insErrR = pcall(function()
+        MySQL.insert.await(
+          [[INSERT INTO match_events
+              (match_id, event_type, team_id, player_id, assist_player_id, sub_in_player_id, sub_out_player_id,
+               penalty_success, half, match_time_ms, recorded_by_license, recorded_by_name)
+            VALUES (?, 'red_card', ?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?)]],
+          { matchId, teamId, playerId, half, mt, license, name }
+        )
+      end)
+      if not insOkR then
+        error('mysql_insert:' .. tostring(insErrR))
+      end
       MySQL.update.await(
         [[UPDATE match_players SET is_active = 0, ejected_at_ms = ?, ejection_reason = ? WHERE id = ?]],
         { os.time() * 1000, reason, playerId }
@@ -256,6 +292,12 @@ RegisterNetEvent('refboard:event:issue_card', function(payload)
     end
     if es:find('bad_phase', 1, true) then
       TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'bad_phase' })
+      return
+    end
+    if es:find('mysql_insert', 1, true) then
+      local short = (#es > 240) and (string.sub(es, 1, 240) .. '...') or es
+      Logger.error('net:event:issue_card', 'mysql_insert_failed', { matchId = matchId, detail = short })
+      TriggerClientEvent('refboard:event:issue_card:ack', src, { ok = false, error = 'db_insert_failed', detail = short })
       return
     end
     Logger.warn('net:event:issue_card', 'transaction_failed', { matchId = matchId, detail = es })

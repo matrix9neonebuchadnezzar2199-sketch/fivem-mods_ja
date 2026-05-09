@@ -421,6 +421,21 @@ RegisterNetEvent('refboard:match:finish', function(payload)
     TriggerClientEvent('refboard:match:finish:ack', src, { ok = false, error = 'bad_status' })
     return
   end
+  -- license 付きメンバーはチームの現役ロスターに同一 license が必要（管理画面で外すと集計不能・エラー防止）
+  local revoked = MySQL.scalar.await(
+    [[SELECT COUNT(*) FROM match_players mp
+      WHERE mp.match_id = ?
+        AND mp.license IS NOT NULL AND TRIM(mp.license) <> ''
+        AND NOT EXISTS (
+          SELECT 1 FROM team_roster tr
+          WHERE tr.team_id = mp.team_id AND tr.license = mp.license AND tr.left_at IS NULL
+        )]],
+    { matchId }
+  )
+  if revoked and tonumber(revoked) > 0 then
+    TriggerClientEvent('refboard:match:finish:ack', src, MakeError(ErrorCodes.ROSTER_SOURCE_REVOKED))
+    return
+  end
   MySQL.update.await(
     [[UPDATE matches SET status = 'finished', finished_at = NOW(),
         clock_running = 0, clock_started_at = NULL
@@ -593,7 +608,7 @@ AddEventHandler('refboard:internal:broadcastState', function(matchId)
     current_half = snap.match.current_half,
     pk_first_team_id = snap.match.pk_first_team_id,
     clock_running = tonumber(snap.match.clock_running) or 0,
-    clock_started_at = snap.match.clock_started_at,
+    clock_started_at = RefboardParseEpochMs(snap.match.clock_started_at),
     clock_accumulated_ms = tonumber(snap.match.clock_accumulated_ms) or 0,
     breakdown = snap.breakdown,
     events = snap.events,

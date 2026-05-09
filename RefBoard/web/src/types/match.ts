@@ -97,7 +97,8 @@ export type MatchClockAck = {
   error?: string
   matchId?: number
   clock_running?: number
-  clock_started_at?: number | null
+  /** サーバが nil を JSON 省略すると undefined になり得る */
+  clock_started_at?: number | null | string
   clock_accumulated_ms?: number
 }
 
