@@ -5,7 +5,7 @@ Locales.ja = {
     notify_capture_ok = '写真をインベントリに追加しました。',
     notify_capture_fail = '撮影の保存に失敗しました。',
     notify_capture_decode_fail = '画像データの復号に失敗しました（サーバー）。画質・解像度を下げて再試行してください。',
-    notify_capture_discord_http = 'Discord Webhook が HTTP エラーを返しました（URL・権限・レート制限を確認）。',
+    notify_capture_discord_http = 'Discord Webhook が HTTP エラーです（HTTP %s）。URLの誤り・Webhook の削除・チャンネル権限・画像が大きすぎる（413）・短時間の連投（429）・サーバから discord.com への通信不可を確認してください。',
     notify_capture_discord_empty = 'Discord Webhook の応答が空です（wait=true とファイル送信を確認）。',
     notify_capture_discord_json = 'Discord Webhook の応答を解釈できませんでした。',
     notify_capture_discord_attachments = 'Discord 応答に添付 URL がありません（Webhook のファイル投稿を確認）。',

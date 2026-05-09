@@ -90,6 +90,7 @@ Webhook の実トークンをリポジトリにコミットしないこと。ロ
 - **名前を付けても写真が増えない** … **`polaroid_photo` が `items.lua` に未定義**だと `AddItem` が `invalid_item` で失敗します（カメラだけ追加していないか確認）。**インベントリ満杯・重量オーバー**でも同様です。`config.lua` の **`Config.DiscordWebhook`** が正しいか、F8／サーバーログも併せて確認してください。**v1.0.3** 以降は Discord／復号失敗時に**より具体的な通知**が出ます。切り分けには **`Config.Debug = true`** でサーバーに `[polapaint]` ログを出すとよいです。
 - **Webhook 未設定の通知** … `config.lua` の URL がプレースホルダのままです。
 - **撮影・保存が失敗** … Discord の Webhook が無効、またはペイロードが大きすぎます。`Config.JpegQuality` を下げる、`Config.MaxImageWidth` を下げる、`Config.MaxBase64PayloadLength` を確認してください。
+- **「Discord Webhook が HTTP エラー（HTTP …）」** … **v1.0.4** 以降は括弧内に **ステータスコード** が出ます。**404** は URL 誤り／Webhook 削除、**401/403** は無効トークン／権限、**413** は画像が大きすぎ、**429** はレート制限、**0 や負**はサーバから HTTPS が届いていない可能性があります。
 - **ペイント保存で真っ黒・失敗** … 外部画像の CORS により Canvas が汚染されている可能性があります。Discord CDN の URL で通常は問題ありません。
 
 ## 開発メモ

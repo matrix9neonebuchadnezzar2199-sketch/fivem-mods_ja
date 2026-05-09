@@ -115,7 +115,6 @@ end
 ---@return string
 local function discordErrToNotifyKey(err)
     if err == 'decode' then return 'notify_capture_decode_fail' end
-    if err == 'http' then return 'notify_capture_discord_http' end
     if err == 'empty' then return 'notify_capture_discord_empty' end
     if err == 'json' then return 'notify_capture_discord_json' end
     if err == 'attachments' then return 'notify_capture_discord_attachments' end
@@ -136,7 +135,7 @@ local function webhookWithWait(webhookUrl)
 end
 
 ---@param b64 string
----@param cb fun(url: string?, err: string?)
+---@param cb fun(url: string?, err: string?, httpStatus: number|nil)
 local function discordUploadJpeg(b64, cb)
     local webhook = webhookWithWait(Config.DiscordWebhook)
     if isPlaceholderWebhook(Config.DiscordWebhook) or not isDiscordWebhookUrl(Config.DiscordWebhook) then
@@ -173,7 +172,7 @@ local function discordUploadJpeg(b64, cb)
     PerformHttpRequest(webhook, function(status, response)
         dbg(('webhook status=%s len=%s'):format(tostring(status), response and #response or 0))
         if status ~= 200 and status ~= 204 then
-            cb(nil, 'http')
+            cb(nil, 'http', status)
             return
         end
         if type(response) ~= 'string' or response == '' then
@@ -202,6 +201,23 @@ end
 ---@param src number
 local function notify(src, key)
     TriggerClientEvent('polapaint:client:notify', src, L(key))
+end
+
+---@param src number
+---@param err string|nil
+---@param httpStatus number|nil
+local function notifyDiscordFail(src, err, httpStatus)
+    if err == 'webhook' then
+        notify(src, 'notify_webhook_not_configured')
+    elseif err == 'http' then
+        TriggerClientEvent(
+            'polapaint:client:notify',
+            src,
+            L('notify_capture_discord_http'):format(tostring(httpStatus ~= nil and httpStatus or '?'))
+        )
+    else
+        notify(src, discordErrToNotifyKey(err))
+    end
 end
 
 RegisterNetEvent('polapaint:server:requestCapture', function()
@@ -247,14 +263,10 @@ RegisterNetEvent('polapaint:server:submitCapture', function(b64Payload, photoLab
         notify(src, 'notify_no_camera')
         return
     end
-    discordUploadJpeg(b64Payload, function(url, err)
+    discordUploadJpeg(b64Payload, function(url, err, httpStatus)
         if not url then
-            dbg('capture upload fail: ' .. tostring(err))
-            if err == 'webhook' then
-                notify(src, 'notify_webhook_not_configured')
-            else
-                notify(src, discordErrToNotifyKey(err))
-            end
+            dbg(('capture upload fail: err=%s http=%s'):format(tostring(err), tostring(httpStatus)))
+            notifyDiscordFail(src, err, httpStatus)
             return
         end
         local meta = {
@@ -311,14 +323,10 @@ RegisterNetEvent('polapaint:server:submitEdited', function(slot, b64Payload)
         notify(src, 'notify_edit_fail')
         return
     end
-    discordUploadJpeg(b64Payload, function(url, err)
+    discordUploadJpeg(b64Payload, function(url, err, httpStatus)
         if not url then
-            dbg('edit upload fail: ' .. tostring(err))
-            if err == 'webhook' then
-                notify(src, 'notify_webhook_not_configured')
-            else
-                notify(src, discordErrToNotifyKey(err))
-            end
+            dbg(('edit upload fail: err=%s http=%s'):format(tostring(err), tostring(httpStatus)))
+            notifyDiscordFail(src, err, httpStatus)
             return
         end
         local newMeta = {}
