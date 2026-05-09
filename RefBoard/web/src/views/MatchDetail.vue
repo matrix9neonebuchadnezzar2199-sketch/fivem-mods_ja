@@ -18,6 +18,7 @@ import MatchStatusCard from '../components/match/MatchStatusCard.vue'
 import PlayerListCard from '../components/match/PlayerListCard.vue'
 import EventTimelineCard from '../components/match/EventTimelineCard.vue'
 import PenaltyShootoutPanel from '../components/match/PenaltyShootoutPanel.vue'
+import CompactEventList from '../components/match/CompactEventList.vue'
 import SubstitutionDialog from '../components/match/SubstitutionDialog.vue'
 import CardIssueDialog from '../components/match/CardIssueDialog.vue'
 import HelpTriggerButton from '../components/help/HelpTriggerButton.vue'
@@ -932,6 +933,16 @@ function exportMatchEventsCsv() {
               {{ t('match_detail.compact_restore_full') }}
             </button>
           </div>
+        </div>
+
+        <div class="mt-3 border-t border-slate-600/50 pt-2">
+          <div class="mb-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5 text-xs text-slate-500">
+            <span>{{ t('match.operator_label') }}:</span>
+            <span v-if="operatorIsSet" class="font-medium text-slate-300">{{ operatorName }}</span>
+            <span v-else>{{ t('match.operator_unset') }}</span>
+          </div>
+          <div class="mb-1 text-xs font-medium text-slate-400">{{ t('compact.recent_events') }}</div>
+          <CompactEventList :events="detail.events" />
         </div>
       </div>
     </div>

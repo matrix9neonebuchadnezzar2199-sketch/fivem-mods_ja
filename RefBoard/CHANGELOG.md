@@ -8,6 +8,9 @@
 - コンパクト小窓モード（`transparentChrome`）時、`Teleport` 系モーダルの背後オーバーレイを透過しゲーム画面が見えるようにした（`composables/useDialogOverlay.ts`）。
 - PK 入力は `matches` に `pk_goal` / `pk_miss` として保存されていたが、`localMatchAdapter` が表示用 `text` を組み立てていなかったため PK 一覧・イベント欄が空行に見える不具合を修正（D-1）。
 - PK 入力 UI をホーム左・アウェイ右の 2 列（小窓モードでは 1 列縦積み）に刷新。成功は ⚽、失敗は `失敗`／`Miss` 表示。`localEventToRow` に `pkTeamId` / `pkPlayerNumber` / `pkPlayerName` を追加（D-2）。
+- 小窓モード（下部ドック）に直近イベント一覧を追加（新しい順・最大高さ 8rem でスクロール、読み取り専用）。PK 中は従来どおり一覧非表示（B）。
+- 小窓モードで操作者名（`selfName`）を表示。未設定時は「未設定」（C）。
+- 疑似データに PK デモ試合を 1 件追加（live・1-1・PK 2-2 同点で未決着、`sampleData.ts` の `pkDemo` と `seedActions.ts` で生成）。
 
 ## v0.2.1 — 2026‑05‑10（テスト基盤導入）
 

@@ -4,6 +4,10 @@
     "cancel": "Cancel",
     "execute": "Run"
   },
+  "compact": {
+    "no_events": "No events yet",
+    "recent_events": "Recent events"
+  },
   "toast": {
     "match_finished": "Match finished",
     "match_clock_failed": "Could not update the match clock.",

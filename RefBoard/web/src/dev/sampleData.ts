@@ -98,6 +98,8 @@ export interface SeedMatch {
   liveElapsedMinutes?: number
   finishedGoals?: { home: number; away: number }
   scheduledOffsetDays?: number
+  /** true: live・1-1・PK ハーフ・各 3 本蹴り終わり PK 2-2（未決着、D-2/B 検証用） */
+  pkDemo?: boolean
 }
 
 export const SEED_MATCHES: SeedMatch[] = [
@@ -115,7 +117,15 @@ export const SEED_MATCHES: SeedMatch[] = [
   { title: '練習試合 B', homeIndex: 3, awayIndex: 8, status: 'finished', homeScore: 1, awayScore: 1, finishedGoals: { home: 1, away: 1 } },
   { title: 'カップ戦 1回戦 第1試合', homeIndex: 1, awayIndex: 4, status: 'live', homeScore: 1, awayScore: 0, liveElapsedMinutes: 20 },
   { title: 'カップ戦 1回戦 第2試合', homeIndex: 2, awayIndex: 7, status: 'live', homeScore: 0, awayScore: 0, liveElapsedMinutes: 46 },
-  { title: 'カップ戦 1回戦 第3試合', homeIndex: 6, awayIndex: 9, status: 'live', homeScore: 2, awayScore: 1, liveElapsedMinutes: 78 },
+  {
+    title: 'カップ戦 PKデモ（同点→PK・検証用）',
+    homeIndex: 2,
+    awayIndex: 7,
+    status: 'live',
+    homeScore: 1,
+    awayScore: 1,
+    pkDemo: true,
+  },
   { title: 'リーグ第3節 第1試合', homeIndex: 0, awayIndex: 2, status: 'draft', homeScore: 0, awayScore: 0, scheduledOffsetDays: 1 },
   { title: 'リーグ第3節 第2試合', homeIndex: 3, awayIndex: 5, status: 'draft', homeScore: 0, awayScore: 0, scheduledOffsetDays: 2 },
   { title: 'リーグ第3節 第3試合', homeIndex: 4, awayIndex: 6, status: 'draft', homeScore: 0, awayScore: 0, scheduledOffsetDays: 3 },

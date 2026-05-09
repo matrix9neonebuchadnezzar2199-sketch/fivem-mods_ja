@@ -4,6 +4,10 @@
     "cancel": "キャンセル",
     "execute": "実行する"
   },
+  "compact": {
+    "no_events": "イベントなし",
+    "recent_events": "直近のイベント"
+  },
   "toast": {
     "match_finished": "試合を終了しました",
     "match_clock_failed": "試合時計の更新に失敗しました。",

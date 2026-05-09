@@ -65,6 +65,7 @@ RefBoard/
       │  └─ errorCodeMapper.ts    E2001/E3004/E3006 のみ
       ├─ components/
       │  ├─ match/MinuteInput.vue  イベント時刻（分＋ロスタイム）入力
+      │  ├─ match/CompactEventList.vue  小窓モード用・直近イベント（新しい順・スクロール）
       │  └─ data/ImportBackupDialog.vue  JSON 取り込みウィザード
       ├─ views/
       │  ├─ Launcher.vue          表示名入力 → 試合一覧へ
@@ -106,10 +107,11 @@ RefBoard/
 - **PK 表示**: `MatchDetail.vue` が `PenaltyShootoutPanel` の `pk-shot` を受け `addEvent`（`half: 'PK'`, `minute: 0`, `kind: 'pk_goal'|'pk_miss'`、`teamId` 付き）へ渡す。UI 用の `MatchEvent`（`types/match.ts`）へは `localEventToRow` が `kind: 'penalty'`・`penaltySuccess`・**非空の `text`**（タイムライン／CSV 用。成功は `⚽ 番号 氏名`、失敗は `失敗 番号 氏名`）に加え、2 列 PK パネル用に **`pkTeamId` / `pkPlayerNumber` / `pkPlayerName`** を付与。パネルは **左＝ホーム（`team1Id`）・右＝アウェイ（`team2Id`）** にキックを縦積み（テレビ中継型）。交互の蹴り順・勝敗判定は従来どおり時系列の `pkEvents` インデックスで計算。`matchCompactDock.transparentChrome` のときは PK グリッドを **1 列**に縮退。`breakdown.pk` は `homePkScore`/`awayPkScore` のスナップショット。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
+- **小窓ドック直近イベント**: `MatchDetail.vue` の `compactDock && serverHalf !== 'pk'` ブロック内で、`detail.events` を `CompactEventList` に渡し **新しい順**（`reverse`）で表示。既定 `max-height: 8rem`、`overflow-y: auto`。PK 行も含む。クリックは無反応（編集は通常画面）。その上に **操作者**（`settings.selfName`、未設定は `match.operator_unset`）を 1 行表示。
 - **ヘルプ**: ja/en 各 16 本。緊急度高（🆘）と診断（🩺）カテゴリは廃止し、🔧 トラブル配下に `trouble_undo_goal` と `trouble_e3006_player_has_events` の 2 本のみ。`errorCodeMapper.ts` は `E2001`/`E3004`/`E3006` のみ保持。
 - **ヘルプ検索**: `utils/helpSearch.ts` の Fuse.js 設定で `threshold: 0.35` / `minMatchCharLength: 2` / `ignoreLocation: true` / `keys: title(0.5) tags(0.3) slug(0.1) body(0.1)`。評価クエリは `docs/testing/help_search_queries.md`。再現用に `web/scripts/eval-help-fuse.mjs` あり。
 - **試合時刻入力**: `utils/matchTime.ts::parseMinuteInput` で `45` / `45+2` / `45＋2` を受理し、`{ minute, stoppage }` として保存。表示は `formatMinute`（`45+2'`）と `formatMinuteForCsv`（`45+2`）で分岐。PK 中のフィールドプレーイベントは `minute=0` / `stoppage=null`、PK シュートのみラベル `PK`。
-- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（またはブラウザ `npm run dev` 時）、`dev/sampleData.ts` 固定データを `localPersist` へ書き込み `location.reload()` で反映。10 チーム × 13 名・20 試合（終了／進行中／下書き混在）。全削除時は `refboard_local_*` に加え `refboard_settings` と `refboard-locale` も除去。
+- **開発確認用疑似データ**: Settings の Development で「開発用データ操作パネルを表示」がオンのとき（またはブラウザ `npm run dev` 時）、`dev/sampleData.ts` 固定データを `localPersist` へ書き込み `location.reload()` で反映。10 チーム × 13 名・20 試合（終了／進行中 3／下書き 5）。**進行中のうち 1 件が PK デモ**（`SeedMatch.pkDemo`・1-1・PK 2-2 同点・未決着、`seedActions.buildMatchFromSeed` が `pk_goal`/`pk_miss` を生成）。全削除時は `refboard_local_*` に加え `refboard_settings` と `refboard-locale` も除去。
 
 ## 6. 開発・ビルド・配布
 
@@ -145,8 +147,9 @@ npx vue-tsc --noEmit # 型チェック
 ## 9. ロードマップ（v0.2.0 → v1.0.0）
 
 - **v0.2.0（完了・2026‑05‑09）**: ヘルプ Fuse 再調整、ロスタイム入力許容、JSON インポート部分マージ。
-- **v0.2.x（短期）**: コンパクト小窓モードの再評価、`intro_setup` スクショ更新。
-- **v0.3.0（中期）**: 集計・大会／リーグ、CSV 拡充、ヘルプ拡充。
+- **v0.2.2（完了・2026‑05‑10）**: 小窓モード A（モーダル透過）、D‑1/D‑2（PK 表示・2 列 UI）、B（直近イベント）、C（小窓で操作者表示）、PK デモシード。Git タグ `v0.2.2`。
+- **v0.2.x 残り**: `intro_setup` スクショ差し替えのみ（任意）。
+- **v0.3.0（着手予定）**: **B1** CSV 出力項目拡充、**I** ヘルプ拡充。大会／リーグ集計（旧 B2）は **v0.4.0** に延期。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -154,8 +157,8 @@ npx vue-tsc --noEmit # 型チェック
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.2.2（開発用疑似データ投入／削除、設定の DB メタ表示撤去。vitest は v0.2.1〜）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: PK キャンセル UI、コンパクト小窓再評価など §7 TODO のいずれか。
+> 現状: v0.2.2（タグ済み。小窓 A/B/C、PK D‑1/D‑2、PK デモシード、vitest）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 次着手候補: v0.3.0（B1 CSV + I ヘルプ）、または §7 の PK キャンセル UI など。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
 短縮フレーズ: `小窓モードいって` / `PK キャンセルいって`
@@ -174,3 +177,4 @@ npx vue-tsc --noEmit # 型チェック
 - 2026‑05‑10: コンパクト小窓時のモーダル背後透過（A）。`useDialogOverlay.ts` を追加し各種ダイアログのオーバーレイに適用。
 - 2026‑05‑10: PK 記録の表示不具合（D-1）。`stores/matches.ts::addEvent` は従来どおり `pk_goal` / `pk_miss` を保持するが、`utils/localMatchAdapter.ts::localEventToRow` が `text` を空のまま返していたため `PenaltyShootoutPanel` の記録リストと `EventTimelineCard` が空行に見えていた。PK 行に `⚽`／`失敗` と背番号・氏名（またはラベルのみ）を付与して修正。
 - 2026‑05‑10: PK 入力 UI（D-2）。`PenaltyShootoutPanel` をホーム／アウェイ 2 列表示＋チーム別の選手選択・成功／失敗ボタンに変更。`localEventToRow` に `pkTeamId` 等を追加し `localMatchAdapter.test.ts` で PK 行を検証。
+- 2026‑05‑10: 小窓モードに `CompactEventList`（直近イベント・新しい順・8rem スクロール）と操作者 1 行（C）を追加。`SeedMatch.pkDemo` による PK デモ試合を疑似データに 1 件組み込み。Git タグ `v0.2.2`。

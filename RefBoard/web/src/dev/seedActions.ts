@@ -154,29 +154,46 @@ function buildMatchFromSeed(
       }
     }
   } else if (s.status === 'live') {
-    const elapsedMin = s.liveElapsedMinutes ?? 0
-    currentHalf = elapsedMin <= 45 ? '1H' : '2H'
-    const elapsed = elapsedMin * 60 * 1000
-    clockStartedAt = nowMs - elapsed
-    clockAccumulatedMs = 0
-    startedAt = new Date(clockStartedAt).toISOString()
-
-    if (homePlayers.length > 0 && awayPlayers.length > 0) {
-      const half1: Half = '1H'
-      const half2: Half = '2H'
-      let m = 8
-      for (let g = 0; g < s.homeScore; g++) {
-        const half: Half = m <= 40 ? half1 : half2
-        const minute = half === half1 ? Math.min(44, m) : Math.min(89, 48 + m)
-        events.push(makeGoalEvent(matchId, home.id, homePlayers[g % homePlayers.length].id, half, minute))
-        m += 12
+    if (s.pkDemo) {
+      currentHalf = 'PK'
+      clockStartedAt = null
+      clockAccumulatedMs = 90 * 60 * 1000
+      startedAt = new Date(nowMs - 2 * 60 * 60 * 1000).toISOString()
+      if (homePlayers.length >= 3 && awayPlayers.length >= 3) {
+        events.push(makeGoalEvent(matchId, home.id, homePlayers[0].id, '2H', 23))
+        events.push(makeGoalEvent(matchId, away.id, awayPlayers[0].id, '2H', 67))
+        events.push(makePkEvent(matchId, 'pk_goal', home.id, homePlayers[0].id))
+        events.push(makePkEvent(matchId, 'pk_goal', away.id, awayPlayers[0].id))
+        events.push(makePkEvent(matchId, 'pk_miss', home.id, homePlayers[1].id))
+        events.push(makePkEvent(matchId, 'pk_miss', away.id, awayPlayers[1].id))
+        events.push(makePkEvent(matchId, 'pk_goal', home.id, homePlayers[2].id))
+        events.push(makePkEvent(matchId, 'pk_goal', away.id, awayPlayers[2].id))
       }
-      m = 10
-      for (let g = 0; g < s.awayScore; g++) {
-        const half: Half = m <= 38 ? half1 : half2
-        const minute = half === half1 ? Math.min(43, m + 5) : Math.min(88, 52 + m)
-        events.push(makeGoalEvent(matchId, away.id, awayPlayers[g % awayPlayers.length].id, half, minute))
-        m += 11
+    } else {
+      const elapsedMin = s.liveElapsedMinutes ?? 0
+      currentHalf = elapsedMin <= 45 ? '1H' : '2H'
+      const elapsed = elapsedMin * 60 * 1000
+      clockStartedAt = nowMs - elapsed
+      clockAccumulatedMs = 0
+      startedAt = new Date(clockStartedAt).toISOString()
+
+      if (homePlayers.length > 0 && awayPlayers.length > 0) {
+        const half1: Half = '1H'
+        const half2: Half = '2H'
+        let m = 8
+        for (let g = 0; g < s.homeScore; g++) {
+          const half: Half = m <= 40 ? half1 : half2
+          const minute = half === half1 ? Math.min(44, m) : Math.min(89, 48 + m)
+          events.push(makeGoalEvent(matchId, home.id, homePlayers[g % homePlayers.length].id, half, minute))
+          m += 12
+        }
+        m = 10
+        for (let g = 0; g < s.awayScore; g++) {
+          const half: Half = m <= 38 ? half1 : half2
+          const minute = half === half1 ? Math.min(43, m + 5) : Math.min(88, 52 + m)
+          events.push(makeGoalEvent(matchId, away.id, awayPlayers[g % awayPlayers.length].id, half, minute))
+          m += 11
+        }
       }
     }
   } else {
@@ -195,8 +212,8 @@ function buildMatchFromSeed(
     awayName: away.name,
     homeScore: s.homeScore,
     awayScore: s.awayScore,
-    homePkScore: null,
-    awayPkScore: null,
+    homePkScore: s.pkDemo ? 2 : null,
+    awayPkScore: s.pkDemo ? 2 : null,
     status: s.status,
     currentHalf,
     halfMinutes: 45,
@@ -247,6 +264,30 @@ function makeCardEvent(
     kind: color,
     half,
     minute,
+    stoppage: null,
+    teamId,
+    playerId,
+    assistPlayerId: null,
+    subInPlayerId: null,
+    subOutPlayerId: null,
+    note: null,
+    voided: false,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+function makePkEvent(
+  matchId: number,
+  kind: 'pk_goal' | 'pk_miss',
+  teamId: number,
+  playerId: number,
+): MatchEvent {
+  return {
+    id: nextId('event'),
+    matchId,
+    kind,
+    half: 'PK',
+    minute: 0,
     stoppage: null,
     teamId,
     playerId,
