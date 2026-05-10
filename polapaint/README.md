@@ -10,9 +10,9 @@
 
 ## NUI からのアップロード経路
 
-FiveM の CEF は、URL によって **`SetHttpHandler`** に届く経路と **`files` で宣言した静的ファイル**を返す経路が分かれます。**JPEG アップロード**は `postNuiBinary` が **`http://<リソース名>/uploadCapture` / `uploadEdit`** に POST します（クエリは付けず **`X-Polapaint-*` ヘッダ**で token / name / slot を送る）。
+NUI の実オリジンは **`https://cfx-nui-<リソース名>`**（例: `https://cfx-nui-polapaint`）です。`https://polapaint/...` のように短いホストへ POST すると **別オリジン扱いになり 404** になることがあります。
 
-一部環境では **`https://` の POST がサーバー HTTP ハンドラに届かず 404** になる報告があるため、バイナリ POST だけ **`http://`** としています。通常の `RegisterNUICallback` 向け JSON（`postNui`）は従来どおり **`https://`** です。
+**`postNui` / `postNuiBinary`** は **`window.location.origin`（`NUI_ORIGIN()`）と同一オリジン**の URLへ POST します（取得できないときだけ `https://cfx-nui-` + `RES()` にフォールバック）。本文は JPEG の **`ArrayBuffer`**、token / name / slot は **`X-Polapaint-*` ヘッダ**（クエリは付けない）。
 
 サーバーは **クエリまたはヘッダ**のどちらでも `token` 等を受け取れます。`curl` の手動テストはクエリ付き URL でも動きます。
 

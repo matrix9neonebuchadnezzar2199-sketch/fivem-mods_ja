@@ -55,8 +55,17 @@
     return 'polapaint';
   }
 
+  /** NUI ページと同一オリジン（例: https://cfx-nui-polapaint）。fetch が SetHttpHandler に届くようにする */
+  function NUI_ORIGIN() {
+    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+      var o = window.location.origin;
+      if (o && o.indexOf('http') === 0) return o;
+    }
+    return 'https://cfx-nui-' + RES();
+  }
+
   function postNui(endpoint, data) {
-    return fetch(`https://${RES()}/${endpoint}`, {
+    return fetch(NUI_ORIGIN() + '/' + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8' },
       body: JSON.stringify(data || {}),
@@ -64,8 +73,7 @@
   }
 
   async function postNuiBinary(endpoint, body, query) {
-    /* NUI 内 fetch は https://<resource>/… が静的参照と誤認証され SetHttpHandler に届かない事例があるため http を使用 */
-    const url = 'http://' + RES() + '/' + endpoint;
+    const url = NUI_ORIGIN() + '/' + endpoint;
     const headers = { 'Content-Type': 'image/jpeg' };
     if (query) {
       if (query.token) headers['X-Polapaint-Token'] = String(query.token);
@@ -369,25 +377,23 @@
   window.addEventListener('keydown', async (e) => {
     if (e.key !== 'F2') return;
     const jpegBuf = new Uint8Array([0xFF, 0xD8, 0xFF, 0xD9]).buffer;
-    try {
-      const r = await fetch('http://' + RES() + '/uploadCapture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'image/jpeg' },
-        body: jpegBuf,
-      });
-      nuiAlert('test_http_' + r.status);
-    } catch (err) {
-      nuiAlert('test_http_err_' + (err && err.message ? err.message : 'unknown'));
-    }
-    try {
-      const r = await fetch('https://' + RES() + '/uploadCapture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'image/jpeg' },
-        body: jpegBuf,
-      });
-      nuiAlert('test_https_' + r.status);
-    } catch (err) {
-      nuiAlert('test_https_err_' + (err && err.message ? err.message : 'unknown'));
+    var targets = [
+      NUI_ORIGIN() + '/uploadCapture',
+      'https://' + RES() + '/uploadCapture',
+      'https://cfx-nui-' + RES() + '/uploadCapture',
+    ];
+    for (var ti = 0; ti < targets.length; ti++) {
+      var url = targets[ti];
+      try {
+        var r = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'image/jpeg' },
+          body: jpegBuf,
+        });
+        nuiAlert('test_' + url + '_' + r.status);
+      } catch (err) {
+        nuiAlert('test_' + url + '_err_' + (err && err.message ? err.message : 'unknown'));
+      }
     }
   });
 
