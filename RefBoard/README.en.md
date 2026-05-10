@@ -43,10 +43,11 @@
 
 ## Feature highlights
 
-- **Matches** — list/create/detail, running clock, goal wizard, manual score edits with history  
-- **Players** — roster-aware subs, yellow/red, PK logging (three-column first/second kicker layout)  
-- **Teams** — registration and roster  
-- **Help** — 16 articles (JA/EN), Fuse.js search, per-screen `?` (match detail keeps navigation inside the modal)  
+- **Matches** — list/create/detail, running clock, goal wizard, manual score edits with history
+- **Players** — roster-aware subs, yellow/red
+- **Penalty shootout** — three-column first/second kicker layout, persistent first team, **undo last kick**, **re-roll first team** (when no kicks recorded), **cancel entire shootout** (returns to second half), and a "both teams need at least one player" entry validation
+- **Teams** — registration and roster
+- **Help** — 16 articles (JA/EN), Fuse.js search, per-screen `?` (match detail keeps navigation inside the modal), the getting-started guide includes UI screenshots
 - **Dev** — optional **seed data** from Settings (keep off on production machines)
 
 ---
@@ -67,10 +68,11 @@ Tweak [`config.lua`](./config.lua) for `Config.OpenKey` and `Config.DefaultLocal
 ```bash
 cd RefBoard/web
 npm install
-npm run dev    # browser-only preview
-npm run build  # output → web/dist (what FiveM serves)
-npx vue-tsc --noEmit
-npm test
+npm run dev          # browser-only preview
+npm run build        # output → web/dist (what FiveM serves)
+npx vue-tsc --noEmit # type check
+npm test             # vitest (55 tests as of v0.6.0)
+npm run check:help   # validate ja/en help article integrity (run whenever articles change)
 ```
 
 `fxmanifest.lua` points at `web/dist`. Always run **`npm run build`** before shipping.
