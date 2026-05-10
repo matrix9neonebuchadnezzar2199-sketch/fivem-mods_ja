@@ -217,11 +217,39 @@ function CameraLoop()
                 PlaySoundFrontend(-1, "Camera_Shoot", "Phone_Soundset_Franklin", false)
 
                 if Config.UseFivemerr == false then
-                    exports['screenshot-basic']:requestScreenshotUpload(tostring(uploadHookOrSecret), "files[]", function(data)
-                        local image = json.decode(data)
+                    if Config and Config.Debug then
+                        print(('[%s] [DEBUG] webhook URL 先頭20文字=%s len=%d'):format(GetCurrentResourceName(), tostring(uploadHookOrSecret):sub(1, 20), #tostring(uploadHookOrSecret)))
+                    end
+                    -- 注: encoding を明示しないと Discord 側で「internal network error (40333)」が出ることがある。
+                    -- オリジナル ps-camera は Fivemerr 側だけ encoding='png' を渡し、Discord 側を省略していた書き漏らし。
+                    exports['screenshot-basic']:requestScreenshotUpload(tostring(uploadHookOrSecret), "files[]", { encoding = 'png' }, function(data)
+                        if Config and Config.Debug then
+                            print(('[%s] [DEBUG] screenshot-basic コールバック発火'):format(GetCurrentResourceName()))
+                            print(('[%s] [DEBUG] 生レスポンス（先頭500字）= %s'):format(GetCurrentResourceName(), tostring(data):sub(1, 500)))
+                        end
+                        local ok, image = pcall(json.decode, data)
+                        if not ok or type(image) ~= 'table' then
+                            print(('[%s] [ERROR] レスポンス JSON パース失敗: %s'):format(GetCurrentResourceName(), tostring(image)))
+                            camera = false
+                            if cameraprop then DeleteEntity(cameraprop) end
+                            ClearPedTasks(lPed)
+                            SendNUIMessage({action = "hideOverlay"})
+                            return
+                        end
+                        if not image.attachments or not image.attachments[1] then
+                            print(('[%s] [ERROR] Discord 応答に attachments なし。webhook URL が無効か、権限/制限の可能性。応答 = %s'):format(GetCurrentResourceName(), tostring(data):sub(1, 500)))
+                            camera = false
+                            if cameraprop then DeleteEntity(cameraprop) end
+                            ClearPedTasks(lPed)
+                            SendNUIMessage({action = "hideOverlay"})
+                            return
+                        end
                         camera = false
                         if cameraprop then DeleteEntity(cameraprop) end
                         ClearPedTasks(lPed)
+                        if Config and Config.Debug then
+                            print(('[%s] [DEBUG] proxy_url=%s → CreatePhoto 送信'):format(GetCurrentResourceName(), tostring(image.attachments[1].proxy_url)))
+                        end
                         TriggerServerEvent("ps-camera:CreatePhoto", json.encode(image.attachments[1].proxy_url))
                         SendNUIMessage({action = "SavePic", pic = json.encode(image.attachments[1].proxy_url)})
                         SendNUIMessage({action = "hideOverlay"})

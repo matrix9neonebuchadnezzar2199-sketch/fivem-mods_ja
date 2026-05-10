@@ -67,8 +67,16 @@ end)
 
 RegisterNetEvent('ps-camera:CreatePhoto', function(url)
     local src = source
+    if Config and Config.Debug then
+        print(('[%s] [DEBUG] CreatePhoto 受信 src=%d url=%s'):format(GetCurrentResourceName(), src, tostring(url):sub(1, 200)))
+    end
     local player = QBCore.Functions.GetPlayer(src)
-    if not player then return end
+    if not player then
+        if Config and Config.Debug then
+            print(('[%s] [DEBUG] CreatePhoto: GetPlayer(%d) が nil（キャラ未ロード？）'):format(GetCurrentResourceName(), src))
+        end
+        return
+    end
 
     local coords = GetEntityCoords(GetPlayerPed(src))
 
@@ -77,8 +85,16 @@ end)
 
 RegisterNetEvent('ps-camera:savePhoto', function(url, streetName)
     local src = source
+    if Config and Config.Debug then
+        print(('[%s] [DEBUG] savePhoto 受信 src=%d streetName=%s url=%s'):format(GetCurrentResourceName(), src, tostring(streetName), tostring(url):sub(1, 200)))
+    end
     local player = QBCore.Functions.GetPlayer(src)
-    if not player then return end
+    if not player then
+        if Config and Config.Debug then
+            print(('[%s] [DEBUG] savePhoto: GetPlayer(%d) が nil'):format(GetCurrentResourceName(), src))
+        end
+        return
+    end
 
     local location = streetName
 
@@ -93,7 +109,10 @@ RegisterNetEvent('ps-camera:savePhoto', function(url, streetName)
     end
 
     if SvConfig.Inv == 'qb' then
-        player.Functions.AddItem('photo', 1, nil, info)
+        local addOk = player.Functions.AddItem('photo', 1, nil, info)
+        if Config and Config.Debug then
+            print(('[%s] [DEBUG] AddItem photo 結果=%s（false の場合は qb-core/shared/items.lua の photo 未登録か容量超過）'):format(GetCurrentResourceName(), tostring(addOk)))
+        end
         TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['photo'], 'add')
     elseif SvConfig.Inv == 'ox' then
         local ox_inventory = exports.ox_inventory

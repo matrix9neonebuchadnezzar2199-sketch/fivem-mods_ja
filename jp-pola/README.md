@@ -6,7 +6,7 @@ ps-camera（Project Sloth Team）を **完全日本語化** したフォーク�
 
 - **オリジナル**: https://github.com/Project-Sloth/ps-camera
 - **ライセンス**: [CC BY-NC-SA 4.0](LICENSE)（**非商用**・継承）
-- **バージョン**: `1.1.0-jp.1`
+- **バージョン**: `1.1.0-jp.2`
 - **対象**: GTA5 / FiveM
 - **依存**: [QBCore](https://github.com/qbcore-framework/qb-core), [screenshot-basic](https://github.com/citizenfx/screenshot-basic)（任意で `ox_inventory`）
 
@@ -106,6 +106,15 @@ set jp-pola_webhook "https://discord.com/api/webhooks/..."
 - `config.lua` に日本語コメント
 
 詳細は [CHANGELOG_JP.md](CHANGELOG_JP.md) を参照。
+
+## トラブルシュート
+
+### `Warning: could not load 'locales/ja.json'`
+
+**ox_lib** が `lib.locale()` のとき、現在のリソース内の `locales/<言語>.json` を読みに行き、無いとこの警告を出します。
+
+- **jp-pola は ox_lib 不要**です。`fxmanifest.lua` に **`@ox_lib/init.lua` を追加している**場合は、不要ならその行を削除すると警告も消えます（他 MOD の manifest をコピーしたときに混ざりがち）。
+- どうしても `ox_lib` を同梱したい場合は、本リソースに **`locales/en.json` と `locales/ja.json`**（空の `{}` で可）を置き、`files` に列挙する。`1.1.0-jp.2` 以降は同梱済み。
 
 ## ライセンス・クレジット
 

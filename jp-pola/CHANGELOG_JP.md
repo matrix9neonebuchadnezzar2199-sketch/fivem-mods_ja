@@ -2,6 +2,14 @@
 
 バージョン規則: **オリジナル版番＋ `-jp.N`**（[CONTRIBUTING_JP.md §5](../CONTRIBUTING_JP.md)）。
 
+## 1.1.0-jp.2 — 2026-05-10
+
+### 修正・追加
+
+- **Discord Webhook 撮影**: `screenshot-basic` の `requestScreenshotUpload` に **`encoding = 'png'`** を渡す（原作は Fivemerr 側のみ指定しており、Discord 側で `internal network error`（40333）になることがあった）。
+- **ox_lib 警告**: `locales/en.json` / `locales/ja.json` を空オブジェクト `{}` で同梱し `files` に列挙（`@ox_lib/init.lua` を誤って足した環境での `could not load 'locales/ja.json'` を防止）。
+- `Config.Debug` のリポジトリ既定を `false` に戻す。
+
 ## 1.1.0-jp.1 — 2026-05-10
 
 オリジナル `1.1.0`（Project Sloth Team）をベースに完全日本語化。
