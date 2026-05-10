@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Match, MatchEvent as LocalMatchEvent, MatchPlayer as LocalMatchPlayer } from '../types/local'
-import { computeFieldGoalBreakdown, localEventToRow } from './localMatchAdapter'
+import { computeFieldGoalBreakdown, localEventToRow, matchToDetailModel } from './localMatchAdapter'
 
 const players: LocalMatchPlayer[] = [
   { id: 1, matchId: 1, teamId: 10, name: '山田', number: 10, status: 'playing' },
@@ -57,6 +57,27 @@ function baseMatch(over: Partial<Match> = {}): Match {
     ...over,
   }
 }
+
+describe('matchToDetailModel pkFirstTeamId fallback', () => {
+  it('pkFirstTeamId が設定されている場合はそれを使う', () => {
+    const m = baseMatch({ homeTeamId: 1, awayTeamId: 2, pkFirstTeamId: 2 })
+    const d = matchToDetailModel(m, 0)
+    expect(d.pkFirstTeamId).toBe(2)
+  })
+
+  it('pkFirstTeamId が null の場合は homeTeamId を fallback とする', () => {
+    const m = baseMatch({ homeTeamId: 1, awayTeamId: 2, pkFirstTeamId: null })
+    const d = matchToDetailModel(m, 0)
+    expect(d.pkFirstTeamId).toBe(1)
+  })
+
+  it('pkFirstTeamId 未設定（古いデータ）でも homeTeamId を返す', () => {
+    const m = baseMatch({ homeTeamId: 1, awayTeamId: 2 })
+    delete (m as Partial<Match>).pkFirstTeamId
+    const d = matchToDetailModel(m, 0)
+    expect(d.pkFirstTeamId).toBe(1)
+  })
+})
 
 describe('computeFieldGoalBreakdown', () => {
   it('splits 1H vs 2H goals by event half', () => {

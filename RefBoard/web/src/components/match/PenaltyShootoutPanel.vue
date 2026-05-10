@@ -6,6 +6,8 @@ import { useDialogOverlay } from '../../composables/useDialogOverlay'
 const { overlayRootClassFlexCol, overlayRootClass } = useDialogOverlay()
 const pkWinnerOverlayClass = overlayRootClassFlexCol('z-[400]', 'bg-black/80')
 const pkFinishAskOverlayClass = overlayRootClass('z-[410]', 'bg-black/60')
+const pkUndoOverlayClass = overlayRootClass('z-[420]', 'bg-black/60')
+const pkRerollOverlayClass = overlayRootClass('z-[420]', 'bg-black/60')
 
 const props = defineProps<{
   model: MatchDetailModel
@@ -15,6 +17,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   finished: []
   'pk-shot': [{ teamId: number; playerId: number; success: boolean }]
+  'pk-undo-last': []
+  'pk-reroll-first': [{ pkFirstTeamId: number }]
   'finish-match': []
 }>()
 
@@ -27,6 +31,9 @@ const secondKickerPlayerId = ref<string | null>(null)
 const showWinnerOverlay = ref(false)
 const showFinishAsk = ref(false)
 const winnerName = ref('')
+const showUndoConfirm = ref(false)
+const showRerollDialog = ref(false)
+const rerollPickTeamId = ref<number>(0)
 
 let winTimer: number | null = null
 
@@ -72,9 +79,7 @@ const displayRows = computed(() =>
 
 const nextTeamId = computed(() => {
   const n = pkEvents.value.length
-  const first = props.model.pkFirstTeamId ?? props.model.team1Id
-  const second = first === props.model.team1Id ? props.model.team2Id : props.model.team1Id
-  return n % 2 === 0 ? first : second
+  return n % 2 === 0 ? firstTeamId.value : secondTeamId.value
 })
 
 const rosterHome = computed((): MatchPlayer[] =>
@@ -117,6 +122,59 @@ const pkDecided = computed(() => {
   return n % 2 === 0 && tFirst !== tSecond
 })
 
+const lastPkEvent = computed(() => pkEvents.value[pkEvents.value.length - 1] ?? null)
+
+const lastPkEventLabel = computed(() => {
+  const ev = lastPkEvent.value
+  if (!ev) return ''
+  const idx =
+    ev.pkTeamId === firstTeamId.value
+      ? pkColFirstShots.value.findIndex((x) => x.id === ev.id) + 1
+      : pkColSecondShots.value.findIndex((x) => x.id === ev.id) + 1
+  const teamName = ev.pkTeamId === props.model.team1Id ? props.model.home.name : props.model.away.name
+  const result = ev.penaltySuccess ? t('penalty.success') : t('penalty.miss')
+  return t('penalty.undo_confirm_body', { team: teamName, index: idx, result })
+})
+
+const canUndo = computed(() => !props.readonly && !pkDecided.value && pkEvents.value.length > 0)
+
+const canReroll = computed(
+  () =>
+    !props.readonly &&
+    pkEvents.value.length === 0 &&
+    props.model.pkFirstTeamId != null,
+)
+
+function openUndoConfirm() {
+  if (!canUndo.value) return
+  showUndoConfirm.value = true
+}
+
+function confirmUndoLast() {
+  showUndoConfirm.value = false
+  emit('pk-undo-last')
+}
+
+function cancelUndoDialog() {
+  showUndoConfirm.value = false
+}
+
+function openRerollDialog() {
+  if (!canReroll.value) return
+  rerollPickTeamId.value = props.model.pkFirstTeamId ?? props.model.team1Id
+  showRerollDialog.value = true
+}
+
+function cancelRerollDialog() {
+  showRerollDialog.value = false
+}
+
+function confirmReroll() {
+  if (rerollPickTeamId.value !== props.model.team1Id && rerollPickTeamId.value !== props.model.team2Id) return
+  showRerollDialog.value = false
+  emit('pk-reroll-first', { pkFirstTeamId: rerollPickTeamId.value })
+}
+
 function winnerLabelForTeam(teamId: number) {
   if (teamId === props.model.team1Id) return props.model.home.name
   if (teamId === props.model.team2Id) return props.model.away.name
@@ -133,8 +191,8 @@ function maybeShowWinnerOverlay() {
     if (i % 2 === 0) tFirst++
     else tSecond++
   }
-  const first = props.model.pkFirstTeamId ?? props.model.team1Id
-  const second = first === props.model.team1Id ? props.model.team2Id : props.model.team1Id
+  const first = firstTeamId.value
+  const second = secondTeamId.value
   const wid = tFirst > tSecond ? first : second
   winnerName.value = winnerLabelForTeam(wid)
   showWinnerOverlay.value = true
@@ -332,6 +390,66 @@ function inputRowClass(tid: number) {
               {{ t('penalty.miss') }}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!readonly" class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-violet-500/20 pt-3">
+      <button
+        type="button"
+        class="rounded-md border border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/20 disabled:opacity-40"
+        :disabled="!canUndo"
+        @click="openUndoConfirm"
+      >
+        {{ t('penalty.undo_last') }}
+      </button>
+      <button
+        v-if="canReroll"
+        type="button"
+        class="rounded-md border border-slate-500/50 bg-slate-700/50 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
+        @click="openRerollDialog"
+      >
+        {{ t('penalty.reroll_first_team') }}
+      </button>
+    </div>
+
+    <div v-if="showUndoConfirm" :class="pkUndoOverlayClass">
+      <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-5 shadow-xl">
+        <h4 class="mb-2 font-semibold text-slate-50">{{ t('penalty.undo_confirm_title') }}</h4>
+        <p class="mb-4 text-sm text-slate-300">{{ lastPkEventLabel }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded border border-slate-600 px-3 py-2 text-sm" @click="cancelUndoDialog">
+            {{ t('dialog.no') }}
+          </button>
+          <button
+            type="button"
+            class="rounded bg-amber-600 px-3 py-2 text-sm font-semibold text-white"
+            @click="confirmUndoLast"
+          >
+            {{ t('dialog.yes') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showRerollDialog" :class="pkRerollOverlayClass">
+      <div class="max-w-md rounded-xl border border-slate-600 bg-slate-900 p-5 shadow-xl">
+        <h4 class="mb-2 font-semibold text-slate-50">{{ t('penalty.reroll_first_team_title') }}</h4>
+        <p class="mb-3 text-xs text-slate-500">{{ t('penalty.reroll_first_team_body') }}</p>
+        <label class="mb-3 block text-xs text-slate-400">
+          {{ t('match_status.pk_first') }}
+          <select v-model.number="rerollPickTeamId" class="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm">
+            <option :value="model.team1Id">{{ model.home.name }}</option>
+            <option :value="model.team2Id">{{ model.away.name }}</option>
+          </select>
+        </label>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="rounded border border-slate-600 px-3 py-2 text-sm" @click="cancelRerollDialog">
+            {{ t('dialog.no') }}
+          </button>
+          <button type="button" class="rounded bg-primary px-3 py-2 text-sm font-semibold text-white" @click="confirmReroll">
+            {{ t('match_status.pk_start') }}
+          </button>
         </div>
       </div>
     </div>

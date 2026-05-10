@@ -79,6 +79,8 @@ export interface Match {
   awayScore: number
   homePkScore?: number | null
   awayPkScore?: number | null
+  /** PK 先攻チーム ID（null の場合は homeTeamId を fallback として扱う） */
+  pkFirstTeamId?: number | null
   status: 'draft' | 'live' | 'finished'
   currentHalf: Half
   halfMinutes: number

@@ -536,7 +536,9 @@ function currentHalf(): Half {
 }
 
 function onSetHalf(p: { matchId: number; half: string; pkFirstTeamId?: number }) {
-  void p.pkFirstTeamId
+  if (p.pkFirstTeamId != null) {
+    matchesStore.setPkFirstTeam(p.matchId, p.pkFirstTeamId)
+  }
   matchesStore.setHalf(p.matchId, serverHalfStringToHalf(p.half))
   syncDetail()
 }
@@ -650,6 +652,27 @@ function onIssueCard(payload: {
       voided: false,
     })
     matchesStore.setPlayerStatus(id, payload.playerId, 'ejected')
+  }
+  syncDetail()
+}
+
+function onPkUndoLast() {
+  const m = rawMatch.value
+  if (!m) return
+  const pkEvents = m.events
+    .filter((e) => !e.voided && (e.kind === 'pk_goal' || e.kind === 'pk_miss'))
+    .sort((a, b) => a.id - b.id)
+  const last = pkEvents[pkEvents.length - 1]
+  if (!last) return
+  matchesStore.voidEvent(matchId.value, last.id)
+  syncDetail()
+}
+
+function onPkRerollFirst(p: { pkFirstTeamId: number }) {
+  const ok = matchesStore.setPkFirstTeam(matchId.value, p.pkFirstTeamId)
+  if (!ok) {
+    toast(t('toast.event_invalid_team'), 'error')
+    return
   }
   syncDetail()
 }
@@ -899,6 +922,8 @@ function onAddManual(p: { name: string; number: number | null }) {
           :model="detail"
           :readonly="readonly"
           @pk-shot="onPkShot"
+          @pk-undo-last="onPkUndoLast"
+          @pk-reroll-first="onPkRerollFirst"
           @finish-match="onPkPanelFinishMatch"
         />
       </div>

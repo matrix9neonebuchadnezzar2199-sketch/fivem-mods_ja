@@ -82,6 +82,52 @@ describe('useMatchesStore addEvent', () => {
   })
 })
 
+describe('setPkFirstTeam', () => {
+  it('PK イベントが 0 件のとき先攻チームを設定できる', () => {
+    const teams = useTeamsStore()
+    const home = teams.createTeam({ name: 'H' })
+    const away = teams.createTeam({ name: 'A' })
+    const store = useMatchesStore()
+    const m = store.createMatch({ title: 't', homeTeamId: home.id, awayTeamId: away.id })
+    expect(store.setPkFirstTeam(m.id, away.id)).toBe(true)
+    expect(store.find(m.id)?.pkFirstTeamId).toBe(away.id)
+  })
+
+  it('PK イベントが 1 件以上あれば設定を拒否する', () => {
+    const teams = useTeamsStore()
+    const home = teams.createTeam({ name: 'H' })
+    const away = teams.createTeam({ name: 'A' })
+    const store = useMatchesStore()
+    const m = store.createMatch({ title: 't', homeTeamId: home.id, awayTeamId: away.id })
+    store.setPkFirstTeam(m.id, home.id)
+    store.addEvent(m.id, {
+      kind: 'pk_goal',
+      half: 'PK',
+      minute: 0,
+      stoppage: null,
+      teamId: home.id,
+      playerId: null,
+      assistPlayerId: null,
+      subInPlayerId: null,
+      subOutPlayerId: null,
+      note: null,
+      voided: false,
+    })
+    expect(store.setPkFirstTeam(m.id, away.id)).toBe(false)
+    expect(store.find(m.id)?.pkFirstTeamId).toBe(home.id)
+  })
+
+  it('不正なチーム ID は拒否する', () => {
+    const teams = useTeamsStore()
+    const home = teams.createTeam({ name: 'H' })
+    const away = teams.createTeam({ name: 'A' })
+    const store = useMatchesStore()
+    const m = store.createMatch({ title: 't', homeTeamId: home.id, awayTeamId: away.id })
+    expect(store.setPkFirstTeam(m.id, 99_999)).toBe(false)
+    expect(store.find(m.id)?.pkFirstTeamId).toBeNull()
+  })
+})
+
 describe('useMatchesStore clockNowMs', () => {
   afterEach(() => {
     vi.useRealTimers()

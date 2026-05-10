@@ -408,13 +408,25 @@ errorCode: null
 ## Mistakes
 
 - Wrong kicker: **Undo** that PK row, re-record.
-- Wrong first team: **no cancel-PK UI** yet — contact admin or annotate per ops policy.
+- Wrong first team: with **zero** kicks recorded, use **Re-select First Team** at the bottom of the panel. After any kick, undo kicks until none remain, then re-select. There is still **no** full “cancel PK phase and rewind half” UI.
 - Need to go back before PK: avoid starting PK until sure; there is **no** simple “rewind half” UI.
 
 ## FAQ
 
 **Q. Edit PK score manually?**  
 A. **Not** via manual score edit (that is for regulation goals). Use PK event undo/re-record.
+
+## Selecting the First Kicker Team
+
+When transitioning to penalty shootout, a dialog appears to select the first kicking team. Choose home or away based on the coin toss result. Once set, the first team cannot be changed after any PK kick has been recorded (to maintain record consistency).
+
+## Undoing the Last Kick
+
+Use the "↶ Undo Last Kick" button at the bottom of the PK panel to void the most recently recorded kick. A confirmation dialog appears before execution. Voided kicks remain in the timeline as "voided".
+
+## Re-selecting the First Team
+
+The "Re-select First Team" button is shown only when no PK kicks have been recorded. Use it after undoing all kicks via "Undo Last Kick", or right after the PK transition if you set the wrong team. To re-select after recording any kick, you must undo all kicks first.
 
 ## See also
 
@@ -543,7 +555,7 @@ A. In the wizard’s **match minute** field, enter **\`45+2\`** style (\`minute+
 |-----|--------|
 | \`G\` | Open goal wizard |
 | \`Esc\` | Close wizard (discard unconfirmed) |
-`,d=`---
+`,h=`---
 title: Substitute a player
 category: in_match
 tags: [sub, substitution, bench, stoppage, additional time, 45+2]
@@ -598,7 +610,7 @@ A. Use **Add player** / roster flow first, then substitute.
 
 - [Yellow and red cards](#/workspace/help/article/match_card)
 - [Record a goal](#/workspace/help/article/match_record_goal)
-`,h=`---
+`,d=`---
 title: Add a member to the roster
 category: team
 tags: [roster, member, server id, number]
@@ -875,4 +887,4 @@ Note steps and tell the maintainer if it looks like a bug.
 ## See also
 
 - PK UI: [#/workspace/help/article/match_pk_recording](#/workspace/help/article/match_pk_recording)
-`;export{g as _,p as a,u as b,m as c,h as d,d as e,c as f,l as g,i as h,s as i,r as j,o as k,a as l,t as m,n,e as o};
+`;export{g as _,p as a,u as b,m as c,d,h as e,c as f,l as g,i as h,s as i,r as j,o as k,a as l,t as m,n,e as o};

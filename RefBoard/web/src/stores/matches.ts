@@ -39,6 +39,7 @@ export const useMatchesStore = defineStore('matches', () => {
       awayScore: 0,
       homePkScore: null,
       awayPkScore: null,
+      pkFirstTeamId: null,
       status: 'draft',
       currentHalf: '1H',
       halfMinutes: input.halfMinutes ?? 45,
@@ -196,6 +197,19 @@ export const useMatchesStore = defineStore('matches', () => {
     patch(matchId, {})
   }
 
+  /** PK 先攻チームを設定。PK イベントが 1 件でもあれば拒否（履歴整合性のため） */
+  function setPkFirstTeam(matchId: number, teamId: number): boolean {
+    const m = find(matchId)
+    if (!m) return false
+    if (teamId !== m.homeTeamId && teamId !== m.awayTeamId) return false
+    const hasPkEvent = m.events.some(
+      (e) => !e.voided && (e.kind === 'pk_goal' || e.kind === 'pk_miss'),
+    )
+    if (hasPkEvent) return false
+    patch(matchId, { pkFirstTeamId: teamId })
+    return true
+  }
+
   function manualScoreEdit(matchId: number, p: { homeScore: number; awayScore: number; reason: string }) {
     const m = find(matchId)
     if (!m) return
@@ -266,6 +280,7 @@ export const useMatchesStore = defineStore('matches', () => {
     removePlayer,
     addEvent,
     voidEvent,
+    setPkFirstTeam,
     manualScoreEdit,
     finishMatch,
     reopenMatch,

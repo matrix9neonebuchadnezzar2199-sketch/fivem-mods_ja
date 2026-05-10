@@ -264,6 +264,7 @@ function buildMatchFromSeed(
     awayScore: s.awayScore,
     homePkScore: s.pkInProgress ? 1 : s.pkDemo ? 2 : null,
     awayPkScore: s.pkInProgress ? 1 : s.pkDemo ? 2 : null,
+    pkFirstTeamId: s.pkInProgress || s.pkDemo ? home.id : null,
     status: s.status,
     currentHalf,
     halfMinutes: 45,

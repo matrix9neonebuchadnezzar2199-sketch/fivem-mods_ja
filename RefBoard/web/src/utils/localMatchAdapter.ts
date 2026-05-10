@@ -192,7 +192,7 @@ export function matchToDetailModel(m: Match, elapsedMs: number): MatchDetailMode
       pk: { home: m.homePkScore ?? 0, away: m.awayPkScore ?? 0 },
     },
     serverHalf: halfToServerHalf(m.currentHalf),
-    pkFirstTeamId: m.homeTeamId,
+    pkFirstTeamId: m.pkFirstTeamId ?? m.homeTeamId,
     homePlayers: m.players.filter((p) => p.teamId === m.homeTeamId).map(localPlayerToRow),
     awayPlayers: m.players.filter((p) => p.teamId === m.awayTeamId).map(localPlayerToRow),
     events: m.events

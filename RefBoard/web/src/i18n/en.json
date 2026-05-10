@@ -326,7 +326,13 @@
     "winner_title": "Shootout winner",
     "winner_line": "{team}",
     "finish_title": "Finish the match now?",
-    "finish_later": "Later"
+    "finish_later": "Later",
+    "undo_last": "↶ Undo Last Kick",
+    "undo_confirm_title": "Undo the last kick?",
+    "undo_confirm_body": "Undo {team}'s shot #{index} ({result}). It will remain in the timeline as voided.",
+    "reroll_first_team": "Re-select First Team",
+    "reroll_first_team_title": "Re-select the first kicking team",
+    "reroll_first_team_body": "Since no PK kicks have been recorded yet, you can change the first kicking team."
   },
   "events": {
     "title": "Match events",

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.1 — 2026‑05‑10
+
+- **L-5 PK 先攻チーム選択 UI**: `Match.pkFirstTeamId` を型定義に追加し、`createMatch` で `null` 初期化、`setPkFirstTeam(matchId, teamId)` 関数を追加（PK イベント 1 件以上で拒否）。`matchToDetailModel` で `?? homeTeamId` の fallback を実装。`MatchStatusCard` の既存 PK 移行ダイアログから先攻 ID を `setHalf` payload で受け取り、`MatchDetail.onSetHalf` で `setPkFirstTeam` を呼ぶ。
+- **PK リカバリ機能**: `PenaltyShootoutPanel` 下部に「↶ 直前のキックを取消」ボタン（PK イベント 1 件以上で有効、確認ダイアログあり）と「先攻を再抽選」ボタン（PK イベント 0 件 + 先攻設定済みのときのみ表示）を追加。それぞれ `pk-undo-last` / `pk-reroll-first` イベントで親に伝達。
+- **シードデータ更新**: PK 進行中試合・PK デモ試合に `pkFirstTeamId: home.id` を明示。
+- **i18n**: `penalty.undo_last`, `penalty.undo_confirm_title`, `penalty.undo_confirm_body`, `penalty.reroll_first_team`, `penalty.reroll_first_team_title`, `penalty.reroll_first_team_body` を ja/en に追加。
+- **テスト**: `setPkFirstTeam` の正常系・拒否系（PK イベント存在時、不正チーム ID）、`matchToDetailModel` の `pkFirstTeamId` fallback を追加。**43 → 49 件**。
+- **ヘルプ記事**: `match_penalty_shootout.md`（ja/en）に先攻選択・直前取消・再抽選の説明を追記。
+- **バージョン同期**: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.5.1** へ。
+
 ## v0.5.0 — 2026‑05‑10
 
 - **ヘルプ（F-3）**: `npm run check:help` — `scripts/check-help-articles.mjs` で `index.json`／`reverse_index.json`／`articles/*.md`／`context_map.json` の整合と ja/en スラッグ対称、各記事フロントマター（`title`・`category` 必須）を検証。
@@ -14,10 +24,9 @@
 - **テスト**: `stores/matches.test.ts`（不正 teamId 拒否、時計巻き戻し時の `clockNowMs`）、`localMatchAdapter.test.ts`（`computeFieldGoalBreakdown` の 1H/2H/PK 除外）を新設。**37 → 43 件**。
 - 版数: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.5.0** に同期。
 
-### Future（v0.5.0 後に検討）
+### Future（v0.5.1 後に検討）
 
-- **F-1'**: `intro_setup` への **スクリーンショット新規追加**（記事内に既存画像が無かったため、当初 F-1「更新」はスコープ外。手元撮影可能になったら v0.5.1 等で対応）。
-- **L-5**: PK 先攻選択 UI（`Match` 型に `pkFirstTeamId` 追加、コイントス UI、現状はホーム固定の機能的バグ）。
+- **F-1'**: `intro_setup` への **スクリーンショット新規追加**（手元撮影可能になったら v0.5.2 等で対応）。
 - **H-2 / M-1 / M-6 / M-9**: ID カウンタ・settings キー整合、fetch タイムアウト、PK 連打 race、版数表記整理。
 
 ## v0.4.1 — 2026‑05‑09

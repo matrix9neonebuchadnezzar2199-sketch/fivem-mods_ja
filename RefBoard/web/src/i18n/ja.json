@@ -326,7 +326,13 @@
     "winner_title": "PK戦の勝者",
     "winner_line": "{team}",
     "finish_title": "試合を終了しますか？",
-    "finish_later": "後で"
+    "finish_later": "後で",
+    "undo_last": "↶ 直前のキックを取消",
+    "undo_confirm_title": "直前のキックを取消しますか？",
+    "undo_confirm_body": "{team} の {index} 本目（{result}）を取消します。タイムラインには取消済みとして残ります。",
+    "reroll_first_team": "先攻を再抽選",
+    "reroll_first_team_title": "先攻チームを選び直す",
+    "reroll_first_team_body": "PK戦の記録がまだないため、先攻チームを変更できます。"
   },
   "events": {
     "title": "試合イベント",
