@@ -11,7 +11,7 @@
 **No live DB sync.** A self-contained FiveM NUI to run the full lifecycle—clock, goals, subs, cards, PKs—entirely on the operator’s machine.
 
 <p>
-  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.5.2-5b6cf9?style=flat-square" alt="version" /></a>
+  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.6.0-5b6cf9?style=flat-square" alt="version" /></a>
   <img src="https://img.shields.io/badge/FiveM-cerulean-1a1a2e?style=flat-square" alt="FiveM cerulean" />
   <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
@@ -36,8 +36,8 @@
 | **Bilingual** | Japanese by default; English via `vue-i18n`. |
 | **Field-ready** | Full layout plus **compact dock**, **PK dock**, and contextual **help** (search & reverse index). |
 
-> **v0.4.0 note**  
-> The data-management screen and CSV/JSON export have been **removed**. Plan your own record-keeping outside the app. See [CHANGELOG.md](./CHANGELOG.md).
+> **About data management (v0.4.0 and later)**
+> RefBoard does not talk to a game server and keeps everything in this device's `localStorage`. **The data-management screen and CSV/JSON export were removed in v0.4.0.** Plan your own record-keeping outside the app (screenshots, side notes, etc.). See [CHANGELOG.md](./CHANGELOG.md) for the rationale and history.
 
 ---
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.6.0 — 2026-05-10
+
+- **A（M-1 fetch タイムアウト）**: `useNui.ts::postToLua` に `AbortController` で 5 秒タイムアウトを追加。タイムアウト時は `{ ok: false, error: 'timeout' }`、その他のエラーは `{ ok: false, error: 'fetch_failed' }` を返す。CEF 応答停止時に UI が固まる潜在リスクを解消。
+- **B（M-6 PK 連打耐性）**: `PenaltyShootoutPanel.vue` の確認系関数 3 つ（`confirmUndoLast` / `confirmReroll` / `confirmCancelAll`）に `isProcessing` フラグを追加して二重 emit を防止。`record()` は `pid` リセット → `if (!pid) return` の既存ガードで足りるため変更なし。
+- **C（H-2 clearAllData 整合性）**: `seedActions.ts` で:
+  - `NON_PREFIXED_KEYS = ['refboard_settings', 'refboard-locale']` を定数化（今後ノンプレフィックスキーを追加する際の登録先）。
+  - `clearAllData()` 末尾で `rehydrateStoresAfterLocalStorageMutation()` を呼び、Pinia と localStorage の整合を保証。
+  - `resetIdCounters()` の代わりに既存の `resetCountersMemoryOnly()` を使用し、`clearAllLocal` 直後の不要なディスク書き戻しを回避。
+- **D（M-9 README 文言）**: 「v0.4.0 の注意」を「データ管理機能について（v0.4.0 以降）」へ見出し変更し、過去形・現状の挙動を明確化（ja/en 両方）。
+- **E（F-1' スクリーンショット）**: `intro_setup` 記事（ja/en）に画面 4 枚（ランチャー／チーム管理／試合一覧／試合詳細）を挿入。`web/public/help/intro_setup/01〜04-*.png` に配置し、相対パス `./help/intro_setup/...` で参照。`sanitizeHelpHtml.ts` の `ALLOWED_TAGS` に `img`、`ALLOWED_ATTR` に `src` / `alt` / `width` / `height` / `loading` / `decoding` を追加（`script` / `iframe` / `on*` などは引き続き禁止）。
+- **テスト**: `cancelPenaltyShootout` の void 後 events 配列残存を追加、`clearAllData` の rehydrate と id_counters クリーンアップ（最小 localStorage モック）、`resetIdCounters` / `resetCountersMemoryOnly` のセマンティクス比較を追加。**51 → 55 件**。
+- **HANDOVER**: §3 ディレクトリ・§5 主要機構・§6 テスト件数・§7 TODO（F-3/F-5/F-7 を追記、解消済みを除去）・§9 ロードマップ・§10 セッションフレーズ・§11 改版履歴を v0.6.0 ベースに更新。
+- **バージョン同期**: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.6.0** へ。
+
 ## v0.5.2 — 2026-05-10（緊急バグ修正）
 
 - **🚨 重要バグ修正（H）**: 0 名 vs 0 名で PK 戦に入ると脱出不能になる問題を修正。データロストの可能性があるため緊急パッチとしてリリース。

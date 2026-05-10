@@ -29,19 +29,28 @@ export function getResourceName(): string {
   return 'RefBoard'
 }
 
+/** Lua への POST タイムアウト（ms）。CEF 応答停止時に UI が固まらないよう短めに。 */
+const NUI_FETCH_TIMEOUT_MS = 5000
+
 async function postToLua(path: string, data?: unknown): Promise<unknown> {
   if (!isInFiveM()) {
     return { ok: true }
   }
+  const ac = new AbortController()
+  const timer = setTimeout(() => ac.abort(), NUI_FETCH_TIMEOUT_MS)
   try {
     const res = await fetch(`https://${getResourceName()}/${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8' },
       body: JSON.stringify(data ?? {}),
+      signal: ac.signal,
     })
     return await res.json().catch(() => ({ ok: true }))
-  } catch {
-    return { ok: false }
+  } catch (err) {
+    const isAbort = err instanceof DOMException && err.name === 'AbortError'
+    return { ok: false, error: isAbort ? 'timeout' : 'fetch_failed' }
+  } finally {
+    clearTimeout(timer)
   }
 }
 

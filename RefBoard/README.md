@@ -11,7 +11,7 @@
 **通信なし・DB なし。** 各監督・審判の端末に閉じた NUI で、スコア・時計・交代・カード・PK までを一気通貫で記録します。
 
 <p>
-  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.5.2-5b6cf9?style=flat-square" alt="version" /></a>
+  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.6.0-5b6cf9?style=flat-square" alt="version" /></a>
   <img src="https://img.shields.io/badge/FiveM-cerulean-1a1a2e?style=flat-square" alt="FiveM cerulean" />
   <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
@@ -36,8 +36,8 @@
 | **二言語 UI** | 日本語を既定に、英語に切り替え可能（`vue-i18n`）。 |
 | **現場志向** | 通常表示に加え **コンパクト（小窓）モード**、**PK 専用ドック**、コンテキスト別 **ヘルプ**（検索・逆引き付き）。 |
 
-> **v0.4.0 の注意**  
-> データ管理画面および CSV / JSON エクスポートは **廃止**しました。バックアップはアプリ外でご自身の運用（スクリーンショット・手元メモ等）に委ねます。詳細は [CHANGELOG.md](./CHANGELOG.md) を参照してください。
+> **データ管理機能について（v0.4.0 以降）**
+> RefBoard はサーバ通信を行わず、データはこの端末の `localStorage` にのみ保存されます。**v0.4.0 でデータ管理画面と CSV / JSON エクスポートは削除されました**。バックアップはアプリ外でご自身の運用（スクリーンショット・手元メモ等）にお任せしています。経緯と詳細は [CHANGELOG.md](./CHANGELOG.md) を参照してください。
 
 ---
 

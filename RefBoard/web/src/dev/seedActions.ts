@@ -15,9 +15,12 @@ import type { Match, MatchEvent, MatchPlayer, ScoreHistoryEntry, RosterMember, T
 
 const SEED_FLAG_KEY = 'seed_state'
 
-/** Pinia の settings と同じキー（`localPersist` の前缀とは別） */
-const SETTINGS_STORAGE_KEY = 'refboard_settings'
-const LOCALE_STORAGE_KEY = 'refboard-locale'
+/**
+ * `localPersist` のプレフィックス（`refboard_local_*`）外で localStorage に置かれる
+ * Pinia 連動のキー一覧。`clearAllData` で漏れなく削除するために定数化する。
+ * 新規キーを追加する際はここに登録する運用とする（HANDOVER §5 参照）。
+ */
+const NON_PREFIXED_KEYS = ['refboard_settings', 'refboard-locale'] as const
 
 interface SeedState {
   installedAt: string
@@ -48,13 +51,17 @@ export function clearMatchData(): void {
 /** 全データ削除（設定・取り込み履歴含む `refboard_local_*` ＋ settings キー） */
 export function clearAllData(): void {
   clearAllLocal()
-  resetIdCounters()
-  try {
-    localStorage.removeItem(SETTINGS_STORAGE_KEY)
-    localStorage.removeItem(LOCALE_STORAGE_KEY)
-  } catch {
-    /* ignore */
+  // clearAllLocal で id_counters のディスク表現も消えているため、メモリ側だけ defaults に戻す
+  // （resetIdCounters を使うと直後に saveLocal で書き戻してしまう）
+  resetCountersMemoryOnly()
+  for (const key of NON_PREFIXED_KEYS) {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      /* ignore（権限違反等は極めて稀） */
+    }
   }
+  rehydrateStoresAfterLocalStorageMutation()
 }
 
 /** 投入：空にしてからシード（`location.reload` なし・ID 採番はバッチでディスク 1 回） */

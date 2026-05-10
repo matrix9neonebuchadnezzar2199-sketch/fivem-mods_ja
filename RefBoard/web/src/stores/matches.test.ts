@@ -196,4 +196,31 @@ describe('cancelPenaltyShootout', () => {
     const store = useMatchesStore()
     expect(store.cancelPenaltyShootout(99999)).toBe(false)
   })
+
+  it('PK 行は events 配列から削除されず voided=true として残る（タイムライン用）', () => {
+    const teams = useTeamsStore()
+    const home = teams.createTeam({ name: 'H' })
+    const away = teams.createTeam({ name: 'A' })
+    const store = useMatchesStore()
+    const m = store.createMatch({ title: 't', homeTeamId: home.id, awayTeamId: away.id })
+    store.setPkFirstTeam(m.id, home.id)
+    store.setHalf(m.id, 'PK')
+    store.addEvent(m.id, {
+      kind: 'pk_goal', half: 'PK', minute: 0, stoppage: null,
+      teamId: home.id, playerId: null, assistPlayerId: null,
+      subInPlayerId: null, subOutPlayerId: null, note: null, voided: false,
+    })
+    store.addEvent(m.id, {
+      kind: 'pk_miss', half: 'PK', minute: 0, stoppage: null,
+      teamId: away.id, playerId: null, assistPlayerId: null,
+      subInPlayerId: null, subOutPlayerId: null, note: null, voided: false,
+    })
+    const beforeLen = store.find(m.id)!.events.length
+    store.cancelPenaltyShootout(m.id)
+    const after = store.find(m.id)!
+    expect(after.events.length).toBe(beforeLen)
+    const pkRows = after.events.filter((e) => e.kind === 'pk_goal' || e.kind === 'pk_miss')
+    expect(pkRows.length).toBe(2)
+    expect(pkRows.every((e) => e.voided === true)).toBe(true)
+  })
 })

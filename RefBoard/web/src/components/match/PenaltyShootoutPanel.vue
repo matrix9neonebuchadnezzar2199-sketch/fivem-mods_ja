@@ -37,6 +37,8 @@ const showUndoConfirm = ref(false)
 const showRerollDialog = ref(false)
 const showCancelAllConfirm = ref(false)
 const rerollPickTeamId = ref<number>(0)
+/** 確認ダイアログの確定ボタン連打による二重 emit ガード（M-6） */
+const isProcessing = ref(false)
 
 let winTimer: number | null = null
 
@@ -155,9 +157,13 @@ function openUndoConfirm() {
   showUndoConfirm.value = true
 }
 
-function confirmUndoLast() {
+async function confirmUndoLast() {
+  if (isProcessing.value) return
+  isProcessing.value = true
   showUndoConfirm.value = false
   emit('pk-undo-last')
+  await nextTick()
+  isProcessing.value = false
 }
 
 function cancelUndoDialog() {
@@ -174,10 +180,14 @@ function cancelRerollDialog() {
   showRerollDialog.value = false
 }
 
-function confirmReroll() {
+async function confirmReroll() {
+  if (isProcessing.value) return
   if (rerollPickTeamId.value !== props.model.team1Id && rerollPickTeamId.value !== props.model.team2Id) return
+  isProcessing.value = true
   showRerollDialog.value = false
   emit('pk-reroll-first', { pkFirstTeamId: rerollPickTeamId.value })
+  await nextTick()
+  isProcessing.value = false
 }
 
 function openCancelAll() {
@@ -189,9 +199,13 @@ function cancelCancelAllDialog() {
   showCancelAllConfirm.value = false
 }
 
-function confirmCancelAll() {
+async function confirmCancelAll() {
+  if (isProcessing.value) return
+  isProcessing.value = true
   showCancelAllConfirm.value = false
   emit('pk-cancel-all')
+  await nextTick()
+  isProcessing.value = false
 }
 
 function winnerLabelForTeam(teamId: number) {
