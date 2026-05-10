@@ -29,7 +29,7 @@
 ## 概要
 
 - **モノレポ**: 1 つの Git リポジトリに複数の FiveM リソースが並びます。必要なフォルダだけをサーバーの `resources` に配置して `ensure` します（全体を丸ごとコピーする必要はありません）。
-- **独立性**: 各 MOD はフォルダ単位で完結します。**`jp-<名前>/`** 形式が多いですが、`polapaint` のように例外の名前もあります（[`AGENTS.md`](AGENTS.md)）。
+- **独立性**: 各 MOD はフォルダ単位で完結します。**`jp-<名前>/`** 形式が多いですが、命名の例外もあります（[`AGENTS.md`](AGENTS.md)）。
 - **ドキュメント**: インストール・依存関係・Convar は **各フォルダの `README.md`** が正。ルート README は索引と共通ルールのみです。
 - **更新方針**: 既存のフォルダ名・イベント名・運営向け `config` の値を無断で変えず、**ドキュメントやロケールだけ足す**運用を推奨します。
 
@@ -107,7 +107,6 @@
 | [jp-mch](jp-mch/README.md) | ミニマルクリーン HUD（クライアント完結・ESX/QB/Qbox/standalone・日本語 UI・Munlay HUD 系フォーク） |
 | [jp-mbt_emote_menu](jp-mbt_emote_menu/README.ja.md) | MBT Emote Menu 日本語対応（rpemotes-reborn・NUI・**`README.ja.md`** 参照・原作 PolyForm Noncommercial） |
 | [jp-mechanic](jp-mechanic/README.md) | 整備工場 伝票整理内職（NUI・部品照合・Qbox） |
-| [polapaint](polapaint/README.md) | ポラロイド撮影・サーバー側ローカル保存・署名付き GET 配信・NUI 閲覧／編集（screenshot-basic・ox_lib・ox / QB インベントリ・**GPL-3.0-or-later**） |
 | [jp-sentinel](jp-sentinel/README.md) | 警察向け Sentinel Ball（追尾ドローン・マップ共有・ESX/QB/Qbox/ACE） |
 | [jp-slot](jp-slot/README.md) | カジノスロット（着席 NUI・抽選 / 現金はサーバー権威） |
 | [jp-tcgbook](jp-tcgbook/README.md) | スタンドアロン TCG・BOOK（コレクション／デッキ編成／CPU・PvP・Elo・対戦履歴・ランキング・段位徽章・JA/EN UI・oxmysql） |
@@ -148,4 +147,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\apply_nui_i18n.ps1 -
 ## ライセンス
 
 - **リポジトリルート**の [`LICENSE`](LICENSE) は **MIT**（Copyright JP-Mods）。
-- **個別リソース**に別ファイルや `fxmanifest` の `license` がある場合は、**そのリソース単位で優先**されます（例: [`polapaint`](polapaint/README.md) は **GPL-3.0-or-later**）。
+- **個別リソース**に別ファイルや `fxmanifest` の `license` がある場合は、**そのリソース単位で優先**されます。

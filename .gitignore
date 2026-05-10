@@ -43,5 +43,5 @@ jp-it-drugs/
 # ローカル素材庫（凍結された旧 RefBoard、GitHub には push しない）
 RefBoard_old/
 
-# polapaint: 本番 Discord Webhook の実トークンはリポに含めない
-polapaint/ウェブフックキー.txt
+# polapaint: 凍結・GitHub 非公開（ローカルまたは別配布のみ。clone には含まれない）
+polapaint/
