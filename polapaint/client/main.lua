@@ -4,6 +4,9 @@ local L = PolaPaintUtil.L
 local uiOpen      = false
 local captureBusy = false
 
+--- 大きな JPEG base64 を送る際の latent 転送レート（バイト/秒）。通常 TriggerServerEvent のペイロード上限回避用。
+local NET_IMG_LATENT_BPS = 2097152
+
 local function notify(msg)
     if type(msg) ~= 'string' or msg == '' then return end
     print(('^3[polapaint client]^7 %s'):format(msg))
@@ -139,9 +142,9 @@ local function startCaptureFlow()
             end
 
             local b64 = dataUri:match('^data:image/[^;]+;base64,(.+)$') or dataUri
-            print('[polapaint] STEP6 firing TriggerServerEvent uploadCapture, b64 len=' .. #b64)
-            TriggerServerEvent('polapaint:server:uploadCapture', name, b64)
-            print('[polapaint] STEP7 TriggerServerEvent done')
+            print('[polapaint] STEP6 firing TriggerLatentServerEvent uploadCapture, b64 len=' .. #b64)
+            TriggerLatentServerEvent('polapaint:server:uploadCapture', NET_IMG_LATENT_BPS, name, b64)
+            print('[polapaint] STEP7 TriggerLatentServerEvent done')
         end)
     end)
     print('[polapaint] STEP2.5 pcall returned ok=' .. tostring(ok) .. ' err=' .. tostring(err))
@@ -233,7 +236,7 @@ RegisterNUICallback('savePaint', function(data, cb)
     local slotNum = tonumber(slot)
     if not slotNum then return end
     closeUi()
-    TriggerServerEvent('polapaint:server:uploadEdit', token, slotNum, image)
+    TriggerLatentServerEvent('polapaint:server:uploadEdit', NET_IMG_LATENT_BPS, token, slotNum, image)
 end)
 
 RegisterCommand('polapaint_unstuck', function()

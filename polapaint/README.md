@@ -11,8 +11,8 @@
 
 ## データ経路（v3）
 
-- **撮影**: クライアントで `screenshot-basic` → JPEG dataUri → **ox_lib** で名前入力 → **`TriggerServerEvent('polapaint:server:uploadCapture', name, b64)`**。撮影フローでは **NUI fetch を使いません**。
-- **編集**: サーバーが編集トークンを発行後、NUI で描画 → **`RegisterNUICallback('savePaint')`** で base64 を受け取り → **`TriggerServerEvent('polapaint:server:uploadEdit', …)`**（短距離の NUI fetch のみ）。
+- **撮影**: クライアントで `screenshot-basic` → JPEG dataUri → **ox_lib** で名前入力 → **`TriggerLatentServerEvent('polapaint:server:uploadCapture', …)`**（**大きな base64 は通常の `TriggerServerEvent` ではペイロード上限に届かないことがあるため latent を使用**）。撮影フローでは **NUI fetch を使いません**。
+- **編集**: サーバーが編集トークンを発行後、NUI で描画 → **`RegisterNUICallback('savePaint')`** → **`TriggerLatentServerEvent('polapaint:server:uploadEdit', …)`**。
 - **画像表示（ビューワ／編集の元画像）**: `https://<resource>/photo/<signed>.jpg` の **GET**（`SetHttpHandler`）。
 
 ## `SetHttpHandler` と他リソースについて
