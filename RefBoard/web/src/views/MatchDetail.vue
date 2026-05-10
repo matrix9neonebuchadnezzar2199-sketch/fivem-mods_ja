@@ -549,12 +549,12 @@ function onRecordGoal(payload: {
 }) {
   const id = matchId.value
   const half = currentHalf()
-  const t = eventTimeForStorage(payload.eventTime)
-  matchesStore.addEvent(id, {
+  const evTime = eventTimeForStorage(payload.eventTime)
+  const ev = matchesStore.addEvent(id, {
     kind: 'goal',
     half,
-    minute: t.minute,
-    stoppage: t.stoppage,
+    minute: evTime.minute,
+    stoppage: evTime.stoppage,
     teamId: payload.teamId,
     playerId: payload.scorerPlayerId,
     assistPlayerId: payload.assistPlayerId,
@@ -563,6 +563,10 @@ function onRecordGoal(payload: {
     note: null,
     voided: false,
   })
+  if (!ev) {
+    toast(t('toast.event_invalid_team'), 'error')
+    return
+  }
   syncDetail()
 }
 
@@ -654,7 +658,7 @@ function onPkShot(payload: { teamId: number; playerId: number; success: boolean 
   const id = matchId.value
   const half: Half = 'PK'
   const kind = payload.success ? 'pk_goal' : 'pk_miss'
-  matchesStore.addEvent(id, {
+  const ev = matchesStore.addEvent(id, {
     kind,
     half,
     minute: 0,
@@ -667,6 +671,10 @@ function onPkShot(payload: { teamId: number; playerId: number; success: boolean 
     note: null,
     voided: false,
   })
+  if (!ev) {
+    toast(t('toast.event_invalid_team'), 'error')
+    return
+  }
   syncDetail()
 }
 

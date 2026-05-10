@@ -42,6 +42,7 @@ export function clearMatchData(): void {
   })
   removeLocal(SEED_FLAG_KEY)
   resetIdCounters()
+  rehydrateStoresAfterLocalStorageMutation()
 }
 
 /** 全データ削除（設定・取り込み履歴含む `refboard_local_*` ＋ settings キー） */

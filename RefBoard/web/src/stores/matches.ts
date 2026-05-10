@@ -70,7 +70,8 @@ export const useMatchesStore = defineStore('matches', () => {
   }
 
   function clockNowMs(m: Match): number {
-    return m.clockAccumulatedMs + (m.clockStartedAt ? nowMs() - m.clockStartedAt : 0)
+    const running = m.clockStartedAt ? Math.max(0, nowMs() - m.clockStartedAt) : 0
+    return m.clockAccumulatedMs + running
   }
 
   function clockStart(id: number) {
@@ -98,7 +99,7 @@ export const useMatchesStore = defineStore('matches', () => {
     if (!m) return
     const full = Math.max(60_000, m.halfMinutes * 2 * 60 * 1000)
     let acc = m.clockAccumulatedMs
-    if (m.clockStartedAt) acc += nowMs() - m.clockStartedAt
+    if (m.clockStartedAt) acc += Math.max(0, nowMs() - m.clockStartedAt)
     acc = Math.max(0, Math.min(full, acc + deltaMs))
     const keepRunning = Boolean(m.clockStartedAt)
     patch(id, {
@@ -158,6 +159,14 @@ export const useMatchesStore = defineStore('matches', () => {
   function addEvent(matchId: number, e: Omit<MatchEvent, 'id' | 'matchId' | 'createdAt'>): MatchEvent | null {
     const m = find(matchId)
     if (!m) return null
+    const needsValidTeam =
+      !e.voided && (e.kind === 'goal' || e.kind === 'pk_goal' || e.kind === 'pk_miss')
+    if (needsValidTeam) {
+      const tid = e.teamId
+      if (tid == null || (tid !== m.homeTeamId && tid !== m.awayTeamId)) {
+        return null
+      }
+    }
     const ev: MatchEvent = { ...e, id: nextId('event'), matchId, createdAt: nowIso() }
     m.events.push(ev)
     if (ev.kind === 'goal' && !ev.voided) {

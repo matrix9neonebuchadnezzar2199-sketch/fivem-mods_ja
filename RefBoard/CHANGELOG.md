@@ -1,14 +1,24 @@
 # Changelog
 
-## v0.5.0（未リリース）
+## v0.5.0 — 2026‑05‑10
 
 - **ヘルプ（F-3）**: `npm run check:help` — `scripts/check-help-articles.mjs` で `index.json`／`reverse_index.json`／`articles/*.md`／`context_map.json` の整合と ja/en スラッグ対称、各記事フロントマター（`title`・`category` 必須）を検証。
 - **ヘルプ（F-2）**: 試合一覧・チーム管理・設定の「?」を **`HelpHoverDialog`（中央モーダル）** に統一。旧右スライドの `ContextHelpPanel`／`HelpTriggerButton`／`contextHelp` ストアを削除。`context_map.json` に **`match_list`** を追加し、**`settings`** の関連記事を拡充。
 - **UX（F-4）**: イベント時刻の **`formatMinute`** で `stoppage === 0` を **`M'` のみ**に統一（試合開始直後の **`0+0'`** 表記を解消）。`EventTimelineCard`／`CompactEventList` で **ロスタイム分（`+N'`）を amber で強調**（`EventMinuteColumn.vue`）。`MinuteInput` の表示も `+0` を省略。
+- **修正（H-3 整合性）**: `addEvent` で `goal` / `pk_goal` / `pk_miss` の `teamId` がホーム・アウェイ以外または欠落のとき**イベントを追加せず `null` を返す**。呼び出し側でトースト通知（`toast.event_invalid_team`）。
+- **修正（H-4 時計）**: `clockNowMs` / `clockAdjust` の進行中分を `Math.max(0, ...)` でクランプ。端末時刻巻き戻しによる負値表示を防止。
+- **修正（L-6 内訳）**: `computeFieldGoalBreakdown()` で `breakdown.firstHalf` / `secondHalf` を void 以外の `goal` イベントの `half` から正しく集計（従来は前半 0・後半に全得点を押し込む表示バグ）。
+- **セキュリティ（H-1 ヘルプ HTML）**: `sanitizeHelpHtml.ts` で DOMPurify の `ALLOWED_TAGS` / `ALLOWED_ATTR` を明示列挙、`script` / `iframe` / `on*` 属性を確実に除外。記事内リンクの `decodeURIComponent` を try/catch で保護。
+- **修正（M-4 quota）**: `saveLocal` / `saveLocalBatch` で `QuotaExceededError`（DOMException 22）を検知し、8 秒クールダウンでトースト通知（`toast.local_storage_quota` を ja/en に追加）。
+- **修正（M-3 整合）**: `clearMatchData()` の最後で `rehydrateStoresAfterLocalStorageMutation()` を実行し、API 単独呼び出しでも Pinia 状態と localStorage が同期されるよう改善。
+- **テスト**: `stores/matches.test.ts`（不正 teamId 拒否、時計巻き戻し時の `clockNowMs`）、`localMatchAdapter.test.ts`（`computeFieldGoalBreakdown` の 1H/2H/PK 除外）を新設。**37 → 43 件**。
+- 版数: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.5.0** に同期。
 
 ### Future（v0.5.0 後に検討）
 
 - **F-1'**: `intro_setup` への **スクリーンショット新規追加**（記事内に既存画像が無かったため、当初 F-1「更新」はスコープ外。手元撮影可能になったら v0.5.1 等で対応）。
+- **L-5**: PK 先攻選択 UI（`Match` 型に `pkFirstTeamId` 追加、コイントス UI、現状はホーム固定の機能的バグ）。
+- **H-2 / M-1 / M-6 / M-9**: ID カウンタ・settings キー整合、fetch タイムアウト、PK 連打 race、版数表記整理。
 
 ## v0.4.1 — 2026‑05‑09
 

@@ -6,12 +6,37 @@
  * SCHEMA_VERSION を上げると旧データは fallback に置き換わる（migration は今のところ実装しない）。
  */
 
+import { i18n } from '../i18n'
+import { useToast } from '../composables/useToast'
+
 const KEY_PREFIX = 'refboard_local_'
 const SCHEMA_VERSION = 1
 
 interface PersistedShape<T> {
   version: number
   data: T
+}
+
+let lastQuotaToastAt = 0
+const QUOTA_TOAST_COOLDOWN_MS = 8000
+
+function isQuotaExceeded(err: unknown): boolean {
+  if (err instanceof DOMException && (err.name === 'QuotaExceededError' || err.code === 22)) {
+    return true
+  }
+  return err instanceof Error && err.name === 'QuotaExceededError'
+}
+
+function notifyStorageQuotaExceeded(): void {
+  const t = Date.now()
+  if (t - lastQuotaToastAt < QUOTA_TOAST_COOLDOWN_MS) return
+  lastQuotaToastAt = t
+  try {
+    const msg = i18n.global.t('toast.local_storage_quota')
+    useToast().push(msg, 'error', 9000)
+  } catch {
+    /* i18n / toast 未初期化時 */
+  }
 }
 
 export function loadLocal<T>(key: string, fallback: T): T {
@@ -32,8 +57,9 @@ export function saveLocal<T>(key: string, data: T): void {
   try {
     const payload: PersistedShape<T> = { version: SCHEMA_VERSION, data }
     localStorage.setItem(KEY_PREFIX + key, JSON.stringify(payload))
-  } catch {
-    /* quota / private mode は黙殺 */
+  } catch (err) {
+    if (isQuotaExceeded(err)) notifyStorageQuotaExceeded()
+    /* その他（プライベートモード等）は黙殺 */
   }
 }
 
@@ -44,8 +70,8 @@ export function saveLocalBatch(entries: Record<string, unknown>): void {
     try {
       const payload: PersistedShape<unknown> = { version: SCHEMA_VERSION, data }
       localStorage.setItem(KEY_PREFIX + key, JSON.stringify(payload))
-    } catch {
-      /* ignore */
+    } catch (err) {
+      if (isQuotaExceeded(err)) notifyStorageQuotaExceeded()
     }
   }
 }

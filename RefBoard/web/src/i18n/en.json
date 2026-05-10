@@ -26,7 +26,9 @@
     "match_finish_failed": "Could not finalize the match.",
     "goal_record_timeout": "No response when recording the goal. Check connection and edit lock.",
     "goal_record_failed": "Could not record the goal ({code}).",
-    "card_issue_no_lock": "The edit lock is not bound to this match. Re-open the match from the list, or close with F6 and enter as editor again."
+    "card_issue_no_lock": "The edit lock is not bound to this match. Re-open the match from the list, or close with F6 and enter as editor again.",
+    "local_storage_quota": "Browser storage is full; changes may not be saved. Delete old matches or free storage space.",
+    "event_invalid_team": "Could not add the event because the team reference was invalid."
   },
   "launcher": {
     "edit_password_hint": "Edit mode password (must match Config.EditPassword on server)",

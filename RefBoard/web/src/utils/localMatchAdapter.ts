@@ -116,6 +116,31 @@ export function localEventToRow(e: LocalMatchEvent, players: LocalMatchPlayer[])
   }
 }
 
+/** フィールドゴール（PK 以外）をハーフ別に集計。void 済み・不正 teamId は除外 */
+export function computeFieldGoalBreakdown(m: Match): {
+  firstHalf: { home: number; away: number }
+  secondHalf: { home: number; away: number }
+  extra: { home: number; away: number }
+} {
+  const firstHalf = { home: 0, away: 0 }
+  const secondHalf = { home: 0, away: 0 }
+  const extra = { home: 0, away: 0 }
+
+  for (const e of m.events) {
+    if (e.voided || e.kind !== 'goal') continue
+    const tid = e.teamId
+    if (tid == null) continue
+    const isHome = tid === m.homeTeamId
+    const isAway = tid === m.awayTeamId
+    if (!isHome && !isAway) continue
+    const bucket = e.half === '1H' ? firstHalf : secondHalf
+    if (isHome) bucket.home += 1
+    else bucket.away += 1
+  }
+
+  return { firstHalf, secondHalf, extra }
+}
+
 export function serverHalfStringToHalf(s: string): Half {
   switch (s) {
     case 'halftime':
@@ -141,6 +166,7 @@ export function matchToDetailModel(m: Match, elapsedMs: number): MatchDetailMode
   const dbStatus: MatchDbStatus = m.status === 'finished' ? 'finished' : 'draft'
   const scheduledDate = m.scheduledAt ? m.scheduledAt.slice(0, 10) : m.createdAt.slice(0, 10)
   const kick = m.scheduledAt && m.scheduledAt.length >= 16 ? m.scheduledAt.slice(11, 16) : ''
+  const fieldBreakdown = computeFieldGoalBreakdown(m)
 
   return {
     id: m.id,
@@ -160,9 +186,9 @@ export function matchToDetailModel(m: Match, elapsedMs: number): MatchDetailMode
     clockRunning: Boolean(m.clockStartedAt),
     clockStartedAtMs: m.clockStartedAt ?? null,
     breakdown: {
-      firstHalf: { home: 0, away: 0 },
-      secondHalf: { home: m.homeScore, away: m.awayScore },
-      extra: { home: 0, away: 0 },
+      firstHalf: fieldBreakdown.firstHalf,
+      secondHalf: fieldBreakdown.secondHalf,
+      extra: fieldBreakdown.extra,
       pk: { home: m.homePkScore ?? 0, away: m.awayPkScore ?? 0 },
     },
     serverHalf: halfToServerHalf(m.currentHalf),

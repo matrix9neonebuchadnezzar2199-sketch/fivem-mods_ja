@@ -11,7 +11,7 @@
 **No live DB sync.** A self-contained FiveM NUI to run the full lifecycle—clock, goals, subs, cards, PKs—entirely on the operator’s machine.
 
 <p>
-  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.4.1-5b6cf9?style=flat-square" alt="version" /></a>
+  <a href="https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/blob/main/RefBoard/fxmanifest.lua"><img src="https://img.shields.io/badge/release-v0.5.0-5b6cf9?style=flat-square" alt="version" /></a>
   <img src="https://img.shields.io/badge/FiveM-cerulean-1a1a2e?style=flat-square" alt="FiveM cerulean" />
   <img src="https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
   <img src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />

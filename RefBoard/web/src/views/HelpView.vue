@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
-import DOMPurify from 'dompurify'
+import { sanitizeHelpHtml } from '../utils/sanitizeHelpHtml'
 import reverseIndexJa from '../help/ja/reverse_index.json'
 import reverseIndexEn from '../help/en/reverse_index.json'
 import indexTreeJa from '../help/ja/index.json'
@@ -101,7 +101,7 @@ const articleHtml = computed(() => {
   if (!raw) return `<p class="text-slate-400">${t('help.article_missing')}</p>`
   const md = stripFrontMatter(raw)
   const parsed = marked.parse(md, { async: false }) as string
-  return DOMPurify.sanitize(parsed)
+  return sanitizeHelpHtml(parsed)
 })
 
 function slugFromArticleFile(file: string): string {

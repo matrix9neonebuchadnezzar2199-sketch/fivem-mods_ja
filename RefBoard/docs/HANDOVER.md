@@ -1,7 +1,7 @@
 # RefBoard 引継資料（第 3 版・ローカル版）
 
-- **作成日**: 2026‑05‑09
-- **対象バージョン**: v0.4.1（ローカル専用・データ管理廃止・PK 3 列ドック・PK 進行中シード）
+- **作成日**: 2026‑05‑09（継続更新）
+- **対象バージョン**: v0.5.0（ローカル専用・F-2/F-3/F-4・H-1/H-3/H-4/L-6/M-3/M-4 反映）
 - **位置づけ**: 旧 v0.8.6 までのサーバ連動版（`RefBoard_old/`）からローカル単体版へ刷新した最初の安定リリース。
 
 ## 0. 第 3 版での主な変更
@@ -23,11 +23,11 @@
 - ヘルプ: marked + dompurify + fuse.js 7.3
 - 永続化: `localStorage`（キー前缀 `refboard_local_`、スキーマバージョン 1）
 
-## 3. ディレクトリ構成（v0.4.1）
+## 3. ディレクトリ構成（v0.5.0）
 
 ```
 RefBoard/
-├─ fxmanifest.lua          version '0.4.1'
+├─ fxmanifest.lua          version '0.5.0'
 ├─ config.lua              OpenKey, DefaultLocale のみ
 ├─ client/main.lua         NUI 開閉と /refboard コマンド
 ├─ shared/constants.lua    リソース名等の定数のみ
@@ -37,7 +37,7 @@ RefBoard/
 ├─ CHANGELOG.md
 ├─ README.md
 └─ web/
-   ├─ package.json         version 0.4.1（`REFBOARD_UI_VERSION`・fxmanifest と整合）
+   ├─ package.json         version 0.5.0（`REFBOARD_UI_VERSION`・fxmanifest と整合）
    ├─ index.html           rootFontScale FOUC 対策インラインスクリプト
    ├─ vite.config.ts       manualChunks（旧 v0.8.6 設定を踏襲）
    ├─ scripts/
@@ -49,7 +49,7 @@ RefBoard/
       ├─ router/index.ts   `/workspace/data` なし
       ├─ types/local.ts    Match/Team/Player/Event/ScoreHistory 型
       ├─ stores/
-      │  ├─ matches.ts     試合 CRUD、時計、イベント、PK、手動編集、終了/再開
+      │  ├─ matches.ts     試合 CRUD、時計、イベント、PK、手動編集、終了/再開（`addEvent` の scoring系 teamId 検証 H-3）
       │  ├─ teams.ts       チーム CRUD、ロスター
       │  ├─ settings.ts    selfName, locale, fontScale, marquee 等
       │  └─ matchCompactDock.ts
@@ -59,11 +59,13 @@ RefBoard/
       │  ├─ sampleData.ts         開発用疑似データの固定配列（チーム・試合シード）
       │  └─ seedActions.ts        投入／削除／全削除（Pinia 再 hydrate・`location.reload` なし）
       ├─ utils/
-      │  ├─ localPersist.ts       localStorage ラッパ（v=1）
+      │  ├─ localPersist.ts       localStorage ラッパ（v=1）、quota 超過時トースト（M-4）
+      │  ├─ sanitizeHelpHtml.ts   ヘルプ HTML 用 DOMPurify 明示設定（H-1）
       │  ├─ localId.ts            ID カウンタ
       │  ├─ matchTime.ts          イベント時刻 `45+2` パース／表示・`eventMinutePresetFromClock`
-      │  ├─ localMatchAdapter.ts  Match → MatchDetailModel ブリッジ
+      │  ├─ localMatchAdapter.ts  Match → MatchDetailModel ブリッジ（`computeFieldGoalBreakdown` L-6）
       │  ├─ matchTime.test.ts     parseMinute / preset 時計 等
+      │  ├─ matches.test.ts       addEvent 検証・clockNowMs 巻き戻し（H-3/H-4）
       │  └─ errorCodeMapper.ts    E2001/E3004/E3006 のみ
       ├─ components/
       │  ├─ match/MinuteInput.vue  イベント時刻（分＋ロスタイム）入力
@@ -102,8 +104,12 @@ RefBoard/
 
 - **永続化**: `utils/localPersist.ts` がキーごとに `{ version: 1, data }` 形式で `localStorage` に書き、各ストアが `watch(deep)` で自動保存。**アプリ内の CSV／JSON エクスポート・バックアップ UI は v0.4.0 で削除**。ブラウザのサイトデータ削除や設定の「全データ削除」で失われたデータは復旧できない。
 - **ID 採番**: `utils/localId.ts` が match/team/player/rosterMember/event/scoreHistory のカウンタを `id_counters` キーで管理。
-- **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
-- **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。
+- **時計**: `matches` ストアの `clockStartedAt`（停止時 null）と `clockAccumulatedMs` の合算で `clockNowMs(m)` を算出。進行中分は **`Math.max(0, Date.now() - clockStartedAt)`** でクランプ（H-4・端末時刻巻き戻し対策）。`clockAdjust` 内の経過加算も同様。UI 側は 250ms ポーリングで表示のみ更新し、保存はストアが担当。
+- **得点ロジック**: `addEvent` で `goal`/`pk_goal` を加算、`voidEvent` で減算。手動スコアは `manualScoreEdit` が `scoreHistory` に履歴を残しつつ `homeScore`/`awayScore` を上書き。**`goal` / `pk_goal` / `pk_miss` かつ非 void** のとき `teamId` がホーム・アウェイのいずれでもない／欠落なら **イベントを追加せず `null`**（H-3）。
+- **ハーフ別得点内訳（L-6）**: `localMatchAdapter.ts` の `computeFieldGoalBreakdown` が void 以外の `goal` イベントを `half` で前半／後半に振り分け、`matchToDetailModel` の `breakdown.firstHalf` / `secondHalf` に反映。
+- **ヘルプ HTML（H-1）**: `sanitizeHelpHtml.ts` で `HelpHoverDialog` / `HelpView` の本文を DOMPurify 明示設定でサニタイズ。記事内 `a[href]` の `decodeURIComponent` は try/catch。
+- **localStorage quota（M-4）**: `saveLocal` / `saveLocalBatch` が `QuotaExceededError` を捕捉したとき、8 秒クールダウンでトースト（`toast.local_storage_quota`）。
+- **疑似データ削除の整合（M-3）**: `clearMatchData()` 末尾で `rehydrateStoresAfterLocalStorageMutation()` を呼び、Pinia と `localStorage` を同期。
 - **PK 表示（v0.4.0）**: `serverHalf === 'pk'` の間は **通常の試合編集 UI を出さず**、画面**下部固定**の PK 専用ドックに `PenaltyShootoutPanel` のみ。`PenaltyShootoutPanel` は **3 列**（通し番号・先攻キック順・後攻）グリッド。入力（選手選択・成功／失敗）は **各チーム列の下**に配置。先攻／後攻は `pkFirstTeamId`（未設定時はホーム）基準。`pk-shot` → `addEvent` の経路は従来どおり。表示用 `MatchEvent` は `localEventToRow` が `text`・`pkTeamId` 等を付与。
 - **NUI 通信**: `useNui().send('close')` 等のコンパクト関連だけ Lua にPOST。他はブラウザ／FiveM ともに `{ ok: true }` を返すスタブ。`on()` は `refboard:compact_input_mode` のみ window.message 経由で購読。
 - **小窓モーダル透過**: `matchCompactDock.transparentChrome` が真のとき、`useDialogOverlay()` が `Teleport` 先の全画面オーバーレイを `bg-transparent` に切り替え（通常時は従来どおり `bg-black/55`〜`bg-black/65` 等）。ダイアログ本体の `bg-slate-900` は維持。
@@ -127,15 +133,19 @@ npm run check:help   # ヘルプ index / reverse_index / articles / context_map 
 node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意）
 ```
 
-- `npm test`: vitest による単体テスト。`matchTime.test.ts` 等（v0.4.0 時点 **37** 件）。watch は `npm run test:watch`。
+- `npm test`: vitest による単体テスト。`matchTime.test.ts` / `localMatchAdapter.test.ts` / `matches.test.ts` 等（v0.5.0 時点 **43** 件）。watch は `npm run test:watch`。
 
 `fxmanifest.lua` は `web/dist/index.html` と `web/dist/**/*` をパッケージ。`server.cfg` には `ensure RefBoard` の 1 行のみ（`oxmysql` も ACE も不要）。`Config.OpenKey`（既定 F6）と `Config.DefaultLocale`（既定 `ja`）だけ設定可能。
 
-## 7. 既知の TODO（v0.4.0 時点）
+## 7. 既知の TODO（v0.5.0 時点）
 
 - PK キャンセル UI、選手状態セルのタップ切替、`Ctrl+Z` でゴール取消ショートカット。
 - **F-1'（将来）**: `intro_setup` へのスクリーンショット **新規**追加（v0.5.0 時点で記事内に画像なしのため「更新」タスクはスコープ外とした。CHANGELOG の Future 参照）。
-- **v0.5.0 候補**: 大会／リーグ集計（旧 B2）、Fuse クエリの再チューニング（データ系記事削除により「CSV」等の短語が別記事に吸われる）。
+- **L-5**: PK 先攻選択 UI（`Match` 型に `pkFirstTeamId` 永続化、コイントス／選択ダイアログ、テスト。現状 UI はホーム固定）。
+- **H-2**: `clearAllData` と settings 系キー（`refboard_settings` / `refboard-locale` / `refboard_local_*`）の整合をドキュメントと実装の両方で明示。
+- **M-1**: `useNui.postToLua` に `AbortController` によるタイムアウト（5 秒目安）。
+- **M-6**: PK 連打 race — `PenaltyShootoutPanel` のボタン `disabled` に `pkDecided` を含める等。
+- **v0.6.x 候補**: 大会／リーグ集計（旧 B2）、Fuse クエリの再チューニング（データ系記事削除により「CSV」等の短語が別記事に吸われる）。
 
 ## 8. 実機テストの始め方
 
@@ -158,8 +168,10 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 - **v0.3.2（完了）**: PK 中は下部固定 PK 専用ドック、試合詳細ヘルプを `HelpHoverDialog`、FiveM 向け CSV/JSON 不可の注意文。タグ `v0.3.2`。
 - **v0.4.0（完了）**: **データ管理画面・CSV/JSON 機能の全削除**（BREAKING）。PK ドック 3 列化、`HelpHoverDialog` 内で記事遷移、赤牌 `note` 表示修正、イベント時刻プリセット。タグ **`v0.4.0`**。
 - **v0.4.1（完了）**: 疑似データに **PK 進行中**試合「カップ戦 PK進行中（実機検証用）」を追加（live 3 件構成は維持）。タグ **`v0.4.1`**。
-- **v0.5.0（作業中）**: F-2 完了で一覧／チーム／設定も `HelpHoverDialog` 統一。残り F-4〜F-5 等。当初 F-1（`intro_setup` スクショ**更新**）は対象画像が無いため **スコープ外** → **F-1'（新規画像）** は v0.5.0 後。
-- **v0.5.x 候補**: 大会／リーグ集計（旧 B2）、Fuse 再調整、F-1'。
+- **v0.5.0（完了・2026‑05‑10）**: F-2（`HelpHoverDialog` 統一）、F-3（`check:help`）、F-4（ロスタイム表示整理）、H-1/H-3/H-4/L-6/M-3/M-4。Git タグ **`v0.5.0`**。**F-5**（当初スコープにあった項目）は事前調査で **L-5（PK 先攻選択 UI）** が真の課題と判明したため **v0.5.0 ではスコープ外** → v0.5.1+ で対応。
+- **v0.5.1 候補**: **L-5** PK 先攻選択 UI、**F-1'** `intro_setup` スクリーンショット追加。
+- **v0.6.0 候補**: **H-2** / **M-1** / **M-6** 整理、入力バリデーション層の最小実装。
+- **v0.6.x 候補**: 大会／リーグ集計（旧 B2）、Fuse 再調整。
 - **v0.9.0**: 実機テストシナリオ実施・記録、軽微不具合修正。
 - **v1.0.0**: README 更新、デモ GIF、CHANGELOG 総括、配布 zip。
 
@@ -167,8 +179,8 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 
 > リポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja の `RefBoard/`
 > ローカル: H:\CURSOR\Dev\fivem-mods_ja\RefBoard
-> 現状: v0.4.1。先端タグ `v0.4.1`（安定版 `v0.4.0` タグも維持）。バックアップ UI なし（`localStorage` のみ）。`RefBoard_old/` は GitHub 非追跡の素材庫。
-> 次着手候補: §7 の PK キャンセル UI、v0.5.0 の F-4／F-5、将来 F-1'（intro_setup 画像新規）。
+> 現状: v0.5.0。先端タグ `v0.5.0`（安定版 `v0.4.x` タグも維持）。バックアップ UI なし（`localStorage` のみ）。`RefBoard_old/` は GitHub 非追跡の素材庫。
+> 次着手候補: §7 の **L-5**（PK 先攻選択）、PK キャンセル UI、将来 **F-1'**（intro_setup 画像新規）。
 > 引継資料: `RefBoard/docs/HANDOVER.md` 第 3 版、開発日記は `RefBoard/docs/diary/`。
 
 短縮フレーズ: `小窓モードいって` / `PK キャンセルいって`
@@ -196,3 +208,4 @@ node scripts/eval-help-fuse.mjs   # Fuse 検索の目視用サンプル（任意
 - 2026‑05‑09: **v0.4.1** PK 進行中のシード試合追加（`SeedMatch.pkInProgress`／`seedActions`）。版数と README バッジを 0.4.1 に同期。Git タグ **`v0.4.1`**。
 - 2026‑05‑09: **v0.5.0 作業** — F-1（intro_setup スクショ更新）は記事に画像が無いため **v0.5.0 スコープ外**、**F-1'** として CHANGELOG Future に記録。F-2: `MatchList`／`TeamManage`／`Settings` に `HelpHoverDialog` を展開し `ContextHelpPanel` 系を削除。`context_map.json` に `match_list`、`settings` の記事拡充。
 - 2026‑05‑09: **v0.5.0 F-4** — `formatMinute` で stoppage 0 を `+0` なしに統一（`0+0'` 解消）。`EventMinuteColumn` でロスタイムを強調色表示。`MinuteInput` の `+0` 表記省略。
+- 2026‑05‑10: **v0.5.0 リリース**。F-3（ヘルプ整合チェック）、F-2（`HelpHoverDialog` 統一）、F-4（ロスタイム表示整理）に加え、脆弱性・バグ修正 **H-1** / **H-3** / **H-4** / **L-6** / **M-3** / **M-4** を反映。テスト **37 → 43** 件。**F-5** は事前調査で **L-5**（PK 先攻選択 UI）が真の課題と判明したためスコープ外、v0.5.1+ で対応。Git タグ **`v0.5.0`**。
