@@ -1,2 +1,3 @@
-data/photos/*
+data/photos/**/*.jpg
+data/photos/**/.keep
 !data/photos/.gitkeep

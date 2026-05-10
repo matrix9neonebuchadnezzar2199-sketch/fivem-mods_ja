@@ -3,22 +3,44 @@ PolaPaintStorage = {}
 local STORAGE_DIR = 'data/photos/'
 local hmacKey     = nil
 
---- 起動時初期化（ディレクトリは SaveResourceFile が親を作成しない場合があるため、初回保存で確実）
+--- ID 先頭 2 文字（16進）でサブディレクトリを切る（最大 256 シャード）
+---@param id string 32 hex（小文字想定）
+---@return string リソース相対パス
+local function shardedRelPath(id)
+    local shard = id:sub(1, 2)
+    return ('%s%s/%s.jpg'):format(STORAGE_DIR, shard, id)
+end
+
+--- v2 以前のフラット配置（移行前ファイルの読み取り用）
+---@param id string
+---@return string
+local function legacyFlatRelPath(id)
+    return ('%s%s.jpg'):format(STORAGE_DIR, id)
+end
+
+--- 起動時初期化（シャード用ディレクトリは SaveResourceFile が親を作れない環境向けに .keep で作成）
 function PolaPaintStorage.init()
     local k = {}
     for i = 1, 32 do k[i] = ('%02x'):format(math.random(0, 255)) end
     hmacKey = table.concat(k)
 
-    SaveResourceFile(GetCurrentResourceName(), 'data/photos/.polapaint_dir', 'ok', 2)
+    local hex = '0123456789abcdef'
+    for i = 1, 16 do
+        for j = 1, 16 do
+            local shard = hex:sub(i, i) .. hex:sub(j, j)
+            SaveResourceFile(
+                GetCurrentResourceName(),
+                ('%s%s/.keep'):format(STORAGE_DIR, shard),
+                '',
+                -1
+            )
+        end
+    end
 
     local retention = Config.Storage and Config.Storage.retentionSec or 0
     if retention > 0 and Config.Debug then
         print('[polapaint] retentionSec>0: OS 側での定期削除を推奨（FiveM にディレクトリ列挙無し）')
     end
-end
-
-local function pathOf(id)
-    return ('%s%s.jpg'):format(STORAGE_DIR, id)
 end
 
 --- バイナリ書き込み
@@ -35,7 +57,8 @@ function PolaPaintStorage.savePhoto(bin)
     if #bin > maxBytes then return nil, 'too_large' end
 
     local id = PolaPaintUtil.token(16)
-    local ok = SaveResourceFile(GetCurrentResourceName(), pathOf(id), bin, #bin)
+    local rel = shardedRelPath(id)
+    local ok = SaveResourceFile(GetCurrentResourceName(), rel, bin, #bin)
     if not ok then return nil, 'write_fail' end
     return id, nil
 end
@@ -45,7 +68,10 @@ end
 ---@return string|nil bin
 function PolaPaintStorage.loadPhoto(id)
     if type(id) ~= 'string' or not id:match('^[a-f0-9]+$') or #id ~= 32 then return nil end
-    return LoadResourceFile(GetCurrentResourceName(), pathOf(id))
+    local name = GetCurrentResourceName()
+    local bin = LoadResourceFile(name, shardedRelPath(id))
+    if bin then return bin end
+    return LoadResourceFile(name, legacyFlatRelPath(id))
 end
 
 --- 簡易 HMAC（FNV-1a ベース。改ざん防止用途）

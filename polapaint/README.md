@@ -73,7 +73,7 @@ ox_inventory の **`buttons`（コンテキストから「閲覧」）** に相�
 
 ## 運用上の注意
 
-1. 写真ファイルは `polapaint/data/photos/<id>.jpg` に蓄積されます。容量管理は OS の `find` / タスクスケジューラ等での削除を推奨します。
+1. 写真ファイルは `polapaint/data/photos/<shard>/<id>.jpg`（`<shard>` は ID の先頭 2 桁の 16 進）に蓄積されます。更新前に保存された **`data/photos/<id>.jpg`（フラット）** も読み込み時に引き続き参照できます。バックアップは `data/photos/` ごとアーカイブすれば十分です。
 2. **複数ノード／ロードバランサ**ではローカルファイルが共有されないため、別ストレージ連携が必要です（`server/storage.lua` の差し替えポイント）。
 3. **`polapaint_old/`** は旧版アーカイブ用です。**`fxmanifest.lua` を `.disabled` にしてあるため FiveM のリソースとしては認識されません。`ensure polapaint_old` はしないでください。**（参照・履歴用のみ）
 

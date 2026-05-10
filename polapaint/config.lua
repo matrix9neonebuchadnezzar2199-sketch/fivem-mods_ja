@@ -24,7 +24,7 @@ Config.EditSaveCooldownSec   = 3
 Config.CaptureSessionTTLSec  = 30       -- 撮影トークン有効秒
 Config.EditSessionTTLSec     = 120      -- 編集トークン有効秒
 
--- ローカルストレージ（リソース配下の data/photos/）
+-- ローカルストレージ（リソース配下の data/photos/）。保存先は ID 先頭 2 文字で最大 256 シャード（例: data/photos/ab/<id>.jpg）。旧フラット配置も読み込み時にフォールバック。
 Config.Storage = {
     -- HTTP ハンドラの公開パス（リソース名の後に続く部分）。例: …/polapaint/photo/<signed>.jpg
     httpRoute      = '/photo/',
