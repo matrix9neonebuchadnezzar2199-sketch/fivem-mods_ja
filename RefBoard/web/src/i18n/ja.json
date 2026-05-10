@@ -28,7 +28,9 @@
     "goal_record_failed": "ゴールを記録できませんでした（{code}）。",
     "card_issue_no_lock": "編集ロックがこの試合に紐づいていません。試合一覧から当該試合を開き直すか、F6で閉じて編集で入り直してください。",
     "local_storage_quota": "ブラウザの保存領域が不足しています。データが保存されない可能性があります。古い試合を削除するか、ストレージを空けてください。",
-    "event_invalid_team": "チーム指定が不正なためイベントを追加できませんでした。"
+    "event_invalid_team": "チーム指定が不正なためイベントを追加できませんでした。",
+    "pk_no_players": "PK戦を開始するには両チームに選手が登録されている必要があります。",
+    "pk_cancelled": "PK戦をキャンセルしました。"
   },
   "launcher": {
     "edit_password_hint": "編集モード用パスワード（config.lua の EditPassword と一致）",
@@ -332,7 +334,10 @@
     "undo_confirm_body": "{team} の {index} 本目（{result}）を取消します。タイムラインには取消済みとして残ります。",
     "reroll_first_team": "先攻を再抽選",
     "reroll_first_team_title": "先攻チームを選び直す",
-    "reroll_first_team_body": "PK戦の記録がまだないため、先攻チームを変更できます。"
+    "reroll_first_team_body": "PK戦の記録がまだないため、先攻チームを変更できます。",
+    "cancel_all": "PK戦をキャンセル",
+    "cancel_all_title": "PK戦をキャンセルしますか？",
+    "cancel_all_body": "PK戦を取りやめて後半 (2H) に戻ります。記録済みの PK イベント {count} 件はすべて取消されます。元に戻せません。"
   },
   "events": {
     "title": "試合イベント",

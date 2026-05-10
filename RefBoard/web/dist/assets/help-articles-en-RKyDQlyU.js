@@ -386,6 +386,10 @@ errorCode: null
 - Regulation (and extra time if used) **ended** with **tied score** (per your rules).
 - Both sides agreed to PKs (house rules).
 
+## Before Starting
+
+Both teams must have at least **one player** registered to start the penalty shootout. If either team has zero players, the shootout cannot be started (a warning will be displayed).
+
 ## Start PKs
 
 1. In \`MatchStatusCard\`, switch half to **PK**.
@@ -408,8 +412,8 @@ errorCode: null
 ## Mistakes
 
 - Wrong kicker: **Undo** that PK row, re-record.
-- Wrong first team: with **zero** kicks recorded, use **Re-select First Team** at the bottom of the panel. After any kick, undo kicks until none remain, then re-select. There is still **no** full “cancel PK phase and rewind half” UI.
-- Need to go back before PK: avoid starting PK until sure; there is **no** simple “rewind half” UI.
+- Wrong first team: with **zero** kicks recorded, use **Re-select First Team** at the bottom of the panel. After any kick, undo kicks until none remain, then re-select—or use **Cancel Penalty Shootout** below to return to the second half.
+- Entered PK by mistake: use **Cancel Penalty Shootout** (returns to second half, 2H).
 
 ## FAQ
 
@@ -427,6 +431,10 @@ Use the "↶ Undo Last Kick" button at the bottom of the PK panel to void the mo
 ## Re-selecting the First Team
 
 The "Re-select First Team" button is shown only when no PK kicks have been recorded. Use it after undoing all kicks via "Undo Last Kick", or right after the PK transition if you set the wrong team. To re-select after recording any kick, you must undo all kicks first.
+
+## Cancelling the Penalty Shootout
+
+Use the "Cancel Penalty Shootout" button at the bottom-right of the PK panel to abort the shootout and return to the second half (2H). Use this if you accidentally entered the PK phase or noticed that players are missing. A confirmation dialog shows the number of recorded events; confirming voids all PK events. They remain in the timeline as voided.
 
 ## See also
 

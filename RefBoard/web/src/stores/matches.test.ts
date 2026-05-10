@@ -147,3 +147,53 @@ describe('useMatchesStore clockNowMs', () => {
     expect(matches.clockNowMs(cur)).toBe(cur.clockAccumulatedMs)
   })
 })
+
+describe('cancelPenaltyShootout', () => {
+  it('PK イベントを全件 void し、状態を 2H に戻す', () => {
+    const teams = useTeamsStore()
+    const home = teams.createTeam({ name: 'H' })
+    const away = teams.createTeam({ name: 'A' })
+    const store = useMatchesStore()
+    const m = store.createMatch({ title: 't', homeTeamId: home.id, awayTeamId: away.id })
+    store.setPkFirstTeam(m.id, home.id)
+    store.setHalf(m.id, 'PK')
+    store.addEvent(m.id, {
+      kind: 'pk_goal',
+      half: 'PK',
+      minute: 0,
+      stoppage: null,
+      teamId: home.id,
+      playerId: null,
+      assistPlayerId: null,
+      subInPlayerId: null,
+      subOutPlayerId: null,
+      note: null,
+      voided: false,
+    })
+    store.addEvent(m.id, {
+      kind: 'pk_miss',
+      half: 'PK',
+      minute: 0,
+      stoppage: null,
+      teamId: away.id,
+      playerId: null,
+      assistPlayerId: null,
+      subInPlayerId: null,
+      subOutPlayerId: null,
+      note: null,
+      voided: false,
+    })
+    expect(store.cancelPenaltyShootout(m.id)).toBe(true)
+    const after = store.find(m.id)!
+    expect(after.currentHalf).toBe('2H')
+    expect(after.pkFirstTeamId).toBeNull()
+    expect(after.homePkScore).toBe(0)
+    expect(after.awayPkScore).toBe(0)
+    expect(after.events.every((e) => !(e.kind === 'pk_goal' || e.kind === 'pk_miss') || e.voided)).toBe(true)
+  })
+
+  it('存在しない試合 ID は false を返す', () => {
+    const store = useMatchesStore()
+    expect(store.cancelPenaltyShootout(99999)).toBe(false)
+  })
+})

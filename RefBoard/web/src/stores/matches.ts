@@ -197,6 +197,24 @@ export const useMatchesStore = defineStore('matches', () => {
     patch(matchId, {})
   }
 
+  /** PK 戦を全体キャンセル：PK イベント全件 void、pk スコアと先攻リセット、後半 (2H) に戻す */
+  function cancelPenaltyShootout(matchId: number): boolean {
+    const m = find(matchId)
+    if (!m) return false
+    for (const ev of m.events) {
+      if (!ev.voided && (ev.kind === 'pk_goal' || ev.kind === 'pk_miss')) {
+        ev.voided = true
+      }
+    }
+    patch(matchId, {
+      homePkScore: 0,
+      awayPkScore: 0,
+      pkFirstTeamId: null,
+      currentHalf: '2H',
+    })
+    return true
+  }
+
   /** PK 先攻チームを設定。PK イベントが 1 件でもあれば拒否（履歴整合性のため） */
   function setPkFirstTeam(matchId: number, teamId: number): boolean {
     const m = find(matchId)
@@ -280,6 +298,7 @@ export const useMatchesStore = defineStore('matches', () => {
     removePlayer,
     addEvent,
     voidEvent,
+    cancelPenaltyShootout,
     setPkFirstTeam,
     manualScoreEdit,
     finishMatch,

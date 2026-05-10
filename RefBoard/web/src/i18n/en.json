@@ -28,7 +28,9 @@
     "goal_record_failed": "Could not record the goal ({code}).",
     "card_issue_no_lock": "The edit lock is not bound to this match. Re-open the match from the list, or close with F6 and enter as editor again.",
     "local_storage_quota": "Browser storage is full; changes may not be saved. Delete old matches or free storage space.",
-    "event_invalid_team": "Could not add the event because the team reference was invalid."
+    "event_invalid_team": "Could not add the event because the team reference was invalid.",
+    "pk_no_players": "Both teams must have at least one player registered to start the penalty shootout.",
+    "pk_cancelled": "Penalty shootout cancelled."
   },
   "launcher": {
     "edit_password_hint": "Edit mode password (must match Config.EditPassword on server)",
@@ -332,7 +334,10 @@
     "undo_confirm_body": "Undo {team}'s shot #{index} ({result}). It will remain in the timeline as voided.",
     "reroll_first_team": "Re-select First Team",
     "reroll_first_team_title": "Re-select the first kicking team",
-    "reroll_first_team_body": "Since no PK kicks have been recorded yet, you can change the first kicking team."
+    "reroll_first_team_body": "Since no PK kicks have been recorded yet, you can change the first kicking team.",
+    "cancel_all": "Cancel Penalty Shootout",
+    "cancel_all_title": "Cancel the penalty shootout?",
+    "cancel_all_body": "Cancel the penalty shootout and return to second half (2H). All {count} recorded PK event(s) will be voided. This cannot be undone."
   },
   "events": {
     "title": "Match events",

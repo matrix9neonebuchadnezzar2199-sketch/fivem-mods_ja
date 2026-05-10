@@ -677,6 +677,19 @@ function onPkRerollFirst(p: { pkFirstTeamId: number }) {
   syncDetail()
 }
 
+function onPkValidationFailed(p: { reason: string }) {
+  if (p.reason === 'no_players') {
+    toast(t('toast.pk_no_players'), 'error', { ms: 5000 })
+  }
+}
+
+function onPkCancelAll() {
+  const ok = matchesStore.cancelPenaltyShootout(matchId.value)
+  if (!ok) return
+  syncDetail()
+  toast(t('toast.pk_cancelled'), 'success')
+}
+
 function onPkShot(payload: { teamId: number; playerId: number; success: boolean }) {
   const id = matchId.value
   const half: Half = 'PK'
@@ -825,7 +838,13 @@ function onAddManual(p: { name: string; number: number | null }) {
             />
           </div>
           <div class="min-w-0" :style="cardDimStyle" @pointerenter="setFocus('status')" @pointerleave="setFocus(null)">
-            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" @set-half="onSetHalf" />
+            <MatchStatusCard
+              :model="detail"
+              :readonly="readonly"
+              :editor-here="editorHereStatus"
+              @set-half="onSetHalf"
+              @pk-validation-failed="onPkValidationFailed"
+            />
           </div>
         </div>
 
@@ -924,6 +943,7 @@ function onAddManual(p: { name: string; number: number | null }) {
           @pk-shot="onPkShot"
           @pk-undo-last="onPkUndoLast"
           @pk-reroll-first="onPkRerollFirst"
+          @pk-cancel-all="onPkCancelAll"
           @finish-match="onPkPanelFinishMatch"
         />
       </div>
@@ -965,7 +985,14 @@ function onAddManual(p: { name: string; number: number | null }) {
             @pointerenter="setFocus('status')"
             @pointerleave="setFocus(null)"
           >
-            <MatchStatusCard :model="detail" :readonly="readonly" :editor-here="editorHereStatus" embed @set-half="onSetHalf" />
+            <MatchStatusCard
+              :model="detail"
+              :readonly="readonly"
+              :editor-here="editorHereStatus"
+              embed
+              @set-half="onSetHalf"
+              @pk-validation-failed="onPkValidationFailed"
+            />
             <div class="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 px-0.5 text-xs text-slate-500">
               <span>{{ t('match.operator_label') }}:</span>
               <span v-if="operatorIsSet" class="font-medium text-slate-300">{{ operatorName }}</span>

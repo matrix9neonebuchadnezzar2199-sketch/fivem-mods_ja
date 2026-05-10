@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.5.2 — 2026-05-10（緊急バグ修正）
+
+- **🚨 重要バグ修正（H）**: 0 名 vs 0 名で PK 戦に入ると脱出不能になる問題を修正。データロストの可能性があるため緊急パッチとしてリリース。
+- **入口バリデーション**: PK 戦への移行時、両チーム 1 名以上の選手登録を必須化。`MatchStatusCard.onSelectChange` で `homePlayers.length === 0 || awayPlayers.length === 0` の場合は新規 emit `pk-validation-failed` を発火し、`MatchDetail` でトースト警告（`toast.pk_no_players`）。
+- **PK 全体キャンセル**: `PenaltyShootoutPanel` 右下に「PK 戦をキャンセル」ボタンを追加。確認ダイアログで PK イベント件数を表示し、確定で `cancelPenaltyShootout` を実行。新規ストア関数 `cancelPenaltyShootout(matchId)` は PK イベント全件 void、`homePkScore`/`awayPkScore` を 0、`pkFirstTeamId` を null、`currentHalf` を `'2H'` に戻す（atomic）。
+- **i18n**: ja/en に `toast.pk_no_players`, `toast.pk_cancelled`, `penalty.cancel_all`, `penalty.cancel_all_title`, `penalty.cancel_all_body` を追加。
+- **テスト**: `cancelPenaltyShootout` の正常系（全件 void・状態リセット）と存在しない試合 ID の拒否を追加。**49 → 51 件**。
+- **ヘルプ記事**: `match_penalty_shootout.md`（ja/en）に「開始前の注意（最低 1 名以上）」と「PK 戦をキャンセルする」セクションを追記。
+- **バージョン同期**: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.5.2** へ。
+
 ## v0.5.1 — 2026‑05‑10
 
 - **L-5 PK 先攻チーム選択 UI**: `Match.pkFirstTeamId` を型定義に追加し、`createMatch` で `null` 初期化、`setPkFirstTeam(matchId, teamId)` 関数を追加（PK イベント 1 件以上で拒否）。`matchToDetailModel` で `?? homeTeamId` の fallback を実装。`MatchStatusCard` の既存 PK 移行ダイアログから先攻 ID を `setHalf` payload で受け取り、`MatchDetail.onSetHalf` で `setPkFirstTeam` を呼ぶ。

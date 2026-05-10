@@ -22,6 +22,7 @@ const { t } = useI18n()
 
 const emit = defineEmits<{
   'set-half': [payload: { matchId: number; half: string; pkFirstTeamId?: number }]
+  'pk-validation-failed': [payload: { reason: string }]
 }>()
 
 const showPkConfirm = ref(false)
@@ -73,6 +74,11 @@ function onSelectChange(ev: Event) {
     return
   }
   if (v === 'penalties') {
+    if (props.model.homePlayers.length === 0 || props.model.awayPlayers.length === 0) {
+      emit('pk-validation-failed', { reason: 'no_players' })
+      el.value = props.model.uiStatus
+      return
+    }
     pkFirstTeamId.value = props.model.pkFirstTeamId ?? props.model.team1Id
     showPkConfirm.value = true
     el.value = props.model.uiStatus
