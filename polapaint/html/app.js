@@ -34,67 +34,29 @@
     maxNameLen: 40,
   };
 
-  function normalizeResourceHost(name) {
-    if (!name || typeof name !== 'string') return '';
-    var n = name;
-    if (n.indexOf('cfx-nui-') === 0) n = n.slice('cfx-nui-'.length);
-    return n;
-  }
-
-  function RES() {
-    if (typeof GetParentResourceName === 'function') {
-      try {
-        var n = normalizeResourceHost(GetParentResourceName());
-        if (n) return n;
-      } catch (e) {}
-    }
-    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
-      var h = normalizeResourceHost(window.location.hostname);
-      if (h) return h;
-    }
-    return 'polapaint';
-  }
-
-  /** NUI ページと同一オリジン（例: https://cfx-nui-polapaint）。fetch が SetHttpHandler に届くようにする */
-  function NUI_ORIGIN() {
-    if (typeof window !== 'undefined' && window.location && window.location.origin) {
-      var o = window.location.origin;
-      if (o && o.indexOf('http') === 0) return o;
-    }
-    return 'https://cfx-nui-' + RES();
-  }
-
   function postNui(endpoint, data) {
-    return fetch(NUI_ORIGIN() + '/' + endpoint, {
+    const name = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'polapaint';
+    return fetch(`https://${name}/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8' },
       body: JSON.stringify(data || {}),
-    }).catch(() => nuiAlert('notify_nui_fetch_failed'));
-  }
-
-  async function postNuiBinary(endpoint, body, query) {
-    const url = NUI_ORIGIN() + '/' + endpoint;
-    const headers = { 'Content-Type': 'image/jpeg' };
-    if (query) {
-      if (query.token) headers['X-Polapaint-Token'] = String(query.token);
-      if (query.name != null && query.name !== '') {
-        headers['X-Polapaint-Name'] = encodeURIComponent(String(query.name));
-      }
-      if (query.slot != null) headers['X-Polapaint-Slot'] = String(query.slot);
-    }
-    nuiAlert('debug_url2_' + url);
-    try {
-      const r = await fetch(url, { method: 'POST', headers: headers, body: body });
-      if (!r.ok && r.status !== 204) throw new Error('http_' + r.status);
-      return r;
-    } catch (e) {
-      nuiAlert('debug_fetch_err_' + (e && e.message ? e.message : 'unknown'));
-      nuiAlert('notify_nui_fetch_failed');
-      throw e;
-    }
+    });
   }
 
   function nuiAlert(key) { postNui('ppNuiAlert', { key }); }
+
+  async function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = r.result;
+        const i = typeof s === 'string' ? s.indexOf(',') : -1;
+        resolve(i >= 0 ? s.slice(i + 1) : s);
+      };
+      r.onerror = () => reject(new Error('read'));
+      r.readAsDataURL(blob);
+    });
+  }
 
   function graphemeCount(s) {
     if (typeof Intl !== 'undefined' && Intl.Segmenter) {
@@ -171,21 +133,13 @@
       nuiAlert('notify_photo_name_too_long');
       return;
     }
-    let buf;
     try {
-      buf = await state.pendingCaptureBlob.arrayBuffer();
+      const b64 = await blobToBase64(state.pendingCaptureBlob);
+      await postNui('uploadCapture', { token: state.captureToken, name: raw, image: b64 });
     } catch {
-      nuiAlert('notify_nui_image_prepare_fail');
-      postNui('close', {});
-      return;
+      nuiAlert('notify_nui_fetch_failed');
     }
-    postNuiBinary('uploadCapture', buf, {
-      token: state.captureToken,
-      name: raw,
-    }).catch(() => {});
-    state.pendingCaptureBlob = null;
-    state.captureToken = null;
-    els.nameOverlay.classList.add('hidden');
+    hideAll();
     postNui('close', {});
   }
 
@@ -316,16 +270,17 @@
       x.drawImage(els.cvBg, 0, 0);
       x.drawImage(els.cvDraw, 0, 0);
       const blob = await canvasToJpegBlob(out, state.jpegQuality);
-      const buf = await blob.arrayBuffer();
-      await postNuiBinary('uploadEdit', buf, {
+      const b64 = await blobToBase64(blob);
+      await postNui('uploadEdit', {
         token: state.paintEditToken,
         slot: String(state.paintSlot),
+        image: b64,
       });
-      postNui('close', {});
     } catch {
-      nuiAlert('notify_nui_image_prepare_fail');
-      postNui('close', {});
+      nuiAlert('notify_nui_fetch_failed');
     }
+    hideAll();
+    postNui('close', {});
   }
 
   function initPalette() {
@@ -372,29 +327,6 @@
     }
     if (msg.action === 'openViewer') return openViewerMode(msg);
     if (msg.action === 'openPaint') return openPaintMode(msg);
-  });
-
-  window.addEventListener('keydown', async (e) => {
-    if (e.key !== 'F2') return;
-    const jpegBuf = new Uint8Array([0xFF, 0xD8, 0xFF, 0xD9]).buffer;
-    var targets = [
-      NUI_ORIGIN() + '/uploadCapture',
-      'https://' + RES() + '/uploadCapture',
-      'https://cfx-nui-' + RES() + '/uploadCapture',
-    ];
-    for (var ti = 0; ti < targets.length; ti++) {
-      var url = targets[ti];
-      try {
-        var r = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'image/jpeg' },
-          body: jpegBuf,
-        });
-        nuiAlert('test_' + url + '_' + r.status);
-      } catch (err) {
-        nuiAlert('test_' + url + '_err_' + (err && err.message ? err.message : 'unknown'));
-      }
-    }
   });
 
   initPalette();

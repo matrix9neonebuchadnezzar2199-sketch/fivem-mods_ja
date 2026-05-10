@@ -10,11 +10,12 @@
 
 ## NUI からのアップロード経路
 
-NUI の実オリジンは **`https://cfx-nui-<リソース名>`**（例: `https://cfx-nui-polapaint`）です。`https://polapaint/...` のように短いホストへ POST すると **別オリジン扱いになり 404** になることがあります。
+コミュニティで広く使われる **`fetch('https://' + GetParentResourceName() + '/...')`** パターンに合わせています。本文は **`Content-Type: application/json`** の **JSON** で、JPEG は **`image` フィールドに base64 文字列**として載せます（NUI からバイナリ直接 POST は使いません）。サーバーで **`PolaPaintUtil.b64decode`** してから既存の保存処理へ渡します。
 
-**`postNui` / `postNuiBinary`** は **`window.location.origin`（`NUI_ORIGIN()`）と同一オリジン**の URLへ POST します（取得できないときだけ `https://cfx-nui-` + `RES()` にフォールバック）。本文は JPEG の **`ArrayBuffer`**、token / name / slot は **`X-Polapaint-*` ヘッダ**（クエリは付けない）。
+- **撮影アップロード**: `POST .../uploadCapture` … `{ token, name, image }`
+- **編集保存**: `POST .../uploadEdit` … `{ token, slot, image }`
 
-サーバーは **クエリまたはヘッダ**のどちらでも `token` 等を受け取れます。`curl` の手動テストはクエリ付き URL でも動きます。
+外部からの `curl` テストも同じ JSON 形式で可能です。
 
 ## `SetHttpHandler` と他リソースについて
 

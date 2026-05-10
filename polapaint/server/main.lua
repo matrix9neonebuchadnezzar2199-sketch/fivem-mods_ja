@@ -128,73 +128,6 @@ local function handleUploadEdit(src, body, token, slotStr)
     return true, nil
 end
 
---- req.path にクエリが無く req.url 側だけにあるランタイムへの対応
-local function getQueryString(req)
-    local q
-    if type(req.path) == 'string' then
-        q = req.path:match('%?(.*)$')
-    end
-    if (not q or q == '') and type(req.url) == 'string' then
-        q = req.url:match('%?(.*)$')
-    end
-    return q
-end
-
-local function parseQueryParams(queryStr)
-    if not queryStr or queryStr == '' then return {} end
-    local out = {}
-    for kv in (queryStr .. '&'):gmatch('([^&]+)&') do
-        local k, v = kv:match('^([^=]+)=(.*)$')
-        if k then
-            v = v or ''
-            v = v:gsub('+', ' ')
-            v = v:gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
-            out[k] = v
-        end
-    end
-    return out
-end
-
-local function parseQueryFromReq(req)
-    return parseQueryParams(getQueryString(req))
-end
-
---- HTTP ヘッダ取得（大文字小文字・キー表記ゆれ対応）
-local function hdrGet(hdr, name)
-    if type(hdr) ~= 'table' or type(name) ~= 'string' then return nil end
-    local nl = name:lower()
-    for k, v in pairs(hdr) do
-        if type(k) == 'string' and k:lower() == nl then return v end
-    end
-    return nil
-end
-
---- application/x-www-form-urlencoded 風のパーセント復号（ヘッダの名前用）
-local function decodeUriComponent(s)
-    if type(s) ~= 'string' then return s end
-    s = s:gsub('+', ' ')
-    s = s:gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
-    return s
-end
-
-local function mergePolapaintHeadersIntoQuery(q, hdr)
-    q = q or {}
-    if type(hdr) ~= 'table' then return q end
-    if not q.token or q.token == '' then
-        local t = hdrGet(hdr, 'X-Polapaint-Token')
-        if type(t) == 'string' and t ~= '' then q.token = t end
-    end
-    if not q.name or q.name == '' then
-        local n = hdrGet(hdr, 'X-Polapaint-Name')
-        if type(n) == 'string' and n ~= '' then q.name = decodeUriComponent(n) end
-    end
-    if not q.slot or q.slot == '' then
-        local s = hdrGet(hdr, 'X-Polapaint-Slot')
-        if type(s) == 'string' and s ~= '' then q.slot = s end
-    end
-    return q
-end
-
 local function pathWithoutQuery(p)
     if type(p) ~= 'string' then return '' end
     return (p:match('^([^%?]+)') or p)
@@ -274,8 +207,7 @@ CreateThread(function()
                 res.writeHead(204, {
                     ['Access-Control-Allow-Origin']  = '*',
                     ['Access-Control-Allow-Methods']   = 'POST, OPTIONS',
-                    ['Access-Control-Allow-Headers']   =
-                        'Content-Type, X-Polapaint-Token, X-Polapaint-Name, X-Polapaint-Slot',
+                    ['Access-Control-Allow-Headers']   = 'Content-Type',
                 })
                 res.send('')
                 return
@@ -285,121 +217,126 @@ CreateThread(function()
         end
 
         if method == 'POST' then
-            print('[polapaint] DEBUG: POST received path=' .. tostring(rawPath))
-            local q = mergePolapaintHeadersIntoQuery(parseQueryFromReq(req), req.headers or {})
             local hdr = req.headers or {}
             local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
-            local hardCap = maxBytes * 2
-
-            local expectedBody = tonumber(hdr['Content-Length'] or hdr['content-length'])
-            print('[polapaint] DEBUG: expectedBody=' .. tostring(expectedBody))
-            if expectedBody and expectedBody > hardCap then
-                res.writeHead(413); res.send('payload too large'); return
-            end
-
+            local hardCap = math.floor(maxBytes * 1.4) + 65536
             local parts = {}
             local dispatched = false
             local lastChunkAt = 0
-            local quietMs = 250
-            local quietThresholdMs = 240
 
-            local function partsTotalLen()
-                local t = 0
-                for i = 1, #parts do t = t + #parts[i] end
-                return t
-            end
-
-            local function refuseTooLarge()
-                if dispatched then return true end
-                dispatched = true
-                res.writeHead(413); res.send('payload too large')
-                return true
-            end
-
-            local function dispatchUploadPost(body)
-                print('[polapaint] DEBUG: dispatchUploadPost called, dispatched=' ..
-                    tostring(dispatched) .. ' body_type=' .. type(body) ..
-                    ' body_len=' .. tostring(type(body) == 'string' and #body or '--'))
+            local function finish(status, text)
                 if dispatched then return end
                 dispatched = true
+                res.writeHead(status)
+                res.send(text or '')
+            end
+
+            local function dispatchJsonBody(body)
+                if dispatched then return end
                 if type(body) ~= 'string' then body = '' end
 
+                local okDec, data = pcall(json.decode, body)
+                if not okDec or type(data) ~= 'table' then
+                    finish(400, 'bad json')
+                    return
+                end
+
+                local token = data.token
+                local image = data.image
+                local name = data.name
+                local slotStr = tostring(data.slot or '')
+
+                if type(image) ~= 'string' or image == '' then
+                    finish(400, 'no image')
+                    return
+                end
+
+                local bin = PolaPaintUtil.b64decode(image)
+                if not bin or #bin > maxBytes then
+                    finish(413, 'too large')
+                    return
+                end
+
                 if pathForMatch:find('uploadCapture', 1, true) then
-                    local token = q.token
-                    local name = q.name or ''
-                    if Config.Debug then
-                        print(('[polapaint] capture upload received: bytes=%d token=%s'):format(
-                            #body, tostring(token)))
+                    local nameStr = type(name) == 'string' and name or ''
+                    if type(token) ~= 'string' or token == '' then
+                        finish(400, 'bad')
+                        return
                     end
-                    if not token then res.writeHead(400); res.send('bad'); return end
                     local foundSrc
                     for s, st in pairs(pendingCapture) do
                         if st.token == token then foundSrc = s; break end
                     end
-                    if not foundSrc then res.writeHead(403); res.send('expired'); return end
-                    local ok, errKey = handleUploadCapture(foundSrc, body, token, name)
+                    if not foundSrc then finish(403, 'expired'); return end
+                    local ok, errKey = handleUploadCapture(foundSrc, bin, token, nameStr)
                     if not ok then
                         notify(foundSrc, errKey or 'notify_capture_fail')
-                        res.writeHead(400); res.send(errKey or 'fail'); return
+                        finish(400, errKey or 'fail')
+                        return
                     end
                     notify(foundSrc, 'notify_capture_ok')
-                    res.writeHead(204); res.send('')
+                    finish(204, '')
                     return
                 end
 
                 if pathForMatch:find('uploadEdit', 1, true) then
-                    local token = q.token
-                    local slotStr = q.slot or ''
-                    if Config.Debug then
-                        print(('[polapaint] edit upload received: bytes=%d'):format(#body))
+                    if type(token) ~= 'string' or token == '' then
+                        finish(400, 'bad')
+                        return
                     end
-                    if not token then res.writeHead(400); res.send('bad'); return end
                     local foundSrc
                     for s, st in pairs(pendingEdit) do
                         if st.token == token then foundSrc = s; break end
                     end
-                    if not foundSrc then res.writeHead(403); res.send('expired'); return end
-                    local ok, errKey = handleUploadEdit(foundSrc, body, token, slotStr)
+                    if not foundSrc then finish(403, 'expired'); return end
+                    local ok, errKey = handleUploadEdit(foundSrc, bin, token, slotStr)
                     if not ok then
                         notify(foundSrc, errKey or 'notify_edit_fail')
-                        res.writeHead(400); res.send(errKey or 'fail'); return
+                        finish(400, errKey or 'fail')
+                        return
                     end
                     notify(foundSrc, 'notify_edit_saved')
-                    res.writeHead(204); res.send('')
+                    finish(204, '')
                     return
                 end
 
-                res.writeHead(404); res.send('not found')
+                finish(404, 'not found')
             end
 
             req.setDataHandler(function(chunk)
-                print('[polapaint] DEBUG: chunk received, type=' .. type(chunk) ..
-                    ' len=' .. tostring(type(chunk) == 'string' and #chunk or 'n/a'))
+                if dispatched then return end
+
                 if type(chunk) == 'string' and #chunk > 0 then
                     parts[#parts + 1] = chunk
-                    if partsTotalLen() > hardCap then
-                        refuseTooLarge()
+                    local total = 0
+                    for i = 1, #parts do total = total + #parts[i] end
+                    if total > hardCap then
+                        finish(413, 'payload too large')
                         return
                     end
                 end
 
                 local body = table.concat(parts)
-                print('[polapaint] DEBUG: body so far=' .. #body .. ' / expected=' .. tostring(expectedBody))
+                local cl = tonumber(hdr['Content-Length'] or hdr['content-length'] or 0)
+                if cl and cl > hardCap then
+                    finish(413, 'payload too large')
+                    return
+                end
 
-                if expectedBody and expectedBody > 0 then
-                    if #body < expectedBody then return end
-                    if #body > expectedBody then
-                        body = body:sub(1, expectedBody)
+                if cl and cl > 0 then
+                    if #body < cl then return end
+                    if #body > cl then
+                        body = body:sub(1, cl)
                     end
-                    dispatchUploadPost(body)
+                    dispatchJsonBody(body)
                     return
                 end
 
                 lastChunkAt = now()
-                SetTimeout(quietMs, function()
+                SetTimeout(120, function()
                     if dispatched then return end
-                    if now() - lastChunkAt < quietThresholdMs then return end
-                    dispatchUploadPost(table.concat(parts))
+                    if now() - lastChunkAt < 100 then return end
+                    dispatchJsonBody(table.concat(parts))
                 end)
             end)
             return
