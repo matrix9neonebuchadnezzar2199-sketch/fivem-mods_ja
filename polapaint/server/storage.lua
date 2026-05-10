@@ -58,8 +58,14 @@ function PolaPaintStorage.savePhoto(bin)
 
     local id = PolaPaintUtil.token(16)
     local rel = shardedRelPath(id)
-    local ok = SaveResourceFile(GetCurrentResourceName(), rel, bin, #bin)
-    if not ok then return nil, 'write_fail' end
+    --- JPEG は途中に NUL バイトを含み得る。SaveResourceFile は第4引数 **-1** で Lua 文字列全体を書くのが安全。
+    local ok = SaveResourceFile(GetCurrentResourceName(), rel, bin, -1)
+    if not ok then
+        if Config.Debug then
+            print(('[polapaint] SaveResourceFile failed path=%s bin_len=%d'):format(rel, #bin))
+        end
+        return nil, 'write_fail'
+    end
     return id, nil
 end
 
