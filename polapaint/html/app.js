@@ -15,14 +15,10 @@
     palette: $('palette'), penSize: $('pen-size'), penLabel: $('pen-label-text'),
     btnUndo: $('btn-undo'), btnClear: $('btn-clear'), btnSave: $('btn-save'),
     editorClose: $('editor-close'),
-    nameOverlay: $('name-overlay'), nameTitle: $('name-title'),
-    nameInput: $('name-input'), nameConfirm: $('name-confirm'), nameCancel: $('name-cancel'),
   };
 
   let state = {
     jpegQuality: 0.85,
-    pendingCaptureBlob: null,
-    captureToken: null,
     paintSlot: null,
     paintEditToken: null,
     drawCtx: null,
@@ -31,7 +27,6 @@
     strokeDirty: false,
     undoStack: [],
     activeColor: COLORS[0],
-    maxNameLen: 40,
   };
 
   function postNui(endpoint, data) {
@@ -40,10 +35,8 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8' },
       body: JSON.stringify(data || {}),
-    });
+    }).catch(() => {});
   }
-
-  function nuiAlert(key) { postNui('ppNuiAlert', { key }); }
 
   async function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
@@ -58,33 +51,6 @@
     });
   }
 
-  function graphemeCount(s) {
-    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-      const seg = new Intl.Segmenter('ja', { granularity: 'grapheme' });
-      let n = 0;
-      for (const _ of seg.segment(s)) n++;
-      return n;
-    }
-    return Array.from(s).length;
-  }
-
-  function dataUriToScaledBlob(dataUri, maxW, quality) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.naturalWidth, h = img.naturalHeight;
-        if (!w || !h) return reject(new Error('badsize'));
-        if (w > maxW) { h = Math.round((h * maxW) / w); w = maxW; }
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        c.toBlob((b) => b ? resolve(b) : reject(new Error('blob')), 'image/jpeg', quality);
-      };
-      img.onerror = () => reject(new Error('load'));
-      img.src = dataUri;
-    });
-  }
-
   function canvasToJpegBlob(canvas, quality) {
     return new Promise((resolve, reject) => {
       canvas.toBlob((b) => b ? resolve(b) : reject(new Error('blob')), 'image/jpeg', quality);
@@ -93,67 +59,20 @@
 
   function hideAll() {
     els.app.classList.add('hidden');
-    els.nameOverlay.classList.add('hidden');
     els.viewer.classList.add('hidden');
     els.editor.classList.add('hidden');
     els.viewerImg.removeAttribute('src');
-    state.pendingCaptureBlob = null;
-    state.captureToken = null;
     state.paintSlot = null;
     state.paintEditToken = null;
     state.undoStack = [];
     state.drawing = false;
     state.strokeDirty = false;
-    els.nameInput.value = '';
-  }
-
-  function openCaptureNameDialog(blob, token, dialog, maxNameLen) {
-    state.pendingCaptureBlob = blob;
-    state.captureToken = token;
-    state.maxNameLen = maxNameLen || 40;
-
-    els.nameTitle.textContent = dialog.title || '';
-    els.nameInput.placeholder = dialog.placeholder || '';
-    els.nameConfirm.textContent = dialog.confirm || 'OK';
-    els.nameCancel.textContent = dialog.cancel || 'Cancel';
-    els.nameInput.value = '';
-
-    els.app.classList.remove('hidden');
-    els.nameOverlay.classList.remove('hidden');
-    els.viewer.classList.add('hidden');
-    els.editor.classList.add('hidden');
-    setTimeout(() => els.nameInput.focus(), 50);
-  }
-
-  async function submitCaptureName() {
-    if (!state.pendingCaptureBlob || !state.captureToken) return;
-    const raw = els.nameInput.value.trim();
-    if (!raw) return;
-    if (graphemeCount(raw) > state.maxNameLen) {
-      nuiAlert('notify_photo_name_too_long');
-      return;
-    }
-    try {
-      const b64 = await blobToBase64(state.pendingCaptureBlob);
-      await postNui('uploadCapture', { token: state.captureToken, name: raw, image: b64 });
-    } catch {
-      nuiAlert('notify_nui_fetch_failed');
-    }
-    hideAll();
-    postNui('close', {});
-  }
-
-  function cancelCaptureName() {
-    state.pendingCaptureBlob = null;
-    state.captureToken = null;
-    postNui('close', {});
   }
 
   function openViewerMode(payload) {
     els.viewerTitle.textContent = (payload.strings && payload.strings.title) || '';
     els.viewerClose.textContent = (payload.strings && payload.strings.close) || '閉じる';
     els.viewerImg.src = payload.imageUrl;
-    els.nameOverlay.classList.add('hidden');
     els.app.classList.remove('hidden');
     els.viewer.classList.remove('hidden');
     els.editor.classList.add('hidden');
@@ -209,7 +128,6 @@
     els.btnSave.textContent = s.save || '保存';
     els.editorClose.textContent = s.close || '閉じる';
 
-    els.nameOverlay.classList.add('hidden');
     els.app.classList.remove('hidden');
     els.editor.classList.remove('hidden');
     els.viewer.classList.add('hidden');
@@ -219,10 +137,7 @@
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => setupPaintCanvas(img, payload);
-    img.onerror = () => {
-      nuiAlert('notify_nui_image_prepare_fail');
-      postNui('close', {});
-    };
+    img.onerror = () => postNui('close', {});
     img.src = payload.imageUrl;
   }
 
@@ -271,16 +186,12 @@
       x.drawImage(els.cvDraw, 0, 0);
       const blob = await canvasToJpegBlob(out, state.jpegQuality);
       const b64 = await blobToBase64(blob);
-      await postNui('uploadEdit', {
+      postNui('savePaint', {
         token: state.paintEditToken,
-        slot: String(state.paintSlot),
+        slot: state.paintSlot,
         image: b64,
       });
-    } catch {
-      nuiAlert('notify_nui_fetch_failed');
-    }
-    hideAll();
-    postNui('close', {});
+    } catch {}
   }
 
   function initPalette() {
@@ -303,12 +214,6 @@
   els.btnUndo.addEventListener('click', applyUndo);
   els.btnClear.addEventListener('click', clearDrawLayer);
   els.btnSave.addEventListener('click', savePaint);
-  els.nameCancel.addEventListener('click', cancelCaptureName);
-  els.nameConfirm.addEventListener('click', submitCaptureName);
-  els.nameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); submitCaptureName(); }
-    if (e.key === 'Escape') { e.preventDefault(); cancelCaptureName(); }
-  });
 
   els.cvDraw.addEventListener('pointerdown', onDown);
   els.cvDraw.addEventListener('pointermove', onMove);
@@ -318,13 +223,6 @@
   window.addEventListener('message', (ev) => {
     const msg = ev.data; if (!msg || !msg.action) return;
     if (msg.action === 'setMode' && msg.mode === 'hidden') return hideAll();
-
-    if (msg.action === 'prepareCapture') {
-      dataUriToScaledBlob(msg.dataUri, msg.maxWidth || 2560, msg.quality || 0.85)
-        .then((blob) => openCaptureNameDialog(blob, msg.token, msg.nameDialog || {}, msg.maxNameLength))
-        .catch(() => { nuiAlert('notify_nui_image_prepare_fail'); postNui('close', {}); });
-      return;
-    }
     if (msg.action === 'openViewer') return openViewerMode(msg);
     if (msg.action === 'openPaint') return openPaintMode(msg);
   });

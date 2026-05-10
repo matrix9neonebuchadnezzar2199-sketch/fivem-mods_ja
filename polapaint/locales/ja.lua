@@ -24,6 +24,9 @@ Locales.ja = {
     notify_session_expired            = 'セッションが切れました。やり直してください。',
     notify_nui_fetch_failed           = 'UI 通信に失敗しました。',
     notify_nui_image_prepare_fail     = '画像の前処理に失敗しました。',
+    notify_ox_lib_required            = 'ox_lib が起動していません（名前入力に必要です）。',
+    notify_capture_cancelled          = '撮影をキャンセルしました。',
+    notify_ui_force_closed            = 'UI を強制解除しました。',
 
     nui_close                         = '閉じる',
     nui_save                          = '保存',

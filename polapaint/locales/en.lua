@@ -24,6 +24,9 @@ Locales.en = {
     notify_session_expired            = 'Session expired. Please try again.',
     notify_nui_fetch_failed           = 'UI request failed.',
     notify_nui_image_prepare_fail     = 'Image preparation failed.',
+    notify_ox_lib_required            = 'ox_lib is not running (required for name input).',
+    notify_capture_cancelled          = 'Capture cancelled.',
+    notify_ui_force_closed            = 'UI force-closed.',
 
     nui_close                         = 'Close',
     nui_save                          = 'Save',

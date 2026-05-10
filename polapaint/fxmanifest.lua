@@ -2,13 +2,14 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-author 'JP-Mods (polapaint contributors)'
-description 'polapaint v2 - Polaroid camera with NUI paint editor (local storage)'
-version '2.0.0'
+author 'JP-Mods'
+description 'polapaint v3 - Polaroid camera with local storage (net-event only)'
+version '3.0.0'
 license 'GPL-3.0-or-later'
 repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
 
 shared_scripts {
+    '@ox_lib/init.lua',
     'config.lua',
     'locales/ja.lua',
     'locales/en.lua',
@@ -34,4 +35,9 @@ files {
     'html/style.css',
     'html/app.js',
     'html/images/*.png',
+}
+
+dependencies {
+    'screenshot-basic',
+    'ox_lib',
 }

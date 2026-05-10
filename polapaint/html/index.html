@@ -7,23 +7,15 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app" class="hidden" aria-modal="true" role="dialog">
-
-    <div id="name-overlay" class="overlay hidden">
-      <div class="dialog">
-        <h2 id="name-title"></h2>
-        <input type="text" id="name-input" maxlength="256" autocomplete="off" />
-        <div class="row">
-          <button type="button" id="name-cancel" class="btn"></button>
-          <button type="button" id="name-confirm" class="btn primary"></button>
-        </div>
-      </div>
-    </div>
-
+  <div id="app" class="hidden">
     <div id="viewer" class="panel hidden">
       <div class="cheki">
-        <div class="cheki-photo"><img id="viewer-img" alt="" /></div>
-        <div class="cheki-caption"><span id="viewer-title"></span></div>
+        <div class="cheki-photo-wrap">
+          <img id="viewer-img" alt="" />
+        </div>
+        <div class="cheki-caption">
+          <span id="viewer-title"></span>
+        </div>
       </div>
       <button type="button" id="viewer-close" class="btn primary"></button>
     </div>
@@ -38,11 +30,10 @@
         </div>
         <div class="toolbar">
           <div class="palette" id="palette"></div>
-          <label class="pen-label">
-            <span id="pen-label-text"></span>
+          <label class="pen-label"><span id="pen-label-text"></span>
             <input type="range" id="pen-size" min="2" max="28" value="6" />
           </label>
-          <div class="row">
+          <div class="btn-row">
             <button type="button" id="btn-undo" class="btn"></button>
             <button type="button" id="btn-clear" class="btn"></button>
             <button type="button" id="btn-save" class="btn primary"></button>
@@ -51,7 +42,6 @@
         </div>
       </div>
     </div>
-
   </div>
   <script src="app.js"></script>
 </body>

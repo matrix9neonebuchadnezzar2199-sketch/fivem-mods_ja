@@ -68,10 +68,86 @@ local function isScreenshotBasicReady()
     return GetResourceState('screenshot-basic') == 'started'
 end
 
-exports('useCamera', function(_, _)
+--- ox_lib による名前入力（撮影フロー用・NUI fetch 不使用）
+---@return string|nil
+local function askPhotoName(maxLen)
+    if GetResourceState('ox_lib') ~= 'started' then
+        notify(L('notify_ox_lib_required'))
+        return nil
+    end
+    local input = lib.inputDialog(L('nui_capture_name_title'), {
+        {
+            type = 'input',
+            label = L('nui_capture_name_title'),
+            placeholder = L('nui_capture_name_placeholder'),
+            required = true,
+            min = 1,
+            max = maxLen or 40,
+        },
+    })
+    if not input or not input[1] then return nil end
+    local s = tostring(input[1]):gsub('^%s+', ''):gsub('%s+$', '')
+    if s == '' then return nil end
+    return s
+end
+
+--- 撮影フロー（exports / qb から）
+local function startCaptureFlow()
     if uiOpen or captureBusy then notify(L('notify_busy')); return end
-    if not isScreenshotBasicReady() then notify(L('notify_screenshot_basic_missing')); return end
-    TriggerServerEvent('polapaint:server:requestCapture')
+    if not isScreenshotBasicReady() then
+        notify(L('notify_screenshot_basic_missing')); return
+    end
+    captureBusy = true
+    notify(L('notify_capture_started'))
+
+    local q = Config.JpegQuality or 0.85
+    local resolved = false
+    SetTimeout(15000, function()
+        if not resolved then
+            resolved = true
+            captureBusy = false
+            notify(L('notify_capture_timeout'))
+        end
+    end)
+
+    local ok, err = pcall(function()
+        exports['screenshot-basic']:requestScreenshot({
+            encoding = 'jpg',
+            quality = q,
+        }, function(dataUri)
+            if resolved then return end
+            resolved = true
+
+            if type(dataUri) ~= 'string' or dataUri == '' then
+                captureBusy = false
+                notify(L('notify_capture_fail'))
+                return
+            end
+
+            local name = askPhotoName(Config.MaxPhotoNameLength or 40)
+            captureBusy = false
+            if not name then
+                notify(L('notify_capture_cancelled'))
+                return
+            end
+
+            local b64 = dataUri:match('^data:image/[^;]+;base64,(.+)$') or dataUri
+            TriggerServerEvent('polapaint:server:uploadCapture', name, b64)
+        end)
+    end)
+
+    if not ok then
+        captureBusy = false
+        resolved = true
+        if Config.Debug then
+            print(('[polapaint] requestScreenshot failed: %s'):format(tostring(err)))
+        end
+        notify(L('notify_capture_fail'))
+    end
+end
+
+exports('useCamera', function(_, _)
+    startCaptureFlow()
 end)
 
 exports('usePhoto', function(data, slot)
@@ -104,62 +180,15 @@ exports('openPhotoViewer', function(slotId)
     })
 end)
 
+RegisterNetEvent('polapaint:client:qbUseCamera', function()
+    startCaptureFlow()
+end)
+
 RegisterNetEvent('polapaint:client:qbUsePhoto', function(slot)
     if uiOpen or captureBusy then notify(L('notify_busy')); return end
     slot = tonumber(slot)
     if not slot then return end
     TriggerServerEvent('polapaint:server:requestEdit', slot)
-end)
-
-RegisterNetEvent('polapaint:client:doCapture', function(token)
-    if captureBusy or uiOpen then return end
-    if type(token) ~= 'string' then return end
-    if not isScreenshotBasicReady() then notify(L('notify_screenshot_basic_missing')); return end
-
-    captureBusy = true
-    notify(L('notify_capture_started'))
-    local q = Config.JpegQuality or 0.85
-
-    local resolved = false
-    SetTimeout(15000, function()
-        if not resolved then
-            resolved = true
-            captureBusy = false
-            notify(L('notify_capture_timeout'))
-        end
-    end)
-
-    local ok, err = pcall(function()
-        exports['screenshot-basic']:requestScreenshot({
-            encoding = 'jpg', quality = q,
-        }, function(dataUri)
-            if resolved then return end
-            resolved = true
-            captureBusy = false
-            if type(dataUri) ~= 'string' or dataUri == '' then
-                notify(L('notify_capture_fail')); return
-            end
-            openUi({
-                action        = 'prepareCapture',
-                token         = token,
-                dataUri       = dataUri,
-                maxWidth      = Config.MaxImageWidth or 2560,
-                quality       = q,
-                maxNameLength = Config.MaxPhotoNameLength or 40,
-                nameDialog    = {
-                    title       = L('nui_capture_name_title'),
-                    placeholder = L('nui_capture_name_placeholder'),
-                    confirm     = L('nui_capture_confirm'),
-                    cancel      = L('nui_capture_cancel'),
-                },
-            })
-        end)
-    end)
-    if not ok then
-        captureBusy = false; resolved = true
-        if Config.Debug then print(('[polapaint] requestScreenshot failed: %s'):format(tostring(err))) end
-        notify(L('notify_capture_fail'))
-    end
 end)
 
 RegisterNetEvent('polapaint:client:openPaint', function(payload)
@@ -172,8 +201,10 @@ RegisterNetEvent('polapaint:client:openPaint', function(payload)
         editToken = payload.editToken,
         quality   = Config.JpegQuality or 0.85,
         strings   = {
-            close = L('nui_close'),  save  = L('nui_save'),
-            clear = L('nui_clear'),  undo  = L('nui_undo'),
+            close = L('nui_close'),
+            save  = L('nui_save'),
+            clear = L('nui_clear'),
+            undo  = L('nui_undo'),
             penSize = L('nui_pen_size'),
         },
     })
@@ -184,37 +215,22 @@ RegisterNUICallback('close', function(_, cb)
     cb({ ok = true })
 end)
 
-RegisterNUICallback('ppNuiAlert', function(data, cb)
-    cb({ ok = true })
-    if type(data) == 'string' then
-        local ok, decoded = pcall(json.decode, data)
-        if ok and type(decoded) == 'table' then data = decoded end
-    end
-    if data and type(data.key) == 'string' then notify(L(data.key)) end
-end)
-
-RegisterNUICallback('uploadCapture', function(data, cb)
+RegisterNUICallback('savePaint', function(data, cb)
     cb({ ok = true })
     if type(data) ~= 'table' then return end
-    if type(data.token) ~= 'string' or type(data.image) ~= 'string' then return end
-    if data.token == '' or data.image == '' then return end
-    TriggerServerEvent(
-        'polapaint:server:uploadCapture',
-        data.token,
-        type(data.name) == 'string' and data.name or tostring(data.name or ''),
-        data.image
-    )
+    local token = data.token
+    local slot = data.slot
+    local image = data.image
+    if type(token) ~= 'string' or token == '' then return end
+    if type(image) ~= 'string' or image == '' then return end
+    local slotNum = tonumber(slot)
+    if not slotNum then return end
+    closeUi()
+    TriggerServerEvent('polapaint:server:uploadEdit', token, slotNum, image)
 end)
 
-RegisterNUICallback('uploadEdit', function(data, cb)
-    cb({ ok = true })
-    if type(data) ~= 'table' then return end
-    if type(data.token) ~= 'string' or type(data.image) ~= 'string' then return end
-    if data.token == '' or data.image == '' then return end
-    TriggerServerEvent(
-        'polapaint:server:uploadEdit',
-        data.token,
-        tostring(data.slot or ''),
-        data.image
-    )
-end)
+RegisterCommand('polapaint_unstuck', function()
+    closeUi()
+    captureBusy = false
+    notify(L('notify_ui_force_closed'))
+end, false)

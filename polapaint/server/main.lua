@@ -3,9 +3,8 @@
 local L = PolaPaintUtil.L
 local now = PolaPaintUtil.now
 
-local cooldown        = { capture = {}, edit = {} }
-local pendingCapture  = {}
-local pendingEdit     = {}
+local cooldown    = { capture = {}, edit = {} }
+local pendingEdit = {}
 
 local function notify(src, key)
     TriggerClientEvent('polapaint:client:notify', src, L(key))
@@ -18,6 +17,13 @@ end
 
 local function markCooldown(src, kind)
     cooldown[kind][src] = now()
+end
+
+--- data:image/...;base64, を除去（クライアントが素の base64 だけ送る場合もそのまま通す）
+local function stripDataUriPayload(s)
+    if type(s) ~= 'string' then return '' end
+    local raw = s:match('^data:image/[^;]+;base64,(.+)$') or s
+    return raw
 end
 
 local function normalizePhotoLabel(label)
@@ -48,24 +54,44 @@ local function webhookImageUrlForId(id)
     return ('%s/photo/%s.jpg'):format(pub, signed)
 end
 
----@param body string
----@return boolean ok, string|nil errKey
-local function handleUploadCapture(src, body, token, name)
-    local s = pendingCapture[src]
-    if not s or s.token ~= token or now() > s.expires_ms then
-        return false, 'notify_session_expired'
+RegisterNetEvent('polapaint:server:uploadCapture', function(name, b64)
+    local src = source
+    if type(name) ~= 'string' or type(b64) ~= 'string' then return end
+
+    if Config.Debug then
+        print(('[polapaint] uploadCapture from src=%d, name=%s, b64_len=%d'):format(
+            src, name, #b64))
     end
-    pendingCapture[src] = nil
+
+    if not peekCooldown(src, 'capture', Config.CaptureCooldownSec or 4) then
+        notify(src, 'notify_capture_cooldown'); return
+    end
 
     local label = normalizePhotoLabel(name)
-    if not label then return false, 'notify_photo_name_invalid' end
+    if not label then notify(src, 'notify_photo_name_invalid'); return end
 
-    if PolaPaintSvBridge.cameraCount(src) < 1 then return false, 'notify_no_camera' end
+    if PolaPaintSvBridge.cameraCount(src) < 1 then
+        notify(src, 'notify_no_camera'); return
+    end
 
-    local id, err = PolaPaintStorage.savePhoto(body)
+    local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
+    if #b64 > math.floor(maxBytes * 1.4) + 65536 then
+        notify(src, 'notify_payload_too_large'); return
+    end
+
+    local bin = PolaPaintUtil.b64decode(stripDataUriPayload(b64))
+    if not bin then
+        notify(src, 'notify_storage_fail')
+        if Config.Debug then print('[polapaint] b64decode failed') end
+        return
+    end
+
+    local id, err = PolaPaintStorage.savePhoto(bin)
     if not id then
-        if err == 'too_large' then return false, 'notify_payload_too_large' end
-        return false, 'notify_storage_fail'
+        if err == 'too_large' then notify(src, 'notify_payload_too_large')
+        else notify(src, 'notify_storage_fail') end
+        if Config.Debug then print('[polapaint] savePhoto failed: ' .. tostring(err)) end
+        return
     end
 
     local meta = buildPhotoMeta(id, label)
@@ -77,85 +103,24 @@ local function handleUploadCapture(src, body, token, name)
         elseif reason == 'cannot_carry' or reason == 'cannot_carry_other' then
             key = 'notify_capture_weight_limit'
         end
-        return false, key
+        notify(src, key); return
     end
 
     markCooldown(src, 'capture')
+    notify(src, 'notify_capture_ok')
+    if Config.Debug then print(('[polapaint] capture saved: id=%s'):format(id)) end
+
     PolaPaintWebhook.notify(
         ('%s が写真を撮影: %s'):format(GetPlayerName(src) or '?', label),
         webhookImageUrlForId(id)
     )
-    return true, nil
-end
-
----@return boolean ok, string|nil errKey
-local function handleUploadEdit(src, body, token, slotStr)
-    if not peekCooldown(src, 'edit', Config.EditSaveCooldownSec or 3) then
-        return false, 'notify_edit_cooldown'
-    end
-    local s = pendingEdit[src]
-    if not s or s.token ~= token or now() > s.expires_ms then
-        return false, 'notify_session_expired'
-    end
-    local slot = tonumber(slotStr)
-    if not slot or slot ~= s.slot then return false, 'notify_slot_invalid' end
-    pendingEdit[src] = nil
-
-    local item = PolaPaintSvBridge.getSlot(src, slot)
-    if not item or item.name ~= (Config.Items and Config.Items.photo) then
-        return false, 'notify_slot_invalid'
-    end
-
-    local id, err = PolaPaintStorage.savePhoto(body)
-    if not id then
-        if err == 'too_large' then return false, 'notify_payload_too_large' end
-        return false, 'notify_edit_fail'
-    end
-
-    local newMeta = {}
-    for k, v in pairs(item.metadata or {}) do newMeta[k] = v end
-    newMeta.url = ('polapaint://photo/%s'):format(PolaPaintStorage.publicUrl(id))
-    newMeta.ts = os.time()
-
-    local okMeta = PolaPaintSvBridge.setMetadata(src, slot, newMeta)
-    if not okMeta then return false, 'notify_edit_fail' end
-
-    markCooldown(src, 'edit')
-    PolaPaintWebhook.notify(
-        ('%s が写真を編集'):format(GetPlayerName(src) or '?'),
-        webhookImageUrlForId(id)
-    )
-    return true, nil
-end
-
-local function pathWithoutQuery(p)
-    if type(p) ~= 'string' then return '' end
-    return (p:match('^([^%?]+)') or p)
-end
-
-local function handleRequestCapture(src)
-    if not peekCooldown(src, 'capture', Config.CaptureCooldownSec or 4) then
-        notify(src, 'notify_capture_cooldown'); return
-    end
-    if PolaPaintSvBridge.cameraCount(src) < 1 then
-        notify(src, 'notify_no_camera'); return
-    end
-    local token = PolaPaintUtil.token(16)
-    pendingCapture[src] = {
-        token = token,
-        expires_ms = now() + (Config.CaptureSessionTTLSec or 30) * 1000,
-    }
-    TriggerClientEvent('polapaint:client:doCapture', src, token)
-end
-
-RegisterNetEvent('polapaint:server:requestCapture', function()
-    handleRequestCapture(source)
 end)
 
 RegisterNetEvent('polapaint:server:requestEdit', function(slot)
     local src = source
     slot = tonumber(slot)
     if not slot then return end
+
     local item = PolaPaintSvBridge.getSlot(src, slot)
     if not item or item.name ~= (Config.Items and Config.Items.photo) then
         notify(src, 'notify_slot_invalid'); return
@@ -164,6 +129,7 @@ RegisterNetEvent('polapaint:server:requestEdit', function(slot)
     if type(meta.url) ~= 'string' or meta.url == '' then
         notify(src, 'notify_photo_no_url'); return
     end
+
     local token = PolaPaintUtil.token(16)
     pendingEdit[src] = {
         token = token,
@@ -177,57 +143,82 @@ RegisterNetEvent('polapaint:server:requestEdit', function(slot)
     })
 end)
 
---- NUI fetch → RegisterNUICallback → TriggerServerEvent で届く JPEG（base64）
-RegisterNetEvent('polapaint:server:uploadCapture', function(token, name, b64)
+RegisterNetEvent('polapaint:server:uploadEdit', function(token, slot, b64)
     local src = source
-    if type(token) ~= 'string' or type(b64) ~= 'string' or token == '' or b64 == '' then return end
-    local bin = PolaPaintUtil.b64decode(b64)
+    if type(token) ~= 'string' or type(b64) ~= 'string' then return end
+    slot = tonumber(slot)
+    if not slot then return end
+
+    if Config.Debug then
+        print(('[polapaint] uploadEdit from src=%d, slot=%d, b64_len=%d'):format(
+            src, slot, #b64))
+    end
+
+    if not peekCooldown(src, 'edit', Config.EditSaveCooldownSec or 3) then
+        notify(src, 'notify_edit_cooldown'); return
+    end
+
+    local s = pendingEdit[src]
+    if not s or s.token ~= token or now() > s.expires_ms then
+        notify(src, 'notify_session_expired'); return
+    end
+    if slot ~= s.slot then notify(src, 'notify_slot_invalid'); return end
+    pendingEdit[src] = nil
+
+    local item = PolaPaintSvBridge.getSlot(src, slot)
+    if not item or item.name ~= (Config.Items and Config.Items.photo) then
+        notify(src, 'notify_slot_invalid'); return
+    end
+
     local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
-    if not bin or #bin > maxBytes then
-        notify(src, 'notify_payload_too_large')
+    if #b64 > math.floor(maxBytes * 1.4) + 65536 then
+        notify(src, 'notify_payload_too_large'); return
+    end
+
+    local bin = PolaPaintUtil.b64decode(stripDataUriPayload(b64))
+    if not bin then notify(src, 'notify_storage_fail'); return end
+
+    local id, err = PolaPaintStorage.savePhoto(bin)
+    if not id then
+        if err == 'too_large' then notify(src, 'notify_payload_too_large')
+        else notify(src, 'notify_edit_fail') end
         return
     end
-    if Config.Debug then
-        print(('[polapaint] capture upload (net): bytes=%d token=%s'):format(#bin, token))
+
+    local newMeta = {}
+    for k, v in pairs(item.metadata or {}) do newMeta[k] = v end
+    newMeta.url = ('polapaint://photo/%s'):format(PolaPaintStorage.publicUrl(id))
+    newMeta.ts = os.time()
+
+    if not PolaPaintSvBridge.setMetadata(src, slot, newMeta) then
+        notify(src, 'notify_edit_fail'); return
     end
-    local ok, errKey = handleUploadCapture(src, bin, token, type(name) == 'string' and name or '')
-    if not ok then
-        notify(src, errKey or 'notify_capture_fail')
-    else
-        notify(src, 'notify_capture_ok')
-    end
+
+    markCooldown(src, 'edit')
+    notify(src, 'notify_edit_saved')
+    if Config.Debug then print(('[polapaint] edit saved: id=%s'):format(id)) end
+
+    PolaPaintWebhook.notify(
+        ('%s が写真を編集'):format(GetPlayerName(src) or '?'),
+        webhookImageUrlForId(id)
+    )
 end)
 
-RegisterNetEvent('polapaint:server:uploadEdit', function(token, slotStr, b64)
-    local src = source
-    if type(token) ~= 'string' or type(b64) ~= 'string' or token == '' or b64 == '' then return end
-    local bin = PolaPaintUtil.b64decode(b64)
-    local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
-    if not bin or #bin > maxBytes then
-        notify(src, 'notify_payload_too_large')
-        return
-    end
-    if Config.Debug then
-        print(('[polapaint] edit upload (net): bytes=%d token=%s'):format(#bin, token))
-    end
-    local ok, errKey = handleUploadEdit(src, bin, token, tostring(slotStr or ''))
-    if not ok then
-        notify(src, errKey or 'notify_edit_fail')
-    else
-        notify(src, 'notify_edit_saved')
-    end
-end)
+local function pathWithoutQuery(p)
+    if type(p) ~= 'string' then return '' end
+    return (p:match('^([^%?]+)') or p)
+end
 
 CreateThread(function()
     PolaPaintStorage.init()
 
     SetHttpHandler(function(req, res)
         local rawPath = req.path or ''
-        local pathForMatch = pathWithoutQuery(rawPath)
+        local path = pathWithoutQuery(rawPath)
         local method = (req.method or 'GET'):upper()
 
         if method == 'GET' then
-            local signed = pathForMatch:match('/photo/([^/]+)%.jpg$')
+            local signed = path:match('/photo/([^/]+)%.jpg$')
             if signed then
                 local id = PolaPaintStorage.verifySignedId(signed)
                 if not id then res.writeHead(403); res.send('forbidden'); return end
@@ -240,20 +231,18 @@ CreateThread(function()
                 res.send(bin)
                 return
             end
-            res.writeHead(404); res.send('not found'); return
         end
 
-        res.writeHead(405); res.send('method not allowed')
+        res.writeHead(404); res.send('not found')
     end)
 
-    if Config.Debug then print('[polapaint] server initialized (HTTP handler)') end
+    if Config.Debug then print('[polapaint] server initialized (GET-only handler)') end
 end)
 
 AddEventHandler('playerDropped', function()
     local s = source
     cooldown.capture[s] = nil
     cooldown.edit[s] = nil
-    pendingCapture[s] = nil
     pendingEdit[s] = nil
 end)
 
@@ -269,7 +258,7 @@ CreateThread(function()
     local pho = Config.Items and Config.Items.photo
     if cam then
         QBCore.Functions.CreateUseableItem(cam, function(src)
-            handleRequestCapture(src)
+            TriggerClientEvent('polapaint:client:qbUseCamera', src)
         end)
     end
     if pho then

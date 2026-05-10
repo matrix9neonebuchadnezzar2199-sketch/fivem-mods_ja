@@ -1,21 +1,19 @@
-# polapaint v2.0
+# polapaint v3.0
 
-ポラロイド風カメラ・写真編集（NUI）・チェキ風ビューワ。写真データは **Discord CDN ではなくサーバー側ローカルファイル**（`data/photos/`）に保存し、署名付きパスの JPEG は **`SetHttpHandler` の GET** で配信します（**アップロード POST は HTTP ハンドラでは扱いません**）。
+ポラロイド風カメラ・写真編集（NUI）・チェキ風ビューワ。写真データは **サーバー側ローカル**（`data/photos/<shard>/`）に保存し、署名付きパスの JPEG は **`SetHttpHandler` の GET** のみで配信します。
 
 ## 要件
 
-- **screenshot-basic**（別リソース）。**起動順**: `ensure screenshot-basic` の後に `ensure polapaint` を推奨。これは **HTTP の競合ではなく**、`exports['screenshot-basic']:requestScreenshot` が解決できるようにするためです。
-- **ox_inventory** または **qb-core / qb-inventory**（`Config.Framework = 'auto'` で自動判定）。
-- Lua **5.4**（`lua54 'yes'`）。
+- **screenshot-basic**（必須・`fxmanifest` の `dependencies` に記載）
+- **ox_lib**（必須・撮影後の **名前入力 `lib.inputDialog`** に使用）
+- **ox_inventory** または **qb-core / qb-inventory**（`Config.Framework = 'auto'` で自動判定）
+- Lua **5.4**（`lua54 'yes'`）
 
-## NUI からのアップロード経路
+## データ経路（v3）
 
-NUI の **`fetch('https://' + GetParentResourceName() + '/uploadCapture' | '/uploadEdit', { JSON… })`** は、FiveM では **`RegisterNUICallback`** に渡ります（**`SetHttpHandler` の POST とは別経路**）。本文は **`application/json`** で、JPEG は **`image` に base64**。
-
-1. **`client/main.lua`** … `RegisterNUICallback('uploadCapture'/'uploadEdit')` が **`cb({ ok = true })` で即応答**したうえで、`TriggerServerEvent('polapaint:server:uploadCapture'/'uploadEdit', …)` でサーバーへ転送。
-2. **`server/main.lua`** … `RegisterNetEvent` で受け取り、`PolaPaintUtil.b64decode` のあと既存の **`handleUploadCapture` / `handleUploadEdit`** を実行。
-
-ゲーム外からの **`curl http://<server>:30120/polapaint/uploadCapture`** 等でアップロードを真似ることは、**この構成では想定していません**（画像の GET は `http(s)://…/polapaint/photo/<signed>.jpg` が利用可能）。
+- **撮影**: クライアントで `screenshot-basic` → JPEG dataUri → **ox_lib** で名前入力 → **`TriggerServerEvent('polapaint:server:uploadCapture', name, b64)`**。撮影フローでは **NUI fetch を使いません**。
+- **編集**: サーバーが編集トークンを発行後、NUI で描画 → **`RegisterNUICallback('savePaint')`** で base64 を受け取り → **`TriggerServerEvent('polapaint:server:uploadEdit', …)`**（短距離の NUI fetch のみ）。
+- **画像表示（ビューワ／編集の元画像）**: `https://<resource>/photo/<signed>.jpg` の **GET**（`SetHttpHandler`）。
 
 ## `SetHttpHandler` と他リソースについて
 
