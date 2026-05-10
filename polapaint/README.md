@@ -10,9 +10,11 @@
 
 ## NUI からのアップロード経路
 
-CEF NUI からの `fetch('https://<リソース名>/uploadCapture', …)` は、静的ファイルに無ければ **当リソースに登録した `SetHttpHandler` にディスパッチ**されます（GET / POST 共通）。
+FiveM の CEF は、URL によって **`SetHttpHandler`** に届く経路と **`files` で宣言した静的ファイル**を返す経路が分かれます。**JPEG アップロード**は `postNuiBinary` が **`http://<リソース名>/uploadCapture` / `uploadEdit`** に POST します（クエリは付けず **`X-Polapaint-*` ヘッダ**で token / name / slot を送る）。
 
-一部環境では **`?token=…&name=…` を URL に付けると NUI 内 fetch が 404 になる**ことがあるため、**token / name / slot は `X-Polapaint-*` ヘッダで送り、クエリ文字列は付けません**（本文は JPEG の `ArrayBuffer`）。サーバーは **クエリが無い場合もヘッダから同値を補完**します。`curl` での手動テストは従来どおりクエリ付き URL でも動きます。
+一部環境では **`https://` の POST がサーバー HTTP ハンドラに届かず 404** になる報告があるため、バイナリ POST だけ **`http://`** としています。通常の `RegisterNUICallback` 向け JSON（`postNui`）は従来どおり **`https://`** です。
+
+サーバーは **クエリまたはヘッダ**のどちらでも `token` 等を受け取れます。`curl` の手動テストはクエリ付き URL でも動きます。
 
 ## `SetHttpHandler` と他リソースについて
 

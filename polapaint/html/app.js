@@ -64,7 +64,8 @@
   }
 
   async function postNuiBinary(endpoint, body, query) {
-    const url = 'https://' + RES() + '/' + endpoint;
+    /* NUI 内 fetch は https://<resource>/… が静的参照と誤認証され SetHttpHandler に届かない事例があるため http を使用 */
+    const url = 'http://' + RES() + '/' + endpoint;
     const headers = { 'Content-Type': 'image/jpeg' };
     if (query) {
       if (query.token) headers['X-Polapaint-Token'] = String(query.token);
@@ -363,6 +364,31 @@
     }
     if (msg.action === 'openViewer') return openViewerMode(msg);
     if (msg.action === 'openPaint') return openPaintMode(msg);
+  });
+
+  window.addEventListener('keydown', async (e) => {
+    if (e.key !== 'F2') return;
+    const jpegBuf = new Uint8Array([0xFF, 0xD8, 0xFF, 0xD9]).buffer;
+    try {
+      const r = await fetch('http://' + RES() + '/uploadCapture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: jpegBuf,
+      });
+      nuiAlert('test_http_' + r.status);
+    } catch (err) {
+      nuiAlert('test_http_err_' + (err && err.message ? err.message : 'unknown'));
+    }
+    try {
+      const r = await fetch('https://' + RES() + '/uploadCapture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: jpegBuf,
+      });
+      nuiAlert('test_https_' + r.status);
+    } catch (err) {
+      nuiAlert('test_https_err_' + (err && err.message ? err.message : 'unknown'));
+    }
   });
 
   initPalette();
