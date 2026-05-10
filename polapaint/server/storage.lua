@@ -66,12 +66,16 @@ function PolaPaintStorage.savePhoto(bin)
     SaveResourceFile(resName, ('%s%s/.keep'):format(STORAGE_DIR, shard), '', -1)
 
     --- JPEG は NUL を含み得るため第4引数は -1
-    local ok = SaveResourceFile(resName, relShard, bin, -1)
-    if not ok then
+    local okShard = SaveResourceFile(resName, relShard, bin, -1)
+    local ok = okShard
+    if not okShard then
         if Config.Debug then
             print(('[polapaint] SaveResourceFile shard failed path=%s bin_len=%d, retry flat'):format(relShard, #bin))
         end
         ok = SaveResourceFile(resName, relFlat, bin, -1)
+        if ok and Config.Debug then
+            print(('[polapaint] SaveResourceFile ok (flat fallback) path=%s'):format(relFlat))
+        end
     end
     if not ok then
         if Config.Debug then
