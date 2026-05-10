@@ -4,7 +4,7 @@
 
 | | |
 | --- | --- |
-| **リポジトリ** | 複数 MOD を同一ルートに並べる開発レイアウト（[`docs/STYLEGUIDE.md`](docs/STYLEGUIDE.md) の表記・UTF-8 方針に準拠） |
+| **リポジトリ** | 複数 MOD を同一ルートに並べる開発レイアウト（[`AGENTS.md`](AGENTS.md) の表記・UTF-8 方針に準拠） |
 | **ルート LICENSE** | [`LICENSE`](LICENSE) は **MIT**（**個別フォルダに LICENSE / `fxmanifest` の `license` がある場合はそちらが優先**） |
 | **開発ガイド** | [`AGENTS.md`](AGENTS.md) · [`CONTRIBUTING_JP.md`](CONTRIBUTING_JP.md) |
 
@@ -63,15 +63,14 @@
 
 | ドキュメント | 内容 |
 | --- | --- |
-| [`docs/STYLEGUIDE.md`](docs/STYLEGUIDE.md) | 用語・文体・**UTF-8（BOM 禁止）** |
-| [`AGENTS.md`](AGENTS.md) | フォルダ構成、`jp-<mod>:イベント` 命名、開発日記の置き場 |
+| [`AGENTS.md`](AGENTS.md) | フォルダ構成、`jp-<mod>:イベント` 命名、開発日記の置き場、UTF-8（BOM 禁止）方針 |
 | [`CONTRIBUTING_JP.md`](CONTRIBUTING_JP.md) | 外部 MOD の日本語化・フォーク配布の判断・作業の型 |
 
 ---
 
 ## 文字コードと `config.lua`（全 MOD 共通の約束）
 
-運営・開発の両方で次を共通ルールとします（詳細は [`docs/STYLEGUIDE.md`](docs/STYLEGUIDE.md)）。
+運営・開発の両方で次を共通ルールとします（詳細は [`AGENTS.md`](AGENTS.md) 文字コード節）。
 
 | 項目 | ルール |
 | --- | --- |
