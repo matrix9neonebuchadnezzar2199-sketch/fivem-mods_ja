@@ -12,11 +12,25 @@ ps-camera（Project Sloth Team）を **完全日本語化** したフォーク�
 
 > ESX・QBCore に依存するため [AGENTS.md](../AGENTS.md) の「単体 jp-* MOD」基準からは外れます。**フォーク／ローカライズ配布**としての位置付けです（[CONTRIBUTING_JP.md §2](../CONTRIBUTING_JP.md)）。
 
+## 動くまでの手順（この順でチェック）
+
+1. **依存リソース**が `server.cfg` で **`qb-core` → `screenshot-basic` → `jp-pola`** のように先に起動している（`ensure` の順序が前であること）。
+2. **`ensure jp-pola`** を書く。旧 **`ps-camera` は ensure しない**（二重起動で壊れる）。
+3. **`qb-core/shared/items.lua`** に `camera` と `photo` を登録（下記「インストール」の例どおり）。
+4. **`jp-pola/images/` の `camera.png` / `photo.png`** を、使っているインベントリの画像フォルダにコピー（例: `ox_inventory/web/images/` や `qb-inventory/html/images/`）。**`SvConfig.Inv = 'ox'`** のときは、**`ox_inventory/data/items.lua` に `camera` / `photo` の定義**も必要（未登録だと付与できない）。
+5. **`jp-pola/server/sv_main.lua` の `SvConfig.Inv`** を **`'qb'`** か **`'ox'`** に合わせる（ox_inventory なら **`'ox'`**）。
+6. **`jp-pola/config.lua` の `Config.UseFivemerr`** と **認証情報**をセットで合わせる（ズレるとカメラが開かない／撮影しても何も起きない）。
+   - **Fivemerr** … `Config.UseFivemerr = true` ＋ `set jp-pola_fivemerr_token "..."`（または `SvConfig.FivemerrApiToken`）。
+   - **Discord** … `Config.UseFivemerr = false` ＋ `set jp-pola_webhook "..."`（または `SvConfig.webhook`）。**1.1.0-jp.2 以降**で Discord 40333 対策済み（PNG 送信）。
+7. **`restart jp-pola`**（またはサーバー再起動）。
+8. ゲーム内で **カメラアイテムを使用** → 枠が出たら **シャッターは Enter**（左クリックではない。下表参照）。
+9. まだダメなら **`Config.Debug = true`** にして撮影し、**F8 とサーバーコンソール**の `[jp-pola]` ログを確認。
+
 ## 操作キー
 
 | 操作 | キー |
 |---|---|
-| シャッター | 左クリック |
+| シャッター | **Enter**（`INPUT_FRONTEND_ACCEPT` / control 176。原作 README の「左クリック」はコードと一致しません） |
 | フラッシュ オン／オフ | F |
 | カメラを閉じる | Backspace |
 | ズームイン／アウト（徒歩） | マウスホイール |
