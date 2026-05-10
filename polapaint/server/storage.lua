@@ -57,12 +57,25 @@ function PolaPaintStorage.savePhoto(bin)
     if #bin > maxBytes then return nil, 'too_large' end
 
     local id = PolaPaintUtil.token(16)
-    local rel = shardedRelPath(id)
-    --- JPEG は途中に NUL バイトを含み得る。SaveResourceFile は第4引数 **-1** で Lua 文字列全体を書くのが安全。
-    local ok = SaveResourceFile(GetCurrentResourceName(), rel, bin, -1)
+    local shard = id:sub(1, 2)
+    local relShard = shardedRelPath(id)
+    local relFlat = legacyFlatRelPath(id)
+    local resName = GetCurrentResourceName()
+
+    --- サブディレクトリが未作成の環境向けに、書き込み直前にもシャードを触る
+    SaveResourceFile(resName, ('%s%s/.keep'):format(STORAGE_DIR, shard), '', -1)
+
+    --- JPEG は NUL を含み得るため第4引数は -1
+    local ok = SaveResourceFile(resName, relShard, bin, -1)
     if not ok then
         if Config.Debug then
-            print(('[polapaint] SaveResourceFile failed path=%s bin_len=%d'):format(rel, #bin))
+            print(('[polapaint] SaveResourceFile shard failed path=%s bin_len=%d, retry flat'):format(relShard, #bin))
+        end
+        ok = SaveResourceFile(resName, relFlat, bin, -1)
+    end
+    if not ok then
+        if Config.Debug then
+            print(('[polapaint] SaveResourceFile flat failed path=%s bin_len=%d'):format(relFlat, #bin))
         end
         return nil, 'write_fail'
     end
