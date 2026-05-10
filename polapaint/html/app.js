@@ -34,7 +34,26 @@
     maxNameLen: 40,
   };
 
-  const RES = () => (typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'polapaint');
+  function normalizeResourceHost(name) {
+    if (!name || typeof name !== 'string') return '';
+    var n = name;
+    if (n.indexOf('cfx-nui-') === 0) n = n.slice('cfx-nui-'.length);
+    return n;
+  }
+
+  function RES() {
+    if (typeof GetParentResourceName === 'function') {
+      try {
+        var n = normalizeResourceHost(GetParentResourceName());
+        if (n) return n;
+      } catch (e) {}
+    }
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      var h = normalizeResourceHost(window.location.hostname);
+      if (h) return h;
+    }
+    return 'polapaint';
+  }
 
   function postNui(endpoint, data) {
     return fetch(`https://${RES()}/${endpoint}`, {
@@ -150,6 +169,8 @@
       postNui('close', {});
       return;
     }
+    nuiAlert('debug_res_value_' + RES());
+    nuiAlert('debug_full_url_https://' + RES() + '/uploadCapture');
     postNuiBinary('uploadCapture', buf, {
       token: state.captureToken,
       name: raw,
