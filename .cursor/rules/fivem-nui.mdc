@@ -1,0 +1,103 @@
+---
+description: FiveM NUI（HTML/CSS/JS）規約。フォーカス対称性・コールバック・fetch の作法
+globs:
+  - "**/html/**"
+  - "**/web/**"
+  - "**/client/**/*.lua"
+alwaysApply: true
+---
+
+# NUI 規約
+
+NUI は HTML/CSS/JS で UI を出すレイヤー。FiveM 固有の作法を外すと **マウスが取られたまま戻らない／HTTP 経由で読めない／本番だけ画像が出ない** といった事故になる。
+
+## 1. フォーカス制御は必ず対称
+
+`SetNuiFocus` は **必ず開閉対で**呼ぶ：
+
+```lua
+local function openUI()
+  SetNuiFocus(true, true)                    -- マウス, キーボード
+  SendNUIMessage({ type = 'open' })
+end
+
+local function closeUI()
+  SetNuiFocus(false, false)
+  SendNUIMessage({ type = 'close' })
+end
+```
+
+- **必ず**以下のタイミングで `SetNuiFocus(false, false)` を呼ぶ：
+  - NUI 側で「閉じる」ボタン → `RegisterNUICallback('close', cb)` の中
+  - ESC キー押下（NUI 側で `keydown` を拾うか、Lua 側で `IsControlJustPressed(0, 322)` 監視）
+  - **`onResourceStop` の中**（リスタート時のフォーカス残り防止）
+  - プレイヤー死亡・気絶など、UI を閉じるべき状態
+
+- フォーカスを取らない（純粋な HUD 表示）場合は **`SetNuiFocus(false, false)` のままで `SendNUIMessage` だけ送る**。視覚だけのオーバーレイにフォーカスを取らない。
+
+## 2. NUI コールバック（NUI → クライアント）
+
+```lua
+RegisterNUICallback('action', function(data, cb)
+  -- data は NUI からの任意 JSON。untrusted 扱いで検証する
+  -- 必要ならここで TriggerServerEvent（サーバー側で改めて検証）
+
+  cb({ ok = true })                          -- 必ず cb を呼ぶ。呼ばないと NUI 側 fetch が hang する
+end)
+```
+
+- **`cb(...)` を必ず呼ぶ**。早期 return で `cb` を呼ばないと、NUI 側の `fetch().then(...)` が完走せず UI が固まる。
+- NUI から渡ってくる `data` は **untrusted**。サーバーへ流す前にクライアント側でも軽く検証し、サーバー側でも本検証する（fivem-server-authority 参照）。
+
+## 3. メッセージ（クライアント → NUI）
+
+```lua
+SendNUIMessage({
+  type    = 'updateScore',
+  payload = { p1 = score1, p2 = score2 },
+})
+```
+
+- **`type` 駆動**で 1 本化（NUI 側で `switch (msg.data.type)`）。`event` `action` `kind` を MOD 内で混在させない。
+- 大量データ（数百件以上）は **分割送信** か、NUI 側から `fetch` で取りに行く設計にする。`SendNUIMessage` 経由は JSON シリアライズコストがかかる。
+
+## 4. NUI からの fetch（NUI → クライアント Lua）
+
+NUI 内 JS から FiveM Lua を叩くときは：
+
+```js
+const res = await fetch(`https://${GetParentResourceName()}/action`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ key: 'value' }),
+});
+const json = await res.json();
+```
+
+- **`https://` + リソース名**の URL を使う。`http://` でも動くが `https://` で統一。
+- リソース名は `GetParentResourceName()` で取る（リネーム耐性）。ハードコードしない。
+- レスポンスは **必ず** Lua 側で `cb({...})` を返す（hang 防止）。
+
+## 5. 画像・アセットの扱い
+
+- `fxmanifest.lua` の `files {}` に **読み込ませる全アセット** を列挙する（fivem-fxmanifest 参照）。
+- 本番 Linux サーバーは **大文字小文字が厳密**。`Banner.png` と `banner.png` は別扱い。**全部小文字**を推奨。
+- 動的にカード／アイコンを増やす場合は `**/*.png` ワイルドカードと **欠け検知のための個別列挙** を併用する（jp-tcgbook 参照）。
+
+## 6. NUI 側 i18n（jp-tcgbook 規約）
+
+`jp-tcgbook` 系・新規 NUI MOD で多言語化が要るときは AGENTS.md の i18n 節に従う：
+
+- ユーザー向け文言は **`STR.ja` と `STR.en` の両方**にキーを入れる。欠けるとキー名が出る。
+- 静的 HTML は `data-i18n` / `data-i18n-html` / `data-i18n-placeholder` 等の属性で。
+- 動的 JS は `I18n.t('key')` / `I18n.tf('key', { name: value })`。
+- 言語切替の `localStorage` キーは MOD ごとに分ける（例: `jp-tcgbook-ui-lang`）。
+
+## 7. やらないことリスト
+
+- `SetNuiFocus(true, true)` を呼んで `false, false` を呼び忘れる（マウスが戻らない）
+- `RegisterNUICallback` で `cb` を呼ばずに return（NUI 側 hang）
+- NUI からの `data` を検証せずサーバーへ流す
+- HTML/CSS/JS を `files` に列挙し忘れる（NUI が空白）
+- 本番 Linux で `Banner.png` のような大文字混在ファイル名を使う
+- `https://${GetParentResourceName()}` ではなく `https://my-mod-name` のようにハードコード

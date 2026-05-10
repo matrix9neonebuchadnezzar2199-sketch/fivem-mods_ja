@@ -1,0 +1,104 @@
+---
+description: FiveM Lua のコーディング規約（変数スコープ・イベント・ネイティブ・ライフサイクル）
+globs: "**/*.lua"
+alwaysApply: true
+---
+
+# FiveM Lua コーディングルール
+
+`fxmanifest.lua` のテンプレート・ファイル分割は別ルール（fivem-fxmanifest）。
+セキュリティ／サーバー権威は別ルール（fivem-server-authority）。NUI は別ルール（fivem-nui）。
+
+## 1. 変数とスコープ
+
+- **すべて `local`**。グローバル禁止。スレッド外で持つ状態はファイル先頭で `local State = { ... }` のように 1 つのテーブルに集約。
+- 例外は `Config = {}`（`shared_script`／`shared_scripts` で読み込まれる前提）と、`exports` 経由で公開する関数だけ。
+- 外部から触らせたい関数は `exports('name', fn)` で出す。グローバル関数で公開しない。
+
+## 2. ネイティブ関数
+
+- **PascalCase 表記**を基本（`GetEntityCoords`、`CreateVehicle`、`DoesEntityExist` 等）。
+- 未公開／生ハッシュは `Citizen.InvokeNative(0xHASH, ...)` でラップしてコメントを残す。
+- リファレンス: https://docs.fivem.net/natives/
+
+## 3. プレイヤー／エンティティの常識
+
+- `PlayerPedId()` の戻り値は **そのフレーム内** だけ信用する。`Wait()` を跨いだら取り直す。
+- スポーンの定型は **必ず三点セット**：
+
+  ```lua
+  if not IsModelInCdimage(model) or not IsModelValid(model) then return end
+  RequestModel(model)
+  while not HasModelLoaded(model) do Wait(0) end
+  -- ... 使い終わったら
+  SetModelAsNoLongerNeeded(model)
+  ```
+
+- 削除前は `DoesEntityExist(ent)` を確認。**ネットワーク所有権**が必要なら `NetworkRequestControlOfEntity(ent)` を待ってから操作する（タイムアウト付き）。
+- サーバー側で永続的に管理したい車・Ped は `CreateVehicleServerSetter` / `CreatePedServerSetter` 系を優先。
+
+## 4. ティック粒度（パフォーマンス指針の入口。詳細は fivem-perf）
+
+- 入力監視・描画系: `Wait(0)`（必要最小限の関数だけ）
+- 近接ポーリング（プレイヤー周辺・距離判定）: `Wait(500) 〜 Wait(1000)`
+- 待機中（プレイヤーが遠い・状態オフ）: `Wait(1500) 〜 Wait(5000)`、または **スレッドを終了して再起動**
+- 「常時 `Wait(0)`」は **絶対に書かない**。常駐スレッドは状態に応じて `Wait` 値を切り替える。
+
+## 5. イベントとネットイベント
+
+- 命名は **必ず `jp-<mod名>:アクション名`**。例: `jp-coin:flip`, `jp-tcgbook:battle:finish`。
+- ネットイベントは **登録パターンを統一**：
+
+  ```lua
+  RegisterNetEvent('jp-<mod>:foo', function(arg)
+    -- handler
+  end)
+  ```
+
+- **同じイベントを複数ファイルで `RegisterNetEvent` しない**（重複登録で多重発火する）。
+- データ取得系はイベント往復ではなく **コールバック** を使う（`ox_lib` を使うなら `lib.callback`、純正なら `RegisterServerCallback` 相当の自前実装）。
+- サーバー側ハンドラの先頭で `local src = source` を**必ず**ローカルに退避（後述 fivem-server-authority）。
+
+## 6. リソースのライフサイクル（クリーンアップ必須）
+
+リソース停止／リスタート時に副作用を残さない。クライアント／サーバーそれぞれで **以下を必ず仕込む**：
+
+```lua
+AddEventHandler('onResourceStop', function(res)
+  if res ~= GetCurrentResourceName() then return end
+  -- クライアント例: NUI フォーカス解除、自前で生成したエンティティ削除、Blip 削除、UI 終了
+  -- サーバー例: タイマー停止、保留中の DB 書き込み flush、開いている stream を閉じる
+end)
+```
+
+代表的な「忘れがち」一覧：
+
+- `SetNuiFocus(false, false)` を NUI 終了時に必ず呼ぶ（リソース停止時にも）
+- 自前で `CreateObject` / `CreatePed` / `CreateVehicle` したエンティティを `DeleteEntity` する（`SetEntityAsMissionEntity` していないと消えない）
+- `AddBlipForCoord` で作った Blip は `RemoveBlip(blip)`
+- `RegisterCommand` は仕様上アンレジ不可だが、**サーバー側のスレッドや SetTimeout は終了処理が必要**
+
+## 7. デバッグログ
+
+- `print` の頭は **必ずリソース名タグ**: `print(('[%s] ...'):format(GetCurrentResourceName()))`。
+- リリース前に `Config.Debug` フラグでガードする（`if Config.Debug then print(...) end`）。
+- エラーは `pcall` でラップして握りつぶさない。失敗を `print` するか `lib.print.error` などで構造化する。
+
+## 8. 外部連携（standalone 維持）
+
+- `dependency` を書かない／書くなら最小限（自前 jp-* MOD は **完全 standalone** を既定とする）。
+- 他 MOD と連携したい場合は **`exports` を `pcall` でラップ** して、未読込み時にも安全に動くようにする：
+
+  ```lua
+  local ok, inv = pcall(function() return exports.ox_inventory end)
+  if not ok or not inv then return end
+  ```
+
+## 9. やらないことリスト（事故率高）
+
+- グローバル変数の使用
+- `Wait(0)` の常時ループ（FPS とサーバー負荷の元凶）
+- `RegisterNetEvent` の重複登録
+- サーバー側で `source` をローカルに退避せず `Wait` を挟む
+- スポーンしたエンティティの未削除（リスタート後にゴミが残る）
+- `print` を本番に残す（`Config.Debug` で必ずガード）

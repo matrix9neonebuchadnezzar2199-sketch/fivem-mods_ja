@@ -1,0 +1,81 @@
+---
+description: config.lua の運営者設定を壊さないためのルール（座標・価格・テーブル・後方互換）
+globs:
+  - "**/config.lua"
+  - "**/shared/config.lua"
+alwaysApply: true
+---
+
+# Config 保全ルール
+
+`config.lua` は **サーバー運営者が最も触る** ファイル。エージェント／開発者が無断で初期値に戻すと、本番運用の設定（座標・価格・対象アイテム・Webhook・場所リスト）が消えて事故になる。
+
+## 1. 触ってよいもの／いけないもの
+
+| 種別 | 例 | 方針 |
+|---|---|---|
+| **運営者設定**（座標・価格・範囲・テーブル件数・対象アイテム・Webhook・公開 URL） | `Config.Machines`、`Config.Prices`、`Config.Items`、`Config.Webhook` | **依頼がある項目だけ** 変更する。それ以外は値を維持する。 |
+| **構造（キー・型）** | `Config.Foo = { x, y, z }` を `{ name, coords }` に変えるなど | 後方互換のための **正規化関数** を入れる（後述）。古い `config.lua` で起動できなくなるのを防ぐ。 |
+| **コメント・フォーマット** | 日本語説明・整形 | 改善目的で触ってよい。ただし **値は変えない**。 |
+| **新規項目** | 機能追加に伴う追記 | **末尾に追記** が原則。`Config.NewFeature = ...`。既存項目の前に割り込ませない。 |
+
+## 2. 編集前のチェック（事故防止）
+
+`config.lua` を編集するときは **作業前に**：
+
+1. **依頼内容の確認**: ユーザーが「どの値を／どこに／何に」変えてほしいかを明確化する。曖昧なら聞く。
+2. **対象テーブルの保全**: `Config.Machines` のような配列は **件数・各要素のキー・値**を編集前に把握する。差分を見て、依頼外の要素が触れていないか確認する。
+3. **正規化関数の有無**: 構造変更を伴う場合、起動時に旧形式を読める **正規化関数** を入れる方針か、ユーザーに確認する。
+
+## 3. 編集後のチェック（完了報告前）
+
+1. **`git diff config.lua` を確認**。依頼項目以外が変わっていないこと。
+2. 件数・型が想定通り（配列が空になっていない、`{` `}` の対応がズレていない）。
+3. 既存コメントの日本語が崩れていない（BOM 混入や全角スペース化など）。
+4. 文字コードが **UTF-8 BOM なし**（utf8-text-encoding 参照）。
+
+## 4. 構造拡張時の後方互換パターン
+
+利用者が **旧 `config.lua` を持ち込む** 想定がある場合（特にフォーク／バージョンアップ）、起動時または該当機能の直前に **一度だけ** 正規化する：
+
+```lua
+-- 例: 旧形式 vec3 配列 → 新形式 { name, coords } へ
+local function NormalizeMachines(list)
+  if type(list) ~= 'table' then return {} end
+  for i, m in ipairs(list) do
+    if m.x and m.y and m.z and not m.coords then
+      list[i] = { name = ('machine_%d'):format(i), coords = vector3(m.x, m.y, m.z) }
+    end
+  end
+  return list
+end
+
+Config.Machines = NormalizeMachines(Config.Machines)
+```
+
+- **`nil` チェック**で旧形式を検出 → 新形式に **置き換え**（または参照用にラップ）。
+- 正規化後のコードパスは **新形式のみ** を読む（分岐だらけにしない）。
+- 参考実装: `jp-deliveryjobv2` の `NormalizeDeliveryRoutes()`（CONTRIBUTING_JP.md §3）。
+
+## 5. やらないことリスト
+
+- ユーザーが入れた座標・価格・テーブル件数を **依頼なしで初期値に戻す**
+- 既存キー名を **リネーム**（旧設定が読めなくなる）
+- 既存値の **型を変更**（例: 数値 → テーブル）
+- 大きな差し替え（**全文置換**）で運営者設定を一括リセット
+- 機能追加で **末尾追記でなく** 既存項目の前に割り込ませる（diff が読みにくい）
+
+## 6. 機微情報の取り扱い
+
+Webhook URL・API キー・公開 URL は **`config.lua` に直書きしない**。`server.cfg` 側 Convar に出す（fivem-fxmanifest §Convar 参照）：
+
+```lua
+-- ❌ config.lua に直書き
+Config.WebhookUrl = 'https://discord.com/api/webhooks/...'
+
+-- ✅ Convar 経由
+Config.Webhook = { convarName = 'jp-mymod_webhook' }
+-- server.cfg: set jp-mymod_webhook "https://..."
+```
+
+これにより、リポジトリへ機微情報が混入する事故を構造的に防げる。

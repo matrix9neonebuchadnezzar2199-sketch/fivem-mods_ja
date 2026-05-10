@@ -1,0 +1,119 @@
+---
+description: FiveM サーバー権威・セキュリティ規約（source 検証・チート対策・経済系の取り扱い）
+globs: "**/server/**/*.lua"
+alwaysApply: true
+---
+
+# サーバー権威とセキュリティ
+
+FiveM のクライアントは **すべて改ざん可能**。クライアントから送られる値（座標・金額・対象エンティティ・選択肢）はすべて **untrusted** として扱う。
+
+## 1. `source` の取り扱い（最優先）
+
+ネットイベント／コールバックハンドラの **先頭で必ず** ローカルに退避する：
+
+```lua
+RegisterNetEvent('jp-shop:buy', function(itemId, qty)
+  local src = source                          -- 必ずここで取る
+  if not src or src <= 0 then return end
+
+  Citizen.Wait(0)                             -- ここで `source` は別の値に化ける可能性がある
+  -- 以後は `src` だけを使う。`source` を再参照しない
+end)
+```
+
+- `Wait` を挟んだ後の `source` は別イベントの値になっている可能性があり、**他人の名義で処理が走る**事故になる。
+- `RegisterCommand` のサーバー版コールバックは **第 1 引数が `source`**（コンソールから叩いた場合は `0`）。`source == 0` のときに「コンソール経由」と判定する。
+
+## 2. 引数の検証
+
+すべての net イベント／コールバックは：
+
+- **型チェック**: `type(qty) == 'number'`、`math.type(qty) == 'integer'` 等
+- **範囲チェック**: 0 < qty <= 上限。負数・NaN・Inf を弾く
+- **ホワイトリスト**: `Config.Items[itemId]` のキー存在で許可制にする
+- **整合性**: `claimedSlot` が実在するスロットか、対象 ped/vehicle が **本人の近傍に実在** するか
+
+検証漏れは「マイナス数量で残高ブースト」「IDで他人のインベントリを参照」などの典型脆弱性に直結する。
+
+## 3. 経済・インベントリの権威
+
+- **金銭・アイテム数の最終決定はサーバーのみ**。クライアントから「いくらもらった」「いくつ消費した」を受け取らない。
+- 「ガチャを引いた」「商品を買った」のような **状態遷移ごと** に：
+  1. 在庫／残高をサーバー側で読む
+  2. 取引可能か判定する（残高、所持上限、距離、クールダウン）
+  3. 引き落とし → 付与の順で **同期的に** 反映する
+  4. 結果を `TriggerClientEvent` で本人に返す
+- DB を使う MOD は **トランザクション**（oxmysql の `MySQL.transaction`）で原子的に。
+
+## 4. 距離・所有権の検証
+
+クライアントから「あの ped と話した」「あの vehicle に乗った」と言われたら必ず：
+
+```lua
+local ped = GetPlayerPed(src)
+if ped == 0 then return end
+local pcoords = GetEntityCoords(ped)
+if #(pcoords - targetCoords) > 5.0 then return end       -- 距離検証
+```
+
+- 対象がエンティティなら `NetworkGetEntityFromNetworkId(netId)` → `DoesEntityExist` の確認まで。
+- インベントリ系は `ox_inventory` 等が距離検証を内包しているならそちらに委ねる。
+
+## 5. クールダウン／レート制限
+
+イベントを連打されてもサーバー側で吸収できるよう、`source` 単位のクールダウンを持つ：
+
+```lua
+local lastUse = {}                            -- [src] = os.time()
+RegisterNetEvent('jp-coin:flip', function()
+  local src, now = source, os.time()
+  if (now - (lastUse[src] or 0)) < (Config.CooldownSec or 2) then return end
+  lastUse[src] = now
+  -- 本処理
+end)
+
+AddEventHandler('playerDropped', function()
+  lastUse[source] = nil                       -- 退出時クリーンアップ
+end)
+```
+
+- 重い処理（DB・HTTP）を呼ぶイベントは **特に** 必要。
+- `playerDropped` で `[src]` をクリーンアップしないと長期運用でテーブルが肥大化する。
+
+## 6. NUI 入力は untrusted
+
+`RegisterNUICallback` は **クライアント側だけ**で動く。NUI からの入力値をそのまま `TriggerServerEvent` で右から左へ流すのは禁止。サーバー側で **改めて** 検証＋権威確認する。
+
+## 7. `exports` の発信元検証（必要なら）
+
+`exports` で他リソースに公開する関数は、呼び出し元を確認できる：
+
+```lua
+exports('giveBonus', function(amount)
+  local res = GetInvokingResource()
+  if res ~= 'allowed_resource' then return false end
+  -- ...
+end)
+```
+
+- 必要なケースは限られる（経済系の付与エクスポートを公開する場合等）。普段はそこまで気にしないが、**お金を動かす export はホワイトリスト**を検討する。
+
+## 8. 監査ログ
+
+経済系・管理者操作・退場処理は **必ず print** に残す（後追い調査用）：
+
+```lua
+print(('[%s] buy src=%d item=%s qty=%d total=%d'):format(GetCurrentResourceName(), src, itemId, qty, price))
+```
+
+- 本番運用では Discord Webhook へも飛ばす（`polapaint` の `server/webhook.lua` がリファレンス実装）。
+- 個人情報（ライセンス番号）は **マスクして** 出すか、サーバー内 KV のみに留める。
+
+## 9. やらないことリスト
+
+- クライアントから受け取った `amount` をそのまま `AddMoney` する
+- `source` を退避せずに `Wait` を挟む
+- DB 書き込みの直前で型／範囲チェックをサボる
+- `playerDropped` でセッション情報をクリーンアップしない
+- 開発中の `print` を残したまま本番に出す
