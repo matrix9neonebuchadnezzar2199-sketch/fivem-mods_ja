@@ -63,25 +63,26 @@
     }).catch(() => nuiAlert('notify_nui_fetch_failed'));
   }
 
-  function postNuiBinary(endpoint, body, queryObj) {
-    const qs = queryObj
-      ? '?' + Object.entries(queryObj).map(([k, v]) =>
-          `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`
-        ).join('&')
-      : '';
-    const url = `https://${RES()}/${endpoint}${qs}`;
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'image/jpeg' },
-      body: body,
-    }).then((r) => {
+  async function postNuiBinary(endpoint, body, query) {
+    const url = 'https://' + RES() + '/' + endpoint;
+    const headers = { 'Content-Type': 'image/jpeg' };
+    if (query) {
+      if (query.token) headers['X-Polapaint-Token'] = String(query.token);
+      if (query.name != null && query.name !== '') {
+        headers['X-Polapaint-Name'] = encodeURIComponent(String(query.name));
+      }
+      if (query.slot != null) headers['X-Polapaint-Slot'] = String(query.slot);
+    }
+    nuiAlert('debug_url2_' + url);
+    try {
+      const r = await fetch(url, { method: 'POST', headers: headers, body: body });
       if (!r.ok && r.status !== 204) throw new Error('http_' + r.status);
       return r;
-    }).catch((e) => {
+    } catch (e) {
       nuiAlert('debug_fetch_err_' + (e && e.message ? e.message : 'unknown'));
       nuiAlert('notify_nui_fetch_failed');
-      return Promise.reject(new Error('fail'));
-    });
+      throw e;
+    }
   }
 
   function nuiAlert(key) { postNui('ppNuiAlert', { key }); }
@@ -169,8 +170,6 @@
       postNui('close', {});
       return;
     }
-    nuiAlert('debug_res_value_' + RES());
-    nuiAlert('debug_full_url_https://' + RES() + '/uploadCapture');
     postNuiBinary('uploadCapture', buf, {
       token: state.captureToken,
       name: raw,

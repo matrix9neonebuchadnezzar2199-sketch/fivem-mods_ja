@@ -159,6 +159,42 @@ local function parseQueryFromReq(req)
     return parseQueryParams(getQueryString(req))
 end
 
+--- HTTP ヘッダ取得（大文字小文字・キー表記ゆれ対応）
+local function hdrGet(hdr, name)
+    if type(hdr) ~= 'table' or type(name) ~= 'string' then return nil end
+    local nl = name:lower()
+    for k, v in pairs(hdr) do
+        if type(k) == 'string' and k:lower() == nl then return v end
+    end
+    return nil
+end
+
+--- application/x-www-form-urlencoded 風のパーセント復号（ヘッダの名前用）
+local function decodeUriComponent(s)
+    if type(s) ~= 'string' then return s end
+    s = s:gsub('+', ' ')
+    s = s:gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
+    return s
+end
+
+local function mergePolapaintHeadersIntoQuery(q, hdr)
+    q = q or {}
+    if type(hdr) ~= 'table' then return q end
+    if not q.token or q.token == '' then
+        local t = hdrGet(hdr, 'X-Polapaint-Token')
+        if type(t) == 'string' and t ~= '' then q.token = t end
+    end
+    if not q.name or q.name == '' then
+        local n = hdrGet(hdr, 'X-Polapaint-Name')
+        if type(n) == 'string' and n ~= '' then q.name = decodeUriComponent(n) end
+    end
+    if not q.slot or q.slot == '' then
+        local s = hdrGet(hdr, 'X-Polapaint-Slot')
+        if type(s) == 'string' and s ~= '' then q.slot = s end
+    end
+    return q
+end
+
 local function pathWithoutQuery(p)
     if type(p) ~= 'string' then return '' end
     return (p:match('^([^%?]+)') or p)
@@ -238,7 +274,8 @@ CreateThread(function()
                 res.writeHead(204, {
                     ['Access-Control-Allow-Origin']  = '*',
                     ['Access-Control-Allow-Methods']   = 'POST, OPTIONS',
-                    ['Access-Control-Allow-Headers']   = 'Content-Type',
+                    ['Access-Control-Allow-Headers']   =
+                        'Content-Type, X-Polapaint-Token, X-Polapaint-Name, X-Polapaint-Slot',
                 })
                 res.send('')
                 return
@@ -249,7 +286,7 @@ CreateThread(function()
 
         if method == 'POST' then
             print('[polapaint] DEBUG: POST received path=' .. tostring(rawPath))
-            local q = parseQueryFromReq(req)
+            local q = mergePolapaintHeadersIntoQuery(parseQueryFromReq(req), req.headers or {})
             local hdr = req.headers or {}
             local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
             local hardCap = maxBytes * 2

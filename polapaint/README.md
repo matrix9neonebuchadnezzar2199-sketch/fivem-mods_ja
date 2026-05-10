@@ -10,7 +10,9 @@
 
 ## NUI からのアップロード経路
 
-CEF NUI からの `fetch('https://<リソース名>/uploadCapture?...', { method: 'POST', body: JPEG blob })` は、静的ファイルに無ければ **当リソースに登録した `SetHttpHandler` にディスパッチ**されます（GET / POST 共通）。v2.0 はこの経路で JPEG を受け取ります。
+CEF NUI からの `fetch('https://<リソース名>/uploadCapture', …)` は、静的ファイルに無ければ **当リソースに登録した `SetHttpHandler` にディスパッチ**されます（GET / POST 共通）。
+
+一部環境では **`?token=…&name=…` を URL に付けると NUI 内 fetch が 404 になる**ことがあるため、**token / name / slot は `X-Polapaint-*` ヘッダで送り、クエリ文字列は付けません**（本文は JPEG の `ArrayBuffer`）。サーバーは **クエリが無い場合もヘッダから同値を補完**します。`curl` での手動テストは従来どおりクエリ付き URL でも動きます。
 
 ## `SetHttpHandler` と他リソースについて
 
