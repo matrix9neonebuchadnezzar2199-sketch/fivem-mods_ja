@@ -154,6 +154,7 @@ local function startCaptureFlow()
 
             local b64 = dataUri:match('^data:image/[^;]+;base64,(.+)$') or dataUri
             print('[polapaint] STEP6 firing TriggerLatentServerEvent uploadCapture, b64 len=' .. #b64)
+            notify(L('notify_capture_saving'))
             TriggerLatentServerEvent('polapaint:server:uploadCapture', NET_IMG_LATENT_BPS, name, b64)
             print('[polapaint] STEP7 TriggerLatentServerEvent done')
         end)
@@ -171,10 +172,36 @@ exports('useCamera', function(_, _)
     startCaptureFlow()
 end)
 
-exports('usePhoto', function(data, slot)
+--- ox_inventory は `client.export` を包み、`exports.polapaint:usePhoto(nil, itemDef, ctx)` の **3 引数**で呼ぶ（`modules/items/shared.lua` の useExport）。
+---@param a any
+---@param b any
+---@param c any
+---@return number|nil
+local function resolveInventorySlotFromOxUse(a, b, c)
+    if type(c) == 'table' and type(c.slot) == 'number' then
+        return c.slot
+    end
+    if type(b) == 'table' and type(b.slot) == 'number' then
+        return b.slot
+    end
+    if type(a) == 'table' and type(a.slot) == 'number' then
+        return a.slot
+    end
+    if type(b) == 'number' then return b end
+    if type(a) == 'number' then return a end
+    return nil
+end
+
+exports('usePhoto', function(a, b, c)
     if uiOpen or captureBusy then notify(L('notify_busy')); return end
-    local sn = slot and slot.slot
-    if type(sn) ~= 'number' then return end
+    local sn = resolveInventorySlotFromOxUse(a, b, c)
+    if type(sn) ~= 'number' then
+        if Config.Debug then
+            print('[polapaint] usePhoto: could not resolve slot (expected ox_inventory ctx.slot)')
+        end
+        notify(L('notify_slot_invalid'))
+        return
+    end
     TriggerServerEvent('polapaint:server:requestEdit', sn)
 end)
 
@@ -247,6 +274,7 @@ RegisterNUICallback('savePaint', function(data, cb)
     local slotNum = tonumber(slot)
     if not slotNum then return end
     closeUi()
+    notify(L('notify_edit_saving'))
     TriggerLatentServerEvent('polapaint:server:uploadEdit', NET_IMG_LATENT_BPS, token, slotNum, image)
 end)
 
