@@ -69,6 +69,12 @@ ox_inventory の **`buttons`（コンテキストから「閲覧」）** に相�
 - **閲覧のみ**が必要な場合: 自作の `RegisterCommand` / `exports` / qb-target から `exports['polapaint']:openPhotoViewer(slot)` を呼ぶ運用を検討してください。
 - **USE = 編集**・**閲覧は別導線**という前提を運営・プレイヤーに共有してください。
 
+## トラブルシュート（「写真アイテムが items.lua に未定義」）
+
+- **ox_inventory** を使う場合、`ox_inventory/data/items.lua`（または分割定義）に **`Config.Items.photo` と同じキー**（既定は **`polaroid_photo`**）を追加してください。`snippets/ox_inventory_items.lua.example` をコピーするとよいです。
+- アイテム追加後は **`refresh ox_inventory`**（またはサーバー再起動）が必要です。
+- **`Config.Framework = 'auto'`** で認識できないときは `server.cfg` で **`ensure ox_inventory`** を **`ensure polapaint` より前**にしてください。
+
 ## 運用上の注意
 
 1. 写真ファイルは **`data/photos/<shard>/<id>.jpg`** を優先して保存します。環境によってサブディレクトリへの書き込みが失敗する場合があるため、**そのときは自動で `data/photos/<id>.jpg`（フラット）へフォールバック**します。読み込みはシャード→フラットの順です。バックアップは `data/photos/` ごとアーカイブすれば十分です。

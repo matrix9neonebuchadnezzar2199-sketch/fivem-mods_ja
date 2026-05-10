@@ -97,8 +97,15 @@ RegisterNetEvent('polapaint:server:uploadCapture', function(name, b64)
     local meta = buildPhotoMeta(id, label)
     local ok, reason = PolaPaintSvBridge.givePhoto(src, meta)
     if not ok then
+        if Config.Debug then
+            print(('[polapaint] givePhoto failed reason=%s fw=%s Config.Items.photo=%s'):format(
+                tostring(reason),
+                tostring(PolaPaintSvBridge.detect()),
+                tostring(Config.Items and Config.Items.photo)))
+        end
         local key = 'notify_capture_fail'
         if reason == 'invalid_item' then key = 'notify_capture_item_not_defined'
+        elseif reason == 'no_framework' then key = 'notify_inventory_framework_missing'
         elseif reason == 'inventory_full' then key = 'notify_capture_inventory_full'
         elseif reason == 'cannot_carry' or reason == 'cannot_carry_other' then
             key = 'notify_capture_weight_limit'

@@ -41,9 +41,16 @@ function PolaPaintSvBridge.givePhoto(src, meta)
     local fw = PolaPaintSvBridge.detect()
     local photo = Config.Items and Config.Items.photo
     if not photo then return false, 'invalid_item' end
+    if not fw then return false, 'no_framework' end
     if fw == 'ox' then
         local ok, reason = exports.ox_inventory:AddItem(src, photo, 1, meta)
         if ok then return true, nil end
+        if Config.Debug then
+            print(('[polapaint] ox_inventory AddItem failed item=%s meta_keys=%s reason=%s'):format(
+                photo,
+                type(meta) == 'table' and next(meta) and 'ok' or 'empty',
+                tostring(reason)))
+        end
         if reason == 'inventory_full' then return false, 'inventory_full' end
         if reason == 'cannot_carry' or reason == 'cannot_carry_other' then
             return false, reason
