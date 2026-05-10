@@ -1,4 +1,4 @@
-param([string]$Path = 'jp-pola')
+param([string]$Path = '.')
 
 Get-ChildItem -Path $Path -Recurse -Include *.lua,*.md,*.html,*.css,*.js -File | ForEach-Object {
     $fp = $_.FullName
