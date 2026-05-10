@@ -18,6 +18,7 @@ end
 --- 制御文字を含むか
 ---@param s string
 function PolaPaintUtil.hasControl(s)
+    if type(s) ~= 'string' then return false end
     return s:find('[%z\1-\31\127]') ~= nil
 end
 
@@ -30,30 +31,55 @@ function PolaPaintUtil.token(bytes)
     return table.concat(t)
 end
 
---- RFC Base64 デコード（純 Lua）。壊れた入力は nil。
----@param data string
----@return string|nil
-function PolaPaintUtil.b64decode(data)
-    if type(data) ~= 'string' or data == '' then return nil end
-    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    data = string.gsub(data, '[^' .. b .. '=]', '')
-    local ok, result = pcall(function()
-        return (data:gsub('.', function(x)
-            if x == '=' then return '' end
-            local r, f = '', (string.find(b, x, 1, true) - 1)
-            for i = 6, 1, -1 do
-                r = r .. (((f % 2 ^ i - f % 2 ^ (i - 1)) > 0) and '1' or '0')
-            end
-            return r
-        end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-            if #x ~= 8 then return '' end
-            local c = 0
-            for i = 1, 8 do c = c + (x:sub(i, i) == '1' and 2 ^ (8 - i) or 0) end
-            return string.char(c)
-        end))
-    end)
-    if not ok then return nil end
-    return result
+do
+    local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    local decmap = {}
+    for i = 1, #b64chars do
+        decmap[b64chars:byte(i)] = i - 1
+    end
+    decmap[('='):byte()] = 0
+
+    --- 高速 Base64 デコード。失敗時 nil。
+    ---@param data string
+    ---@return string|nil
+    function PolaPaintUtil.b64decode(data)
+        if type(data) ~= 'string' or data == '' then return nil end
+        -- 改行・空白除去
+        data = data:gsub('[\r\n\t ]', '')
+        local len = #data
+        if len % 4 ~= 0 then return nil end
+
+        local pad = 0
+        if data:sub(-1) == '=' then pad = 1 end
+        if data:sub(-2) == '==' then pad = 2 end
+
+        local out = {}
+        local outIdx = 0
+        local byte = string.byte
+        local char = string.char
+
+        for i = 1, len, 4 do
+            local c1 = decmap[byte(data, i)]
+            local c2 = decmap[byte(data, i + 1)]
+            local c3 = decmap[byte(data, i + 2)]
+            local c4 = decmap[byte(data, i + 3)]
+            if not (c1 and c2 and c3 and c4) then return nil end
+
+            local n = c1 * 0x40000 + c2 * 0x1000 + c3 * 0x40 + c4
+            outIdx = outIdx + 1
+            out[outIdx] = char(
+                (n >> 16) & 0xFF,
+                (n >> 8) & 0xFF,
+                n & 0xFF
+            )
+        end
+
+        local result = table.concat(out)
+        if pad > 0 then
+            result = result:sub(1, #result - pad)
+        end
+        return result
+    end
 end
 
 --- ロケール参照

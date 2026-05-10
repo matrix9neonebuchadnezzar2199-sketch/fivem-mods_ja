@@ -257,6 +257,14 @@ CreateThread(function()
                     return
                 end
 
+                if Config.Debug then
+                    if pathForMatch:find('uploadCapture', 1, true) and type(token) == 'string' then
+                        print(('[polapaint] capture upload received: bytes=%d token=%s'):format(#bin, token))
+                    elseif pathForMatch:find('uploadEdit', 1, true) and type(token) == 'string' then
+                        print(('[polapaint] edit upload received: bytes=%d token=%s'):format(#bin, token))
+                    end
+                end
+
                 if pathForMatch:find('uploadCapture', 1, true) then
                     local nameStr = type(name) == 'string' and name or ''
                     if type(token) ~= 'string' or token == '' then
