@@ -6,7 +6,7 @@ local captureBusy = false
 
 local function notify(msg)
     if type(msg) ~= 'string' or msg == '' then return end
-    print(('^3[polapaint]^7 %s'):format(msg))
+    print(('^3[polapaint client]^7 %s'):format(msg))
     if GetResourceState('ox_lib') == 'started' then
         pcall(TriggerEvent, 'ox_lib:notify', {
             title = 'polapaint', description = msg,
@@ -93,12 +93,14 @@ end
 
 --- 撮影フロー（exports / qb から）
 local function startCaptureFlow()
+    print('[polapaint] STEP1 startCaptureFlow entered')
     if uiOpen or captureBusy then notify(L('notify_busy')); return end
     if not isScreenshotBasicReady() then
         notify(L('notify_screenshot_basic_missing')); return
     end
     captureBusy = true
     notify(L('notify_capture_started'))
+    print('[polapaint] STEP2 captureBusy=true, calling requestScreenshot')
 
     local q = Config.JpegQuality or 0.85
     local resolved = false
@@ -107,6 +109,7 @@ local function startCaptureFlow()
             resolved = true
             captureBusy = false
             notify(L('notify_capture_timeout'))
+            print('[polapaint] STEP_TIMEOUT screenshot did not return in 15s')
         end
     end)
 
@@ -115,16 +118,20 @@ local function startCaptureFlow()
             encoding = 'jpg',
             quality = q,
         }, function(dataUri)
+            print('[polapaint] STEP3 screenshot callback fired, type=' .. type(dataUri) .. ' len=' .. (type(dataUri) == 'string' and #dataUri or 0))
             if resolved then return end
             resolved = true
 
             if type(dataUri) ~= 'string' or dataUri == '' then
                 captureBusy = false
                 notify(L('notify_capture_fail'))
+                print('[polapaint] STEP3a invalid dataUri')
                 return
             end
 
+            print('[polapaint] STEP4 calling askPhotoName')
             local name = askPhotoName(Config.MaxPhotoNameLength or 40)
+            print('[polapaint] STEP5 askPhotoName returned: ' .. tostring(name))
             captureBusy = false
             if not name then
                 notify(L('notify_capture_cancelled'))
@@ -132,16 +139,16 @@ local function startCaptureFlow()
             end
 
             local b64 = dataUri:match('^data:image/[^;]+;base64,(.+)$') or dataUri
+            print('[polapaint] STEP6 firing TriggerServerEvent uploadCapture, b64 len=' .. #b64)
             TriggerServerEvent('polapaint:server:uploadCapture', name, b64)
+            print('[polapaint] STEP7 TriggerServerEvent done')
         end)
     end)
+    print('[polapaint] STEP2.5 pcall returned ok=' .. tostring(ok) .. ' err=' .. tostring(err))
 
     if not ok then
         captureBusy = false
         resolved = true
-        if Config.Debug then
-            print(('[polapaint] requestScreenshot failed: %s'):format(tostring(err)))
-        end
         notify(L('notify_capture_fail'))
     end
 end
