@@ -14,6 +14,11 @@ Config = Config or {}
 -- SvConfig（旧来の直書き）か、server.cfg 側の convar で渡す。
 Config.UseFivemerr = true
 
+-- Discord Webhook（UseFivemerr = false）のとき:
+-- true = スクリーンショットを base64 でサーバーに送り、**サーバーから** Discord に multipart POST（40333 / Cloudflare 対策・Webhook URL をクライアントに渡さない）。
+-- false = 従来どおり screenshot-basic がクライアント(CEF)から直接 Discord に POST（軽いが 40333 が出る環境がある）。
+Config.DiscordUploadViaServer = true
+
 -- デバッグログ（true で client/server の print を有効化）
 -- 本番では必ず false にする（常時 print はパフォーマンス低下とログ汚染の原因）。
 Config.Debug = false

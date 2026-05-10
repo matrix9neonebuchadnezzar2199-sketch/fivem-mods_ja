@@ -2,6 +2,15 @@
 
 バージョン規則: **オリジナル版番＋ `-jp.N`**（[CONTRIBUTING_JP.md §5](../CONTRIBUTING_JP.md)）。
 
+## 1.1.0-jp.3 — 2026-05-10
+
+### 修正（Discord 40333）
+
+- **原因**: ゲーム内 CEF（`screenshot-basic`）から Discord Webhook へ直接 POST すると、Cloudflare 等で **`internal network error`（40333）** になることがある。
+- **対応**:
+  - 既定 **`Config.DiscordUploadViaServer = true`**: `requestScreenshot` で PNG の data URL を取り、`TriggerLatentServerEvent` で base64 をサーバーへ送り、**`PerformHttpRequest`** で multipart（`payload_json` + `files[0]`）を Discord に POST。Webhook URL はクライアントに渡さない。
+  - `Config.DiscordUploadViaServer = false` のときは従来の `requestScreenshotUpload`。**フィールド名を `files[]` → `files[0]`** に修正し、`encoding = 'png'` と `headers = {}` を明示。
+
 ## 1.1.0-jp.2 — 2026-05-10
 
 ### 修正・追加

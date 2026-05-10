@@ -39,6 +39,26 @@ RegisterNetEvent("ps-debug", function()
     end
 end)
 
+-- Discord サーバー経由アップロード完了（jp-pola:discordB64Upload の結果）
+RegisterNetEvent('jp-pola:relayDiscordResult', function(ok, payload)
+    if not ok then
+        print(('[%s] [ERROR] Discord サーバーアップロード失敗: %s'):format(GetCurrentResourceName(), tostring(payload):sub(1, 400)))
+        camera = false
+        local ped = PlayerPedId()
+        ClearPedTasks(ped)
+        if cameraprop and DoesEntityExist(cameraprop) then DeleteEntity(cameraprop) end
+        SendNUIMessage({ action = 'hideOverlay' })
+        return
+    end
+    camera = false
+    local ped = PlayerPedId()
+    if cameraprop and DoesEntityExist(cameraprop) then DeleteEntity(cameraprop) end
+    ClearPedTasks(ped)
+    TriggerServerEvent('ps-camera:CreatePhoto', json.encode(payload))
+    SendNUIMessage({ action = 'SavePic', pic = json.encode(payload) })
+    SendNUIMessage({ action = 'hideOverlay' })
+end)
+
 local function HideHUDThisFrame()
     HideHelpTextThisFrame()
     HideHudAndRadarThisFrame()
@@ -184,7 +204,13 @@ function CameraLoop()
     CreateThread(function()
         local lPed = PlayerPedId()
         local vehicle = GetVehiclePedIsIn(lPed)
-        local uploadHookOrSecret = grabUploadDetails()
+        -- Discord サーバー経由アップロード時は Webhook URL をクライアントに渡さない（grab 不要）
+        local uploadHookOrSecret
+        if Config.UseFivemerr == false and Config.DiscordUploadViaServer then
+            uploadHookOrSecret = ''
+        else
+            uploadHookOrSecret = grabUploadDetails()
+        end
         Wait(500)
 
         SetTimecycleModifier("default")
@@ -216,13 +242,41 @@ function CameraLoop()
                 end
                 PlaySoundFrontend(-1, "Camera_Shoot", "Phone_Soundset_Franklin", false)
 
-                if Config.UseFivemerr == false then
+                if Config.UseFivemerr == false and Config.DiscordUploadViaServer then
+                    -- サーバー経由 Discord 投稿（CEF→Discord の 40333 / Cloudflare 回避）
+                    exports['screenshot-basic']:requestScreenshot({ encoding = 'png' }, function(dataUri)
+                        if type(dataUri) ~= 'string' or not dataUri:find('^data:image', 1, false) then
+                            print(('[%s] [ERROR] requestScreenshot の戻りが不正'):format(GetCurrentResourceName()))
+                            camera = false
+                            if cameraprop then DeleteEntity(cameraprop) end
+                            ClearPedTasks(lPed)
+                            SendNUIMessage({ action = 'hideOverlay' })
+                            return
+                        end
+                        local b64 = dataUri:match('base64,(.+)$')
+                        if not b64 or #b64 < 32 or #b64 > 12000000 then
+                            print(('[%s] [ERROR] base64 長さ異常 len=%s'):format(GetCurrentResourceName(), tostring(b64 and #b64)))
+                            camera = false
+                            if cameraprop then DeleteEntity(cameraprop) end
+                            ClearPedTasks(lPed)
+                            SendNUIMessage({ action = 'hideOverlay' })
+                            return
+                        end
+                        if Config and Config.Debug then
+                            print(('[%s] [DEBUG] Discord サーバー経由アップロード開始 base64 len=%d'):format(GetCurrentResourceName(), #b64))
+                        end
+                        TriggerLatentServerEvent('jp-pola:discordB64Upload', 12000000, b64)
+                    end)
+                elseif Config.UseFivemerr == false then
                     if Config and Config.Debug then
                         print(('[%s] [DEBUG] webhook URL 先頭20文字=%s len=%d'):format(GetCurrentResourceName(), tostring(uploadHookOrSecret):sub(1, 20), #tostring(uploadHookOrSecret)))
                     end
-                    -- 注: encoding を明示しないと Discord 側で「internal network error (40333)」が出ることがある。
-                    -- オリジナル ps-camera は Fivemerr 側だけ encoding='png' を渡し、Discord 側を省略していた書き漏らし。
-                    exports['screenshot-basic']:requestScreenshotUpload(tostring(uploadHookOrSecret), "files[]", { encoding = 'png' }, function(data)
+                    -- Discord は multipart のファイル名を files[0] にする。files[] は非推奨／エラーになり得る。
+                    -- encoding + headers は screenshot-basic の request 仕様に合わせる。
+                    exports['screenshot-basic']:requestScreenshotUpload(tostring(uploadHookOrSecret), 'files[0]', {
+                        headers = {},
+                        encoding = 'png',
+                    }, function(data)
                         if Config and Config.Debug then
                             print(('[%s] [DEBUG] screenshot-basic コールバック発火'):format(GetCurrentResourceName()))
                             print(('[%s] [DEBUG] 生レスポンス（先頭500字）= %s'):format(GetCurrentResourceName(), tostring(data):sub(1, 500)))

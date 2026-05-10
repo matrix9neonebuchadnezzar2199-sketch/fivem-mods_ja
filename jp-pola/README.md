@@ -6,7 +6,7 @@ ps-camera（Project Sloth Team）を **完全日本語化** したフォーク�
 
 - **オリジナル**: https://github.com/Project-Sloth/ps-camera
 - **ライセンス**: [CC BY-NC-SA 4.0](LICENSE)（**非商用**・継承）
-- **バージョン**: `1.1.0-jp.2`
+- **バージョン**: `1.1.0-jp.3`
 - **対象**: GTA5 / FiveM
 - **依存**: [QBCore](https://github.com/qbcore-framework/qb-core), [screenshot-basic](https://github.com/citizenfx/screenshot-basic)（任意で `ox_inventory`）
 
@@ -21,7 +21,7 @@ ps-camera（Project Sloth Team）を **完全日本語化** したフォーク�
 5. **`jp-pola/server/sv_main.lua` の `SvConfig.Inv`** を **`'qb'`** か **`'ox'`** に合わせる（ox_inventory なら **`'ox'`**）。
 6. **`jp-pola/config.lua` の `Config.UseFivemerr`** と **認証情報**をセットで合わせる（ズレるとカメラが開かない／撮影しても何も起きない）。
    - **Fivemerr** … `Config.UseFivemerr = true` ＋ `set jp-pola_fivemerr_token "..."`（または `SvConfig.FivemerrApiToken`）。
-   - **Discord** … `Config.UseFivemerr = false` ＋ `set jp-pola_webhook "..."`（または `SvConfig.webhook`）。**1.1.0-jp.2 以降**で Discord 40333 対策済み（PNG 送信）。
+   - **Discord** … `Config.UseFivemerr = false` ＋ `set jp-pola_webhook "..."`（または `SvConfig.webhook`）。**1.1.0-jp.3** では既定で **`Config.DiscordUploadViaServer = true`**（画像をサーバー経由で Discord に POST。CEF 直叩きの **40333 internal network error** を避ける）。従来どおりクライアントから送りたい場合だけ `false`。
 7. **`restart jp-pola`**（またはサーバー再起動）。
 8. ゲーム内で **カメラアイテムを使用** → 枠が出たら **シャッターは Enter**（左クリックではない。下表参照）。
 9. まだダメなら **`Config.Debug = true`** にして撮影し、**F8 とサーバーコンソール**の `[jp-pola]` ログを確認。
@@ -94,6 +94,7 @@ set jp-pola_webhook "https://discord.com/api/webhooks/..."
 | 項目 | 値 | 既定 | 説明 |
 |---|---|---|---|
 | `Config.UseFivemerr` | `true` / `false` | `true` | アップロード方式 |
+| `Config.DiscordUploadViaServer` | `true` / `false` | `true` | Discord 時: サーバー経由アップロード（40333 回避） |
 | `Config.Debug` | `true` / `false` | `false` | デバッグ print |
 | `SvConfig.Inv` | `'qb'` / `'ox'` | `'qb'` | インベントリ |
 | `SvConfig.webhook` | 文字列 | `''` | Webhook 直書き（空なら convar） |

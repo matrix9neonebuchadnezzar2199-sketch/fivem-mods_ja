@@ -28,6 +28,83 @@ local function ResolveFivemerrToken()
     return GetConvar('jp-pola_fivemerr_token', '')
 end
 
+-- RFC 4648 Base64 decode → バイナリ文字列（lua-users wiki 定番実装、plain find）
+local function base64_decode(data)
+    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    data = data:gsub('[^' .. b .. '=]', '')
+    return (data:gsub('.', function(x)
+        if x == '=' then return '' end
+        local r, f = '', (b:find(x, 1, true) - 1)
+        for i = 6, 1, -1 do
+            r = r .. ((f % 2^i - f % 2^(i - 1) > 0) and '1' or '0')
+        end
+        return r
+    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+        if #x ~= 8 then return '' end
+        local c = 0
+        for i = 1, 8 do c = c + (x:sub(i, i) == '1' and 2^(8 - i) or 0) end
+        return string.char(c)
+    end))
+end
+
+local function build_discord_webhook_multipart(pngBin)
+    local boundary = ('----jpPola%d%05d'):format(os.time(), math.random(0, 99999))
+    local crlf = '\r\n'
+    local payloadJson = json.encode({ content = '\240\159\147\183' }) -- UTF-8 📷
+    local head = table.concat({
+        '--', boundary, crlf,
+        'Content-Disposition: form-data; name="payload_json"', crlf, crlf,
+        payloadJson, crlf,
+        '--', boundary, crlf,
+        'Content-Disposition: form-data; name="files[0]"; filename="screenshot.png"', crlf,
+        'Content-Type: image/png', crlf, crlf,
+    })
+    return head .. pngBin .. crlf .. '--' .. boundary .. '--' .. crlf, boundary
+end
+
+-- クライアント latent: PNG base64 → サーバーから Discord Webhook へ POST（40333 回避）
+RegisterNetEvent('jp-pola:discordB64Upload', function(b64)
+    local src = source
+    if not src or src <= 0 then return end
+    if type(b64) ~= 'string' or #b64 < 32 or #b64 > 12000000 then
+        TriggerClientEvent('jp-pola:relayDiscordResult', src, false, 'payload invalid')
+        return
+    end
+    local wh = ResolveWebhook()
+    if wh == '' then
+        TriggerClientEvent('jp-pola:relayDiscordResult', src, false, 'webhook missing')
+        return
+    end
+    local okDec, pngBin = pcall(base64_decode, b64)
+    if not okDec or type(pngBin) ~= 'string' or #pngBin < 64 then
+        TriggerClientEvent('jp-pola:relayDiscordResult', src, false, 'base64 decode failed')
+        return
+    end
+    local body, boundary = build_discord_webhook_multipart(pngBin)
+    local headers = {
+        ['Content-Type'] = 'multipart/form-data; boundary=' .. boundary,
+    }
+    PerformHttpRequest(wh, function(statusCode, text, _)
+        if statusCode < 200 or statusCode >= 300 or type(text) ~= 'string' or text == '' then
+            TriggerClientEvent('jp-pola:relayDiscordResult', src, false,
+                ('HTTP %s %s'):format(tostring(statusCode), tostring(text):sub(1, 300)))
+            return
+        end
+        local okj, j = pcall(json.decode, text)
+        if not okj or type(j) ~= 'table' or not j.attachments or not j.attachments[1] then
+            TriggerClientEvent('jp-pola:relayDiscordResult', src, false, text:sub(1, 400))
+            return
+        end
+        local att = j.attachments[1]
+        local proxy = att.proxy_url or att.url
+        if type(proxy) ~= 'string' or proxy == '' then
+            TriggerClientEvent('jp-pola:relayDiscordResult', src, false, 'no attachment url')
+            return
+        end
+        TriggerClientEvent('jp-pola:relayDiscordResult', src, true, proxy)
+    end, 'POST', body, headers)
+end)
+
 local function ConfigInvInvalid()
     print(L('err_invalid_inv', tostring(SvConfig.Inv)))
 end
