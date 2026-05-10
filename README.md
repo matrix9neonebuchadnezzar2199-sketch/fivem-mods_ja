@@ -106,7 +106,6 @@
 | [jp-mch](jp-mch/README.md) | ミニマルクリーン HUD（クライアント完結・ESX/QB/Qbox/standalone・日本語 UI・Munlay HUD 系フォーク） |
 | [jp-mbt_emote_menu](jp-mbt_emote_menu/README.ja.md) | MBT Emote Menu 日本語対応（rpemotes-reborn・NUI・**`README.ja.md`** 参照・原作 PolyForm Noncommercial） |
 | [jp-mechanic](jp-mechanic/README.md) | 整備工場 伝票整理内職（NUI・部品照合・Qbox） |
-| [jp-sentinel](jp-sentinel/README.md) | 警察向け Sentinel Ball（追尾ドローン・マップ共有・ESX/QB/Qbox/ACE） |
 | [jp-slot](jp-slot/README.md) | カジノスロット（着席 NUI・抽選 / 現金はサーバー権威） |
 | [jp-tcgbook](jp-tcgbook/README.md) | スタンドアロン TCG・BOOK（コレクション／デッキ編成／CPU・PvP・Elo・対戦履歴・ランキング・段位徽章・JA/EN UI・oxmysql） |
 | [jp-timer](jp-timer/README.md) | 画面カウントダウン（`/min`・RP 向け軽量） |
@@ -115,6 +114,7 @@
 | [jp-v-farming](jp-v-farming/README.md) | 農業・青果売却（ox_target / ox_lib / ox_inventory・日本語 i18n・原作 MIT） |
 | [pls_jobsystem](pls_jobsystem/README.md) | PLS Job System 日本語化（動的ジョブ管理・React NUI・フォルダ名 `pls_jobsystem` 固定・原作 MIT） |
 | [qb-storerobbery-ja](qb-storerobbery-ja/README.md) | `qb-storerobbery` 日本語化フォーク（コンビニ強盗・KVP クールダウン・ox_inventory ブリッジ） |
+| [screenshot-basic](screenshot-basic/README.md) | 画面キャプチャ API（CitizenFX `screenshot-basic` のビルド済み同梱・MIT・他リソースの撮影依存用） |
 
 ---
 
@@ -122,6 +122,7 @@
 
 | ツール | パス | 説明 |
 | --- | --- | --- |
+| 開発デプロイ（ローカル） | [`scripts/deploy.bat`](scripts/deploy.bat) | `deploy.bat jp-<mod名>` で開発ツリーからテスト用 `resources` へコピー。**パスは環境に合わせて編集**し、手順は [`AGENTS.md`](AGENTS.md) の開発フローを参照。 |
 | 汎用 NUI 日本語化適用 | [`tools/apply_nui_i18n.ps1`](tools/apply_nui_i18n.ps1) | 各 MOD の `web/dist/assets/index.js` を翻訳マップに従って日本語化。**詳細は [`tools/README_JA.md`](tools/README_JA.md)**。 |
 
 **実行例（プレビュー）:**
