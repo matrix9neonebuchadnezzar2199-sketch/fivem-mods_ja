@@ -177,6 +177,47 @@ RegisterNetEvent('polapaint:server:requestEdit', function(slot)
     })
 end)
 
+--- NUI fetch → RegisterNUICallback → TriggerServerEvent で届く JPEG（base64）
+RegisterNetEvent('polapaint:server:uploadCapture', function(token, name, b64)
+    local src = source
+    if type(token) ~= 'string' or type(b64) ~= 'string' or token == '' or b64 == '' then return end
+    local bin = PolaPaintUtil.b64decode(b64)
+    local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
+    if not bin or #bin > maxBytes then
+        notify(src, 'notify_payload_too_large')
+        return
+    end
+    if Config.Debug then
+        print(('[polapaint] capture upload (net): bytes=%d token=%s'):format(#bin, token))
+    end
+    local ok, errKey = handleUploadCapture(src, bin, token, type(name) == 'string' and name or '')
+    if not ok then
+        notify(src, errKey or 'notify_capture_fail')
+    else
+        notify(src, 'notify_capture_ok')
+    end
+end)
+
+RegisterNetEvent('polapaint:server:uploadEdit', function(token, slotStr, b64)
+    local src = source
+    if type(token) ~= 'string' or type(b64) ~= 'string' or token == '' or b64 == '' then return end
+    local bin = PolaPaintUtil.b64decode(b64)
+    local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
+    if not bin or #bin > maxBytes then
+        notify(src, 'notify_payload_too_large')
+        return
+    end
+    if Config.Debug then
+        print(('[polapaint] edit upload (net): bytes=%d token=%s'):format(#bin, token))
+    end
+    local ok, errKey = handleUploadEdit(src, bin, token, tostring(slotStr or ''))
+    if not ok then
+        notify(src, errKey or 'notify_edit_fail')
+    else
+        notify(src, 'notify_edit_saved')
+    end
+end)
+
 CreateThread(function()
     PolaPaintStorage.init()
 
@@ -200,154 +241,6 @@ CreateThread(function()
                 return
             end
             res.writeHead(404); res.send('not found'); return
-        end
-
-        if method == 'OPTIONS' then
-            if pathForMatch:find('uploadCapture', 1, true) or pathForMatch:find('uploadEdit', 1, true) then
-                res.writeHead(204, {
-                    ['Access-Control-Allow-Origin']  = '*',
-                    ['Access-Control-Allow-Methods']   = 'POST, OPTIONS',
-                    ['Access-Control-Allow-Headers']   = 'Content-Type',
-                })
-                res.send('')
-                return
-            end
-            res.writeHead(404); res.send('')
-            return
-        end
-
-        if method == 'POST' then
-            local hdr = req.headers or {}
-            local maxBytes = (Config.Storage and Config.Storage.maxBytes) or (4 * 1024 * 1024)
-            local hardCap = math.floor(maxBytes * 1.4) + 65536
-            local parts = {}
-            local dispatched = false
-            local lastChunkAt = 0
-
-            local function finish(status, text)
-                if dispatched then return end
-                dispatched = true
-                res.writeHead(status)
-                res.send(text or '')
-            end
-
-            local function dispatchJsonBody(body)
-                if dispatched then return end
-                if type(body) ~= 'string' then body = '' end
-
-                local okDec, data = pcall(json.decode, body)
-                if not okDec or type(data) ~= 'table' then
-                    finish(400, 'bad json')
-                    return
-                end
-
-                local token = data.token
-                local image = data.image
-                local name = data.name
-                local slotStr = tostring(data.slot or '')
-
-                if type(image) ~= 'string' or image == '' then
-                    finish(400, 'no image')
-                    return
-                end
-
-                local bin = PolaPaintUtil.b64decode(image)
-                if not bin or #bin > maxBytes then
-                    finish(413, 'too large')
-                    return
-                end
-
-                if Config.Debug then
-                    if pathForMatch:find('uploadCapture', 1, true) and type(token) == 'string' then
-                        print(('[polapaint] capture upload received: bytes=%d token=%s'):format(#bin, token))
-                    elseif pathForMatch:find('uploadEdit', 1, true) and type(token) == 'string' then
-                        print(('[polapaint] edit upload received: bytes=%d token=%s'):format(#bin, token))
-                    end
-                end
-
-                if pathForMatch:find('uploadCapture', 1, true) then
-                    local nameStr = type(name) == 'string' and name or ''
-                    if type(token) ~= 'string' or token == '' then
-                        finish(400, 'bad')
-                        return
-                    end
-                    local foundSrc
-                    for s, st in pairs(pendingCapture) do
-                        if st.token == token then foundSrc = s; break end
-                    end
-                    if not foundSrc then finish(403, 'expired'); return end
-                    local ok, errKey = handleUploadCapture(foundSrc, bin, token, nameStr)
-                    if not ok then
-                        notify(foundSrc, errKey or 'notify_capture_fail')
-                        finish(400, errKey or 'fail')
-                        return
-                    end
-                    notify(foundSrc, 'notify_capture_ok')
-                    finish(204, '')
-                    return
-                end
-
-                if pathForMatch:find('uploadEdit', 1, true) then
-                    if type(token) ~= 'string' or token == '' then
-                        finish(400, 'bad')
-                        return
-                    end
-                    local foundSrc
-                    for s, st in pairs(pendingEdit) do
-                        if st.token == token then foundSrc = s; break end
-                    end
-                    if not foundSrc then finish(403, 'expired'); return end
-                    local ok, errKey = handleUploadEdit(foundSrc, bin, token, slotStr)
-                    if not ok then
-                        notify(foundSrc, errKey or 'notify_edit_fail')
-                        finish(400, errKey or 'fail')
-                        return
-                    end
-                    notify(foundSrc, 'notify_edit_saved')
-                    finish(204, '')
-                    return
-                end
-
-                finish(404, 'not found')
-            end
-
-            req.setDataHandler(function(chunk)
-                if dispatched then return end
-
-                if type(chunk) == 'string' and #chunk > 0 then
-                    parts[#parts + 1] = chunk
-                    local total = 0
-                    for i = 1, #parts do total = total + #parts[i] end
-                    if total > hardCap then
-                        finish(413, 'payload too large')
-                        return
-                    end
-                end
-
-                local body = table.concat(parts)
-                local cl = tonumber(hdr['Content-Length'] or hdr['content-length'] or 0)
-                if cl and cl > hardCap then
-                    finish(413, 'payload too large')
-                    return
-                end
-
-                if cl and cl > 0 then
-                    if #body < cl then return end
-                    if #body > cl then
-                        body = body:sub(1, cl)
-                    end
-                    dispatchJsonBody(body)
-                    return
-                end
-
-                lastChunkAt = now()
-                SetTimeout(120, function()
-                    if dispatched then return end
-                    if now() - lastChunkAt < 100 then return end
-                    dispatchJsonBody(table.concat(parts))
-                end)
-            end)
-            return
         end
 
         res.writeHead(405); res.send('method not allowed')

@@ -1,6 +1,6 @@
 # polapaint v2.0
 
-ポラロイド風カメラ・写真編集（NUI）・チェキ風ビューワ。写真データは **Discord CDN ではなくサーバー側ローカルファイル**（`data/photos/`）に保存し、当リソースの **`SetHttpHandler`** で JPEG を配信します。
+ポラロイド風カメラ・写真編集（NUI）・チェキ風ビューワ。写真データは **Discord CDN ではなくサーバー側ローカルファイル**（`data/photos/`）に保存し、署名付きパスの JPEG は **`SetHttpHandler` の GET** で配信します（**アップロード POST は HTTP ハンドラでは扱いません**）。
 
 ## 要件
 
@@ -10,16 +10,16 @@
 
 ## NUI からのアップロード経路
 
-コミュニティで広く使われる **`fetch('https://' + GetParentResourceName() + '/...')`** パターンに合わせています。本文は **`Content-Type: application/json`** の **JSON** で、JPEG は **`image` フィールドに base64 文字列**として載せます（NUI からバイナリ直接 POST は使いません）。サーバーで **`PolaPaintUtil.b64decode`** してから既存の保存処理へ渡します。
+NUI の **`fetch('https://' + GetParentResourceName() + '/uploadCapture' | '/uploadEdit', { JSON… })`** は、FiveM では **`RegisterNUICallback`** に渡ります（**`SetHttpHandler` の POST とは別経路**）。本文は **`application/json`** で、JPEG は **`image` に base64**。
 
-- **撮影アップロード**: `POST .../uploadCapture` … `{ token, name, image }`
-- **編集保存**: `POST .../uploadEdit` … `{ token, slot, image }`
+1. **`client/main.lua`** … `RegisterNUICallback('uploadCapture'/'uploadEdit')` が **`cb({ ok = true })` で即応答**したうえで、`TriggerServerEvent('polapaint:server:uploadCapture'/'uploadEdit', …)` でサーバーへ転送。
+2. **`server/main.lua`** … `RegisterNetEvent` で受け取り、`PolaPaintUtil.b64decode` のあと既存の **`handleUploadCapture` / `handleUploadEdit`** を実行。
 
-外部からの `curl` テストも同じ JSON 形式で可能です。
+ゲーム外からの **`curl http://<server>:30120/polapaint/uploadCapture`** 等でアップロードを真似ることは、**この構成では想定していません**（画像の GET は `http(s)://…/polapaint/photo/<signed>.jpg` が利用可能）。
 
 ## `SetHttpHandler` と他リソースについて
 
-**`SetHttpHandler` はリソースごとに 1 つ登録でき、URL の先頭セグメント（リソース名）でルーティングされます。** `screenshot-basic` のハンドラと **衝突しません**（`/screenshot-basic/...` と `/polapaint/...` は別宛先）。
+**`SetHttpHandler` はリソースごとに 1 つ登録でき、URL の先頭セグメント（リソース名）でルーティングされます。** 本リソースでは **GET `/photo/<signed>.jpg` の配信**に使用します。`screenshot-basic` のハンドラと **衝突しません**（`/screenshot-basic/...` と `/polapaint/...` は別宛先）。
 
 ## 設定
 

@@ -180,14 +180,41 @@ RegisterNetEvent('polapaint:client:openPaint', function(payload)
 end)
 
 RegisterNUICallback('close', function(_, cb)
-    closeUi(); cb('ok')
+    closeUi()
+    cb({ ok = true })
 end)
 
 RegisterNUICallback('ppNuiAlert', function(data, cb)
-    cb('ok')
+    cb({ ok = true })
     if type(data) == 'string' then
         local ok, decoded = pcall(json.decode, data)
         if ok and type(decoded) == 'table' then data = decoded end
     end
     if data and type(data.key) == 'string' then notify(L(data.key)) end
+end)
+
+RegisterNUICallback('uploadCapture', function(data, cb)
+    cb({ ok = true })
+    if type(data) ~= 'table' then return end
+    if type(data.token) ~= 'string' or type(data.image) ~= 'string' then return end
+    if data.token == '' or data.image == '' then return end
+    TriggerServerEvent(
+        'polapaint:server:uploadCapture',
+        data.token,
+        type(data.name) == 'string' and data.name or tostring(data.name or ''),
+        data.image
+    )
+end)
+
+RegisterNUICallback('uploadEdit', function(data, cb)
+    cb({ ok = true })
+    if type(data) ~= 'table' then return end
+    if type(data.token) ~= 'string' or type(data.image) ~= 'string' then return end
+    if data.token == '' or data.image == '' then return end
+    TriggerServerEvent(
+        'polapaint:server:uploadEdit',
+        data.token,
+        tostring(data.slot or ''),
+        data.image
+    )
 end)
