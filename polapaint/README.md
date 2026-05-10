@@ -2,16 +2,21 @@
 
 ポラロイド風カメラ・写真のローカル保存・署名付き HTTP 配信・NUI による閲覧／ペイント編集。**ESX / QBCore 非依存**のスタンドアロンリソースです。
 
+本フォルダは [fivem-mods（JP-Mods）](../README.md) **モノレポの一部**として保守されています。**`polapaint` だけを `resources` に置いて `ensure polapaint` する**運用で問題ありません。
+
 | | |
 | --- | --- |
 | **FiveM** | `fx_version cerulean` · `lua54 'yes'` |
-| **ライセンス** | GPL-3.0-or-later（リポジトリ内 `LICENSE`） |
+| **作者** | JP-Mods（`fxmanifest.lua` の `author`） |
 | **版** | `fxmanifest.lua` の `version` を参照 |
+| **ライセンス** | **GPL-3.0-or-later**（このフォルダの [`LICENSE`](LICENSE)。モノレポルートの [`LICENSE`](../LICENSE) は **MIT** で別） |
+| **ソース** | GitHub リポジトリ [`fivem-mods_ja`](https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja) 内の **`polapaint/`** |
 
 ---
 
 ## 目次
 
+- [モノレポでの位置づけ](#モノレポでの位置づけ)
 - [概要](#概要)
 - [要件](#要件)
 - [インストール](#インストール)
@@ -23,7 +28,17 @@
 - [Discord Webhook・公開 URL](#discord-webhook公開-url)
 - [運用・バックアップ](#運用バックアップ)
 - [トラブルシュート](#トラブルシュート)
-- [ライセンス](#ライセンス-1)
+- [ライセンス](#ライセンス)
+
+---
+
+## モノレポでの位置づけ
+
+| 項目 | 内容 |
+| --- | --- |
+| **入手** | リポジトリ全体を clone するか、**`polapaint` ディレクトリのみ**をサーバーの `resources` にコピーする。 |
+| **親 README** | 収録一覧・共通トラブルシュートは [ルート `README.md`](../README.md)。 |
+| **開発ルール** | [`AGENTS.md`](../AGENTS.md)（イベント名・開発日記）、[`docs/STYLEGUIDE.md`](../docs/STYLEGUIDE.md)（UTF-8 **BOM 禁止** 等）。 |
 
 ---
 
@@ -266,4 +281,5 @@ ox のような標準 **「閲覧」ボタンが無い**ため、素の QB だ�
 
 ## ライセンス
 
-GPL-3.0-or-later。詳細はリポジトリ内の `LICENSE` を参照してください。
+- **本リソース（`polapaint/`）** は **GPL-3.0-or-later**。全文は当フォルダの [`LICENSE`](LICENSE)。
+- **モノレポルート** の [`LICENSE`](../LICENSE) は **MIT**（他フォルダ向け）。polapaint を配布・改変する際は **必ず `polapaint/LICENSE`** に従ってください。
