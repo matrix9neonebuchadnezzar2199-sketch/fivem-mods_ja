@@ -66,8 +66,10 @@ end
 RegisterNetEvent('jp-pola:discordB64Upload', function(b64)
     local src = source
     if not src or src <= 0 then return end
-    if type(b64) ~= 'string' or #b64 < 32 or #b64 > 12000000 then
-        TriggerClientEvent('jp-pola:relayDiscordResult', src, false, 'payload invalid')
+    local maxB64 = (Config.DiscordRelayMaxBase64Chars or (40 * 1024 * 1024))
+    if type(b64) ~= 'string' or #b64 < 32 or #b64 > maxB64 then
+        TriggerClientEvent('jp-pola:relayDiscordResult', src, false,
+            ('payload invalid len=%s max=%s'):format(tostring(b64 and #b64), tostring(maxB64)))
         return
     end
     local wh = ResolveWebhook()

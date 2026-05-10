@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'Project Sloth Team (JP fork by JP-Mods)'
 description 'カメラ・写真撮影 MOD（ps-camera 日本語版）'
-version '1.1.0-jp.3'
+version '1.1.0-jp.4'
 
 -- オリジナル: https://github.com/Project-Sloth/ps-camera
 -- ライセンス: CC BY-NC-SA 4.0（LICENSE 参照）

@@ -2,6 +2,11 @@
 
 バージョン規則: **オリジナル版番＋ `-jp.N`**（[CONTRIBUTING_JP.md §5](../CONTRIBUTING_JP.md)）。
 
+## 1.1.0-jp.4 — 2026-05-10
+
+- **Discord サーバー経由**: 高解像度 PNG で base64 が **1,200万文字超**になるため、既定上限を **`Config.DiscordRelayMaxBase64Chars = 45 * 1024 * 1024`**（約 45MiB 文字列）に拡大。`config.lua` で運営がさらに上げられるようにした。
+- `TriggerLatentServerEvent` の bps を **100000000** に上げ、大容量の latent 転送が切れにくくした。
+
 ## 1.1.0-jp.3 — 2026-05-10
 
 ### 修正（Discord 40333）

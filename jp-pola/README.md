@@ -6,7 +6,7 @@ ps-camera（Project Sloth Team）を **完全日本語化** したフォーク�
 
 - **オリジナル**: https://github.com/Project-Sloth/ps-camera
 - **ライセンス**: [CC BY-NC-SA 4.0](LICENSE)（**非商用**・継承）
-- **バージョン**: `1.1.0-jp.3`
+- **バージョン**: `1.1.0-jp.4`
 - **対象**: GTA5 / FiveM
 - **依存**: [QBCore](https://github.com/qbcore-framework/qb-core), [screenshot-basic](https://github.com/citizenfx/screenshot-basic)（任意で `ox_inventory`）
 
@@ -95,6 +95,7 @@ set jp-pola_webhook "https://discord.com/api/webhooks/..."
 |---|---|---|---|
 | `Config.UseFivemerr` | `true` / `false` | `true` | アップロード方式 |
 | `Config.DiscordUploadViaServer` | `true` / `false` | `true` | Discord 時: サーバー経由アップロード（40333 回避） |
+| `Config.DiscordRelayMaxBase64Chars` | 整数 | `47185920`（45MiB） | サーバー経由時の base64 最大文字数（高解像度用） |
 | `Config.Debug` | `true` / `false` | `false` | デバッグ print |
 | `SvConfig.Inv` | `'qb'` / `'ox'` | `'qb'` | インベントリ |
 | `SvConfig.webhook` | 文字列 | `''` | Webhook 直書き（空なら convar） |

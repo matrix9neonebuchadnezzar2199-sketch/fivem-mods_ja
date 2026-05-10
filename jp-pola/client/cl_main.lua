@@ -254,8 +254,10 @@ function CameraLoop()
                             return
                         end
                         local b64 = dataUri:match('base64,(.+)$')
-                        if not b64 or #b64 < 32 or #b64 > 12000000 then
-                            print(('[%s] [ERROR] base64 長さ異常 len=%s'):format(GetCurrentResourceName(), tostring(b64 and #b64)))
+                        local maxB64 = (Config.DiscordRelayMaxBase64Chars or (40 * 1024 * 1024))
+                        if not b64 or #b64 < 32 or #b64 > maxB64 then
+                            print(('[%s] [ERROR] base64 長さが上限を超えたか短すぎます len=%s max=%s（config.lua の DiscordRelayMaxBase64Chars で拡張可）'):format(
+                                GetCurrentResourceName(), tostring(b64 and #b64), tostring(maxB64)))
                             camera = false
                             if cameraprop then DeleteEntity(cameraprop) end
                             ClearPedTasks(lPed)
@@ -265,7 +267,8 @@ function CameraLoop()
                         if Config and Config.Debug then
                             print(('[%s] [DEBUG] Discord サーバー経由アップロード開始 base64 len=%d'):format(GetCurrentResourceName(), #b64))
                         end
-                        TriggerLatentServerEvent('jp-pola:discordB64Upload', 12000000, b64)
+                        -- bps を大きめに（高解像度 PNG の latent 転送がタイムアウトしにくい）
+                        TriggerLatentServerEvent('jp-pola:discordB64Upload', 100000000, b64)
                     end)
                 elseif Config.UseFivemerr == false then
                     if Config and Config.Debug then
