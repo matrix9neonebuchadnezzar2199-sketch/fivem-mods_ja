@@ -75,6 +75,10 @@ ox_inventory の **`buttons`（コンテキストから「閲覧」）** に相�
 - アイテム追加後は **`refresh ox_inventory`**（またはサーバー再起動）が必要です。
 - **`Config.Framework = 'auto'`** で認識できないときは `server.cfg` で **`ensure ox_inventory`** を **`ensure polapaint` より前**にしてください。
 
+## AFK キック（写真／名前入力・NUI 中）
+
+撮影・名前入力（ox_lib）・編集 NUI ではゲーム側への入力が届きにくく、別リソースの AFK 判定で警告・キックされやすくなります。polapaint は **`LocalPlayer.state.polapaint_busy`** を約 **500ms** ごとに更新します（`true` = NUI 表示中または撮影フロー処理中）。サーバー側の AFK で **`Player(source).state.polapaint_busy`** が `true` のときはカウントしない／リセットするなどの除外を検討してください。
+
 ## 運用上の注意
 
 1. 写真ファイルは **`data/photos/<shard>/<id>.jpg`** を優先して保存します。環境によってサブディレクトリへの書き込みが失敗する場合があるため、**そのときは自動で `data/photos/<id>.jpg`（フラット）へフォールバック**します。読み込みはシャード→フラットの順です。バックアップは `data/photos/` ごとアーカイブすれば十分です。

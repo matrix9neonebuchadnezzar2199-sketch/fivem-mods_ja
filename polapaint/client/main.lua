@@ -53,6 +53,17 @@ local function openUi(payload)
     end)
 end
 
+--- AFK 対策: NUI／撮影・名前入力中はゲーム操作が無くなるため PlayerState を同期（サーバー側 AFK で Player(source).state.polapaint_busy を参照して除外可能）
+CreateThread(function()
+    while true do
+        Wait(500)
+        local busy = uiOpen or captureBusy
+        pcall(function()
+            LocalPlayer.state:set('polapaint_busy', busy, true)
+        end)
+    end
+end)
+
 CreateThread(function()
     while true do
         if uiOpen then
