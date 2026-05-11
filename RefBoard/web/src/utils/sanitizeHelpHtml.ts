@@ -1,5 +1,8 @@
 import DOMPurify from 'dompurify'
 
+/** ヘルプ HTML の URI 許可（DOMPurify `ALLOWED_URI_REGEXP` と同一）。単体テストは Node でもこの正規表現を検証する */
+export const HELP_ALLOWED_URI_REGEXP = /^(?:https?:\/\/|\.\/|\.\.\/|\/|#)/i
+
 /** ヘルプ Markdown（marked 出力）向け。script / iframe / on* を確実に除外しつつ一般的な記法を許可 */
 const HELP_HTML_CONFIG = {
   ALLOWED_TAGS: [
@@ -90,6 +93,8 @@ const HELP_HTML_CONFIG = {
     'onkeydown',
     'onkeyup',
   ],
+  /** data: / javascript: 等を拒否しつつ、相対パス・ルート相対・# アンカーを許可 */
+  ALLOWED_URI_REGEXP: HELP_ALLOWED_URI_REGEXP,
 }
 
 export function sanitizeHelpHtml(dirty: string): string {

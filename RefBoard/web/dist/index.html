@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://refboard https://*; frame-ancestors 'none';"
+    />
     <title>RefBoard</title>
     <script>
       // FOUC 防止: stores/settings.ts より先に html.font-size を当てる。
@@ -24,15 +28,15 @@
       })()
     </script>
     <script type="module" crossorigin src="./assets/index.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/vendor-TM8lJ-ex.js">
-    <link rel="modulepreload" crossorigin href="./assets/vendor-pinia-7KzHPOeL.js">
-    <link rel="modulepreload" crossorigin href="./assets/vendor-router-B0ZqCvUW.js">
-    <link rel="modulepreload" crossorigin href="./assets/vendor-i18n-DNNOXni8.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-Dy6kdTOp.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-pinia-Bnn7dS9C.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-router-B5utpkQ-.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-i18n-Ts2pPZUH.js">
     <link rel="modulepreload" crossorigin href="./assets/help-articles-ja-BqaV28M6.js">
     <link rel="modulepreload" crossorigin href="./assets/help-articles-en-QQNmqghE.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-markdown-zIwYtVb9.js">
     <link rel="modulepreload" crossorigin href="./assets/help-meta-w6ViOKAB.js">
-    <link rel="modulepreload" crossorigin href="./assets/vendor-vueuse-CDm8o_Se.js">
+    <link rel="modulepreload" crossorigin href="./assets/vendor-vueuse-DCQxDcUY.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-search-CMLop-UK.js">
     <link rel="stylesheet" crossorigin href="./assets/index.css">
   </head>

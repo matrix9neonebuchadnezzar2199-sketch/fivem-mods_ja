@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MatchDetailModel, MatchEvent, MatchPlayer } from '../../types/match'
 import { useDialogOverlay } from '../../composables/useDialogOverlay'
@@ -271,6 +271,13 @@ function inputRowClass(tid: number) {
   const active = canInputForTeam(tid)
   return active ? 'border-amber-500/45 bg-amber-500/10' : 'border-slate-600/50 bg-slate-900/30'
 }
+
+onBeforeUnmount(() => {
+  if (winTimer !== null) {
+    window.clearTimeout(winTimer)
+    winTimer = null
+  }
+})
 </script>
 
 <template>

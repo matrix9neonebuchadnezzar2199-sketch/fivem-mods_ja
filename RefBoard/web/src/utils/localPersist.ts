@@ -58,8 +58,13 @@ export function saveLocal<T>(key: string, data: T): void {
     const payload: PersistedShape<T> = { version: SCHEMA_VERSION, data }
     localStorage.setItem(KEY_PREFIX + key, JSON.stringify(payload))
   } catch (err) {
-    if (isQuotaExceeded(err)) notifyStorageQuotaExceeded()
-    /* その他（プライベートモード等）は黙殺 */
+    if (isQuotaExceeded(err)) {
+      notifyStorageQuotaExceeded()
+      return
+    }
+    if (import.meta.env.DEV) {
+      console.warn('[RefBoard] saveLocal failed:', key, err)
+    }
   }
 }
 
@@ -97,25 +102,6 @@ export function clearAllLocal(): void {
   } catch {
     /* ignore */
   }
-}
-
-export function dumpAllLocal(): Record<string, unknown> {
-  if (typeof localStorage === 'undefined') return {}
-  const out: Record<string, unknown> = {}
-  try {
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const k = localStorage.key(i)
-      if (!k || !k.startsWith(KEY_PREFIX)) continue
-      try {
-        out[k] = JSON.parse(localStorage.getItem(k) || 'null')
-      } catch {
-        out[k] = null
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-  return out
 }
 
 export const LOCAL_PERSIST_KEY_PREFIX = KEY_PREFIX

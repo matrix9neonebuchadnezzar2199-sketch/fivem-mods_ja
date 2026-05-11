@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.6.1 — 2026-05-11
+
+### 静的コードチェックによる健全性向上
+
+- `PenaltyShootoutPanel.vue` の winTimer をアンマウント時にクリア（タスク T-01）
+- `localPersist.saveLocal` の異常黙殺を DEV ログ出力に変更（T-02）
+- `manualScoreEdit` に負数・上限・非整数バリデーション追加（T-03）
+- `createMatch` に title 必須・長さ・halfMinutes 範囲のバリデーション追加（T-04）
+- 未使用関数 `dumpAllLocal` の削除（T-05）
+- `sanitizeHelpHtml` に `ALLOWED_URI_REGEXP` を明示し `data:`/`javascript:` を確実に拒否（T-06）
+- `web/index.html` に CSP meta タグを追加（T-07）
+- `CHANGELOG.md` の旧サーバ版履歴（v0.9.x / v0.8.x）をアーカイブセクションに隔離（T-08）
+- **実機テスト項目**: `RefBoard/test-static-code-hardening.md`（ルート `.gitignore` の `docs/` 除外のため `RefBoard/docs/` ではなく直下に配置）
+- **テスト**: `matches.validation.test.ts`（createMatch / manualScoreEdit バリデーション）、`sanitizeHelpHtml.uri.test.ts`（`HELP_ALLOWED_URI_REGEXP`）。**55 → 70 件**
+- **バージョン同期**: `package.json` / `package-lock.json` / `fxmanifest.lua` / `REFBOARD_UI_VERSION` を **0.6.1** へ。
+
 ## v0.6.0 — 2026-05-10
 
 - **A（M-1 fetch タイムアウト）**: `useNui.ts::postToLua` に `AbortController` で 5 秒タイムアウトを追加。タイムアウト時は `{ ok: false, error: 'timeout' }`、その他のエラーは `{ ok: false, error: 'fetch_failed' }` を返す。CEF 応答停止時に UI が固まる潜在リスクを解消。
@@ -123,6 +139,11 @@
 - 2026‑05‑09 追記: `web/package.json`・`package-lock.json`・`REFBOARD_UI_VERSION` を 0.1.0 に同期（`fxmanifest.lua` と整合）。
 - 2026‑05‑09 追記: 試合詳細ヘッダに操作者名（`selfName`）を表示。未設定時は Settings への誘導リンク。
 - 2026‑05‑09 追記: JSON バックアップのインポート UI（置換／追記）と取り込み履歴（直近 20 件）を追加。`schemaVersion=1` のみ対応。
+
+## アーカイブ（旧サーバ連動版・参考、現行版とは無関係）
+
+以下は v0.9.x 系の旧 MySQL 連動版の履歴です。現行 RefBoard (v0.1.0 以降のローカル単体版) の挙動とは無関係であり、参考情報として保持しています。
+
 ## v0.9.2 — 2026-05-09
 
 - **feat（設定）**: 全体フォント倍率に **250% / 300%** を追加（`rootFontScale`・`index.html` FOUC 先読み・`sanitizeRootFontScale` を同期）。

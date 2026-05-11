@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://refboard https://*; frame-ancestors 'none';"
+    />
     <title>RefBoard</title>
     <script>
       // FOUC 防止: stores/settings.ts より先に html.font-size を当てる。

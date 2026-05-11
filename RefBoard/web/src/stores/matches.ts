@@ -24,6 +24,16 @@ export const useMatchesStore = defineStore('matches', () => {
     scheduledAt?: string
     venue?: string | null
   }): Match {
+    if (typeof input.title !== 'string' || input.title.trim().length === 0) {
+      throw new Error('title_required')
+    }
+    if (input.title.trim().length > 100) {
+      throw new Error('title_too_long')
+    }
+    const halfMinutes = input.halfMinutes ?? 45
+    if (!Number.isFinite(halfMinutes) || halfMinutes <= 0 || halfMinutes > 120) {
+      throw new Error('half_minutes_out_of_range')
+    }
     const teams = useTeamsStore()
     const home = teams.getTeam(input.homeTeamId)
     const away = teams.getTeam(input.awayTeamId)
@@ -42,7 +52,7 @@ export const useMatchesStore = defineStore('matches', () => {
       pkFirstTeamId: null,
       status: 'draft',
       currentHalf: '1H',
-      halfMinutes: input.halfMinutes ?? 45,
+      halfMinutes,
       clockStartedAt: null,
       clockAccumulatedMs: 0,
       scheduledAt: input.scheduledAt || null,
@@ -231,6 +241,9 @@ export const useMatchesStore = defineStore('matches', () => {
   function manualScoreEdit(matchId: number, p: { homeScore: number; awayScore: number; reason: string }) {
     const m = find(matchId)
     if (!m) return
+    if (!Number.isInteger(p.homeScore) || p.homeScore < 0) return
+    if (!Number.isInteger(p.awayScore) || p.awayScore < 0) return
+    if (p.homeScore > 999 || p.awayScore > 999) return
     const entry: ScoreHistoryEntry = {
       id: nextId('scoreHistory'),
       matchId,
