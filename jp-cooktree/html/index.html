@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="root" class="hidden">
+    <div class="panel">
+        <div class="header">
+            <h1>料理スキルツリー</h1>
+            <div class="stats">
+                <span class="stat-item">Lv <span id="lv">-</span></span>
+                <span class="stat-item">SP <span id="sp">-</span></span>
+                <span class="stat-item">★ <span id="stars">-</span></span>
+            </div>
+            <button id="close-btn">×</button>
+        </div>
+        <div class="canvas-wrap">
+            <svg id="tree" viewBox="-1400 -500 2800 1000" preserveAspectRatio="xMidYMid meet"></svg>
+            <div id="spec-popup" class="popup hidden">
+                <div class="popup-title">専門職を選択</div>
+                <div id="spec-list"></div>
+            </div>
+            <div id="effects-panel" class="effects-panel">
+                <div class="effects-header">
+                    <span>取得済みスキル効果</span>
+                </div>
+                <div class="effects-section">
+                    <div class="effects-section-title">🎯 専門職スキル</div>
+                    <div id="effects-spec-list" class="effects-list"></div>
+                </div>
+                <div class="effects-section">
+                    <div class="effects-section-title">⚙️ 汎用スキル（パッシブ）</div>
+                    <div id="effects-general-list" class="effects-list"></div>
+                </div>
+                <div class="effects-section">
+                    <div class="effects-section-title">⭐ ★パッシブ</div>
+                    <div id="effects-stars-list" class="effects-list"></div>
+                </div>
+                <div class="effects-totals">
+                    <div class="effects-totals-title">📈 合計ステータス</div>
+                    <div id="effects-totals-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
