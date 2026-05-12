@@ -1,15 +1,65 @@
--- P3a: 調理配管（常に成功・素材なし）。ミニゲーム/失敗/★/クリは P3b 以降。
+-- P3c/P3d: クライアント Glitch ミニゲーム結果を受け、成功／失敗／クリティカル分岐。
+-- clientSuccess はクライアント報告のため改ざん可能（本番ではステーション＋検証強化を想定）。
 
 local resName = GetCurrentResourceName()
 local lastUse = {}
 
-local function doCookSession(src, recipeId)
+---@param quality string 'normal' | 'critical' | 'failed'
+---@param star boolean
+---@param src number
+---@return table
+local function buildCookMetadata(quality, star, src)
+    local playerName = GetPlayerName(src)
+    if type(playerName) ~= 'string' or playerName == '' then
+        playerName = ('id:%d'):format(src)
+    end
+    return {
+        quality = quality,
+        star = star == true,
+        cookedBy = playerName,
+        cookedAt = os.time(),
+    }
+end
+
+--- NUI 用: ★マップ・合計・料理 XP 状態を一括送信
+---@param src number
+local function pushPlayerStateToClient(src)
+    if not src or src <= 0 then return end
+    local ident = CookTree.Stars.GetIdentifier(src)
+    local map = CookTree.Stars.GetAll(ident)
+    local total = CookTree.Stars.GetTotal(ident)
+    local xpState = CookTree.ExtXP.GetAll(src)
+    TriggerClientEvent('jp-cooktree:receivePlayerState', src, {
+        recipeStars = map,
+        starTotal = total,
+        level = xpState.level,
+        sp = xpState.sp,
+        xp = xpState.xp,
+        nextLevelXp = xpState.nextLevelXp,
+    })
+end
+
+--- NUI 調理フロー用: 成否種別（クライアントは pending 再オープン時のみ使用）
+---@param src number
+---@param recipeId string
+---@param resultType string success | critical | failed | cooldown | unlock_denied | inventory_full | error
+local function notifyCookUi(src, recipeId, resultType)
+    if not src or src <= 0 or type(recipeId) ~= 'string' or recipeId == '' then return end
+    TriggerClientEvent('jp-cooktree:cookResultConfirmed', src, recipeId, resultType)
+end
+
+---@param src number
+---@param recipeId string
+---@param clientSuccess boolean ミニゲーム成否（クライアント報告）
+local function handleSubmitCookResult(src, recipeId, clientSuccess)
     if type(src) ~= 'number' or src <= 0 then return end
     if type(recipeId) ~= 'string' or recipeId == '' then return end
+    if type(clientSuccess) ~= 'boolean' then return end
 
     local recipe = Config.Recipes and Config.Recipes[recipeId]
     if not recipe then
         print(('[%s] Unknown recipe src=%d recipe=%s'):format(resName, src, recipeId))
+        notifyCookUi(src, recipeId, 'error')
         return
     end
 
@@ -17,45 +67,144 @@ local function doCookSession(src, recipeId)
     local cd = (Config.Cooldowns and Config.Cooldowns.globalSec) or 5
     if (now - (lastUse[src] or 0)) < cd then
         print(('[%s] cook denied cooldown src=%d'):format(resName, src))
+        notifyCookUi(src, recipeId, 'cooldown')
         return
     end
 
     local level = CookTree.ExtXP.GetLevel(src)
     if not CookTree.IsRecipeUnlocked(recipeId, level) then
         print(('[%s] Unlock denied src=%d recipe=%s lv=%d'):format(resName, src, recipeId, level))
+        notifyCookUi(src, recipeId, 'unlock_denied')
         return
     end
 
-    -- P3a: 常に成功（ミニゲームは P3c）
-    local success = true
-    if success then
-        if not recipe.result or not recipe.result.item then
-            print(('[%s] cook error: recipe missing result src=%d recipe=%s'):format(resName, src, recipeId))
+    if not clientSuccess then
+        local fail = recipe.failureResult or { item = 'failed_dish', count = 1 }
+        if not fail.item then
+            print(('[%s] cook fail: no failureResult item src=%d recipe=%s'):format(resName, src, recipeId))
+            notifyCookUi(src, recipeId, 'error')
             return
         end
-        local added = CookTree.Inv.AddItem(src, recipe.result.item, recipe.result.count or 1)
-        if not added then
-            print(('[%s] cook aborted: AddItem failed src=%d recipe=%s'):format(resName, src, recipeId))
+        local metaFail = buildCookMetadata('failed', false, src)
+        local addedFail = CookTree.Inv.AddItem(src, fail.item, fail.count or 1, metaFail)
+        if not addedFail then
+            print(('[%s] cook fail aborted: AddItem failed src=%d recipe=%s'):format(resName, src, recipeId))
+            notifyCookUi(src, recipeId, 'inventory_full')
             return
         end
         lastUse[src] = now
-        local exp = tonumber(recipe.exp) or 0
-        if exp > 0 then
-            CookTree.ExtXP.AddXP(src, exp)
-        end
-        print(('[%s] Cook success src=%d recipe=%s exp=%d'):format(resName, src, recipeId, exp))
-    else
-        if recipe.failureResult and recipe.failureResult.item then
-            CookTree.Inv.AddItem(src, recipe.failureResult.item, recipe.failureResult.count or 1)
-        end
-        print(('[%s] Cook failed src=%d recipe=%s'):format(resName, src, recipeId))
+        print(('[%s] Cook failed src=%d recipe=%s -> %s quality=failed'):format(resName, src, recipeId, fail.item))
+        notifyCookUi(src, recipeId, 'failed')
+        return
     end
+
+    if not recipe.result or not recipe.result.item then
+        print(('[%s] cook error: recipe missing result src=%d recipe=%s'):format(resName, src, recipeId))
+        notifyCookUi(src, recipeId, 'error')
+        return
+    end
+
+    local baseExp = tonumber(recipe.exp) or 0
+    local critCfg = Config.CriticalMultiplier or {}
+    local expMult = 1
+    local starDelta = 1
+    local isCritical = false
+    local chance = tonumber(Config.CriticalChance) or 0.0
+    if chance > 0 and math.random() < chance then
+        isCritical = true
+        expMult = tonumber(critCfg.exp) or 2
+        starDelta = tonumber(critCfg.stars) or 2
+    end
+
+    local metaOk
+    if isCritical then
+        metaOk = buildCookMetadata('critical', true, src)
+    else
+        metaOk = buildCookMetadata('normal', false, src)
+    end
+
+    local added = CookTree.Inv.AddItem(src, recipe.result.item, recipe.result.count or 1, metaOk)
+    if not added then
+        print(('[%s] cook aborted: AddItem failed src=%d recipe=%s'):format(resName, src, recipeId))
+        notifyCookUi(src, recipeId, 'inventory_full')
+        return
+    end
+    lastUse[src] = now
+
+    local expGain = math.floor(baseExp * expMult)
+    if expGain > 0 then
+        CookTree.ExtXP.AddXP(src, expGain)
+    end
+
+    local ident = CookTree.Stars.GetIdentifier(src)
+    local newStars = CookTree.Stars.Increment(ident, recipeId, starDelta)
+    if newStars then
+        print(('[%s] Star count recipe=%s new=%d (+%d) src=%d'):format(resName, recipeId, newStars, starDelta, src))
+    end
+
+    if isCritical then
+        print(('[%s] CRITICAL quality=critical src=%d recipe=%s exp=%d (x%d)'):format(resName, src, recipeId, expGain, expMult))
+    else
+        print(('[%s] Cook success quality=normal src=%d recipe=%s exp=%d'):format(resName, src, recipeId, expGain))
+    end
+
+    pushPlayerStateToClient(src)
+    notifyCookUi(src, recipeId, isCritical and 'critical' or 'success')
 end
 
-RegisterNetEvent('jp-cooktree:requestCookSession', function(recipeId)
+RegisterNetEvent('jp-cooktree:submitCookResult', function(recipeId, clientSuccess)
     local src = source
     if not src or src <= 0 then return end
-    doCookSession(src, recipeId)
+    handleSubmitCookResult(src, recipeId, clientSuccess)
+end)
+
+-- 調理開始前: unlock・インベントリ容量のみサーバー権威で検証（ミニゲーム前に拒否）
+RegisterNetEvent('jp-cooktree:requestCookStart', function(recipeId)
+    local src = source
+    if not src or src <= 0 then return end
+    if type(recipeId) ~= 'string' or recipeId == '' then
+        TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'unknown_recipe', recipeId or '')
+        return
+    end
+
+    local recipe = Config.Recipes and Config.Recipes[recipeId]
+    if not recipe then
+        print(('[%s] cook start denied src=%d recipe=%s reason=unknown_recipe'):format(resName, src, recipeId))
+        TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'unknown_recipe', recipeId)
+        return
+    end
+
+    local playerLevel = CookTree.ExtXP.GetLevel(src)
+    if not CookTree.IsRecipeUnlocked(recipeId, playerLevel) then
+        print(('[%s] cook start denied src=%d recipe=%s reason=locked lv=%d'):format(resName, src, recipeId, playerLevel))
+        TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'locked', recipeId)
+        return
+    end
+
+    if not recipe.result or not recipe.result.item then
+        print(('[%s] cook start denied src=%d recipe=%s reason=no_result'):format(resName, src, recipeId))
+        TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'unknown_recipe', recipeId)
+        return
+    end
+
+    local count = tonumber(recipe.result.count) or 1
+    if count < 1 or math.floor(count) ~= count then count = 1 end
+
+    local okCarry, canCarry = pcall(function()
+        return exports.ox_inventory:CanCarryItem(src, recipe.result.item, count)
+    end)
+    if not okCarry then
+        print(('[%s] cook start denied src=%d recipe=%s reason=can_carry_error'):format(resName, src, recipeId))
+        TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'inventory_full', recipeId)
+        return
+    end
+    if not canCarry then
+        print(('[%s] cook start denied src=%d recipe=%s reason=inventory_full'):format(resName, src, recipeId))
+        TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'inventory_full', recipeId)
+        return
+    end
+
+    TriggerClientEvent('jp-cooktree:cookStartResponse', src, true, nil, recipeId)
 end)
 
 AddEventHandler('playerDropped', function()
@@ -65,15 +214,14 @@ AddEventHandler('playerDropped', function()
     end
 end)
 
--- サーバー側コマンド（txAdmin 等 src=0 では調理不可。プレイヤーは client の cook_test から TriggerServerEvent を使用）
-RegisterCommand('cook_test', function(src, args)
-    if not args[1] then
-        print(('[%s] Usage: cook_test <recipeId> (player client / F8 → client forwards here)'):format(resName))
-        return
-    end
-    if not src or src <= 0 then
-        print(('[%s] cook_test: use in-game F8 as player, or TriggerServerEvent from client'):format(resName))
-        return
-    end
-    doCookSession(src, args[1])
-end, false)
+RegisterNetEvent('jp-cooktree:requestStars', function()
+    local src = source
+    if not src or src <= 0 then return end
+    pushPlayerStateToClient(src)
+end)
+
+RegisterNetEvent('jp-cooktree:requestPlayerState', function()
+    local src = source
+    if not src or src <= 0 then return end
+    pushPlayerStateToClient(src)
+end)

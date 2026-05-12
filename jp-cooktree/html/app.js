@@ -9,7 +9,19 @@ const specList = document.getElementById('spec-list');
 
 const NS = 'http://www.w3.org/2000/svg';
 
-let state = { specs: {}, currentSpec: 'western', level: 0, sp: 0, stars: 0, generalTree: {}, ranks: {} };
+let state = {
+    specs: {},
+    currentSpec: 'western',
+    level: 1,
+    sp: 0,
+    xp: 0,
+    nextLevelXp: null,
+    stars: 0,
+    starTotal: 0,
+    recipeStars: {},
+    generalTree: {},
+    ranks: {},
+};
 
 const INITIAL_VIEWBOX = { x: -1400, y: -500, w: 2800, h: 1000 };
 let viewBox = { ...INITIAL_VIEWBOX };
@@ -301,7 +313,7 @@ function render() {
     ensureDefs();
     lvEl.textContent = state.level;
     spEl.textContent = state.sp;
-    starsEl.textContent = state.stars;
+    starsEl.textContent = (typeof state.starTotal === 'number' ? state.starTotal : state.stars) ?? 0;
 
     drawWeb();              // 外側の蜘蛛の巣枠（最背面）
     drawSpecNodes();       // 専門職ノード
@@ -339,6 +351,7 @@ function selectSpec(specId) {
     });
     hideSpecPopup();
     render();
+    renderEffects();
 }
 
 // ポップアップ外クリックで閉じる
@@ -405,19 +418,51 @@ function close() {
 window.addEventListener('message', (ev) => {
     const data = ev.data;
     if (data.action === 'open') {
+        if (cookResultHideTimer) {
+            clearTimeout(cookResultHideTimer);
+            cookResultHideTimer = null;
+        }
+        if (cookResultEl) {
+            cookResultEl.classList.add('hidden');
+            cookResultEl.textContent = '';
+        }
         state = {
             specs: data.specializations,
             currentSpec: data.currentSpec,
-            level: data.level,
-            sp: data.sp || 0,
-            stars: data.stars || 0,
+            level: typeof data.level === 'number' ? data.level : Number(data.level) || 1,
+            sp: typeof data.sp === 'number' ? data.sp : Number(data.sp) || 0,
+            xp: typeof data.xp === 'number' ? data.xp : Number(data.xp) || 0,
+            nextLevelXp: data.nextLevelXp,
+            recipeStars: data.recipeStars || {},
+            starTotal: typeof data.starTotal === 'number' ? data.starTotal : (Number(data.stars) || 0),
+            stars: typeof data.starTotal === 'number' ? data.starTotal : (Number(data.stars) || 0),
             generalTree: data.generalTree || {},
             ranks: data.generalRanks || {},
+            cookRecipeBook: data.cookRecipeBook || {},
         };
         viewBox = { ...INITIAL_VIEWBOX };
         render();
         renderEffects();
         root.classList.remove('hidden');
+        if (data.cookResult) showFlashCookResult(data.cookResult);
+    } else if (data.action === 'updateStars') {
+        state.recipeStars = data.recipeStars || {};
+        state.starTotal = typeof data.starTotal === 'number' ? data.starTotal : 0;
+        state.stars = state.starTotal;
+        starsEl.textContent = state.starTotal;
+        renderEffects();
+    } else if (data.action === 'updatePlayerState') {
+        state.level = typeof data.level === 'number' ? data.level : Number(data.level) || 1;
+        state.sp = typeof data.sp === 'number' ? data.sp : Number(data.sp) || 0;
+        state.xp = typeof data.xp === 'number' ? data.xp : Number(data.xp) || 0;
+        state.nextLevelXp = data.nextLevelXp;
+        state.recipeStars = data.recipeStars || {};
+        state.starTotal = typeof data.starTotal === 'number' ? data.starTotal : 0;
+        state.stars = state.starTotal;
+        render();
+        renderEffects();
+    } else if (data.action === 'cookDenied') {
+        showFlashCookDenied(data.reason);
     } else if (data.action === 'close') {
         root.classList.add('hidden');
     }
@@ -437,28 +482,164 @@ const effectsSpecList = document.getElementById('effects-spec-list');
 const effectsGeneralList = document.getElementById('effects-general-list');
 const effectsStarsList = document.getElementById('effects-stars-list');
 const effectsTotalsList = document.getElementById('effects-totals-list');
+const cookResultEl = document.getElementById('cook-result');
 
-function renderEffects() {
-    // 専門職で解放済みのレシピ
-    effectsSpecList.innerHTML = '';
-    let specCount = 0;
-    for (const [specId, spec] of Object.entries(state.specs)) {
-        for (const [nodeId, node] of Object.entries(spec.nodes || {})) {
-            if (isNodeUnlocked(nodeId, spec.nodes, state.level)) {
-                const div = document.createElement('div');
-                div.className = 'effect-item';
-                div.innerHTML = `
-                    <span class="effect-item-icon">${node.icon ? node.icon.value : '?'}</span>
-                    <span class="effect-item-label">${node.label}</span>
-                    <span class="effect-item-value">[${spec.label}] Lv${node.lv}</span>
-                `;
-                effectsSpecList.appendChild(div);
-                specCount++;
-            }
+let cookResultHideTimer = null;
+
+function showFlashCookDenied(reason) {
+    if (!cookResultEl) return;
+    let text = 'エラーが発生しました';
+    switch (reason) {
+        case 'inventory_full':
+            text = 'インベントリに空きがありません';
+            break;
+        case 'locked':
+            text = 'レベルが足りません';
+            break;
+        case 'unknown_recipe':
+            text = 'レシピが見つかりません';
+            break;
+        default:
+            break;
+    }
+    cookResultEl.className = 'cook-result denied';
+    cookResultEl.textContent = text;
+    cookResultEl.classList.remove('hidden');
+    if (cookResultHideTimer) clearTimeout(cookResultHideTimer);
+    cookResultHideTimer = setTimeout(() => {
+        cookResultEl.classList.add('hidden');
+        cookResultEl.textContent = '';
+        cookResultHideTimer = null;
+    }, 3000);
+}
+
+function showFlashCookResult(cookResult) {
+    if (!cookResultEl || !cookResult) return;
+    const map = {
+        success: { cls: 'success', text: '成功！' },
+        critical: { cls: 'critical', text: 'クリティカル！' },
+        failed: { cls: 'failed', text: '失敗…' },
+        cooldown: { cls: 'failed', text: 'クールダウン中です' },
+        unlock_denied: { cls: 'failed', text: '未解放のため調理できません' },
+        inventory_full: { cls: 'failed', text: 'インベントリに空きがありません' },
+        error: { cls: 'failed', text: 'エラーが発生しました' },
+        busy: { cls: 'failed', text: '調理処理中です' },
+    };
+    const m = map[cookResult.result] || map.error;
+    cookResultEl.className = 'cook-result ' + m.cls;
+    cookResultEl.textContent = m.text;
+    cookResultEl.classList.remove('hidden');
+    if (cookResultHideTimer) clearTimeout(cookResultHideTimer);
+    cookResultHideTimer = setTimeout(() => {
+        cookResultEl.classList.add('hidden');
+        cookResultEl.textContent = '';
+        cookResultHideTimer = null;
+    }, 3000);
+}
+
+async function onCookButtonClick(recipeId, btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const prev = btn.textContent;
+    btn.textContent = '…';
+    try {
+        const res = await fetch(`https://${GetParentResourceName()}/cook`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ recipeId }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (j && j.busy) {
+            showFlashCookResult({ result: 'busy', recipeId });
+        }
+    } catch (_) {
+        showFlashCookResult({ result: 'error', recipeId });
+    } finally {
+        btn.textContent = prev;
+        btn.disabled = false;
+    }
+}
+
+function findRecipeLabel(recipeId) {
+    if (!recipeId || !state.specs) return recipeId || '';
+    for (const spec of Object.values(state.specs)) {
+        for (const node of Object.values(spec.nodes || {})) {
+            if (node.recipe === recipeId) return node.label || recipeId;
         }
     }
-    if (specCount === 0) {
-        effectsSpecList.innerHTML = '<div class="effect-item-empty">未解放</div>';
+    return recipeId;
+}
+
+function getRecipeStarCount(recipeId) {
+    if (!recipeId || !state.recipeStars) return 0;
+    const n = state.recipeStars[recipeId];
+    return typeof n === 'number' ? n : 0;
+}
+
+function renderEffects() {
+    // 専門職: レシピノード（node.recipe）ごとに調理ボタン
+    effectsSpecList.innerHTML = '';
+    const spec = state.specs[state.currentSpec];
+    if (!spec || !spec.nodes) {
+        effectsSpecList.innerHTML = '<div class="effect-item-empty">—</div>';
+    } else {
+        let specCount = 0;
+        for (const [nodeId, node] of Object.entries(spec.nodes)) {
+            if (!node.recipe) continue;
+            specCount++;
+            const unlocked = isNodeUnlocked(nodeId, spec.nodes, state.level);
+            const hasDef = !!(state.cookRecipeBook && state.cookRecipeBook[node.recipe]);
+            const wrap = document.createElement('div');
+            wrap.className = 'effect-cook-block';
+
+            const info = document.createElement('div');
+            info.className = 'recipe-info';
+
+            const titleRow = document.createElement('div');
+            titleRow.className = 'recipe-title';
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'recipe-title-icon';
+            iconSpan.textContent = node.icon ? node.icon.value : '?';
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'recipe-title-text';
+            nameSpan.textContent = node.label || nodeId;
+            titleRow.appendChild(iconSpan);
+            titleRow.appendChild(nameSpan);
+
+            const metaRow = document.createElement('div');
+            metaRow.className = 'recipe-meta';
+            const starN = getRecipeStarCount(node.recipe);
+            metaRow.textContent = `[${spec.label}] ★${starN} 要 Lv${node.lv}`;
+
+            info.appendChild(titleRow);
+            info.appendChild(metaRow);
+            wrap.appendChild(info);
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            let btnLabel = '調理する';
+            let btnExtraClass = '';
+            if (!unlocked) {
+                btnLabel = 'Lv要';
+                btnExtraClass = ' locked';
+            } else if (!hasDef) {
+                btnLabel = '未実装';
+                btnExtraClass = ' na';
+            }
+            btn.className = 'cook-button' + btnExtraClass;
+            btn.textContent = btnLabel;
+            const canCook = unlocked && hasDef;
+            btn.disabled = !canCook;
+            if (!hasDef) btn.title = 'レシピ未実装（Config.Recipes に未定義）';
+            else if (!unlocked) btn.title = `Lv.${node.lv} 以上で解放`;
+            btn.dataset.recipeId = node.recipe;
+            btn.addEventListener('click', () => onCookButtonClick(node.recipe, btn));
+            wrap.appendChild(btn);
+            effectsSpecList.appendChild(wrap);
+        }
+        if (specCount === 0) {
+            effectsSpecList.innerHTML = '<div class="effect-item-empty">レシピノードなし</div>';
+        }
     }
 
     // 汎用スキル（汎用ツリー）
@@ -490,11 +671,28 @@ function renderEffects() {
         effectsGeneralList.innerHTML = '<div class="effect-item-empty">未解放</div>';
     }
 
-    // ★パッシブ（P3 で実装）
-    effectsStarsList.innerHTML = '<div class="effect-item-empty">未実装（P3 で追加予定）</div>';
+    // ★パッシブ（P3e）／レシピ別 ★ カウント（P3b）
+    effectsStarsList.innerHTML = '';
+    const starEntries = Object.entries(state.recipeStars || {}).filter(([, c]) => typeof c === 'number' && c > 0);
+    if (starEntries.length === 0) {
+        effectsStarsList.innerHTML = '<div class="effect-item-empty">調理成功でレシピごとに ★ が増えます</div>';
+    } else {
+        starEntries.sort((a, b) => b[1] - a[1]);
+        for (const [rid, cnt] of starEntries) {
+            const div = document.createElement('div');
+            div.className = 'effect-item';
+            div.innerHTML = `
+                <span class="effect-item-icon">⭐</span>
+                <span class="effect-item-label">${findRecipeLabel(rid)}</span>
+                <span class="effect-item-value">★${cnt}</span>
+            `;
+            effectsStarsList.appendChild(div);
+        }
+    }
 
     // 合計ステータス（P3b で state.totals 経由に切替）
     effectsTotalsList.innerHTML = `
+        <div class="effects-totals-item"><span class="label">料理XP</span><span class="value">${typeof state.xp === 'number' ? state.xp : 0}${state.nextLevelXp != null ? ` / 次Lv ${state.nextLevelXp}` : '（最大）'}</span></div>
         <div class="effects-totals-item"><span class="label">クリティカル率</span><span class="value">+0%</span></div>
         <div class="effects-totals-item"><span class="label">最大HP</span><span class="value">200 (基本)</span></div>
         <div class="effects-totals-item"><span class="label">所持重量</span><span class="value">標準</span></div>

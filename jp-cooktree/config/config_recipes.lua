@@ -10,6 +10,14 @@ Config.Recipes = {
         failureResult   = { item = 'failed_dish', count = 1 },
         exp             = 10,
         buffs           = { 'stamina_up' },
-        cookTime        = 5000, -- ミニゲーム制限時間 ms（P3c で使用）
+        cookTime        = 5000, -- 将来: UI 制限などに使用
+        -- P3c: jp-glitch28（exports 例: StartSkillCheckGame）。段階は後から追加可。
+        stages = {
+            {
+                export = 'StartSkillCheckGame',
+                label  = '焼き加減を見る',
+                args   = { { 'E', 'F', 'R' }, 65, 15000, 18, 5, 1, true },
+            },
+        },
     },
 }
