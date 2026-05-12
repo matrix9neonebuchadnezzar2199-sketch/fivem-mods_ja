@@ -31,11 +31,16 @@ Citizen.CreateThread(function()
     Citizen.Wait(500)
     local activeOpacity = config.BackgroundOpacity[config.ActiveVisualTheme] or 0.95
     
+    local vol = tonumber(config.NuiSoundVolume)
+    if not vol or vol ~= vol then vol = 0.5 end
+    if vol < 0.0 then vol = 0.0 elseif vol > 1.0 then vol = 1.0 end
+
     SendNUIMessage({
         action = 'setColors',
         colors = config.Colors,
         visualTheme = config.ActiveVisualTheme,
-        backgroundOpacity = activeOpacity
+        backgroundOpacity = activeOpacity,
+        nuiSoundVolume = vol,
     })
 end)
 

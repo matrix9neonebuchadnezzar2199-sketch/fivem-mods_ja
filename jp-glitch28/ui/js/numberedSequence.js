@@ -483,6 +483,11 @@ function playNumberedSequenceSound(type) {
                 audio = document.getElementById('sound-buttonPress');
         }        
         if (audio) {
+            if (typeof window.applyGlitchNuiSoundVolume === 'function') {
+                window.applyGlitchNuiSoundVolume(audio);
+            } else {
+                audio.volume = 0.5;
+            }
             audio.currentTime = 0;
             audio.play().catch(() => {});
         }

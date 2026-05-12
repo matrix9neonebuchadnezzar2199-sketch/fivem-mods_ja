@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'JP-Mods（日本語版）／原作: Luma & Glitch Studios'
 description 'Glitch Minigames — 日本語UI（28+ミニゲーム・exports互換維持）'
-version '2.1.1'
+version '2.1.2'
 
 client_script {
     'client/customMinigames/client.lua',

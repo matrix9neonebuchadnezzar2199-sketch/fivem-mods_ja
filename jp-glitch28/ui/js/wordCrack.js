@@ -405,6 +405,11 @@ var WordCrack = (function() {
     function playSound(soundId) {
         var sound = document.getElementById(soundId);
         if (sound) {
+            if (typeof window.applyGlitchNuiSoundVolume === 'function') {
+                window.applyGlitchNuiSoundVolume(sound);
+            } else {
+                sound.volume = 0.5;
+            }
             sound.currentTime = 0;
             sound.play().catch(function() {});
         }

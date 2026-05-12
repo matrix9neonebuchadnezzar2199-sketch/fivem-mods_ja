@@ -40,6 +40,15 @@ window.MinigameColors = {
     safeRgba: '34, 197, 94'
 };
 
+/** NUI HTML5 効果音の音量（0.0〜1.0）。Lua `setColors` の nuiSoundVolume で上書き。 */
+window.GlitchNuiSoundVolume = 0.5;
+
+window.applyGlitchNuiSoundVolume = function (el) {
+    if (!el || typeof el.volume !== 'number') return;
+    const v = window.GlitchNuiSoundVolume;
+    el.volume = typeof v === 'number' && !Number.isNaN(v) ? Math.max(0, Math.min(1, v)) : 0.5;
+};
+
 $(document).ready(function() {
     window.addEventListener('message', function(event) {
         const data = event.data;
@@ -47,6 +56,10 @@ $(document).ready(function() {
         // updatese color theme from Lua config
         if (data.action === 'setColors' && data.colors) {
             window.MinigameColors = data.colors;
+
+            if (typeof data.nuiSoundVolume === 'number' && !Number.isNaN(data.nuiSoundVolume)) {
+                window.GlitchNuiSoundVolume = Math.max(0, Math.min(1, data.nuiSoundVolume));
+            }
             
             // Apply visual theme class to body
             if (data.visualTheme) {
@@ -551,6 +564,7 @@ function preloadSounds() {
     for (const soundId of sounds) {
         const sound = document.getElementById(soundId);
         if (sound) {
+            window.applyGlitchNuiSoundVolume(sound);
             sound.addEventListener('error', function() {
                 console.warn(`Failed to load sound: ${soundId}`);
                 failedSounds++;
@@ -589,6 +603,7 @@ function playSound(soundId) {
     }
     
     try {
+        window.applyGlitchNuiSoundVolume(sound);
         sound.currentTime = 0;
         let playPromise = sound.play();
         

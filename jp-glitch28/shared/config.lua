@@ -25,6 +25,7 @@
 --   config.ActiveTheme         : 'cyan'(青) または 'monochrome'(モノクロ)
 --   config.ActiveVisualTheme   : 'classic'(従来) または 'modern'(現代)
 --   config.BackgroundOpacity   : 背景の不透明度 (0.0~1.0)
+--   config.NuiSoundVolume        : NUI（HTML5 audio）効果音の音量 0.0〜1.0（ミニゲームUI内の click 等）
 -- =============================================================
 
 config = {}
@@ -45,6 +46,9 @@ config.BackgroundOpacity = {
     classic = 0.80,
     modern = 0.90
 }
+
+-- NUI 内 HTML5 オーディオ（click / success / failure 等）の音量。クライアント起動時に NUI へ送られる。
+config.NuiSoundVolume = 0.5
 
 -- Available Color Themes
 config.Themes = {
