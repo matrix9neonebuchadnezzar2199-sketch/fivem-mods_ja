@@ -9,7 +9,7 @@ Config.GeneralTree = {
     --------------------------------------------------------------------
     hp_node = {
         angle = 0, radius = 540, type = 'status', category = 'hp',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged', effectPerRank = 5,
         label = '生命力', icon = { type = 'emoji', value = '❤️' },
         maxRank = 5, perRank = { stat = 'max_hp', value = 5 },
         spCostPerRank = 1,
@@ -17,6 +17,7 @@ Config.GeneralTree = {
     },
     carry_node = {
         angle = 45, radius = 540, type = 'status', category = 'carry',
+        nodeType = 'staged',
         label = '頑強な体', icon = { type = 'emoji', value = '💪' },
         maxRank = 5, perRank = { stat = 'carry_kg', value = 1 },
         spCostPerRank = 1,
@@ -24,7 +25,7 @@ Config.GeneralTree = {
     },
     crit_node = {
         angle = 90, radius = 540, type = 'status', category = 'crit',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged',
         label = '繊細な手先', icon = { type = 'emoji', value = '⚡' },
         maxRank = 5, perRank = { stat = 'crit_rate', value = 0.01 },
         spCostPerRank = 2,
@@ -32,7 +33,7 @@ Config.GeneralTree = {
     },
     exp_node = {
         angle = 135, radius = 540, type = 'status', category = 'exp',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged',
         label = '学習の才', icon = { type = 'emoji', value = '📈' },
         maxRank = 5, perRank = { stat = 'exp_mult', value = 0.05 },
         spCostPerRank = 2,
@@ -40,7 +41,7 @@ Config.GeneralTree = {
     },
     armor_cap_node = {
         angle = 180, radius = 540, type = 'status', category = 'armor',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged', effectPerRank = 10,
         label = '頑健な装備', icon = { type = 'emoji', value = '🛡️' },
         maxRank = 3, perRank = { stat = 'armor_cap', value = 5 },
         spCostPerRank = 2,
@@ -48,6 +49,7 @@ Config.GeneralTree = {
     },
     buff_dur_node = {
         angle = 225, radius = 540, type = 'status', category = 'buff',
+        nodeType = 'staged',
         label = '余韻の持続', icon = { type = 'emoji', value = '⏳' },
         maxRank = 5, perRank = { stat = 'buff_duration', value = 0.05 },
         spCostPerRank = 2,
@@ -55,6 +57,7 @@ Config.GeneralTree = {
     },
     cook_speed_node = {
         angle = 270, radius = 540, type = 'status', category = 'speed',
+        nodeType = 'staged',
         label = '手際の良さ', icon = { type = 'emoji', value = '🏃' },
         maxRank = 3, perRank = { stat = 'cook_speed', value = 0.05 },
         spCostPerRank = 2,
@@ -62,7 +65,7 @@ Config.GeneralTree = {
     },
     cooldown_node = {
         angle = 315, radius = 540, type = 'status', category = 'cooldown',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged',
         label = '淀みなき動き', icon = { type = 'emoji', value = '⏱️' },
         maxRank = 3, perRank = { stat = 'cooldown_reduce', value = 5 },
         spCostPerRank = 2,
@@ -74,7 +77,7 @@ Config.GeneralTree = {
     --------------------------------------------------------------------
     star_mult_node = {
         angle = 22, radius = 660, type = 'status', category = 'star',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged',
         label = '精進の証', icon = { type = 'emoji', value = '🌟' },
         maxRank = 3, perRank = { stat = 'star_mult', value = 0.1 },
         spCostPerRank = 3,
@@ -82,6 +85,7 @@ Config.GeneralTree = {
     },
     save_node = {
         angle = 112, radius = 660, type = 'status', category = 'save',
+        nodeType = 'staged',
         label = '無駄なき調理', icon = { type = 'emoji', value = '♻️' },
         maxRank = 5, perRank = { stat = 'ingredient_save', value = 0.02 },
         spCostPerRank = 3,
@@ -117,6 +121,7 @@ Config.GeneralTree = {
     --------------------------------------------------------------------
     armor_regen_node = {
         angle = 0, radius = 760, type = 'status', category = 'armor_regen',
+        nodeType = 'staged',
         label = '不屈の意志', icon = { type = 'emoji', value = '🛡️' },
         maxRank = 3, perRank = { stat = 'armor_regen', value = 0.5 },
         spCostPerRank = 4,
@@ -124,7 +129,7 @@ Config.GeneralTree = {
     },
     hp_regen_node = {
         angle = 72, radius = 760, type = 'status', category = 'hp_regen',
-        nodeType = 'staged', costPerRank = 1,
+        nodeType = 'staged',
         label = '生命の鼓動', icon = { type = 'emoji', value = '💗' },
         maxRank = 3, perRank = { stat = 'hp_regen_mult', value = 0.5 },
         spCostPerRank = 4,
@@ -132,6 +137,7 @@ Config.GeneralTree = {
     },
     heat_vision_node = {
         angle = 144, radius = 760, type = 'status', category = 'heat',
+        nodeType = 'staged',
         label = '炎の眼', icon = { type = 'emoji', value = '🔥' },
         maxRank = 1, perRank = { stat = 'heat_vision', value = 1 },
         spCostPerRank = 5,
@@ -139,6 +145,7 @@ Config.GeneralTree = {
     },
     max_hp_big_node = {
         angle = 216, radius = 760, type = 'status', category = 'hp_big',
+        nodeType = 'staged',
         label = '豪傑の体躯', icon = { type = 'emoji', value = '💪' },
         maxRank = 3, perRank = { stat = 'max_hp', value = 20 },
         spCostPerRank = 4,
