@@ -9,6 +9,7 @@ Config.GeneralTree = {
     --------------------------------------------------------------------
     hp_node = {
         angle = 0, radius = 540, type = 'status', category = 'hp',
+        nodeType = 'staged', costPerRank = 1,
         label = '生命力', icon = { type = 'emoji', value = '❤️' },
         maxRank = 5, perRank = { stat = 'max_hp', value = 5 },
         spCostPerRank = 1,
@@ -23,6 +24,7 @@ Config.GeneralTree = {
     },
     crit_node = {
         angle = 90, radius = 540, type = 'status', category = 'crit',
+        nodeType = 'staged', costPerRank = 1,
         label = '繊細な手先', icon = { type = 'emoji', value = '⚡' },
         maxRank = 5, perRank = { stat = 'crit_rate', value = 0.01 },
         spCostPerRank = 2,
@@ -30,6 +32,7 @@ Config.GeneralTree = {
     },
     exp_node = {
         angle = 135, radius = 540, type = 'status', category = 'exp',
+        nodeType = 'staged', costPerRank = 1,
         label = '学習の才', icon = { type = 'emoji', value = '📈' },
         maxRank = 5, perRank = { stat = 'exp_mult', value = 0.05 },
         spCostPerRank = 2,
@@ -37,6 +40,7 @@ Config.GeneralTree = {
     },
     armor_cap_node = {
         angle = 180, radius = 540, type = 'status', category = 'armor',
+        nodeType = 'staged', costPerRank = 1,
         label = '頑健な装備', icon = { type = 'emoji', value = '🛡️' },
         maxRank = 3, perRank = { stat = 'armor_cap', value = 5 },
         spCostPerRank = 2,
@@ -58,6 +62,7 @@ Config.GeneralTree = {
     },
     cooldown_node = {
         angle = 315, radius = 540, type = 'status', category = 'cooldown',
+        nodeType = 'staged', costPerRank = 1,
         label = '淀みなき動き', icon = { type = 'emoji', value = '⏱️' },
         maxRank = 3, perRank = { stat = 'cooldown_reduce', value = 5 },
         spCostPerRank = 2,
@@ -69,6 +74,7 @@ Config.GeneralTree = {
     --------------------------------------------------------------------
     star_mult_node = {
         angle = 22, radius = 660, type = 'status', category = 'star',
+        nodeType = 'staged', costPerRank = 1,
         label = '精進の証', icon = { type = 'emoji', value = '🌟' },
         maxRank = 3, perRank = { stat = 'star_mult', value = 0.1 },
         spCostPerRank = 3,
@@ -118,6 +124,7 @@ Config.GeneralTree = {
     },
     hp_regen_node = {
         angle = 72, radius = 760, type = 'status', category = 'hp_regen',
+        nodeType = 'staged', costPerRank = 1,
         label = '生命の鼓動', icon = { type = 'emoji', value = '💗' },
         maxRank = 3, perRank = { stat = 'hp_regen_mult', value = 0.5 },
         spCostPerRank = 4,

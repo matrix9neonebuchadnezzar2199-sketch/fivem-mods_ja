@@ -19,6 +19,7 @@ local starTotalCache = 0
 -- ext_xp: 直近の Lv / SP（requestPlayerState 応答までの表示用）
 local playerLevelCache = 1
 local playerSpCache = 0
+local passiveRanksCache = {}
 
 local function buildCookRecipeBook()
     local t = {}
@@ -44,6 +45,7 @@ local function openTree()
         generalTree = Config.GeneralTree,
         generalRanks = {},
         cookRecipeBook = buildCookRecipeBook(),
+        passiveRanks = passiveRanksCache,
     }
     if pendingCookResult then
         payload.cookResult = pendingCookResult
@@ -121,6 +123,7 @@ RegisterNetEvent('jp-cooktree:receivePlayerState', function(data)
     end
     playerLevelCache = tonumber(data.level) or 1
     playerSpCache = tonumber(data.sp) or 0
+    passiveRanksCache = type(data.passiveRanks) == 'table' and data.passiveRanks or {}
     if isOpen then
         SendNUIMessage({
             action = 'updatePlayerState',
@@ -130,8 +133,22 @@ RegisterNetEvent('jp-cooktree:receivePlayerState', function(data)
             nextLevelXp = data.nextLevelXp,
             recipeStars = recipeStarsCache,
             starTotal = starTotalCache,
+            passiveRanks = passiveRanksCache,
         })
     end
+end)
+
+RegisterNetEvent('jp-cooktree:passiveRankUpResponse', function(result)
+    if type(result) ~= 'table' then return end
+    SendNUIMessage({
+        action = 'rankUpResponse',
+        ok = result.ok == true,
+        reason = result.reason,
+        nodeId = result.nodeId,
+        newRank = result.newRank,
+        spLeft = result.spLeft,
+        cost = result.cost,
+    })
 end)
 
 RegisterNetEvent('jp-cooktree:cookStartResponse', function(allowed, reason, recipeId)
@@ -250,6 +267,12 @@ RegisterNUICallback('selectSpec', function(data, cb)
         currentSpecId = data.specId
     end
     cb({ ok = true, currentSpec = currentSpecId })
+end)
+
+RegisterNUICallback('rankUp', function(data, cb)
+    cb({ ok = true })
+    if not data or type(data.nodeId) ~= 'string' or data.nodeId == '' then return end
+    TriggerServerEvent('jp-cooktree:requestPassiveRankUp', data.nodeId)
 end)
 
 AddEventHandler('onResourceStop', function(res)

@@ -48,3 +48,32 @@ function CookTree.FindRecipeOwner(recipeId)
     if not recipe or not recipe.unlockNode then return nil, nil end
     return recipe.unlockNode:match('^(.-):(.+)$')
 end
+
+---@param node table|nil
+---@return boolean
+function CookTree.IsStagedNode(node)
+    if not node or type(node) ~= 'table' then return false end
+    if node.nodeType ~= 'staged' then return false end
+    local mr = tonumber(node.maxRank)
+    return mr ~= nil and mr > 0
+end
+
+---@param node table|nil
+---@return integer
+function CookTree.GetNodeCostPerRank(node)
+    if not node or type(node) ~= 'table' then return 1 end
+    local c = node.costPerRank or node.spCostPerRank
+    if c == nil then return 1 end
+    c = tonumber(c)
+    if not c or c < 1 then return 1 end
+    return math.floor(c)
+end
+
+---@param nodeId string
+---@return table|nil
+function CookTree.GetNode(nodeId)
+    if type(nodeId) ~= 'string' or nodeId == '' then return nil end
+    local t = Config and Config.GeneralTree
+    if type(t) ~= 'table' then return nil end
+    return t[nodeId]
+end

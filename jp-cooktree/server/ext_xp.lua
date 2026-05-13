@@ -134,6 +134,21 @@ function CookTree.ExtXP.ConsumeSP(src, amount)
 end
 
 ---@param src number
+---@param amount number
+function CookTree.ExtXP.AddSP(src, amount)
+    if type(src) ~= 'number' or src <= 0 then return end
+    local n = tonumber(amount)
+    if not n or n <= 0 or math.floor(n) ~= n then return end
+    n = math.floor(n)
+    local ident = getIdentifier(src)
+    local sKey = kvpSpKey(ident)
+    local cur = GetResourceKvpInt(sKey)
+    if not cur or cur < 0 then cur = 0 end
+    SetResourceKvpInt(sKey, cur + n)
+    print(('[%s][XP] AddSP src=%d amount=%d total=%d'):format(resName, src, n, cur + n))
+end
+
+---@param src number
 ---@return table xp: integer, level: integer, sp: integer, nextLevelXp: number|nil
 function CookTree.ExtXP.GetAll(src)
     if type(src) ~= 'number' or src <= 0 then

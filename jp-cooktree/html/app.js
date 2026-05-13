@@ -21,6 +21,8 @@ let state = {
     recipeStars: {},
     generalTree: {},
     ranks: {},
+    passiveRanks: {},
+    selectedGeneralNodeId: null,
 };
 
 const INITIAL_VIEWBOX = { x: -1400, y: -500, w: 2800, h: 1000 };
@@ -174,20 +176,40 @@ function drawGeneralNodes() {
         if (!node || node.angle == null || node.radius == null) continue;
         const pos = polarToXY(node.angle, node.radius);
         const isRecipe = node.type === 'recipe';
-        const cls = isRecipe ? 'hex-node recipe' : 'hex-node status';
-        drawHexNode(svg, pos.x, pos.y, 36, cls);
+        const isStaged = node.nodeType === 'staged' && (node.maxRank || 0) > 0;
+        const cls = isRecipe ? 'hex-node recipe' : ('hex-node status' + (isStaged ? ' hex-interactive' : ''));
 
-        appendIcon(svg, pos.x, pos.y + 2, node.icon, 'node-icon');
+        const grp = document.createElementNS(NS, 'g');
+        grp.setAttribute('class', 'general-node-group');
+        if (isStaged) {
+            grp.style.cursor = 'pointer';
+            grp.addEventListener('mousedown', (ev) => { ev.stopPropagation(); });
+            grp.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                state.selectedGeneralNodeId = id;
+                renderEffects();
+            });
+        }
+
+        drawHexNode(grp, pos.x, pos.y, 36, cls);
+        appendIcon(grp, pos.x, pos.y + 2, node.icon, 'node-icon');
 
         const label = document.createElementNS(NS, 'text');
         label.setAttribute('x', pos.x);
         label.setAttribute('y', pos.y + 68);
         label.setAttribute('class', 'node-label');
         label.textContent = node.label || id;
-        svg.appendChild(label);
+        grp.appendChild(label);
+
+        svg.appendChild(grp);
 
         if (!isRecipe && node.maxRank && node.maxRank > 1) {
-            const rk = (state.ranks && state.ranks[id]) || 0;
+            let rk = 0;
+            if (isStaged) {
+                rk = (state.passiveRanks && state.passiveRanks[id]) || 0;
+            } else {
+                rk = (state.ranks && state.ranks[id]) || 0;
+            }
             drawRankIndicator(svg, pos.x, pos.y, rk, node.maxRank);
         }
     }
@@ -439,6 +461,8 @@ window.addEventListener('message', (ev) => {
             generalTree: data.generalTree || {},
             ranks: data.generalRanks || {},
             cookRecipeBook: data.cookRecipeBook || {},
+            passiveRanks: data.passiveRanks || {},
+            selectedGeneralNodeId: null,
         };
         viewBox = { ...INITIAL_VIEWBOX };
         render();
@@ -459,6 +483,25 @@ window.addEventListener('message', (ev) => {
         state.recipeStars = data.recipeStars || {};
         state.starTotal = typeof data.starTotal === 'number' ? data.starTotal : 0;
         state.stars = state.starTotal;
+        state.passiveRanks = data.passiveRanks || {};
+        render();
+        renderEffects();
+    } else if (data.action === 'rankUpResponse') {
+        if (data.ok) {
+            showRankUpFeedback(`ランクアップ！ → 段階 ${data.newRank}`, 'success');
+        } else {
+            let label = 'ランクアップに失敗しました';
+            switch (data.reason) {
+                case 'insufficient_sp': label = 'SP が不足しています'; break;
+                case 'max_rank': label = '最大ランクです'; break;
+                case 'unknown_node': label = 'ノードが見つかりません'; break;
+                case 'not_staged': label = 'このノードはランクアップできません'; break;
+                case 'consume_failed': label = '処理競合が発生しました、もう一度お試しください'; break;
+                case 'invalid_node': label = '無効なノードIDです'; break;
+                default: break;
+            }
+            showRankUpFeedback(label, 'denied');
+        }
         render();
         renderEffects();
     } else if (data.action === 'cookDenied') {
@@ -485,6 +528,19 @@ const effectsTotalsList = document.getElementById('effects-totals-list');
 const cookResultEl = document.getElementById('cook-result');
 
 let cookResultHideTimer = null;
+
+function showRankUpFeedback(text, kind) {
+    if (!cookResultEl) return;
+    cookResultEl.className = 'cook-result ' + (kind === 'success' ? 'success' : 'denied');
+    cookResultEl.textContent = text;
+    cookResultEl.classList.remove('hidden');
+    if (cookResultHideTimer) clearTimeout(cookResultHideTimer);
+    cookResultHideTimer = setTimeout(() => {
+        cookResultEl.classList.add('hidden');
+        cookResultEl.textContent = '';
+        cookResultHideTimer = null;
+    }, 3000);
+}
 
 function showFlashCookDenied(reason) {
     if (!cookResultEl) return;
@@ -576,6 +632,69 @@ function getRecipeStarCount(recipeId) {
     return typeof n === 'number' ? n : 0;
 }
 
+function appendStagedRankDetail(container) {
+    container.innerHTML = '';
+    const selId = state.selectedGeneralNodeId;
+    const node = selId && state.generalTree ? state.generalTree[selId] : null;
+    if (!node || node.nodeType !== 'staged' || !(node.maxRank > 0)) {
+        container.style.display = 'none';
+        return;
+    }
+    container.style.display = 'block';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'staged-detail-title';
+    nameEl.textContent = node.label || selId;
+    container.appendChild(nameEl);
+
+    const currentRank = (state.passiveRanks && state.passiveRanks[selId]) || 0;
+    const maxRank = node.maxRank || 0;
+    const costRaw = node.costPerRank != null ? node.costPerRank : (node.spCostPerRank != null ? node.spCostPerRank : 1);
+    const cost = Math.max(1, Math.floor(Number(costRaw) || 1));
+    const canRankUp = currentRank < maxRank && state.sp >= cost;
+    const atMaxRank = currentRank >= maxRank;
+
+    const rankLine = document.createElement('div');
+    rankLine.className = 'node-rank-display';
+    rankLine.textContent = `段階 ${currentRank}/${maxRank}`;
+    container.appendChild(rankLine);
+
+    const info = document.createElement('div');
+    info.className = 'node-rank-info';
+    const needSp = document.createElement('span');
+    needSp.textContent = `必要 SP: ${cost}`;
+    const leftSp = document.createElement('span');
+    leftSp.textContent = `残 SP: ${state.sp}`;
+    info.appendChild(needSp);
+    info.appendChild(leftSp);
+    container.appendChild(info);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'rankup-button' + (canRankUp ? '' : ' locked');
+    btn.disabled = !canRankUp;
+    btn.dataset.nodeId = selId;
+    btn.textContent = atMaxRank ? '最大ランク' : 'ランクアップ';
+    if (!canRankUp && !atMaxRank) {
+        btn.title = `SP が不足しています（必要 ${cost} / 残 ${state.sp}）`;
+    }
+    btn.addEventListener('click', async () => {
+        if (!canRankUp || btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = '…';
+        try {
+            await fetch(`https://${GetParentResourceName()}/rankUp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nodeId: selId }),
+            });
+        } catch (_) {
+            /* 成否表示は rankUpResponse */
+        }
+    });
+    container.appendChild(btn);
+}
+
 function renderEffects() {
     // 専門職: レシピノード（node.recipe）ごとに調理ボタン
     effectsSpecList.innerHTML = '';
@@ -644,6 +763,11 @@ function renderEffects() {
 
     // 汎用スキル（汎用ツリー）
     effectsGeneralList.innerHTML = '';
+    const stagedHost = document.createElement('div');
+    stagedHost.className = 'staged-node-detail-host';
+    effectsGeneralList.appendChild(stagedHost);
+    appendStagedRankDetail(stagedHost);
+
     let gcount = 0;
     for (const [id, node] of Object.entries(state.generalTree || {})) {
         if (!node) continue;
@@ -653,6 +777,9 @@ function renderEffects() {
         let meta = '';
         if (node.type === 'recipe') {
             meta = `SP${node.spCost != null ? node.spCost : '—'} · レシピ`;
+        } else if (node.nodeType === 'staged' && node.maxRank > 1) {
+            const rk = (state.passiveRanks && state.passiveRanks[id]) || 0;
+            meta = `段階 ${rk}/${node.maxRank}`;
         } else if (node.maxRank > 1) {
             const rk = (state.ranks && state.ranks[id]) || 0;
             meta = `段階 ${rk}/${node.maxRank}`;

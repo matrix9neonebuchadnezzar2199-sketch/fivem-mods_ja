@@ -36,6 +36,7 @@ local function pushPlayerStateToClient(src)
         sp = xpState.sp,
         xp = xpState.xp,
         nextLevelXp = xpState.nextLevelXp,
+        passiveRanks = CookTree.Passive.GetAll(src),
     })
 end
 
@@ -224,4 +225,33 @@ RegisterNetEvent('jp-cooktree:requestPlayerState', function()
     local src = source
     if not src or src <= 0 then return end
     pushPlayerStateToClient(src)
+end)
+
+RegisterNetEvent('jp-cooktree:requestPassiveRankUp', function(nodeId)
+    local src = source
+    if not src or src <= 0 then return end
+
+    if type(nodeId) ~= 'string' or nodeId == '' then
+        TriggerClientEvent('jp-cooktree:passiveRankUpResponse', src, {
+            ok = false,
+            reason = 'invalid_node',
+            nodeId = nodeId,
+        })
+        return
+    end
+
+    local result = CookTree.Passive.RankUp(src, nodeId)
+
+    TriggerClientEvent('jp-cooktree:passiveRankUpResponse', src, {
+        ok = result.ok,
+        reason = result.reason,
+        nodeId = nodeId,
+        newRank = result.newRank,
+        spLeft = result.spLeft,
+        cost = result.cost,
+    })
+
+    if result.ok then
+        pushPlayerStateToClient(src)
+    end
 end)

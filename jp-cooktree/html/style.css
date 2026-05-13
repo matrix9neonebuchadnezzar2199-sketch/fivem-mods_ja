@@ -133,6 +133,10 @@ body {
     filter: url(#silver-glow);
     pointer-events: none;
 }
+.hex-node.status.hex-interactive {
+    pointer-events: all;
+    cursor: pointer;
+}
 .hex-node.recipe {
     fill: rgba(168, 117, 66, 0.18);
     stroke: #d4a574;
@@ -410,4 +414,71 @@ body {
     background: rgba(251, 146, 60, 0.12);
     border-left: 3px solid #fb923c;
     text-shadow: 0 0 8px rgba(251, 146, 60, 0.35);
+}
+
+/* P3f: 汎用ツリー段階ノード詳細 + ランクアップ */
+.staged-node-detail-host {
+    display: none;
+    margin-bottom: 10px;
+    padding: 12px;
+    background: rgba(40, 28, 16, 0.55);
+    border: 1px solid rgba(139, 92, 246, 0.45);
+    border-radius: 6px;
+}
+.staged-detail-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: #d4823a;
+    margin-bottom: 6px;
+}
+
+.rankup-button {
+    flex-shrink: 0;
+    min-width: 100px;
+    padding: 8px 16px;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+}
+
+.rankup-button:hover:not(:disabled) {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+}
+
+.rankup-button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.rankup-button:disabled,
+.rankup-button.locked {
+    background: #555;
+    color: #888;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.node-rank-display {
+    font-size: 22px;
+    font-weight: bold;
+    color: #fbbf24;
+    margin: 12px 0 8px 0;
+    text-align: center;
+}
+
+.node-rank-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    color: #aaa;
+    margin: 8px 0;
+    padding: 0 8px;
 }
