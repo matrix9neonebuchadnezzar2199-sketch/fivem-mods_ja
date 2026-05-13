@@ -2,7 +2,7 @@ Config = Config or {}
 
 -- 全体設定（運営の主な調整項目はここ）
 Config.Cooldowns = { perRecipeSec = 60, globalSec = 5 }
-Config.Debug = false
+Config.Debug = true  -- 開発中は true。本番リリース時に false へ
 
 -- 料理専用 XP テーブル（累積 XP が閾値以上ならそのレベルに到達。キーは飛び番可）
 -- 検証向け: Lv1→2 は 100 XP（訓練レシピ 10 XP ×10 回成功でレベルアップ）
