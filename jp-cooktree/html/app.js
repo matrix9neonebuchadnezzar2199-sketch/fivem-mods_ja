@@ -155,7 +155,7 @@ function drawRankIndicator(parent, cx, cy, currentRank, maxRank) {
     if (maxRank <= 1) return;
     const dotR = 4;
     const gap = 12;
-    const dotY = cy + 52;
+    const dotY = cy - 52;
     const totalW = (maxRank - 1) * gap;
     const startX = cx - totalW / 2;
     for (let i = 0; i < maxRank; i++) {
