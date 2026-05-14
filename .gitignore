@@ -20,6 +20,8 @@ desktop.ini
 docs/
 !jp-tcgbook/docs/
 !jp-tcgbook/docs/**
+!jp-cooktree/docs/
+!jp-cooktree/docs/**
 
 # 一時・ログ
 *.log

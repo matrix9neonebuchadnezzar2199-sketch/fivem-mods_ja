@@ -5,38 +5,46 @@ local resName = GetCurrentResourceName()
 local lastUse = {}
 
 ---@param quality string 'normal' | 'critical' | 'failed'
----@param star boolean
 ---@param src number
+---@param recipeId string|nil
 ---@return table
-local function buildCookMetadata(quality, star, src)
+local function buildCookMetadata(quality, src, recipeId)
     local playerName = GetPlayerName(src)
     if type(playerName) ~= 'string' or playerName == '' then
         playerName = ('id:%d'):format(src)
     end
+    local starStage = 0
+    local starBuff = nil
+    if type(recipeId) == 'string' and recipeId ~= '' then
+        local ranks = CookTree.Passive.GetAll(src)
+        starStage = CookTree.GetRecipeStarStage(recipeId, ranks)
+        local cat = Config.RecipeStarBuff and Config.RecipeStarBuff[recipeId]
+        if type(cat) == 'table' then
+            starBuff = cat[starStage]
+        end
+    end
     return {
         quality = quality,
-        star = star == true,
         cookedBy = playerName,
         cookedAt = os.time(),
+        starStage = starStage,
+        starBuff = starBuff,
     }
 end
 
---- NUI 用: ★マップ・合計・料理 XP 状態を一括送信
+--- NUI 用: 料理 XP 状態を一括送信
 ---@param src number
 local function pushPlayerStateToClient(src)
     if not src or src <= 0 then return end
-    local ident = CookTree.Stars.GetIdentifier(src)
-    local map = CookTree.Stars.GetAll(ident)
-    local total = CookTree.Stars.GetTotal(ident)
     local xpState = CookTree.ExtXP.GetAll(src)
+    local ranks = CookTree.Passive.GetAll(src)
     TriggerClientEvent('jp-cooktree:receivePlayerState', src, {
-        recipeStars = map,
-        starTotal = total,
         level = xpState.level,
         sp = xpState.sp,
         xp = xpState.xp,
         nextLevelXp = xpState.nextLevelXp,
-        passiveRanks = CookTree.Passive.GetAll(src),
+        passiveRanks = ranks,
+        recipeUnlocked = CookTree.GetUnlockedRecipes(xpState.level, ranks),
     })
 end
 
@@ -73,7 +81,8 @@ local function handleSubmitCookResult(src, recipeId, clientSuccess)
     end
 
     local level = CookTree.ExtXP.GetLevel(src)
-    if not CookTree.IsRecipeUnlocked(recipeId, level) then
+    local ranks = CookTree.Passive.GetAll(src)
+    if not CookTree.IsRecipeUnlocked(recipeId, level, ranks) then
         print(('[%s] Unlock denied src=%d recipe=%s lv=%d'):format(resName, src, recipeId, level))
         notifyCookUi(src, recipeId, 'unlock_denied')
         return
@@ -86,7 +95,7 @@ local function handleSubmitCookResult(src, recipeId, clientSuccess)
             notifyCookUi(src, recipeId, 'error')
             return
         end
-        local metaFail = buildCookMetadata('failed', false, src)
+        local metaFail = buildCookMetadata('failed', src, recipeId)
         local addedFail = CookTree.Inv.AddItem(src, fail.item, fail.count or 1, metaFail)
         if not addedFail then
             print(('[%s] cook fail aborted: AddItem failed src=%d recipe=%s'):format(resName, src, recipeId))
@@ -108,20 +117,18 @@ local function handleSubmitCookResult(src, recipeId, clientSuccess)
     local baseExp = tonumber(recipe.exp) or 0
     local critCfg = Config.CriticalMultiplier or {}
     local expMult = 1
-    local starDelta = 1
     local isCritical = false
     local chance = tonumber(Config.CriticalChance) or 0.0
     if chance > 0 and math.random() < chance then
         isCritical = true
         expMult = tonumber(critCfg.exp) or 2
-        starDelta = tonumber(critCfg.stars) or 2
     end
 
     local metaOk
     if isCritical then
-        metaOk = buildCookMetadata('critical', true, src)
+        metaOk = buildCookMetadata('critical', src, recipeId)
     else
-        metaOk = buildCookMetadata('normal', false, src)
+        metaOk = buildCookMetadata('normal', src, recipeId)
     end
 
     local added = CookTree.Inv.AddItem(src, recipe.result.item, recipe.result.count or 1, metaOk)
@@ -135,12 +142,6 @@ local function handleSubmitCookResult(src, recipeId, clientSuccess)
     local expGain = math.floor(baseExp * expMult)
     if expGain > 0 then
         CookTree.ExtXP.AddXP(src, expGain)
-    end
-
-    local ident = CookTree.Stars.GetIdentifier(src)
-    local newStars = CookTree.Stars.Increment(ident, recipeId, starDelta)
-    if newStars then
-        print(('[%s] Star count recipe=%s new=%d (+%d) src=%d'):format(resName, recipeId, newStars, starDelta, src))
     end
 
     if isCritical then
@@ -176,7 +177,8 @@ RegisterNetEvent('jp-cooktree:requestCookStart', function(recipeId)
     end
 
     local playerLevel = CookTree.ExtXP.GetLevel(src)
-    if not CookTree.IsRecipeUnlocked(recipeId, playerLevel) then
+    local ranks = CookTree.Passive.GetAll(src)
+    if not CookTree.IsRecipeUnlocked(recipeId, playerLevel, ranks) then
         print(('[%s] cook start denied src=%d recipe=%s reason=locked lv=%d'):format(resName, src, recipeId, playerLevel))
         TriggerClientEvent('jp-cooktree:cookStartResponse', src, false, 'locked', recipeId)
         return
@@ -213,12 +215,6 @@ AddEventHandler('playerDropped', function()
     if src and src > 0 then
         lastUse[src] = nil
     end
-end)
-
-RegisterNetEvent('jp-cooktree:requestStars', function()
-    local src = source
-    if not src or src <= 0 then return end
-    pushPlayerStateToClient(src)
 end)
 
 RegisterNetEvent('jp-cooktree:requestPlayerState', function()

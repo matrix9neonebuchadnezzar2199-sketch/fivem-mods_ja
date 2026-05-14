@@ -2,7 +2,6 @@ const root = document.getElementById('root');
 const svg  = document.getElementById('tree');
 const lvEl = document.getElementById('lv');
 const spEl = document.getElementById('sp');
-const starsEl = document.getElementById('stars');
 const closeBtn = document.getElementById('close-btn');
 const popup = document.getElementById('spec-popup');
 const specList = document.getElementById('spec-list');
@@ -16,9 +15,6 @@ let state = {
     sp: 0,
     xp: 0,
     nextLevelXp: null,
-    stars: 0,
-    starTotal: 0,
-    recipeStars: {},
     generalTree: {},
     ranks: {},
     passiveRanks: {},
@@ -38,12 +34,15 @@ function polarToXY(angleDeg, radius) {
     return { x: radius * Math.cos(rad), y: radius * Math.sin(rad) };
 }
 
-function isNodeUnlocked(nodeId, nodes, level) {
+function isNodeUnlocked(specId, nodeId, nodes, level, passiveRanks) {
+    passiveRanks = passiveRanks || {};
     const node = nodes[nodeId];
     if (!node) return false;
     if (level < node.lv) return false;
     for (const req of (node.requires || [])) {
-        if (!isNodeUnlocked(req, nodes, level)) return false;
+        if (!isNodeUnlocked(specId, req, nodes, level, passiveRanks)) return false;
+        const rk = passiveRanks[`${specId}:${req}`] || 0;
+        if (rk < 1) return false;
     }
     return true;
 }
@@ -180,12 +179,9 @@ function drawGeneralNodes() {
     for (const [id, node] of Object.entries(tree)) {
         if (!node || node.angle == null || node.radius == null) continue;
         const pos = polarToXY(node.angle, node.radius);
-        const isRecipe = node.type === 'recipe';
         const isStaged = node.nodeType === 'staged' && (node.maxRank || 0) > 0;
-        let kind = null;
-        if (isStaged) kind = 'staged';
-        else if (isRecipe) kind = 'recipe_unlock';
-        const cls = isRecipe
+        const kind = isStaged ? 'staged' : null;
+        const cls = node.type === 'recipe'
             ? 'hex-node recipe hex-interactive'
             : ('hex-node status' + (isStaged ? ' hex-interactive' : ''));
 
@@ -213,13 +209,8 @@ function drawGeneralNodes() {
 
         svg.appendChild(grp);
 
-        if (!isRecipe && node.maxRank && node.maxRank > 1) {
-            let rk = 0;
-            if (isStaged) {
-                rk = (state.passiveRanks && state.passiveRanks[id]) || 0;
-            } else {
-                rk = (state.ranks && state.ranks[id]) || 0;
-            }
+        if (node.maxRank && node.maxRank > 1 && isStaged) {
+            const rk = (state.passiveRanks && state.passiveRanks[id]) || 0;
             drawRankIndicator(svg, pos.x, pos.y, rk, node.maxRank);
         }
     }
@@ -303,23 +294,24 @@ function drawSpecNodes() {
             const path = document.createElementNS(NS, 'path');
             path.setAttribute('d', `M ${a.x} ${a.y} Q ${ctrlX} ${ctrlY} ${b.x} ${b.y}`);
             path.setAttribute('class',
-                isNodeUnlocked(id, spec.nodes, state.level) ? 'edge unlocked' : 'edge');
+                isNodeUnlocked(state.currentSpec, id, spec.nodes, state.level, state.passiveRanks) ? 'edge unlocked' : 'edge');
             svg.appendChild(path);
         }
     }
 
     for (const [id, node] of Object.entries(spec.nodes)) {
         const pos = polarToXY(node.angle, node.radius);
-        const unlocked = isNodeUnlocked(id, spec.nodes, state.level);
+        const fullId = `${state.currentSpec}:${id}`;
+        const unlocked = isNodeUnlocked(state.currentSpec, id, spec.nodes, state.level, state.passiveRanks);
 
         const grp = document.createElementNS(NS, 'g');
         grp.setAttribute('class', 'spec-node-group');
-        grp.setAttribute('data-node-id', id);
+        grp.setAttribute('data-node-id', fullId);
         grp.style.cursor = 'pointer';
         grp.addEventListener('mousedown', (ev) => { ev.stopPropagation(); });
         grp.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            showPopover(id, grp, 'spec_leaf');
+            showPopover(fullId, grp, 'staged');
         });
 
         const circle = document.createElementNS(NS, 'circle');
@@ -347,6 +339,12 @@ function drawSpecNodes() {
         grp.appendChild(label);
 
         svg.appendChild(grp);
+
+        const isStaged = node.nodeType === 'staged' && (node.maxRank || 0) > 0;
+        if (node.maxRank && node.maxRank > 1 && isStaged) {
+            const rk = (state.passiveRanks && state.passiveRanks[fullId]) || 0;
+            drawRankIndicator(svg, pos.x, pos.y, rk, node.maxRank);
+        }
     }
 }
 
@@ -355,7 +353,6 @@ function render() {
     ensureDefs();
     lvEl.textContent = state.level;
     spEl.textContent = state.sp;
-    starsEl.textContent = (typeof state.starTotal === 'number' ? state.starTotal : state.stars) ?? 0;
 
     drawWeb();              // 外側の蜘蛛の巣枠（最背面）
     drawSpecNodes();       // 専門職ノード
@@ -487,9 +484,6 @@ window.addEventListener('message', (ev) => {
             sp: typeof data.sp === 'number' ? data.sp : Number(data.sp) || 0,
             xp: typeof data.xp === 'number' ? data.xp : Number(data.xp) || 0,
             nextLevelXp: data.nextLevelXp,
-            recipeStars: data.recipeStars || {},
-            starTotal: typeof data.starTotal === 'number' ? data.starTotal : (Number(data.stars) || 0),
-            stars: typeof data.starTotal === 'number' ? data.starTotal : (Number(data.stars) || 0),
             generalTree: data.generalTree || {},
             ranks: data.generalRanks || {},
             cookRecipeBook: data.cookRecipeBook || {},
@@ -501,21 +495,11 @@ window.addEventListener('message', (ev) => {
         renderEffects();
         root.classList.remove('hidden');
         if (data.cookResult) showFlashCookResult(data.cookResult);
-    } else if (data.action === 'updateStars') {
-        state.recipeStars = data.recipeStars || {};
-        state.starTotal = typeof data.starTotal === 'number' ? data.starTotal : 0;
-        state.stars = state.starTotal;
-        starsEl.textContent = state.starTotal;
-        renderEffects();
-        refreshPopoverContent();
     } else if (data.action === 'updatePlayerState') {
         state.level = typeof data.level === 'number' ? data.level : Number(data.level) || 1;
         state.sp = typeof data.sp === 'number' ? data.sp : Number(data.sp) || 0;
         state.xp = typeof data.xp === 'number' ? data.xp : Number(data.xp) || 0;
         state.nextLevelXp = data.nextLevelXp;
-        state.recipeStars = data.recipeStars || {};
-        state.starTotal = typeof data.starTotal === 'number' ? data.starTotal : 0;
-        state.stars = state.starTotal;
         state.passiveRanks = data.passiveRanks || {};
         state.recipeUnlocked = data.recipeUnlocked || state.recipeUnlocked || {};
         render();
@@ -565,7 +549,6 @@ closeBtn.addEventListener('click', close);
 const effectsPanel = document.getElementById('effects-panel');
 const effectsSpecList = document.getElementById('effects-spec-list');
 const effectsGeneralList = document.getElementById('effects-general-list');
-const effectsStarsList = document.getElementById('effects-stars-list');
 const effectsTotalsList = document.getElementById('effects-totals-list');
 const cookResultEl = document.getElementById('cook-result');
 
@@ -668,12 +651,6 @@ function findRecipeLabel(recipeId) {
     return recipeId;
 }
 
-function getRecipeStarCount(recipeId) {
-    if (!recipeId || !state.recipeStars) return 0;
-    const n = state.recipeStars[recipeId];
-    return typeof n === 'number' ? n : 0;
-}
-
 // ============ ノード詳細ポップオーバー ============
 
 // staged ノードの効果値表示（rank=0 でも現効果として表示できる文字列）
@@ -730,6 +707,34 @@ function formatNodeListNames(ids, nodes) {
     }).join('、');
 }
 
+/** @param {object} node @param {number} stage 1..max（次の段階へ上げるときのコスト） */
+function getSpCostStage(node, stage) {
+    const st = node && node.spCostStages;
+    const s = Math.floor(Number(stage) || 0);
+    if (Array.isArray(st) && s >= 1 && s <= st.length) {
+        const c = Math.floor(Number(st[s - 1]));
+        if (c >= 1) return c;
+    }
+    return Math.max(1, Math.floor(Number(node && node.spCostPerRank) || 1));
+}
+
+/** @param {string} fullNodeId */
+function resolvePopoverNode(fullNodeId) {
+    if (!fullNodeId) return null;
+    const gt = state.generalTree || {};
+    if (gt[fullNodeId]) {
+        return { scope: 'general', node: gt[fullNodeId], fullId: fullNodeId };
+    }
+    const ix = fullNodeId.indexOf(':');
+    if (ix <= 0) return null;
+    const specId = fullNodeId.slice(0, ix);
+    const localId = fullNodeId.slice(ix + 1);
+    const spec = state.specs && state.specs[specId];
+    const node = spec && spec.nodes && spec.nodes[localId];
+    if (!node) return null;
+    return { scope: 'spec', node, fullId: fullNodeId, specId, localId };
+}
+
 let activePopoverNodeId = null;
 let activePopoverIconEl = null;
 let activePopoverKind = null;
@@ -761,15 +766,13 @@ function positionPopover(popover, iconRect) {
 function showPopover(nodeId, iconEl, kind) {
     const popover = document.getElementById('node-popover');
     if (!popover) return;
+    if (kind !== 'staged') return;
     popover.innerHTML = '';
-    if (kind === 'staged') renderStagedPopover(popover, nodeId);
-    else if (kind === 'recipe_unlock') renderRecipeUnlockPopover(popover, nodeId);
-    else if (kind === 'spec_leaf') renderSpecLeafPopover(popover, nodeId);
-    else return;
+    renderStagedPopover(popover, nodeId);
     popover.classList.remove('hidden');
     activePopoverNodeId = nodeId;
     activePopoverIconEl = iconEl;
-    activePopoverKind = kind;
+    activePopoverKind = 'staged';
     const anchor = () => positionPopover(popover, getNodeIconRect(iconEl));
     anchor();
     requestAnimationFrame(anchor);
@@ -793,17 +796,11 @@ function refreshPopoverContent() {
     const popover = document.getElementById('node-popover');
     if (!popover || popover.classList.contains('hidden')) return;
     const nid = activePopoverNodeId;
-    let grp = null;
-    if (activePopoverKind === 'spec_leaf') {
-        grp = svg.querySelector('.spec-node-group[data-node-id="' + nid + '"]');
-    } else {
-        grp = svg.querySelector('.general-node-group[data-node-id="' + nid + '"]');
-    }
+    let grp = svg.querySelector('.general-node-group[data-node-id="' + nid + '"]')
+        || svg.querySelector('.spec-node-group[data-node-id="' + nid + '"]');
     activePopoverIconEl = grp;
     popover.innerHTML = '';
     if (activePopoverKind === 'staged') renderStagedPopover(popover, nid);
-    else if (activePopoverKind === 'recipe_unlock') renderRecipeUnlockPopover(popover, nid);
-    else if (activePopoverKind === 'spec_leaf') renderSpecLeafPopover(popover, nid);
     if (grp) {
         requestAnimationFrame(() => {
             positionPopover(popover, getNodeIconRect(grp));
@@ -830,40 +827,88 @@ function appendDivider(container) {
     container.appendChild(div);
 }
 
-function renderStagedPopover(container, nodeId) {
-    const node = state.generalTree && state.generalTree[nodeId];
-    if (!node) return;
+function renderStagedPopover(container, fullNodeId) {
+    const res = resolvePopoverNode(fullNodeId);
+    if (!res || !res.node) return;
 
-    const currentRank = (state.passiveRanks && state.passiveRanks[nodeId]) || 0;
+    const node = res.node;
+    const currentRank = (state.passiveRanks && state.passiveRanks[fullNodeId]) || 0;
     const maxRank = node.maxRank || 0;
-    const cost = Math.max(1, Math.floor(Number(node.spCostPerRank) || 1));
     const atMaxRank = currentRank >= maxRank;
-    const canRankUp = !atMaxRank && state.sp >= cost;
+    const costNext = !atMaxRank ? getSpCostStage(node, currentRank + 1) : 0;
+    const canRankUp = !atMaxRank && state.sp >= costNext;
 
-    appendTitleRow(container, node, nodeId);
+    appendTitleRow(container, node, fullNodeId);
 
     const rankLine = document.createElement('div');
     rankLine.className = 'popover-rank-line';
     rankLine.textContent = `段階 ${currentRank}/${maxRank}`;
     container.appendChild(rankLine);
 
+    if (res.scope === 'spec') {
+        const spec = state.specs[res.specId];
+        const sl = document.createElement('div');
+        sl.className = 'popover-rank-line';
+        sl.style.fontSize = '0.85em';
+        sl.style.opacity = '0.85';
+        sl.textContent = '専門職: ' + (spec && spec.label ? spec.label : res.specId);
+        container.appendChild(sl);
+    }
+
     appendDivider(container);
+
+    let curEffect = '—';
+    let nextEffect = null;
+    let incParen = '';
+    if (res.scope === 'general' && NODE_EFFECT_FORMAT[fullNodeId]) {
+        curEffect = formatStagedEffect(fullNodeId, currentRank);
+        if (!atMaxRank) {
+            nextEffect = formatStagedEffect(fullNodeId, currentRank + 1);
+            incParen = formatStagedIncrementParen(fullNodeId);
+        }
+    } else {
+        curEffect = currentRank < 1
+            ? '—（ツリー未投資）'
+            : `段階 ${currentRank} 反映中（品質ボーナス枠・RecipeStarBuff 連動予定）`;
+        if (!atMaxRank) {
+            nextEffect = `段階 ${currentRank + 1} へ強化（品質向上枠）`;
+        }
+    }
 
     const curRow = document.createElement('div');
     curRow.className = 'popover-effect-row';
-    curRow.innerHTML = `<span class="popover-effect-label">現効果</span><span class="popover-effect-value">${formatStagedEffect(nodeId, currentRank)}</span>`;
+    curRow.innerHTML = `<span class="popover-effect-label">現効果</span><span class="popover-effect-value">${curEffect}</span>`;
     container.appendChild(curRow);
 
-    if (!atMaxRank) {
-        const inc = formatStagedIncrementParen(nodeId);
-        const nextVal = formatStagedEffect(nodeId, currentRank + 1);
+    if (!atMaxRank && nextEffect != null) {
         const nextRow = document.createElement('div');
         nextRow.className = 'popover-effect-row';
-        const nextInner = inc
-            ? `<span class="popover-effect-label">次効果</span><span class="popover-effect-value next">${nextVal} <span class="popover-effect-delta">(${inc})</span></span>`
-            : `<span class="popover-effect-label">次効果</span><span class="popover-effect-value next">${nextVal}</span>`;
-        nextRow.innerHTML = nextInner;
+        if (incParen) {
+            nextRow.innerHTML = `<span class="popover-effect-label">次効果</span><span class="popover-effect-value next">${nextEffect} <span class="popover-effect-delta">(${incParen})</span></span>`;
+        } else {
+            nextRow.innerHTML = `<span class="popover-effect-label">次効果</span><span class="popover-effect-value next">${nextEffect}</span>`;
+        }
         container.appendChild(nextRow);
+    }
+
+    if (res.scope === 'spec') {
+        appendDivider(container);
+        const spec = state.specs[res.specId];
+        const reqRow = document.createElement('div');
+        reqRow.className = 'popover-meta';
+        reqRow.innerHTML = `<span>前提ノード</span><span>${formatNodeListNames(node.requires || [], spec.nodes)}</span>`;
+        container.appendChild(reqRow);
+        const lvRow = document.createElement('div');
+        lvRow.className = 'popover-meta';
+        lvRow.innerHTML = `<span>必要 Lv</span><span>${node.lv}（現 ${state.level}）</span>`;
+        container.appendChild(lvRow);
+    }
+
+    if (node.description) {
+        const desc = document.createElement('div');
+        desc.className = 'popover-description';
+        desc.textContent = node.description;
+        container.appendChild(desc);
     }
 
     appendDivider(container);
@@ -871,17 +916,17 @@ function renderStagedPopover(container, nodeId) {
     const metaRow = document.createElement('div');
     metaRow.className = 'popover-meta';
     metaRow.innerHTML = atMaxRank
-        ? `<span>必要 SP</span><span>—（最大）</span><span>残 SP</span><span>${state.sp}</span>`
-        : `<span>必要 SP</span><span>${cost}</span><span>残 SP</span><span>${state.sp}</span>`;
+        ? `<span>必要 SP</span><span>—（最大段階）</span><span>残 SP</span><span>${state.sp}</span>`
+        : `<span>必要 SP</span><span>${costNext}</span><span>残 SP</span><span>${state.sp}</span>`;
     container.appendChild(metaRow);
 
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'popover-button rankup' + (canRankUp ? '' : ' locked');
     btn.disabled = !canRankUp;
-    btn.textContent = atMaxRank ? '最大ランク' : 'ランクアップ';
+    btn.textContent = 'ランクアップ';
     if (!canRankUp && !atMaxRank) {
-        btn.title = `SP が不足しています（必要 ${cost} / 残 ${state.sp}）`;
+        btn.title = `SP が不足しています（必要 ${costNext} / 残 ${state.sp}）`;
     } else if (atMaxRank) {
         btn.title = '最大段階です';
     }
@@ -893,184 +938,65 @@ function renderStagedPopover(container, nodeId) {
             await fetch(`https://${GetParentResourceName()}/rankUp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nodeId }),
+                body: JSON.stringify({ nodeId: fullNodeId }),
             });
         } catch (_) { /* 結果は rankUpResponse */ }
     });
     container.appendChild(btn);
-}
-
-function renderRecipeUnlockPopover(container, nodeId) {
-    const node = state.generalTree && state.generalTree[nodeId];
-    if (!node) return;
 
     const rid = node.recipe;
-    const gTree = state.generalTree || {};
-    const hasDef = !!(state.cookRecipeBook && rid && state.cookRecipeBook[rid]);
-    const recipeOpened = rid ? isRecipeUnlockedNui(rid) : false;
-    const stars = getRecipeStarCount(rid);
-
-    appendTitleRow(container, node, nodeId);
-
-    const sub = document.createElement('div');
-    sub.className = 'popover-rank-line';
-    sub.textContent = rid ? `レシピ: ${rid}` : 'レシピ未設定';
-    container.appendChild(sub);
+    if (!rid) return;
 
     appendDivider(container);
 
-    const reqRow = document.createElement('div');
-    reqRow.className = 'popover-meta';
-    reqRow.innerHTML = `<span>前提ノード</span><span>${formatNodeListNames(node.requires || [], gTree)}</span>`;
-    container.appendChild(reqRow);
+    const hasDef = !!(state.cookRecipeBook && state.cookRecipeBook[rid]);
+    const recipeOpened = isRecipeUnlockedNui(rid);
 
-    const lvNeed = node.lv != null ? Number(node.lv) : null;
-    const lvRow = document.createElement('div');
-    lvRow.className = 'popover-meta';
-    lvRow.innerHTML = lvNeed != null
-        ? `<span>必要 Lv</span><span>${lvNeed}（現 ${state.level}）</span>`
-        : `<span>必要 Lv</span><span>—（現 ${state.level}）</span>`;
-    container.appendChild(lvRow);
-
-    if (node.description) {
-        const desc = document.createElement('div');
-        desc.className = 'popover-description';
-        desc.textContent = node.description;
-        container.appendChild(desc);
+    const cookRow = document.createElement('div');
+    cookRow.className = 'popover-meta';
+    let cookHint = '—';
+    if (currentRank < 1) {
+        cookHint = 'ツリー未解放（段階1以上で調理可）';
+    } else if (!hasDef) {
+        cookHint = 'レシピ未定義（Config.Recipes）';
+    } else if (!recipeOpened) {
+        cookHint = 'レシピ未解放（前提を満たしてください）';
+    } else {
+        cookHint = '調理可能';
     }
+    cookRow.innerHTML = `<span>調理</span><span>${cookHint}</span>`;
+    container.appendChild(cookRow);
 
     appendDivider(container);
-
-    const starRow = document.createElement('div');
-    starRow.className = 'popover-effect-row';
-    starRow.innerHTML = `<span class="popover-effect-label">★獲得</span><span class="popover-effect-value">★${stars}</span>`;
-    container.appendChild(starRow);
-
-    const unlockRow = document.createElement('div');
-    unlockRow.className = 'popover-meta';
-    unlockRow.innerHTML = `<span>調理</span><span>${recipeOpened ? '解放済み' : '未解放'}</span>`;
-    container.appendChild(unlockRow);
-
-    appendDivider(container);
-
-    const spCost = node.spCost != null ? node.spCost : '—';
-    const metaSp = document.createElement('div');
-    metaSp.className = 'popover-meta';
-    metaSp.innerHTML = `<span>ツリー解放 SP（予定）</span><span>${spCost}</span><span>残 SP</span><span>${state.sp}</span>`;
-    container.appendChild(metaSp);
 
     let btnLabel = '調理する';
     let btnDisabled = true;
     let btnTitle = '';
-    if (!hasDef) {
+    if (currentRank < 1) {
+        btnLabel = 'ツリー未解放';
+        btnTitle = '段階1以上にランクアップしてください';
+    } else if (!hasDef) {
         btnLabel = '未実装';
         btnTitle = 'Config.Recipes に未定義';
     } else if (!recipeOpened) {
         btnLabel = '未解放';
-        btnTitle = '専門職ツリーのレシピ解放後に調理可能';
+        btnTitle = 'レシピの解放条件を満たしてください';
     } else {
         btnDisabled = false;
     }
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'popover-button cook' + (btnDisabled ? ' locked' : '');
-    btn.textContent = btnLabel;
-    btn.disabled = btnDisabled;
-    if (btnTitle) btn.title = btnTitle;
-    if (rid) btn.dataset.recipeId = rid;
-    btn.addEventListener('click', () => {
+    const cookBtn = document.createElement('button');
+    cookBtn.type = 'button';
+    cookBtn.className = 'popover-button cook' + (btnDisabled ? ' locked' : '');
+    cookBtn.textContent = btnLabel;
+    cookBtn.disabled = btnDisabled;
+    if (btnTitle) cookBtn.title = btnTitle;
+    cookBtn.dataset.recipeId = rid;
+    cookBtn.addEventListener('click', () => {
         if (btnDisabled) return;
-        onCookButtonClick(rid, btn);
+        onCookButtonClick(rid, cookBtn);
     });
-    container.appendChild(btn);
-}
-
-function renderSpecLeafPopover(container, nodeId) {
-    const spec = state.specs && state.specs[state.currentSpec];
-    if (!spec || !spec.nodes) return;
-    const node = spec.nodes[nodeId];
-    if (!node) return;
-
-    appendTitleRow(container, node, nodeId);
-
-    const specLine = document.createElement('div');
-    specLine.className = 'popover-rank-line';
-    specLine.textContent = `専門職: ${spec.label}`;
-    container.appendChild(specLine);
-
-    if (spec.description) {
-        const sd = document.createElement('div');
-        sd.className = 'popover-description';
-        sd.textContent = spec.description;
-        container.appendChild(sd);
-    }
-
-    appendDivider(container);
-
-    const treeUnlocked = isNodeUnlocked(nodeId, spec.nodes, state.level);
-    const reqLine = document.createElement('div');
-    reqLine.className = 'popover-meta';
-    reqLine.innerHTML = `<span>前提ノード</span><span>${formatNodeListNames(node.requires || [], spec.nodes)}</span>`;
-    container.appendChild(reqLine);
-
-    const lvRow = document.createElement('div');
-    lvRow.className = 'popover-meta';
-    lvRow.innerHTML = `<span>必要 Lv（共通）</span><span>${node.lv}（現 ${state.level}）</span>`;
-    container.appendChild(lvRow);
-
-    if (node.description) {
-        const desc = document.createElement('div');
-        desc.className = 'popover-description';
-        desc.textContent = node.description;
-        container.appendChild(desc);
-    }
-
-    if (!node.recipe) {
-        return;
-    }
-
-    const starN = getRecipeStarCount(node.recipe);
-    appendDivider(container);
-    const starRow = document.createElement('div');
-    starRow.className = 'popover-effect-row';
-    starRow.innerHTML = `<span class="popover-effect-label">★獲得</span><span class="popover-effect-value">★${starN}</span>`;
-    container.appendChild(starRow);
-
-    appendDivider(container);
-
-    const hasDef = !!(state.cookRecipeBook && state.cookRecipeBook[node.recipe]);
-    const recipeOk = isRecipeUnlockedNui(node.recipe);
-
-    let btnLabel = '調理する';
-    let btnDisabled = false;
-    let btnTitle = '';
-    if (!treeUnlocked) {
-        btnLabel = 'ツリー未解放';
-        btnDisabled = true;
-        btnTitle = '前提ノード／Lv 条件を満たしてください';
-    } else if (!hasDef) {
-        btnLabel = '未実装';
-        btnDisabled = true;
-        btnTitle = 'Config.Recipes に未定義';
-    } else if (!recipeOk) {
-        btnLabel = '調理未解放';
-        btnDisabled = true;
-        btnTitle = 'レシピの解放条件を満たしてください';
-    }
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'popover-button cook' + (btnDisabled ? ' locked' : '');
-    btn.textContent = btnLabel;
-    btn.disabled = btnDisabled;
-    if (btnTitle) btn.title = btnTitle;
-    btn.dataset.recipeId = node.recipe;
-    btn.addEventListener('click', () => {
-        if (btnDisabled) return;
-        onCookButtonClick(node.recipe, btn);
-    });
-    container.appendChild(btn);
+    container.appendChild(cookBtn);
 }
 
 function renderEffects() {
@@ -1083,16 +1009,19 @@ function renderEffects() {
         let unlockedCount = 0;
         for (const [nodeId, node] of Object.entries(spec.nodes)) {
             if (!node.recipe) continue;
-            if (!isNodeUnlocked(nodeId, spec.nodes, state.level)) continue;
+            if (!isNodeUnlocked(state.currentSpec, nodeId, spec.nodes, state.level, state.passiveRanks)) continue;
             unlockedCount++;
+            const fullId = `${state.currentSpec}:${nodeId}`;
+            const rk = (state.passiveRanks && state.passiveRanks[fullId]) || 0;
+            const maxRank = node.maxRank || 0;
             const div = document.createElement('div');
             div.className = 'effect-item';
             const icon = node.icon ? node.icon.value : '?';
-            const starN = getRecipeStarCount(node.recipe);
+            const meta = maxRank > 1 ? `段階 ${rk}/${maxRank}` : '解放済';
             div.innerHTML = `
                 <span class="effect-item-icon">${icon}</span>
                 <span class="effect-item-label">${node.label || nodeId}</span>
-                <span class="effect-item-value">★${starN}</span>
+                <span class="effect-item-value">${meta}</span>
             `;
             effectsSpecList.appendChild(div);
         }
@@ -1123,25 +1052,6 @@ function renderEffects() {
     }
     if (acquiredCount === 0) {
         effectsGeneralList.innerHTML = '<div class="effect-item-empty">未取得（ツリーのノードアイコンをクリック）</div>';
-    }
-
-    // ★パッシブ（P3e）／レシピ別 ★ カウント（P3b）
-    effectsStarsList.innerHTML = '';
-    const starEntries = Object.entries(state.recipeStars || {}).filter(([, c]) => typeof c === 'number' && c > 0);
-    if (starEntries.length === 0) {
-        effectsStarsList.innerHTML = '<div class="effect-item-empty">調理成功でレシピごとに ★ が増えます</div>';
-    } else {
-        starEntries.sort((a, b) => b[1] - a[1]);
-        for (const [rid, cnt] of starEntries) {
-            const div = document.createElement('div');
-            div.className = 'effect-item';
-            div.innerHTML = `
-                <span class="effect-item-icon">⭐</span>
-                <span class="effect-item-label">${findRecipeLabel(rid)}</span>
-                <span class="effect-item-value">★${cnt}</span>
-            `;
-            effectsStarsList.appendChild(div);
-        }
     }
 
     // 合計ステータス（P3b で state.totals 経由に切替）

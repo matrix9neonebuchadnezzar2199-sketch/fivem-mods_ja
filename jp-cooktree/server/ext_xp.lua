@@ -1,4 +1,4 @@
--- 料理専用 XP / Level / SP（Resource KVP）。識別子は CookTree.Stars.GetIdentifier（fxmanifest で stars.lua を本ファイルより前に列挙すること）。
+-- 料理専用 XP / Level / SP（Resource KVP）。識別子は CookTree.GetPlayerIdentifier（shared/tree.lua）。
 
 CookTree = CookTree or {}
 CookTree.ExtXP = CookTree.ExtXP or {}
@@ -8,8 +8,8 @@ local resName = GetCurrentResourceName()
 ---@param src number
 ---@return string
 local function getIdentifier(src)
-    if CookTree.Stars and CookTree.Stars.GetIdentifier then
-        return CookTree.Stars.GetIdentifier(src)
+    if CookTree.GetPlayerIdentifier then
+        return CookTree.GetPlayerIdentifier(src)
     end
     return ('noid:%d'):format(type(src) == 'number' and src or 0)
 end

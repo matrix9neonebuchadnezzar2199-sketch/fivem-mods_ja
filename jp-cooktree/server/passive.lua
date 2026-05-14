@@ -1,9 +1,10 @@
 --[[
     jp-cooktree passive.lua
-    汎用ツリー段階型ノードのランク（KVP 永続化）
+    汎用ツリー + 汎用 recipe + 専門職ノードの段階ランク（KVP 永続化）
 
     KVP キー:
-      <resName>:passive_rank:<safeId>:<nodeId>  各ノードの現ランク (Int, 0〜maxRank)
+      <resName>:passive_rank:<safeId>:<sanitizedNodeId>
+    nodeId は汎用なら hp_node、専門職は western:root（: は safeNodeId で _ に正規化）
 ]]
 
 CookTree = CookTree or {}
@@ -22,15 +23,7 @@ end
 ---@param src number
 ---@return string
 local function getIdentifierForKvp(src)
-    if CookTree.Stars and CookTree.Stars.GetIdentifier then
-        return CookTree.Stars.GetIdentifier(src)
-    end
-    if type(src) ~= 'number' or src <= 0 then return 'noid:0' end
-    local ids = GetPlayerIdentifiers(src)
-    for _, id in ipairs(ids) do
-        if type(id) == 'string' and id:sub(1, 8) == 'license:' then return id end
-    end
-    return ('noid:%d'):format(src)
+    return CookTree.GetPlayerIdentifier(src)
 end
 
 ---@param src number
@@ -67,14 +60,56 @@ local function passiveRankKey(src, nodeId)
     return ('%s:passive_rank:%s:%s'):format(resName, getSafeId(src), safeNodeId(nodeId))
 end
 
+---@param node table|nil
+---@param rank integer
+---@return integer
+local function sumCostsToRank(node, rank)
+    if not node or rank < 1 then return 0 end
+    local s = 0
+    for st = 1, rank do
+        s = s + CookTree.GetNodeCostForStage(node, st)
+    end
+    return s
+end
+
+---@param nodeId string
+---@return table|nil node
+---@return string|nil kvId  KVP に使う論理 ID（: 可）
+local function resolveStagedNode(nodeId)
+    if type(nodeId) ~= 'string' or nodeId == '' then return nil, nil end
+    local n = CookTree.GetNode(nodeId)
+    if n and CookTree.IsStagedNode(n) then
+        return n, nodeId
+    end
+    local sid, nid = nodeId:match('^([^:]+):(.+)$')
+    if sid and nid then
+        local spec = Config.Specializations and Config.Specializations[sid]
+        local sn = spec and spec.nodes and spec.nodes[nid]
+        if sn and CookTree.IsStagedNode(sn) then
+            return sn, nodeId
+        end
+    end
+    return nil, nil
+end
+
 ---@return string[]
-local function listAllStagedNodeIds()
+local function listAllStagedKvIds()
     local ids = {}
     local tree = Config and Config.GeneralTree
-    if type(tree) ~= 'table' then return ids end
-    for nodeId, node in pairs(tree) do
-        if type(nodeId) == 'string' and CookTree.IsStagedNode(node) then
-            ids[#ids + 1] = nodeId
+    if type(tree) == 'table' then
+        for nodeId, node in pairs(tree) do
+            if type(nodeId) == 'string' and CookTree.IsStagedNode(node) then
+                ids[#ids + 1] = nodeId
+            end
+        end
+    end
+    for specId, spec in pairs(Config.Specializations or {}) do
+        if spec.nodes then
+            for nid, node in pairs(spec.nodes) do
+                if type(nid) == 'string' and CookTree.IsStagedNode(node) then
+                    ids[#ids + 1] = specId .. ':' .. nid
+                end
+            end
         end
     end
     return ids
@@ -94,10 +129,10 @@ end
 function CookTree.Passive.GetAll(src)
     local result = {}
     if type(src) ~= 'number' or src <= 0 then return result end
-    for _, nodeId in ipairs(listAllStagedNodeIds()) do
-        local rank = kvpGet(passiveRankKey(src, nodeId))
+    for _, kvId in ipairs(listAllStagedKvIds()) do
+        local rank = kvpGet(passiveRankKey(src, kvId))
         if rank > 0 then
-            result[nodeId] = rank
+            result[kvId] = rank
         end
     end
     return result
@@ -135,8 +170,8 @@ end
 ---@param nodeId string
 ---@return table
 function CookTree.Passive.RankUp(src, nodeId)
-    local node = CookTree.GetNode and CookTree.GetNode(nodeId)
-    if not node then
+    local node, kvId = resolveStagedNode(nodeId)
+    if not node or not kvId then
         return { ok = false, reason = 'unknown_node' }
     end
 
@@ -144,7 +179,7 @@ function CookTree.Passive.RankUp(src, nodeId)
         return { ok = false, reason = 'not_staged' }
     end
 
-    local key = passiveRankKey(src, nodeId)
+    local key = passiveRankKey(src, kvId)
     local currentRank = kvpGet(key)
     local maxRank = math.floor(tonumber(node.maxRank) or 0)
 
@@ -152,7 +187,8 @@ function CookTree.Passive.RankUp(src, nodeId)
         return { ok = false, reason = 'max_rank', newRank = currentRank }
     end
 
-    local cost = CookTree.GetNodeCostPerRank(node)
+    local nextStage = currentRank + 1
+    local cost = CookTree.GetNodeCostForStage(node, nextStage)
     local currentSp = CookTree.ExtXP.GetSP(src)
 
     if currentSp < cost then
@@ -170,7 +206,7 @@ function CookTree.Passive.RankUp(src, nodeId)
     local spLeft = CookTree.ExtXP.GetSP(src)
 
     print(('[%s][Passive] RankUp src=%d node=%s rank=%d->%d cost=%d spLeft=%d'):format(
-        resName, src, nodeId, currentRank, newRank, cost, spLeft))
+        resName, src, kvId, currentRank, newRank, cost, spLeft))
 
     CookTree.Passive.ApplyStatebag(src)
 
@@ -184,13 +220,14 @@ function CookTree.Passive.ResetAll(src)
     if type(src) ~= 'number' or src <= 0 then return 0 end
     local refundedSp = 0
 
-    for _, nodeId in ipairs(listAllStagedNodeIds()) do
-        local key = passiveRankKey(src, nodeId)
+    for _, kvId in ipairs(listAllStagedKvIds()) do
+        local key = passiveRankKey(src, kvId)
         local rank = kvpGet(key)
         if rank > 0 then
-            local node = CookTree.GetNode(nodeId)
-            local costPerRank = CookTree.GetNodeCostPerRank(node)
-            refundedSp = refundedSp + (rank * costPerRank)
+            local node = select(1, resolveStagedNode(kvId))
+            if node then
+                refundedSp = refundedSp + sumCostsToRank(node, rank)
+            end
             kvpSet(key, 0)
         end
     end

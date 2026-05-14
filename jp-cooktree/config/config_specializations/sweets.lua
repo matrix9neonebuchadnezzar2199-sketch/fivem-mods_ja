@@ -15,6 +15,9 @@ Config.Specializations.sweets = {
             icon = { type = 'emoji', value = '🍮' },
             recipe = 'pudding',
             requires = {},
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         macaron = {
             angle = 30, radius = 280, lv = 15,
@@ -22,6 +25,9 @@ Config.Specializations.sweets = {
             icon = { type = 'emoji', value = '🌈' },
             recipe = 'macaron',
             requires = { 'root' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         croquembouche = {
             angle = 150, radius = 440, lv = 40,
@@ -29,6 +35,9 @@ Config.Specializations.sweets = {
             icon = { type = 'emoji', value = '🗼' },
             recipe = 'croquembouche',
             requires = { 'macaron' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
     },
 }

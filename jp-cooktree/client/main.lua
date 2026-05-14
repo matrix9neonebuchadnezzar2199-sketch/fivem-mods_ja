@@ -13,9 +13,6 @@ local pendingCookResult = nil
 -- requestCookStart 応答待ちのレシピ ID（多重押下・競合抑止）
 local pendingCookRecipeId = nil
 
--- P3b: サーバーから返る ★（NUI オープン前に受信した分をキャッシュ）
-local recipeStarsCache = {}
-local starTotalCache = 0
 -- ext_xp: 直近の Lv / SP（requestPlayerState 応答までの表示用）
 local playerLevelCache = 1
 local playerSpCache = 0
@@ -33,7 +30,7 @@ end
 ---@return table<string, boolean>
 local function buildRecipeUnlockedMap(level)
     if CookTree and CookTree.GetUnlockedRecipes then
-        return CookTree.GetUnlockedRecipes(level) or {}
+        return CookTree.GetUnlockedRecipes(level, passiveRanksCache) or {}
     end
     return {}
 end
@@ -48,9 +45,6 @@ local function openTree()
         currentSpec = currentSpecId,
         level = playerLevelCache,
         sp = playerSpCache,
-        stars = starTotalCache,
-        recipeStars = recipeStarsCache,
-        starTotal = starTotalCache,
         generalTree = Config.GeneralTree,
         generalRanks = {},
         cookRecipeBook = buildCookRecipeBook(),
@@ -122,18 +116,11 @@ end
 
 RegisterNetEvent('jp-cooktree:receivePlayerState', function(data)
     if type(data) ~= 'table' then return end
-    recipeStarsCache = type(data.recipeStars) == 'table' and data.recipeStars or {}
-    if type(data.starTotal) == 'number' then
-        starTotalCache = data.starTotal
-    else
-        starTotalCache = 0
-        for _, c in pairs(recipeStarsCache) do
-            if type(c) == 'number' then starTotalCache = starTotalCache + c end
-        end
-    end
     playerLevelCache = tonumber(data.level) or 1
     playerSpCache = tonumber(data.sp) or 0
     passiveRanksCache = type(data.passiveRanks) == 'table' and data.passiveRanks or {}
+    local recipeUnlocked = type(data.recipeUnlocked) == 'table' and data.recipeUnlocked
+        or buildRecipeUnlockedMap(playerLevelCache)
     if isOpen then
         SendNUIMessage({
             action = 'updatePlayerState',
@@ -141,10 +128,8 @@ RegisterNetEvent('jp-cooktree:receivePlayerState', function(data)
             sp = playerSpCache,
             xp = tonumber(data.xp) or 0,
             nextLevelXp = data.nextLevelXp,
-            recipeStars = recipeStarsCache,
-            starTotal = starTotalCache,
             passiveRanks = passiveRanksCache,
-            recipeUnlocked = buildRecipeUnlockedMap(playerLevelCache),
+            recipeUnlocked = recipeUnlocked,
         })
     end
 end)

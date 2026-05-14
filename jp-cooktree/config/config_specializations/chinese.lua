@@ -15,6 +15,9 @@ Config.Specializations.chinese = {
             icon = { type = 'emoji', value = '🍳' },
             recipe = 'egg_fried_rice',
             requires = {},
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         mapo = {
             angle = 30, radius = 280, lv = 15,
@@ -22,6 +25,9 @@ Config.Specializations.chinese = {
             icon = { type = 'emoji', value = '🌶️' },
             recipe = 'mapo_tofu',
             requires = { 'root' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         peking = {
             angle = 150, radius = 440, lv = 40,
@@ -29,6 +35,9 @@ Config.Specializations.chinese = {
             icon = { type = 'emoji', value = '🦆' },
             recipe = 'peking_duck',
             requires = { 'mapo' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
     },
 }

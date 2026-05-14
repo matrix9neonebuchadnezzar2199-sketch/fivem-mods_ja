@@ -19,39 +19,44 @@
     </thead>
     <tbody>
       <tr>
-        <td>18:06</td>
-        <td>ノードポップオーバー確定仕様（次効果増分・recipeUnlocked・再アンカー）</td>
-        <td><span class="commit-hash">538bad1</span></td>
-        <td><a href="#entry-1806">詳細</a></td>
+        <td>23:50</td>
+        <td>B-2 統合実装（★廃止・recipe/spec staged・段階メタ枠）</td>
+        <td><span class="commit-hash">1156a88</span></td>
+        <td><a href="#entry-b2">詳細</a></td>
       </tr>
     </tbody>
   </table>
 </section>
 
 <main>
-<section id="entry-1806" class="entry">
-  <h2>ノードポップオーバー確定仕様の反映</h2>
+<section id="entry-b2" class="entry">
+  <h2>B-2 統合実装（★カウンタ廃止・staged 統一・RecipeStarBuff 枠）</h2>
   <div class="entry-meta">
-    <span>時刻 <strong>18:06 JST</strong></span>
-    <span>Commit <strong class="commit-hash">538bad1</strong></span>
+    <span>時刻 <strong>23:50 JST</strong></span>
+    <span>Commit <strong class="commit-hash" id="b2-commit">1156a88</strong></span>
   </div>
 
   <h3>変更ファイル</h3>
   <ul class="changes">
-    <li><span class="op">📝</span> <code>jp-cooktree/html/app.js</code>（staged 次効果の増分括弧、汎用 recipe ポップオーバー、全 spec ノードクリック、<code>data-node-id</code> 再アンカー、<code>recipeUnlocked</code>、ランクアップ即時反映）</li>
-    <li><span class="op">📝</span> <code>jp-cooktree/html/style.css</code>（ポップオーバー背景 #1f1612、<code>.popover-effect-delta</code>、recipe 六角の pointer-events）</li>
-    <li><span class="op">📝</span> <code>jp-cooktree/html/index.html</code>（<code>#node-popover</code> を body 直下へ移動）</li>
-    <li><span class="op">📝</span> <code>jp-cooktree/client/main.lua</code>（<code>CookTree.GetUnlockedRecipes</code> を NUI へ <code>recipeUnlocked</code> として送信）</li>
-    <li><span class="op">➕</span> <code>jp-cooktree/docs/2026-05-14_開発日記.html</code>（本日ファイル）</li>
+    <li><span class="op">❌</span> <code>jp-cooktree/server/stars.lua</code>（削除）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/fxmanifest.lua</code>（stars 削除・shared に config_star_buffs・version 1.1.0）</li>
+    <li><span class="op">➕</span> <code>jp-cooktree/config/config_star_buffs.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-cooktree/config/config_recipes.lua</code>（homemade_sauce / caesar_salad 検証用）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/shared/tree.lua</code>（IsRecipeUnlocked 汎用ツリー分岐・GetRecipeStarStage）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/server/main.lua</code>（buildCookMetadata に starStage/starBuff）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/client/main.lua</code>（GetUnlockedRecipes に passiveRanks・recipeUnlocked 優先）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/app.js</code>（staged 統一ポップオーバー・spec 複合 ID・段階コスト）</li>
+    <li><span class="op">📝</span> その他 B-2 関連（config specializations / passive / ext_xp / index 等・本セッション前後の差分）</li>
   </ul>
 
   <h3>概要</h3>
-  <p>確定設計に沿い、staged ポップオーバーで「次効果」を 1 段増分の括弧付きで表示し、最大ランク時は次効果行を省略して SP 行と無効化されたランクアップボタンを表示。汎用ツリーの recipe ノードは解放条件・★・調理ボタンをポップオーバーに集約し、調理可否は <code>recipeUnlocked</code>（Lua の <code>GetUnlockedRecipes</code> と整合）で判定。SVG 再描画後も <code>data-node-id</code> でグループを引き直してポップオーバー位置を更新。専門職リーフはレシピが無い場合は情報のみ（選択ボタンなし）。</p>
+  <p>★カウンタ（<code>stars.lua</code>）を廃止し、recipe / spec の段階は既存 KVP 形式の <code>passive_rank</code> に統一。前提ノードは段階1以上、汎用ツリーの recipe ノードは SP のみで段階解放（<code>IsRecipeUnlocked</code> の unlockNode なし分岐）。NUI は専門職ノードを <code>western:root</code> 形式でランクアップし、ポップオーバーにランクアップ＋調理を統合。</p>
+  <p><code>Config.RecipeStarBuff</code> は枠のみ新設し、調理 metadata に <code>starStage</code> / <code>starBuff</code> を付与。<code>fxmanifest</code> を 1.1.0 に更新。</p>
 
   <h3>未完了 / 次タスク</h3>
   <ul>
-    <li>汎用ツリー recipe の SP 解放本体（サーバー権威）と NUI の「予定」表記の置き換え</li>
-    <li>調理クールダウン残り秒の NUI 同期（任意）</li>
+    <li><code>RecipeStarBuff</code> のレシピ別・段階別定義とゲーム内効果反映</li>
+    <li>実機チェックリスト（<code>cook_reset_sp</code>・metadata・KVP 復元など）</li>
   </ul>
 </section>
 </main>

@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'CookTree'
 description 'Cooking skill tree - POE-style'
-version '1.0.0'
+version '1.1.0'
 
 -- ox_inventory: アイテム付与。P3c: Glitch Minigames（jp-glitch28 / リネーム時は Config で合わせる）
 dependencies {
@@ -15,6 +15,7 @@ dependencies {
 shared_scripts {
     'config/config_main.lua',
     'config/config_buffs.lua',
+    'config/config_star_buffs.lua',
     'config/config_specializations/western.lua',
     'config/config_specializations/chinese.lua',
     'config/config_specializations/sweets.lua',
@@ -25,7 +26,6 @@ shared_scripts {
 
 server_scripts {
     'server/inventory.lua',
-    'server/stars.lua',
     'server/ext_xp.lua',
     'server/passive.lua',
     'server/main.lua',

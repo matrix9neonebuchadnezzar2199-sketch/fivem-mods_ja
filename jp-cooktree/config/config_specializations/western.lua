@@ -16,6 +16,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🍳' },
             recipe = 'omurice_special',
             requires = {},
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         soup_basic = {
             angle = 315, radius = 200, lv = 5,
@@ -23,6 +26,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🍲' },
             recipe = 'onion_gratin_soup',
             requires = { 'root' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         salad_basic = {
             angle = 225, radius = 200, lv = 8,
@@ -30,6 +36,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🥗' },
             recipe = 'caesar_salad',
             requires = { 'root' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         pasta_basic = {
             angle = 345, radius = 280, lv = 12,
@@ -37,6 +46,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🍝' },
             recipe = 'carbonara',
             requires = { 'soup_basic' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         risotto = {
             angle = 195, radius = 280, lv = 15,
@@ -44,6 +56,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🍚' },
             recipe = 'mushroom_risotto',
             requires = { 'salad_basic' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         steakhouse = {
             angle = 30, radius = 280, lv = 20,
@@ -51,6 +66,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🥩' },
             recipe = 'harami_aged',
             requires = { 'pasta_basic' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         foie_gras = {
             angle = 60, radius = 360, lv = 30,
@@ -58,6 +76,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🦆' },
             recipe = 'foie_gras',
             requires = { 'steakhouse' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         bouillabaisse = {
             angle = 165, radius = 360, lv = 35,
@@ -65,6 +86,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🐟' },
             recipe = 'bouillabaisse',
             requires = { 'risotto' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         truffle_pasta = {
             angle = 300, radius = 360, lv = 40,
@@ -72,6 +96,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🍄' },
             recipe = 'truffle_tagliolini',
             requires = { 'pasta_basic' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
         caviar_master = {
             angle = 130, radius = 440, lv = 50,
@@ -79,6 +106,9 @@ Config.Specializations.western = {
             icon = { type = 'emoji', value = '🍣' },
             recipe = 'caviar_phantom',
             requires = { 'bouillabaisse', 'foie_gras' },
+            nodeType = 'staged',
+            maxRank = 5,
+            spCostStages = { 2, 3, 4, 5, 6 },
         },
     },
 }

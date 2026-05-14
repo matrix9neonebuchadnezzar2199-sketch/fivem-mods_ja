@@ -20,4 +20,35 @@ Config.Recipes = {
             },
         },
     },
+
+    -- 汎用ツリー recipe_sauce ノード（unlockNode なし → GeneralTree の段階で解放）
+    homemade_sauce = {
+        label           = '自家製デミグラスソース',
+        result          = { item = 'homemade_sauce', count = 1 },
+        failureResult   = { item = 'failed_dish', count = 1 },
+        exp             = 5,
+        stages = {
+            {
+                export = 'StartSkillCheckGame',
+                label  = '濃度を見る',
+                args   = { { 'E', 'F', 'R' }, 60, 15000, 18, 5, 1, true },
+            },
+        },
+    },
+
+    -- 西欧 salad_basic ノード段階1以上 + Lv/前提ツリー（IsRecipeUnlocked）
+    caesar_salad = {
+        label           = 'シーザーサラダ',
+        unlockNode      = 'western:salad_basic',
+        result          = { item = 'caesar_salad', count = 1 },
+        failureResult   = { item = 'failed_dish', count = 1 },
+        exp             = 8,
+        stages = {
+            {
+                export = 'StartSkillCheckGame',
+                label  = 'ドレッシングを合わせる',
+                args   = { { 'E', 'F', 'R' }, 62, 15000, 18, 5, 1, true },
+            },
+        },
+    },
 }
