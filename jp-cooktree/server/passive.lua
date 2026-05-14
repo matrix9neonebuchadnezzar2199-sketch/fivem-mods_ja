@@ -103,6 +103,34 @@ function CookTree.Passive.GetAll(src)
     return result
 end
 
+--- 段階型パッシブの合算値を Player Statebag に反映（他リソースが参照可能）
+---@param src number
+function CookTree.Passive.ApplyStatebag(src)
+    if type(src) ~= 'number' or src <= 0 then return end
+    local player = Player(src)
+    if not player or not player.state then return end
+
+    local armorNode = CookTree.GetNode and CookTree.GetNode('armor_cap_node')
+    local armorRank = CookTree.Passive.GetRank(src, 'armor_cap_node')
+    local armorBonus = 0
+    local armorEpr = armorNode and tonumber(armorNode.effectPerRank)
+    if armorEpr and armorEpr ~= 0 then
+        armorBonus = math.floor(armorRank * armorEpr)
+    end
+    player.state:set('cooktree:armor_cap_bonus', armorBonus, true)
+
+    local hpNode = CookTree.GetNode and CookTree.GetNode('hp_node')
+    local hpRank = CookTree.Passive.GetRank(src, 'hp_node')
+    local hpBonus = 0
+    local hpEpr = hpNode and tonumber(hpNode.effectPerRank)
+    if hpEpr and hpEpr ~= 0 then
+        hpBonus = math.floor(hpRank * hpEpr)
+    end
+    player.state:set('cooktree:hp_bonus', hpBonus, true)
+
+    print(('[%s][State] src=%d armor_cap_bonus=%d hp_bonus=%d'):format(resName, src, armorBonus, hpBonus))
+end
+
 ---@param src number
 ---@param nodeId string
 ---@return table
@@ -144,6 +172,8 @@ function CookTree.Passive.RankUp(src, nodeId)
     print(('[%s][Passive] RankUp src=%d node=%s rank=%d->%d cost=%d spLeft=%d'):format(
         resName, src, nodeId, currentRank, newRank, cost, spLeft))
 
+    CookTree.Passive.ApplyStatebag(src)
+
     return { ok = true, newRank = newRank, spLeft = spLeft, cost = cost }
 end
 
@@ -170,6 +200,9 @@ function CookTree.Passive.ResetAll(src)
     end
 
     print(('[%s][Passive] Reset src=%d refundedSp=%d'):format(resName, src, refundedSp))
+
+    CookTree.Passive.ApplyStatebag(src)
+
     return refundedSp
 end
 

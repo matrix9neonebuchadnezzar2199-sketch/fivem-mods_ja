@@ -4,7 +4,7 @@ lua54 'yes'
 
 author 'CookTree'
 description 'Cooking skill tree - POE-style'
-version '0.9.1'
+version '1.0.0'
 
 -- ox_inventory: アイテム付与。P3c: Glitch Minigames（jp-glitch28 / リネーム時は Config で合わせる）
 dependencies {

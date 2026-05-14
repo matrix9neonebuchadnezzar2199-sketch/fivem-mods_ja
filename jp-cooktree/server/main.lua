@@ -227,6 +227,47 @@ RegisterNetEvent('jp-cooktree:requestPlayerState', function()
     pushPlayerStateToClient(src)
 end)
 
+AddEventHandler('playerJoining', function()
+    local joiningSrc = source
+    SetTimeout(2000, function()
+        if type(joiningSrc) == 'number' and joiningSrc > 0 and GetPlayerName(joiningSrc) then
+            CookTree.Passive.ApplyStatebag(joiningSrc)
+        end
+    end)
+end)
+
+AddEventHandler('onResourceStart', function(resourceName)
+    if resourceName ~= resName then return end
+    SetTimeout(1000, function()
+        for _, playerId in ipairs(GetPlayers()) do
+            local src = tonumber(playerId)
+            if src then
+                CookTree.Passive.ApplyStatebag(src)
+            end
+        end
+    end)
+end)
+
+if Config and Config.Debug then
+    RegisterCommand('cook_show_state', function(source)
+        local src = source
+        if src == 0 then
+            print(('[%s] cook_show_state はプレイヤーから実行してください'):format(resName))
+            return
+        end
+        local player = Player(src)
+        if not player or not player.state then return end
+        local armor = player.state['cooktree:armor_cap_bonus'] or 0
+        local hp = player.state['cooktree:hp_bonus'] or 0
+        TriggerClientEvent('chat:addMessage', src, {
+            color = { 100, 200, 255 },
+            multiline = false,
+            args = { '[jp-cooktree]', ('armor_cap_bonus=%d / hp_bonus=%d'):format(armor, hp) },
+        })
+        print(('[%s][State] cook_show_state src=%d armor_cap_bonus=%d hp_bonus=%d'):format(resName, src, armor, hp))
+    end, false)
+end
+
 RegisterNetEvent('jp-cooktree:requestPassiveRankUp', function(nodeId)
     local src = source
     if not src or src <= 0 then return end
