@@ -25,10 +25,22 @@
         <td><a href="#entry-2015">詳細</a></td>
       </tr>
       <tr>
+        <td>追記</td>
+        <td>Statebag（armor_cap_node + hp_node）</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-statebag">詳細</a></td>
+      </tr>
+      <tr>
         <td>21:22</td>
         <td>A-2 コスト体系統一 + status 系 staged 化（14 ノード）</td>
-        <td><span class="commit-hash">pending</span></td>
+        <td><span class="commit-hash">4fd3243</span></td>
         <td><a href="#entry-2122">詳細</a></td>
+      </tr>
+      <tr>
+        <td>22:37</td>
+        <td>ノード詳細をポップオーバー化 + 右パネル整理</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-2237">詳細</a></td>
       </tr>
     </tbody>
   </table>
@@ -63,6 +75,43 @@
   <ul>
     <li>Statebag 値を <code>SetPedMaxHealth</code> 等へ適用する処理（他リソースまたは本 MOD 拡張）</li>
     <li>P3e / P3d など横展開</li>
+  </ul>
+</section>
+
+<section id="entry-statebag" class="entry">
+  <h2>Statebag 実装（armor_cap_node + hp_node）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>追記 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-cooktree/config/config_general.lua</code>（<code>effectPerRank</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/server/passive.lua</code>（<code>ApplyStatebag</code>、RankUp / ResetAll から呼び出し）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/server/main.lua</code>（<code>playerJoining</code> / <code>onResourceStart</code>、<code>cook_show_state</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/docs/2026-05-13_開発日記.html</code>（本追記）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>パッシブノードのランクを <code>Player(src).state</code> に反映。他リソース・クライアントは <code>cooktree:armor_cap_bonus</code> および <code>cooktree:hp_bonus</code> を参照可能（レプリケーション有効）。jp-cooktree 自身は書き込みのみ。実ゲーム値への適用は別リソースの責務。</p>
+
+  <h3>実装メモ（前ターン提案との差分）</h3>
+  <ul>
+    <li><code>ApplyStatebag</code> 内で <code>GetAll(src)</code> ではなく <code>GetRank</code> を直読み（0 ランクも明示扱い、動作同一）</li>
+    <li><code>playerJoining</code> ハンドラ先頭で <code>local joiningSrc = source</code> を即キャプチャ（<code>SetTimeout</code> 越しに <code>source</code> が他イベントで上書きされる事故防止）</li>
+    <li><code>cook_show_state</code> エラー文言を <code>('[%s]'):format(resName)</code> 化、<code>chat:addMessage</code> に <code>multiline = false</code> 明示</li>
+  </ul>
+
+  <h3>検証メモ</h3>
+  <ul>
+    <li>ランクアップ直後・<code>restart jp-cooktree</code> 直後・再接続後に <code>[State]</code> ログで数値が期待通りか確認する</li>
+    <li><code>Config.Debug</code> 時 <code>cook_show_state</code> でチャット＋サーバログ確認</li>
+  </ul>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>他 staged ノードの <code>effectPerRank</code> と Statebag キーを <code>ApplyStatebag</code> に段階的に追加</li>
   </ul>
 </section>
 
@@ -102,6 +151,61 @@
   <ul>
     <li>A-1（Statebag）の残ノード対応（<code>crit / exp / cooldown</code> ほか）</li>
     <li>仕様書 v1.0 を <code>docs/specification_v1.0.md</code> 等に保存（任意）</li>
+  </ul>
+</section>
+
+<section id="entry-2237" class="entry">
+  <h2>ノード詳細をポップオーバー化 + 右パネル整理</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>22:37 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-cooktree/html/index.html</code>（<code>#node-popover</code> 追加）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/style.css</code>（<code>.node-popover</code> 系スタイル、旧 staged 詳細・cook ブロック CSS 撤去）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/app.js</code>（<code>showPopover</code>／<code>render*Popover</code>、staged / recipe_unlock / spec_leaf 対応、右パネル再構成）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/docs/2026-05-13_開発日記.html</code>（本追記）</li>
+  </ul>
+
+  <h3>仕様（決定事項）</h3>
+  <ul>
+    <li><strong>Q1=b'</strong>：右パネルの汎用スキルセクションは <em>取得済み（rank≥1）のみ</em> リスト表示。詳細パネル廃止。</li>
+    <li><strong>Q2=α</strong>：ポップオーバーは「現効果 / 次効果」を並列表示（<code>NODE_EFFECT_FORMAT</code> で各 staged ノードの単位付き文字列を生成）。</li>
+    <li><strong>Q3=i</strong>：アイコン右側固定、画面端で左反転（<code>positionPopover</code>）。</li>
+    <li><strong>Q4=p / Q5=II</strong>：staged / recipe_unlock / spec_leaf すべてポップオーバー対応。spec_leaf は調理ボタンをポップオーバー内に統合。</li>
+    <li><strong>Q6=X</strong>：外クリック（<code>document.mousedown</code>）で閉じる。</li>
+    <li><strong>確認事項の決定</strong>：中央スペックハブは現行の選択ポップアップを維持（spec 切替の動線確保）。spec leaf は <em>右パネル調理ボタン削除、ポップオーバー一本化</em>。</li>
+  </ul>
+
+  <h3>挙動</h3>
+  <ul>
+    <li><strong>staged ノード</strong>：現効果（<code>effectPerRank × rank</code> ベース）／次効果／必要 SP・残 SP／ランクアップボタン（SP 不足・最大ランク時は無効化）。</li>
+    <li><strong>recipe_unlock ノード（6）</strong>：情報表示のみ（必要 SP・description 表示）。SP 消費による解放は B-4 で実装予定。</li>
+    <li><strong>spec_leaf ノード</strong>：レシピ名・★カウント・必要 Lv／調理ボタン（Lv 未到達・未実装時は無効化）。調理フローは既存 <code>onCookButtonClick</code> に委譲。</li>
+    <li><strong>右パネル「🎯 専門職スキル」</strong>：Lv 解放済みのレシピのみ <code>[icon] ラベル ★N</code> の情報行を表示（調理ボタンなし）。</li>
+    <li><strong>右パネル「⚙️ 汎用スキル」</strong>：staged の rank≥1 のみ <code>[icon] ラベル 段階 X/Y</code> を表示。</li>
+    <li><strong>rankUpResponse / updatePlayerState 後</strong>：<code>refreshPopoverContent()</code> でポップオーバー中身のみ作り直し（位置維持、SVG 再描画で <code>iconEl</code> が無効化されるため）。</li>
+  </ul>
+
+  <h3>クリーンアップ</h3>
+  <p>P3f で導入した <code>.staged-node-detail-host</code>／<code>.rankup-button</code>／<code>.node-rank-display</code>／<code>.node-rank-info</code> および旧 cook ブロック関連の CSS（<code>.effect-cook-block</code>／<code>.cook-button</code>系）を撤去。<code>appendStagedRankDetail</code> 関数と <code>state.selectedGeneralNodeId</code> も削除（このターンの変更で孤児化したため）。</p>
+
+  <h3>検証メモ</h3>
+  <ul>
+    <li>staged: <code>hp_node</code> クリック → 現効果0/次効果+5HP、ランクアップで段階 1/5、リストに追加。</li>
+    <li>recipe_unlock: <code>recipe_sauce</code> クリック → 情報表示、ボタン無し。</li>
+    <li>spec_leaf: 特製オムライス クリック → ★数・必要 Lv・調理ボタン、調理実行可能。</li>
+    <li>画面右端ノード → ポップオーバー左反転表示。外クリックで閉じる。再度別ノードで新位置に再表示。</li>
+    <li>中央ハブクリック → 既存の選択ポップアップ（変更なし）。</li>
+  </ul>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>A-1 Statebag コミット 2（<code>server/main.lua</code>・<code>server/passive.lua</code>・<code>fxmanifest 1.0.0</code>）</li>
+    <li>B-4: recipe_unlock ノードに SP 消費の解放ボタンを実装</li>
+    <li>必要なら zoom/pan 時のポップオーバー自動 hide（現状は固定位置のまま残る）</li>
   </ul>
 </section>
 </main>
