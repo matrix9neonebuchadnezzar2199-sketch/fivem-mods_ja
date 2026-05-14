@@ -1,0 +1,1 @@
+-- ヴェガ NPC 配置・制御（INSTRUCTION-009）

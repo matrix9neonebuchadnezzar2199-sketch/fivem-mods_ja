@@ -1,0 +1,128 @@
+# MERIDIAN-9 / Project JANUS（jp-meridian9）
+
+**MERIDIAN-9** は、FiveM 上で動作する **次元探査・エクストラクション型ミッション** の骨格リソースです。  
+現段階（v0.1.0-jp）は **設定・フレームワーク検出・NUI 最小表示・oxmysql 永続化（契約/統計/ログ）** までを含む **M0〜M1 スキャフォールド** であり、任務ロジック本体はロードマップ（`docs/milestones.md`）に従い順次実装します。
+
+**ESX / QBCore / Qbox は必須にしません。** 未導入環境では Standalone として起動し、報酬は `Config.Reward.standaloneMoneyEvent` または手動付与案内にフォールバックします。  
+**永続化のため oxmysql は必須**です（`fxmanifest.lua` の `dependencies` に記載）。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
+
+---
+
+## 前提条件
+
+- FiveM サーバー（`fx_version` `cerulean` 以上）
+- **oxmysql**（必須）：DB 接続に使用。未導入の場合は [overextended/oxmysql](https://github.com/overextended/oxmysql) を `resources` に配置し、`server.cfg` で `ensure oxmysql` を **jp-meridian9 より前**に記述すること。
+- MySQL 5.7.8+ または MariaDB 10.3+（`JSON` 型利用のため）
+- 初回導入時に **`sql/install.sql`** を対象データベースに流し込むこと。
+
+### DB スキーマ初期化
+
+```bash
+mysql -u <ユーザー> -p <DB名> < sql/install.sql
+```
+
+実行後、`mrd9_contracts` / `mrd9_stats` / `mrd9_mission_logs` の 3 テーブルが作成されます。
+
+---
+
+## 特徴
+
+- **Standalone（フレームワーク）** … ESX / QB / Qbox は **必須にしない**。`dependencies` にフレームワークは書かない。
+- **oxmysql 必須** … 契約・統計・ミッション履歴の永続化のため **`dependencies { 'oxmysql' }`** を採用する。
+- **ソフト検出** … `server/framework.lua` が ESX / QB / Qbox を検出し、通貨付与を切り替え
+- **運営者向け `config.lua` 集約** … 座標・難易度・報酬方式を 1 ファイルで調整可能（各項目に日本語コメント）
+- **イベント命名** … `jp-meridian9:アクション名`
+- **コマンド接頭辞** … `/m9_` 系（`config.lua` の `Config.Commands` で名前変更可）
+
+---
+
+## 導入
+
+1. 本フォルダを `resources` 配下に配置する（例: `resources/[jp-mods]/jp-meridian9/`）。
+2. `server.cfg` に追加:
+
+   ```cfg
+   ensure jp-meridian9
+   ```
+
+3. サーバーで `refresh` のあと `ensure jp-meridian9`（またはサーバー再起動）。
+4. クライアント接続後、F8 に `[jp-meridian9] resource loaded` が出ることを確認。
+
+**フレームワーク依存はありません。** 通知はネイティブのフィードを使用（`ox_lib` 不要）。
+
+---
+
+## コマンド
+
+| コマンド | 内容 |
+| -------- | ---- |
+| `/m9_stats` | 自分の統計（未実装・プレースホルダ。`Config.Commands.stats` で変更可） |
+| `/m9_test_bucket` | デバッグ用バケット転送（**`Config.Debug == true` のときのみ**登録） |
+| `/m9_sign_me` | DB 契約テスト（**`Config.Debug == true` のみ**。`MRD9.Contract.Sign`） |
+| `/m9_check_contract` | 契約行の表示（**Debug のみ**） |
+| `/m9_my_stats` | `mrd9_stats` の表示（**Debug のみ**） |
+
+予定（README 追記予定）:
+
+- `/m9_call` … 任務呼び出し・ゲート連携（実装後に表を更新）
+
+---
+
+## 設定
+
+主な項目は `config.lua` 内のセクション見出しに従ってください。
+
+| セクション | 内容 |
+| ---------- | ---- |
+| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ |
+| `Config.Gate` / `Config.SiteNine` | 転送・天候・時刻演出 |
+| `Config.Party` / `Config.Mission` | 人数・時間・ルーティングバケット帯 |
+| `Config.Zombies` / `Config.Items` | 敵ウェーブと回収アイテム定義 |
+| `Config.Reward` | `paymentType` / `standaloneMoneyEvent` |
+| `Config.HUD` / `Config.Commands` | HUD 周期・コマンド名 |
+
+---
+
+## プロジェクト構成
+
+```
+jp-meridian9/
+├── fxmanifest.lua
+├── README.md
+├── LICENSE
+├── config.lua
+├── locales/ja.lua
+├── shared/utils.lua
+├── client/          … クライアント各モジュール（プレースホルダ含む）
+├── server/          … サーバー（framework.lua で FW 検出）
+├── html/            … NUI（ロゴ・将来 HUD）
+├── sql/install.sql  … DB（今後 INSTRUCTION-006 で拡張）
+├── image/           … 素材保管（ビルド用コピー元）
+└── docs/            … 設計・マイルストーン・台本・`FORMAL_POLICIES.md`
+```
+
+---
+
+## トラブルシューティング
+
+| 現象 | 確認 |
+| ---- | ---- |
+| NUI が真っ白 | `fxmanifest.lua` の `files` に `html/*` と `html/assets/*` が含まれているか |
+| Linux 本番で画像が出ない | パス・拡張子の大文字小文字、`files` 列挙漏れ |
+| Standalone で報酬が入らない | 想定どおり。`Config.Reward.standaloneMoneyEvent` を設定するか手動付与 |
+| フレームワーク検出が想定と違う | 起動順・リソース名（`es_extended` / `qb-core` / `qbx_core`）を確認 |
+
+---
+
+## 開発運用（本 MOD 専用）
+
+- **開発日記**：`jp-meridian9/YYYY-MM-DD_開発日記.md`（MOD 直下・Markdown）。リポジトリ既定の `docs/*.html` 日記は本 MOD では使わない。
+- **正式方針・例外規約・INSTRUCTION 前提**：`docs/FORMAL_POLICIES.md` を参照（日記配置、グローバル許容、`fxmanifest` 補足、画像暫定、INSTRUCTION-006/019 メモ）。
+
+---
+
+## 作者・バージョン
+
+- **作者:** JP-Mods  
+- **バージョン:** `fxmanifest.lua` の `version` フィールドと同期（現在 `0.1.0-jp`）  
+- **ライセンス:** MIT（`LICENSE` 参照）

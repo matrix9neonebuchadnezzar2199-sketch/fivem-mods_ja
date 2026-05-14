@@ -1,0 +1,1 @@
+-- 対話 UI / シーケンス（INSTRUCTION-009）

@@ -1,0 +1,1 @@
+-- party: サーバー側パーティ（INSTRUCTION-010 で実装予定）

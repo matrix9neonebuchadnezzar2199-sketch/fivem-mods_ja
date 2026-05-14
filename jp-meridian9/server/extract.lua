@@ -1,0 +1,1 @@
+-- extract: 脱出処理（INSTRUCTION-013 で実装予定）

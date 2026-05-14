@@ -1,0 +1,319 @@
+作業ディレクトリ："H:\CURSOR\Dev\fivem-mods_ja\jp-meridian9"
+
+"H:\CURSOR\Dev\fivem-mods_ja\jp-meridian9"
+├── README.md
+├── docs/
+│   ├── design.md                    # 全体設計書
+│   ├── milestones.md                # マイルストーン管理
+│   ├── dialogue_script.md           # ヴェガのセリフ集
+│   └── server_rules.md              # サーバール
+
+
+
+
+
+# MERIDIAN-9 プロジェクト 全体設計＆マイルストーン
+
+## 1. プロジェクト概要
+
+**プロジェクト名**：MERIDIAN-9 / Project JANUS（コードネーム：`mrd9_janus`）
+**ジャンル**：エクストラクション型 PvE ミッション（ルートシューター系）
+**プラットフォーム**：FiveM（ESX または QBCore 連携、Standalone 動作も可能な設計）
+**プレイ人数**：1〜5 名／セッション、複数セッション並行可能
+**1 セッション想定時間**：10〜30 分
+**開発体制想定**：1〜2 名、期間 6〜8 週間
+
+## 2. システム全体アーキテクチャ
+
+### 2.1 コンポーネント構成
+
+システムは大きく 4 層に分かれます。**外部リソース層**として The Apocalypse Project（マップ）、Multiverse-World-Manager（バケット基盤）、TP-Advanced-Zombies 改（敵 AI）を利用。**コアロジック層**として本体スクリプト `mrd9_janus` がセッション管理・ミッション進行・報酬計算を担当。**UI 層**として NUI で HUD・対話・パーティ編成・査定画面を実装。**データ永続化層**として oxmysql で契約者情報・統計・ランキングを保存。
+
+### 2.2 リソース間の関係
+
+```
+[mrd9_janus] (本体)
+    ├─ [multiverse_manager] を内部関数として利用（バケット発行）
+    ├─ [tp_zombies_lite] にイベント発火（ゾンビアリーナ起動）
+    ├─ [apocalypse_project] のマップ座標を参照
+    ├─ [ox_lib] でメニュー・通知
+    ├─ [ox_target] で NPC インタラクション
+    └─ [oxmysql] でデータ永続化
+```
+
+### 2.3 ディレクトリ構成（最終形）
+
+```
+resources/
+├── [maps]/
+│   └── apocalypse_project/
+├── [scripts]/
+│   ├── multiverse_manager/
+│   ├── tp_zombies_lite/              # TP-Advanced-Zombies を改造
+│   └── mrd9_janus/                   # 本体
+│       ├── fxmanifest.lua
+│       ├── config/
+│       │   ├── config.lua            # 全般設定
+│       │   ├── npc.lua               # ヴェガNPC設定
+│       │   ├── dialogue.lua          # セリフ全文
+│       │   ├── items.lua             # アイテムテーブル
+│       │   ├── missions.lua          # ミッション定義
+│       │   └── spawns.lua            # マップ内座標
+│       ├── server/
+│       │   ├── main.lua              # 起動・初期化
+│       │   ├── session.lua           # セッション管理
+│       │   ├── party.lua             # パーティ管理
+│       │   ├── mission.lua           # ミッション進行
+│       │   ├── loot.lua              # アイテムスポーン
+│       │   ├── extract.lua           # 脱出処理
+│       │   ├── reward.lua            # 報酬計算
+│       │   ├── contract.lua          # 契約者DB管理
+│       │   └── stats.lua             # 統計・ランキング
+│       ├── client/
+│       │   ├── main.lua
+│       │   ├── npc.lua               # NPCスポーン・対話起動
+│       │   ├── dialogue.lua          # 対話UI制御
+│       │   ├── party.lua             # パーティ編成UI制御
+│       │   ├── hud.lua               # HP/タイマー/所持品
+│       │   ├── loot.lua              # アイテム取得
+│       │   ├── extract.lua           # 脱出ポイント表示
+│       │   ├── transition.lua        # フェード・カットシーン
+│       │   └── effects.lua           # ゲートパーティクル等
+│       ├── shared/
+│       │   ├── utils.lua             # 共通関数
+│       │   └── locale_ja.lua         # 日本語ローカライズ
+│       └── ui/
+│           ├── index.html
+│           ├── style.css
+│           ├── app.js
+│           └── assets/
+│               ├── logo.png          # MERIDIAN-9 ロゴ
+│               └── icons/
+```
+
+## 3. データフロー設計
+
+### 3.1 ゲームループの状態遷移
+
+プレイヤーは次の 6 状態を遷移します。**IDLE**（通常ロスサントス、バケット 0）→ **DIALOGUE**（ヴェガと対話中）→ **PARTY_FORMING**（パーティ編成 UI 表示中）→ **TRANSITIONING**（フェード演出中、バケット切替）→ **IN_MISSION**（サイト・ナイン内、独自バケット）→ **EXTRACTING**（脱出処理中）→ **IDLE**（帰還、報酬付与）。死亡時は IN_MISSION から直接 IDLE へ強制遷移し、所持品は全ロスト。
+
+### 3.2 サーバー側データ構造
+
+セッション管理の中心となるデータ構造を以下のように設計します。
+
+```lua
+-- セッションオブジェクト
+Session = {
+    id = "S_1234567890",
+    bucket = 101,                    -- ユニークなバケット番号
+    leader = playerSrc,
+    members = { src1, src2, src3 },
+    state = "IN_MISSION",            -- FORMING/TRANSITIONING/IN_MISSION/ENDING
+    startedAt = timestamp,
+    endsAt = timestamp + timeLimit,
+    mission = {
+        type = "SAMPLE_RECOVERY",
+        difficulty = "NORMAL",
+        targetMap = "site_nine_main",
+    },
+    inventory = {
+        [src1] = { {id, name, rarity, value}, ... },
+        [src2] = { ... },
+    },
+    zombieState = {
+        currentWave = 2,
+        totalKilled = 47,
+    },
+    aliveCount = 3,
+}
+
+-- 契約者DB（永続化）
+Contract = {
+    identifier = "license:xxx",
+    signedAt = timestamp,
+    totalMissions = 12,
+    totalExtracts = 8,
+    totalDeaths = 4,
+    totalEarnings = 145000,
+    bestExtractValue = 25000,
+}
+```
+
+### 3.3 クライアント・サーバー間イベント設計
+
+主要なネットイベントを整理します。**クライアント→サーバー**は `mrd9:requestDialogue`（対話開始）、`mrd9:signContract`（契約締結）、`mrd9:requestStartMission`（ミッション開始要求）、`mrd9:respondPartyInvite`（招待承諾／拒否）、`mrd9:requestExtract`（脱出要求）、`mrd9:lootItem`（アイテム取得）、`mrd9:playerDied`（死亡通知）。**サーバー→クライアント**は `mrd9:onDialogueData`（対話データ送信）、`mrd9:onPartyInvite`（招待通知）、`mrd9:onMissionStart`（ミッション開始）、`mrd9:onTransition`（フェード演出）、`mrd9:onMissionEnd`（ミッション終了・結果）、`mrd9:onHudUpdate`（HUD 更新）。
+
+セキュリティ観点で、**全ての判定（脱出位置、アイテム取得距離、死亡確認）はサーバー側で再検証**し、クライアントを信用しない設計にします。
+
+## 4. 機能仕様（最小実装スコープ）
+
+### 4.1 必須機能（MVP）
+
+最初のリリースに含める機能を明確化します。**ヴェガ NPC スポーンと対話**（ox_target ベース、初回／リピート分岐）、**契約締結と DB 登録**（oxmysql）、**パーティ編成**（1〜5 名、招待→承諾フロー）、**バケット発行とサイト・ナインへの転送**（Multiverse 連携、フェード演出）、**ゾンビスポーン**（TP 改、固定 3 ウェーブ）、**アイテムスポーン**（10〜20 固定座標からランダム選出、3 レアリティ）、**HUD 表示**（自分のHP大、メンバーHP小、タイマー、所持品数）、**脱出ポイント表示と脱出処理**（マップに 2 箇所、近接で起動）、**死亡時の全ロスト処理**、**帰還後の自動査定と報酬振り込み**、**サーバールール文書（守秘義務）の表示**。
+
+### 4.2 第二段階機能（MVP 後）
+
+需要を見て追加する機能。複数ミッションタイプ（観測機器設置、生存者救出など）、難易度選択（Easy/Normal/Hard）、装備持ち込みシステム、保険システム、トレーダー NPC（個別売買）、ロアアイテム閲覧、ランキングボード、Subject-0 ボス戦、観戦モード、ボイス範囲制限連携（pma-voice）。
+
+### 4.3 対象外（実装しない）
+
+サーバー全体ゾンビ化、PvP モード、複雑な経済シミュレーション、フルクラフトシステム——これらは MERIDIAN-9 のコンセプトから外れるか、別 MOD で実現すべき領域なので含めません。
+
+## 5. UI/UX 設計
+
+### 5.1 主要 UI 画面
+
+**対話画面**は画面下部にヴェガのバストアップ（小）＋テキスト枠＋選択肢ボタン、AMBIENT な暗いトーン。**契約書画面**は中央に契約書ドキュメント風 UI、スクロール可能、最下部に「サイン」ボタン（マウスで署名アニメーション）。**パーティ編成画面**は左に近隣の契約済みプレイヤーリスト、右に現在のパーティメンバー、招待ボタン。**HUD（ミッション中）**は左上に自分の HP バー（大、320×40px）、左中央にメンバー HP（小、200×24px 縦並び）、右上に経過時間とウェーブ情報、右下に所持品数＋推定価値。**査定画面**はミッション帰還時に表示、回収物一覧→個別価値→合計額→振り込み完了アニメーション。
+
+### 5.2 デザイントンマナ
+
+MERIDIAN-9 ロゴに合わせ、**ダークネイビー（#0A1628）背景＋シルバー（#C8D0DC）テキスト＋アクセントブルー（#3DA8E8）**で統一。フォントは英数字に Inter または Roboto Mono、日本語に Noto Sans JP。**冷たく、科学的で、無機質**な印象を全画面で維持。エフェクトは控えめで、過度な派手さは避けます。
+
+### 5.3 演出（フェード・パーティクル）
+
+ゲート起動時の演出として、地下室の床に青いパーティクル（`scr_rcbarry2` 系）→画面青フェード（3 秒）→真っ白フラッシュ→サイト・ナインで起動、というシーケンス。脱出時は逆順で、サイト・ナインで真っ白フラッシュ→青フェード→地下室で覚醒。これらは `effects.lua` に集約。
+
+## 6. データベース設計
+
+oxmysql 前提で、最小限のテーブル構成。
+
+```sql
+-- 契約者テーブル
+CREATE TABLE mrd9_contracts (
+    identifier VARCHAR(64) PRIMARY KEY,
+    signed_at DATETIME NOT NULL,
+    status ENUM('active', 'suspended', 'terminated') DEFAULT 'active',
+    notes TEXT
+);
+
+-- 統計テーブル
+CREATE TABLE mrd9_stats (
+    identifier VARCHAR(64) PRIMARY KEY,
+    total_missions INT DEFAULT 0,
+    total_extracts INT DEFAULT 0,
+    total_deaths INT DEFAULT 0,
+    total_earnings BIGINT DEFAULT 0,
+    best_extract_value INT DEFAULT 0,
+    fastest_extract_seconds INT DEFAULT NULL,
+    last_mission_at DATETIME,
+    FOREIGN KEY (identifier) REFERENCES mrd9_contracts(identifier)
+);
+
+-- ミッション履歴テーブル（任意、ランキング用）
+CREATE TABLE mrd9_mission_logs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    session_id VARCHAR(32) NOT NULL,
+    identifier VARCHAR(64) NOT NULL,
+    started_at DATETIME NOT NULL,
+    ended_at DATETIME,
+    outcome ENUM('extracted', 'died', 'timeout', 'aborted'),
+    items_recovered_json JSON,
+    earnings INT DEFAULT 0,
+    INDEX idx_identifier (identifier),
+    INDEX idx_session (session_id)
+);
+```
+
+## 7. マイルストーン（6〜8 週間想定）
+
+### Milestone 0：環境構築（3 日）
+
+開発環境のセットアップを完了させる段階です。FiveM サーバーをローカル構築、ox_lib・ox_target・oxmysql・MySQL を導入、Multiverse-World-Manager と TP-Advanced-Zombies をクローン、The Apocalypse Project をマップ導入、Git リポジトリ作成、`fxmanifest.lua` 雛形作成、各種ライセンス確認、デバッグコマンド整備。**完了判定**は「空の `mrd9_janus` リソースが起動し、コンソールに `MERIDIAN-9 loaded` が表示される」こと。
+
+### Milestone 1：基盤構築（1 週間）
+
+セッション管理・バケット転送・契約者 DB の核を作る段階。DB テーブル作成と oxmysql 接続テスト、`session.lua` でセッションオブジェクトと CRUD 実装、`contract.lua` で契約者登録・確認関数、Multiverse-World-Manager の関数を呼び出すラッパー実装、デバッグコマンド `/mrd9_test_bucket` で任意のプレイヤーを別バケットへ転送・帰還できること。**完了判定**は「コマンドでバケット 100 へ転送→ The Apocalypse Project の廃墟内に立てる→帰還できる」。
+
+### Milestone 2：NPC と対話システム（1 週間）
+
+ヴェガ NPC のスポーンと対話フローを完成させる段階。`config/npc.lua` で座標・モデル設定、`client/npc.lua` でスポーンとフリーズ、ox_target でインタラクション登録、`config/dialogue.lua` に全セリフ記載、`client/dialogue.lua` で対話 UI 表示（最初はシンプルな ox_lib のメニューでも可、後で NUI に置換）、初回／リピート分岐ロジック、契約締結→ DB 登録、フレーバーセリフのランダム選出。**完了判定**は「ヴェガに話しかけ、契約締結し、再訪時にリピート用メニューが表示される」。
+
+### Milestone 3：パーティ編成と転送（1 週間）
+
+複数プレイヤーをまとめてミッションへ送るフロー完成。`server/party.lua` でパーティオブジェクト管理、招待トークン生成、`client/party.lua` で招待 UI（招待を受けた側に通知＋承諾／拒否）、全員承諾後にセッション生成、`client/transition.lua` でフェード演出、サーバー側で全員のバケットを一括変更してスポーン地点へテレポート、Apocalypse Project マップ内の安全な開始地点座標を `config/spawns.lua` に定義。**完了判定**は「2 人以上で組んでヴェガに依頼し、同じバケットで同時に廃墟内に出現する」。
+
+### Milestone 4：ゾンビと戦闘（1 週間）
+
+TP-Advanced-Zombies を改造してアリーナ化。TP のコードを `tp_zombies_lite` にフォーク、グローバルスポーンを停止、`startArena(bucket, config)` イベントを新設、ゾンビスポーン時に `SetEntityRoutingBucket` でバケット指定、ウェーブ管理（3 ウェーブ、各ウェーブ撃破で次へ）、ゾンビ撃破カウントをサーバー集計、`config/missions.lua` でウェーブ構成定義。**完了判定**は「ミッション開始と同時にゾンビが指定バケット内のみに湧き、撃破するとウェーブが進む」。
+
+### Milestone 5：アイテムと脱出（1 週間）
+
+エクストラクション要素のコアを実装。`config/items.lua` にアイテム定義（共通・アンコモン・レア・レジェンダリーの 4 段階、各 5〜10 種）、`server/loot.lua` でマップ内 15 箇所程度の固定座標からランダム選出・スポーン、`client/loot.lua` でオブジェクト表示と取得インタラクション（ox_target または近接 E キー）、サーバー側でアイテム取得検証＋セッションのインベントリに追加、`config/spawns.lua` に脱出ポイント 2 箇所定義、`client/extract.lua` で脱出ポイントをマップに表示（ブリップ）、近接で起動 UI、サーバー側で位置検証＋ `server/extract.lua` で脱出処理（バケット 0 へ戻す、アイテムは保持）。**完了判定**は「アイテムを拾い、脱出ポイントから抜けて、所持品が保持されて街へ戻る」。
+
+### Milestone 6：HUD と報酬（5 日）
+
+UI 完成と報酬システム実装。`ui/` 配下に NUI（HTML/CSS/JS）構築、HP バー（自分大・メンバー小）、タイマー、所持品数＋推定価値、サーバーから 500ms 間隔で HUD データ送信、`server/reward.lua` で価値計算（rarity multiplier 適用）、ESX/QBCore の所持金加算（または Standalone 用カスタム通貨）、帰還時の査定画面 NUI、統計テーブル更新。**完了判定**は「ミッション中に正しい HUD が表示され、帰還後に査定画面が出て所持金が増える」。
+
+### Milestone 7：死亡処理と全ロスト（3 日）
+
+リスク／リワードの心臓部。プレイヤー死亡検知（`baseevents:onPlayerDied` または独自ヘルス監視）、サーバーで死亡時にインベントリを空にする、生存者数カウント減算、全員死亡で `EndSession(reason='wipe')`、死亡プレイヤーは即座にバケット 0 へ戻す、死亡画面とヴェガからの自動メッセージ（生存者がいる場合「あなたの仲間は任務を続行中です」、全滅時「任務は失敗しました」）。**完了判定**は「死亡すると所持品が消え、街に戻され、ヴェガからメッセージが届く」。
+
+### Milestone 8：演出と仕上げ（5 日）
+
+世界観の完成度を上げる段階。ゲートパーティクル演出、フェードイン／アウト、サウンド（ゲート起動音、警報音、心拍音）、ロスサントス到着時のテキストオーバーレイ（「並行次元・座標不明」等）、ヴェガのアニメーション（書類を読む、ペンを置く等）、契約書 UI のリッチ化、査定画面のアニメーション、ロゴ表示の各所配置。**完了判定**は「全体プレイ感が映像作品のように繋がって見える」。
+
+### Milestone 9：テストとバランス調整（1 週間）
+
+実プレイテストと数値調整。1 人プレイテスト（バランス確認）、5 人パーティテスト（同期確認）、ゾンビ難易度調整（数・HP・ダメージ）、アイテム価値調整（レアリティ別の出現率と報酬バランス）、タイマー設定（推奨 15〜20 分）、サーバー負荷確認（複数セッション並行時）、バグ修正、ログ整備。**完了判定**は「3 セッション連続で大きな問題なく完走できる」。
+
+### Milestone 10：ドキュメントとリリース（3 日）
+
+運営向け資料完成。README.md（インストール手順、依存関係、設定方法）、サーバールール文書（守秘義務、OOC ルール）、運営用デバッグコマンド一覧、トラブルシューティング、Discord 等での告知用ティザー画像、サーバー導入。**完了判定**は「自分以外の人がドキュメントを読んで導入できる」。
+
+## 8. リスク管理と懸念事項
+
+### 8.1 技術的リスク
+
+**TP-Advanced-Zombies のサポート終了**——既知のバグや FiveM アップデートへの非対応リスクあり。対策として、改造時に最低限のコードのみ抽出し、不要部分は削除して保守性を上げる。最悪の場合、`WeponzTV/Standalone-Zombie-System` への切り替え準備。
+
+**OneSync 同期問題**——ルーティングバケット内のエンティティ同期に稀に不整合が出ることがある。対策として、重要なエンティティ（ゾンビ・アイテム）はサーバー側で生成し、定期的に存在確認。
+
+**The Apocalypse Project の重さ**——ストリーミング量が多く、低スペックプレイヤーの読み込み遅延の可能性。対策として、最初のミッションエリアを限定し、必要部分のみストリーミングする調整。
+
+### 8.2 設計的リスク
+
+**バケット枯渇**——FiveM のバケット番号は 0〜2^32-1 だが、同時セッション数が増えると管理が複雑化。対策として、終了したセッションのバケット番号を再利用するプール管理。
+
+**パーティ離脱時の挙動**——ミッション中に誰かが切断した場合の処理。対策として、切断＝死亡扱いで所持品ロスト、サーバー側で正しく検知し残りメンバーには通知。
+
+**アイテム複製エクスプロイト**——クライアントを信用するとアイテム取得を多重発火される可能性。対策として、サーバー側で取得済みフラグを管理し、同一アイテムの二重取得を拒否。
+
+### 8.3 運用的リスク
+
+**RP 整合性の崩壊**——プレイヤーがゲーム内で「ゾンビがいた」と公言してしまう。対策として、サーバールール明文化＋ヴェガのセリフで毎回守秘義務を強調＋違反時の運営介入ルール策定。
+
+**プレイヤーの想定外行動**——契約済みでない人を無理やり連れて行こうとする等。対策として、未契約者は物理的にゲート起動不可、地下扉を契約者のみ通過可能に。
+
+## 9. 成功指標（KPI）
+
+リリース後の評価基準を設定しておきます。**プレイ頻度**として週あたりの総セッション数、**継続率**として契約者の 2 回目以降参加率、**完走率**として脱出成功 vs 死亡比率、**バランス指標**として平均報酬額・平均所持時間、**RP 浸透度**として街中での自発的言及数（運営観察）。これらをログから自動集計できる管理画面を Milestone 10 で簡易実装すると、運営判断がしやすくなります。
+
+---
+
+## 全体ガントチャート（概算）
+
+```
+週 1   週 2   週 3   週 4   週 5   週 6   週 7   週 8
+[M0][M1     ][M2     ][M3     ][M4     ][M5     ][M6  ][M7][M8 ][M9     ][M10]
+環境 基盤    NPC      パーティ ゾンビ   アイテム HUD  死亡 演出 テスト   公開
+```
+
+合計 **約 6〜8 週間**、1 人開発で平日 2〜3 時間／日のペース想定。2 人体制ならクライアント／サーバー分担で **4〜5 週間** まで短縮可能。
+
+---
+
+## 修正・追加検討ポイント
+
+このマイルストーン案について、特に確認・調整したい点を挙げます。
+
+**(A) スコープの妥当性**：MVP 機能リストは多すぎ／少なすぎないか。「これは最初は不要」「これは絶対欲しい」があれば教えてください。
+
+**(B) 期間の妥当性**：6〜8 週間という見積もりは、想定されている開発体制・時間と合っているか。短くしたい／長くてもよい、どちらでしょうか。
+
+**(C) フレームワーク選定**：ESX か QBCore か Standalone か——既存サーバーの環境次第で大きく実装が変わります。
+
+**(D) マイルストーン順序**：「先に演出を見たい」「先にゾンビ戦を試したい」など、心理的なモチベ維持のため順序変更を希望される場合は調整可能。
+
+**(E) サーバー導入規模**：プライベートで少人数で遊ぶのか、公開サーバーで多数プレイヤーが利用するのか——スケール想定によってデータベース設計や負荷対策の重み付けが変わります。
+
+修正点・追加要望をいただければ、それに合わせて全体設計を更新します。
