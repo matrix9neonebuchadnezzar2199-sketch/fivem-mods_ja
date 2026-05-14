@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>2026-05-14 開発日記 - jp-cooktree</title>
+<link rel="stylesheet" href="../../.cursor/templates/diary-style.css">
+</head>
+<body class="diary">
+<header>
+  <h1>📓 2026-05-14 開発日記</h1>
+  <p>ツール: <strong>jp-cooktree</strong></p>
+</header>
+
+<section class="diary-toc">
+  <h2>目次</h2>
+  <table>
+    <thead>
+      <tr><th>時刻</th><th>概要</th><th>Commit</th><th>詳細</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>18:06</td>
+        <td>ノードポップオーバー確定仕様（次効果増分・recipeUnlocked・再アンカー）</td>
+        <td><span class="commit-hash">538bad1</span></td>
+        <td><a href="#entry-1806">詳細</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<main>
+<section id="entry-1806" class="entry">
+  <h2>ノードポップオーバー確定仕様の反映</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>18:06 JST</strong></span>
+    <span>Commit <strong class="commit-hash">538bad1</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-cooktree/html/app.js</code>（staged 次効果の増分括弧、汎用 recipe ポップオーバー、全 spec ノードクリック、<code>data-node-id</code> 再アンカー、<code>recipeUnlocked</code>、ランクアップ即時反映）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/style.css</code>（ポップオーバー背景 #1f1612、<code>.popover-effect-delta</code>、recipe 六角の pointer-events）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/index.html</code>（<code>#node-popover</code> を body 直下へ移動）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/client/main.lua</code>（<code>CookTree.GetUnlockedRecipes</code> を NUI へ <code>recipeUnlocked</code> として送信）</li>
+    <li><span class="op">➕</span> <code>jp-cooktree/docs/2026-05-14_開発日記.html</code>（本日ファイル）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>確定設計に沿い、staged ポップオーバーで「次効果」を 1 段増分の括弧付きで表示し、最大ランク時は次効果行を省略して SP 行と無効化されたランクアップボタンを表示。汎用ツリーの recipe ノードは解放条件・★・調理ボタンをポップオーバーに集約し、調理可否は <code>recipeUnlocked</code>（Lua の <code>GetUnlockedRecipes</code> と整合）で判定。SVG 再描画後も <code>data-node-id</code> でグループを引き直してポップオーバー位置を更新。専門職リーフはレシピが無い場合は情報のみ（選択ボタンなし）。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>汎用ツリー recipe の SP 解放本体（サーバー権威）と NUI の「予定」表記の置き換え</li>
+    <li>調理クールダウン残り秒の NUI 同期（任意）</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>
