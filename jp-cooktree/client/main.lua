@@ -29,6 +29,15 @@ local function buildCookRecipeBook()
     return t
 end
 
+---@param level integer
+---@return table<string, boolean>
+local function buildRecipeUnlockedMap(level)
+    if CookTree and CookTree.GetUnlockedRecipes then
+        return CookTree.GetUnlockedRecipes(level) or {}
+    end
+    return {}
+end
+
 local function openTree()
     if isOpen then return end
     isOpen = true
@@ -46,6 +55,7 @@ local function openTree()
         generalRanks = {},
         cookRecipeBook = buildCookRecipeBook(),
         passiveRanks = passiveRanksCache,
+        recipeUnlocked = buildRecipeUnlockedMap(playerLevelCache),
     }
     if pendingCookResult then
         payload.cookResult = pendingCookResult
@@ -134,6 +144,7 @@ RegisterNetEvent('jp-cooktree:receivePlayerState', function(data)
             recipeStars = recipeStarsCache,
             starTotal = starTotalCache,
             passiveRanks = passiveRanksCache,
+            recipeUnlocked = buildRecipeUnlockedMap(playerLevelCache),
         })
     end
 end)
