@@ -22,6 +22,8 @@ docs/
 !jp-tcgbook/docs/**
 !jp-cooktree/docs/
 !jp-cooktree/docs/**
+!jp-meridian9/docs/
+!jp-meridian9/docs/**
 
 # 一時・ログ
 *.log

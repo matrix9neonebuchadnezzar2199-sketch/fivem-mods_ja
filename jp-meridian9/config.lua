@@ -37,8 +37,13 @@ Config.Party = {
 -- ▼ ミッション設定 ---------------------------------------------
 Config.Mission = {
     timeLimitSeconds = 1200,            -- 制限時間（20分）
-    bucketStart = 100,                  -- セッション用バケット番号開始値
-    bucketMax = 999,                    -- バケット番号最大値
+    bucketStart = 100,                  -- セッション用バケット番号開始値（プール下限）
+    bucketEnd = 999,                    -- バケット番号上限（プール上限）
+    maxConcurrentSessions = 20,         -- 同時並行セッション上限
+    cleanupIntervalSeconds = 60,      -- タイムアウト監視周期（秒）
+    -- 動作確認用の暫定座標（The Apocalypse Project 導入後に差し替え。海上 0,0,0 は避ける）
+    spawnPoint = vector4(1972.0, 3818.0, 33.4, 0.0),   -- サイト・ナイン側スポーン（暫定: Sandy Shores 近郊）
+    returnPoint = vector4(-75.24, -818.74, 326.18, 0.0), -- 帰還（暫定: Maze Bank 付近）
 }
 
 -- ▼ ゾンビ設定 -------------------------------------------------

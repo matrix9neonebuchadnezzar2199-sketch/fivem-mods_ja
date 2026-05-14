@@ -2,6 +2,24 @@ local resName = GetCurrentResourceName()
 
 print(('[%s] resource loaded'):format(resName))
 
+MRD9.CurrentSession = nil
+
+RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
+    if type(data) ~= 'table' or not data.sessionId then
+        return
+    end
+    MRD9.Log('Mission started: %s', data.sessionId)
+    MRD9.CurrentSession = data
+end)
+
+RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
+    if type(data) ~= 'table' or not data.sessionId then
+        return
+    end
+    MRD9.Log('Mission ended: %s reason=%s', data.sessionId, tostring(data.reason))
+    MRD9.CurrentSession = nil
+end)
+
 RegisterNetEvent('jp-meridian9:notify', function(msg)
     BeginTextCommandThefeedPost('STRING')
     AddTextComponentSubstringPlayerName(tostring(msg))

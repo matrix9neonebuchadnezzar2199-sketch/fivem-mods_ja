@@ -103,3 +103,69 @@ RegisterCommand('m9_my_stats', function(source)
         dbgChat(source, '[MRD9]', '統計なし（契約後にミッション参加してください）')
     end
 end, false)
+
+local function dbgPrintOrChat(source, body)
+    if source == 0 then
+        print(('[MRD9] %s'):format(body))
+    else
+        dbgChat(source, '[MRD9]', body)
+    end
+end
+
+RegisterCommand('m9_test_session', function(source)
+    if not Config.Debug then
+        return
+    end
+    if source == 0 then
+        return
+    end
+
+    local sessionId, err = MRD9.Session.Create({
+        leader = source,
+        members = { source },
+        missionType = 'SAMPLE_RECOVERY',
+        difficulty = 'NORMAL',
+    })
+
+    if not sessionId then
+        dbgChat(source, '[MRD9]', 'セッション作成失敗: ' .. tostring(err or 'unknown'))
+        return
+    end
+
+    dbgChat(source, '[MRD9]', 'セッション作成成功: ' .. sessionId)
+
+    CreateThread(function()
+        Wait(1000)
+        local ok, terr = MRD9.Session.TransferIn(sessionId)
+        if not ok then
+            dbgChat(source, '[MRD9]', '転送失敗: ' .. tostring(terr or 'unknown'))
+        end
+    end)
+end, false)
+
+RegisterCommand('m9_test_extract', function(source)
+    if not Config.Debug then
+        return
+    end
+    if source == 0 then
+        return
+    end
+    MRD9.Session.RemovePlayer(source, 'extracted')
+    dbgChat(source, '[MRD9]', '脱出完了（テスト）')
+end, false)
+
+RegisterCommand('m9_list_sessions', function(source)
+    if not Config.Debug then
+        return
+    end
+    local all = MRD9.Session.GetAll()
+    local count = 0
+    for id, s in pairs(all) do
+        count = count + 1
+        local msg = ('id=%s bucket=%d members=%d state=%s'):format(id, s.bucket, #s.members, tostring(s.state))
+        dbgPrintOrChat(source, msg)
+    end
+    if count == 0 then
+        dbgPrintOrChat(source, 'アクティブセッションなし')
+    end
+end, true)

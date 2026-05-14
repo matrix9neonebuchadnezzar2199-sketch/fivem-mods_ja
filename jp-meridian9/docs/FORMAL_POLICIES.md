@@ -1,0 +1,107 @@
+# MERIDIAN-9（jp-meridian9）正式方針
+
+マスター承認済みの修正方針を、外部の指示書とリポ実装の両方で参照できるよう集約したもの。更新時は本ファイルと実装の差分を必ず確認すること。
+
+---
+
+## INSTRUCTION-005 補足：開発日記（MERIDIAN-9 専用例外）
+
+**MERIDIAN-9 専用例外**：日記は `jp-meridian9/YYYY-MM-DD_開発日記.md` 形式で **MOD 直下** に配置する。リポジトリ既定の `dev-diary-required.mdc`（`<mod>/docs/*.html`）は **本 MOD では適用しない**。
+
+理由：規模が大きく日記が頻繁に増えるため、ファイルブラウザで時系列を一覧しやすい直下配置が運用上有利。
+
+---
+
+## INSTRUCTION-001 補足：グローバル変数規約の例外
+
+`.cursor/rules/fivem-lua.mdc` の「グローバル禁止」原則に対し、MERIDIAN-9 では以下のみグローバル化を許容する。
+
+- `MRD9` … 名前空間テーブル（ユーティリティ・状態管理を内包）
+- `Config` … 設定オブジェクト
+- `Locales` / `_` … ロケール辞書とヘルパー関数
+
+これら **以外** の関数・変数は **`local` 必須**。将来的にモジュール分割（`exports` ベース）への移行余地は残すが、現段階では開発速度を優先する。
+
+---
+
+## INSTRUCTION-001 補足：`fxmanifest.lua` ヘッダ
+
+リポジトリ慣習に合わせ、次を含める（`version` はリリースに合わせて更新）。
+
+```lua
+fx_version 'cerulean'
+game 'gta5'
+lua54 'yes'
+
+author 'JP-Mods'
+description 'MERIDIAN-9 / Project JANUS - 次元探査エクストラクション型ミッション MOD'
+version '0.1.0-jp'
+license 'MIT'
+repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
+```
+
+INSTRUCTION-006 以降: `dependencies { 'oxmysql' }` を追加し、`server_scripts` の **先頭**に `'@oxmysql/lib/MySQL.lua'` を置く（`jp-tcgbook` 等のリポジトリ慣習に合わせる）。
+
+---
+
+## INSTRUCTION-003：フレームワーク検出と Qbox
+
+- **運用ルール**：実装で判明した API 誤りは **実装を正** とし、本ファイル・外部指示書を **事後更新** する。
+- **Qbox**：`qb-core` とは API が異なるため分岐を分離する。プレイヤー取得は **`exports.qbx_core:GetPlayer(src)`** を用いる（`GetCoreObject().Functions.GetPlayer` に依存しない）。
+
+指示書スニペット例（簡略。`paymentType` が `cash` / `bank` 以外のときは実装側で `custom` 等へ分岐すること）：
+
+```lua
+elseif fw == 'qbox' then
+    local Player = exports.qbx_core:GetPlayer(src)
+    if Player then
+        Player.Functions.AddMoney(paymentType, amount, 'jp-meridian9 reward')
+    end
+```
+
+---
+
+## INSTRUCTION-003 補足：FW 検出行の `print`
+
+完了判定（サーバーコンソールで FW 名を即確認）のため、フレームワーク検出直後の **`print` は `Config.Debug` 非依存**で残す。将来、開発フェーズが落ち着いたら `MRD9.Log` へ統一する可能性あり。**実装ファイルでは該当 `print` 直上にコメントで意図を明記**する。
+
+---
+
+## INSTRUCTION-004：画像アセット
+
+- **ロゴが 1 枚しかない場合**：`logo_light.png` / `logo_dark.png` に **同一ファイルを複製してよい**。背景色によるバージョン分けは後工程で対応する。
+- **拡張子のみ変更（JPEG → `.png`）の暫定対応**：本番で NUI 表示に問題が出た場合、画像編集ツールで **真の PNG 形式**に再エクスポートすること。**透過が必要な場合は必須**。
+
+---
+
+## INSTRUCTION-019 チェックリスト（事前メモ）
+
+README 完成・運営者向けドキュメント整備（INSTRUCTION-019）の段階で、少なくとも以下を確認する。
+
+- [ ] NUI 用ロゴ・アイコンを **真の PNG** に再エクスポート済み（暫定 JPEG 流用を解消）
+- [ ] Linux 本番での大文字小文字・`fxmanifest` `files` 列挙の再確認
+
+---
+
+## INSTRUCTION-006：DB スキーマ（実装済み・正本追記）
+
+| 項目 | 確定・実装 |
+|------|------------|
+| DB ライブラリ | **oxmysql** 必須。`fxmanifest.lua` に `dependencies { 'oxmysql' }` と `@oxmysql/lib/MySQL.lua`（`server_scripts` 先頭） |
+| 接続確認 | `server/main.lua` で起動後 `Wait(2000)` のあと `SELECT 1` および `INFORMATION_SCHEMA` で `mrd9_contracts` 存在確認（`MySQL.ready` は未使用） |
+| スキーマ | `mrd9_contracts` / `mrd9_stats`（FK）/ `mrd9_mission_logs`。手動で `sql/install.sql` を適用 |
+| 読み込み順 | `contract.lua` / `stats.lua` を **`main.lua` より先**に読み込み（`RegisterCommand` から `MRD9.Contract` を参照するため） |
+| デバッグ | `Config.Debug` 時のみ `/m9_sign_me` `/m9_check_contract` `/m9_my_stats` |
+
+契約判定は `mrd9_contracts.identifier`（`license:xxx`）を正とする。
+
+## INSTRUCTION-007：セッション管理（実装済み・正本追記）
+
+| 決定 | 内容 |
+|------|------|
+| D1 Multiverse | **(a) 機能のみ移植**（`server/session.lua` 独自実装。Multiverse 本体は非同梱）。クレジットは `docs/CREDITS.md`。 |
+| D2 バケット | **(b) プール管理**（`bucketStart`〜`bucketEnd` をキュー化し、終了時に `ReleaseBucket`）。旧 `bucketMax` は `missionBucketEnd()` でフォールバック。 |
+| D3 永続化 | **(a) メモリのみ**。`onResourceStop` で全セッション `Destroy(..., 'server_shutdown')`（キー配列にコピーしてからループ）。 |
+| `SetPlayerRoutingBucket` | 実装は **整数 `playerSrc`**。指示書の `tostring(src)` は環境差異向けメモとして `session.lua` にコメント。 |
+| `MRD9.Session.GetAll` | **内部 `sessions` テーブル参照をそのまま返す**（デバッグ用途。改変は自己責任）。 |
+| 離脱通知 | `RemovePlayer` では離脱プレイヤーへ必ず `jp-meridian9:onMissionEnd` を送る（最後の 1 人でも `Destroy` が空ループにならないよう）。 |

@@ -62,6 +62,14 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 | `/m9_check_contract` | 契約行の表示（**Debug のみ**） |
 | `/m9_my_stats` | `mrd9_stats` の表示（**Debug のみ**） |
 
+### デバッグコマンド（`Config.Debug = true` 時のみ）
+
+| コマンド | 内容 |
+| -------- | ---- |
+| `/m9_test_session` | 1 人パーティのテストセッション作成 → 約 1 秒後にバケット転送＋スポーン |
+| `/m9_test_extract` | 現在のセッションから脱出（バケット 0・帰還座標） |
+| `/m9_list_sessions` | アクティブセッション一覧（**restricted**・コンソール `source=0` からも可） |
+
 予定（README 追記予定）:
 
 - `/m9_call` … 任務呼び出し・ゲート連携（実装後に表を更新）
@@ -76,7 +84,7 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 | ---------- | ---- |
 | `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ |
 | `Config.Gate` / `Config.SiteNine` | 転送・天候・時刻演出 |
-| `Config.Party` / `Config.Mission` | 人数・時間・ルーティングバケット帯 |
+| `Config.Party` / `Config.Mission` | 人数・時間・バケット帯・**spawnPoint / returnPoint**（セッション転送） |
 | `Config.Zombies` / `Config.Items` | 敵ウェーブと回収アイテム定義 |
 | `Config.Reward` | `paymentType` / `standaloneMoneyEvent` |
 | `Config.HUD` / `Config.Commands` | HUD 周期・コマンド名 |
@@ -98,7 +106,7 @@ jp-meridian9/
 ├── html/            … NUI（ロゴ・将来 HUD）
 ├── sql/install.sql  … DB（今後 INSTRUCTION-006 で拡張）
 ├── image/           … 素材保管（ビルド用コピー元）
-└── docs/            … 設計・マイルストーン・台本・`FORMAL_POLICIES.md`
+└── docs/            … 設計・マイルストーン・台本・`FORMAL_POLICIES.md`・`CREDITS.md`
 ```
 
 ---
