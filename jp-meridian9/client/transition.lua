@@ -238,6 +238,7 @@ function MRD9.Transition.TeleportToSiteNine(sp)
         return false
     end
 
+    -- (1) フェードアウト + プレイヤーを安全状態に
     DoScreenFadeOut(500)
     local fadeDeadline = GetGameTimer() + 1500
     while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
@@ -251,37 +252,34 @@ function MRD9.Transition.TeleportToSiteNine(sp)
     SetEntityCollision(ped, false, false)
     SetEntityInvincible(ped, true)
 
-    -- (1) MAP 固有のロード待ち
+    -- (2) 先にプレイヤー座標を目的地へ移動。
+    -- プレイヤー位置を更新することでストリーミングエンジンの注目点を切替える。
+    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 200.0, false, false, false, false)
+    Wait(200)
+
+    -- (3) MAP 固有のロード待ち（IPL active）
     local islandKey = (cfg().island or 'cayoperico')
     if islandKey == 'northYankton' then
         local NY = getNorthYanktonObject()
         if NY and type(NY.ipl) == 'table' then
             local ok = waitIplsActive(NY.ipl, 15000)
             print(('[jp-meridian9] TeleportToSiteNine: NY IPL active=%s (count=%d)'):format(tostring(ok), #NY.ipl))
-        else
-            print('[jp-meridian9] TeleportToSiteNine: NorthYankton オブジェクト取得失敗')
         end
-    elseif islandKey == 'cayoperico' then
-        -- SetIslandEnabled は IPL 連射ではなく Heist Island のジオメトリ層を切替えるため、
-        -- 個別 IPL アクティブ待機は不要。NewLoadSceneStart で十分。
-        print('[jp-meridian9] TeleportToSiteNine: Cayo Perico SetIslandEnabled(true) 後の NewLoadSceneStart')
     end
 
-    -- (2) ymap/ybn 実体ストリーミング（NewLoadSceneStart）
-    -- IPL active 後でも実ジオメトリは別ストリーム。座標周辺のシーンを同期ロードする。
+    -- (4) ymap/ybn ストリーミング待ち
     RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
     NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
-    local sceneDeadline = GetGameTimer() + 12000
+    local sceneStart = GetGameTimer()
+    local sceneDeadline = sceneStart + 12000
     while not IsNewLoadSceneLoaded() and GetGameTimer() < sceneDeadline do
         RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
         Wait(0)
     end
     NewLoadSceneStop()
-    print(('[jp-meridian9] TeleportToSiteNine: NewLoadSceneLoaded after %dms'):format(GetGameTimer() - (sceneDeadline - 12000)))
+    print(('[jp-meridian9] TeleportToSiteNine: NewLoadSceneLoaded after %dms'):format(GetGameTimer() - sceneStart))
 
-    -- (3) 地面 Z を実検出して確実に陸地に着地
-    -- 北ヤンクトン地形がロードされていれば GetGroundZFor_3dCoord が成功する。
-    -- 失敗するなら ymap がまだロード中なので追加待機。
+    -- (5) 地面 Z 検出
     local groundFound, groundZ = false, nil
     local groundDeadline = GetGameTimer() + 10000
     while GetGameTimer() < groundDeadline do
@@ -297,16 +295,16 @@ function MRD9.Transition.TeleportToSiteNine(sp)
     local finalZ = z
     if groundFound and groundZ then
         finalZ = groundZ + 1.0
-        print(('[jp-meridian9] TeleportToSiteNine: ground Z found = %.3f -> teleport Z = %.3f'):format(groundZ, finalZ))
+        print(('[jp-meridian9] TeleportToSiteNine: ground Z = %.3f -> teleport Z = %.3f'):format(groundZ, finalZ))
     else
-        print('[jp-meridian9] TeleportToSiteNine: ground Z not found within 10s. Using config Z (may fall into ocean)')
+        print('[jp-meridian9] TeleportToSiteNine: ground Z not found within 10s. Using config Z')
     end
 
-    -- (4) テレポート
+    -- (6) 最終テレポート（正確な地表 Z へ）
     SetEntityCoords(ped, x + 0.0, y + 0.0, finalZ, false, false, false, false)
     SetEntityHeading(ped, w)
 
-    -- (5) コリジョン最終待機
+    -- (7) コリジョン最終待機
     local colDeadline = GetGameTimer() + 5000
     while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < colDeadline do
         RequestCollisionAtCoord(x + 0.0, y + 0.0, finalZ)
@@ -337,6 +335,7 @@ function MRD9.Transition.TeleportToLosSantos(rp)
         return false
     end
 
+    -- (1) フェードアウト + プレイヤー安全化
     DoScreenFadeOut(500)
     local fadeDeadline = GetGameTimer() + 1500
     while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
@@ -350,24 +349,55 @@ function MRD9.Transition.TeleportToLosSantos(rp)
     SetEntityCollision(ped, false, false)
     SetEntityInvincible(ped, true)
 
-    -- 帰還側は北ヤンクトンを無効化してから LS のシーンロード
+    -- (2) 先にプレイヤーを LS 座標へ移動。Island を破棄する前にプレイヤー位置を移すことで、
+    -- ストリーミングエンジンが LS の ymap/ybn を先読みし始める。
+    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 200.0, false, false, false, false)
+    Wait(200)
+
+    -- (3) Cayo Perico / 北ヤンクトンの地形・ミニマップを無効化
     MRD9.Transition.Leave()
+
+    -- (4) 破棄反映を待ってから LS のシーンロード開始
+    Wait(800)
 
     RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
     NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
-    local sceneDeadline = GetGameTimer() + 12000
+    local sceneStart = GetGameTimer()
+    local sceneDeadline = sceneStart + 12000
     while not IsNewLoadSceneLoaded() and GetGameTimer() < sceneDeadline do
         RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
         Wait(0)
     end
     NewLoadSceneStop()
+    print(('[jp-meridian9] TeleportToLosSantos: NewLoadSceneLoaded after %dms'):format(GetGameTimer() - sceneStart))
 
-    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 0.0, false, false, false, false)
+    -- (5) LS の地表 Z 検出（事務所周辺は約 30）
+    local groundFound, groundZ = false, nil
+    local groundDeadline = GetGameTimer() + 5000
+    while GetGameTimer() < groundDeadline do
+        local f, gz = GetGroundZFor_3dCoord(x + 0.0, y + 0.0, z + 200.0, false)
+        if f and gz and gz > -10.0 and gz < 1000.0 then
+            groundFound = true
+            groundZ = gz
+            break
+        end
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 100.0)
+        Wait(100)
+    end
+    local finalZ = z
+    if groundFound and groundZ then
+        finalZ = groundZ + 1.0
+        print(('[jp-meridian9] TeleportToLosSantos: ground Z = %.3f -> teleport Z = %.3f'):format(groundZ, finalZ))
+    end
+
+    -- (6) 最終テレポート
+    SetEntityCoords(ped, x + 0.0, y + 0.0, finalZ, false, false, false, false)
     SetEntityHeading(ped, w)
 
+    -- (7) コリジョン最終待機
     local colDeadline = GetGameTimer() + 5000
     while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < colDeadline do
-        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, finalZ)
         Wait(0)
     end
 
