@@ -23,10 +23,11 @@ RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
         MRD9.Arena.ClientBeginMission()
     end
     -- 任務中はミニマップを強制表示（qbx_hud 等の隠蔽に対抗）
+    -- 毎フレーム呼ぶことで他リソースの DisplayRadar(false) との競合点滅を防ぐ。
     CreateThread(function()
         while MRD9.CurrentSession do
             DisplayRadar(true)
-            Wait(500)
+            Wait(0)
         end
     end)
 end)

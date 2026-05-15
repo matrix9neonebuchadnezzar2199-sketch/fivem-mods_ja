@@ -153,9 +153,9 @@ Config.SiteNine = {
     timecycleModifier = nil,            -- 色味フィルター OFF
     timecycleStrength = 0.0,
     blackout = false,
-    thunderEnabled = true,              -- 周期的に雷光＋雷鳴を発火
-    thunderIntervalMinMs = 8 * 1000,    -- 次の雷までの最小間隔（短めで頻繁に）
-    thunderIntervalMaxMs = 20 * 1000,
+    thunderEnabled = false,             -- 雷光は眩しすぎるため既定 OFF（雪の遠雷音だけ欲しい時のみ true）
+    thunderIntervalMinMs = 30 * 1000,
+    thunderIntervalMaxMs = 90 * 1000,
     weatherKeeperMs = 5000,             -- 天気維持スレッドの周期（他リソースの上書き対抗）
     -- INSTRUCTION-020 v5: 'cayoperico' で Cayo Perico 採用、'none' で MAP 切替なし
     island = 'cayoperico',

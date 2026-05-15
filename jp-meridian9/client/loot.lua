@@ -139,10 +139,11 @@ local function addLootBlip(lootId, ent)
         State.blips[lootId] = removeBlipSafe(State.blips[lootId])
     end
     local b = AddBlipForEntity(ent)
-    SetBlipSprite(b, 478)   -- 箱（Crate）
-    SetBlipColour(b, 5)     -- 黄
-    SetBlipScale(b, 0.7)
-    SetBlipAsShortRange(b, true)
+    SetBlipSprite(b, 408)         -- Crate（箱・宝箱風）
+    SetBlipColour(b, 5)           -- 黄
+    SetBlipScale(b, 0.85)
+    SetBlipAsShortRange(b, false) -- 任務中は距離関係なくミニマップに常時表示
+    SetBlipDisplay(b, 2)          -- ミニマップ + ESC マップ両方
     BeginTextCommandSetBlipName('STRING')
     AddTextComponentSubstringPlayerName(_('loot_pickup_label'))
     EndTextCommandSetBlipName(b)
