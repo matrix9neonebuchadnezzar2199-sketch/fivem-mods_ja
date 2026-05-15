@@ -231,9 +231,9 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 
 | 項目 | 内容 |
 |------|------|
-| 設計趣旨 | 3 ウェーブ単発（INSTRUCTION-011 アリーナ）よりも **「アリーナ序盤 + 自由探索 + 持続的脅威」** のハイブリッドがエクストラクション体験として優れるという判断（マスター実機検証 2026-05-15） |
-| 任務フロー | `[Arena enabled]` 3 ウェーブ → `Survival.Start` / `[Arena disabled]` TransferIn 直後に `Survival.Start` / 個別脱出または全滅で `Survival.Stop` |
-| スポーン仕様 | **各メンバー周辺 30〜150m に 3 分ごとに 3 体**（`Config.Survival.intervalMs/countPerPlayer/radiusMin/radiusMax`） |
+| 設計趣旨 | 3 ウェーブ単発（INSTRUCTION-011 アリーナ）は **初期位置が塀に囲まれている問題**で破綻するため、**「最初から探索 + ランダム湧きの持続的脅威」** に確定（マスター実機検証 2026-05-15）。アリーナ実装はコード残置・既定で `Config.Arena.enabled = false` |
+| 任務フロー | TransferIn 直後に `Survival.Start` 即開始 → `firstSpawnMs (20s)` 後に最初のスポーン → 以降 `intervalMs (3 分)` 間隔 / 個別脱出または全滅で `Survival.Stop` |
+| スポーン仕様 | **各メンバー周辺 30〜150m に 3 分ごとに 3 体**（`Config.Survival.intervalMs/countPerPlayer/radiusMin/radiusMax`）。1 サイクル目だけ `firstSpawnMs = 20s` |
 | 実装 | `server/survival.lua` 新規。`MRD9.Survival.Start/Stop/IsActive`。`MRD9.Arena.Spawn.PickCoordsNearPlayer` を半径オーバーライド付きで流用 |
 | フック | `arena/arena.lua` `_onWaveCleared` の `cleared` 分岐で `Survival.Start`、`session.lua` `TransferIn` で `Arena.enabled=false` 時に直接 `Survival.Start`、`session.lua` `Destroy` で `Survival.Stop` |
 | spawnPoints | INSTRUCTION-020 v3 採用座標（住宅街エリア 5 ヶ所）からランダム選出。チーム分散しすぎを防ぐ |

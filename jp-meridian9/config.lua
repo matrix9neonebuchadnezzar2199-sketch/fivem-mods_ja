@@ -197,8 +197,11 @@ Config.Commands = {
 
 -- ▼ ゾンビアリーナ（INSTRUCTION-011）--------------------------------
 -- ウェーブ定義は `waves[1]` から連番。TP-Advanced-Zombies 由来のスポーンは `server/arena/spawn.lua`。
+-- INSTRUCTION-021: マスター判断により 3 ウェーブ制は廃止。任務開始から直接サバイバル
+-- フェーズへ入る運用に変更（初期位置が塀に囲まれてゾンビが入ってこない問題への対処）。
+-- アリーナ実装は将来の特定難易度・ボス戦などで再利用できるよう **コードは残置**。
 Config.Arena = {
-    enabled = true,                     -- false で TransferIn 後もアリーナ開始しない
+    enabled = false,                    -- INSTRUCTION-021: 既定で無効。true でアリーナ復活
     countdownSeconds = 5,
     waveIntervalSeconds = 10,
     totalWaves = 3,
@@ -264,12 +267,14 @@ Config.ExtractPoints = {
 }
 
 -- ▼ オープンワールド・サバイバル（INSTRUCTION-021）------------------
--- 3 ウェーブクリア後 or Config.Arena.enabled=false 時に、自由探索フェーズへ移行。
+-- Config.Arena.enabled=false（既定）時は TransferIn 直後にこのフェーズが開始。
+-- Arena 有効時は 3 ウェーブクリア後に開始。
 -- 各メンバー周辺 radiusMin〜radiusMax m にゾンビが intervalMs ごとに count 体スポーン。
 -- 「探索しながらゾンビ処理」の持続的脅威でサバイバル感を演出する。
 Config.Survival = {
     enabled = true,
-    intervalMs = 180 * 1000,            -- 3 分ごと
+    firstSpawnMs = 20 * 1000,           -- 開始から最初のスポーンまで（ゲート演出後すぐ来るよう短め）
+    intervalMs = 180 * 1000,            -- 以降のスポーン周期（3 分ごと）
     countPerPlayer = 3,                 -- 1 サイクルで各メンバー周辺に出現する体数
     radiusMin = 30.0,                   -- スポーン半径下限（m）
     radiusMax = 150.0,                  -- スポーン半径上限（m）

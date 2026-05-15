@@ -11,7 +11,7 @@
 - **脱出（INSTRUCTION-013）**: `Config.Extract` / `Config.ExtractPoints`、`server/extract.lua` + `client/extract.lua`、`lib.progressCircle`、`session.extractedInventory` メモリ保持、`mrd9_mission_logs` 記録
 - **任務中 HUD（INSTRUCTION-014）**: `server/hud.lua` が `IN_MISSION` のみ DTO 配信、`client/hud.lua` が `m9_hud_*` NUI プロトコル（オーバーレイ・非フォーカス）、`html/*` がタイマー／パーティ／インベントリ／ウェーブ帯＋トースト。脱出案内は **013 の `lib.showTextUI` のみ**（HUD に脱出バッジなし）。
 - **サイト・ナイン MAP（INSTRUCTION-020 v3）**: GTA V バニラ同梱の **Cayo Perico**（GTA Online Heist DLC）を採用。**`SetIslandEnabled('HeistIsland', true/false)`** クライアントローカルネイティブで島本体を切替。`client/transition.lua` の `Transition.Enter/Leave` で `Config.SiteNine.island` に応じて Cayo Perico / 北ヤンクトンを切替（互換性のため両方サポート）。**routing bucket と組み合わせて bucket 内クライアントだけ熱帯島が見える**真の分離方式。LS 市街地（ヴェガ事務所周辺）は無改変。座標基準は住宅街 5 ヶ所からランダム選出（`Config.Mission.spawnPoints`）。演出は雷雨・夜 22 時・青いフィルター（熱帯ホラー）。v1 The Apocalypse Project と v2 North Yankton は撤回。
-- **オープンワールド・サバイバル（INSTRUCTION-021）**: 3 ウェーブクリア後または `Config.Arena.enabled=false` 時に **`MRD9.Survival.Start`** が起動。3 分ごとに各メンバー周辺 30〜150m に 3 体スポーンする持続的脅威を維持。`Config.Mission.spawnPoints` 5 ヶ所からランダム選出で湧き分散、`Config.ExtractPoints` は **監視塔／ヘリポート／テント／飛行場／配電施設** の 5 ヶ所で脱出ルートも自由化。
+- **オープンワールド・サバイバル（INSTRUCTION-021）**: 任務開始から即 **`MRD9.Survival.Start`** が起動（`Config.Arena.enabled = false` 既定。3 ウェーブは廃止、アリーナはコード残置）。開始 20 秒後に最初のスポーン、以降 3 分ごとに各メンバー周辺 30〜150m に 3 体スポーンする持続的脅威。`Config.Mission.spawnPoints` 5 ヶ所からランダム選出で湧き分散、`Config.ExtractPoints` は **監視塔／ヘリポート／テント／飛行場／配電施設** の 5 ヶ所で脱出ルートも自由化。
 - 本格査定 UI 等は未接続（INSTRUCTION-015 以降）
 
 ## 非機能

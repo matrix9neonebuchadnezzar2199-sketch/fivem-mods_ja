@@ -86,18 +86,20 @@ function MRD9.Survival.Start(sessionId)
         cycleCount = 0,
     }
 
-    MRD9.Log('Survival started session=%s interval=%dms count=%d radius=%.0f-%.0f',
+    MRD9.Log('Survival started session=%s firstSpawn=%dms interval=%dms count=%d radius=%.0f-%.0f',
         sessionId,
+        tonumber(cfg.firstSpawnMs) or 20000,
         tonumber(cfg.intervalMs) or 180000,
         tonumber(cfg.countPerPlayer) or 3,
         tonumber(cfg.radiusMin) or 30.0,
         tonumber(cfg.radiusMax) or 150.0)
 
     for _, m in ipairs(session.members) do
-        TriggerClientEvent('jp-meridian9:notify', m, 'サイト・ナイン: 自由探索フェーズ開始（持続的脅威）')
+        TriggerClientEvent('jp-meridian9:notify', m, 'サイト・ナイン到着: 周囲を警戒せよ')
     end
 
     CreateThread(function()
+        local firstMs = tonumber(cfg.firstSpawnMs) or 20000
         local intervalMs = tonumber(cfg.intervalMs) or 180000
         local countPerPlayer = tonumber(cfg.countPerPlayer) or 3
         local minR = tonumber(cfg.radiusMin) or 30.0
@@ -115,7 +117,9 @@ function MRD9.Survival.Start(sessionId)
                 return
             end
 
-            Wait(intervalMs)
+            -- 1 サイクル目だけ短い firstSpawnMs、以降は intervalMs
+            local waitMs = (state.cycleCount == 0) and firstMs or intervalMs
+            Wait(waitMs)
 
             state = survivalStates[sessionId]
             if not state or not state.running then
