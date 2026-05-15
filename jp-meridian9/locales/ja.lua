@@ -72,13 +72,71 @@ Locales['ja'] = {
     ['vega_flavor_none'] = '……特に新しい情報はありません。',
     ['vega_target_label'] = 'ヴェガと話す',
 
-    -- ▼ パーティ
+    -- ▼ ブリップ（INSTRUCTION-010）
+    ['npc_blip_label'] = 'Vega & Associates 法律事務所',
+
+    -- ▼ ゲート選択肢
+    ['gate_solo'] = 'ソロで行く',
+    ['gate_solo_desc'] = '一人でゲートを開いて出発します',
+    ['gate_party'] = 'パーティを編成する',
+    ['gate_party_desc'] = '最大5人までのパーティを編成します',
+
+    -- ▼ パーティ UI / 通知
+    ['party_menu_title'] = 'パーティ編成',
+    ['party_member_list'] = 'メンバー (%d/%d)',
+    ['party_invite_nearby'] = '近くのプレイヤーを招待',
+    ['party_no_nearby_players'] = '近くに招待可能なプレイヤーがいません',
+    ['party_kick_member'] = 'メンバーを追放',
+    ['party_kick_select'] = '追放するメンバーを選択',
+    ['party_disband'] = 'パーティを解散',
+    ['party_leave'] = 'パーティを離脱',
+    ['party_confirm_dispatch'] = 'ゲートを開いて出発',
+    ['party_close_menu'] = '閉じる',
+    ['party_invite_received_header'] = 'パーティ招待',
+    ['party_invite_received'] = '%s からパーティ招待が届きました',
+    ['party_invite_accept'] = '承諾',
+    ['party_invite_decline'] = '拒否',
     ['party_invite_sent'] = '%s に招待を送信しました',
-    ['party_invite_received'] = '%s から MERIDIAN-9 任務への招待が届いています',
-    ['party_invite_accepted'] = '招待を承諾しました',
+    ['party_invite_accepted'] = '%s が招待を承諾しました',
+    ['party_invite_declined'] = '%s が招待を拒否しました',
+    ['party_invite_timeout'] = '招待がタイムアウトしました',
+    ['party_member_joined'] = '%s がパーティに加入しました',
+    ['party_member_left'] = '%s がパーティを離脱しました',
+    ['party_member_kicked'] = '%s がパーティから追放されました',
+    ['party_leader_promoted'] = '%s が新しいリーダーになりました',
+    ['party_disbanded'] = 'パーティが解散されました',
+    ['party_dispatched'] = 'ゲートを開きました。転送します……',
+    ['party_you_were_kicked'] = 'パーティから追放されました',
+
+    ['err_not_leader'] = 'リーダーのみが実行できます',
+    ['err_already_in_party'] = '既にパーティに参加しています',
+    ['err_not_in_party'] = 'パーティに所属していません',
+    ['err_target_in_party'] = '対象は既に他のパーティに参加しています',
+    ['err_target_in_session'] = '対象は既にミッション中です',
+    ['err_target_not_contracted'] = '対象は契約者ではありません',
+    ['err_target_too_far'] = '対象が招待範囲外です',
+    ['err_party_full'] = 'パーティは満員です',
+    ['err_party_too_few'] = 'メンバーが不足しています',
+    ['err_no_pending_invite'] = '保留中の招待がありません',
+    ['err_invite_expired'] = '招待が期限切れです',
+    ['err_target_offline'] = '対象がオフラインです',
+    ['err_invite_pending_elsewhere'] = '対象は既に他パーティからの招待保留中です',
+    ['err_pending_invites'] = '未処理の招待があるため出発できません',
+    ['err_session_create_failed'] = 'セッション作成に失敗しました: %s',
+    ['err_unknown'] = '不明なエラーが発生しました',
+
+    -- Session.Create 失敗コード（表示用）
+    ['member_not_contracted'] = 'メンバーに契約未締結者が含まれています',
+    ['member_already_in_session'] = 'メンバーが既に他セッションに所属しています',
+    ['invalid_member'] = '無効なメンバーが含まれています',
+    ['invalid_params'] = 'セッション引数が不正です',
+    ['too_many_sessions'] = '同時セッション上限に達しています',
+    ['no_bucket_available'] = 'ルーティングバケットが枯渇しています',
+    ['no_spawn_point'] = 'スポーン地点が未設定です（Config.Mission.spawnPoint）',
+    ['session_not_found'] = 'セッションが見つかりません',
+
+    -- ▼ パーティ（旧キー互換）
     ['party_invite_rejected'] = '招待を拒否しました',
-    ['party_full'] = 'パーティが満員です',
-    ['party_not_contracted'] = '対象者は契約者ではありません',
 
     -- ▼ ミッション
     ['mission_starting'] = 'ゲートが起動します……',
@@ -99,9 +157,6 @@ Locales['ja'] = {
     ['contract_required'] = '先にヴェガと契約を結ぶ必要があります',
     ['contract_signed'] = '契約が締結されました。JANUS プログラムへようこそ',
     ['debug_only'] = 'このコマンドはデバッグモード時のみ使用可能です',
-
-    ['party_menu_wip_title'] = 'MERIDIAN-9',
-    ['party_menu_wip_desc'] = 'パーティ編成機能は INSTRUCTION-010 で実装予定です',
 }
 
 --- フレーバーセリフ（`_()` 非対象・テーブル参照）

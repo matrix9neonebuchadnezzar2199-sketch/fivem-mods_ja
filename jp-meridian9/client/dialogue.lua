@@ -26,6 +26,7 @@ local executeContractSign
 local openTutorial
 local openTutorialQuestions
 local openRepeatVisit
+local openGateSubmenu
 local openFlavorTalk
 
 local function openFirstVisitFlow()
@@ -238,6 +239,53 @@ openTutorialQuestions = function()
     lib.showContext('m9_tutorial_questions')
 end
 
+openGateSubmenu = function()
+    local opts = {}
+    if Config.Party and Config.Party.allowSoloMission then
+        opts[#opts + 1] = {
+            title = _('gate_solo'),
+            description = _('gate_solo_desc'),
+            icon = 'user',
+            onSelect = function()
+                CreateThread(function()
+                    local ok, err = lib.callback.await('jp-meridian9:server:partyCreate', false)
+                    if not ok then
+                        lib.notify({ description = _(err or 'err_unknown'), type = 'error' })
+                        return
+                    end
+                    local ok2, err2 = lib.callback.await('jp-meridian9:server:partyConfirm', false)
+                    if not ok2 then
+                        lib.notify({ description = _(err2 or 'err_unknown'), type = 'error' })
+                    end
+                end)
+            end,
+        }
+    end
+    opts[#opts + 1] = {
+        title = _('gate_party'),
+        description = _('gate_party_desc'),
+        icon = 'users',
+        onSelect = function()
+            CreateThread(function()
+                local ok, err = lib.callback.await('jp-meridian9:server:partyCreate', false)
+                if not ok then
+                    lib.notify({ description = _(err or 'err_unknown'), type = 'error' })
+                    return
+                end
+                TriggerEvent('jp-meridian9:client:openPartyMenu')
+            end)
+        end,
+    }
+
+    lib.registerContext({
+        id = 'm9_gate',
+        title = _('vega_repeat_start_mission'),
+        menu = 'm9_repeat_main',
+        options = opts,
+    })
+    lib.showContext('m9_gate')
+end
+
 openRepeatVisit = function()
     CreateThread(function()
         vegaSay(_('vega_repeat_greeting'), 3000)
@@ -251,7 +299,7 @@ openRepeatVisit = function()
                     title = _('vega_repeat_start_mission'),
                     icon = 'play',
                     onSelect = function()
-                        TriggerEvent('jp-meridian9:client:openPartyMenu')
+                        openGateSubmenu()
                     end,
                 },
                 {

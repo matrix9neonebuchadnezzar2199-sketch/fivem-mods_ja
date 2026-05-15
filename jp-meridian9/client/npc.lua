@@ -78,9 +78,11 @@ local function spawnVega()
         SetBlipSprite(vegaBlip, blipCfg.sprite or 280)
         SetBlipColour(vegaBlip, blipCfg.color or 4)
         SetBlipScale(vegaBlip, blipCfg.scale or 0.8)
-        SetBlipAsShortRange(vegaBlip, true)
+        SetBlipAsShortRange(vegaBlip, blipCfg.shortRange ~= false)
         BeginTextCommandSetBlipName('STRING')
-        AddTextComponentSubstringPlayerName(blipCfg.label or 'Vega & Associates')
+        local labelKey = blipCfg.labelKey
+        local labelText = (labelKey and type(labelKey) == 'string' and _(labelKey)) or blipCfg.label or 'Vega & Associates'
+        AddTextComponentSubstringPlayerName(labelText)
         EndTextCommandSetBlipName(vegaBlip)
     end
 

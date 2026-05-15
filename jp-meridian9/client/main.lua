@@ -26,14 +26,6 @@ RegisterNetEvent('jp-meridian9:notify', function(msg)
     EndTextCommandThefeedPostTicker(false, true)
 end)
 
-RegisterNetEvent('jp-meridian9:client:openPartyMenu', function()
-    lib.notify({
-        title = _('party_menu_wip_title'),
-        description = _('party_menu_wip_desc'),
-        type = 'inform',
-    })
-end)
-
 local function registerCmd(name, handler)
     if type(name) == 'string' and name ~= '' then
         RegisterCommand(name, handler, false)

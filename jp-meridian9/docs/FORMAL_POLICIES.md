@@ -144,4 +144,17 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 |----------|
 | NPC 対話時の `IsContracted` は **キャッシュ＋DB フォールバック**の既存実装のまま。NPC 側から明示 `LoadCache` は不要（INSTRUCTION-008 方針）。 |
 | `client/npc.lua` でスポーン・`onResourceStop` で `removeLocalEntity`＋`DeleteEntity`・ブリップ削除。 |
-| `client/dialogue.lua` で初回／リピート分岐・署名コールバック・チュートリアル。パーティメニューは `jp-meridian9:client:openPartyMenu` を INSTRUCTION-010 で本実装。 |
+| `client/dialogue.lua` で初回／リピート分岐・署名コールバック・チュートリアル。ゲートは「ソロ／パーティ」分岐（`openGateSubmenu`）。パーティ UI は `client/party.lua` の `jp-meridian9:client:openPartyMenu`。 |
+
+## INSTRUCTION-010：パーティ編成（実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| 永続化 | **メモリのみ**。`server/party.lua` の `parties` / `playerToParty` / `globalPendingInvite`。リソース再起動で消滅。 |
+| メンバー規約 | `members[1]` = リーダー。離脱・譲渡後も先頭をリーダーに同期。 |
+| 招待 | 距離 `Config.Party.inviteRange`、タイムアウトは `CreateThread` + `Wait`（トークンで無効化）。同一被招待者へのグローバル排他 `globalPendingInvite`。 |
+| 確定 | `MRD9.Session.Create({ leader, members })` → 成功後のみ `party.sessionId` 代入 → `Session.TransferIn`。失敗時は `forming` にロールバック。未処理招待がある間は `Confirm` 拒否（`err_pending_invites`）。 |
+| 切断 | `server/session.lua` の `playerDropped` **先頭**で `MRD9.Party.HandleDisconnect`（`dispatched` は no-op）。 |
+| セッション終了 | `Session.Destroy` 末尾で `MRD9.Party.NotifySessionDestroyed` により `dispatched` パーティを掃除。 |
+| クライアント | `lib.registerContext` メイン UI、招待受信のみ `lib.alertDialog`。 |
+| 逸脱 | 指示書の `server/main.lua` の `playerDropped` 追記ではなく **`session.lua` に統合**（切断処理の順序を一本化）。 |

@@ -1,7 +1,7 @@
 # MERIDIAN-9 / Project JANUS（jp-meridian9）
 
 **MERIDIAN-9** は、FiveM 上で動作する **次元探査・エクストラクション型ミッション** の骨格リソースです。  
-現段階（v0.1.0-jp）は **設定・FW 検出・NUI・oxmysql（契約/統計/ログ）・セッション・契約キャッシュ／運営コマンド** までを含む **M0〜M1 スキャフォールド** であり、任務ロジック本体はロードマップ（`docs/milestones.md`）に従い順次実装します。
+現段階（v0.1.0-jp）は **設定・FW 検出・NUI・oxmysql（契約/統計/ログ）・セッション・契約キャッシュ／運営コマンド・ヴェガ対話・パーティ編成（ゲート〜セッション転送）** までを含む **M0〜M3 入口** であり、任務内の戦闘・ルート等はロードマップ（`docs/milestones.md`）に従い順次実装します。
 
 **ESX / QBCore / Qbox は必須にしません。** 未導入環境では Standalone として起動し、報酬は `Config.Reward.standaloneMoneyEvent` または手動付与案内にフォールバックします。  
 **永続化のため oxmysql は必須**です。対話 UI と NPC ターゲットのため **ox_lib / ox_target も必須**です（`fxmanifest.lua` の `dependencies` に記載）。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
@@ -59,6 +59,38 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 ---
 
+## パーティ編成
+
+契約済みプレイヤーがヴェガの「ゲートを起動してくれ」から **ソロ** または **パーティ（最大 5 人）** でサイト・ナインへ入るためのフローです。
+
+### 流れ
+
+1. リーダーがゲートメニューで「パーティを編成する」を選ぶと `partyCreate` が走り、パーティ編成メニューが開きます。
+2. リーダーが **10m 以内**の契約済みプレイヤーを招待（サーバー側で距離・契約・セッション未所属を再検証）。
+3. 被招待者に `lib.alertDialog`（承諾／拒否）。**30 秒**でタイムアウト。
+4. リーダーが **未処理の招待がない状態**で「ゲートを開いて出発」→ `MRD9.Session.Create` → `TransferIn` で全員同一バケットへ転送。
+5. ソロはゲートメニュー「ソロで行く」（`Config.Party.allowSoloMission == true` のときのみ表示）で `partyCreate` の直後に `partyConfirm` を連続実行。
+
+### `Config.Party`
+
+| キー | 既定 | 説明 |
+|------|------|------|
+| `maxMembers` | `5` | 最大人数 |
+| `minMembers` | `1` | 最小人数（ソロ可） |
+| `inviteRange` | `10.0` | 招待可能距離（m） |
+| `inviteTimeoutSeconds` | `30` | 招待の有効秒数 |
+| `allowSoloMission` | `true` | ソロでゲート確定を許可 |
+| `autoPromoteOnLeaderLeave` | `true` | 編成中にリーダーが落ちた場合、先頭メンバーへ自動譲渡 |
+
+### デバッグ（`Config.Debug = true`）
+
+| コマンド | 内容 |
+| -------- | ---- |
+| `/m9_party_status` | 自分の所属パーティをチャットに表示 |
+| `/m9_party_list` | 全パーティ一覧（**ACE `jp-meridian9.admin` 必須**。無権限時は無反応） |
+
+---
+
 ## コマンド
 
 | コマンド | 内容 |
@@ -76,6 +108,8 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 | `/m9_test_session` | 1 人パーティのテストセッション作成 → 約 1 秒後にバケット転送＋スポーン |
 | `/m9_test_extract` | 現在のセッションから脱出（バケット 0・帰還座標） |
 | `/m9_list_sessions` | アクティブセッション一覧（**restricted**・コンソール `source=0` からも可） |
+| `/m9_party_status` | 自分のパーティ状態（チャット表示） |
+| `/m9_party_list` | 全パーティ一覧（**ACE 必須**・無反応可） |
 
 ### 運営者向けコマンド（要 ACE: `jp-meridian9.admin`）
 
@@ -99,9 +133,10 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 | セクション | 内容 |
 | ---------- | ---- |
-| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ |
+| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ・**ブリップ**（`blip.*`） |
 | `Config.Gate` / `Config.SiteNine` | 転送・天候・時刻演出 |
-| `Config.Party` / `Config.Mission` | 人数・時間・バケット帯・**spawnPoint / returnPoint**（セッション転送） |
+| `Config.Party` | 招待距離・タイムアウト・ソロ可否・リーダー自動譲渡（**ゲート／パーティ編成**） |
+| `Config.Mission` | 時間・バケット帯・**spawnPoint / returnPoint**（セッション転送） |
 | `Config.Zombies` / `Config.Items` | 敵ウェーブと回収アイテム定義 |
 | `Config.Reward` | `paymentType` / `standaloneMoneyEvent` |
 | `Config.HUD` / `Config.Commands` | HUD 周期・コマンド名 |

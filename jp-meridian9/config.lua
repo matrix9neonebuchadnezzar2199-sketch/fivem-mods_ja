@@ -22,11 +22,13 @@ Config.NPC = {
     blockEvents = true,                 -- AIイベントブロック
     targetDistance = 2.5,               -- ox_target 有効距離
     blip = {
-        enabled = false,                -- 既定は非表示（秘密の入口）
-        sprite = 280,
-        color = 4,
+        enabled = true,                 -- INSTRUCTION-010: 短距離マーカー表示
+        sprite = 498,                   -- 書類系アイコン
+        color = 4,                      -- 黄
         scale = 0.8,
-        label = 'Vega & Associates',
+        shortRange = true,              -- 近距離のみ
+        labelKey = 'npc_blip_label',    -- locales のキー（`_()` 参照）
+        label = 'Vega & Associates',    -- labelKey 未使用時のフォールバック
     },
 }
 
@@ -36,12 +38,14 @@ Config.Gate = {
     destination = vector3(0.0, 0.0, 0.0), -- サイト・ナイン側スポーン地点
 }
 
--- ▼ パーティ設定 -----------------------------------------------
+-- ▼ パーティ設定（INSTRUCTION-010）-------------------------------
 Config.Party = {
-    minSize = 1,                        -- 最小人数
-    maxSize = 5,                        -- 最大人数
-    inviteTimeout = 30,                 -- 招待タイムアウト（秒）
-    maxInviteDistance = 10.0,           -- 招待可能距離（m）
+    maxMembers = 5,
+    minMembers = 1,
+    inviteRange = 10.0,                 -- 招待可能距離（m）
+    inviteTimeoutSeconds = 30,         -- 招待タイムアウト（秒）
+    allowSoloMission = true,            -- ソロでゲート確定を許可
+    autoPromoteOnLeaderLeave = true,    -- リーダー離脱時に次メンバーへ自動譲渡
 }
 
 -- ▼ ミッション設定 ---------------------------------------------

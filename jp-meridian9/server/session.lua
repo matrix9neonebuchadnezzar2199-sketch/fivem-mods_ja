@@ -269,6 +269,11 @@ function MRD9.Session.Destroy(sessionId, reason)
     end
 
     ReleaseBucket(s.bucket)
+
+    if MRD9.Party and MRD9.Party.NotifySessionDestroyed then
+        MRD9.Party.NotifySessionDestroyed(sessionId)
+    end
+
     sessions[sessionId] = nil
     MRD9.Log('Session destroyed: id=%s reason=%s', sessionId, tostring(reason))
     return true
@@ -314,6 +319,9 @@ AddEventHandler('playerDropped', function()
     local src = source
     if type(src) ~= 'number' or src <= 0 then
         return
+    end
+    if MRD9.Party and MRD9.Party.HandleDisconnect then
+        MRD9.Party.HandleDisconnect(src)
     end
     if memberToSession[src] then
         MRD9.Log('Player dropped during mission: src=%d', src)
