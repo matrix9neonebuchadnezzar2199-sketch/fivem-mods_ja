@@ -10,6 +10,9 @@ RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
     end
     MRD9.Log('Mission started: %s', data.sessionId)
     MRD9.CurrentSession = data
+    if MRD9.Transition and MRD9.Transition.Enter then
+        MRD9.Transition.Enter()
+    end
     if MRD9.HUD and MRD9.HUD.OnMissionStart then
         MRD9.HUD.OnMissionStart(data)
     end
@@ -26,6 +29,9 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
     MRD9.Log('Mission ended: %s reason=%s', data.sessionId, tostring(reason))
     if MRD9.HUD and MRD9.HUD.OnMissionEnd then
         MRD9.HUD.OnMissionEnd(data)
+    end
+    if MRD9.Transition and MRD9.Transition.Leave then
+        MRD9.Transition.Leave()
     end
     MRD9.CurrentSession = nil
     if reason == 'arena_wiped' then

@@ -57,7 +57,7 @@ Config.Mission = {
     cleanupIntervalSeconds = 60,      -- タイムアウト監視周期（秒）
     -- 動作確認用の暫定座標（The Apocalypse Project 導入後に差し替え。海上 0,0,0 は避ける）
     spawnPoint = vector4(1972.0, 3818.0, 33.4, 0.0),   -- サイト・ナイン側スポーン（暫定: Sandy Shores 近郊）
-    returnPoint = vector4(-75.24, -818.74, 326.18, 0.0), -- 帰還（暫定: Maze Bank 付近）
+    returnPoint = vector4(425.0, -979.3, 30.5, 270.0), -- 帰還: ヴェガ事務所の前（NPC の隣）
 }
 
 -- ▼ ゾンビ設定 -------------------------------------------------
@@ -111,10 +111,15 @@ Config.Reward = {
 }
 
 -- ▼ サイト・ナイン演出 -----------------------------------------
+-- 任務中だけクライアント側で適用する。`onMissionEnd` で全解除。
 Config.SiteNine = {
-    weather = 'XMAS',                   -- 雪・霧・暗い演出
+    weather = 'XMAS',                   -- 雪・霧・暗い演出（GTA 内部キー）
     timeHour = 3,                       -- 深夜3時固定
+    timeMinute = 0,                     -- 分
     timeFreeze = true,                  -- 時間進行停止
+    timecycleModifier = 'spectator5',   -- ポストエフェクト（寒色・コントラスト寄り）
+    timecycleStrength = 1.0,            -- 0.0〜1.0
+    blackout = true,                    -- 街灯・建物の明かりを消す（荒廃感）
 }
 
 -- ▼ HUD設定 -----------------------------------------------------
