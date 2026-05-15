@@ -38,6 +38,26 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
     end
     local reason = data.reason
     MRD9.Log('Mission ended: %s reason=%s', data.sessionId, tostring(reason))
+
+    -- INSTRUCTION-021: 死亡系の場合は **即時 HP 復元** で qbx_spawn の死亡監視を回避。
+    -- これをやらないと qbx_spawn が再スポーンを発動して
+    -- プレイヤーを病院・デフォルト spawn へ強制移動させ、Transition.Leave も走らず
+    -- 本島まで天候が継続する事故が起きる（マスター実機 2026-05-15）。
+    if reason == 'died' or reason == 'all_lost' or reason == 'arena_wiped' then
+        local ped = PlayerPedId()
+        if ped and ped ~= 0 then
+            pcall(function() ClearPedTasksImmediately(ped) end)
+            pcall(function() SetEntityHealth(ped, GetEntityMaxHealth(ped) or 200) end)
+            pcall(function() SetEntityInvincible(ped, true) end)
+        end
+    end
+
+    -- 天候 / 時間 / island の clean を **最初に** 呼ぶ。
+    -- TeleportToLosSantos が中断されても本島まで雪が降る事故を防ぐ。
+    if MRD9.Transition and MRD9.Transition.Leave then
+        MRD9.Transition.Leave()
+    end
+
     if MRD9.HUD and MRD9.HUD.OnMissionEnd then
         MRD9.HUD.OnMissionEnd(data)
     end
@@ -50,17 +70,12 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
         end
         if MRD9.Transition and MRD9.Transition.TeleportToLosSantos and rp then
             MRD9.Transition.TeleportToLosSantos(rp)
-        elseif MRD9.Transition and MRD9.Transition.Leave then
-            MRD9.Transition.Leave()
         end
 
-        -- INSTRUCTION-021: 死亡系の演出（ragdoll / HP 1 への設定）は撤去。
-        -- 理由: qbx_core / qbx_spawn の死亡監視が SetEntityHealth(ped, 1) を「死亡」と判定し、
-        -- プレイヤーを別場所（病院・デフォルト spawn）へ強制移動させる競合があったため
-        -- （マスター実機 2026-05-15）。死亡時もシンプルに『フェード → ヴェガ事務所前で立つ』
-        -- とし、インベントリ消去は server/session.lua 側で完結する。
-        if reason == 'arena_wiped' or reason == 'died' or reason == 'all_lost' then
-            -- 演出なし。将来 INSTRUCTION-016（蘇生・全ロスト演出）で再検討
+        -- フェード/テレポート完了後に Invincible 解除
+        local ped = PlayerPedId()
+        if ped and ped ~= 0 then
+            pcall(function() SetEntityInvincible(ped, false) end)
         end
     end)
 end)
