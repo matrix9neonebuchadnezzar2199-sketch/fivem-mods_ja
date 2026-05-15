@@ -13,6 +13,7 @@ local State = {
     appliedModifier = nil,
     appliedBlackout = false,
     nyEnabled = false,
+    cayoEnabled = false,
 }
 
 ---@return table
@@ -162,6 +163,43 @@ local function clearNorthYankton()
     State.nyEnabled = false
 end
 
+---@return boolean
+local function applyCayoPerico()
+    -- INSTRUCTION-020 v3: Cayo Perico を有効化（クライアントローカル）
+    -- 北ヤンクトンと同時有効化を避ける排他制御。
+    if State.nyEnabled then
+        clearNorthYankton()
+    end
+    SetIslandEnabled('HeistIsland', true)
+    State.cayoEnabled = true
+    return true
+end
+
+local function clearCayoPerico()
+    if not State.cayoEnabled then
+        return
+    end
+    SetIslandEnabled('HeistIsland', false)
+    State.cayoEnabled = false
+end
+
+---@return boolean
+local function applyIsland()
+    local c = cfg()
+    local key = c.island
+    if key == 'cayoperico' then
+        return applyCayoPerico()
+    elseif key == 'northYankton' then
+        return applyNorthYankton()
+    end
+    return false
+end
+
+local function clearIsland()
+    clearCayoPerico()
+    clearNorthYankton()
+end
+
 ---@return nil
 function MRD9.Transition.Enter()
     if State.active then
@@ -169,10 +207,10 @@ function MRD9.Transition.Enter()
     end
     State.active = true
 
-    -- INSTRUCTION-020: 北ヤンクトンの IPL ロード（クライアントローカル）
-    -- bob74_ipl 経由で NorthYankton を Enable。ロードは非同期で 20 個以上の IPL を順次読む。
-    -- 実際の同期ロード待ちは TeleportToSiteNine() の NewLoadSceneStart で行う。
-    applyNorthYankton()
+    -- INSTRUCTION-020 v3: Config.SiteNine.island に応じて Cayo Perico / 北ヤンクトンを Enable
+    -- いずれもクライアントローカル。Cayo Perico は SetIslandEnabled、北ヤンクトンは bob74_ipl 経由。
+    -- 実際の同期ロード待ちは TeleportToSiteNine() で行う。
+    applyIsland()
 
     applyClockOverride()
     applyWeather()
@@ -205,19 +243,24 @@ function MRD9.Transition.TeleportToSiteNine(sp)
     SetEntityCollision(ped, false, false)
     SetEntityInvincible(ped, true)
 
-    -- IPL を Enable してから、全 IPL が IsIplActive になるまで待機。
-    -- bob74_ipl の Enable は RequestIpl を発射するだけで非同期のため、
-    -- ここでロード完了を保証する。
-    local NY = getNorthYanktonObject()
-    if NY and type(NY.ipl) == 'table' then
-        local ok = waitIplsActive(NY.ipl, 15000)
-        if not ok then
-            MRD9.Log('NorthYankton: 一部 IPL が 15 秒以内に active にならず（タイムアウト）')
+    -- (1) MAP 固有のロード待ち
+    local islandKey = (cfg().island or 'cayoperico')
+    if islandKey == 'northYankton' then
+        local NY = getNorthYanktonObject()
+        if NY and type(NY.ipl) == 'table' then
+            local ok = waitIplsActive(NY.ipl, 15000)
+            print(('[jp-meridian9] TeleportToSiteNine: NY IPL active=%s (count=%d)'):format(tostring(ok), #NY.ipl))
+        else
+            print('[jp-meridian9] TeleportToSiteNine: NorthYankton オブジェクト取得失敗')
         end
+    elseif islandKey == 'cayoperico' then
+        -- SetIslandEnabled は IPL 連射ではなく Heist Island のジオメトリ層を切替えるため、
+        -- 個別 IPL アクティブ待機は不要。NewLoadSceneStart で十分。
+        print('[jp-meridian9] TeleportToSiteNine: Cayo Perico SetIslandEnabled(true) 後の NewLoadSceneStart')
     end
 
-    -- IPL がロード済みでも、座標周辺の ymap/コリジョン本体は別ストリーミング。
-    -- NewLoadSceneStart で同期シーンロードを並行実行する。
+    -- (2) ymap/ybn 実体ストリーミング（NewLoadSceneStart）
+    -- IPL active 後でも実ジオメトリは別ストリーム。座標周辺のシーンを同期ロードする。
     RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
     NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
     local sceneDeadline = GetGameTimer() + 12000
@@ -226,13 +269,39 @@ function MRD9.Transition.TeleportToSiteNine(sp)
         Wait(0)
     end
     NewLoadSceneStop()
+    print(('[jp-meridian9] TeleportToSiteNine: NewLoadSceneLoaded after %dms'):format(GetGameTimer() - (sceneDeadline - 12000)))
 
-    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 0.0, false, false, false, false)
+    -- (3) 地面 Z を実検出して確実に陸地に着地
+    -- 北ヤンクトン地形がロードされていれば GetGroundZFor_3dCoord が成功する。
+    -- 失敗するなら ymap がまだロード中なので追加待機。
+    local groundFound, groundZ = false, nil
+    local groundDeadline = GetGameTimer() + 10000
+    while GetGameTimer() < groundDeadline do
+        local f, gz = GetGroundZFor_3dCoord(x + 0.0, y + 0.0, 300.0, false)
+        if f and gz and gz > -50.0 and gz < 500.0 then
+            groundFound = true
+            groundZ = gz
+            break
+        end
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, 200.0)
+        Wait(100)
+    end
+    local finalZ = z
+    if groundFound and groundZ then
+        finalZ = groundZ + 1.0
+        print(('[jp-meridian9] TeleportToSiteNine: ground Z found = %.3f -> teleport Z = %.3f'):format(groundZ, finalZ))
+    else
+        print('[jp-meridian9] TeleportToSiteNine: ground Z not found within 10s. Using config Z (may fall into ocean)')
+    end
+
+    -- (4) テレポート
+    SetEntityCoords(ped, x + 0.0, y + 0.0, finalZ, false, false, false, false)
     SetEntityHeading(ped, w)
 
+    -- (5) コリジョン最終待機
     local colDeadline = GetGameTimer() + 5000
     while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < colDeadline do
-        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, finalZ)
         Wait(0)
     end
 

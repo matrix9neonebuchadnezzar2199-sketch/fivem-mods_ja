@@ -218,11 +218,20 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | NUI | `html/index.html` / `style.css` / `app.js`。`#m9-toasts` は `#app` 外に配置し、任務終了後も短時間トーストを表示可能。 |
 | fxmanifest | **`server/hud.lua` は `server/arena/arena.lua` の直後**（`GetHudSnapshot` 依存）。**`client/hud.lua` は `client/main.lua` より前**。 |
 
-## INSTRUCTION-020：サイト・ナイン MAP 導入（北ヤンクトン版 v2・実装済み・正本追記）
+## INSTRUCTION-020：サイト・ナイン MAP 導入（Cayo Perico 版 v3・実装済み・正本追記）
 
 | 項目 | 内容 |
 |------|------|
-| 採用 MAP | **GTA V バニラ同梱の North Yankton**（Prologue「Ludendorff」ステージ）。LS 南西海上の独立 region、座標基準 `(3217.697, -4834.826, 111.815)` |
+| 採用 MAP | **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC、build 2189+）。LS 南西海上の独立島、座標基準 `(4840, -5174, 2.0)`、メインビーチ `(4523, -4974, 4.5)` |
+| 地形 enable | **`SetIslandEnabled('HeistIsland', true/false)`** クライアントローカルネイティブ。bob74_ipl 不要 |
+| 撤回案 | **v1** The Apocalypse Project（LS 内 ymap 直配置で bucket 分離不可）／**v2** North Yankton（Prologue 専用ジオメトリ未完成、雪で移動減速）。v3 で Cayo Perico に確定 |
+| 演出 | 雷雨 (`THUNDER`)・夜 22 時・青いフィルター (`phone_cam11`) で熱帯ホラー |
+
+### v2 北ヤンクトン版の名残（互換性）
+
+| 項目 | 内容 |
+|------|------|
+| 採用 MAP（v2 当時） | **GTA V バニラ同梱の North Yankton**（Prologue「Ludendorff」ステージ）。LS 南西海上の独立 region、座標基準 `(3217.697, -4834.826, 111.815)` |
 | IPL ローダー | **[Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)**（MIT）。`fxmanifest.lua` の `dependencies` に追加し、`server.cfg` で `ensure bob74_ipl` を `jp-meridian9` の前に置く |
 | 同梱方針 | **本リポには同梱しない**。運営者が GitHub から `git clone https://github.com/Bob74/bob74_ipl.git` で取得 |
 | 分離方式 | **クライアントローカル IPL × routing bucket** の組み合わせ。`NorthYankton.Enable(true)` はクライアントローカルネイティブのため、任務 bucket 内のメンバーだけが個別に Enable することで「**bucket 内クライアントだけ別空間が見える**」が成立。bucket 0 のプレイヤーには **海面のまま**（既存 LS の見た目を一切壊さない） |

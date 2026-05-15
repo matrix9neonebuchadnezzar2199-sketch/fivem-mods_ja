@@ -55,13 +55,12 @@ Config.Mission = {
     bucketEnd = 999,                    -- バケット番号上限（プール上限）
     maxConcurrentSessions = 20,         -- 同時並行セッション上限
     cleanupIntervalSeconds = 60,      -- タイムアウト監視周期（秒）
-    -- INSTRUCTION-020: サイト・ナイン = 北ヤンクトン（Ludendorff 街中心）
-    -- bob74_ipl の NorthYankton 公式座標 (3217.697, -4834.826, 111.815) を基準に Z=113.0 で着地。
-    spawnPoint = vector4(3217.697, -4834.826, 113.0, 90.0),
-    returnPoint = vector4(425.0, -979.3, 30.5, 270.0), -- 帰還: ヴェガ事務所の前（NPC の隣）
-    -- サーバー側 TransferIn 後、IPL ロード待ちで追加スリープする ms。
-    -- 未指定なら Config.SiteNine.iplLoadWaitMs を使う。
-    siteNineLoadWaitMs = 2000,
+    -- INSTRUCTION-020 v3: サイト・ナイン = Cayo Perico メインビーチ
+    -- SetIslandEnabled('HeistIsland', true) で島本体を有効化。仮座標、実機精査で確定する。
+    spawnPoint = vector4(4523.0, -4974.0, 4.5, 0.0),
+    returnPoint = vector4(425.0, -979.3, 30.5, 270.0), -- 帰還: ヴェガ事務所の前
+    -- TransferIn 後の追加スリープ（クライアント側の島ロード待ち）。
+    siteNineLoadWaitMs = 1500,
 }
 
 -- ▼ ゾンビ設定 -------------------------------------------------
@@ -97,29 +96,33 @@ Config.RarityMultiplier = {
 }
 
 -- ▼ アイテム出現地点 -------------------------------------------
--- INSTRUCTION-020: 北ヤンクトン（Ludendorff）内の暫定座標。実機で精査して確定する想定。
+-- INSTRUCTION-020 v3: Cayo Perico 内の暫定座標。実機で精査して確定する想定。
 -- 各地点でランダムにアイテムが配置される。重みはレアリティ別の出現割合。
 Config.LootSpawns = {
-    -- 街中心エリア
-    { coords = vector3(3220.0, -4810.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(3245.0, -4825.0, 113.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(3185.0, -4790.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(3201.0, -4848.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(3273.0, -4810.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(3175.0, -4775.0, 113.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    -- 銀行・ロアポイント
-    { coords = vector3(3279.0, -4842.0, 112.5), weight = { common = 50, uncommon = 35, rare = 12, legendary = 3 } },
-    { coords = vector3(3290.0, -4848.0, 112.5), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    -- 教会周辺
-    { coords = vector3(3261.0, -4733.0, 113.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    { coords = vector3(3245.0, -4750.0, 113.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    -- 墓地（高レアリティ寄り）
-    { coords = vector3(3127.0, -4671.0, 116.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
-    { coords = vector3(3155.0, -4715.0, 115.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    -- 駅・港湾
-    { coords = vector3(3360.0, -4793.0, 110.5), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    { coords = vector3(3325.0, -4795.0, 110.5), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    { coords = vector3(3308.0, -4708.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- メインビーチ
+    { coords = vector3(4523.0, -4974.0, 4.5),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(4490.0, -5050.0, 3.8),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- 港（西側ドック）
+    { coords = vector3(4520.0, -5160.0, 11.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4470.0, -5180.0, 4.5),  weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- 北側ジャングル
+    { coords = vector3(4700.0, -5000.0, 30.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4760.0, -5150.0, 27.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- メインコンパウンド門
+    { coords = vector3(4760.0, -5500.0, 19.0), weight = { common = 50, uncommon = 35, rare = 12, legendary = 3 } },
+    { coords = vector3(4860.0, -5560.0, 22.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- El Rubio 邸宅前（高レア集中）
+    { coords = vector3(4985.0, -5765.0, 35.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
+    -- ビーチサイドバー（パーティ会場）
+    { coords = vector3(4500.0, -4500.0, 4.0),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- コミュニケーションタワー（高レア寄り）
+    { coords = vector3(4750.0, -5300.0, 35.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
+    -- 滑走路
+    { coords = vector3(5160.0, -5810.0, 17.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(5050.0, -5650.0, 15.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- ジャングル深部
+    { coords = vector3(4900.0, -5200.0, 28.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4830.0, -5100.0, 24.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
 }
 
 -- ▼ 脱出ポイント -----------------------------------------------
@@ -135,20 +138,24 @@ Config.Reward = {
 
 -- ▼ サイト・ナイン演出 -----------------------------------------
 -- 任務中だけクライアント側で適用する。`onMissionEnd` で全解除。
--- INSTRUCTION-020: 北ヤンクトン（bob74_ipl 経由）も同タイミングで Enable/Disable。
+-- INSTRUCTION-020 v3: Cayo Perico を採用。SetIslandEnabled で島を有効化。
+-- 演出は熱帯ホラー（雷雨・夜・青みフィルター）。
 Config.SiteNine = {
-    weather = 'XMAS',                   -- 雪・霧・暗い演出（GTA 内部キー）
-    timeHour = 3,                       -- 深夜3時固定
-    timeMinute = 0,                     -- 分
+    -- 演出
+    weather = 'THUNDER',                -- 雷雨（熱帯ホラー）
+    timeHour = 22,                      -- 夜 10 時
+    timeMinute = 0,
     timeFreeze = true,                  -- 時間進行停止
-    timecycleModifier = 'spectator5',   -- ポストエフェクト（寒色・コントラスト寄り）
-    timecycleStrength = 1.0,            -- 0.0〜1.0
-    blackout = true,                    -- 街灯・建物の明かりを消す（荒廃感）
-    -- INSTRUCTION-020: 北ヤンクトン
-    northYankton = true,                -- true で bob74_ipl 経由で NorthYankton.Enable(true)
-    graveStyle = 'dug',                 -- 'covered' / 'dug' / 'funeral'（墓地の状態）
-    traffic = false,                    -- 北ヤンクトン内の AI 交通（無人化のため false 推奨）
-    iplLoadWaitMs = 2000,               -- Enable(true) 後のロード待ち（地形コリジョン安定化）
+    timecycleModifier = 'phone_cam11',  -- 青み・コントラスト寄り（不気味）
+    timecycleStrength = 0.85,
+    blackout = false,                   -- Cayo Perico は元から街灯少ない、不要
+    -- INSTRUCTION-020 v3: 島切替
+    -- 'cayoperico' | 'northYankton' | 'none'
+    island = 'cayoperico',
+    -- 北ヤンクトン用パラメータ（island = 'northYankton' のときのみ有効）
+    graveStyle = 'dug',                 -- 'covered' / 'dug' / 'funeral'
+    traffic = false,                    -- 島内 AI 交通
+    iplLoadWaitMs = 1500,               -- IPL/Island ロード待ち（地形コリジョン安定化）
 }
 
 -- ▼ HUD設定 -----------------------------------------------------
@@ -239,9 +246,9 @@ Config.Extract = {
 }
 
 -- ▼ 脱出ポイント上書き ---------------------------------------------
--- INSTRUCTION-020: 北ヤンクトン（Ludendorff）内の暫定 3 箇所。実機で精査して確定する想定。
+-- INSTRUCTION-020 v3: Cayo Perico 内の暫定 3 箇所。実機で精査して確定する想定。
 Config.ExtractPoints = {
-    { coords = vector3(3261.0, -4733.0, 113.0), label = '教会前広場',       radius = 3.5, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(3360.0, -4793.0, 110.5), label = '駅プラットフォーム', radius = 3.5, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(3127.0, -4671.0, 116.0), label = '墓地裏門',         radius = 3.5, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4520.0, -5160.0, 11.0), label = '西港ドック',        radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5160.0, -5810.0, 17.0), label = '南滑走路',          radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4700.0, -5000.0, 30.0), label = '北ジャングル丘陵',  radius = 4.0, blipSprite = 488, blipColor = 5 },
 }

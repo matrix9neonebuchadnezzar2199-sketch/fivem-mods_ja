@@ -61,17 +61,17 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 ---
 
-## サイト・ナイン MAP 導入手順（INSTRUCTION-020 / 北ヤンクトン）
+## サイト・ナイン MAP 導入手順（INSTRUCTION-020 v3 / Cayo Perico）
 
-任務地「サイト・ナイン」は **GTA V バニラ同梱の North Yankton** を **クライアントローカル IPL** で有効化する設計です（routing bucket と組み合わせて、任務 bucket 内のクライアントだけ別空間が見える分離方式）。
+任務地「サイト・ナイン」は **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC ステージ）を **`SetIslandEnabled('HeistIsland', true/false)` クライアントローカルネイティブ**で有効化する設計です（routing bucket と組み合わせて、任務 bucket 内のクライアントだけ熱帯島が見える分離方式）。
 
 ### 仕組み
 
 - ヴェガ事務所（Mission Row）に居る通常プレイヤーには **何も見えない**（海面のみ）
-- 任務 bucket に転送されたメンバーだけが **北ヤンクトン（Ludendorff）** を見て戦闘
+- 任務 bucket に転送されたメンバーだけが **Cayo Perico（熱帯島・雷雨・夜）** を見て戦闘
 - 帰還するとヴェガ事務所周辺は綺麗な LS のまま
 
-### bob74_ipl の取得
+### bob74_ipl の取得（El Rubio 邸宅内装用）
 
 ```powershell
 cd "<server_resources>\[gamemodes]\[maps]"
@@ -80,21 +80,34 @@ git clone https://github.com/Bob74/bob74_ipl.git bob74_ipl
 
 `server.cfg` に `ensure bob74_ipl` を **`ensure jp-meridian9` より前**に追加。
 
+`sv_enforceGameBuild` は **2189 以上**（推奨 3258 以上）。Cayo Perico DLC を含むビルド要件。
+
 ### サイト・ナイン演出のカスタマイズ
 
 `config.lua` の `Config.SiteNine`:
 
 | キー | 既定 | 説明 |
 |---|---|---|
-| `weather` | `'XMAS'` | 天候（雪・霧） |
-| `timeHour` | `3` | 時刻固定（深夜 3 時） |
+| `weather` | `'THUNDER'` | 天候（雷雨・熱帯ホラー） |
+| `timeHour` | `22` | 時刻固定（夜 10 時） |
 | `timeFreeze` | `true` | 時間進行停止 |
-| `timecycleModifier` | `'spectator5'` | 寒色・コントラストポストエフェクト |
-| `blackout` | `true` | 街灯・建物の灯り消灯 |
-| `northYankton` | `true` | `false` で北ヤンクトン IPL を無効化（演出のみ） |
-| `graveStyle` | `'dug'` | 墓地スタイル `'covered'/'dug'/'funeral'` |
-| `traffic` | `false` | 北ヤンクトン内の AI 交通（廃墟感のため既定 false） |
-| `iplLoadWaitMs` | `2000` | `Enable(true)` 後のロード待ち（ms） |
+| `timecycleModifier` | `'phone_cam11'` | 青み・コントラストポストエフェクト |
+| `timecycleStrength` | `0.85` | 強度 |
+| `blackout` | `false` | 街灯消灯（Cayo Perico は元から街灯少ないので不要） |
+| `island` | `'cayoperico'` | `'cayoperico'` / `'northYankton'` / `'none'` で MAP 切替 |
+| `iplLoadWaitMs` | `1500` | 島ロード後の待機（ms） |
+
+### デバッグコマンド（F8）
+
+| コマンド | 動作 |
+|---|---|
+| `m9_cayo on` | Cayo Perico を有効化（北ヤンクトン排他 OFF） |
+| `m9_cayo off` | 無効化 |
+| `m9_cayo tp` | メインビーチへテレポート（フェード + ロード待ち） |
+| `m9_cayo tp <x> <y> <z>` | 任意座標へテレポート |
+| `m9_cayo coords` | 現在座標を `vector4(...)` 形式で chat / F8 に表示 |
+| `m9_cayo back` | ヴェガ事務所へ戻る |
+| `m9_ny *` | 同様の北ヤンクトン用（検証期間中残置） |
 
 詳細は `docs/INSTRUCTION-020（サイト・ナイン MAP 導入）.md` を参照。
 

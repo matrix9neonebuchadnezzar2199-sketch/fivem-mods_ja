@@ -1,8 +1,11 @@
-# INSTRUCTION-020 設計書：サイト・ナイン MAP 導入（**北ヤンクトン版・v2**）
+# INSTRUCTION-020 設計書：サイト・ナイン MAP 導入（**Cayo Perico 版・v3 / 確定**）
 
-> 本タスクは `jp-meridian9/全体設計.txt` §7 M0 環境構築の積み残し。**v1 で The Apocalypse Project 採用を提案したが撤回**（LS 内ジオメトリ置換型で「車・ヘリで地続きで行ける」問題が解消できないため）。本 v2 では **GTA V バニラ同梱の North Yankton** を採用し、**クライアントローカル IPL × routing bucket** の組み合わせで真の「別空間」を実現する。
+> 本タスクは `jp-meridian9/全体設計.txt` §7 M0 環境構築の積み残し。マスター実機検証により採用 MAP を確定。
 >
-> ファイル名は Windows 制約で全角中点を使用。
+> 採用変遷:
+> - v1 The Apocalypse Project → 撤回（LS 内ジオメトリ置換で bucket 分離不可）
+> - v2 North Yankton → 撤回（Prologue 専用ジオメトリ未完成、建物の横壁が無い、雪で移動が重い）
+> - **v3 Cayo Perico（本書）= 確定**：完成度の高い熱帯島、海上独立、bucket × `SetIslandEnabled` で真の分離
 
 ---
 
@@ -10,73 +13,76 @@
 
 | 項目 | 値 |
 |---|---|
-| 採用 MAP | **North Yankton**（GTA V キャンペーン Prologue「Ludendorff」のステージ。GTA V 本体に標準同梱） |
-| IPL ローダー | **[Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)**（MIT、現役メンテ、2024 年更新） |
-| 配置座標 | 中心 約 `(3217.697, -4834.826, 111.8152)`（**Cayo Perico と同座標に重ねて配置**するのがバニラ仕様） |
-| LICENSE 問題 | バニラ GTA V のリソース＋MIT IPL ローダーのみ。**LICENSE クリア** |
-| 本リポへの同梱 | bob74_ipl は同梱しない（運営者が GitHub から取得）。North Yankton 自体はバニラなので取得不要 |
-| 全体整合 | `ストーリー.txt` §「サイト・ナイン」「Subject-0」「研究員失踪」と高い親和性 |
-| サーバーデプロイ先 | `H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\[jp-mods]\jp-meridian9`（マスター環境で確定済み） |
+| 採用 MAP | **Cayo Perico**（GTA Online Heist DLC ステージ。GTA V 本体に標準同梱、build 2189+） |
+| 地形 enable | **`SetIslandEnabled('HeistIsland', true/false)`**（クライアントローカルネイティブ、bob74_ipl 不要） |
+| El Rubio 邸宅内装 | `bob74_ipl/dlc_cayoperico/base.lua` が `h4_ch2_mansion_final` IPL を起動時にロード済み |
+| 配置座標 | 中心 約 `(4840, -5174, 2.0)`、メインビーチ `(4523, -4974, 4.5)`、邸宅 `(4985, -5765, 35)` |
+| ライセンス | バニラ GTA V（Rockstar Games 著作物） + Bob74/bob74_ipl（MIT、内装 IPL 用） |
+| 同梱方針 | bob74_ipl は本リポに同梱しない（運営者が GitHub から取得） |
+| デプロイ先パス | `H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\[jp-mods]\jp-meridian9` |
 
 ---
 
-## 1. 北ヤンクトン採用の根拠
+## 1. Cayo Perico 採用の根拠
 
-### 1-A. 「海の向こう」要件を完全に満たす
+### 1-A. 完成度の決定差
 
-- 北ヤンクトンは LS から **直線距離 約 6〜7 km の海上 region**（座標 X≈3217）
-- バニラでは **海面のみ**配置（GTA V キャンペーンで一時的にロードされる以外は非表示）
-- **車・ヘリで物理的に行こうとしても海面しかなく着地不可**
-- **ゲート転送以外でアクセス手段が無い** → サイト・ナインの神秘性が完全に保たれる
-
-### 1-B. 世界観適合度
-
-| 要素 | 北ヤンクトン | サイト・ナイン世界観適合 |
+| 観点 | 北ヤンクトン (v2) | Cayo Perico (v3) |
 |---|---|---|
-| 気候 | **雪国・吹雪** | ◎ `Config.SiteNine.weather='XMAS'` と完全一致 |
-| 地形 | **港町・教会・墓地・荒廃した街並み** | ◎ ホラー / SF 隔離区域として完璧 |
-| 住民 | **無人**（バニラでは AI 通行人ゼロ） | ◎ 「研究員 25 名失踪」「向こう側」の不気味さを増幅 |
-| 既知のロケーション | **Ludendorff 銀行（カットシーン）／墓地／教会** | ◎ ロアアイテム・任務ポイントとして物語化しやすい |
+| 建物ジオメトリ | ✗ 前面のみ・横壁欠落（Prologue 専用未完成） | ✓ 完成（GTA Online 商用 DLC） |
+| 戦闘エリア | △ 街中心狭め、線形 | ✓ ジャングル・コンパウンド・ビーチ・滑走路の多層構造 |
+| 床コンディション | ✗ 雪で移動減速 | ✓ 平地・砂浜・ジャングル |
+| ミニマップ | ✗ LS 用のまま、北ヤンクトン MAP 出ない | ✓ Heist Island 用 MAP データ同梱 |
 
-### 1-C. 技術的な決定打：**bucket 内分離が真に成立**
+### 1-B. 「海の向こう」要件を完全に満たす
 
-- `Bob74/bob74_ipl` の `NorthYankton.Enable(true)` は **クライアントローカルネイティブ**に展開される
-- サーバー介在なし。**呼んだクライアントだけが ipl をロード**する
-- routing bucket 内のクライアント全員が `Enable(true)` を呼べば、**その bucket 内でだけ北ヤンクトンが見える**
-- bucket 0 のプレイヤーには **海面のまま**（既存 LS の見た目を一切壊さない）
-- ヴェガ事務所周辺 (Mission Row) は **完全に綺麗のまま**
-- 設計書 §3.1 の IDLE↔IN_MISSION 状態遷移が体感的に完全分離
+- LS から **直線距離 約 7 km の海上独立島**（座標 X≈4840）
+- バニラでは **海面のみ**配置（GTA Online Heist DLC を有効化したクライアントのみ表示）
+- **車・ヘリで物理的に行こうとしても海面しかなく**、ゲート転送以外でアクセス不可
+- bucket 外プレイヤーには **完全に海**（任務 bucket 内だけ島がレンダリングされる）
+
+### 1-C. 技術的優位
+
+- `SetIslandEnabled('HeistIsland', true)` は **クライアントローカルネイティブ**（OneSync routing bucket と組み合わせて真の分離）
+- `bob74_ipl` 不要（依存を最小化できる）→ ただし El Rubio 邸宅内装の利用のため依存は維持
+- 起動が `RequestIpl` の連射より高速（島全体を 1 コマンドで切替）
+
+### 1-D. 世界観適合（再解釈）
+
+- 「**サイト・ナイン = 次元の歪みで現実世界から切り離された熱帯島**」
+- 「**El Rubio の元秘密基地が異次元化、研究員 25 名はジャングル深部で失踪**」
+- 「**Subject-0 はメインコンパウンド地下のサブマリン基地に眠る**」
+- 夜と雷雨の演出で **熱帯ホラー**（インシデント・ゼロ系の不気味さは温度湿度演出で表現）
+- ストーリー §「インシデント・ゼロ」「APERTURE-J」「Subject-0」「研究員失踪」と整合
 
 ---
 
 ## 2. スコープ
 
 ### 含む
-
-- `Bob74/bob74_ipl` の採用と運用方針
-- `client/transition.lua` の `Transition.Enter/Leave` に NorthYankton 連携を実装
-- `Config.Mission.spawnPoint` / `Config.ExtractPoints` / `Config.LootSpawns` を北ヤンクトン内座標に再配置
-- `fxmanifest.lua` の dependencies / 起動チェック
-- README / CREDITS / FORMAL_POLICIES / milestones / design 更新
-- 既知の罠（穴・broken model）への暫定対策
+- `SetIslandEnabled` を `Transition.Enter/Leave` に統合
+- 排他制御（北ヤンクトン IPL との同時 enable 防止、開発検証期間中）
+- `Config.Mission.spawnPoint` / `ExtractPoints` / `LootSpawns` を Cayo Perico 内座標に
+- 演出（雷雨・夜・暗色フィルター）
+- 起動チェック・ドキュメント整備
 
 ### 含まない
-
-- ゲート転送の派手な演出（フェード・SFX・カメラワーク）→ **INSTRUCTION-017** で扱う
-- 北ヤンクトン自体の改変（穴塞ぎ・テクスチャ修正）→ 必要なら別 INSTRUCTION
-- 査定 UI・報酬画面 → INSTRUCTION-015
+- ゲート転送演出（フェード／SFX）→ INSTRUCTION-017
+- 査定 UI → INSTRUCTION-015
+- El Rubio 邸宅内 NPC・ロアロケーション → 将来拡張
 
 ---
 
 ## 3. 確定事項
 
-- **MAP 採用**: バニラ North Yankton（GTA V Prologue 由来）
-- **IPL ローダー**: Bob74/bob74_ipl（MIT）
-- **`alberttheprince/NorthYankton` は採用しない**（routing bucket 制御を自前の `Transition.Enter/Leave` に組み込む方が `jp-meridian9` セッション設計と整合）
-- **bucket 分離方式**: クライアント側 `NorthYankton.Enable(true)` をミッション開始時に呼び、終了時に `Enable(false)` を呼ぶ。**bucket 内のクライアント全員が個別に Enable する**
-- **座標基準点**: `(3217.697, -4834.826, 111.8152)`（Ludendorff 街中心、Bob74 公式座標）
-- **LS の Mission Row（ヴェガ事務所）は無改変**
-- **Cayo Perico との関係**: バニラ仕様で **同座標に重なる**。`NorthYankton.Enable(true)` を呼んだクライアントは Cayo が消えて North が見える。RP 整合上は問題なし（任務 bucket 中はサイト・ナインだけ）
+- **採用 MAP**: Cayo Perico（GTA V バニラ + GTA Online Heist DLC）
+- **地形制御ネイティブ**: `SetIslandEnabled('HeistIsland', true/false)`（クライアントローカル）
+- **bob74_ipl は採用継続**（El Rubio 邸宅内装 + 北ヤンクトン検証用 + 将来のロアロケーション拡張余地）
+- **`Config.SiteNine.island = 'cayoperico'`** で MAP 種別を制御。`'northYankton'` も実装上残す（互換性）
+- **演出**: 雷雨 (`THUNDER`)・22 時・青み (`phone_cam11`) で熱帯ホラー
+- **`Config.SiteNine.blackout = false`**（Cayo Perico は元から街灯少ない、不要）
+- **`Config.SiteNine.weather = 'THUNDER'`**（雷雨）
+- **`Config.Mission.spawnPoint`**: 仮 `(4523.0, -4974.0, 4.5, 0.0)` メインビーチ（実機精査で確定）
 
 ---
 
@@ -84,82 +90,60 @@
 
 ### 4-A. 採用する外部リソース
 
-| リソース | 用途 | 配置 | LICENSE | リポ |
-|---------|------|------|---------|------|
-| `bob74_ipl` | IPL ロード基盤・北ヤンクトン制御オブジェクト提供 | `resources/[scripts]/bob74_ipl/` または `resources/bob74_ipl/` | MIT | [Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl) |
+| リソース | 用途 | LICENSE |
+|---------|------|---------|
+| `bob74_ipl` | El Rubio 邸宅内装 IPL の自動ロード（既起動）、将来の内装拡張 | MIT |
 
-導入手順（運営者向け）:
+`SetIslandEnabled` 自体はバニラネイティブ、追加リソース不要。
 
-```powershell
-cd "H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources"
-git clone https://github.com/Bob74/bob74_ipl.git bob74_ipl
-```
-
-`server.cfg`:
-
-```
-ensure bob74_ipl
-ensure jp-meridian9
-```
-
-### 4-B. `bob74_ipl` API 抜粋
+### 4-B. `SetIslandEnabled` の挙動（FiveM ドキュメント・実機検証）
 
 ```lua
-local NorthYankton = exports['bob74_ipl']:GetNorthYanktonObject()
+-- 島を有効化（クライアントローカル、即時切替）
+SetIslandEnabled('HeistIsland', true)
 
--- 全体 ON/OFF
-NorthYankton.Enable(true)   -- IPL ロード（クライアントローカル）
-NorthYankton.Enable(false)  -- IPL アンロード
-
--- 墓地スタイル
-NorthYankton.Grave.Set(NorthYankton.Grave.covered)  -- 雪に覆われた墓
-NorthYankton.Grave.Set(NorthYankton.Grave.dug)      -- 掘り起こされた墓
-NorthYankton.Grave.Set(NorthYankton.Grave.funeral)  -- 葬儀（Prologue 仕様）
-
--- AI 交通
-NorthYankton.Traffic.Enable(false)  -- 廃墟感（jp-meridian9 ではこちら）
+-- 島を無効化
+SetIslandEnabled('HeistIsland', false)
 ```
 
-### 4-C. `client/transition.lua` 拡張案
+- **クライアント単位**: 各クライアントが個別に有効化、サーバー介在なし
+- **OneSync routing bucket と独立**: bucket 内のメンバーだけが個別に呼べば、その bucket だけ島が見える
+- **ロード時間**: 距離ベースのストリーミング。プレイヤーが島座標に近いほど早く描画
+- **要求 build**: `sv_enforceGameBuild 2189` 以上（現環境は 3258、OK）
 
-既存の `MRD9.Transition.Enter/Leave` に NorthYankton 連携を追加。
+### 4-C. `client/transition.lua` 拡張
 
 ```lua
-local function applyNorthYankton()
-    local ok, NY = pcall(function()
-        return exports['bob74_ipl']:GetNorthYanktonObject()
-    end)
-    if not ok or not NY then
-        MRD9.Log('NorthYankton: bob74_ipl 未導入。ロードをスキップ')
-        return false
-    end
-    NY.Enable(true)
-    if NY.Grave and NY.Grave.Set then
-        NY.Grave.Set(NY.Grave.dug)  -- 掘り起こされた墓（不穏な雰囲気）
-    end
-    if NY.Traffic and NY.Traffic.Enable then
-        NY.Traffic.Enable(false)
-    end
-    State.nyEnabled = true
-    return true
+local function applyCayoPerico()
+    SetIslandEnabled('HeistIsland', true)
+    State.islandEnabled = 'cayoperico'
 end
 
-local function clearNorthYankton()
-    if not State.nyEnabled then return end
-    local ok, NY = pcall(function()
-        return exports['bob74_ipl']:GetNorthYanktonObject()
-    end)
-    if ok and NY and NY.Enable then
-        NY.Enable(false)
+local function clearCayoPerico()
+    if State.islandEnabled == 'cayoperico' then
+        SetIslandEnabled('HeistIsland', false)
+        State.islandEnabled = nil
     end
-    State.nyEnabled = false
+end
+
+local function applyIsland()
+    local c = cfg()
+    if c.island == 'cayoperico' then
+        applyCayoPerico()
+    elseif c.island == 'northYankton' then
+        applyNorthYankton()
+    end
+end
+
+local function clearIsland()
+    clearCayoPerico()
+    clearNorthYankton()
 end
 
 function MRD9.Transition.Enter()
     if State.active then return end
     State.active = true
-    applyNorthYankton()  -- IPL ロード（非同期）
-    Wait((Config.SiteNine and Config.SiteNine.iplLoadWaitMs) or 1500)  -- ロード待ち
+    applyIsland()  -- 島の地形ロード開始
     applyClockOverride()
     applyWeather()
     applyTimecycle()
@@ -173,155 +157,182 @@ function MRD9.Transition.Leave()
     clearTimecycle()
     clearWeather()
     clearClockOverride()
-    clearNorthYankton()
+    clearIsland()
 end
 ```
 
-### 4-D. サーバー側起動チェック (`server/main.lua`)
+### 4-D. `TeleportToSiteNine` の島対応
 
-```lua
-local function checkNorthYanktonMap()
-    if GetResourceState('bob74_ipl') ~= 'started' then
-        print('[jp-meridian9] (server) [WARN] bob74_ipl 未起動。北ヤンクトンが表示されません。INSTRUCTION-020 §4-A 参照')
-        return false
-    end
-    print('[jp-meridian9] (server) bob74_ipl 起動確認 OK（北ヤンクトン利用可）')
-    return true
-end
-```
+既存の北ヤンクトン用 IPL ロード待ち (`waitIplsActive`) は **`Config.SiteNine.island == 'northYankton'` の時だけ**実行。Cayo Perico の場合は `SetIslandEnabled` 後に `NewLoadSceneStart` + `GetGroundZFor_3dCoord` だけで十分（IPL 連射より高速）。
 
-### 4-E. クライアント間同期
+### 4-E. サーバー側起動チェック（無変更）
 
-- `NorthYankton.Enable` はクライアントローカル
-- bucket 内の全クライアントが個別に `Enable(true)` を呼ぶ必要
-- jp-meridian9 では `TriggerClientEvent('jp-meridian9:onMissionStart', src, ...)` がメンバー全員に発火するため、各自で `Transition.Enter()` を呼ぶことで同期成立（既存設計でカバー済み）
-
-### 4-F. ロード待ちと安全テレポート
-
-- `NorthYankton.Enable(true)` 直後は IPL がストリーミング中で **地形コリジョンが未確定**
-- `SetEntityCoords` で即テレポートするとプレイヤーが地形を貫通する事故あり
-- 対策: クライアント側で **`Wait(1500)`** → `RequestCollisionAtCoord(x, y, z)` を呼んで → `Wait` を再度入れる
-- サーバー側 `SetEntityCoords` は **クライアントの `Transition.Enter()` 完了後**に発火させる（イベント順序）
+`server/main.lua` の `bob74_ipl` 起動確認はそのまま残す（邸宅内装で使う）。
 
 ---
 
 ## 5. 座標設計
 
-### 5-A. 北ヤンクトン主要ロケーション（バニラ・実調査）
+### 5-A. Cayo Perico 主要ロケーション（参考座標、実機精査で確定）
 
-| ロケーション | 座標 (X, Y, Z) | 用途候補 |
+| ロケーション | 座標案 | 用途 |
 |---|---|---|
-| **Ludendorff 街中心**（Bob74 公式） | `(3217.697, -4834.826, 111.815)` | spawnPoint 第一候補 |
-| **教会前広場** | `(3261.0, -4733.0, 113.0)` 付近 | 探索エリア・ExtractPoint 候補 |
-| **銀行前**（プロローグ Heist 場所） | `(3279.0, -4842.0, 112.0)` 付近 | 探索エリア・ロアロケーション |
-| **墓地** | `(3127.0, -4671.0, 116.0)` 付近 | 探索エリア・キーロケーション |
-| **駅 / 港湾** | `(3360.0, -4793.0, 110.0)` 付近 | ExtractPoint 候補 |
+| **メインビーチ（北東岸）** | `(4523.0, -4974.0, 4.5)` | **spawnPoint 第一候補** |
+| **港（西側ドック）** | `(4520.0, -5160.0, 11.0)` | ExtractPoint |
+| **滑走路南端** | `(5160.0, -5810.0, 17.0)` | ExtractPoint |
+| **北側ジャングル丘陵** | `(4700.0, -5000.0, 30.0)` | ExtractPoint |
+| **El Rubio 邸宅前** | `(4985.0, -5765.0, 35.0)` | LootSpawn 高レア |
+| **メインコンパウンド門** | `(4760.0, -5500.0, 19.0)` | LootSpawn |
+| **ビーチサイドバー（パーティ会場）** | `(4500.0, -4500.0, 4.0)` | LootSpawn |
+| **コミュニケーションタワー** | `(4750.0, -5300.0, 35.0)` | LootSpawn 高レア |
+| **地下サブマリン**（オフ島・別 IPL） | `(1560.0, 400.0, -50.0)` | ロアロケーション（将来） |
 
-> 座標は バニラ Prologue マップを基準にした概算値。**実機で精査・確定する**。
-
-### 5-B. Config 適用
+### 5-B. `Config.Mission`
 
 ```lua
 Config.Mission = {
-    spawnPoint = vector4(3217.697, -4834.826, 113.0, 90.0),  -- Ludendorff 中心、東向き
-    returnPoint = vector4(425.0, -979.3, 30.5, 270.0),       -- ヴェガ事務所前（変更なし）
     timeLimitSeconds = 1200,
-    -- ... 既存設定
-}
-
-Config.ExtractPoints = {
-    { coords = vector3(3261.0, -4733.0, 113.0), label = '教会前広場',  radius = 3.5, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(3360.0, -4793.0, 110.0), label = '駅プラットフォーム', radius = 3.5, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(3127.0, -4671.0, 116.0), label = '墓地裏門',      radius = 3.5, blipSprite = 488, blipColor = 5 },
-}
-
-Config.LootSpawns = {
-    -- 中心半径 200m 以内、街路上または建物周辺
-    { coords = vector3(3220.0, -4810.0, 112.5), weight = { common=70, uncommon=25, rare=4, legendary=1 } },
-    { coords = vector3(3245.0, -4825.0, 113.0), weight = { common=70, uncommon=25, rare=4, legendary=1 } },
-    -- ... 15 箇所程度（実機で確定）
+    bucketStart = 100,
+    bucketEnd = 999,
+    maxConcurrentSessions = 20,
+    cleanupIntervalSeconds = 60,
+    -- INSTRUCTION-020 v3: サイト・ナイン = Cayo Perico メインビーチ
+    spawnPoint = vector4(4523.0, -4974.0, 4.5, 0.0),
+    returnPoint = vector4(425.0, -979.3, 30.5, 270.0),  -- ヴェガ事務所前
+    siteNineLoadWaitMs = 1500,  -- Cayo Perico は IPL 連射不要で短縮可
 }
 ```
 
-### 5-C. アリーナ（ゾンビウェーブ）
+### 5-C. `Config.SiteNine`
 
-- `Config.Arena.spawnRadiusMin/Max` は既存値を踏襲（30〜80m）
-- spawnPoint 周辺の建物を遮蔽物として活用
-- 雪の中・廃墟・暗闇という条件で AI が見つけにくい → ホラー感増幅
+```lua
+Config.SiteNine = {
+    -- 演出
+    weather = 'THUNDER',                 -- 雷雨（熱帯ホラー）
+    timeHour = 22,                       -- 夜 10 時
+    timeMinute = 0,
+    timeFreeze = true,
+    timecycleModifier = 'phone_cam11',   -- 青み・コントラスト
+    timecycleStrength = 0.85,
+    blackout = false,                    -- Cayo Perico はもともと街灯少ない
+    -- INSTRUCTION-020 v3: 島切替
+    island = 'cayoperico',               -- 'cayoperico' | 'northYankton' | 'none'
+    iplLoadWaitMs = 1500,                -- 北ヤンクトン時の RequestIpl 待ち
+}
+```
+
+### 5-D. `Config.ExtractPoints`
+
+```lua
+Config.ExtractPoints = {
+    { coords = vector3(4520.0, -5160.0, 11.0), label = '西港ドック',        radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5160.0, -5810.0, 17.0), label = '南滑走路',          radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4700.0, -5000.0, 30.0), label = '北ジャングル丘陵',  radius = 4.0, blipSprite = 488, blipColor = 5 },
+}
+```
+
+### 5-E. `Config.LootSpawns`（仮、実機精査前提）
+
+```lua
+Config.LootSpawns = {
+    -- メインビーチ
+    { coords = vector3(4523.0, -4974.0, 4.5),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(4490.0, -5050.0, 3.8),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- 港
+    { coords = vector3(4520.0, -5160.0, 11.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4470.0, -5180.0, 4.5),  weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- 北側ジャングル
+    { coords = vector3(4700.0, -5000.0, 30.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4760.0, -5150.0, 27.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- メインコンパウンド周辺
+    { coords = vector3(4760.0, -5500.0, 19.0), weight = { common = 50, uncommon = 35, rare = 12, legendary = 3 } },
+    { coords = vector3(4860.0, -5560.0, 22.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4985.0, -5765.0, 35.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } }, -- 邸宅
+    -- ビーチサイドバー
+    { coords = vector3(4500.0, -4500.0, 4.0),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- コミュニケーションタワー（高レア寄り）
+    { coords = vector3(4750.0, -5300.0, 35.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
+    -- 滑走路
+    { coords = vector3(5160.0, -5810.0, 17.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(5050.0, -5650.0, 15.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- ジャングル深部
+    { coords = vector3(4900.0, -5200.0, 28.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(4830.0, -5100.0, 24.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+}
+```
 
 ---
 
 ## 6. ファイル変更
 
-| ファイル | 変更内容 |
-|---------|---------|
-| `jp-meridian9/fxmanifest.lua` | `dependencies { 'oxmysql', 'ox_lib', 'ox_target', 'bob74_ipl' }` 追記 |
-| `jp-meridian9/config.lua` | `Config.Mission.spawnPoint` を北ヤンクトン中心へ。`Config.ExtractPoints` を 3 箇所に再定義。`Config.LootSpawns` を 15 箇所程度に再定義。`Config.SiteNine` に `iplLoadWaitMs = 1500` を追加 |
-| `jp-meridian9/client/transition.lua` | `applyNorthYankton` / `clearNorthYankton` を追加。`Transition.Enter/Leave` の頭で呼ぶ。`pcall` で `bob74_ipl` 未導入時は no-op |
-| `jp-meridian9/server/main.lua` | `checkNorthYanktonMap()` を起動シーケンスに追加 |
-| `jp-meridian9/server/session.lua` | `TransferIn` でテレポート前に **`Wait(2000)`** 等の追加待機を入れて IPL ロード完了を待つ（必要なら） |
-| `jp-meridian9/README.md` | `## 5. サイト・ナイン MAP 導入手順` セクション。Bob74/bob74_ipl の取得手順・参考リンク |
-| `jp-meridian9/docs/CREDITS.md` | Bob74 / bob74_ipl (MIT) を追記。GTA V 公式リソース（North Yankton/Prologue マップ）は Rockstar Games 著作物として注記 |
-| `jp-meridian9/docs/FORMAL_POLICIES.md` | INSTRUCTION-020 正本セクション追記：「サイト・ナイン＝北ヤンクトン採用」「bob74_ipl を依存に追加」「bucket × クライアントローカル IPL の組み合わせで分離成立」「The Apocalypse Project 採用は撤回」 |
-| `jp-meridian9/docs/milestones.md` | M0 を完了状態に更新（INSTRUCTION-020 紐付け） |
-| `jp-meridian9/docs/design.md` | サイト・ナイン＝北ヤンクトンの旨を §現状節に追記 |
+| ファイル | 変更 |
+|---------|------|
+| `jp-meridian9/config.lua` | `Config.Mission.spawnPoint` を Cayo Perico へ、`Config.SiteNine` を熱帯ホラー演出に、`island='cayoperico'` 追加。`Config.ExtractPoints` / `Config.LootSpawns` を Cayo Perico 内座標へ |
+| `jp-meridian9/client/transition.lua` | `applyCayoPerico` / `clearCayoPerico` 追加。`applyIsland` / `clearIsland` で `Config.SiteNine.island` 分岐 |
+| `jp-meridian9/server/main.lua` | 既存の `bob74_ipl` 起動チェックは維持（邸宅内装で使用） |
+| `jp-meridian9/server/session.lua` | `TransferIn` テレポート委譲（v2 で実装済み・無変更） |
+| `jp-meridian9/README.md` | サイト・ナイン MAP 導入手順を Cayo Perico に書き直し |
+| `jp-meridian9/docs/CREDITS.md` | 採用 MAP を Cayo Perico に書き直し、北ヤンクトンは「検証期間中の代替案として実装したが採用見送り」と記録 |
+| `jp-meridian9/docs/FORMAL_POLICIES.md` | INSTRUCTION-020 を v3 に書き直し |
+| `jp-meridian9/docs/milestones.md` | M0 INSTRUCTION-020 完了（Cayo Perico 版）を反映 |
+| `jp-meridian9/docs/design.md` | 「サイト・ナイン MAP」現状節を Cayo Perico に更新 |
 
 ---
 
-## 7. 着手順序（コード実装はマスター承認後）
+## 7. 着手順序
 
-1. ✅ **マスター承認**（本設計書）
-2. **`AGENTS.md` / `.cursor/rules/cursor-workflow.mdc` のサーバーパス訂正**（`C:\FiveMServer\server-data\resources\` → `H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\`）
-3. テストサーバー側に `bob74_ipl` を clone
-4. `server.cfg` に `ensure bob74_ipl` を `ensure jp-meridian9` の前に追加
-5. `fxmanifest.lua` の `dependencies` に追記
-6. `client/transition.lua` に `applyNorthYankton/clearNorthYankton` 実装
-7. `Config.Mission.spawnPoint` を北ヤンクトン中心へ更新
-8. `Config.ExtractPoints` を仮の 3 箇所で配置
-9. `Config.LootSpawns` を仮の 5〜10 箇所で配置（実機調整の前提）
-10. `server/main.lua` の起動チェック追加
-11. **実機テスト**（ソロ）：ヴェガ依頼 → ゲート → 雪の北ヤンクトンに転送 → 戦闘 → 脱出 → 事務所綺麗
-12. **bucket 分離テスト**（運営＋テスト用キャラ 2 名）：片方は任務、もう片方は通常 LS。海上を飛んで「相手から自分の MAP が見えない」を確認
-13. `ExtractPoints` / `LootSpawns` の **座標を実機で精査して確定**
-14. ドキュメント整備（README / CREDITS / FORMAL_POLICIES / milestones / design）
-15. 開発日記追記 + コミット + push
+1. ✅ マスター承認（Cayo Perico 確定）
+2. 設計書 v3 を `docs/INSTRUCTION-020...md` に保存（本書）
+3. `config.lua` 変更（spawnPoint / ExtractPoints / LootSpawns / SiteNine）
+4. `client/transition.lua` 変更（`applyCayoPerico` / `applyIsland` / 分岐）
+5. ドキュメント整備（README / CREDITS / FORMAL_POLICIES / milestones / design）
+6. `scripts/deploy.bat jp-meridian9` でテストサーバーへ反映
+7. **マスター実機テスト**:
+   - 任務開始 → 雷雨の Cayo Perico メインビーチに着地
+   - 3 ウェーブ戦闘
+   - 港 / 滑走路 / 丘陵のいずれかから脱出
+   - ヴェガ事務所へ綺麗に帰還
+8. **マスターから座標精査の vector4 集**を受領（任務開始地・脱出 3 ヶ所・ルート 5〜15 ヶ所）
+9. `Config.Mission.spawnPoint` / `Config.ExtractPoints` / `Config.LootSpawns` を実機座標で確定
+10. 開発日記 + コミット + push
 
 ---
 
 ## 8. パフォーマンス目標
 
 - **クライアント resmon**：
-  - ロード時瞬間 < 3.0 ms（IPL ロード 1〜2 秒）
-  - 任務中定常 < 0.5 ms（追加負荷は SetWeatherTypeNow と Timecycle のみ）
-  - 任務外 < 0.05 ms（北ヤンクトンは無効化）
-- **サーバー resmon**：< 1.0 ms（既存と同等。bucket 切替時のみ瞬間負荷）
+  - `SetIslandEnabled` 後のロード瞬間 < 2.0 ms（IPL 連射しない分、北ヤンクトン版より軽い）
+  - 任務中定常 < 0.5 ms
+  - 任務外 < 0.05 ms
+- **サーバー resmon**：< 1.0 ms
 
 ---
 
 ## 9. セキュリティ・権威
 
-- `NorthYankton.Enable` はクライアントローカルで、**サーバー権威の対象外**
-- ただし「**そもそも bucket に居ないクライアントが Enable(true) を呼んでも、座標 (3217, -4834) に居なければ何も見えない**」ため、悪用面の懸念は小さい
-- bucket 切替・テレポート・インベントリは引き続きサーバー権威（`fivem-server-authority.mdc` 準拠）
+- `SetIslandEnabled` はクライアントローカル、サーバー権威の対象外
+- bucket 外プレイヤーが手元で `SetIslandEnabled('HeistIsland', true)` を呼んでも、座標 (4840, -5174) に居なければ何も見えない（既存 LS のまま）
+- 任務 bucket への参加・テレポート・インベントリはサーバー権威（`fivem-server-authority.mdc` 準拠）
 
 ---
 
 ## 10. RP 整合・世界観
 
-### ストーリー上の解釈
+### ストーリー再解釈（`ストーリー.txt` 無改変で整合）
 
-- 「**サイト・ナイン**」＝ **北ヤンクトンの隔離区域**
-- 「**APERTURE-J ゲート**」＝ ヴェガ事務所地下のゲート、座標を北ヤンクトン中心へワープする装置
-- LS と北ヤンクトンは「**海と次元の歪み**」で隔たれている、と説明可能
-- バニラの「Prologue」=「次元の歪みが古くから観測されていた区域、Meridian-9 がこれを発見して観測拠点化」と整合
-- 「**インシデント・ゼロ**」=「北ヤンクトンに送り込んだ研究員 25 名が死亡し、Subject-0 がここに残された」
-- 雪・教会・墓地・荒廃した街並み =「**死者の街**」のテーマでホラー演出強化
+- 「**サイト・ナイン**」＝ **次元の歪みで現実世界から切り離された熱帯島**
+- 「**APERTURE-J ゲート**」＝ ヴェガ事務所地下のゲート、座標を Cayo Perico メインビーチへワープ
+- 「**インシデント・ゼロ**」＝ 27 名の研究チームが Cayo Perico の El Rubio 元秘密基地で観測活動中、47 分後通信途絶
+- 「**Subject-0**」＝ メインコンパウンド地下のサブマリン基地（地下倉庫）に眠る
+- 「**夜と雷雨**」＝ 第 9 次元の異常気象。本来熱帯島だが、次元の歪みで天候が異常化
+- 「**前任研究員の遺品**」＝ ビーチ・港・ジャングル・邸宅・通信塔に散在
 
-### ストーリー.txt との不整合は無いか
+### `ストーリー.txt` との整合
 
-- §「Sandy Shores 郊外の地下施設に APERTURE 建造」→ **北ヤンクトンの発見はもっと古い**ことにする / または「Sandy Shores 本社ゲートと、Mission Row のヴェガ事務所地下の Janus ゲートは行き先が違う」と再定義
-- §「インシデント・ゼロ 27 名失踪」→ 北ヤンクトンに残された遺体・遺品の回収が JANUS 任務の核
-- §「Subject-0 という呼称を、もし現地で目にすることがあれば——即座に撤退してください」→ 北ヤンクトンの **墓地** か **銀行地下** に Subject-0 が眠る、というロア展開が可能
+- 「Sandy Shores 郊外の地下施設に APERTURE 建造」→ そのまま（本社の本格ゲート）
+- 「Mission Row の路地裏オフィス + APERTURE-J」→ そのまま（小型ゲート、行き先は Cayo Perico）
+- 「次元観測装置」→ Cayo Perico は **観測した第 9 次元**、本社 APERTURE が観測点、APERTURE-J が転送装置
+- 「**過去最高は一回の任務で 25 万ドル相当**」→ El Rubio 邸宅の高価値遺品で実現
 
 ---
 
@@ -329,14 +340,11 @@ Config.LootSpawns = {
 
 | リスク | 対策 |
 |---|---|
-| **バニラ北ヤンクトンの broken model / 穴** | 実機で穴のあるエリアを特定し、`ExtractPoints` / `LootSpawns` で避ける。重大なら別 INSTRUCTION で穴塞ぎ MOD（例: `alberttheprince/NorthYankton` の部分採用）を後追い |
-| **Cayo Perico との同座標重複** | バニラ仕様。`NorthYankton.Enable(true)` 呼び出し時に Cayo は自動的に消える。RP 上は問題なし |
-| **IPL ロード中の地形貫通** | `Wait(1500)` + `RequestCollisionAtCoord` で対処（§4-F） |
-| **bucket 内に新規参加者が来た時の同期** | 新規参加者の `onMissionStart` で `Transition.Enter()` が呼ばれるため、その時点で `NorthYankton.Enable(true)` される。問題なし |
-| **bob74_ipl のメンテ停止リスク** | 最終更新 2024 年で現役。代替候補 `jnccloud/fivem-ipl` も控えに把握 |
-| **GTA V のバージョン要件** | North Yankton は GTA V Prologue 由来で **全 GTA V 同梱**。バージョン要件なし |
-| **runtime `Enable(false)` 時の残留** | bob74_ipl が IPL を `RemoveIpl` するが、テレポート前に `Wait(500)` を入れて確実に |
-| **複数セッション同時稼働時** | 全 bucket のクライアントが独立に `Enable(true/false)` を呼ぶので問題なし。座標が同じなので、別 bucket のメンバーが同じ場所に湧いても **互いに見えない**（bucket 分離が機能） |
+| `SetIslandEnabled` のロード遅延 | `NewLoadSceneStart` + `GetGroundZFor_3dCoord` 待機（既存実装） |
+| 仮 spawnPoint が海面・岩場 | 実機精査で確定（`m9_cayo coords` で取得） |
+| Cayo Perico の地下サブマリン (Z=-50) はオフ島座標 | ロアロケーションとして将来利用、現状の任務エリアには含めない |
+| GTA build 要件 | サーバー `sv_enforceGameBuild 3258`（既設定、要件 2189+ 以上）OK |
+| El Rubio 邸宅内装の境界 | `bob74_ipl/dlc_cayoperico/base.lua` で起動時ロード済み。任務 bucket 内で問題なく動く |
 
 ---
 
@@ -344,71 +352,64 @@ Config.LootSpawns = {
 
 ### 12-A. 単体テスト（ソロ）
 
-- [ ] `bob74_ipl` ensure 後にサーバー起動できる
+- [ ] `restart jp-meridian9` で起動エラーなし
 - [ ] 起動ログに `bob74_ipl 起動確認 OK` が出る
-- [ ] ヴェガと契約 → ゲート起動 → **北ヤンクトン中央広場にテレポート**
-- [ ] 北ヤンクトン内で **雪が降る・寒色フィルター・街灯消灯**が効く
-- [ ] 北ヤンクトン内で 3 ウェーブ戦闘ができる
-- [ ] 北ヤンクトン内で `Config.LootSpawns` のアイテムが拾える
-- [ ] `Config.ExtractPoints` の 3 箇所どれでも脱出できる
-- [ ] 脱出後にヴェガ事務所（Mission Row）へ戻れる
-- [ ] 帰還後、Mission Row 周辺が **綺麗な LS のまま**である
+- [ ] ヴェガ依頼 → ゲート → **Cayo Perico メインビーチ**にフェードイン
+- [ ] 雷雨・夜・青いフィルターが効く
+- [ ] 3 ウェーブ戦闘ができる（敵 AI が島内で正常動作）
+- [ ] LootSpawns 15 ヶ所からアイテム取得
+- [ ] ExtractPoints 3 ヶ所どれでも脱出できる
+- [ ] 脱出後にヴェガ事務所（Mission Row）へ綺麗に帰還
+- [ ] Mission Row 周辺が綺麗な LS のままである
 
 ### 12-B. bucket 分離テスト（運営 + テスト用 1 名）
 
-- [ ] テスト用キャラは **任務に参加せず** LS で待機（bucket 0）
-- [ ] 運営キャラは **任務開始** → 北ヤンクトンへ
-- [ ] 運営キャラがヘリで海上を飛び、座標 `(3217, -4834)` 付近を確認 → **北ヤンクトンが見える**
-- [ ] テスト用キャラが同じ座標へヘリで飛ぶ → **海面のまま、北ヤンクトンは見えない**
-- [ ] 両者が **互いを視認できない**（bucket 分離）
+- [ ] テスト用は LS で待機（bucket 0）
+- [ ] 運営は任務開始 → Cayo Perico へ
+- [ ] 運営がヘリで海上を飛び、座標 `(4840, -5174)` 付近 → **Cayo Perico の島が見える**
+- [ ] テスト用が同座標へ飛ぶ → **海面のまま、島は見えない**
+- [ ] 両者が互いを視認できない（bucket 分離）
 
 ### 12-C. パフォーマンス
 
-- [ ] resmon でクライアント定常 < 0.5 ms
-- [ ] ロード時瞬間 < 3.0 ms
-- [ ] サーバー側で複数セッション並行時に異常負荷なし
+- [ ] resmon クライアント定常 < 0.5 ms
+- [ ] ロード瞬間 < 2.0 ms
 
 ### 12-D. リソース restart 耐性
 
-- [ ] 任務中に `restart jp-meridian9` してもプレイヤーが北ヤンクトンに残らない
-- [ ] `onResourceStop` で `Transition.Leave()` が呼ばれて Enable(false) される
+- [ ] 任務中に `restart jp-meridian9` してもプレイヤーが Cayo Perico に残らない
+- [ ] `onResourceStop` で `Transition.Leave()` → `SetIslandEnabled(false)`
 
 ---
 
 ## 13. 完了条件
 
-1. **bob74_ipl が ensure できる**状態でテストサーバーが起動できる
-2. **ヴェガと契約 → ゲート → 北ヤンクトン到着** が成立
-3. **bucket 0 のプレイヤーには北ヤンクトンが見えない**（最重要）
-4. **任務 bucket 内のプレイヤー同士は互いに見える**
-5. **帰還後、Mission Row のヴェガ事務所周辺が綺麗な LS** である
-6. resmon 目標値内
-7. `docs/FORMAL_POLICIES.md` / `docs/milestones.md` / `docs/design.md` / `docs/CREDITS.md` 更新済み
-8. 開発日記追加 + コミット + push
+1. `SetIslandEnabled` ベースで Cayo Perico に転送可能
+2. ヴェガ依頼 → 雷雨の Cayo Perico ビーチに到着
+3. bucket 0 のプレイヤーには **島が見えない**（最重要）
+4. 帰還後、Mission Row のヴェガ事務所周辺が綺麗な LS
+5. resmon 目標値内
+6. 実機精査による座標確定（spawnPoint / ExtractPoints / LootSpawns）
+7. ドキュメント更新済み
+8. 開発日記 + コミット + push
 
 ---
 
 ## 14. 参考リンク
 
-- [Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)（MIT）
-- [Bob74_ipl Wiki: North Yankton](https://github.com/Bob74/bob74_ipl/wiki/GTA-V:-North-Yankton)
-- [alberttheprince/NorthYankton](https://github.com/alberttheprince/NorthYankton)（採用しないが参考実装として把握）
+- [FiveM 公式 Natives: SetIslandEnabled](https://docs.fivem.net/natives/?_0xCAA6E25F7E92B2F0)
+- [Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)（MIT、El Rubio 邸宅内装用）
 - [FiveM Cookbook: Routing Buckets](https://docs.fivem.net/docs/cookbook/2020/11/27/routing-buckets-split-game-state/)
-- [FiveM 公式 Natives: RequestIpl](https://docs.fivem.net/natives/?_0x338E7EF52B6095A9=)
+- [Cayo Perico Heist DLC（Rockstar Games 公式）](https://www.rockstargames.com/newswire/article/k57o5o89aaa3ko/the-cayo-perico-heist-now-available-in-gta-online)
 
 ---
 
-## 15. v1 → v2 の変更点（過去設計の記録）
+## 15. v1 → v2 → v3 の変更履歴
 
-| 項目 | v1（旧） | v2（本書） |
+| バージョン | 採用 MAP | 撤回理由 |
 |---|---|---|
-| 採用 MAP | The Apocalypse Project | **北ヤンクトン（バニラ）** |
-| ベース | ymap 直配置（LS 内ジオメトリ置換） | **クライアントローカル IPL ロード** |
-| 配置場所 | Sandy Shores 北部 / Mt. Chiliad | **LS 南西海上（独立 region）** |
-| bucket 分離 | 不可能 | **可能（クライアントローカルネイティブの性質）** |
-| 「車・ヘリで地続きアクセス」問題 | 残存 | **完全解消（海上区画）** |
-| LICENSE | 不明（再配布リスク） | **MIT（bob74_ipl）＋バニラ** |
-| ヴェガ事務所への影響 | 荒廃化避けられない | **完全に綺麗** |
-| 工数 | 中（部分採用作業） | **中（IPL 連携＋座標精査）** |
+| v1 | The Apocalypse Project | LS 内 ymap 直配置で bucket 分離不可、地続きアクセス問題 |
+| v2 | North Yankton（GTA V Prologue） | ジオメトリ未完成（建物の横壁欠落、Prologue 専用エリア）、雪で移動減速、ミニマップ非対応 |
+| **v3** | **Cayo Perico**（GTA Online Heist DLC） | **採用確定**：完成度・bucket 分離・「海の向こう」要件すべて満たす |
 
-v1（apocalypse_project 案）は **撤回**。clone した `jp-meridian9/map/apocalypse_project/` は削除予定（処理中のロックを解除して削除）。
+v2 までの北ヤンクトン実装（`applyNorthYankton` / `m9_ny` デバッグコマンド）は **コード上は残す**（将来のロアロケーション・ホラー演出付加の余地）。`Config.SiteNine.island` で切替可能にして互換性を担保。

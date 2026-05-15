@@ -96,3 +96,248 @@ CreateThread(function()
         end)
     end
 end)
+
+---@param msg string
+local function nyChat(msg)
+    TriggerEvent('chat:addMessage', {
+        color = { 180, 220, 255 },
+        multiline = true,
+        args = { '[m9_ny]', msg },
+    })
+    print(('[jp-meridian9] [m9_ny] %s'):format(msg))
+end
+
+---@return table|nil
+local function nyGetObject()
+    if GetResourceState('bob74_ipl') ~= 'started' then
+        return nil
+    end
+    local ok, NY = pcall(function()
+        return exports['bob74_ipl']:GetNorthYanktonObject()
+    end)
+    if not ok or type(NY) ~= 'table' then
+        return nil
+    end
+    return NY
+end
+
+---@param x number
+---@param y number
+---@param z number
+local function nyTeleport(x, y, z)
+    local ped = PlayerPedId()
+    if not ped or ped == 0 then
+        return
+    end
+    DoScreenFadeOut(400)
+    local fadeDeadline = GetGameTimer() + 1000
+    while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
+        Wait(0)
+    end
+    FreezeEntityPosition(ped, true)
+    SetEntityInvincible(ped, true)
+    RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+    NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
+    local d = GetGameTimer() + 8000
+    while not IsNewLoadSceneLoaded() and GetGameTimer() < d do
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        Wait(0)
+    end
+    NewLoadSceneStop()
+    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 0.0, false, false, false, false)
+    Wait(800)
+    FreezeEntityPosition(ped, false)
+    SetEntityInvincible(ped, false)
+    DoScreenFadeIn(800)
+end
+
+RegisterCommand('m9_ny', function(source, args)
+    local sub = args[1] or 'help'
+    sub = string.lower(tostring(sub))
+
+    if sub == 'help' then
+        nyChat('使い方:')
+        nyChat('/m9_ny on             — 北ヤンクトンを Enable')
+        nyChat('/m9_ny off            — Disable')
+        nyChat('/m9_ny tp             — Ludendorff 中心へテレポート')
+        nyChat('/m9_ny tp x y z [h]   — 任意座標へテレポート（h は heading 任意）')
+        nyChat('/m9_ny coords         — 現在座標を vector4(...) 形式で表示')
+        nyChat('/m9_ny back           — ヴェガ事務所へ戻る')
+        return
+    end
+
+    if sub == 'on' then
+        local NY = nyGetObject()
+        if not NY then
+            nyChat('NorthYankton オブジェクト取得失敗（bob74_ipl が未起動？）')
+            return
+        end
+        SetIslandEnabled('HeistIsland', false)  -- 排他制御
+        NY.Enable(true)
+        if NY.Grave and NY.Grave.Set then NY.Grave.Set(NY.Grave.dug) end
+        if NY.Traffic and NY.Traffic.Enable then NY.Traffic.Enable(false) end
+        nyChat(('Enable(true) 呼出（Cayo Perico は OFF）/ IPL count=%d / IPL ロードは数秒〜十数秒かかります'):format(type(NY.ipl) == 'table' and #NY.ipl or 0))
+        return
+    end
+
+    if sub == 'off' then
+        local NY = nyGetObject()
+        if not NY then
+            nyChat('NorthYankton オブジェクト取得失敗')
+            return
+        end
+        NY.Enable(false)
+        nyChat('Enable(false) 呼出')
+        return
+    end
+
+    if sub == 'tp' then
+        local x = tonumber(args[2]) or 3217.697
+        local y = tonumber(args[3]) or -4834.826
+        local z = tonumber(args[4]) or 113.0
+        nyChat(('テレポート開始 → (%.3f, %.3f, %.3f)'):format(x, y, z))
+        CreateThread(function()
+            SetIslandEnabled('HeistIsland', false)  -- 排他制御
+            local NY = nyGetObject()
+            if NY then NY.Enable(true) end
+            nyTeleport(x, y, z)
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 then
+                local h = tonumber(args[5])
+                if h then SetEntityHeading(ped, h + 0.0) end
+            end
+            nyChat('テレポート完了')
+        end)
+        return
+    end
+
+    if sub == 'coords' then
+        local ped = PlayerPedId()
+        if not ped or ped == 0 then
+            nyChat('PlayerPedId が無効')
+            return
+        end
+        local c = GetEntityCoords(ped)
+        local h = GetEntityHeading(ped)
+        local line = ('vector4(%.3f, %.3f, %.3f, %.2f)'):format(c.x, c.y, c.z, h)
+        nyChat(line)
+        return
+    end
+
+    if sub == 'back' then
+        local rp = Config and Config.Mission and Config.Mission.returnPoint
+        if not rp then
+            nyChat('Config.Mission.returnPoint が未設定')
+            return
+        end
+        nyChat('ヴェガ事務所へ戻ります')
+        CreateThread(function()
+            local NY = nyGetObject()
+            if NY then NY.Enable(false) end
+            nyTeleport(rp.x, rp.y, rp.z)
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 and rp.w then
+                SetEntityHeading(ped, rp.w + 0.0)
+            end
+            nyChat('帰還完了')
+        end)
+        return
+    end
+
+    nyChat(('未知のサブコマンド: %s（/m9_ny help）'):format(sub))
+end, false)
+
+---@param msg string
+local function cayoChat(msg)
+    TriggerEvent('chat:addMessage', {
+        color = { 255, 230, 180 },
+        multiline = true,
+        args = { '[m9_cayo]', msg },
+    })
+    print(('[jp-meridian9] [m9_cayo] %s'):format(msg))
+end
+
+RegisterCommand('m9_cayo', function(source, args)
+    local sub = string.lower(tostring(args[1] or 'help'))
+
+    if sub == 'help' then
+        cayoChat('使い方:')
+        cayoChat('/m9_cayo on             — Cayo Perico を Enable')
+        cayoChat('/m9_cayo off            — Disable')
+        cayoChat('/m9_cayo tp             — メインビーチ付近へテレポート')
+        cayoChat('/m9_cayo tp x y z [h]   — 任意座標へテレポート')
+        cayoChat('/m9_cayo coords         — 現在座標を表示')
+        cayoChat('/m9_cayo back           — ヴェガ事務所へ戻る')
+        return
+    end
+
+    if sub == 'on' then
+        local NY = nyGetObject()
+        if NY then NY.Enable(false) end  -- 排他制御
+        SetIslandEnabled('HeistIsland', true)
+        cayoChat('SetIslandEnabled(HeistIsland, true) 呼出（北ヤンクトンは OFF）。地形は周辺ロードで数秒かかります')
+        return
+    end
+
+    if sub == 'off' then
+        SetIslandEnabled('HeistIsland', false)
+        cayoChat('SetIslandEnabled(HeistIsland, false) 呼出')
+        return
+    end
+
+    if sub == 'tp' then
+        -- 既定値: メインビーチ（カヨ・ペリコ北東岸）
+        local x = tonumber(args[2]) or 4523.0
+        local y = tonumber(args[3]) or -4974.0
+        local z = tonumber(args[4]) or 4.5
+        cayoChat(('テレポート開始 → (%.3f, %.3f, %.3f)'):format(x, y, z))
+        CreateThread(function()
+            local NY = nyGetObject()
+            if NY then NY.Enable(false) end  -- 排他制御
+            SetIslandEnabled('HeistIsland', true)
+            Wait(200)
+            nyTeleport(x, y, z)
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 then
+                local h = tonumber(args[5])
+                if h then SetEntityHeading(ped, h + 0.0) end
+            end
+            cayoChat('テレポート完了')
+        end)
+        return
+    end
+
+    if sub == 'coords' then
+        local ped = PlayerPedId()
+        if not ped or ped == 0 then
+            cayoChat('PlayerPedId が無効')
+            return
+        end
+        local c = GetEntityCoords(ped)
+        local h = GetEntityHeading(ped)
+        local line = ('vector4(%.3f, %.3f, %.3f, %.2f)'):format(c.x, c.y, c.z, h)
+        cayoChat(line)
+        return
+    end
+
+    if sub == 'back' then
+        local rp = Config and Config.Mission and Config.Mission.returnPoint
+        if not rp then
+            cayoChat('Config.Mission.returnPoint が未設定')
+            return
+        end
+        cayoChat('ヴェガ事務所へ戻ります')
+        CreateThread(function()
+            SetIslandEnabled('HeistIsland', false)
+            nyTeleport(rp.x, rp.y, rp.z)
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 and rp.w then
+                SetEntityHeading(ped, rp.w + 0.0)
+            end
+            cayoChat('帰還完了')
+        end)
+        return
+    end
+
+    cayoChat(('未知のサブコマンド: %s（/m9_cayo help）'):format(sub))
+end, false)
