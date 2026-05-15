@@ -229,7 +229,19 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | 撤回履歴 | **v1** The Apocalypse Project（LS ymap 直配置で bucket 分離不可）／ **v2** North Yankton（Prologue 専用ジオメトリ未完成）／ **v3** Cayo Perico（`SetIslandEnabled` の常時 ON / 動的切替いずれも GTA V クライアント内部状態破壊問題でマップ画面崩壊・LS 描画失敗を引き起こした） |
 | 撤退理由（v3） | マスター実機で `SetIslandEnabled(true)` 常時 ON 運用時に **ESC マップ画面が崩壊**（地図が下部のみ表示、ビル群歪み）。FiveM プロセス再起動でも復旧せず、GTA V クライアントキャッシュレベルで状態が壊れる。Cayo Perico は実用不可と確定 |
 | 復旧手順（v3 残留状態のクライアント） | (1) FiveM 完全終了（タスクマネージャで FiveM/GTA5 プロセス全終了） (2) `%LOCALAPPDATA%\FiveM\FiveM.app\data\cache\` クリア (3) FiveM 再起動 → 接続。マスター環境で 2026-05-15 に実施し復旧確認 |
-| **教訓・禁止事項** | **`SetIslandEnabled` / `EnableMpDlcMaps` のネイティブ呼出は禁止**。FiveM コミュニティでも GTA V クライアントの内部状態破壊事例あり、復旧にキャッシュクリアが必須となる。MAP 追加は **専用 MAP リソース（ymap を `stream/` フォルダで配信し `fxmanifest.lua` で登録）** の形式で実装すること |
+| **教訓・禁止事項** | **`EnableMpDlcMaps(true)` の呼出は禁止**（ESC マップ崩壊の主犯）。一方 `SetIslandEnabled('HeistIsland', true)` 単体は安全（GTA Online で常時使用されているネイティブ）。v3 での問題は両者を同時に ON にしていたことで `EnableMpDlcMaps` が LS のミニマップ層を差し替えたのが原因 |
+
+## INSTRUCTION-020：サイト・ナイン MAP 導入（**v5 確定運用** / Cayo Perico 常時 ON + EnableMpDlcMaps 封印）
+
+| 項目 | 内容 |
+|------|------|
+| 採用 MAP | **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC） |
+| 地形 enable | **`SetIslandEnabled('HeistIsland', true)`** をクライアント起動時に呼んで **常時 ON 固定**（GTA Online と同じ運用） |
+| ミニマップ切替 | **`EnableMpDlcMaps` は呼ばない**（v3 で ESC マップ崩壊の主犯と判明）。ミニマップは LS のままで Cayo Perico 用に切り替わらない（妥協） |
+| bucket 0 のプレイヤー | 海上に Cayo Perico が遠景表示される。地続きアクセス不可（海上独立島） |
+| bucket 分離対象 | **演出のみ**（天気・時間・タイムサイクル・街灯）。地形は共通 |
+| 復旧成功確認 | マスター実機で 2026-05-15 復旧確認後、本構成（v5）で再挑戦 |
+| 撤回履歴 | v1 The Apocalypse Project（LS ymap で bucket 分離不可）／ v2 North Yankton（Prologue ジオメトリ未完成）／ v3 Cayo Perico + EnableMpDlcMaps（ESC マップ崩壊）／ v4 Sandy Shores 内運用（リスク回避のため Cayo Perico 撤回、しかし「島を読み込む」設計の本質を失った） |
 | 「地続きで行ける」問題 | 復活するが、RP「Meridian-9 隔離区域への許可なき侵入は契約違反」で処理。物理的アクセス制限ではなく**運用ルールで担保** |
 
 ## INSTRUCTION-020：サイト・ナイン MAP 導入（Cayo Perico 版 v3・**撤回**・コード残置記録）

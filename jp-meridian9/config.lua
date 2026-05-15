@@ -55,18 +55,18 @@ Config.Mission = {
     bucketEnd = 999,                    -- バケット番号上限（プール上限）
     maxConcurrentSessions = 20,         -- 同時並行セッション上限
     cleanupIntervalSeconds = 60,      -- タイムアウト監視周期（秒）
-    -- INSTRUCTION-020 v4: サイト・ナイン = LS 内 Sandy Shores 北部廃工場エリア（暫定）
-    -- v3 Cayo Perico は GTA V クライアントの内部状態破壊問題で撤回。
-    -- 「地続きでアクセス可能」だが RP 上「Meridian-9 隔離区域、許可なき侵入は契約違反」と整合。
-    -- 実機精査で座標を確定する想定。
+    -- INSTRUCTION-020 v5: サイト・ナイン = Cayo Perico 住宅街（v3 案を EnableMpDlcMaps だけ
+    -- 封印して復活）。SetIslandEnabled('HeistIsland', true) のみ常時 ON、
+    -- EnableMpDlcMaps は呼ばない（ESC マップ崩壊の主犯と判明したため）。
+    -- 住宅街 5 ヶ所からランダム選出（チーム分散しすぎ防止）。
     spawnPoints = {
-        vector4(2125.0, 4787.0, 41.0,   0.0),   -- 廃倉庫 1（仮）
-        vector4(2100.0, 4775.0, 41.0,  90.0),   -- 廃倉庫 2（仮）
-        vector4(2150.0, 4760.0, 41.0, 180.0),   -- 廃倉庫 3（仮）
-        vector4(2120.0, 4810.0, 41.0, 270.0),   -- 廃倉庫 4（仮）
-        vector4(2080.0, 4795.0, 41.0,  45.0),   -- 廃倉庫 5（仮）
+        vector4(5016.281, -5723.576, 17.680, 260.05),
+        vector4(5082.916, -5735.612, 21.036,   8.07),
+        vector4(5068.562, -5776.124, 16.317, 241.29),
+        vector4(5025.901, -5804.289, 17.478, 110.83),
+        vector4(4961.023, -5789.379, 26.266, 159.78),
     },
-    spawnPoint = vector4(2125.0, 4787.0, 41.0, 0.0),
+    spawnPoint = vector4(5016.281, -5723.576, 17.680, 260.05),
     returnPoint = vector4(425.0, -979.3, 30.5, 270.0),
     siteNineLoadWaitMs = 1500,
 }
@@ -104,18 +104,27 @@ Config.RarityMultiplier = {
 }
 
 -- ▼ アイテム出現地点 -------------------------------------------
--- INSTRUCTION-020 v4: Sandy Shores 北部 廃工場・空港周辺の暫定座標。実機精査で確定。
+-- INSTRUCTION-020 v5: Cayo Perico 内の暫定座標。実機精査で確定する想定。
 Config.LootSpawns = {
-    { coords = vector3(2125.0, 4787.0, 41.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(2100.0, 4775.0, 41.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(2150.0, 4760.0, 41.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    { coords = vector3(2080.0, 4795.0, 41.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(2120.0, 4810.0, 41.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    { coords = vector3(1972.0, 3818.0, 33.4), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(2200.0, 4825.0, 41.0), weight = { common = 50, uncommon = 35, rare = 12, legendary = 3 } },
-    { coords = vector3(2050.0, 4750.0, 41.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
-    { coords = vector3(2557.0, 4671.0, 33.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
-    { coords = vector3(1715.0, 3273.0, 41.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- メインビーチ
+    { coords = vector3(4523.0, -4974.0, 4.5),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(4490.0, -5050.0, 3.8),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- 港（西側ドック）
+    { coords = vector3(4520.0, -5160.0, 11.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- 北側ジャングル
+    { coords = vector3(4700.0, -5000.0, 30.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- メインコンパウンド門
+    { coords = vector3(4760.0, -5500.0, 19.0), weight = { common = 50, uncommon = 35, rare = 12, legendary = 3 } },
+    -- El Rubio 邸宅前（高レア集中）
+    { coords = vector3(4985.0, -5765.0, 35.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
+    -- ビーチサイドバー（パーティ会場）
+    { coords = vector3(4500.0, -4500.0, 4.0),  weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- コミュニケーションタワー（高レア寄り）
+    { coords = vector3(4750.0, -5300.0, 35.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
+    -- 滑走路
+    { coords = vector3(5160.0, -5810.0, 17.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- ジャングル深部
+    { coords = vector3(4900.0, -5200.0, 28.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
 }
 
 -- ▼ 脱出ポイント -----------------------------------------------
@@ -131,25 +140,22 @@ Config.Reward = {
 
 -- ▼ サイト・ナイン演出 -----------------------------------------
 -- 任務中だけクライアント側で適用する。`onMissionEnd` で全解除。
--- INSTRUCTION-020 v4 確定運用:
---   Cayo Perico (v3) / 北ヤンクトン (v2) 採用は撤回。GTA V クライアント内部状態の
---   破壊問題で実用不可だったため。サイト・ナインは LS 内 Sandy Shores 北部の
---   廃工場・隔離区域として運用。MAP 切替系ネイティブは一切呼ばない。
---   bucket と演出（雷雨・夜・青みフィルター・街灯消灯）でサイト・ナイン感を出す。
+-- INSTRUCTION-020 v5 確定運用:
+--   Cayo Perico は client/main.lua のリソース起動時に SetIslandEnabled(true) で
+--   常時 ON 固定。EnableMpDlcMaps は ESC マップ崩壊の主犯と判明したため絶対に呼ばない。
+--   bucket 0 のプレイヤーにも海上に Cayo Perico が遠景として見える。
+--   任務 bucket 分離は **演出のみ**（天気・時間・タイムサイクル・街灯）。
 Config.SiteNine = {
-    -- 演出（任務中のみ）
-    weather = 'THUNDER',                -- 雷雨
+    weather = 'THUNDER',                -- 雷雨（熱帯ホラー）
     timeHour = 22,                      -- 夜 10 時
     timeMinute = 0,
-    timeFreeze = true,                  -- 時間進行停止
+    timeFreeze = true,
     timecycleModifier = 'phone_cam11',  -- 青み・コントラスト
     timecycleStrength = 0.85,
-    blackout = true,                    -- 街灯消灯（LS 内なので有効）
-    -- INSTRUCTION-020 v4: 島切替は 'none' で完全無効化
-    -- 'cayoperico' / 'northYankton' / 'none'
-    -- v3/v2 のコードは残置（将来の MAP MOD 採用余地、現状無効）
-    island = 'none',
-    graveStyle = 'dug',                 -- 北ヤンクトン用（未使用）
+    blackout = false,                   -- Cayo Perico は元から街灯少ない、不要
+    -- INSTRUCTION-020 v5: 'cayoperico' で Cayo Perico 採用、'none' で MAP 切替なし
+    island = 'cayoperico',
+    graveStyle = 'dug',                 -- 北ヤンクトン用（互換維持・未使用）
     traffic = false,
     iplLoadWaitMs = 1500,
 }
@@ -245,13 +251,13 @@ Config.Extract = {
 }
 
 -- ▼ 脱出ポイント上書き ---------------------------------------------
--- INSTRUCTION-020 v4: Sandy Shores 北部 周辺の脱出 5 ヶ所（暫定）。実機精査で確定。
+-- INSTRUCTION-020 v5: Cayo Perico 内の脱出 5 ヶ所（実機精査済み座標）。
 Config.ExtractPoints = {
-    { coords = vector3(2125.0, 4787.0, 41.0), label = '北側ゲート',     radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(1715.0, 3273.0, 41.0), label = '南側救援所',     radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(2557.0, 4671.0, 33.0), label = '東側ヘリパッド', radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(1972.0, 3818.0, 33.4), label = '中央広場',       radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(2050.0, 4825.0, 41.0), label = '配電施設',       radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5043.146, -5112.065,  6.164), label = '監視塔',     radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4884.140, -5283.067,  8.432), label = 'ヘリポート', radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4892.726, -4919.016,  3.368), label = 'テント',     radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4429.605, -4463.830,  4.782), label = '飛行場',     radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5168.241, -4613.965,  2.864), label = '配電施設',   radius = 4.0, blipSprite = 488, blipColor = 5 },
 }
 
 -- ▼ オープンワールド・サバイバル（INSTRUCTION-021）------------------
