@@ -10,47 +10,212 @@ body {
   height: 100%;
   font-family: system-ui, sans-serif;
   background: transparent;
+  overflow: hidden;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #app {
   position: fixed;
   inset: 0;
   pointer-events: none;
+  z-index: 1;
 }
 
-.header {
+.m9-toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  z-index: 2;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 90vw;
+}
+
+.m9-hud {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.m9-hud__wave-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: rgba(8, 12, 24, 0.72);
+  border: 1px solid rgba(120, 180, 255, 0.35);
+  color: #e8f4ff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 3px #000;
+  white-space: nowrap;
+}
+
+.m9-hud__grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr minmax(140px, 200px);
+  grid-template-rows: 1fr auto;
+  padding: 52px 16px 16px;
   gap: 12px;
-  padding: 12px 16px;
-  color: #e8f0ff;
+}
+
+.m9-hud__party {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(8, 12, 24, 0.68);
+  border: 1px solid rgba(120, 180, 255, 0.25);
+  color: #dbe7ff;
+  text-shadow: 0 1px 2px #000;
+  max-height: 45vh;
+  overflow: hidden;
+}
+
+.m9-hud__timer {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  text-align: right;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(8, 12, 24, 0.68);
+  border: 1px solid rgba(120, 180, 255, 0.25);
+  color: #e8f4ff;
   text-shadow: 0 1px 2px #000;
 }
 
-.header img {
-  height: 36px;
-  width: auto;
-  object-fit: contain;
+.m9-hud__timer-value {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
-.title {
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.m9-hud__timer-sub {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 2px;
 }
 
-.main {
-  padding: 0 16px;
+.m9-hud__inventory {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  align-self: end;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(8, 12, 24, 0.68);
+  border: 1px solid rgba(120, 180, 255, 0.25);
   color: #dbe7ff;
   font-size: 13px;
   text-shadow: 0 1px 2px #000;
+  min-width: 140px;
 }
 
-.hint {
+.m9-hud__heading {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.m9-hud__party-list {
+  list-style: none;
   margin: 0;
-  opacity: 0.85;
+  padding: 0;
+}
+
+.m9-hud__member {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.m9-hud__member-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m9-hud__member-meta {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.95;
+}
+
+.m9-hud__member--dead .m9-hud__member-name {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.m9-hud__badge {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.m9-hud__hpbar {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.m9-hud__hpbar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3d7cff, #5cf0c4);
+  border-radius: 2px;
+  max-width: 100%;
+}
+
+.m9-hud__inv-line {
+  margin-bottom: 4px;
+}
+
+.m9-hud__inv-rarity {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.m9-hud__toast {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgba(12, 18, 32, 0.88);
+  border: 1px solid rgba(160, 210, 255, 0.4);
+  color: #f0f6ff;
+  font-size: 14px;
+  text-shadow: 0 1px 3px #000;
+  text-align: center;
+  max-width: 420px;
+}
+
+.m9-hud__toast--success {
+  border-color: rgba(80, 220, 140, 0.55);
+}
+
+.m9-hud__toast--fail {
+  border-color: rgba(255, 100, 100, 0.55);
 }

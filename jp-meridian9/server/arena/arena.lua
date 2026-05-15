@@ -287,6 +287,32 @@ function MRD9.Arena.Cleanup(sessionId, reason)
     MRD9.Log('Arena cleanup session=%s reason=%s', sessionId, tostring(reason))
 end
 
+---@param sessionId string|nil
+---@return table
+function MRD9.Arena.GetHudSnapshot(sessionId)
+    local totalWaves = (Config.Arena and Config.Arena.totalWaves) or 3
+    if not sessionId then
+        return { active = false, wave = 0, totalWaves = totalWaves, zombiesAlive = 0 }
+    end
+    local st = arenaStates[sessionId]
+    if not st then
+        return { active = false, wave = 0, totalWaves = totalWaves, zombiesAlive = 0 }
+    end
+    local zombiesAlive = countKeys(st.zombies or {})
+    local state = st.state or ''
+    local active = state ~= 'failed'
+        and (state == 'countdown' or state == 'wave_active' or state == 'wave_interval' or state == 'cleared')
+    if Config.Arena and Config.Arena.enabled == false then
+        active = false
+    end
+    return {
+        active = active,
+        wave = st.currentWave or 0,
+        totalWaves = st.totalWaves or totalWaves,
+        zombiesAlive = zombiesAlive,
+    }
+end
+
 ---@param sessionId string
 ---@param src integer
 function MRD9.Arena.OnPlayerDowned(sessionId, src)

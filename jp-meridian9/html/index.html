@@ -3,18 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MERIDIAN-9</title>
+  <title>MERIDIAN-9 HUD</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="m9-toasts" class="m9-toasts" aria-live="polite"></div>
   <div id="app" class="hidden">
-    <header class="header">
-      <img id="logo" src="assets/logo_dark.png" alt="MERIDIAN-9" />
-      <span class="title">Project JANUS</span>
-    </header>
-    <main class="main">
-      <p class="hint">HUD は INSTRUCTION-014 で拡張予定です。</p>
-    </main>
+    <div class="m9-hud">
+      <div id="m9-wave-banner" class="m9-hud__wave-banner" hidden></div>
+      <div class="m9-hud__grid">
+        <section id="m9-party" class="m9-hud__party" hidden>
+          <h2 class="m9-hud__heading" id="m9-party-label"></h2>
+          <ul id="m9-party-list" class="m9-hud__party-list"></ul>
+        </section>
+        <section id="m9-timer" class="m9-hud__timer" hidden>
+          <div id="m9-timer-value" class="m9-hud__timer-value">00:00</div>
+          <div id="m9-timer-label" class="m9-hud__timer-sub"></div>
+        </section>
+        <section id="m9-inventory" class="m9-hud__inventory" hidden>
+          <h2 class="m9-hud__heading" id="m9-inv-label"></h2>
+          <div id="m9-inv-total-line" class="m9-hud__inv-line"></div>
+          <div id="m9-inv-rarity" class="m9-hud__inv-rarity"></div>
+        </section>
+      </div>
+    </div>
   </div>
   <script src="app.js"></script>
 </body>

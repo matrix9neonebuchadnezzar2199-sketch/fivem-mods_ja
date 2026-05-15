@@ -172,7 +172,7 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 ### INSTRUCTION-011 残課題メモ（蘇生・脱出 UI 連携）
 
 - `knockdownHealth = 1` + `SetPedToRagdoll` は「ダウン演出 + 救急動線」の最小構成。
-- INSTRUCTION-014（脱出 UI）または INSTRUCTION-016（蘇生システム）実装時に以下を再確認すること:
+- INSTRUCTION-014（任務中 HUD）または INSTRUCTION-016（蘇生システム）実装時に以下を再確認すること:
   - HP 1 状態で救急隊呼び出しトリガーが発火するか
   - ragdoll 中の他プレイヤーからの蘇生操作が可能か
   - `returnAlive = true` 時の挙動との一貫性
@@ -201,3 +201,18 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | Destroy 連携 | `Session.Destroy` 冒頭で **`MRD9.Extract.OnSessionDestroy`** → 未脱出メンバーに `outcome` を割り当てログ（`timeout`/`died`/`aborted`） |
 | ブリップ | 任務中のみ表示（`Config.Extract.showBlipsDuringMission`）。`onMissionStart`/`onMissionEnd` で生成・破棄 |
 | 配置 | `Config.ExtractPoints` を **3 箇所暫定**（`spawnPoint` 周辺）。差し替えは config 末尾 |
+
+## INSTRUCTION-014：任務中 HUD / NUI（実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| Q1 パーティ HP | **サーバー集約**。`server/hud.lua` が `Config.HUD.tickServerMs`（未指定時は `updateInterval`）周期で `state == 'IN_MISSION'` のセッションのみ処理し、メンバー各員へ `jp-meridian9:client:hud:state` で DTO 配信。HP/Armor はサーバー側 `GetPlayerPed` + `GetEntityHealth` 等。 |
+| Q2 インベントリ | **`total` + `byRarity`（common/uncommon/rare/legendary）**。`Config.Items[].rarity` で集計。 |
+| Q3 自分 HP | **パーティ一覧先頭が自分**（`isSelf`）。専用自機パネルは置かない。 |
+| Q4 ウェーブ | **画面上部中央バナー**。`MRD9.Arena.GetHudSnapshot(sessionId)` の `wave` / `totalWaves` / `zombiesAlive` / `active` を DTO に同梱。`Config.HUD.showWaveBanner = false` で非表示。 |
+| Q5 脱出 | **`lib.showTextUI` のみ**（013 踏襲）。HUD に脱出バッジは出さない。 |
+| Q6 周期 | 既定の **`tickServerMs=500` / `tickClientMs=250`**。 |
+| クライアント | `client/hud.lua` が `MRD9.HUD.OnMissionStart` / `OnMissionEnd`、`RegisterNetEvent('jp-meridian9:client:hud:state')`、ローカルタイマー補間と自機行の上書き、`SendNUIMessage`（`m9_hud_show` / `m9_hud_hide` / `m9_hud_locale` / `m9_hud_state` / `m9_hud_event`）。`onResourceStop` で hide + `SetNuiFocus(false,false)` 保険。 |
+| アリーナ連携 | `client/arena.lua` が `MRD9.HUD.PushEvent` でウェーブ系トースト（`lib.notify` と併用）。 |
+| NUI | `html/index.html` / `style.css` / `app.js`。`#m9-toasts` は `#app` 外に配置し、任務終了後も短時間トーストを表示可能。 |
+| fxmanifest | **`server/hud.lua` は `server/arena/arena.lua` の直後**（`GetHudSnapshot` 依存）。**`client/hud.lua` は `client/main.lua` より前**。 |

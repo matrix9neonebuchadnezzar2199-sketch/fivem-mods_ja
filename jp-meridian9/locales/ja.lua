@@ -164,6 +164,25 @@ Locales['ja'] = {
     ['loot_err_invalid_args'] = '引数が不正です',
     ['loot_err_unknown'] = '回収に失敗しました',
 
+    -- ▼ HUD（INSTRUCTION-014）
+    ['hud_timer_remaining'] = '残り',
+    ['hud_party_label'] = 'パーティ',
+    ['hud_inv_label'] = 'インベントリ',
+    ['hud_inv_total'] = '合計',
+    ['hud_inv_common'] = 'C',
+    ['hud_inv_uncommon'] = 'U',
+    ['hud_inv_rare'] = 'R',
+    ['hud_inv_legendary'] = 'L',
+    ['hud_wave_banner'] = 'WAVE {wave} / {total} — {alive} 体残存',
+    ['hud_leader_badge'] = '★',
+    ['hud_self_badge'] = '●',
+    ['hud_event_wave_start'] = 'ウェーブ {wave} / {total} 開始（敵 {alive} 体）',
+    ['hud_event_wave_cleared'] = 'ウェーブ {wave} クリア（次まで {label} 秒）',
+    ['hud_event_mission_success'] = 'ミッション成功',
+    ['hud_event_mission_failed'] = 'ミッション失敗',
+    ['hud_event_extract_success'] = '脱出に成功',
+    ['hud_event_countdown'] = 'ウェーブ開始まで {seconds} 秒',
+
     -- ▼ 脱出（INSTRUCTION-013）
     ['extract_blip_name'] = '脱出: %s',
     ['extract_textui_prompt'] = '[E] 脱出開始 — %s',

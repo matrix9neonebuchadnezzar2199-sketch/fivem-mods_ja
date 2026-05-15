@@ -34,6 +34,9 @@ end
 RegisterNetEvent('jp-meridian9:client:arenaCountdown', function(data)
     local sec = type(data) == 'table' and tonumber(data.seconds) or 5
     lib.notify({ type = 'inform', description = _('arena_countdown', sec) })
+    if MRD9.HUD and MRD9.HUD.PushEvent then
+        MRD9.HUD.PushEvent('countdown', { seconds = sec })
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:client:waveStart', function(data)
@@ -44,6 +47,13 @@ RegisterNetEvent('jp-meridian9:client:waveStart', function(data)
         type = 'inform',
         description = _('arena_wave_start', data.waveNumber or 0, data.totalWaves or 0, data.zombieCount or 0),
     })
+    if MRD9.HUD and MRD9.HUD.PushEvent then
+        MRD9.HUD.PushEvent('wave_start', {
+            wave = data.waveNumber or 0,
+            total = data.totalWaves or 0,
+            alive = data.zombieCount or 0,
+        })
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:client:waveCleared', function(data)
@@ -54,14 +64,26 @@ RegisterNetEvent('jp-meridian9:client:waveCleared', function(data)
         type = 'success',
         description = _('arena_wave_cleared', data.waveNumber or 0, data.nextWaveInSeconds or 0),
     })
+    if MRD9.HUD and MRD9.HUD.PushEvent then
+        MRD9.HUD.PushEvent('wave_cleared', {
+            wave = data.waveNumber or 0,
+            label = tostring(data.nextWaveInSeconds or 0),
+        })
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:client:arenaMissionFailed', function()
     lib.notify({ type = 'error', description = _('arena_mission_failed') })
+    if MRD9.HUD and MRD9.HUD.PushEvent then
+        MRD9.HUD.PushEvent('mission_failed', {})
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:client:missionSuccess', function()
     lib.notify({ type = 'success', description = _('arena_mission_success') })
+    if MRD9.HUD and MRD9.HUD.PushEvent then
+        MRD9.HUD.PushEvent('mission_success', {})
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:client:arenaCleanupZombies', function()

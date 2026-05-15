@@ -40,64 +40,64 @@
 - **オーバーレイのみ**：`SetNuiFocus(false, false)` のまま運用。マウス・キーボードのフォーカスは取らない。
 - **`MRD9.CurrentSession == nil` の間は HUD を隠す**（`onMissionStart` で開く、`onMissionEnd` で閉じる）。
 - **イベント名規約**：`jp-meridian9:client:hud:*` / `jp-meridian9:server:hud:*`（既存命名と整合）。
-- **NUI ↔ Lua プロトコル**：`SendNUIMessage({ type = 'm9_hud_state', payload = {...} })` の単一 `type` ディスパッチ（`fivem-nui.mdc` 準拠）。
+- **NUI ↔ Lua プロトコル**：`SendNUIMessage` は **`type` ディスパッチ**（`m9_hud_show` / `m9_hud_hide` / `m9_hud_locale` / `m9_hud_state` / `m9_hud_event`）。定期更新の本体は `m9_hud_state`（`fivem-nui.mdc` の `type` 駆動に整合）。
 - **i18n**：`html/app.js` 内で `STR.ja` 辞書を持ち、`t(key)` を関数化。将来 `en` を追加するときは `STR.en` を埋める。INSTRUCTION-014 では `ja` のみで可。
 
 ---
 
-## 3. 未確定 Q（マスター回答後に実装着手）
+## 3. 設計 Q（確定済み・マスター回答反映）
 
-> 着手前に以下に回答を埋め、本ドキュメントを更新してからコーディング AI に渡すこと。
+> 本節はマスター回答済み。**実装は以下の確定案に従う。**
 
 ### Q1: パーティ HP のソース
 
 | 案 | 内容 | 採用 |
 |----|------|------|
-| (a) サーバー側の **`server/hud.lua` を新設**し、500ms 周期で各バケット内メンバー全員の `GetEntityHealth` / `GetPedArmour` を集約 → 各メンバーへ broadcast | **推奨**。中央集権・整合性が良い。OneSync 下でサーバー側からのネイティブが使えない場合は (b) | □ |
-| (b) クライアント側でリーダーが集約し、`TriggerLatentClientEvent` で配信 | リーダー負担。サーバーよりはレイテンシ予測しにくい | □ |
-| (c) 各クライアントが自分の HP のみ送信し、サーバーは中継するだけ | シンプル。但しクライアント改ざんに弱い（HUD 表示用なら許容） | □ |
+| (a) サーバー側の **`server/hud.lua` を新設**し、500ms 周期で各バケット内メンバー全員の `GetEntityHealth` / `GetPedArmour` を集約 → 各メンバーへ broadcast | **推奨**。中央集権・整合性が良い。OneSync 下でサーバー側からのネイティブが使えない場合は (b) | 採用 |
+| (b) クライアント側でリーダーが集約し、`TriggerLatentClientEvent` で配信 | リーダー負担。サーバーよりはレイテンシ予測しにくい |  |
+| (c) 各クライアントが自分の HP のみ送信し、サーバーは中継するだけ | シンプル。但しクライアント改ざんに弱い（HUD 表示用なら許容） |  |
 
-**確定: __________**
+**確定: (a)** — `server/hud.lua` + `jp-meridian9:client:hud:state`。
 
 ### Q2: HUD のインベントリ表示
 
 | 案 | 内容 | 採用 |
 |----|------|------|
-| (α) アイテム総数（数字 1 個）と **レアリティ別カウンタ**（C/U/R/L） | 軽量・視認性高い・**推奨** | □ |
-| (β) アイテムごとの個別リスト（最大 N 行） | 詳細だが画面が混む。HUD 用には情報過多 | □ |
-| (γ) 合計値（推定 $）のみ | プレイヤー判断に有用だが、査定基準ぶれの誤解を招く | □ |
+| (α) アイテム総数（数字 1 個）と **レアリティ別カウンタ**（C/U/R/L） | 軽量・視認性高い・**推奨** | 採用 |
+| (β) アイテムごとの個別リスト（最大 N 行） | 詳細だが画面が混む。HUD 用には情報過多 |  |
+| (γ) 合計値（推定 $）のみ | プレイヤー判断に有用だが、査定基準ぶれの誤解を招く |  |
 
-**確定: __________**
+**確定: (α)** — `inventory.total` + `inventory.byRarity`、NUI は `Config.HUD.inventoryMode` に追従。
 
 ### Q3: 自分 HP の表示形式
 
 | 案 | 内容 | 採用 |
 |----|------|------|
-| (i) GTA 既定 HP バーを残し、HUD には数値のみ表示 | GTA UI と二重表示だが安全 | □ |
-| (ii) GTA 既定 HP バーを **隠して**、NUI でカスタムバー表示 | 雰囲気は出るが GTA UI 操作が増える（`HudWeapon` 等は残す） | □ |
-| (iii) HUD には数値もバーも出さず、パーティ HP リストの最上段に自分を含める | 最小構成・**推奨**（情報の重複を避ける） | □ |
+| (i) GTA 既定 HP バーを残し、HUD には数値のみ表示 | GTA UI と二重表示だが安全 |  |
+| (ii) GTA 既定 HP バーを **隠して**、NUI でカスタムバー表示 | 雰囲気は出るが GTA UI 操作が増える（`HudWeapon` 等は残す） |  |
+| (iii) HUD には数値もバーも出さず、パーティ HP リストの最上段に自分を含める | 最小構成・**推奨**（情報の重複を避ける） | 採用 |
 
-**確定: __________**
+**確定: (iii)** — パーティ一覧先頭が自分（`isSelf`）。数値は **HP/最大・AP** のコンパクト表示（バーなし）。
 
 ### Q4: ウェーブ表示
 
 | 案 | 内容 | 採用 |
 |----|------|------|
-| (A) 画面中央上にバナー「WAVE 2 / 3 — 7 体残存」（**推奨**） | アリーナ系の定番。雰囲気がエクストラクション系 | □ |
-| (B) 右下に小さなインジケーター | 控えめ | □ |
-| (C) ウェーブ開始時 / クリア時のみ大バナー、平常時は非表示 | 演出寄り | □ |
+| (A) 画面中央上にバナー「WAVE 2 / 3 — 7 体残存」（**推奨**） | アリーナ系の定番。雰囲気がエクストラクション系 | 採用 |
+| (B) 右下に小さなインジケーター | 控えめ |  |
+| (C) ウェーブ開始時 / クリア時のみ大バナー、平常時は非表示 | 演出寄り |  |
 
-**確定: __________**
+**確定: (A)** — `arena` スナップショット（`MRD9.Arena.GetHudSnapshot`）を `m9_hud_state` に同梱。`Config.HUD.showWaveBanner` で抑止可。
 
 ### Q5: 脱出ゾーン進入時の HUD
 
 | 案 | 内容 | 採用 |
 |----|------|------|
-| (I) **`lib.showTextUI` のまま**変更なし（INSTRUCTION-013 の挙動を維持） | シンプル | □ |
-| (II) HUD 側にも「脱出可能: ◯◯」のサブバッジを出す（`lib.showTextUI` と併用）| 二重表示。視線誘導は強い | □ |
-| (III) `lib.showTextUI` を撤去し HUD バッジに統一 | 統一感は高いが INSTRUCTION-013 を巻き戻す | □ |
+| (I) **`lib.showTextUI` のまま**変更なし（INSTRUCTION-013 の挙動を維持） | シンプル | 採用 |
+| (II) HUD 側にも「脱出可能: ◯◯」のサブバッジを出す（`lib.showTextUI` と併用）| 二重表示。視線誘導は強い |  |
+| (III) `lib.showTextUI` を撤去し HUD バッジに統一 | 統一感は高いが INSTRUCTION-013 を巻き戻す |  |
 
-**確定: __________**
+**確定: (I)** — `client/extract.lua` に HUD 脱出バッジは追加しない。
 
 ### Q6: 配信周期
 
@@ -107,7 +107,7 @@
 | `Config.HUD.tickClientMs`（既定 250） | NUI への自分 HP / タイマー差分送信 |
 | `Config.HUD.tickRenderMs`（既定 100） | NUI 内アニメーション（CSS で完結する分は不要） |
 
-**確定: 既定値で良いか / 変更が必要か __________**
+**確定: 既定値のまま** — `tickServerMs=500` / `tickClientMs=250` / `tickRenderMs=100`（レンダリング用途は現状未使用）。
 
 ---
 
@@ -165,6 +165,7 @@ type HudStateDTO = {
         armor: number;
         alive: boolean;
         isLeader: boolean;
+        isSelf: boolean;
     }>;
     inventory: {
         total: number;
@@ -215,9 +216,10 @@ NUI → Lua の `RegisterNUICallback` は **使わない**（フォーカス取�
 │                                          │ C 7  U 4  R 1 ││
 │                                          └───────────────┘│
 │                                                          │
-│             [脱出可能: 北側ゲート] ← Q5=(II) の時のみ表示 │
 └──────────────────────────────────────────────────────────┘
 ```
+
+（Q5=(I) のため **脱出バッジ行は出さない**。脱出案内は `lib.showTextUI` のみ。）
 
 - **`pointer-events: none`** 必須（既存 CSS のとおり）。
 - **半透明背景** + **影付き文字** で GTA の明るい背景でも視認可能に。
@@ -241,9 +243,9 @@ NUI → Lua の `RegisterNUICallback` は **使わない**（フォーカス取�
 | `jp-meridian9/html/app.js` | **書き換え**。`type` ディスパッチ拡張、i18n の `t(key)` 実装、DOM 描画 |
 | `jp-meridian9/config.lua` | `Config.HUD` を以下に拡張（後方互換維持）:<br>`tickServerMs=500` / `tickClientMs=250` / `showPartyHP` / `showTimer` / `showInventory` / `showWaveBanner` / `inventoryMode = 'byRarity'\|'items'\|'totalOnly'`（Q2 結果を反映） |
 | `jp-meridian9/locales/ja.lua` | HUD 用キー（`hud_timer_remaining` / `hud_party_label` / `hud_inv_total` / `hud_inv_common` / `hud_wave_banner` / `hud_extract_available` 等） |
-| `jp-meridian9/fxmanifest.lua` | `server_scripts` に `'server/hud.lua'` を **`server/session.lua` の直後**に追加（依存順）<br>`files {}` は既存のままで OK（`html/*` を網羅済み） |
-| `jp-meridian9/client/arena.lua` | `MRD9.HUDClient` に Arena 状態を反映するフック追加（`waveStart` / `waveCleared` / `arenaCountdown` / `arenaCleanupZombies` / `arenaMissionFailed` / `missionSuccess` ハンドラ内で `MRD9.HUDClient.arena.*` を更新） |
-| `jp-meridian9/client/extract.lua` | テキスト UI と並行して `MRD9.HUDClient.extract.*` を更新（Q5 が (II)/(III) の場合のみ） |
+| `jp-meridian9/fxmanifest.lua` | `server_scripts` に `'server/hud.lua'` を追加。**読み込み順は `server/arena/arena.lua` の直後**（`GetHudSnapshot` 依存）。`client_scripts` では `client/hud.lua` を `client/main.lua` より前に置き `MRD9.HUD` を先行定義。 |
+| `jp-meridian9/client/arena.lua` | `MRD9.HUD.PushEvent` でウェーブ系トースト（`lib.notify` と併用）。 |
+| `jp-meridian9/client/extract.lua` | Q5=(I) のため **HUD 連携の追記なし**（`lib.showTextUI` のみ）。 |
 
 > 上記の **`client/arena.lua` と `client/extract.lua` への加筆は最小限**（既存ロジックを壊さない）。`MRD9.HUDClient` が存在するときのみ書き込む防御を入れる。
 
@@ -350,7 +352,7 @@ const STR = {
 
 ## 14. 完了条件
 
-1. INSTRUCTION-014 で定義した **全 NUI コンポーネントが動作**（タイマー / 自分 HP / パーティ HP / インベントリ / ウェーブバナー / 脱出バッジ（Q5 に依る））
+1. INSTRUCTION-014 で定義した **全 NUI コンポーネントが動作**（タイマー / パーティ HP 一覧に自分を含む / インベントリ / ウェーブバナー / イベントトースト。**Q5=(I) のため脱出バッジは対象外**）
 2. **`resmon` 目標値内**
 3. **マスター回答済みの Q1〜Q6 がすべて実装に反映**
 4. **`docs/FORMAL_POLICIES.md` に正本セクション追記済み**
@@ -362,7 +364,7 @@ const STR = {
 
 ## 15. 着手前にコーディング AI が行うこと
 
-1. このファイル冒頭の **未確定 Q（§3）が全て埋まっているか確認**。空欄が残っていたらマスターに照会して埋める。
+1. このファイル **§3（Q1〜Q6）が確定済みであることを確認**（空欄・未採用行のみのままならマスターに照会）。
 2. `git pull origin main` で最新状態確認。
 3. `jp-meridian9/config.lua` / `client/main.lua` / `client/arena.lua` / `client/extract.lua` / `server/session.lua` を読み、既存 API を把握。
 4. 既存 NUI（`html/*`）を読み、`type = 'open' / 'close'` の 2 メッセージのみ実装されていることを確認。

@@ -9,7 +9,8 @@
 - **ゾンビアリーナ（INSTRUCTION-011）**: `Config.Arena` ウェーブ、`server/arena/*`、リーダー委譲スポーン、全滅時 `arena_wiped` → 送還後ノックダウン（`client/main.lua`）
 - **ルート取得（INSTRUCTION-012）**: `Config.Loot` / `LootRarityWeight`、`server/loot.lua` + `client/loot.lua`、リーダー `CreateObject` + 全員 `ox_target:addEntity`、`lib.callback` 取得
 - **脱出（INSTRUCTION-013）**: `Config.Extract` / `Config.ExtractPoints`、`server/extract.lua` + `client/extract.lua`、`lib.progressCircle`、`session.extractedInventory` メモリ保持、`mrd9_mission_logs` 記録
-- 本格 HUD 等は未接続（各 `client/` / `server/` のプレースホルダ参照）
+- **任務中 HUD（INSTRUCTION-014）**: `server/hud.lua` が `IN_MISSION` のみ DTO 配信、`client/hud.lua` が `m9_hud_*` NUI プロトコル（オーバーレイ・非フォーカス）、`html/*` がタイマー／パーティ／インベントリ／ウェーブ帯＋トースト。脱出案内は **013 の `lib.showTextUI` のみ**（HUD に脱出バッジなし）。
+- 本格査定 UI 等は未接続（INSTRUCTION-015 以降）
 
 ## 非機能
 

@@ -118,11 +118,19 @@ Config.SiteNine = {
 }
 
 -- ▼ HUD設定 -----------------------------------------------------
+-- INSTRUCTION-014: `updateInterval` は後方互換の別名（tickServerMs 未指定時に使用）。
 Config.HUD = {
-    updateInterval = 500,               -- HUD更新間隔（ミリ秒）
-    showPartyHP = true,                 -- パーティメンバーのHP表示
-    showTimer = true,                   -- 残り時間表示
-    showInventory = true,               -- 所持アイテム数表示
+    enabled = true,                     -- false で NUI HUD 全体を無効化
+    updateInterval = 500,               -- 旧キー（tickServerMs のフォールバック）
+    tickServerMs = 500,                 -- サーバー集約 → クライアント配信周期
+    tickClientMs = 250,                 -- クライアント側ローカル補間（タイマー・自分 HP）
+    tickRenderMs = 100,                  -- 将来: NUI 内アニメ用（現状未使用）
+    showPartyHP = true,                 -- パーティ HP パネル
+    showTimer = true,                   -- 残り時間
+    showInventory = true,               -- インベントリ（総数 + レアリティ別）
+    showWaveBanner = true,              -- ウェーブ帯（中央上）
+    inventoryMode = 'byRarity',         -- 'byRarity' | 'items' | 'totalOnly'（014 既定: byRarity）
+    waveEventMs = 4500,                 -- m9_hud_event ウェーブ系トースト表示時間（ms）
 }
 
 -- ▼ 運営設定 ---------------------------------------------------
