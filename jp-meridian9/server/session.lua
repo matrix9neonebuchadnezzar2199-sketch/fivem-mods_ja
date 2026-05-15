@@ -173,6 +173,10 @@ function MRD9.Session.TransferIn(sessionId)
         MRD9.Arena.Start(sessionId)
     end
 
+    if MRD9.Loot and MRD9.Loot.Spawn then
+        MRD9.Loot.Spawn(sessionId)
+    end
+
     return true, nil
 end
 
@@ -253,6 +257,10 @@ function MRD9.Session.Destroy(sessionId, reason)
 
     if MRD9.Arena and MRD9.Arena.Cleanup then
         MRD9.Arena.Cleanup(sessionId, reason)
+    end
+
+    if MRD9.Loot and MRD9.Loot.Cleanup then
+        MRD9.Loot.Cleanup(sessionId)
     end
 
     local membersCopy = {}

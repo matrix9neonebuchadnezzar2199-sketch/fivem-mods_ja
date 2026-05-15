@@ -176,3 +176,15 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
   - HP 1 状態で救急隊呼び出しトリガーが発火するか
   - ragdoll 中の他プレイヤーからの蘇生操作が可能か
   - `returnAlive = true` 時の挙動との一貫性
+
+## INSTRUCTION-012：ルート取得（実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| 権威 | 取得は **`lib.callback` `jp-meridian9:loot:pickup`**。`source` 退避・距離・セッション・クールダウン・`lootId` 検証。加算は **`session.inventory[src][itemId]`** のみ。 |
+| 配置 | `Config.LootSpawns` が **空でない** かつ `[1].coords` がある場合はそこからランダム座標。それ以外は **`spawnPoint` 中心 `spawnAreaRadius` 内**＋`minDistanceBetween`。 |
+| レアリティ | 各スロットで `Config.LootSpawns` 要素の `weight` があれば使用、なければ **`Config.LootRarityWeight`**。アイテムは `Config.Items` から該当 `rarity` をプール抽選。 |
+| プロップ | リーダーのみ **`jp-meridian9:client:lootSpawnBatch`** で `CreateObject` → **`jp-meridian9:server:lootSpawnAck`** → 全員 **`client:lootRegister`** で **`exports.ox_target:addEntity(netId, …)`**。 |
+| 掃除 | `Session.Destroy` 冒頭で **`MRD9.Loot.Cleanup`**（`client:lootClearAll` のあと `session.loot = nil`）。`TransferIn` 末尾は **`Arena.Start` の次に `Loot.Spawn`**。 |
+| 表示 | 取得成功は **`lib.notify`**（HUD 連携は INSTRUCTION-014）。 |
+| 無効化 | `Config.Loot.enabled = false` でスポーン抑止。 |

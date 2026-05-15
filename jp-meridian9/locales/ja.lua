@@ -151,6 +151,19 @@ Locales['ja'] = {
     ['arena_mission_failed'] = '全滅。サイト・ナインから送還されました',
     ['arena_mission_success'] = 'サイト・ナインの脅威を退けた',
 
+    -- ▼ ルート（INSTRUCTION-012）
+    ['loot_pickup_label'] = '回収する',
+    ['loot_pickup_ok'] = '%s を取得（所持 %d）',
+    ['loot_err_too_far'] = '距離が遠すぎます',
+    ['loot_err_not_found'] = 'この回収物は既にないか無効です',
+    ['loot_err_cooldown'] = '操作が早すぎます',
+    ['loot_err_no_session'] = '任務セッション外です',
+    ['loot_err_not_member'] = 'パーティに含まれていません',
+    ['loot_err_no_ped'] = 'プレイヤー状態が不正です',
+    ['loot_err_bad_item'] = 'アイテム定義エラー',
+    ['loot_err_invalid_args'] = '引数が不正です',
+    ['loot_err_unknown'] = '回収に失敗しました',
+
     -- ▼ 脱出
     ['extract_available'] = '[E] を長押しで脱出',
     ['extract_in_progress'] = '脱出中……動かないでください',

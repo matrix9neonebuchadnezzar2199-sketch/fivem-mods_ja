@@ -162,3 +162,25 @@ Config.Arena = {
         [3] = { zombieCount = 10, bossCount = 1 },
     },
 }
+
+-- ▼ ルート取得（INSTRUCTION-012）--------------------------------
+-- `Config.LootSpawns` が空でない場合は各要素の `coords` からランダムに座標を選ぶ。
+-- 空のときは `Config.Mission.spawnPoint` を中心に `spawnAreaRadius` 内へランダム配置。
+-- レアリティ抽選: 各スポーンの `weight` があればそれを使用、なければ `Config.LootRarityWeight`。
+Config.LootRarityWeight = {
+    common = 70,
+    uncommon = 25,
+    rare = 4,
+    legendary = 1,
+}
+
+Config.Loot = {
+    enabled = true,
+    maxPerSession = 24,
+    pickupRadius = 3.0,
+    spawnAreaRadius = 50.0,
+    minDistanceBetween = 4.0,
+    spawnPlacementAttempts = 28,
+    cooldownMs = 500,
+    defaultPropModel = 'prop_paper_bag_01',
+}

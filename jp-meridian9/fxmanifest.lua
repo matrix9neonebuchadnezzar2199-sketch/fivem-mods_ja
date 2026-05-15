@@ -34,6 +34,7 @@ server_scripts {
     'server/contract.lua',
     'server/stats.lua',
     'server/session.lua',
+    'server/loot.lua',
     'server/arena/wave.lua',
     'server/arena/spawn.lua',
     'server/arena/arena.lua',
