@@ -168,6 +168,11 @@ function MRD9.Session.TransferIn(sessionId)
 
     s.state = 'IN_MISSION'
     MRD9.Log('Session transferred in: id=%s', sessionId)
+
+    if MRD9.Arena and MRD9.Arena.Start then
+        MRD9.Arena.Start(sessionId)
+    end
+
     return true, nil
 end
 
@@ -245,6 +250,10 @@ function MRD9.Session.Destroy(sessionId, reason)
     end
 
     s.state = 'ENDING'
+
+    if MRD9.Arena and MRD9.Arena.Cleanup then
+        MRD9.Arena.Cleanup(sessionId, reason)
+    end
 
     local membersCopy = {}
     for _, src in ipairs(s.members) do

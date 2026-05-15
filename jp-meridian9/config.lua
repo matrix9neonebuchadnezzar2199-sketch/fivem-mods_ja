@@ -138,3 +138,27 @@ Config.Commands = {
     debugTeleport = 'm9_test_bucket',   -- デバッグ用バケット転送（運営のみ）
     stats = 'm9_stats',                 -- 自分の統計確認
 }
+
+-- ▼ ゾンビアリーナ（INSTRUCTION-011）--------------------------------
+-- ウェーブ定義は `waves[1]` から連番。TP-Advanced-Zombies 由来のスポーンは `server/arena/spawn.lua`。
+Config.Arena = {
+    enabled = true,                     -- false で TransferIn 後もアリーナ開始しない
+    countdownSeconds = 5,
+    waveIntervalSeconds = 10,
+    totalWaves = 3,
+    maxConcurrentZombies = 15,
+    spawnRadiusMin = 30.0,
+    spawnRadiusMax = 80.0,
+    spawnRetryAttempts = 5,
+    zombieModels = { 'u_m_y_zombie_01' },
+    bossModels = { 'u_m_y_zombie_01' },
+    zombieHealth = 150,
+    bossHealth = 600,
+    ragdollDurationMs = 5000,           -- 全滅送還後のラグドール（ms）
+    knockdownHealth = 1,                -- 送還直後の HP（蘇生 UI 実装時に再検証）
+    waves = {
+        [1] = { zombieCount = 5, bossCount = 0 },
+        [2] = { zombieCount = 8, bossCount = 0 },
+        [3] = { zombieCount = 10, bossCount = 1 },
+    },
+}

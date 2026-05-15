@@ -17,6 +17,7 @@ shared_scripts {
 
 client_scripts {
     'client/main.lua',
+    'client/arena.lua',
     'client/npc.lua',
     'client/dialogue.lua',
     'client/party.lua',
@@ -33,6 +34,9 @@ server_scripts {
     'server/contract.lua',
     'server/stats.lua',
     'server/session.lua',
+    'server/arena/wave.lua',
+    'server/arena/spawn.lua',
+    'server/arena/arena.lua',
     'server/party.lua',
     'server/main.lua',
     'server/mission.lua',

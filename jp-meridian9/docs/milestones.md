@@ -12,7 +12,7 @@
 | M1 | INSTRUCTION-008 | 契約キャッシュ・運営 ACE コマンド | 完了 |
 | M2 | INSTRUCTION-009 | ヴェガ NPC・対話 | 完了 |
 | M3 | INSTRUCTION-010 | パーティ編成・`Session.Create` / `TransferIn` | 完了 |
-| M4 | INSTRUCTION-011 | ゾンビアリーナ | 未 |
+| M4 | INSTRUCTION-011 | ゾンビアリーナ | 完了 |
 | M5 | INSTRUCTION-012 | ルート取得 | 未 |
 | M5 | INSTRUCTION-013 | 脱出 | 未 |
 | M6 | INSTRUCTION-014 | HUD（NUI） | 未 |

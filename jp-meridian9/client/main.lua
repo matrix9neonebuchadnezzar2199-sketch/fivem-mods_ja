@@ -10,14 +10,32 @@ RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
     end
     MRD9.Log('Mission started: %s', data.sessionId)
     MRD9.CurrentSession = data
+    if MRD9.Arena and MRD9.Arena.ClientBeginMission then
+        MRD9.Arena.ClientBeginMission()
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
     if type(data) ~= 'table' or not data.sessionId then
         return
     end
-    MRD9.Log('Mission ended: %s reason=%s', data.sessionId, tostring(data.reason))
+    local reason = data.reason
+    MRD9.Log('Mission ended: %s reason=%s', data.sessionId, tostring(reason))
     MRD9.CurrentSession = nil
+    if reason == 'arena_wiped' then
+        CreateThread(function()
+            Wait(0)
+            local ped = PlayerPedId()
+            if not ped or ped == 0 then
+                return
+            end
+            local cfg = Config.Arena
+            local h = cfg and tonumber(cfg.knockdownHealth) or 1
+            local ms = cfg and tonumber(cfg.ragdollDurationMs) or 5000
+            SetEntityHealth(ped, h)
+            SetPedToRagdoll(ped, ms, ms + 1, 0, true, true, false)
+        end)
+    end
 end)
 
 RegisterNetEvent('jp-meridian9:notify', function(msg)

@@ -158,3 +158,21 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | セッション終了 | `Session.Destroy` 末尾で `MRD9.Party.NotifySessionDestroyed` により `dispatched` パーティを掃除。 |
 | クライアント | `lib.registerContext` メイン UI、招待受信のみ `lib.alertDialog`。 |
 | 逸脱 | 指示書の `server/main.lua` の `playerDropped` 追記ではなく **`session.lua` に統合**（切断処理の順序を一本化）。 |
+
+## INSTRUCTION-011：ゾンビアリーナ（実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| 移植スコープ | **(a) AI コア相当 + スポーン制御のみ**（`server/arena/spawn.lua` は TP-Advanced-Zombies 派生・Apache 2.0）。ウェーブ定義は `server/arena/wave.lua` + `Config.Arena.waves`（MERIDIAN-9 独自）。 |
+| サーバー | `server/arena/arena.lua` が状態管理。`TransferIn` 完了後に `MRD9.Arena.Start`、`Session.Destroy` 冒頭で `MRD9.Arena.Cleanup`（ゾンビ掃除イベント後にバケット 0 送還）。 |
+| クライアント | リーダーのみ `jp-meridian9:client:spawnZombie` で生成→`jp-meridian9:server:zombieSpawned` で登録。撃破は `jp-meridian9:server:zombieKilled`。全滅は `jp-meridian9:server:playerDowned` 集約後 `Session.Destroy(..., 'arena_wiped')`。 |
+| 失敗演出順 | **`jp-meridian9:client:arenaMissionFailed`**（`lib.notify`）→ **`Session.Destroy`** → **`jp-meridian9:onMissionEnd`**（`reason == 'arena_wiped'`）で `SetEntityHealth` + `SetPedToRagdoll`（送還直後の ped）。 |
+| 設定 | `Config.Arena`（`enabled` / `ragdollDurationMs` / `knockdownHealth` / ウェーブ等）。`Config.Zombies` は従来プレースホルダのまま残置。 |
+
+### INSTRUCTION-011 残課題メモ（蘇生・脱出 UI 連携）
+
+- `knockdownHealth = 1` + `SetPedToRagdoll` は「ダウン演出 + 救急動線」の最小構成。
+- INSTRUCTION-014（脱出 UI）または INSTRUCTION-016（蘇生システム）実装時に以下を再確認すること:
+  - HP 1 状態で救急隊呼び出しトリガーが発火するか
+  - ragdoll 中の他プレイヤーからの蘇生操作が可能か
+  - `returnAlive = true` 時の挙動との一貫性

@@ -144,6 +144,13 @@ Locales['ja'] = {
     ['mission_timeout'] = '制限時間に到達しました。強制撤収します',
     ['mission_wipe'] = '全滅。任務は失敗しました',
 
+    -- ▼ ゾンビアリーナ（INSTRUCTION-011）
+    ['arena_countdown'] = 'ウェーブ開始まで %d 秒',
+    ['arena_wave_start'] = 'ウェーブ %d / %d — 敵 %d 体',
+    ['arena_wave_cleared'] = 'ウェーブ %d クリア。次まで %d 秒',
+    ['arena_mission_failed'] = '全滅。サイト・ナインから送還されました',
+    ['arena_mission_success'] = 'サイト・ナインの脅威を退けた',
+
     -- ▼ 脱出
     ['extract_available'] = '[E] を長押しで脱出',
     ['extract_in_progress'] = '脱出中……動かないでください',
