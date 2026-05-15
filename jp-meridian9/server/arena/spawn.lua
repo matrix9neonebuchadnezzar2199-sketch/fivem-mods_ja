@@ -22,8 +22,10 @@ MRD9.Arena.Spawn = MRD9.Arena.Spawn or {}
 
 ---@param src integer
 ---@param attempts integer|nil
+---@param minROverride number|nil
+---@param maxROverride number|nil
 ---@return vector3|nil
-function MRD9.Arena.Spawn.PickCoordsNearPlayer(src, attempts)
+function MRD9.Arena.Spawn.PickCoordsNearPlayer(src, attempts, minROverride, maxROverride)
     if type(src) ~= 'number' or src <= 0 then
         return nil
     end
@@ -33,8 +35,8 @@ function MRD9.Arena.Spawn.PickCoordsNearPlayer(src, attempts)
     end
     local c = GetEntityCoords(ped)
     local cfg = Config.Arena
-    local minR = (cfg and cfg.spawnRadiusMin) or 30.0
-    local maxR = (cfg and cfg.spawnRadiusMax) or 80.0
+    local minR = tonumber(minROverride) or (cfg and cfg.spawnRadiusMin) or 30.0
+    local maxR = tonumber(maxROverride) or (cfg and cfg.spawnRadiusMax) or 80.0
     if maxR < minR then
         maxR = minR + 1.0
     end

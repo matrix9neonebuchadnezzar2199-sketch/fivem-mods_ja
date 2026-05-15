@@ -145,6 +145,10 @@ function MRD9.Arena._onWaveCleared(sessionId)
         end
         arenaStates[sessionId] = nil
         MRD9.Log('Arena mission success session=%s', sessionId)
+        -- INSTRUCTION-021: 3 ウェーブクリア → 自由探索＋持続的ゾンビ脅威フェーズへ移行
+        if MRD9.Survival and MRD9.Survival.Start then
+            MRD9.Survival.Start(sessionId)
+        end
         return
     end
 

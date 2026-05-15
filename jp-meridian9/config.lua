@@ -55,9 +55,17 @@ Config.Mission = {
     bucketEnd = 999,                    -- バケット番号上限（プール上限）
     maxConcurrentSessions = 20,         -- 同時並行セッション上限
     cleanupIntervalSeconds = 60,      -- タイムアウト監視周期（秒）
-    -- INSTRUCTION-020 v3: サイト・ナイン = Cayo Perico メインビーチ
-    -- SetIslandEnabled('HeistIsland', true) で島本体を有効化。仮座標、実機精査で確定する。
-    spawnPoint = vector4(4523.0, -4974.0, 4.5, 0.0),
+    -- INSTRUCTION-020 v3 / INSTRUCTION-021: サイト・ナイン = Cayo Perico 住宅街エリア
+    -- TransferIn 時に spawnPoints からランダム選出（チームが分散しすぎないよう近隣 5 ヶ所）。
+    spawnPoints = {
+        vector4(5016.281, -5723.576, 17.680, 260.05),
+        vector4(5082.916, -5735.612, 21.036,   8.07),
+        vector4(5068.562, -5776.124, 16.317, 241.29),
+        vector4(5025.901, -5804.289, 17.478, 110.83),
+        vector4(4961.023, -5789.379, 26.266, 159.78),
+    },
+    -- spawnPoints が未指定の場合のフォールバック（旧互換）。
+    spawnPoint = vector4(5016.281, -5723.576, 17.680, 260.05),
     returnPoint = vector4(425.0, -979.3, 30.5, 270.0), -- 帰還: ヴェガ事務所の前
     -- TransferIn 後の追加スリープ（クライアント側の島ロード待ち）。
     siteNineLoadWaitMs = 1500,
@@ -246,9 +254,25 @@ Config.Extract = {
 }
 
 -- ▼ 脱出ポイント上書き ---------------------------------------------
--- INSTRUCTION-020 v3: Cayo Perico 内の暫定 3 箇所。実機で精査して確定する想定。
+-- INSTRUCTION-020 v3: Cayo Perico 内の脱出 5 ヶ所。実機で確定した座標。
 Config.ExtractPoints = {
-    { coords = vector3(4520.0, -5160.0, 11.0), label = '西港ドック',        radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(5160.0, -5810.0, 17.0), label = '南滑走路',          radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(4700.0, -5000.0, 30.0), label = '北ジャングル丘陵',  radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5043.146, -5112.065,  6.164), label = '監視塔',     radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4884.140, -5283.067,  8.432), label = 'ヘリポート', radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4892.726, -4919.016,  3.368), label = 'テント',     radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(4429.605, -4463.830,  4.782), label = '飛行場',     radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5168.241, -4613.965,  2.864), label = '配電施設',   radius = 4.0, blipSprite = 488, blipColor = 5 },
+}
+
+-- ▼ オープンワールド・サバイバル（INSTRUCTION-021）------------------
+-- 3 ウェーブクリア後 or Config.Arena.enabled=false 時に、自由探索フェーズへ移行。
+-- 各メンバー周辺 radiusMin〜radiusMax m にゾンビが intervalMs ごとに count 体スポーン。
+-- 「探索しながらゾンビ処理」の持続的脅威でサバイバル感を演出する。
+Config.Survival = {
+    enabled = true,
+    intervalMs = 180 * 1000,            -- 3 分ごと
+    countPerPlayer = 3,                 -- 1 サイクルで各メンバー周辺に出現する体数
+    radiusMin = 30.0,                   -- スポーン半径下限（m）
+    radiusMax = 150.0,                  -- スポーン半径上限（m）
+    zombieHealth = 100,                 -- 1 体あたり HP
+    zombieModels = { 'u_m_y_zombie_01' },
 }

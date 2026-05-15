@@ -227,6 +227,20 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | 撤回案 | **v1** The Apocalypse Project（LS 内 ymap 直配置で bucket 分離不可）／**v2** North Yankton（Prologue 専用ジオメトリ未完成、雪で移動減速）。v3 で Cayo Perico に確定 |
 | 演出 | 雷雨 (`THUNDER`)・夜 22 時・青いフィルター (`phone_cam11`) で熱帯ホラー |
 
+## INSTRUCTION-021：オープンワールド・サバイバル（実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| 設計趣旨 | 3 ウェーブ単発（INSTRUCTION-011 アリーナ）よりも **「アリーナ序盤 + 自由探索 + 持続的脅威」** のハイブリッドがエクストラクション体験として優れるという判断（マスター実機検証 2026-05-15） |
+| 任務フロー | `[Arena enabled]` 3 ウェーブ → `Survival.Start` / `[Arena disabled]` TransferIn 直後に `Survival.Start` / 個別脱出または全滅で `Survival.Stop` |
+| スポーン仕様 | **各メンバー周辺 30〜150m に 3 分ごとに 3 体**（`Config.Survival.intervalMs/countPerPlayer/radiusMin/radiusMax`） |
+| 実装 | `server/survival.lua` 新規。`MRD9.Survival.Start/Stop/IsActive`。`MRD9.Arena.Spawn.PickCoordsNearPlayer` を半径オーバーライド付きで流用 |
+| フック | `arena/arena.lua` `_onWaveCleared` の `cleared` 分岐で `Survival.Start`、`session.lua` `TransferIn` で `Arena.enabled=false` 時に直接 `Survival.Start`、`session.lua` `Destroy` で `Survival.Stop` |
+| spawnPoints | INSTRUCTION-020 v3 採用座標（住宅街エリア 5 ヶ所）からランダム選出。チーム分散しすぎを防ぐ |
+| 脱出ポイント | 5 ヶ所（監視塔／ヘリポート／テント／飛行場／配電施設）。任務目的・距離・地形のバリエーション |
+| 波管理との分離 | Survival ゾンビは `arenaStates[sessionId]` に登録しない。kill count に貢献せず、純粋な持続的脅威 |
+| `client/arena.lua` 流用 | 既存の `jp-meridian9:client:spawnZombie` ハンドラをそのまま使用。`data.source = 'survival'` で識別可能（演出差別化は将来課題） |
+
 ### v2 北ヤンクトン版の名残（互換性）
 
 | 項目 | 内容 |

@@ -146,7 +146,15 @@ function MRD9.Session.TransferIn(sessionId)
 
     s.state = 'TRANSITIONING'
 
-    local sp = Config.Mission.spawnPoint
+    -- INSTRUCTION-021: spawnPoints からランダム選出（チーム分散防止のため近隣 5 ヶ所）
+    -- 未指定なら従来の単一 spawnPoint を使う（後方互換）。
+    local spawnPoints = Config.Mission.spawnPoints
+    local sp
+    if type(spawnPoints) == 'table' and #spawnPoints > 0 then
+        sp = spawnPoints[math.random(1, #spawnPoints)]
+    else
+        sp = Config.Mission.spawnPoint
+    end
     if not sp then
         return false, 'no_spawn_point'
     end
@@ -167,8 +175,12 @@ function MRD9.Session.TransferIn(sessionId)
     s.state = 'IN_MISSION'
     MRD9.Log('Session transferred in: id=%s', sessionId)
 
-    if MRD9.Arena and MRD9.Arena.Start then
+    local arenaEnabled = Config.Arena and Config.Arena.enabled ~= false
+    if arenaEnabled and MRD9.Arena and MRD9.Arena.Start then
         MRD9.Arena.Start(sessionId)
+    elseif MRD9.Survival and MRD9.Survival.Start then
+        -- INSTRUCTION-021: アリーナ無効時は直接サバイバル開始
+        MRD9.Survival.Start(sessionId)
     end
 
     if MRD9.Loot and MRD9.Loot.Spawn then
@@ -253,6 +265,11 @@ function MRD9.Session.Destroy(sessionId, reason)
 
     if MRD9.Arena and MRD9.Arena.Cleanup then
         MRD9.Arena.Cleanup(sessionId, reason)
+    end
+
+    -- INSTRUCTION-021: サバイバル停止
+    if MRD9.Survival and MRD9.Survival.Stop then
+        MRD9.Survival.Stop(sessionId)
     end
 
     if MRD9.Loot and MRD9.Loot.Cleanup then

@@ -39,6 +39,7 @@ server_scripts {
     'server/arena/wave.lua',
     'server/arena/spawn.lua',
     'server/arena/arena.lua',
+    'server/survival.lua',
     'server/hud.lua',
     'server/party.lua',
     'server/main.lua',
