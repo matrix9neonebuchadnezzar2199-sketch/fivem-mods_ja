@@ -22,6 +22,13 @@ RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
     if MRD9.Arena and MRD9.Arena.ClientBeginMission then
         MRD9.Arena.ClientBeginMission()
     end
+    -- 任務中はミニマップを強制表示（qbx_hud 等の隠蔽に対抗）
+    CreateThread(function()
+        while MRD9.CurrentSession do
+            DisplayRadar(true)
+            Wait(500)
+        end
+    end)
 end)
 
 RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)

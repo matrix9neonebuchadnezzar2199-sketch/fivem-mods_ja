@@ -4,18 +4,19 @@
 
 MRD9 = MRD9 or {}
 
+---ヴェガの台詞をモーダル対話ウィンドウで表示する。
+---`lib.alertDialog` を同期呼出してプレイヤーが「進む」を押すまで待機。
+---旧 `lib.notify`（右下通知）からの置換。第 2 引数 duration は無視（互換維持）。
 ---@param text string
 ---@param duration integer|nil
 local function vegaSay(text, duration)
-    duration = duration or 5000
-    lib.notify({
-        title = _('vega_ui_title'),
-        description = text,
-        duration = duration,
-        position = 'bottom-center',
-        type = 'inform',
-        icon = 'user-tie',
-        iconColor = '#3DA8E8',
+    lib.alertDialog({
+        header = _('vega_ui_title'),
+        content = text,
+        centered = true,
+        cancel = false,
+        size = 'lg',
+        labels = { confirm = '進む' },
     })
 end
 
