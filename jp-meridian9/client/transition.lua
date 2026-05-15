@@ -14,6 +14,7 @@ local State = {
     appliedBlackout = false,
     nyEnabled = false,
     cayoEnabled = false,
+    thunderRunning = false,
 }
 
 ---@return table
@@ -84,6 +85,33 @@ local function clearBlackout()
         SetArtificialLightsState(false)
         State.appliedBlackout = false
     end
+end
+
+-- 雪天候に雷を重ねる補助スレッド。
+-- GTA V には『雷+雪』専用 weather が無いため、雪天候上で ForceLightningFlash を
+-- 定期発火して雷光と雷鳴を演出する。
+local function startThunderLoop()
+    if State.thunderRunning then
+        return
+    end
+    State.thunderRunning = true
+    CreateThread(function()
+        local c = cfg()
+        local minMs = tonumber(c.thunderIntervalMinMs) or 12000
+        local maxMs = tonumber(c.thunderIntervalMaxMs) or 35000
+        if maxMs < minMs then maxMs = minMs + 1000 end
+        -- 最初の雷まで短めに（演出を早く見せる）
+        Wait(math.random(2000, 5000))
+        while State.thunderRunning and State.active do
+            pcall(function() ForceLightningFlash() end)
+            Wait(math.random(minMs, maxMs))
+        end
+        State.thunderRunning = false
+    end)
+end
+
+local function stopThunderLoop()
+    State.thunderRunning = false
 end
 
 ---@return table|nil
