@@ -22,16 +22,21 @@
 
 ## マップ素材
 
-### サイト・ナイン（Cayo Perico）— **採用** ✓ INSTRUCTION-020 v3
+### サイト・ナイン（Cayo Perico）— **採用** ✓ INSTRUCTION-020 v7
 
-- **GTA V 本体同梱の Cayo Perico**（GTA Online Heist DLC、build 2189+ で標準同梱）
-  - Rockstar Games 著作物。jp-meridian9 では `SetIslandEnabled('HeistIsland', true/false)` ネイティブで島本体を切替するのみ
-  - 追加 MAP MOD 不要、LICENSE クリア
-- **[Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)** — IPL ローダー（補助）
+- **GTA V 本体同梱の Cayo Perico**（GTA Online Heist DLC、build 2189+）
+  - Rockstar Games 著作物
+- **[Monarch-Devs/mnr_cayo](https://github.com/Monarch-Devs/mnr_cayo)** — Cayo Perico IPL ローダー（**必須・本流実装**）
+  - License: **GPL-3.0**
+  - Author: IlMelons / Monarch-Devs
+  - スタンドアロン、0.00ms、~250KiB、restart 耐性、カスタム ymap（邸宅ゲート開閉可）
+  - クライアントログイン時に Cayo Perico の IPL を一度だけロード、海上に常時表示
+  - **`jp-meridian9` 側は MAP 切替ネイティブを一切呼ばない**（壊さない構成）
+  - 同梱せず、運営者が `git clone` で取得
+- **[Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)** — IPL ローダー（互換維持・現運用では未使用）
   - License: **MIT**
-  - 用途: El Rubio 邸宅内装の IPL（`h4_ch2_mansion_final`）を自動ロード（`bob74_ipl/dlc_cayoperico/base.lua`）
-  - 将来の北ヤンクトン拡張・ロアロケーション追加にも備えて依存維持
-  - 同梱せず、運営者が `git clone https://github.com/Bob74/bob74_ipl.git` で取得
+  - 旧 v2 北ヤンクトン採用時に使用、現運用では呼出ゼロ。jp-meridian9 dependencies に残置
+  - 将来の北ヤンクトン拡張・他 IPL 制御の余地として依存維持
 
 ### 検証期間中の代替実装（コード上は残置）
 

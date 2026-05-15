@@ -6,7 +6,7 @@
 | M0 | INSTRUCTION-002 | config / locales / utils | 完了 |
 | M0 | INSTRUCTION-003 | framework.lua | 完了 |
 | M0 | INSTRUCTION-004 | 画像配置（`html/assets`） | 完了 |
-| M0 | INSTRUCTION-020 | サイト・ナイン MAP 導入（v5: Cayo Perico 常時 ON + EnableMpDlcMaps 封印） | 完了（v5） |
+| M0 | INSTRUCTION-020 | サイト・ナイン MAP 導入（v7: Monarch-Devs/mnr_cayo 採用、jp-meridian9 は MAP ネイティブ hands-off） | 完了（v7） |
 | M4 | INSTRUCTION-021 | オープンワールド・サバイバル（3 ウェーブ後の自由探索＋持続的脅威） | 完了 |
 | 全 | INSTRUCTION-005 | 開発日記運用 | 常時 |
 | M1 | INSTRUCTION-006 | `sql/install.sql` 本実装・`contract`/`stats`・oxmysql | 完了 |

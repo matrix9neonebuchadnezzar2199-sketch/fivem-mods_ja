@@ -61,24 +61,35 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 ---
 
-## サイト・ナイン MAP 導入手順（INSTRUCTION-020 v3 / Cayo Perico）
+## サイト・ナイン MAP 導入手順（INSTRUCTION-020 v7 / Cayo Perico）
 
-任務地「サイト・ナイン」は **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC ステージ）を **`SetIslandEnabled('HeistIsland', true/false)` クライアントローカルネイティブ**で有効化する設計です（routing bucket と組み合わせて、任務 bucket 内のクライアントだけ熱帯島が見える分離方式）。
+任務地「サイト・ナイン」は **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC ステージ）を、**専用 MAP ローダー `mnr_cayo`** で常時表示する設計です。`jp-meridian9` 側では MAP 切替系ネイティブ（`SetIslandEnabled` / `EnableMpDlcMaps`）は **一切呼びません**（v3 でクライアント環境破壊の前例があったため）。
 
 ### 仕組み
 
-- ヴェガ事務所（Mission Row）に居る通常プレイヤーには **何も見えない**（海面のみ）
-- 任務 bucket に転送されたメンバーだけが **Cayo Perico（熱帯島・雷雨・夜）** を見て戦闘
-- 帰還するとヴェガ事務所周辺は綺麗な LS のまま
+- `mnr_cayo` がクライアントログイン時に Cayo Perico の IPL を一度だけロード
+- 海上に Cayo Perico が **常時遠景表示**（地続きアクセス不可、海上独立島）
+- ヴェガ事務所周辺の LS は **正常表示**、ESC マップも崩壊しない
+- 任務 bucket に転送されたメンバーは Cayo Perico へワープして戦闘（演出: 雷雨・夜・青みフィルター）
+- bucket 0 のプレイヤーも海上に島を視認できるが、ゲート転送以外で物理アクセス不可
 
-### bob74_ipl の取得（El Rubio 邸宅内装用）
+### 必須リソースの取得
 
 ```powershell
 cd "<server_resources>\[gamemodes]\[maps]"
+# 1. Cayo Perico IPL ローダー（必須・MAP の本体）
+git clone https://github.com/Monarch-Devs/mnr_cayo.git mnr_cayo
+# 2. bob74_ipl（旧 v2 北ヤンクトン互換用、現運用では未使用だが jp-meridian9 dependencies で参照）
 git clone https://github.com/Bob74/bob74_ipl.git bob74_ipl
 ```
 
-`server.cfg` に `ensure bob74_ipl` を **`ensure jp-meridian9` より前**に追加。
+`server.cfg` に **`ensure jp-meridian9` より前**に追加：
+
+```
+ensure mnr_cayo
+ensure bob74_ipl
+ensure jp-meridian9
+```
 
 `sv_enforceGameBuild` は **2189 以上**（推奨 3258 以上）。Cayo Perico DLC を含むビルド要件。
 

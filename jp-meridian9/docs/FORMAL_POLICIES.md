@@ -231,17 +231,19 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | 復旧手順（v3 残留状態のクライアント） | (1) FiveM 完全終了（タスクマネージャで FiveM/GTA5 プロセス全終了） (2) `%LOCALAPPDATA%\FiveM\FiveM.app\data\cache\` クリア (3) FiveM 再起動 → 接続。マスター環境で 2026-05-15 に実施し復旧確認 |
 | **教訓・禁止事項** | **`EnableMpDlcMaps(true)` の呼出は禁止**（ESC マップ崩壊の主犯）。一方 `SetIslandEnabled('HeistIsland', true)` 単体は安全（GTA Online で常時使用されているネイティブ）。v3 での問題は両者を同時に ON にしていたことで `EnableMpDlcMaps` が LS のミニマップ層を差し替えたのが原因 |
 
-## INSTRUCTION-020：サイト・ナイン MAP 導入（**v5 確定運用** / Cayo Perico 常時 ON + EnableMpDlcMaps 封印）
+## INSTRUCTION-020：サイト・ナイン MAP 導入（**v7 確定運用** / mnr_cayo + jp-meridian9 hands-off）
 
 | 項目 | 内容 |
 |------|------|
-| 採用 MAP | **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC） |
-| 地形 enable | **`SetIslandEnabled('HeistIsland', true)`** をクライアント起動時に呼んで **常時 ON 固定**（GTA Online と同じ運用） |
-| ミニマップ切替 | **`EnableMpDlcMaps` は呼ばない**（v3 で ESC マップ崩壊の主犯と判明）。ミニマップは LS のままで Cayo Perico 用に切り替わらない（妥協） |
+| 採用 MAP | **GTA V バニラ同梱の Cayo Perico** + **専用 MAP ローダー [Monarch-Devs/mnr_cayo](https://github.com/Monarch-Devs/mnr_cayo)**（GPL-3.0） |
+| ロード方式 | `mnr_cayo` がクライアントログイン時に Cayo Perico IPL を一度だけロード、海上に常時遠景表示 |
+| **jp-meridian9 側の MAP 操作** | **`SetIslandEnabled` / `EnableMpDlcMaps` を含む MAP 切替ネイティブを一切呼ばない**（v3〜v5 で実機破壊事例のため完全禁止） |
 | bucket 0 のプレイヤー | 海上に Cayo Perico が遠景表示される。地続きアクセス不可（海上独立島） |
-| bucket 分離対象 | **演出のみ**（天気・時間・タイムサイクル・街灯）。地形は共通 |
-| 復旧成功確認 | マスター実機で 2026-05-15 復旧確認後、本構成（v5）で再挑戦 |
-| 撤回履歴 | v1 The Apocalypse Project（LS ymap で bucket 分離不可）／ v2 North Yankton（Prologue ジオメトリ未完成）／ v3 Cayo Perico + EnableMpDlcMaps（ESC マップ崩壊）／ v4 Sandy Shores 内運用（リスク回避のため Cayo Perico 撤回、しかし「島を読み込む」設計の本質を失った） |
+| bucket 分離対象 | **演出のみ**（天気・時間・タイムサイクル）。地形は共通 |
+| 起動チェック | `server/main.lua` で `GetResourceState('mnr_cayo')` を確認、未起動なら WARN（運営者に clone 手順を案内） |
+| 撤回履歴 | v1 The Apocalypse Project（LS ymap で bucket 分離不可）／ v2 North Yankton + bob74_ipl（Prologue ジオメトリ未完成）／ v3 Cayo Perico + SetIslandEnabled + EnableMpDlcMaps（ESC マップ崩壊）／ v4 Sandy Shores 内運用（島ロード回避だが設計の本質を失う）／ v5 SetIslandEnabled のみ ON + EnableMpDlcMaps 封印（依然 ESC マップ崩壊、`SetIslandEnabled` 単体でも GTA V クライアント環境破壊事例あり）／ v6 全 MAP ネイティブ撤去（中継状態） |
+| v7 の優位 | コミュニティ大手サーバーが採用する **専用 MAP リソース（ymap 直接ストリーミング）** 方式。`jp-meridian9` 側はネイティブを呼ばず、`mnr_cayo` が GTA V エンジンの正規ロードパスでロード。クライアント環境破壊リスクなし |
+| **教訓・禁止事項（最終確定）** | **MAP 追加は専用 MAP リソース（`stream/` フォルダで ymap 配信）で行う**。`SetIslandEnabled` / `EnableMpDlcMaps` / 同種の MAP 切替ネイティブの動的呼出は **絶対に禁止**（FiveM コミュニティ・jp-meridian9 実機検証ともに環境破壊事例あり） |
 | 「地続きで行ける」問題 | 復活するが、RP「Meridian-9 隔離区域への許可なき侵入は契約違反」で処理。物理的アクセス制限ではなく**運用ルールで担保** |
 
 ## INSTRUCTION-020：サイト・ナイン MAP 導入（Cayo Perico 版 v3・**撤回**・コード残置記録）

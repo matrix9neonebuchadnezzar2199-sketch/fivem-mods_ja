@@ -93,11 +93,18 @@ end)
 
 CreateThread(function()
     Wait(3000)
-    if GetResourceState('bob74_ipl') ~= 'started' then
-        print('[jp-meridian9] (server) [WARN] bob74_ipl 未起動。北ヤンクトンが表示されません（INSTRUCTION-020 §4-A 参照）')
-        return
+    -- INSTRUCTION-020 v7: Cayo Perico は専用 MAP リソース (mnr_cayo) で常時ロード。
+    -- 北ヤンクトン用 bob74_ipl は互換維持（現運用では未使用）。
+    local cayoOk = GetResourceState('mnr_cayo') == 'started'
+    local nyOk = GetResourceState('bob74_ipl') == 'started'
+    if cayoOk then
+        print('[jp-meridian9] (server) mnr_cayo 起動確認 OK（Cayo Perico 常時ロード）')
+    else
+        print('[jp-meridian9] (server) [WARN] mnr_cayo 未起動。海上に Cayo Perico が表示されません。`git clone https://github.com/Monarch-Devs/mnr_cayo.git` で導入し server.cfg に ensure mnr_cayo を追加してください')
     end
-    print('[jp-meridian9] (server) bob74_ipl 起動確認 OK（サイト・ナイン = 北ヤンクトン）')
+    if nyOk then
+        print('[jp-meridian9] (server) bob74_ipl 起動確認 OK（北ヤンクトン互換）')
+    end
 end)
 
 local function dbgChat(src, title, body)
