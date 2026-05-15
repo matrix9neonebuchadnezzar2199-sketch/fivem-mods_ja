@@ -320,29 +320,15 @@ end
 ---@param sessionId string
 ---@param src integer
 function MRD9.Arena.OnPlayerDowned(sessionId, src)
-    local st = arenaStates[sessionId]
     local session = MRD9.Session.Get(sessionId)
-    if not st or not session or st.state == 'failed' or st.state == 'cleared' then
+    if not session then
         return
     end
-
-    st.downed[src] = true
-
-    local allDown = true
-    for _, m in ipairs(session.members) do
-        if not st.downed[m] then
-            allDown = false
-            break
-        end
-    end
-
-    if allDown then
-        st.state = 'failed'
-        for _, m in ipairs(session.members) do
-            TriggerClientEvent('jp-meridian9:client:arenaMissionFailed', m, { sessionId = sessionId })
-        end
-        MRD9.Session.Destroy(sessionId, 'arena_wiped')
-    end
+    -- INSTRUCTION-021: 個別死亡 = 即時個別ロスト＋帰還。
+    -- アリーナ中・サバイバル中問わず、死亡したプレイヤーはその場で除外する。
+    -- インベントリ消去 / bucket 0 / TeleportToLosSantos は RemovePlayer 内で処理。
+    -- 残メンバーが 0 になれば Session.Destroy(sessionId, 'all_lost') が自動発火する。
+    MRD9.Session.RemovePlayer(src, 'died')
 end
 
 ---@param sessionId string

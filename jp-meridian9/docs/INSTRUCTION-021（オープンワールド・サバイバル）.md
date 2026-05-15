@@ -229,7 +229,67 @@ end)
 
 ---
 
-## 13. 将来拡張余地（本書範囲外）
+## 13. 死亡・タイムアウト・クラッシュの初期化処理（マスター質問対応）
+
+### 13-A. 個別死亡（任務中）
+
+- `client/arena.lua` の死亡監視ループが `IsPedDeadOrDying(ped, true)` を検出
+- `TriggerServerEvent('jp-meridian9:server:playerDowned')` を 1 回だけ送信
+- サーバー `MRD9.Arena.OnPlayerDowned(sessionId, src)` で **`Session.RemovePlayer(src, 'died')`** を呼ぶ
+- `RemovePlayer` 内で:
+  - `setPlayerBucket(src, 0)`（任務 bucket から退出）
+  - `session.inventory[src] = {}`（インベントリ全ロスト）
+  - `session.members` から除外
+  - `TriggerClientEvent('jp-meridian9:onMissionEnd', src, { reason='died', returnPoint })`
+- クライアント `onMissionEnd` ハンドラで:
+  - `MRD9.HUD.OnMissionEnd` で HUD 非表示
+  - `MRD9.Transition.TeleportToLosSantos(rp)` でフェード＋安全帰還
+  - 帰還後 `SetEntityHealth(ped, 1)` + `SetPedToRagdoll` で気絶演出
+- 残メンバー 0 なら `Session.Destroy(sessionId, 'all_lost')` 自動発火
+
+### 13-B. アリーナ全滅（同時に全員ダウン）
+
+INSTRUCTION-021 適用後は **個別死亡で即除外**するため、`arena_wiped` のフローはほぼ理論上のケースのみ。`Session.RemovePlayer` で `#members == 0` 検知 → `Destroy(sessionId, 'all_lost')` で代替成立。
+
+### 13-C. タイムアウト（制限時間切れ）
+
+- `server/session.lua` の cleanup ループ（`Wait(cleanupIntervalSeconds * 1000)`）
+- `s.state == 'IN_MISSION' and now >= s.endsAt` を検出
+- `Session.Destroy(sessionId, 'timeout')`
+- 各メンバーに `onMissionEnd { reason='timeout', returnPoint }` → クライアント側で `TeleportToLosSantos`
+- `mrd9_mission_logs.outcome = 'timeout'` 記録（`Extract.OnSessionDestroy` 経由）
+
+### 13-D. クライアントクラッシュ・切断
+
+- `AddEventHandler('playerDropped', ...)` で `Session.RemovePlayer(src, 'disconnect')`
+- bucket 0 復帰・インベントリ消去（既ログイン時無効、再ログイン時に bucket 0 で LS スポーン）
+- 残メンバー 0 なら `Session.Destroy(sessionId, 'all_lost')`
+
+### 13-E. リソース restart（サーバー側）
+
+- `server/session.lua` の `onResourceStop` で全 `sessions` を `Destroy(..., 'server_shutdown')`
+- 各メンバーに `onMissionEnd` 送信 → クライアントが `TeleportToLosSantos` で帰還
+- `MRD9.Arena.Cleanup` でゾンビエンティティ削除、`MRD9.Survival.Stop` で Survival スレッド停止
+
+### 13-F. リソース restart（クライアント側 / Cayo Perico 残留対策）
+
+- `client/transition.lua` の `onResourceStop` で:
+  - `State.active`（任務中）なら **`returnPoint` へ瞬間テレポート**（フェードなしの強制）
+  - `Transition.Leave()` で `SetIslandEnabled(false)` + 演出解除
+- これでクライアントの restart 直後、海面に取り残されずヴェガ事務所前で立っている
+
+### 13-G. テスト観点
+
+- [ ] 任務中に個別死亡 → 自分だけ帰還＋ロスト、他メンバー継続
+- [ ] 任務中に全員順次死亡 → 最後の死亡で `all_lost` → 自動 Destroy
+- [ ] タイムアウト → 全員帰還、`mrd9_mission_logs.outcome='timeout'`
+- [ ] クライアントクラッシュ → 残メンバーに継続通知、`outcome='aborted'` または `died`
+- [ ] `restart jp-meridian9`（サーバー側）→ 全員ヴェガ事務所へフェード帰還
+- [ ] `restart jp-meridian9`（クライアント側、`/restart` 等）→ 自分だけ瞬時帰還（フェードなしだが安全）
+
+---
+
+## 14. 将来拡張余地（本書範囲外）
 
 - **Survival ボス**: 一定周期で特殊個体（HP 高・ダメージ大）をスポーン
 - **環境イベント**: ヘリ追撃・嵐の到来・霧の発生など、定期的な脅威イベント

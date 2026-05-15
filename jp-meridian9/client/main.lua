@@ -46,7 +46,8 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
             MRD9.Transition.Leave()
         end
 
-        if reason == 'arena_wiped' then
+        -- INSTRUCTION-021: 死亡系の reason すべてで気絶演出を発火（個別 died / 全滅 all_lost / arena_wiped）
+        if reason == 'arena_wiped' or reason == 'died' or reason == 'all_lost' then
             local ped = PlayerPedId()
             if ped and ped ~= 0 then
                 local cfg = Config.Arena

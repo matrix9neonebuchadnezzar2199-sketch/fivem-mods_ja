@@ -171,6 +171,11 @@ local function applyCayoPerico()
         clearNorthYankton()
     end
     SetIslandEnabled('HeistIsland', true)
+    -- ミニマップを MP DLC マップ（Heist Island）に切替。プレイヤーが Cayo Perico
+    -- 座標に居る時のみ自動的にミニマップ表示が島用へ変わる（GTA Online 仕様）。
+    if EnableMpDlcMaps then
+        EnableMpDlcMaps(true)
+    end
     State.cayoEnabled = true
     return true
 end
@@ -180,6 +185,9 @@ local function clearCayoPerico()
         return
     end
     SetIslandEnabled('HeistIsland', false)
+    if EnableMpDlcMaps then
+        EnableMpDlcMaps(false)
+    end
     State.cayoEnabled = false
 end
 
@@ -391,6 +399,20 @@ end
 AddEventHandler('onResourceStop', function(res)
     if res ~= GetCurrentResourceName() then
         return
+    end
+    -- INSTRUCTION-021: クライアント側 restart 時の安全帰還。
+    -- Cayo Perico 座標に取り残されないよう、Island 無効化前にヴェガ事務所へ瞬間移動する。
+    local rp = Config and Config.Mission and Config.Mission.returnPoint
+    if rp and State.active then
+        local ped = PlayerPedId()
+        if ped and ped ~= 0 then
+            FreezeEntityPosition(ped, true)
+            SetEntityInvincible(ped, true)
+            SetEntityCoords(ped, rp.x + 0.0, rp.y + 0.0, rp.z + 0.0, false, false, false, false)
+            if rp.w then SetEntityHeading(ped, rp.w + 0.0) end
+            FreezeEntityPosition(ped, false)
+            SetEntityInvincible(ped, false)
+        end
     end
     MRD9.Transition.Leave()
 end)
