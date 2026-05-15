@@ -12,7 +12,113 @@ local State = {
     byLootId = {},
     markerRunning = false,
     blips = {},  -- [lootId] = blipHandle
+    proximityRunning = false,
+    textUiOpen = false,
+    busy = false,
 }
+
+---@param reason string|nil
+---@return string
+local function errMsgFor(reason)
+    local r = tostring(reason or 'unknown')
+    local key = 'loot_err_' .. r
+    local msg = _(key)
+    if msg == key then
+        return _('loot_err_unknown')
+    end
+    return msg
+end
+
+local function hideLootUI()
+    if State.textUiOpen then
+        State.textUiOpen = false
+        if lib and lib.hideTextUI then
+            lib.hideTextUI()
+        end
+    end
+end
+
+-- 近接 + E キーで取得する代替ルート（ox_target の H 経由と並列）。
+-- プレイヤー周辺 2m 以内の最も近い loot を対象にする。
+local function startLootProximityLoop()
+    if State.proximityRunning then
+        return
+    end
+    State.proximityRunning = true
+    CreateThread(function()
+        while State.proximityRunning and MRD9.CurrentSession do
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 then
+                local pc = GetEntityCoords(ped)
+                local bestLootId, bestDist = nil, math.huge
+                for lootId, row in pairs(State.byLootId) do
+                    local ent = NetworkGetEntityFromNetworkId(row.netId)
+                    if ent and ent ~= 0 and DoesEntityExist(ent) then
+                        local d = #(pc - GetEntityCoords(ent))
+                        if d <= 2.2 and d < bestDist then
+                            bestLootId, bestDist = lootId, d
+                        end
+                    end
+                end
+                if bestLootId and not State.busy then
+                    if not State.textUiOpen then
+                        State.textUiOpen = true
+                        lib.showTextUI('[E] ' .. _('loot_pickup_label'), {
+                            position = 'bottom-center',
+                            icon = 'box',
+                            style = {
+                                fontSize = '1.5em',
+                                padding = '12px 18px',
+                                borderRadius = '6px',
+                            },
+                        })
+                    end
+                    if IsControlJustReleased(0, 38) then
+                        State.busy = true
+                        hideLootUI()
+                        local lootId = bestLootId
+                        CreateThread(function()
+                            local res = lib.callback.await('jp-meridian9:loot:pickup', false, lootId)
+                            if type(res) == 'table' and res.ok then
+                                lib.notify({
+                                    type = 'success',
+                                    description = _('loot_pickup_ok', res.name or res.itemId, res.count or 1),
+                                })
+                            elseif type(res) == 'table' then
+                                lib.notify({
+                                    type = 'error',
+                                    description = errMsgFor(res.reason),
+                                })
+                            end
+                            State.busy = false
+                        end)
+                    end
+                    Wait(0)
+                else
+                    if State.textUiOpen then
+                        hideLootUI()
+                    end
+                    Wait(300)
+                end
+            else
+                Wait(800)
+            end
+        end
+        State.proximityRunning = false
+        hideLootUI()
+    end)
+end
+
+AddEventHandler('jp-meridian9:onMissionStart', function()
+    startLootProximityLoop()
+end)
+RegisterNetEvent('jp-meridian9:onMissionStart', function()
+    startLootProximityLoop()
+end)
+RegisterNetEvent('jp-meridian9:onMissionEnd', function()
+    State.proximityRunning = false
+    hideLootUI()
+end)
 
 ---@param b integer|nil
 ---@return nil
