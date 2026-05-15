@@ -56,6 +56,7 @@ end
 local function buildLocalePayload()
     return {
         locale = Config.Locale or 'ja',
+        uiScale = tonumber((Config.HUD or {}).uiScale) or 2.0,
         strings = {
             hud_timer_remaining = _('hud_timer_remaining'),
             hud_party_label = _('hud_party_label'),

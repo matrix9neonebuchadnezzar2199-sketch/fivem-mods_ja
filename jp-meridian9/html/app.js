@@ -58,6 +58,10 @@
     const loc = (payload && payload.locale) || 'ja';
     const pack = STR_FALLBACK[loc] || STR_FALLBACK.ja;
     STR = Object.assign({}, pack, (payload && payload.strings) || {});
+    const scale = Number(payload && payload.uiScale);
+    if (Number.isFinite(scale) && scale > 0) {
+      document.documentElement.style.setProperty('--m9-scale', String(scale));
+    }
   }
 
   function renderWaveBanner(arena, cfg) {

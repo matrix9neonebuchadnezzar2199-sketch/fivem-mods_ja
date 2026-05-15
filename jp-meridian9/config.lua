@@ -131,6 +131,7 @@ Config.HUD = {
     showWaveBanner = true,              -- ウェーブ帯（中央上）
     inventoryMode = 'byRarity',         -- 'byRarity' | 'items' | 'totalOnly'（014 既定: byRarity）
     waveEventMs = 4500,                 -- m9_hud_event ウェーブ系トースト表示時間（ms）
+    uiScale = 2.0,                      -- NUI 文字サイズの倍率（CSS 変数 --m9-scale に渡る）
 }
 
 -- ▼ 運営設定 ---------------------------------------------------

@@ -1,3 +1,7 @@
+:root {
+  --m9-scale: 2;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -33,7 +37,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: calc(8px * var(--m9-scale));
   pointer-events: none;
   max-width: 90vw;
 }
@@ -46,15 +50,15 @@ body {
 
 .m9-hud__wave-banner {
   position: absolute;
-  top: 10px;
+  top: calc(10px * var(--m9-scale));
   left: 50%;
   transform: translateX(-50%);
-  padding: 8px 20px;
+  padding: calc(8px * var(--m9-scale)) calc(20px * var(--m9-scale));
   border-radius: 6px;
   background: rgba(8, 12, 24, 0.72);
   border: 1px solid rgba(120, 180, 255, 0.35);
   color: #e8f4ff;
-  font-size: 15px;
+  font-size: calc(15px * var(--m9-scale));
   font-weight: 600;
   letter-spacing: 0.06em;
   text-shadow: 0 1px 3px #000;
@@ -65,23 +69,27 @@ body {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: minmax(140px, 220px) 1fr minmax(140px, 200px);
+  grid-template-columns:
+    minmax(calc(140px * var(--m9-scale)), calc(220px * var(--m9-scale)))
+    1fr
+    minmax(calc(140px * var(--m9-scale)), calc(200px * var(--m9-scale)));
   grid-template-rows: 1fr auto;
-  padding: 52px 16px 16px;
-  gap: 12px;
+  padding: calc(52px * var(--m9-scale)) calc(16px * var(--m9-scale))
+    calc(16px * var(--m9-scale));
+  gap: calc(12px * var(--m9-scale));
 }
 
 .m9-hud__party {
   grid-column: 1;
   grid-row: 1;
   align-self: start;
-  padding: 10px 12px;
+  padding: calc(10px * var(--m9-scale)) calc(12px * var(--m9-scale));
   border-radius: 8px;
   background: rgba(8, 12, 24, 0.68);
   border: 1px solid rgba(120, 180, 255, 0.25);
   color: #dbe7ff;
   text-shadow: 0 1px 2px #000;
-  max-height: 45vh;
+  max-height: 60vh;
   overflow: hidden;
 }
 
@@ -91,7 +99,7 @@ body {
   justify-self: end;
   align-self: start;
   text-align: right;
-  padding: 10px 14px;
+  padding: calc(10px * var(--m9-scale)) calc(14px * var(--m9-scale));
   border-radius: 8px;
   background: rgba(8, 12, 24, 0.68);
   border: 1px solid rgba(120, 180, 255, 0.25);
@@ -100,16 +108,16 @@ body {
 }
 
 .m9-hud__timer-value {
-  font-size: 26px;
+  font-size: calc(26px * var(--m9-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
 
 .m9-hud__timer-sub {
-  font-size: 12px;
+  font-size: calc(12px * var(--m9-scale));
   opacity: 0.85;
-  margin-top: 2px;
+  margin-top: calc(2px * var(--m9-scale));
 }
 
 .m9-hud__inventory {
@@ -117,19 +125,19 @@ body {
   grid-row: 2;
   justify-self: end;
   align-self: end;
-  padding: 10px 12px;
+  padding: calc(10px * var(--m9-scale)) calc(12px * var(--m9-scale));
   border-radius: 8px;
   background: rgba(8, 12, 24, 0.68);
   border: 1px solid rgba(120, 180, 255, 0.25);
   color: #dbe7ff;
-  font-size: 13px;
+  font-size: calc(13px * var(--m9-scale));
   text-shadow: 0 1px 2px #000;
-  min-width: 140px;
+  min-width: calc(140px * var(--m9-scale));
 }
 
 .m9-hud__heading {
-  margin: 0 0 8px;
-  font-size: 11px;
+  margin: 0 0 calc(8px * var(--m9-scale));
+  font-size: calc(11px * var(--m9-scale));
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -145,10 +153,10 @@ body {
 .m9-hud__member {
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  font-size: 13px;
+  gap: calc(6px * var(--m9-scale));
+  font-size: calc(13px * var(--m9-scale));
   line-height: 1.35;
-  margin-bottom: 4px;
+  margin-bottom: calc(4px * var(--m9-scale));
 }
 
 .m9-hud__member-name {
@@ -170,15 +178,15 @@ body {
 }
 
 .m9-hud__badge {
-  font-size: 11px;
+  font-size: calc(11px * var(--m9-scale));
   opacity: 0.9;
 }
 
 .m9-hud__hpbar {
-  height: 3px;
+  height: calc(3px * var(--m9-scale));
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.12);
-  margin-top: 2px;
+  margin-top: calc(2px * var(--m9-scale));
   overflow: hidden;
 }
 
@@ -190,26 +198,26 @@ body {
 }
 
 .m9-hud__inv-line {
-  margin-bottom: 4px;
+  margin-bottom: calc(4px * var(--m9-scale));
 }
 
 .m9-hud__inv-rarity {
   display: flex;
-  gap: 10px;
+  gap: calc(10px * var(--m9-scale));
   flex-wrap: wrap;
   font-variant-numeric: tabular-nums;
 }
 
 .m9-hud__toast {
-  padding: 10px 16px;
+  padding: calc(10px * var(--m9-scale)) calc(16px * var(--m9-scale));
   border-radius: 8px;
   background: rgba(12, 18, 32, 0.88);
   border: 1px solid rgba(160, 210, 255, 0.4);
   color: #f0f6ff;
-  font-size: 14px;
+  font-size: calc(14px * var(--m9-scale));
   text-shadow: 0 1px 3px #000;
   text-align: center;
-  max-width: 420px;
+  max-width: calc(420px * var(--m9-scale));
 }
 
 .m9-hud__toast--success {
