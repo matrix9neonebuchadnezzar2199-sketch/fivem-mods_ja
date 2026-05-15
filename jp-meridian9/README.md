@@ -14,8 +14,9 @@
 - **oxmysql**（必須）：DB 接続に使用。未導入の場合は [overextended/oxmysql](https://github.com/overextended/oxmysql) を `resources` に配置し、`server.cfg` で `ensure oxmysql` を **jp-meridian9 より前**に記述すること。
 - **ox_lib**（必須）：通知・コンテキストメニュー・`lib.callback`。 [overextended/ox_lib](https://github.com/overextended/ox_lib) を配置し、`ensure ox_lib` を **jp-meridian9 より前**に記述。
 - **ox_target**（必須）：NPC への視線ターゲット。 [overextended/ox_target](https://github.com/overextended/ox_target) を配置し、`ensure ox_target` を **jp-meridian9 より前**に記述（`ox_lib` の後が無難）。
+- **bob74_ipl**（必須）：北ヤンクトン IPL ロード基盤（INSTRUCTION-020）。 [Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl) を `resources/[gamemodes]/[maps]/bob74_ipl/` 等に配置し、`ensure bob74_ipl` を **jp-meridian9 より前**に記述。
 - MySQL 5.7.8+ または MariaDB 10.3+（`JSON` 型利用のため）
-- 初回導入時に **`sql/install.sql`** を対象データベースに流し込むこと。
+- 初回導入時に **`sql/install.sql`** を対象データベースに流し込むこと（v0.1.0-jp 以降は **`mrd9_contracts` 未作成時に起動時自動適用**）。
 
 ### DB スキーマ初期化
 
@@ -42,12 +43,13 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 ## 導入
 
 1. 本フォルダを `resources` 配下に配置する（例: `resources/[jp-mods]/jp-meridian9/`）。
-2. **oxmysql / ox_lib / ox_target** を導入済みであること（各公式リポジトリを参照）。`server.cfg` の例（順序重要）:
+2. **oxmysql / ox_lib / ox_target / bob74_ipl** を導入済みであること。`server.cfg` の例（順序重要）:
 
    ```cfg
    ensure oxmysql
    ensure ox_lib
    ensure ox_target
+   ensure bob74_ipl
    ensure jp-meridian9
    ```
 
@@ -56,6 +58,45 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 5. クライアント接続後、F8 に `[jp-meridian9] resource loaded` が出ることを確認。
 
 **フレームワーク依存はありません。** ヴェガ対話は **ox_lib**（通知・メニュー）、NPC 操作は **ox_target** を使用。
+
+---
+
+## サイト・ナイン MAP 導入手順（INSTRUCTION-020 / 北ヤンクトン）
+
+任務地「サイト・ナイン」は **GTA V バニラ同梱の North Yankton** を **クライアントローカル IPL** で有効化する設計です（routing bucket と組み合わせて、任務 bucket 内のクライアントだけ別空間が見える分離方式）。
+
+### 仕組み
+
+- ヴェガ事務所（Mission Row）に居る通常プレイヤーには **何も見えない**（海面のみ）
+- 任務 bucket に転送されたメンバーだけが **北ヤンクトン（Ludendorff）** を見て戦闘
+- 帰還するとヴェガ事務所周辺は綺麗な LS のまま
+
+### bob74_ipl の取得
+
+```powershell
+cd "<server_resources>\[gamemodes]\[maps]"
+git clone https://github.com/Bob74/bob74_ipl.git bob74_ipl
+```
+
+`server.cfg` に `ensure bob74_ipl` を **`ensure jp-meridian9` より前**に追加。
+
+### サイト・ナイン演出のカスタマイズ
+
+`config.lua` の `Config.SiteNine`:
+
+| キー | 既定 | 説明 |
+|---|---|---|
+| `weather` | `'XMAS'` | 天候（雪・霧） |
+| `timeHour` | `3` | 時刻固定（深夜 3 時） |
+| `timeFreeze` | `true` | 時間進行停止 |
+| `timecycleModifier` | `'spectator5'` | 寒色・コントラストポストエフェクト |
+| `blackout` | `true` | 街灯・建物の灯り消灯 |
+| `northYankton` | `true` | `false` で北ヤンクトン IPL を無効化（演出のみ） |
+| `graveStyle` | `'dug'` | 墓地スタイル `'covered'/'dug'/'funeral'` |
+| `traffic` | `false` | 北ヤンクトン内の AI 交通（廃墟感のため既定 false） |
+| `iplLoadWaitMs` | `2000` | `Enable(true)` 後のロード待ち（ms） |
+
+詳細は `docs/INSTRUCTION-020（サイト・ナイン MAP 導入）.md` を参照。
 
 ---
 

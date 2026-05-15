@@ -91,6 +91,15 @@ CreateThread(function()
     end
 end)
 
+CreateThread(function()
+    Wait(3000)
+    if GetResourceState('bob74_ipl') ~= 'started' then
+        print('[jp-meridian9] (server) [WARN] bob74_ipl 未起動。北ヤンクトンが表示されません（INSTRUCTION-020 §4-A 参照）')
+        return
+    end
+    print('[jp-meridian9] (server) bob74_ipl 起動確認 OK（サイト・ナイン = 北ヤンクトン）')
+end)
+
 local function dbgChat(src, title, body)
     if src <= 0 then
         return

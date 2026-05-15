@@ -50,6 +50,7 @@ dependencies {
     'oxmysql',
     'ox_lib',
     'ox_target',
+    'bob74_ipl',
 }
 
 ui_page 'html/index.html'

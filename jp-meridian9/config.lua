@@ -55,9 +55,13 @@ Config.Mission = {
     bucketEnd = 999,                    -- バケット番号上限（プール上限）
     maxConcurrentSessions = 20,         -- 同時並行セッション上限
     cleanupIntervalSeconds = 60,      -- タイムアウト監視周期（秒）
-    -- 動作確認用の暫定座標（The Apocalypse Project 導入後に差し替え。海上 0,0,0 は避ける）
-    spawnPoint = vector4(1972.0, 3818.0, 33.4, 0.0),   -- サイト・ナイン側スポーン（暫定: Sandy Shores 近郊）
+    -- INSTRUCTION-020: サイト・ナイン = 北ヤンクトン（Ludendorff 街中心）
+    -- bob74_ipl の NorthYankton 公式座標 (3217.697, -4834.826, 111.815) を基準に Z=113.0 で着地。
+    spawnPoint = vector4(3217.697, -4834.826, 113.0, 90.0),
     returnPoint = vector4(425.0, -979.3, 30.5, 270.0), -- 帰還: ヴェガ事務所の前（NPC の隣）
+    -- サーバー側 TransferIn 後、IPL ロード待ちで追加スリープする ms。
+    -- 未指定なら Config.SiteNine.iplLoadWaitMs を使う。
+    siteNineLoadWaitMs = 2000,
 }
 
 -- ▼ ゾンビ設定 -------------------------------------------------
@@ -93,10 +97,29 @@ Config.RarityMultiplier = {
 }
 
 -- ▼ アイテム出現地点 -------------------------------------------
+-- INSTRUCTION-020: 北ヤンクトン（Ludendorff）内の暫定座標。実機で精査して確定する想定。
+-- 各地点でランダムにアイテムが配置される。重みはレアリティ別の出現割合。
 Config.LootSpawns = {
-    -- サイト・ナイン内の固定座標。各地点でランダムにアイテムが配置される。
-    -- { coords = vector3(x, y, z), weight = { common=70, uncommon=25, rare=4, legendary=1 } }
-    -- 後で座標と重み付けを調整
+    -- 街中心エリア
+    { coords = vector3(3220.0, -4810.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(3245.0, -4825.0, 113.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(3185.0, -4790.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(3201.0, -4848.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(3273.0, -4810.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    { coords = vector3(3175.0, -4775.0, 113.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- 銀行・ロアポイント
+    { coords = vector3(3279.0, -4842.0, 112.5), weight = { common = 50, uncommon = 35, rare = 12, legendary = 3 } },
+    { coords = vector3(3290.0, -4848.0, 112.5), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- 教会周辺
+    { coords = vector3(3261.0, -4733.0, 113.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(3245.0, -4750.0, 113.0), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
+    -- 墓地（高レアリティ寄り）
+    { coords = vector3(3127.0, -4671.0, 116.0), weight = { common = 40, uncommon = 35, rare = 18, legendary = 7 } },
+    { coords = vector3(3155.0, -4715.0, 115.0), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    -- 駅・港湾
+    { coords = vector3(3360.0, -4793.0, 110.5), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(3325.0, -4795.0, 110.5), weight = { common = 60, uncommon = 30, rare = 8,  legendary = 2 } },
+    { coords = vector3(3308.0, -4708.0, 112.5), weight = { common = 70, uncommon = 25, rare = 4,  legendary = 1 } },
 }
 
 -- ▼ 脱出ポイント -----------------------------------------------
@@ -112,6 +135,7 @@ Config.Reward = {
 
 -- ▼ サイト・ナイン演出 -----------------------------------------
 -- 任務中だけクライアント側で適用する。`onMissionEnd` で全解除。
+-- INSTRUCTION-020: 北ヤンクトン（bob74_ipl 経由）も同タイミングで Enable/Disable。
 Config.SiteNine = {
     weather = 'XMAS',                   -- 雪・霧・暗い演出（GTA 内部キー）
     timeHour = 3,                       -- 深夜3時固定
@@ -120,6 +144,11 @@ Config.SiteNine = {
     timecycleModifier = 'spectator5',   -- ポストエフェクト（寒色・コントラスト寄り）
     timecycleStrength = 1.0,            -- 0.0〜1.0
     blackout = true,                    -- 街灯・建物の明かりを消す（荒廃感）
+    -- INSTRUCTION-020: 北ヤンクトン
+    northYankton = true,                -- true で bob74_ipl 経由で NorthYankton.Enable(true)
+    graveStyle = 'dug',                 -- 'covered' / 'dug' / 'funeral'（墓地の状態）
+    traffic = false,                    -- 北ヤンクトン内の AI 交通（無人化のため false 推奨）
+    iplLoadWaitMs = 2000,               -- Enable(true) 後のロード待ち（地形コリジョン安定化）
 }
 
 -- ▼ HUD設定 -----------------------------------------------------
@@ -210,9 +239,9 @@ Config.Extract = {
 }
 
 -- ▼ 脱出ポイント上書き ---------------------------------------------
--- 暫定: spawnPoint (1972, 3818, 33.4) 周辺の 3 箇所。サイト・ナイン本マップ導入時に差し替え。
+-- INSTRUCTION-020: 北ヤンクトン（Ludendorff）内の暫定 3 箇所。実機で精査して確定する想定。
 Config.ExtractPoints = {
-    { coords = vector3(2125.0, 4787.0, 41.0), label = '北側ゲート',   radius = 3.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(1715.0, 3273.0, 41.0), label = '南側救援所',   radius = 3.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(2557.0, 4671.0, 33.0), label = '東側ヘリパッド', radius = 3.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(3261.0, -4733.0, 113.0), label = '教会前広場',       radius = 3.5, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(3360.0, -4793.0, 110.5), label = '駅プラットフォーム', radius = 3.5, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(3127.0, -4671.0, 116.0), label = '墓地裏門',         radius = 3.5, blipSprite = 488, blipColor = 5 },
 }

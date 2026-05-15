@@ -10,6 +10,7 @@
 - **ルート取得（INSTRUCTION-012）**: `Config.Loot` / `LootRarityWeight`、`server/loot.lua` + `client/loot.lua`、リーダー `CreateObject` + 全員 `ox_target:addEntity`、`lib.callback` 取得
 - **脱出（INSTRUCTION-013）**: `Config.Extract` / `Config.ExtractPoints`、`server/extract.lua` + `client/extract.lua`、`lib.progressCircle`、`session.extractedInventory` メモリ保持、`mrd9_mission_logs` 記録
 - **任務中 HUD（INSTRUCTION-014）**: `server/hud.lua` が `IN_MISSION` のみ DTO 配信、`client/hud.lua` が `m9_hud_*` NUI プロトコル（オーバーレイ・非フォーカス）、`html/*` がタイマー／パーティ／インベントリ／ウェーブ帯＋トースト。脱出案内は **013 の `lib.showTextUI` のみ**（HUD に脱出バッジなし）。
+- **サイト・ナイン MAP（INSTRUCTION-020）**: GTA V バニラ同梱の **North Yankton** を採用。**`bob74_ipl`** をクライアントローカル IPL ローダーとして使用し、`client/transition.lua` の `Transition.Enter/Leave` で `NorthYankton.Enable(true/false)` を呼ぶ。**routing bucket と組み合わせて bucket 内クライアントだけ別空間が見える**真の分離方式。LS 市街地（ヴェガ事務所周辺）は無改変。座標基準 `(3217.697, -4834.826, 113.0)`（Ludendorff 中心）。
 - 本格査定 UI 等は未接続（INSTRUCTION-015 以降）
 
 ## 非機能

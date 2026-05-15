@@ -151,20 +151,31 @@ function MRD9.Session.TransferIn(sessionId)
         return false, 'no_spawn_point'
     end
 
+    -- INSTRUCTION-020: 北ヤンクトン IPL ロード待ち。
+    -- 各クライアントの Transition.Enter() が NorthYankton.Enable(true) + Wait(iplLoadWaitMs) を行うため、
+    -- サーバー側のテレポートはイベント送信→ロード待ち→座標確定の 2 段階で行う。
+    local iplWaitMs = tonumber(Config.Mission.siteNineLoadWaitMs)
+        or tonumber(Config.SiteNine and Config.SiteNine.iplLoadWaitMs)
+        or 2000
+
     for _, src in ipairs(s.members) do
         setPlayerBucket(src, s.bucket)
-
-        local ped = GetPlayerPed(src)
-        if ped and ped ~= 0 then
-            SetEntityCoords(ped, sp.x, sp.y, sp.z, false, false, false, false)
-            SetEntityHeading(ped, sp.w)
-        end
-
         TriggerClientEvent('jp-meridian9:onMissionStart', src, {
             sessionId = sessionId,
             spawnPoint = sp,
             timeLimitSeconds = Config.Mission.timeLimitSeconds or 1200,
         })
+    end
+
+    -- クライアント側の Transition.Enter() による IPL ロード完了を待ってからテレポート。
+    Wait(iplWaitMs)
+
+    for _, src in ipairs(s.members) do
+        local ped = GetPlayerPed(src)
+        if ped and ped ~= 0 then
+            SetEntityCoords(ped, sp.x, sp.y, sp.z, false, false, false, false)
+            SetEntityHeading(ped, sp.w)
+        end
     end
 
     s.state = 'IN_MISSION'

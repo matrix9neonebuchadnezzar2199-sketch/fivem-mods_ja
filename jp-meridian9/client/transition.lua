@@ -12,6 +12,7 @@ local State = {
     active = false,
     appliedModifier = nil,
     appliedBlackout = false,
+    nyEnabled = false,
 }
 
 ---@return table
@@ -84,12 +85,71 @@ local function clearBlackout()
     end
 end
 
+---@return table|nil
+local function getNorthYanktonObject()
+    if GetResourceState('bob74_ipl') ~= 'started' then
+        return nil
+    end
+    local ok, NY = pcall(function()
+        return exports['bob74_ipl']:GetNorthYanktonObject()
+    end)
+    if not ok or type(NY) ~= 'table' then
+        return nil
+    end
+    return NY
+end
+
+---@return boolean
+local function applyNorthYankton()
+    local c = cfg()
+    if c.northYankton == false then
+        return false
+    end
+    local NY = getNorthYanktonObject()
+    if not NY or type(NY.Enable) ~= 'function' then
+        MRD9.Log('NorthYankton: bob74_ipl の NorthYankton オブジェクトが取得できません。スキップ')
+        return false
+    end
+    NY.Enable(true)
+    if NY.Grave and NY.Grave.Set then
+        local key = c.graveStyle
+        if type(key) == 'string' and NY.Grave[key] then
+            NY.Grave.Set(NY.Grave[key])
+        end
+    end
+    if NY.Traffic and type(NY.Traffic.Enable) == 'function' then
+        NY.Traffic.Enable(c.traffic == true)
+    end
+    State.nyEnabled = true
+    return true
+end
+
+local function clearNorthYankton()
+    if not State.nyEnabled then
+        return
+    end
+    local NY = getNorthYanktonObject()
+    if NY and type(NY.Enable) == 'function' then
+        NY.Enable(false)
+    end
+    State.nyEnabled = false
+end
+
 ---@return nil
 function MRD9.Transition.Enter()
     if State.active then
         return
     end
     State.active = true
+
+    -- INSTRUCTION-020: 北ヤンクトンの IPL ロード（クライアントローカル）
+    -- bob74_ipl 経由で NorthYankton を Enable。ロードは非同期。
+    applyNorthYankton()
+
+    -- ロード待ち。地形コリジョン安定化前にテレポートすると貫通事故が起きる。
+    local waitMs = tonumber(cfg().iplLoadWaitMs) or 2000
+    Wait(waitMs)
+
     applyClockOverride()
     applyWeather()
     applyTimecycle()
@@ -106,6 +166,7 @@ function MRD9.Transition.Leave()
     clearTimecycle()
     clearWeather()
     clearClockOverride()
+    clearNorthYankton()
 end
 
 AddEventHandler('onResourceStop', function(res)

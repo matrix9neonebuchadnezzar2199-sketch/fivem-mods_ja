@@ -22,7 +22,20 @@
 
 ## マップ素材
 
-### サイト・ナイン（廃墟ステージ）
+### サイト・ナイン（北ヤンクトン）— **採用**
 
-- **The Apocalypse Project** by Arcainex
-  - 別途導入が必要（本リポジトリには同梱しない）。`Config.Mission.spawnPoint` は導入後に実座標へ差し替えること。
+- **GTA V 本体同梱の North Yankton（Prologue「Ludendorff」ステージ）**
+  - Rockstar Games 著作物。jp-meridian9 では IPL の有効化のみ（ymap の改変はしない）
+- **[Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)** — IPL ローダー
+  - License: **MIT**
+  - 用途: `exports['bob74_ipl']:GetNorthYanktonObject()` 経由で `NorthYankton.Enable(true/false)` / `Grave.Set` / `Traffic.Enable` を呼び出す
+  - jp-meridian9 の `fxmanifest.lua` に `dependencies { 'bob74_ipl' }` として追加
+  - 同梱せず、運営者が `git clone https://github.com/Bob74/bob74_ipl.git` で取得
+  - 参考: [Wiki: GTA V North Yankton](https://github.com/Bob74/bob74_ipl/wiki/GTA-V:-North-Yankton)
+
+### 検討したが採用しなかった案
+
+- **The Apocalypse Project** by Arcainex（[GitHub](https://github.com/Arcainex/The-Apocalypse-Project)）
+  - LS 内の ymap 直配置型で、bucket 単位のクライアント分離ができないため不採用（詳細は `docs/INSTRUCTION-020（サイト・ナイン MAP 導入）.md` v1→v2 の変更点）
+- **alberttheprince/NorthYankton**（[GitHub](https://github.com/alberttheprince/NorthYankton)）
+  - Bob74/bob74_ipl ベースの NorthYankton + bucket 分離の参考実装。jp-meridian9 では同等処理を `client/transition.lua` で自前統合するため不採用

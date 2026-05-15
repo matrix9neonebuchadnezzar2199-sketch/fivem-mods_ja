@@ -217,3 +217,20 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | アリーナ連携 | `client/arena.lua` が `MRD9.HUD.PushEvent` でウェーブ系トースト（`lib.notify` と併用）。 |
 | NUI | `html/index.html` / `style.css` / `app.js`。`#m9-toasts` は `#app` 外に配置し、任務終了後も短時間トーストを表示可能。 |
 | fxmanifest | **`server/hud.lua` は `server/arena/arena.lua` の直後**（`GetHudSnapshot` 依存）。**`client/hud.lua` は `client/main.lua` より前**。 |
+
+## INSTRUCTION-020：サイト・ナイン MAP 導入（北ヤンクトン版 v2・実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| 採用 MAP | **GTA V バニラ同梱の North Yankton**（Prologue「Ludendorff」ステージ）。LS 南西海上の独立 region、座標基準 `(3217.697, -4834.826, 111.815)` |
+| IPL ローダー | **[Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl)**（MIT）。`fxmanifest.lua` の `dependencies` に追加し、`server.cfg` で `ensure bob74_ipl` を `jp-meridian9` の前に置く |
+| 同梱方針 | **本リポには同梱しない**。運営者が GitHub から `git clone https://github.com/Bob74/bob74_ipl.git` で取得 |
+| 分離方式 | **クライアントローカル IPL × routing bucket** の組み合わせ。`NorthYankton.Enable(true)` はクライアントローカルネイティブのため、任務 bucket 内のメンバーだけが個別に Enable することで「**bucket 内クライアントだけ別空間が見える**」が成立。bucket 0 のプレイヤーには **海面のまま**（既存 LS の見た目を一切壊さない） |
+| 実装 | `client/transition.lua` に `applyNorthYankton` / `clearNorthYankton`。`Transition.Enter` で IPL ロード→`Config.SiteNine.iplLoadWaitMs`（既定 2000ms）待機→既存演出（雪・寒色・街灯消灯・時間固定）。`Transition.Leave` で逆順解除＋IPL 無効化 |
+| サーバー側テレポート | `Session.TransferIn` で **クライアントへ `onMissionStart` 送信→`Config.Mission.siteNineLoadWaitMs`（既定 2000ms）待機→`SetEntityCoords`** の 2 段。IPL ロード完了前のテレポートで地形貫通する事故を防止 |
+| 起動チェック | `server/main.lua` で起動後 `Wait(3000)` のあと `GetResourceState('bob74_ipl')` を確認。未起動なら `[WARN] bob74_ipl 未起動` を出して通常起動継続（演出のみ動作） |
+| 座標 | `Config.Mission.spawnPoint = vector4(3217.697, -4834.826, 113.0, 90.0)`（Ludendorff 中心、東向き）。`Config.ExtractPoints` を **教会前広場 / 駅プラットフォーム / 墓地裏門** の 3 箇所、`Config.LootSpawns` を 15 箇所程度（**墓地と銀行はレア寄り**） |
+| RP 整合 | 「**サイト・ナイン＝北ヤンクトンの隔離区域**」「APERTURE-J ゲートは座標を北ヤンクトン中心へワープ」「LS と北ヤンクトンは海と次元の歪みで隔たれている」と再定義。`ストーリー.txt` のヴェガ事務所・APERTURE・インシデント・ゼロ・Subject-0 と整合 |
+| Cayo Perico との関係 | バニラ仕様で North Yankton と Cayo Perico は **同座標重複配置**。`Enable(true)` を呼んだクライアントは Cayo Perico が消えて North Yankton が見える。jp-meridian9 では Cayo は使わないので問題なし |
+| 撤回案 | **The Apocalypse Project** 採用案（INSTRUCTION-020 v1）は撤回。LS 内 ymap 直配置で bucket 単位分離ができず、「車・ヘリで地続きで行ける」問題が解消できなかったため。詳細は `docs/INSTRUCTION-020（サイト・ナイン MAP 導入）.md` §15 |
+| 既知の罠 | バニラ North Yankton は穴・broken model あり（Prologue 専用未完成エリア）。`ExtractPoints` / `LootSpawns` で穴を避ける運用 |
