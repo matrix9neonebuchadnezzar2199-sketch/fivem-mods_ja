@@ -13,6 +13,9 @@ RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
     if MRD9.Transition and MRD9.Transition.Enter then
         MRD9.Transition.Enter()
     end
+    if MRD9.Transition and MRD9.Transition.TeleportToSiteNine and data.spawnPoint then
+        MRD9.Transition.TeleportToSiteNine(data.spawnPoint)
+    end
     if MRD9.HUD and MRD9.HUD.OnMissionStart then
         MRD9.HUD.OnMissionStart(data)
     end
@@ -30,24 +33,30 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
     if MRD9.HUD and MRD9.HUD.OnMissionEnd then
         MRD9.HUD.OnMissionEnd(data)
     end
-    if MRD9.Transition and MRD9.Transition.Leave then
-        MRD9.Transition.Leave()
-    end
     MRD9.CurrentSession = nil
-    if reason == 'arena_wiped' then
-        CreateThread(function()
-            Wait(0)
+
+    CreateThread(function()
+        local rp = data.returnPoint
+        if not rp and Config and Config.Mission then
+            rp = Config.Mission.returnPoint
+        end
+        if MRD9.Transition and MRD9.Transition.TeleportToLosSantos and rp then
+            MRD9.Transition.TeleportToLosSantos(rp)
+        elseif MRD9.Transition and MRD9.Transition.Leave then
+            MRD9.Transition.Leave()
+        end
+
+        if reason == 'arena_wiped' then
             local ped = PlayerPedId()
-            if not ped or ped == 0 then
-                return
+            if ped and ped ~= 0 then
+                local cfg = Config.Arena
+                local h = cfg and tonumber(cfg.knockdownHealth) or 1
+                local ms = cfg and tonumber(cfg.ragdollDurationMs) or 5000
+                SetEntityHealth(ped, h)
+                SetPedToRagdoll(ped, ms, ms + 1, 0, true, true, false)
             end
-            local cfg = Config.Arena
-            local h = cfg and tonumber(cfg.knockdownHealth) or 1
-            local ms = cfg and tonumber(cfg.ragdollDurationMs) or 5000
-            SetEntityHealth(ped, h)
-            SetPedToRagdoll(ped, ms, ms + 1, 0, true, true, false)
-        end)
-    end
+        end
+    end)
 end)
 
 RegisterNetEvent('jp-meridian9:notify', function(msg)

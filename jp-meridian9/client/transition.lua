@@ -143,17 +143,127 @@ function MRD9.Transition.Enter()
     State.active = true
 
     -- INSTRUCTION-020: 北ヤンクトンの IPL ロード（クライアントローカル）
-    -- bob74_ipl 経由で NorthYankton を Enable。ロードは非同期。
+    -- bob74_ipl 経由で NorthYankton を Enable。ロードは非同期で 20 個以上の IPL を順次読む。
+    -- 実際の同期ロード待ちは TeleportToSiteNine() の NewLoadSceneStart で行う。
     applyNorthYankton()
-
-    -- ロード待ち。地形コリジョン安定化前にテレポートすると貫通事故が起きる。
-    local waitMs = tonumber(cfg().iplLoadWaitMs) or 2000
-    Wait(waitMs)
 
     applyClockOverride()
     applyWeather()
     applyTimecycle()
     applyBlackout()
+end
+
+---@param sp vector4|{ x: number, y: number, z: number, w: number|nil }
+---@return boolean
+function MRD9.Transition.TeleportToSiteNine(sp)
+    if type(sp) ~= 'table' and type(sp) ~= 'vector4' then
+        return false
+    end
+    local x, y, z = tonumber(sp.x), tonumber(sp.y), tonumber(sp.z)
+    local w = tonumber(sp.w) or 0.0
+    if not x or not y or not z then
+        return false
+    end
+
+    DoScreenFadeOut(500)
+    local fadeDeadline = GetGameTimer() + 1500
+    while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
+        Wait(0)
+    end
+
+    local ped = PlayerPedId()
+    SetPlayerControl(PlayerId(), false, 0)
+    SetEntityVisible(ped, false, false)
+    FreezeEntityPosition(ped, true)
+    SetEntityCollision(ped, false, false)
+    SetEntityInvincible(ped, true)
+
+    RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+    NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
+    local sceneDeadline = GetGameTimer() + 12000
+    while not IsNewLoadSceneLoaded() and GetGameTimer() < sceneDeadline do
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        Wait(0)
+    end
+    NewLoadSceneStop()
+
+    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 0.0, false, false, false, false)
+    SetEntityHeading(ped, w)
+
+    local colDeadline = GetGameTimer() + 5000
+    while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < colDeadline do
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        Wait(0)
+    end
+
+    Wait(500)
+
+    SetEntityCollision(ped, true, true)
+    FreezeEntityPosition(ped, false)
+    SetEntityVisible(ped, true, false)
+    SetEntityInvincible(ped, false)
+    SetPlayerControl(PlayerId(), true, 0)
+
+    DoScreenFadeIn(1000)
+    return true
+end
+
+---@param rp vector4|{ x: number, y: number, z: number, w: number|nil }
+---@return boolean
+function MRD9.Transition.TeleportToLosSantos(rp)
+    if type(rp) ~= 'table' and type(rp) ~= 'vector4' then
+        return false
+    end
+    local x, y, z = tonumber(rp.x), tonumber(rp.y), tonumber(rp.z)
+    local w = tonumber(rp.w) or 0.0
+    if not x or not y or not z then
+        return false
+    end
+
+    DoScreenFadeOut(500)
+    local fadeDeadline = GetGameTimer() + 1500
+    while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
+        Wait(0)
+    end
+
+    local ped = PlayerPedId()
+    SetPlayerControl(PlayerId(), false, 0)
+    SetEntityVisible(ped, false, false)
+    FreezeEntityPosition(ped, true)
+    SetEntityCollision(ped, false, false)
+    SetEntityInvincible(ped, true)
+
+    -- 帰還側は北ヤンクトンを無効化してから LS のシーンロード
+    MRD9.Transition.Leave()
+
+    RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+    NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
+    local sceneDeadline = GetGameTimer() + 12000
+    while not IsNewLoadSceneLoaded() and GetGameTimer() < sceneDeadline do
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        Wait(0)
+    end
+    NewLoadSceneStop()
+
+    SetEntityCoords(ped, x + 0.0, y + 0.0, z + 0.0, false, false, false, false)
+    SetEntityHeading(ped, w)
+
+    local colDeadline = GetGameTimer() + 5000
+    while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < colDeadline do
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        Wait(0)
+    end
+
+    Wait(500)
+
+    SetEntityCollision(ped, true, true)
+    FreezeEntityPosition(ped, false)
+    SetEntityVisible(ped, true, false)
+    SetEntityInvincible(ped, false)
+    SetPlayerControl(PlayerId(), true, 0)
+
+    DoScreenFadeIn(1000)
+    return true
 end
 
 ---@return nil

@@ -151,13 +151,10 @@ function MRD9.Session.TransferIn(sessionId)
         return false, 'no_spawn_point'
     end
 
-    -- INSTRUCTION-020: 北ヤンクトン IPL ロード待ち。
-    -- 各クライアントの Transition.Enter() が NorthYankton.Enable(true) + Wait(iplLoadWaitMs) を行うため、
-    -- サーバー側のテレポートはイベント送信→ロード待ち→座標確定の 2 段階で行う。
-    local iplWaitMs = tonumber(Config.Mission.siteNineLoadWaitMs)
-        or tonumber(Config.SiteNine and Config.SiteNine.iplLoadWaitMs)
-        or 2000
-
+    -- INSTRUCTION-020: テレポートはクライアント側で完全制御。
+    -- サーバー側は bucket 切替と spawnPoint を含むイベントだけを発火し、
+    -- クライアントが Transition.Enter() → TeleportToSiteNine() で
+    -- フェード・NewLoadSceneStart・コリジョン待ちを経て安全にテレポートする。
     for _, src in ipairs(s.members) do
         setPlayerBucket(src, s.bucket)
         TriggerClientEvent('jp-meridian9:onMissionStart', src, {
@@ -165,17 +162,6 @@ function MRD9.Session.TransferIn(sessionId)
             spawnPoint = sp,
             timeLimitSeconds = Config.Mission.timeLimitSeconds or 1200,
         })
-    end
-
-    -- クライアント側の Transition.Enter() による IPL ロード完了を待ってからテレポート。
-    Wait(iplWaitMs)
-
-    for _, src in ipairs(s.members) do
-        local ped = GetPlayerPed(src)
-        if ped and ped ~= 0 then
-            SetEntityCoords(ped, sp.x, sp.y, sp.z, false, false, false, false)
-            SetEntityHeading(ped, sp.w)
-        end
     end
 
     s.state = 'IN_MISSION'
@@ -213,16 +199,9 @@ function MRD9.Session.RemovePlayer(src, reason)
 
     setPlayerBucket(src, 0)
 
-    if reason ~= 'disconnect' then
-        local rp = Config.Mission.returnPoint
-        if rp then
-            local ped = GetPlayerPed(src)
-            if ped and ped ~= 0 then
-                SetEntityCoords(ped, rp.x, rp.y, rp.z, false, false, false, false)
-                SetEntityHeading(ped, rp.w)
-            end
-        end
-    end
+    -- INSTRUCTION-020: テレポートはクライアント側 Transition.TeleportToLosSantos に委譲。
+    -- フェード・LoadScene・コリジョン待ちを経て安全に北ヤンクトン→LS へ戻す。
+    -- ただし disconnect の場合はクライアントが既に居ないため何もしない。
 
     if reason == 'died' or reason == 'disconnect' then
         s.inventory[src] = {}
@@ -241,6 +220,7 @@ function MRD9.Session.RemovePlayer(src, reason)
     TriggerClientEvent('jp-meridian9:onMissionEnd', src, {
         sessionId = sessionId,
         reason = reason or 'left',
+        returnPoint = Config.Mission.returnPoint,
     })
 
     MRD9.Log('Player removed from session: src=%d session=%s reason=%s', src, sessionId, tostring(reason))
@@ -286,18 +266,12 @@ function MRD9.Session.Destroy(sessionId, reason)
 
     for _, src in ipairs(membersCopy) do
         setPlayerBucket(src, 0)
-        local rp = Config.Mission.returnPoint
-        if rp then
-            local ped = GetPlayerPed(src)
-            if ped and ped ~= 0 then
-                SetEntityCoords(ped, rp.x, rp.y, rp.z, false, false, false, false)
-                SetEntityHeading(ped, rp.w)
-            end
-        end
         memberToSession[src] = nil
+        -- INSTRUCTION-020: テレポートはクライアント側に委譲（returnPoint をペイロードに含める）
         TriggerClientEvent('jp-meridian9:onMissionEnd', src, {
             sessionId = sessionId,
             reason = reason or 'unknown',
+            returnPoint = Config.Mission.returnPoint,
         })
     end
 
