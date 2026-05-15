@@ -169,3 +169,169 @@ RegisterCommand('m9_list_sessions', function(source)
         dbgPrintOrChat(source, 'アクティブセッションなし')
     end
 end, true)
+
+-- ============================================================
+-- 運営者向けコマンド（ACE: Config.Admin.aceName）
+-- ============================================================
+
+local function adminAceName()
+    return (Config.Admin and Config.Admin.aceName) or 'jp-meridian9.admin'
+end
+
+---@param source integer
+---@return boolean
+local function HasAdminAce(source)
+    if source == 0 then
+        return true
+    end
+    return IsPlayerAceAllowed(source, adminAceName()) == true
+end
+
+---@param source integer
+---@param msg string
+local function notifyAdmin(source, msg)
+    if source == 0 then
+        print(('[MRD9 ADMIN] %s'):format(msg))
+        return
+    end
+    TriggerClientEvent('chat:addMessage', source, {
+        color = { 200, 180, 255 },
+        multiline = true,
+        args = { '[MRD9 ADMIN]', msg },
+    })
+end
+
+---@return integer
+local function adminListLimit()
+    return (Config.Admin and Config.Admin.contractListLimit) or 50
+end
+
+RegisterCommand('m9_admin_sign', function(source, args)
+    if not HasAdminAce(source) then
+        return
+    end
+    local targetId = tonumber(args[1])
+    if not targetId then
+        notifyAdmin(source, '使用方法: /m9_admin_sign <playerId>')
+        return
+    end
+    local identifier = MRD9.GetIdentifier(targetId)
+    if not identifier then
+        notifyAdmin(source, '対象プレイヤーが見つかりません: ' .. tostring(targetId))
+        return
+    end
+    local ok = MRD9.Contract.Sign(identifier)
+    notifyAdmin(source, ok and ('契約締結: ' .. identifier) or ('既に有効: ' .. identifier))
+end, true)
+
+RegisterCommand('m9_admin_suspend', function(source, args)
+    if not HasAdminAce(source) then
+        return
+    end
+    local targetId = tonumber(args[1])
+    if not targetId then
+        notifyAdmin(source, '使用方法: /m9_admin_suspend <playerId> <reason>')
+        return
+    end
+    local reason = table.concat(args, ' ', 2)
+    if reason == '' then
+        reason = 'no reason'
+    end
+    local identifier = MRD9.GetIdentifier(targetId)
+    if not identifier then
+        notifyAdmin(source, '対象プレイヤーが見つかりません: ' .. tostring(targetId))
+        return
+    end
+    MRD9.Contract.Suspend(identifier, reason)
+    notifyAdmin(source, ('サスペンド: %s / 理由: %s'):format(identifier, reason))
+end, true)
+
+RegisterCommand('m9_admin_terminate', function(source, args)
+    if not HasAdminAce(source) then
+        return
+    end
+    local targetId = tonumber(args[1])
+    if not targetId then
+        notifyAdmin(source, '使用方法: /m9_admin_terminate <playerId> <reason>')
+        return
+    end
+    local reason = table.concat(args, ' ', 2)
+    if reason == '' then
+        reason = 'no reason'
+    end
+    local identifier = MRD9.GetIdentifier(targetId)
+    if not identifier then
+        notifyAdmin(source, '対象プレイヤーが見つかりません: ' .. tostring(targetId))
+        return
+    end
+    MRD9.Contract.Terminate(identifier, reason)
+    notifyAdmin(source, ('契約解除: %s / 理由: %s'):format(identifier, reason))
+end, true)
+
+RegisterCommand('m9_admin_check', function(source, args)
+    if not HasAdminAce(source) then
+        return
+    end
+    local targetId = tonumber(args[1])
+    if not targetId then
+        notifyAdmin(source, '使用方法: /m9_admin_check <playerId>')
+        return
+    end
+    local identifier = MRD9.GetIdentifier(targetId)
+    if not identifier then
+        notifyAdmin(source, '対象プレイヤーが見つかりません: ' .. tostring(targetId))
+        return
+    end
+    local contract = MRD9.Contract.Get(identifier)
+    local stats = MRD9.Stats.Get(identifier)
+    if not contract then
+        notifyAdmin(source, '契約なし: ' .. identifier)
+        return
+    end
+    notifyAdmin(
+        source,
+        ('契約: %s / 状態: %s / 締結: %s'):format(tostring(contract.identifier), tostring(contract.status), tostring(contract.signed_at))
+    )
+    if stats then
+        notifyAdmin(
+            source,
+            ('統計: M=%d E=%d D=%d 累計$=%d'):format(
+                tonumber(stats.total_missions) or 0,
+                tonumber(stats.total_extracts) or 0,
+                tonumber(stats.total_deaths) or 0,
+                tonumber(stats.total_earnings) or 0
+            )
+        )
+    end
+    if contract.notes and contract.notes ~= '' then
+        notifyAdmin(source, 'メモ: ' .. tostring(contract.notes))
+    end
+end, true)
+
+RegisterCommand('m9_admin_list', function(source, args)
+    if not HasAdminAce(source) then
+        return
+    end
+    local filter = args[1]
+    local lim = adminListLimit()
+    local results
+    if filter == 'active' or filter == 'suspended' or filter == 'terminated' then
+        results = MySQL.query.await(
+            'SELECT identifier, status, signed_at FROM mrd9_contracts WHERE status = ? ORDER BY signed_at DESC LIMIT ?',
+            { filter, lim }
+        )
+    else
+        results = MySQL.query.await(
+            'SELECT identifier, status, signed_at FROM mrd9_contracts ORDER BY signed_at DESC LIMIT ?',
+            { lim }
+        )
+    end
+    if not results or #results == 0 then
+        notifyAdmin(source, '契約者なし')
+        return
+    end
+    notifyAdmin(source, ('=== 契約者一覧 (%d件) ==='):format(#results))
+    for _, row in ipairs(results) do
+        notifyAdmin(source, ('  %s [%s] %s'):format(tostring(row.identifier), tostring(row.status), tostring(row.signed_at)))
+    end
+end, true)

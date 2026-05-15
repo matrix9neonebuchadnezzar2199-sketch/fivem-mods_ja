@@ -1,7 +1,7 @@
 # MERIDIAN-9 / Project JANUS（jp-meridian9）
 
 **MERIDIAN-9** は、FiveM 上で動作する **次元探査・エクストラクション型ミッション** の骨格リソースです。  
-現段階（v0.1.0-jp）は **設定・フレームワーク検出・NUI 最小表示・oxmysql 永続化（契約/統計/ログ）** までを含む **M0〜M1 スキャフォールド** であり、任務ロジック本体はロードマップ（`docs/milestones.md`）に従い順次実装します。
+現段階（v0.1.0-jp）は **設定・FW 検出・NUI・oxmysql（契約/統計/ログ）・セッション・契約キャッシュ／運営コマンド** までを含む **M0〜M1 スキャフォールド** であり、任務ロジック本体はロードマップ（`docs/milestones.md`）に従い順次実装します。
 
 **ESX / QBCore / Qbox は必須にしません。** 未導入環境では Standalone として起動し、報酬は `Config.Reward.standaloneMoneyEvent` または手動付与案内にフォールバックします。  
 **永続化のため oxmysql は必須**です（`fxmanifest.lua` の `dependencies` に記載）。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
@@ -70,6 +70,16 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 | `/m9_test_extract` | 現在のセッションから脱出（バケット 0・帰還座標） |
 | `/m9_list_sessions` | アクティブセッション一覧（**restricted**・コンソール `source=0` からも可） |
 
+### 運営者向けコマンド（要 ACE: `jp-meridian9.admin`）
+
+| コマンド | 用途 |
+| -------- | ---- |
+| `/m9_admin_sign <playerId>` | 対象プレイヤーを強制契約 |
+| `/m9_admin_suspend <playerId> <reason>` | 契約サスペンド |
+| `/m9_admin_terminate <playerId> <reason>` | 契約解除 |
+| `/m9_admin_check <playerId>` | 契約・統計の確認 |
+| `/m9_admin_list [active\|suspended\|terminated]` | 契約者一覧（件数上限は `Config.Admin.contractListLimit`） |
+
 予定（README 追記予定）:
 
 - `/m9_call` … 任務呼び出し・ゲート連携（実装後に表を更新）
@@ -88,6 +98,26 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 | `Config.Zombies` / `Config.Items` | 敵ウェーブと回収アイテム定義 |
 | `Config.Reward` | `paymentType` / `standaloneMoneyEvent` |
 | `Config.HUD` / `Config.Commands` | HUD 周期・コマンド名 |
+| `Config.Admin` | 運営 ACE 名・`/m9_admin_list` 件数上限 |
+
+---
+
+## 運営権限の設定
+
+運営向けコマンド（`/m9_admin_*`）は **`Config.Admin.aceName`（既定: `jp-meridian9.admin`）** が必要です。`server.cfg` の例:
+
+```cfg
+# MERIDIAN-9 運営権限の付与例（license は実値に置換）
+add_ace identifier.license:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx jp-meridian9.admin allow
+```
+
+複数人にまとめて付与する例:
+
+```cfg
+add_principal identifier.license:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa group.m9admin
+add_principal identifier.license:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb group.m9admin
+add_ace group.m9admin jp-meridian9.admin allow
+```
 
 ---
 
@@ -104,7 +134,7 @@ jp-meridian9/
 ├── client/          … クライアント各モジュール（プレースホルダ含む）
 ├── server/          … サーバー（framework.lua で FW 検出）
 ├── html/            … NUI（ロゴ・将来 HUD）
-├── sql/install.sql  … DB（今後 INSTRUCTION-006 で拡張）
+├── sql/install.sql  … DB スキーマ（手動適用）
 ├── image/           … 素材保管（ビルド用コピー元）
 └── docs/            … 設計・マイルストーン・台本・`FORMAL_POLICIES.md`・`CREDITS.md`
 ```

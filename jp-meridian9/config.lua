@@ -113,6 +113,12 @@ Config.HUD = {
     showInventory = true,               -- 所持アイテム数表示
 }
 
+-- ▼ 運営設定 ---------------------------------------------------
+Config.Admin = {
+    aceName = 'jp-meridian9.admin',     -- 運営向け ACE（server.cfg で付与）
+    contractListLimit = 50,           -- /m9_admin_list の表示件数上限
+}
+
 -- ▼ コマンド名 -------------------------------------------------
 Config.Commands = {
     debugTeleport = 'm9_test_bucket',   -- デバッグ用バケット転送（運営のみ）

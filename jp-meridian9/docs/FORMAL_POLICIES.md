@@ -102,6 +102,27 @@ README 完成・運営者向けドキュメント整備（INSTRUCTION-019）の�
 | D1 Multiverse | **(a) 機能のみ移植**（`server/session.lua` 独自実装。Multiverse 本体は非同梱）。クレジットは `docs/CREDITS.md`。 |
 | D2 バケット | **(b) プール管理**（`bucketStart`〜`bucketEnd` をキュー化し、終了時に `ReleaseBucket`）。旧 `bucketMax` は `missionBucketEnd()` でフォールバック。 |
 | D3 永続化 | **(a) メモリのみ**。`onResourceStop` で全セッション `Destroy(..., 'server_shutdown')`（キー配列にコピーしてからループ）。 |
-| `SetPlayerRoutingBucket` | 実装は **整数 `playerSrc`**。指示書の `tostring(src)` は環境差異向けメモとして `session.lua` にコメント。 |
+| `SetPlayerRoutingBucket` | **整数 `playerSrc`**（公式 Cookbook 準拠）。旧指示書の `tostring(src)` は誤記。詳細は本ファイル「`SetPlayerRoutingBucket` の引数型」節。 |
 | `MRD9.Session.GetAll` | **内部 `sessions` テーブル参照をそのまま返す**（デバッグ用途。改変は自己責任）。 |
 | 離脱通知 | `RemovePlayer` では離脱プレイヤーへ必ず `jp-meridian9:onMissionEnd` を送る（最後の 1 人でも `Destroy` が空ループにならないよう）。 |
+
+## リポジトリ `.gitignore` と `jp-meridian9/docs/`
+
+ルート `.gitignore` は `docs/` を一律除外している。`jp-meridian9` の設計正本・マイルストーン等は **`jp-meridian9/docs/`** に置くため、**`!jp-meridian9/docs/` / `!jp-meridian9/docs/**` 例外**をルート `.gitignore` に追加し、Git 追跡対象とする（`jp-tcgbook` / `jp-cooktree` と同型）。
+
+## `SetPlayerRoutingBucket` の引数型（公式準拠）
+
+FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRoutingBucket(playerSrc, bucketId)` とし、`playerSrc` はサーバー側プレイヤー ID（整数）** を渡す。過去指示書にあった `tostring(src)` は誤記扱いとし、実装は **整数のまま** とする。
+
+## INSTRUCTION-008：契約キャッシュと運営コマンド（実装済み・正本追記）
+
+| ID | 決定 |
+|----|------|
+| D4 | **サーバー側キャッシュ** `contractCache`。`playerJoining`（遅延 `LoadCache`）、`playerDropped`（`UnloadCache`）、リソース起動後に既接続プレイヤーへ一括 `LoadCache`。`Sign` / `Suspend` / `Terminate` / `IsContracted` の DB フォールバックで整合。 |
+| D5 | ACE 名 **`jp-meridian9.admin`**（`Config.Admin.aceName` で変更可）。 |
+| D6 | 運営コマンド `/m9_admin_sign` `/m9_admin_suspend` `/m9_admin_terminate` `/m9_admin_check` `/m9_admin_list`（`RegisterCommand(..., true)` と `HasAdminAce` の二重ガード）。 |
+
+| 実装メモ |
+|----------|
+| `IsContracted` はキャッシュ優先、未ロード時は DB 読み取り後にキャッシュへ書き戻し。 |
+| `MRD9.Contract.Get` は運営確認用のため **DB 直読みのまま**（キャッシュとズレないよう運用側で `Sign` 等の後に必要なら再 `LoadCache`）。 |
