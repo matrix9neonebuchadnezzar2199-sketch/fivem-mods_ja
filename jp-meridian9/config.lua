@@ -256,12 +256,13 @@ Config.Extract = {
 
 -- ▼ 脱出ポイント上書き ---------------------------------------------
 -- INSTRUCTION-020 v5: Cayo Perico 内の脱出 5 ヶ所（実機精査済み座標）。
+-- ブリップ色は 1（赤）で 3D マーカーと統一。
 Config.ExtractPoints = {
-    { coords = vector3(5043.146, -5112.065,  6.164), label = '監視塔',     radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(4884.140, -5283.067,  8.432), label = 'ヘリポート', radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(4892.726, -4919.016,  3.368), label = 'テント',     radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(4429.605, -4463.830,  4.782), label = '飛行場',     radius = 4.0, blipSprite = 488, blipColor = 5 },
-    { coords = vector3(5168.241, -4613.965,  2.864), label = '配電施設',   radius = 4.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(5043.146, -5112.065,  6.164), label = '監視塔',     radius = 4.0, blipSprite = 488, blipColor = 1 },
+    { coords = vector3(4884.140, -5283.067,  8.432), label = 'ヘリポート', radius = 4.0, blipSprite = 488, blipColor = 1 },
+    { coords = vector3(4892.726, -4919.016,  3.368), label = 'テント',     radius = 4.0, blipSprite = 488, blipColor = 1 },
+    { coords = vector3(4429.605, -4463.830,  4.782), label = '飛行場',     radius = 4.0, blipSprite = 488, blipColor = 1 },
+    { coords = vector3(5168.241, -4613.965,  2.864), label = '配電施設',   radius = 4.0, blipSprite = 488, blipColor = 1 },
 }
 
 -- ▼ オープンワールド・サバイバル（INSTRUCTION-021）------------------

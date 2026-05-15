@@ -11,7 +11,42 @@ local resName = GetCurrentResourceName()
 local State = {
     byLootId = {},
     markerRunning = false,
+    blips = {},  -- [lootId] = blipHandle
 }
+
+---@param b integer|nil
+---@return nil
+local function removeBlipSafe(b)
+    if b and DoesBlipExist(b) then
+        RemoveBlip(b)
+    end
+    return nil
+end
+
+---@param lootId string
+---@param ent integer
+local function addLootBlip(lootId, ent)
+    if not ent or ent == 0 or not DoesEntityExist(ent) then
+        return
+    end
+    if State.blips[lootId] then
+        State.blips[lootId] = removeBlipSafe(State.blips[lootId])
+    end
+    local b = AddBlipForEntity(ent)
+    SetBlipSprite(b, 478)   -- 箱（Crate）
+    SetBlipColour(b, 5)     -- 黄
+    SetBlipScale(b, 0.7)
+    SetBlipAsShortRange(b, true)
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentSubstringPlayerName(_('loot_pickup_label'))
+    EndTextCommandSetBlipName(b)
+    State.blips[lootId] = b
+end
+
+---@param lootId string
+local function removeLootBlip(lootId)
+    State.blips[lootId] = removeBlipSafe(State.blips[lootId])
+end
 
 -- アイテム位置に黄色いサークルマーカーを描画する。
 -- プレイヤーから 60m 以内の loot のみ描画してパフォーマンス維持。
@@ -77,6 +112,7 @@ local function removeOne(lootId)
     if not row then
         return
     end
+    removeLootBlip(lootId)
     local netId = row.netId
     pcall(function()
         exports.ox_target:removeEntity(netId, row.optName)
@@ -190,6 +226,7 @@ RegisterNetEvent('jp-meridian9:client:lootRegister', function(data)
                     end)
                     if ok then
                         State.byLootId[lootId] = { netId = netId, optName = oname }
+                        addLootBlip(lootId, ent)
                     elseif Config.Debug then
                         print(('[jp-meridian9] ox_target addEntity failed: %s'):format(tostring(err)))
                     end
@@ -212,6 +249,9 @@ RegisterNetEvent('jp-meridian9:client:lootClearAll', function()
     for lootId in pairs(State.byLootId) do
         removeOne(lootId)
     end
+    for lootId in pairs(State.blips) do
+        removeLootBlip(lootId)
+    end
 end)
 
 AddEventHandler('onResourceStop', function(res)
@@ -221,5 +261,8 @@ AddEventHandler('onResourceStop', function(res)
     State.markerRunning = false
     for lootId in pairs(State.byLootId) do
         removeOne(lootId)
+    end
+    for lootId in pairs(State.blips) do
+        removeLootBlip(lootId)
     end
 end)
