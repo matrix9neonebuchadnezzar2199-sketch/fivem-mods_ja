@@ -99,6 +99,33 @@ local function getNorthYanktonObject()
     return NY
 end
 
+---bob74_ipl が登録した North Yankton 用 IPL リストの全アクティブ化を待つ。
+---`NorthYankton.Enable(true)` は内部で `RequestIpl` を発射するだけで非同期。
+---`IsIplActive` で 1 個ずつ確認し、全て active になるまでブロックする。
+---@param iplList table
+---@param timeoutMs integer
+---@return boolean
+local function waitIplsActive(iplList, timeoutMs)
+    if type(iplList) ~= 'table' then
+        return false
+    end
+    local deadline = GetGameTimer() + (timeoutMs or 15000)
+    while GetGameTimer() < deadline do
+        local allActive = true
+        for _, ipl in ipairs(iplList) do
+            if type(ipl) == 'string' and ipl ~= '' and not IsIplActive(ipl) then
+                allActive = false
+                break
+            end
+        end
+        if allActive then
+            return true
+        end
+        Wait(50)
+    end
+    return false
+end
+
 ---@return boolean
 local function applyNorthYankton()
     local c = cfg()
@@ -178,6 +205,19 @@ function MRD9.Transition.TeleportToSiteNine(sp)
     SetEntityCollision(ped, false, false)
     SetEntityInvincible(ped, true)
 
+    -- IPL を Enable してから、全 IPL が IsIplActive になるまで待機。
+    -- bob74_ipl の Enable は RequestIpl を発射するだけで非同期のため、
+    -- ここでロード完了を保証する。
+    local NY = getNorthYanktonObject()
+    if NY and type(NY.ipl) == 'table' then
+        local ok = waitIplsActive(NY.ipl, 15000)
+        if not ok then
+            MRD9.Log('NorthYankton: 一部 IPL が 15 秒以内に active にならず（タイムアウト）')
+        end
+    end
+
+    -- IPL がロード済みでも、座標周辺の ymap/コリジョン本体は別ストリーミング。
+    -- NewLoadSceneStart で同期シーンロードを並行実行する。
     RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
     NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
     local sceneDeadline = GetGameTimer() + 12000
