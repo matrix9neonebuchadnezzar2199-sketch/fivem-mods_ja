@@ -6,7 +6,7 @@
 | M0 | INSTRUCTION-002 | config / locales / utils | 完了 |
 | M0 | INSTRUCTION-003 | framework.lua | 完了 |
 | M0 | INSTRUCTION-004 | 画像配置（`html/assets`） | 完了 |
-| M0 | INSTRUCTION-020 | サイト・ナイン MAP 導入（Cayo Perico / SetIslandEnabled / bob74_ipl 補助） | 完了（v3） |
+| M0 | INSTRUCTION-020 | サイト・ナイン MAP 導入（v4: LS 内 Sandy Shores 北部隔離区域。v3 Cayo Perico は撤回） | 完了（v4） |
 | M4 | INSTRUCTION-021 | オープンワールド・サバイバル（3 ウェーブ後の自由探索＋持続的脅威） | 完了 |
 | 全 | INSTRUCTION-005 | 開発日記運用 | 常時 |
 | M1 | INSTRUCTION-006 | `sql/install.sql` 本実装・`contract`/`stats`・oxmysql | 完了 |

@@ -218,7 +218,20 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | NUI | `html/index.html` / `style.css` / `app.js`。`#m9-toasts` は `#app` 外に配置し、任務終了後も短時間トーストを表示可能。 |
 | fxmanifest | **`server/hud.lua` は `server/arena/arena.lua` の直後**（`GetHudSnapshot` 依存）。**`client/hud.lua` は `client/main.lua` より前**。 |
 
-## INSTRUCTION-020：サイト・ナイン MAP 導入（Cayo Perico 版 v3・実装済み・正本追記）
+## INSTRUCTION-020：サイト・ナイン MAP 導入（v4 / LS 内 Sandy Shores 北部・確定運用）
+
+| 項目 | 内容 |
+|------|------|
+| 採用 MAP | **LS 内 Sandy Shores 北部の廃工場・隔離区域**（GTA V バニラ LS、追加 MAP MOD なし） |
+| MAP 切替系ネイティブ | **一切呼ばない**。`SetIslandEnabled` / `EnableMpDlcMaps` / `RequestIpl` 系は全て OFF |
+| サイト・ナイン感 | **演出のみで表現**（雷雨 / 夜 22 時 / 青みフィルター / 街灯消灯）。`Config.SiteNine.island = 'none'` |
+| RP 整合 | 「サイト・ナイン = Sandy Shores 北部の Meridian-9 隔離区域。許可なき侵入は契約違反でヴェガが対処」 |
+| 撤回履歴 | **v1** The Apocalypse Project（LS ymap 直配置で bucket 分離不可）／ **v2** North Yankton（Prologue 専用ジオメトリ未完成）／ **v3** Cayo Perico（`SetIslandEnabled` の常時 ON / 動的切替いずれも GTA V クライアント内部状態破壊問題でマップ画面崩壊・LS 描画失敗を引き起こした） |
+| 撤退理由（v3） | マスター実機で `SetIslandEnabled(true)` 常時 ON 運用時に **ESC マップ画面が崩壊**（地図が下部のみ表示、ビル群歪み）。FiveM プロセス再起動でも復旧せず、GTA V クライアントキャッシュレベルで状態が壊れる。Cayo Perico は実用不可と確定 |
+| 復旧手順（v3 残留状態のクライアント） | (1) FiveM 完全終了（タスクマネージャで FiveM/GTA5 プロセス全終了） (2) `%LOCALAPPDATA%\FiveM\FiveM.app\data\cache\` クリア (3) FiveM 再起動 → 接続 |
+| 「地続きで行ける」問題 | 復活するが、RP「Meridian-9 隔離区域への許可なき侵入は契約違反」で処理。物理的アクセス制限ではなく**運用ルールで担保** |
+
+## INSTRUCTION-020：サイト・ナイン MAP 導入（Cayo Perico 版 v3・**撤回**・コード残置記録）
 
 | 項目 | 内容 |
 |------|------|

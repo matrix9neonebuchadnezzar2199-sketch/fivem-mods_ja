@@ -79,11 +79,13 @@ AddEventHandler('onResourceStop', function(res)
     SetNuiFocus(false, false)
 end)
 
----クライアントローカル状態を「サイト・ナイン待機時」へ揃える。
----INSTRUCTION-020 v3 / INSTRUCTION-021 確定運用：
----**Cayo Perico は常時 ON**（`SetIslandEnabled` の動的 OFF が GTA V ストリーミング
----エンジン上で LS のメモリリーク・読み込み失敗を引き起こすため）。
----演出（天気・時間・タイムサイクル・街灯）だけが任務時に変わる。
+---クライアントローカル状態を「サイト・ナイン待機時（LS デフォルト）」へ揃える。
+---INSTRUCTION-020 v4 確定運用：
+---**Cayo Perico / 北ヤンクトン採用を完全撤回**（GTA V クライアントの内部状態破壊問題で
+---実用に耐えないため）。サイト・ナインは **LS 内 Sandy Shores 北部の隔離区域**で運用。
+---演出（天気・時間・タイムサイクル・街灯）のみ任務時に変わる。
+---
+---本関数は MAP 切替系ネイティブを **明示的に OFF** にして、過去の v3 残留状態を払拭する。
 local function m9ApplyBaseClientState()
     -- 演出系は LS デフォルトに戻す
     pcall(function() ClearOverrideWeather() end)
@@ -93,10 +95,9 @@ local function m9ApplyBaseClientState()
     pcall(function() SetTimecycleModifierStrength(1.0) end)
     pcall(function() SetArtificialLightsState(false) end)
     pcall(function() NewLoadSceneStop() end)
-    -- Cayo Perico は常時 ON（地形・ミニマップ）
-    pcall(function() SetIslandEnabled('HeistIsland', true) end)
-    pcall(function() if EnableMpDlcMaps then EnableMpDlcMaps(true) end end)
-    -- 北ヤンクトンは現状不使用（互換用に OFF へ）
+    -- INSTRUCTION-020 v4: MAP 切替系を全て OFF（v3 残留状態の払拭含む）
+    pcall(function() SetIslandEnabled('HeistIsland', false) end)
+    pcall(function() if EnableMpDlcMaps then EnableMpDlcMaps(false) end end)
     if GetResourceState('bob74_ipl') == 'started' then
         local ok, NY = pcall(function()
             return exports['bob74_ipl']:GetNorthYanktonObject()
@@ -108,15 +109,30 @@ local function m9ApplyBaseClientState()
 end
 
 -- リソース起動時のクライアント状態クリーンアップ。
--- 前回セッション残留（クライアントクラッシュ・サーバー restart 中の任務中断）を防ぐ。
 -- Cayo Perico を ON にして固定し、以降 Disable しない（メモリリーク回避）。
+-- 確実性のため: onClientResourceStart（リソース起動瞬間） + CreateThread Wait(2000)
+-- + playerSpawned（spawnmanager 経由）の 3 経路で呼ぶ。冪等性は m9ApplyBaseClientState が保証。
+AddEventHandler('onClientResourceStart', function(res)
+    if res ~= resName then return end
+    m9ApplyBaseClientState()
+    if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
+        MRD9.Transition.Leave()
+    end
+    print('[jp-meridian9] onClientResourceStart: base state applied (Cayo Perico ON)')
+end)
+
+AddEventHandler('playerSpawned', function()
+    m9ApplyBaseClientState()
+    print('[jp-meridian9] playerSpawned: base state re-applied (Cayo Perico ON)')
+end)
+
 CreateThread(function()
     Wait(2000)
     m9ApplyBaseClientState()
     if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
         MRD9.Transition.Leave()
     end
-    print('[jp-meridian9] client base state applied (Cayo Perico ON, effects OFF)')
+    print('[jp-meridian9] CreateThread+2s: base state applied (Cayo Perico ON)')
 end)
 
 -- 緊急復旧コマンド: 世界が壊れたとき F8 で `m9_recover` を叩く
@@ -127,6 +143,11 @@ RegisterCommand('m9_recover', function()
     while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
         Wait(0)
     end
+
+    -- INSTRUCTION-020 v4: MAP 切替を全 OFF（v3 残留状態の払拭）
+    pcall(function() SetIslandEnabled('HeistIsland', false) end)
+    pcall(function() if EnableMpDlcMaps then EnableMpDlcMaps(false) end end)
+    Wait(300)
 
     m9ApplyBaseClientState()
     if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
@@ -174,6 +195,28 @@ RegisterCommand('m9_recover', function()
 
     DoScreenFadeIn(800)
     print('[jp-meridian9] m9_recover: 強制復旧完了')
+end, false)
+
+-- 診断コマンド: 現在のクライアント状態を F8 / chat に表示
+RegisterCommand('m9_status', function()
+    local ped = PlayerPedId()
+    local c = GetEntityCoords(ped)
+    local bucket = -1
+    pcall(function() bucket = GetPlayerRoutingBucket(PlayerId()) end)
+    local lines = {
+        ('player coords: %.2f, %.2f, %.2f'):format(c.x, c.y, c.z),
+        ('player bucket: %s'):format(tostring(bucket)),
+        ('CurrentSession: %s'):format(tostring(MRD9 and MRD9.CurrentSession and MRD9.CurrentSession.sessionId or 'nil')),
+        ('bob74_ipl state: %s'):format(GetResourceState('bob74_ipl')),
+    }
+    for _, line in ipairs(lines) do
+        print(('[jp-meridian9] [m9_status] %s'):format(line))
+        TriggerEvent('chat:addMessage', {
+            color = { 180, 220, 255 },
+            multiline = true,
+            args = { '[m9_status]', line },
+        })
+    end
 end, false)
 
 CreateThread(function()
