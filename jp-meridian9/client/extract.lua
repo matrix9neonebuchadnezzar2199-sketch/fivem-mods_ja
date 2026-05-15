@@ -252,8 +252,13 @@ local function startProximity()
                     if not State.textUiOpen then
                         State.textUiOpen = true
                         lib.showTextUI(_('extract_textui_prompt', pt.label or ''), {
-                            position = (Config.Extract and Config.Extract.textUiPosition) or 'right-center',
+                            position = (Config.Extract and Config.Extract.textUiPosition) or 'bottom-center',
                             icon = 'right-from-bracket',
+                            style = {
+                                fontSize = '1.5em',
+                                padding = '12px 18px',
+                                borderRadius = '6px',
+                            },
                         })
                     end
                     if IsControlJustReleased(0, 38) then

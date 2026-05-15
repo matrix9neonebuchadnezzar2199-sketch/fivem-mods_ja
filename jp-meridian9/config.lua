@@ -251,7 +251,7 @@ Config.Extract = {
     cooldownMs = 1500,
     cancelOnDamage = true,
     showBlipsDuringMission = true,
-    textUiPosition = 'right-center',
+    textUiPosition = 'bottom-center',   -- 真ん中の少し下に表示（マスター指示）
 }
 
 -- ▼ 脱出ポイント上書き ---------------------------------------------

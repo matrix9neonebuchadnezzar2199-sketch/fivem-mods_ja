@@ -6,7 +6,7 @@ MRD9 = MRD9 or {}
 
 ---ヴェガの台詞をモーダル対話ウィンドウで表示する。
 ---`lib.alertDialog` を同期呼出してプレイヤーが「進む」を押すまで待機。
----旧 `lib.notify`（右下通知）からの置換。第 2 引数 duration は無視（互換維持）。
+---size='xl' で最大幅、ox_lib の標準モーダルでは最も大きい表示。
 ---@param text string
 ---@param duration integer|nil
 local function vegaSay(text, duration)
@@ -15,7 +15,7 @@ local function vegaSay(text, duration)
         content = text,
         centered = true,
         cancel = false,
-        size = 'lg',
+        size = 'xl',
         labels = { confirm = '進む' },
     })
 end
