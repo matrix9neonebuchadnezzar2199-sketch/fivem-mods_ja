@@ -89,6 +89,7 @@ README 完成・運営者向けドキュメント整備（INSTRUCTION-019）の�
 |------|------------|
 | DB ライブラリ | **oxmysql** 必須。`fxmanifest.lua` に `dependencies { 'oxmysql' }` と `@oxmysql/lib/MySQL.lua`（`server_scripts` 先頭） |
 | 接続確認 | `server/main.lua` で起動後 `Wait(2000)` のあと `SELECT 1` および `INFORMATION_SCHEMA` で `mrd9_contracts` 存在確認（`MySQL.ready` は未使用） |
+| スキーマ自動適用 | `mrd9_contracts` 不在時、`LoadResourceFile(... , 'sql/install.sql')` で SQL を読み、`--` 行コメントを除いた上で `;` 区切りに分割し、各文を `MySQL.query.await` で順次実行。**`sql/install.sql` を単一情報源**として保ち、Lua 側にスキーマを二重定義しない方針。実行後に再度存在チェックして結果を `print`。失敗時は手動適用にフォールバック（処理は継続）。**注意**: 将来 `COMMENT='--'` のような `--` を含む文字列リテラルを追加するなら、正規 SQL トークナイザーへ差し替える。 |
 | スキーマ | `mrd9_contracts` / `mrd9_stats`（FK）/ `mrd9_mission_logs`。手動で `sql/install.sql` を適用 |
 | 読み込み順 | `contract.lua` / `stats.lua` を **`main.lua` より先**に読み込み（`RegisterCommand` から `MRD9.Contract` を参照するため） |
 | デバッグ | `Config.Debug` 時のみ `/m9_sign_me` `/m9_check_contract` `/m9_my_stats` |

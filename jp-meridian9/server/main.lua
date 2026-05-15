@@ -1,5 +1,64 @@
 print('[jp-meridian9] resource loaded (server)')
 
+---@param sql string
+---@return string[]
+local function splitSqlStatements(sql)
+    local lines = {}
+    for line in sql:gmatch('[^\r\n]+') do
+        local s = line
+        local commentIdx = s:find('%-%-')
+        if commentIdx then
+            s = s:sub(1, commentIdx - 1)
+        end
+        lines[#lines + 1] = s
+    end
+    local joined = table.concat(lines, '\n')
+    local stmts = {}
+    for stmt in joined:gmatch('([^;]+)') do
+        local trimmed = stmt:gsub('^%s+', ''):gsub('%s+$', '')
+        if trimmed ~= '' then
+            stmts[#stmts + 1] = trimmed
+        end
+    end
+    return stmts
+end
+
+---@return boolean
+local function autoInstallSchema()
+    local resName = GetCurrentResourceName()
+    local sql = LoadResourceFile(resName, 'sql/install.sql')
+    if type(sql) ~= 'string' or sql == '' then
+        print('[jp-meridian9] (server) [ERROR] auto-install: sql/install.sql not found in resource')
+        return false
+    end
+    local stmts = splitSqlStatements(sql)
+    if #stmts == 0 then
+        print('[jp-meridian9] (server) [ERROR] auto-install: no statements parsed from sql/install.sql')
+        return false
+    end
+    print(('[jp-meridian9] (server) auto-install: applying %d SQL statements from sql/install.sql'):format(#stmts))
+    for i, stmt in ipairs(stmts) do
+        local ok, err = pcall(function()
+            MySQL.query.await(stmt)
+        end)
+        if not ok then
+            print(('[jp-meridian9] (server) [ERROR] auto-install statement #%d failed: %s'):format(i, tostring(err)))
+            return false
+        end
+    end
+    return true
+end
+
+---@return boolean
+local function mrd9ContractsExists()
+    local cnt = MySQL.scalar.await(
+        [[SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?]],
+        { 'mrd9_contracts' }
+    )
+    return cnt ~= nil and tonumber(cnt) ~= nil and tonumber(cnt) > 0
+end
+
 CreateThread(function()
     Wait(2000)
 
@@ -10,17 +69,25 @@ CreateThread(function()
         print('[jp-meridian9] (server) oxmysql connection OK')
     else
         print('[jp-meridian9] (server) [ERROR] oxmysql connection FAILED')
+        return
     end
 
-    local tableExists = MySQL.scalar.await(
-        [[SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?]],
-        { 'mrd9_contracts' }
-    )
-    if tableExists and tonumber(tableExists) and tonumber(tableExists) > 0 then
+    if mrd9ContractsExists() then
         print('[jp-meridian9] (server) schema check OK (mrd9_contracts exists)')
+        return
+    end
+
+    print('[jp-meridian9] (server) [WARN] mrd9_contracts not found. Attempting auto-install...')
+    local installed = autoInstallSchema()
+    if not installed then
+        print('[jp-meridian9] (server) [ERROR] schema auto-install failed. Apply sql/install.sql manually.')
+        return
+    end
+
+    if mrd9ContractsExists() then
+        print('[jp-meridian9] (server) schema auto-install OK (mrd9_contracts created)')
     else
-        print('[jp-meridian9] (server) [WARN] mrd9_contracts not found. Run sql/install.sql')
+        print('[jp-meridian9] (server) [ERROR] schema still missing after auto-install')
     end
 end)
 
