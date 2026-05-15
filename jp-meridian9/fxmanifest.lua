@@ -35,14 +35,13 @@ server_scripts {
     'server/stats.lua',
     'server/session.lua',
     'server/loot.lua',
+    'server/extract.lua',
     'server/arena/wave.lua',
     'server/arena/spawn.lua',
     'server/arena/arena.lua',
     'server/party.lua',
     'server/main.lua',
     'server/mission.lua',
-    'server/loot.lua',
-    'server/extract.lua',
     'server/reward.lua',
 }
 

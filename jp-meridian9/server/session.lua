@@ -255,6 +255,10 @@ function MRD9.Session.Destroy(sessionId, reason)
 
     s.state = 'ENDING'
 
+    if MRD9.Extract and MRD9.Extract.OnSessionDestroy then
+        MRD9.Extract.OnSessionDestroy(sessionId, reason)
+    end
+
     if MRD9.Arena and MRD9.Arena.Cleanup then
         MRD9.Arena.Cleanup(sessionId, reason)
     end

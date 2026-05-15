@@ -100,10 +100,8 @@ Config.LootSpawns = {
 }
 
 -- ▼ 脱出ポイント -----------------------------------------------
-Config.ExtractPoints = {
-    -- { coords = vector3(x, y, z), label = '北側ゲート', radius = 3.0 }
-    -- 後で座標を調整
-}
+-- Config.ExtractPoints / Config.Extract は INSTRUCTION-013 のブロック（末尾）で定義する。
+-- 暫定座標を運営側で差し替える場合は末尾の Config.ExtractPoints を編集すること。
 
 -- ▼ 報酬・経済 -------------------------------------------------
 Config.Reward = {
@@ -183,4 +181,24 @@ Config.Loot = {
     spawnPlacementAttempts = 28,
     cooldownMs = 500,
     defaultPropModel = 'prop_paper_bag_01',
+}
+
+-- ▼ 脱出（INSTRUCTION-013）------------------------------------------
+-- Config.ExtractPoints の各点で「[E] 脱出開始」→ progressCircle（既定 5 秒）。
+-- 進行中の被ダメージ・移動・発砲・エリア離脱でキャンセル。成功で個別離脱。
+Config.Extract = {
+    enabled = true,
+    durationMs = 5000,
+    cooldownMs = 1500,
+    cancelOnDamage = true,
+    showBlipsDuringMission = true,
+    textUiPosition = 'right-center',
+}
+
+-- ▼ 脱出ポイント上書き ---------------------------------------------
+-- 暫定: spawnPoint (1972, 3818, 33.4) 周辺の 3 箇所。サイト・ナイン本マップ導入時に差し替え。
+Config.ExtractPoints = {
+    { coords = vector3(2125.0, 4787.0, 41.0), label = '北側ゲート',   radius = 3.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(1715.0, 3273.0, 41.0), label = '南側救援所',   radius = 3.0, blipSprite = 488, blipColor = 5 },
+    { coords = vector3(2557.0, 4671.0, 33.0), label = '東側ヘリパッド', radius = 3.0, blipSprite = 488, blipColor = 5 },
 }

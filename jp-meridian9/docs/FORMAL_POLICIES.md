@@ -178,7 +178,6 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
   - `returnAlive = true` 時の挙動との一貫性
 
 ## INSTRUCTION-012：ルート取得（実装済み・正本追記）
-
 | 項目 | 内容 |
 |------|------|
 | 権威 | 取得は **`lib.callback` `jp-meridian9:loot:pickup`**。`source` 退避・距離・セッション・クールダウン・`lootId` 検証。加算は **`session.inventory[src][itemId]`** のみ。 |
@@ -188,3 +187,17 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | 掃除 | `Session.Destroy` 冒頭で **`MRD9.Loot.Cleanup`**（`client:lootClearAll` のあと `session.loot = nil`）。`TransferIn` 末尾は **`Arena.Start` の次に `Loot.Spawn`**。 |
 | 表示 | 取得成功は **`lib.notify`**（HUD 連携は INSTRUCTION-014）。 |
 | 無効化 | `Config.Loot.enabled = false` でスポーン抑止。 |
+
+## INSTRUCTION-013：脱出（実装済み・正本追記）
+
+| 項目 | 内容 |
+|------|------|
+| 個別離脱 | パーティ全員揃わなくても **個別に脱出可**（死亡＝全ロストとの二重リスク回避） |
+| 進行 | **`lib.progressCircle`**（5 秒既定）。`disable.move/car/combat/sprint`、`canCancel = true`。アニメ `random@arrests / idle_2_hands_up` |
+| キャンセル | **被ダメージ（`HasEntityBeenDamagedByAnyPed`）**・エリア外・気絶。判定スレッドは `Wait(150)` |
+| サーバー権威 | **`lib.callback.register('jp-meridian9:extract:request')`**。`source` 退避・state=IN_MISSION・メンバー判定・`pointIdx` ホワイトリスト・距離検証・クールダウン |
+| スナップショット | 成功時 `session.extractedInventory[identifier] = { items, src, extractedAt, sessionId }`。**メモリ保持**（DB は `mrd9_mission_logs` のみ） |
+| ログ | 成功時 `mrd9_mission_logs.outcome = 'extracted'` ＋ `items_recovered_json`。`Stats.Update` は `extracted=true, extractSeconds=elapsed` |
+| Destroy 連携 | `Session.Destroy` 冒頭で **`MRD9.Extract.OnSessionDestroy`** → 未脱出メンバーに `outcome` を割り当てログ（`timeout`/`died`/`aborted`） |
+| ブリップ | 任務中のみ表示（`Config.Extract.showBlipsDuringMission`）。`onMissionStart`/`onMissionEnd` で生成・破棄 |
+| 配置 | `Config.ExtractPoints` を **3 箇所暫定**（`spawnPoint` 周辺）。差し替えは config 末尾 |

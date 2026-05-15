@@ -8,7 +8,8 @@
 - **ヴェガ NPC（暫定座標）＋対話**、**パーティ編成（招待〜セッション転送）**まで完了
 - **ゾンビアリーナ（INSTRUCTION-011）**: `Config.Arena` ウェーブ、`server/arena/*`、リーダー委譲スポーン、全滅時 `arena_wiped` → 送還後ノックダウン（`client/main.lua`）
 - **ルート取得（INSTRUCTION-012）**: `Config.Loot` / `LootRarityWeight`、`server/loot.lua` + `client/loot.lua`、リーダー `CreateObject` + 全員 `ox_target:addEntity`、`lib.callback` 取得
-- 任務内脱出・本格 HUD 等は未接続（各 `client/` / `server/` のプレースホルダ参照）
+- **脱出（INSTRUCTION-013）**: `Config.Extract` / `Config.ExtractPoints`、`server/extract.lua` + `client/extract.lua`、`lib.progressCircle`、`session.extractedInventory` メモリ保持、`mrd9_mission_logs` 記録
+- 本格 HUD 等は未接続（各 `client/` / `server/` のプレースホルダ参照）
 
 ## 非機能
 

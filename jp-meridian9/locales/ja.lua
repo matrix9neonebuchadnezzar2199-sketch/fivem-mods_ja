@@ -164,10 +164,29 @@ Locales['ja'] = {
     ['loot_err_invalid_args'] = '引数が不正です',
     ['loot_err_unknown'] = '回収に失敗しました',
 
-    -- ▼ 脱出
+    -- ▼ 脱出（INSTRUCTION-013）
+    ['extract_blip_name'] = '脱出: %s',
+    ['extract_textui_prompt'] = '[E] 脱出開始 — %s',
+    ['extract_progress_label'] = '脱出中… %s',
+    ['extract_success'] = '%s から脱出に成功',
+    ['extract_cancel_damage'] = 'ダメージを受けて中断（%s）',
+    ['extract_cancel_out_of_zone'] = 'エリア外で中断（%s）',
+    ['extract_cancel_died'] = '気絶により中断',
+    ['extract_cancel_unknown'] = '脱出が中断されました',
+    ['extract_err_too_far'] = '距離が遠すぎます',
+    ['extract_err_no_session'] = '任務セッション外です',
+    ['extract_err_not_member'] = 'パーティに含まれていません',
+    ['extract_err_bad_point'] = '脱出ポイント定義エラー',
+    ['extract_err_no_ped'] = 'プレイヤー状態が不正です',
+    ['extract_err_cooldown'] = '操作が早すぎます',
+    ['extract_err_disabled'] = '脱出機能は無効化されています',
+    ['extract_err_invalid_args'] = '引数が不正です',
+    ['extract_err_unknown'] = '脱出に失敗しました',
+
+    -- ▼ 脱出（既存・互換）
     ['extract_available'] = '[E] を長押しで脱出',
     ['extract_in_progress'] = '脱出中……動かないでください',
-    ['extract_success'] = '脱出に成功しました',
+    -- ['extract_success'] は INSTRUCTION-013 で再定義済み（同キー扱い）
 
     -- ▼ 報酬
     ['reward_received'] = '報酬 $%d を受け取りました',
