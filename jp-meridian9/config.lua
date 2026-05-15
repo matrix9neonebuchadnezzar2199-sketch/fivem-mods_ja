@@ -146,16 +146,17 @@ Config.Reward = {
 --   bucket 0 のプレイヤーにも海上に Cayo Perico が遠景として見える。
 --   任務 bucket 分離は **演出のみ**（天気・時間・タイムサイクル・街灯）。
 Config.SiteNine = {
-    weather = 'XMAS',                   -- 雪（GTA V には『雷+雪』専用 weather が無いため雪を基盤に）
+    weather = 'BLIZZARD',               -- 強い吹雪（GTA V Prologue 系の天候、視覚インパクト大）
     timeHour = 22,                      -- 夜 10 時
     timeMinute = 0,
     timeFreeze = true,
-    timecycleModifier = nil,            -- 色味フィルター OFF（マスター指示）
+    timecycleModifier = nil,            -- 色味フィルター OFF
     timecycleStrength = 0.0,
-    blackout = false,                   -- Cayo Perico は元から街灯少ない
-    thunderEnabled = true,              -- 周期的に雷光・雷鳴を発火（ForceLightningFlash）
-    thunderIntervalMinMs = 12 * 1000,   -- 次の雷までの最小間隔（ms）
-    thunderIntervalMaxMs = 35 * 1000,   -- 最大間隔
+    blackout = false,
+    thunderEnabled = true,              -- 周期的に雷光＋雷鳴を発火
+    thunderIntervalMinMs = 8 * 1000,    -- 次の雷までの最小間隔（短めで頻繁に）
+    thunderIntervalMaxMs = 20 * 1000,
+    weatherKeeperMs = 5000,             -- 天気維持スレッドの周期（他リソースの上書き対抗）
     -- INSTRUCTION-020 v5: 'cayoperico' で Cayo Perico 採用、'none' で MAP 切替なし
     island = 'cayoperico',
     graveStyle = 'dug',                 -- 北ヤンクトン用（互換維持・未使用）

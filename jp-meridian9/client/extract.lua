@@ -35,7 +35,7 @@ local function startMarkerLoop()
                 for _, pt in ipairs(points) do
                     if pt and pt.coords then
                         local d = #(pc - pt.coords)
-                        if d < 80.0 then
+                        if d < 200.0 then
                             local r = tonumber(pt.radius) or 3.0
                             -- タイプ 1: 円柱マーカー。地面から少し上に描画。
                             DrawMarker(

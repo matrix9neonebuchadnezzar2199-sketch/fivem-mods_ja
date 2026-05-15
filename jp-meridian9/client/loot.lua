@@ -30,7 +30,7 @@ local function startLootMarkerLoop()
                     if ent and ent ~= 0 and DoesEntityExist(ent) then
                         local ec = GetEntityCoords(ent)
                         local d = #(pc - ec)
-                        if d < 60.0 then
+                        if d < 150.0 then
                             -- タイプ 1: 円柱マーカー、足元（地面少し上）に黄色
                             DrawMarker(
                                 1,
