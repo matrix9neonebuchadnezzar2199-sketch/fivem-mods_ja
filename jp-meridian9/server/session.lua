@@ -110,6 +110,7 @@ function MRD9.Session.Create(params)
         members = {},
         state = 'CREATED',
         startedAt = now,
+        startedAtIso = os.date('%Y-%m-%d %H:%M:%S'),
         endsAt = now + limitMs,
         mission = {
             type = params.missionType or 'SAMPLE_RECOVERY',

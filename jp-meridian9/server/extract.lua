@@ -81,7 +81,7 @@ local function logMissionFor(session, src, outcome)
     end
     MRD9.Stats.LogMission(identifier, {
         sessionId = session.id,
-        startedAt = nil,
+        startedAt = session.startedAtIso,
         endedAt = os.date('%Y-%m-%d %H:%M:%S'),
         outcome = outcome,
         items = items,

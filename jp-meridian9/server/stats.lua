@@ -88,6 +88,10 @@ function MRD9.Stats.LogMission(identifier, params)
     if params.items then
         itemsJson = json.encode(params.items)
     end
+    local startedAt = params.startedAt
+    if type(startedAt) ~= 'string' or startedAt == '' then
+        startedAt = os.date('%Y-%m-%d %H:%M:%S')
+    end
     MySQL.insert.await(
         [[INSERT INTO mrd9_mission_logs
             (session_id, identifier, started_at, ended_at, outcome,
@@ -96,7 +100,7 @@ function MRD9.Stats.LogMission(identifier, params)
         {
             params.sessionId,
             identifier,
-            params.startedAt,
+            startedAt,
             params.endedAt,
             params.outcome,
             itemsJson,
