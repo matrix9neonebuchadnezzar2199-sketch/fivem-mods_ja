@@ -146,7 +146,12 @@ Config.Reward = {
 
 -- ▼ サイト・ナイン演出 -----------------------------------------
 -- 任務中だけクライアント側で適用する。`onMissionEnd` で全解除。
--- INSTRUCTION-020 v3: Cayo Perico を採用。SetIslandEnabled で島を有効化。
+-- INSTRUCTION-020 v3 / INSTRUCTION-021 確定運用:
+--   Cayo Perico は client/main.lua のリソース起動時に SetIslandEnabled(true) で
+--   **常時 ON 固定**（動的 OFF が GTA V ストリーミングエンジン上で LS メモリリーク
+--   を引き起こすため不可）。bucket 0 のプレイヤーにも海上に Cayo Perico が見える。
+--   任務 bucket での分離は **演出（天気・時間・タイムサイクル・街灯）のみ**。
+--   地形は共通だが、ゲート転送以外で島へ物理アクセスは不可（海上独立島）。
 -- 演出は熱帯ホラー（雷雨・夜・青みフィルター）。
 Config.SiteNine = {
     -- 演出

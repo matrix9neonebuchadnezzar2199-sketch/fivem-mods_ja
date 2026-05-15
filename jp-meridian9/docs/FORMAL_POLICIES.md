@@ -223,7 +223,8 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | 項目 | 内容 |
 |------|------|
 | 採用 MAP | **GTA V バニラ同梱の Cayo Perico**（GTA Online Heist DLC、build 2189+）。LS 南西海上の独立島、座標基準 `(4840, -5174, 2.0)`、メインビーチ `(4523, -4974, 4.5)` |
-| 地形 enable | **`SetIslandEnabled('HeistIsland', true/false)`** クライアントローカルネイティブ。bob74_ipl 不要 |
+| 地形 enable | **`SetIslandEnabled('HeistIsland', true)`** をクライアント起動時に呼んで **常時 ON 固定**。動的 OFF は GTA V ストリーミングエンジン上で LS メモリリーク・読み込み失敗を引き起こすため禁止（マスター実機検証 2026-05-15 で判明、FiveM コミュニティ公知の問題）。`bob74_ipl` は邸宅内装と将来拡張のため依存維持 |
+| bucket 分離対象 | **演出のみ**（天気・時間・タイムサイクル・街灯）。地形は共通だが海上独立島でゲート転送以外アクセス不可 |
 | 撤回案 | **v1** The Apocalypse Project（LS 内 ymap 直配置で bucket 分離不可）／**v2** North Yankton（Prologue 専用ジオメトリ未完成、雪で移動減速）。v3 で Cayo Perico に確定 |
 | 演出 | 雷雨 (`THUNDER`)・夜 22 時・青いフィルター (`phone_cam11`) で熱帯ホラー |
 

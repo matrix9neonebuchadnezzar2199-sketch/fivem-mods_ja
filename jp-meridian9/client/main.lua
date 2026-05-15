@@ -79,6 +79,103 @@ AddEventHandler('onResourceStop', function(res)
     SetNuiFocus(false, false)
 end)
 
+---クライアントローカル状態を「サイト・ナイン待機時」へ揃える。
+---INSTRUCTION-020 v3 / INSTRUCTION-021 確定運用：
+---**Cayo Perico は常時 ON**（`SetIslandEnabled` の動的 OFF が GTA V ストリーミング
+---エンジン上で LS のメモリリーク・読み込み失敗を引き起こすため）。
+---演出（天気・時間・タイムサイクル・街灯）だけが任務時に変わる。
+local function m9ApplyBaseClientState()
+    -- 演出系は LS デフォルトに戻す
+    pcall(function() ClearOverrideWeather() end)
+    pcall(function() ClearWeatherTypePersist() end)
+    pcall(function() NetworkClearClockTimeOverride() end)
+    pcall(function() ClearTimecycleModifier() end)
+    pcall(function() SetTimecycleModifierStrength(1.0) end)
+    pcall(function() SetArtificialLightsState(false) end)
+    pcall(function() NewLoadSceneStop() end)
+    -- Cayo Perico は常時 ON（地形・ミニマップ）
+    pcall(function() SetIslandEnabled('HeistIsland', true) end)
+    pcall(function() if EnableMpDlcMaps then EnableMpDlcMaps(true) end end)
+    -- 北ヤンクトンは現状不使用（互換用に OFF へ）
+    if GetResourceState('bob74_ipl') == 'started' then
+        local ok, NY = pcall(function()
+            return exports['bob74_ipl']:GetNorthYanktonObject()
+        end)
+        if ok and type(NY) == 'table' and type(NY.Enable) == 'function' then
+            pcall(function() NY.Enable(false) end)
+        end
+    end
+end
+
+-- リソース起動時のクライアント状態クリーンアップ。
+-- 前回セッション残留（クライアントクラッシュ・サーバー restart 中の任務中断）を防ぐ。
+-- Cayo Perico を ON にして固定し、以降 Disable しない（メモリリーク回避）。
+CreateThread(function()
+    Wait(2000)
+    m9ApplyBaseClientState()
+    if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
+        MRD9.Transition.Leave()
+    end
+    print('[jp-meridian9] client base state applied (Cayo Perico ON, effects OFF)')
+end)
+
+-- 緊急復旧コマンド: 世界が壊れたとき F8 で `m9_recover` を叩く
+RegisterCommand('m9_recover', function()
+    print('[jp-meridian9] m9_recover: 強制復旧開始')
+    DoScreenFadeOut(300)
+    local fadeDeadline = GetGameTimer() + 800
+    while not IsScreenFadedOut() and GetGameTimer() < fadeDeadline do
+        Wait(0)
+    end
+
+    m9ApplyBaseClientState()
+    if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
+        MRD9.Transition.Leave()
+    end
+
+    local ped = PlayerPedId()
+    if ped and ped ~= 0 then
+        FreezeEntityPosition(ped, true)
+        SetEntityInvincible(ped, true)
+        local rp = (Config and Config.Mission and Config.Mission.returnPoint)
+        local x = rp and rp.x or 425.0
+        local y = rp and rp.y or -979.3
+        local z = rp and rp.z or 30.5
+        local w = rp and rp.w or 0.0
+        SetEntityCoords(ped, x + 0.0, y + 0.0, z + 200.0, false, false, false, false)
+        Wait(300)
+        RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+        NewLoadSceneStart(x + 0.0, y + 0.0, z + 0.0, 0.0, 0.0, 0.0, 50.0, 0)
+        local d = GetGameTimer() + 10000
+        while not IsNewLoadSceneLoaded() and GetGameTimer() < d do
+            RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 0.0)
+            Wait(0)
+        end
+        NewLoadSceneStop()
+        local groundFound, groundZ = false, nil
+        local groundDeadline = GetGameTimer() + 5000
+        while GetGameTimer() < groundDeadline do
+            local f, gz = GetGroundZFor_3dCoord(x + 0.0, y + 0.0, z + 100.0, false)
+            if f and gz and gz > -10.0 and gz < 1000.0 then
+                groundFound = true
+                groundZ = gz
+                break
+            end
+            RequestCollisionAtCoord(x + 0.0, y + 0.0, z + 50.0)
+            Wait(100)
+        end
+        local finalZ = (groundFound and groundZ) and (groundZ + 1.0) or z
+        SetEntityCoords(ped, x + 0.0, y + 0.0, finalZ, false, false, false, false)
+        SetEntityHeading(ped, w + 0.0)
+        Wait(500)
+        FreezeEntityPosition(ped, false)
+        SetEntityInvincible(ped, false)
+    end
+
+    DoScreenFadeIn(800)
+    print('[jp-meridian9] m9_recover: 強制復旧完了')
+end, false)
+
 CreateThread(function()
     local c = Config.Commands
     if not c then

@@ -165,29 +165,21 @@ end
 
 ---@return boolean
 local function applyCayoPerico()
-    -- INSTRUCTION-020 v3: Cayo Perico を有効化（クライアントローカル）
-    -- 北ヤンクトンと同時有効化を避ける排他制御。
+    -- INSTRUCTION-020 v3 / INSTRUCTION-021 確定運用:
+    -- Cayo Perico は **client/main.lua のリソース起動時に SetIslandEnabled(true) で
+    -- 常時 ON 固定**。SetIslandEnabled の動的 OFF は GTA V ストリーミングエンジン上で
+    -- LS のメモリリーク・読み込み失敗を引き起こすため、Disable しない運用に確定。
+    -- 任務 bucket 分離は天気・時間・タイムサイクル・街灯のみ。地形は共通。
+    -- 排他で北ヤンクトンが ON のままなら念のため OFF にする。
     if State.nyEnabled then
         clearNorthYankton()
-    end
-    SetIslandEnabled('HeistIsland', true)
-    -- ミニマップを MP DLC マップ（Heist Island）に切替。プレイヤーが Cayo Perico
-    -- 座標に居る時のみ自動的にミニマップ表示が島用へ変わる（GTA Online 仕様）。
-    if EnableMpDlcMaps then
-        EnableMpDlcMaps(true)
     end
     State.cayoEnabled = true
     return true
 end
 
 local function clearCayoPerico()
-    if not State.cayoEnabled then
-        return
-    end
-    SetIslandEnabled('HeistIsland', false)
-    if EnableMpDlcMaps then
-        EnableMpDlcMaps(false)
-    end
+    -- 常時 ON 運用のため何もしない。State だけリセット。
     State.cayoEnabled = false
 end
 
