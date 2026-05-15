@@ -52,20 +52,22 @@ end
 ---@return boolean
 function MRD9.Arena.Spawn.RequestZombie(sessionId, isBoss)
     local session = MRD9.Session.Get(sessionId)
-    if not session then
+    if not session or not session.members or #session.members == 0 then
         return false
     end
-    local leader = session.leader
+    -- INSTRUCTION-021: ターゲットをパーティメンバーからランダム選出。
+    -- 旧実装はリーダー周辺固定で、複数人パーティだとリーダーだけが標的化されていた。
+    local target = session.members[math.random(1, #session.members)]
     local cfg = Config.Arena
     local model = isBoss and ((cfg.bossModels and cfg.bossModels[1]) or 'u_m_y_zombie_01') or ((cfg.zombieModels and cfg.zombieModels[1]) or 'u_m_y_zombie_01')
     local health = isBoss and (cfg.bossHealth or 600) or (cfg.zombieHealth or 150)
 
-    local coords = MRD9.Arena.Spawn.PickCoordsNearPlayer(leader, cfg.spawnRetryAttempts or 5)
+    local coords = MRD9.Arena.Spawn.PickCoordsNearPlayer(target, cfg.spawnRetryAttempts or 5)
     if not coords then
         return false
     end
 
-    TriggerClientEvent('jp-meridian9:client:spawnZombie', leader, {
+    TriggerClientEvent('jp-meridian9:client:spawnZombie', target, {
         sessionId = sessionId,
         model = model,
         isBoss = isBoss == true,

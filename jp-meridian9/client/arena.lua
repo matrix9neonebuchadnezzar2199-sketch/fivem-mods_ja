@@ -152,6 +152,16 @@ RegisterNetEvent('jp-meridian9:client:spawnZombie', function(data)
     SetPedArmour(ped, 0)
     SetPedRelationshipGroupHash(ped, joaat('HATES_PLAYER'))
     SetBlockingOfNonTemporaryEvents(ped, false)
+    -- INSTRUCTION-021: ゾンビ AI 強化 — 常に戦闘・遠距離索敵・警戒度最大・逃走無効
+    SetPedCombatAttributes(ped, 46, true)   -- AlwaysFight
+    SetPedCombatAttributes(ped, 5, true)    -- CanFightArmedPedsWhenNotArmed
+    SetPedCombatAttributes(ped, 1424, true) -- DisableFleeFromCombat
+    SetPedFleeAttributes(ped, 0, false)
+    SetPedCombatRange(ped, 2)               -- 2 = Far
+    SetPedAlertness(ped, 3)                 -- 3 = Fully Alert
+    SetPedAccuracy(ped, 5)
+    SetPedSeeingRange(ped, 100.0)
+    SetPedHearingRange(ped, 100.0)
 
     local netId = NetworkGetNetworkIdFromEntity(ped)
     if not netId or netId == 0 then
