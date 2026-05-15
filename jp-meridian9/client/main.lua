@@ -46,16 +46,13 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
             MRD9.Transition.Leave()
         end
 
-        -- INSTRUCTION-021: 死亡系の reason すべてで気絶演出を発火（個別 died / 全滅 all_lost / arena_wiped）
+        -- INSTRUCTION-021: 死亡系の演出（ragdoll / HP 1 への設定）は撤去。
+        -- 理由: qbx_core / qbx_spawn の死亡監視が SetEntityHealth(ped, 1) を「死亡」と判定し、
+        -- プレイヤーを別場所（病院・デフォルト spawn）へ強制移動させる競合があったため
+        -- （マスター実機 2026-05-15）。死亡時もシンプルに『フェード → ヴェガ事務所前で立つ』
+        -- とし、インベントリ消去は server/session.lua 側で完結する。
         if reason == 'arena_wiped' or reason == 'died' or reason == 'all_lost' then
-            local ped = PlayerPedId()
-            if ped and ped ~= 0 then
-                local cfg = Config.Arena
-                local h = cfg and tonumber(cfg.knockdownHealth) or 1
-                local ms = cfg and tonumber(cfg.ragdollDurationMs) or 5000
-                SetEntityHealth(ped, h)
-                SetPedToRagdoll(ped, ms, ms + 1, 0, true, true, false)
-            end
+            -- 演出なし。将来 INSTRUCTION-016（蘇生・全ロスト演出）で再検討
         end
     end)
 end)

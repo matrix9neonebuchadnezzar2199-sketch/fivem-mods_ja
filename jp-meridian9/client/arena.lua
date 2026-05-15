@@ -155,7 +155,7 @@ RegisterNetEvent('jp-meridian9:client:spawnZombie', function(data)
     -- INSTRUCTION-021: ゾンビ AI 強化 — 常に戦闘・遠距離索敵・警戒度最大・逃走無効
     SetPedCombatAttributes(ped, 46, true)   -- AlwaysFight
     SetPedCombatAttributes(ped, 5, true)    -- CanFightArmedPedsWhenNotArmed
-    SetPedCombatAttributes(ped, 1424, true) -- DisableFleeFromCombat
+    SetPedCombatAttributes(ped, 17, true)   -- DisableFleeFromCombat（旧 1424 は無効 index）
     SetPedFleeAttributes(ped, 0, false)
     SetPedCombatRange(ped, 2)               -- 2 = Far
     SetPedAlertness(ped, 3)                 -- 3 = Fully Alert
