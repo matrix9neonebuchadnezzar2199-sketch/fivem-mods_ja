@@ -4,7 +4,7 @@
 現段階（v0.1.0-jp）は **設定・FW 検出・NUI・oxmysql（契約/統計/ログ）・セッション・契約キャッシュ／運営コマンド** までを含む **M0〜M1 スキャフォールド** であり、任務ロジック本体はロードマップ（`docs/milestones.md`）に従い順次実装します。
 
 **ESX / QBCore / Qbox は必須にしません。** 未導入環境では Standalone として起動し、報酬は `Config.Reward.standaloneMoneyEvent` または手動付与案内にフォールバックします。  
-**永続化のため oxmysql は必須**です（`fxmanifest.lua` の `dependencies` に記載）。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
+**永続化のため oxmysql は必須**です。対話 UI と NPC ターゲットのため **ox_lib / ox_target も必須**です（`fxmanifest.lua` の `dependencies` に記載）。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
 
 ---
 
@@ -12,6 +12,8 @@
 
 - FiveM サーバー（`fx_version` `cerulean` 以上）
 - **oxmysql**（必須）：DB 接続に使用。未導入の場合は [overextended/oxmysql](https://github.com/overextended/oxmysql) を `resources` に配置し、`server.cfg` で `ensure oxmysql` を **jp-meridian9 より前**に記述すること。
+- **ox_lib**（必須）：通知・コンテキストメニュー・`lib.callback`。 [overextended/ox_lib](https://github.com/overextended/ox_lib) を配置し、`ensure ox_lib` を **jp-meridian9 より前**に記述。
+- **ox_target**（必須）：NPC への視線ターゲット。 [overextended/ox_target](https://github.com/overextended/ox_target) を配置し、`ensure ox_target` を **jp-meridian9 より前**に記述（`ox_lib` の後が無難）。
 - MySQL 5.7.8+ または MariaDB 10.3+（`JSON` 型利用のため）
 - 初回導入時に **`sql/install.sql`** を対象データベースに流し込むこと。
 
@@ -28,7 +30,8 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 ## 特徴
 
 - **Standalone（フレームワーク）** … ESX / QB / Qbox は **必須にしない**。`dependencies` にフレームワークは書かない。
-- **oxmysql 必須** … 契約・統計・ミッション履歴の永続化のため **`dependencies { 'oxmysql' }`** を採用する。
+- **oxmysql 必須** … 契約・統計・ミッション履歴の永続化のため **`dependencies { 'oxmysql', 'ox_lib', 'ox_target' }`** を採用する（フレームワークではなく **Overextended ライブラリ群**）。
+- **ox_lib / ox_target 必須** … ヴェガ NPC の対話（`lib.notify`・context menu）とターゲット。方針は `docs/FORMAL_POLICIES.md`（INSTRUCTION-009）を参照。
 - **ソフト検出** … `server/framework.lua` が ESX / QB / Qbox を検出し、通貨付与を切り替え
 - **運営者向け `config.lua` 集約** … 座標・難易度・報酬方式を 1 ファイルで調整可能（各項目に日本語コメント）
 - **イベント命名** … `jp-meridian9:アクション名`
@@ -39,16 +42,20 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 ## 導入
 
 1. 本フォルダを `resources` 配下に配置する（例: `resources/[jp-mods]/jp-meridian9/`）。
-2. `server.cfg` に追加:
+2. **oxmysql / ox_lib / ox_target** を導入済みであること（各公式リポジトリを参照）。`server.cfg` の例（順序重要）:
 
    ```cfg
+   ensure oxmysql
+   ensure ox_lib
+   ensure ox_target
    ensure jp-meridian9
    ```
 
-3. サーバーで `refresh` のあと `ensure jp-meridian9`（またはサーバー再起動）。
-4. クライアント接続後、F8 に `[jp-meridian9] resource loaded` が出ることを確認。
+3. `server.cfg` に `ensure jp-meridian9` を上記の **後**に追加（未記載なら追記）。
+4. サーバーで `refresh` のあと `ensure jp-meridian9`（またはサーバー再起動）。
+5. クライアント接続後、F8 に `[jp-meridian9] resource loaded` が出ることを確認。
 
-**フレームワーク依存はありません。** 通知はネイティブのフィードを使用（`ox_lib` 不要）。
+**フレームワーク依存はありません。** ヴェガ対話は **ox_lib**（通知・メニュー）、NPC 操作は **ox_target** を使用。
 
 ---
 

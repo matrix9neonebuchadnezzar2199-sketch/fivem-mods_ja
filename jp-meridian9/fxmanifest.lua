@@ -9,6 +9,7 @@ license 'MIT'
 repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
 
 shared_scripts {
+    '@ox_lib/init.lua',
     'shared/utils.lua',
     'locales/ja.lua',
     'config.lua',
@@ -42,6 +43,8 @@ server_scripts {
 
 dependencies {
     'oxmysql',
+    'ox_lib',
+    'ox_target',
 }
 
 ui_page 'html/index.html'

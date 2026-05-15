@@ -13,11 +13,21 @@ Config.Locale = 'ja'                    -- 言語コード（現状 'ja' のみ�
 
 -- ▼ ヴェガNPC設定 ----------------------------------------------
 Config.NPC = {
+    -- 出現位置（暫定: Mission Row 警察署付近。本番は路地裏オフィス等へ差し替え）
+    coords = vector4(427.5, -979.3, 30.7, 90.0),
     model = 's_m_m_highsec_01',         -- NPCのモデル
-    coords = vector4(0.0, 0.0, 0.0, 0.0),  -- 出現座標と向き（要調整：Mission Row 路地裏オフィス）
     scenario = 'WORLD_HUMAN_CLIPBOARD', -- 待機モーション
     invincible = true,                  -- 無敵化
     freeze = true,                      -- 移動禁止
+    blockEvents = true,                 -- AIイベントブロック
+    targetDistance = 2.5,               -- ox_target 有効距離
+    blip = {
+        enabled = false,                -- 既定は非表示（秘密の入口）
+        sprite = 280,
+        color = 4,
+        scale = 0.8,
+        label = 'Vega & Associates',
+    },
 }
 
 -- ▼ ゲート位置 -------------------------------------------------

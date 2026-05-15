@@ -126,3 +126,22 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 |----------|
 | `IsContracted` はキャッシュ優先、未ロード時は DB 読み取り後にキャッシュへ書き戻し。 |
 | `MRD9.Contract.Get` は運営確認用のため **DB 直読みのまま**（キャッシュとズレないよう運用側で `Sign` 等の後に必要なら再 `LoadCache`）。 |
+
+## INSTRUCTION-009：ヴェガ NPC・対話（実装済み・正本追記）
+
+| ID | 決定 |
+|----|------|
+| D7 | **ox_lib** の `lib.registerContext` / `lib.showContext` と `lib.notify` で対話。NUI は INSTRUCTION-014/015 で本格化。 |
+| D8 | **ox_target** の `addLocalEntity` で「ヴェガと話す」。 |
+| D9 | NPC 座標は **暫定** `vector4(427.5, -979.3, 30.7, 90.0)`（Mission Row 警察署付近）。路地裏オフィス MLO は別フェーズで `config.lua` 差し替え。 |
+
+| 依存 | 内容 |
+|------|------|
+| **ox_lib** | `shared_scripts` 先頭に `@ox_lib/init.lua`。`dependencies` に明記。フレームワーク（ESX/QB）ではなく **UI/コールバック基盤**として採用。 |
+| **ox_target** | NPC インタラクション。`dependencies` に明記。 |
+
+| 実装メモ |
+|----------|
+| NPC 対話時の `IsContracted` は **キャッシュ＋DB フォールバック**の既存実装のまま。NPC 側から明示 `LoadCache` は不要（INSTRUCTION-008 方針）。 |
+| `client/npc.lua` でスポーン・`onResourceStop` で `removeLocalEntity`＋`DeleteEntity`・ブリップ削除。 |
+| `client/dialogue.lua` で初回／リピート分岐・署名コールバック・チュートリアル。パーティメニューは `jp-meridian9:client:openPartyMenu` を INSTRUCTION-010 で本実装。 |

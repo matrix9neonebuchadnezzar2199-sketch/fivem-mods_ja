@@ -335,3 +335,31 @@ RegisterCommand('m9_admin_list', function(source, args)
         notifyAdmin(source, ('  %s [%s] %s'):format(tostring(row.identifier), tostring(row.status), tostring(row.signed_at)))
     end
 end, true)
+
+-- ============================================================
+-- 対話用コールバック（INSTRUCTION-009）
+-- ============================================================
+
+lib.callback.register('jp-meridian9:server:isContracted', function(source)
+    local src = source
+    if not src or src <= 0 then
+        return false
+    end
+    local identifier = MRD9.GetIdentifier(src)
+    if not identifier then
+        return false
+    end
+    return MRD9.Contract.IsContracted(identifier)
+end)
+
+lib.callback.register('jp-meridian9:server:signContract', function(source)
+    local src = source
+    if not src or src <= 0 then
+        return false
+    end
+    local identifier = MRD9.GetIdentifier(src)
+    if not identifier then
+        return false
+    end
+    return MRD9.Contract.Sign(identifier)
+end)
