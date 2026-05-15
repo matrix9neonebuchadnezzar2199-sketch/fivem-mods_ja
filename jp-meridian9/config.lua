@@ -150,8 +150,8 @@ Config.SiteNine = {
     timeHour = 22,                      -- 夜 10 時
     timeMinute = 0,
     timeFreeze = true,
-    timecycleModifier = 'phone_cam11',  -- 青み・コントラスト
-    timecycleStrength = 0.85,
+    timecycleModifier = nil,            -- 色味フィルター OFF（マスター指示・目に痛い）
+    timecycleStrength = 0.0,
     blackout = false,                   -- Cayo Perico は元から街灯少ない、不要
     -- INSTRUCTION-020 v5: 'cayoperico' で Cayo Perico 採用、'none' で MAP 切替なし
     island = 'cayoperico',

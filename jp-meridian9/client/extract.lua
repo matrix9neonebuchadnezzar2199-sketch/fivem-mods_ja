@@ -16,7 +16,45 @@ local State = {
     cancelReason = nil,
     proximityRunning = false,
     textUiOpen = false,
+    markerRunning = false,
 }
+
+-- 脱出地点に赤いサークルマーカーを地面に描画する。
+-- プレイヤーから 80m 以内のポイントのみ描画してパフォーマンス維持。
+local function startMarkerLoop()
+    if State.markerRunning then
+        return
+    end
+    State.markerRunning = true
+    CreateThread(function()
+        while State.markerRunning and MRD9.CurrentSession do
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 then
+                local pc = GetEntityCoords(ped)
+                local points = Config.ExtractPoints or {}
+                for _, pt in ipairs(points) do
+                    if pt and pt.coords then
+                        local d = #(pc - pt.coords)
+                        if d < 80.0 then
+                            local r = tonumber(pt.radius) or 3.0
+                            -- タイプ 1: 円柱マーカー。地面から少し上に描画。
+                            DrawMarker(
+                                1,
+                                pt.coords.x + 0.0, pt.coords.y + 0.0, pt.coords.z - 0.95,
+                                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                r * 2.0, r * 2.0, 1.5,
+                                220, 30, 30, 130,
+                                false, false, 2, false, nil, nil, false
+                            )
+                        end
+                    end
+                end
+            end
+            Wait(0)
+        end
+        State.markerRunning = false
+    end)
+end
 
 ---@param b integer|nil
 ---@return nil
@@ -239,11 +277,13 @@ end
 RegisterNetEvent('jp-meridian9:onMissionStart', function()
     showBlips()
     startProximity()
+    startMarkerLoop()
 end)
 
 RegisterNetEvent('jp-meridian9:onMissionEnd', function()
     State.proximityRunning = false
     State.inProgress = false
+    State.markerRunning = false
     hideTextUI()
     clearBlips()
 end)
@@ -253,6 +293,7 @@ AddEventHandler('onResourceStop', function(res)
         return
     end
     State.proximityRunning = false
+    State.markerRunning = false
     hideTextUI()
     clearBlips()
 end)

@@ -10,7 +10,45 @@ local resName = GetCurrentResourceName()
 
 local State = {
     byLootId = {},
+    markerRunning = false,
 }
+
+-- アイテム位置に黄色いサークルマーカーを描画する。
+-- プレイヤーから 60m 以内の loot のみ描画してパフォーマンス維持。
+local function startLootMarkerLoop()
+    if State.markerRunning then
+        return
+    end
+    State.markerRunning = true
+    CreateThread(function()
+        while State.markerRunning and MRD9.CurrentSession do
+            local ped = PlayerPedId()
+            if ped and ped ~= 0 then
+                local pc = GetEntityCoords(ped)
+                for lootId, row in pairs(State.byLootId) do
+                    local ent = NetworkGetEntityFromNetworkId(row.netId)
+                    if ent and ent ~= 0 and DoesEntityExist(ent) then
+                        local ec = GetEntityCoords(ent)
+                        local d = #(pc - ec)
+                        if d < 60.0 then
+                            -- タイプ 1: 円柱マーカー、足元（地面少し上）に黄色
+                            DrawMarker(
+                                1,
+                                ec.x + 0.0, ec.y + 0.0, ec.z - 0.95,
+                                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                0.7, 0.7, 0.9,
+                                240, 210, 30, 150,
+                                false, false, 2, false, nil, nil, false
+                            )
+                        end
+                    end
+                end
+            end
+            Wait(0)
+        end
+        State.markerRunning = false
+    end)
+end
 
 ---@param lootId string
 ---@return string
@@ -114,6 +152,7 @@ RegisterNetEvent('jp-meridian9:client:lootRegister', function(data)
     if type(data) ~= 'table' or type(data.entries) ~= 'table' then
         return
     end
+    startLootMarkerLoop()
     CreateThread(function()
         for _, e in ipairs(data.entries) do
             local netId = e.netId
@@ -169,6 +208,7 @@ RegisterNetEvent('jp-meridian9:client:lootRemoved', function(data)
 end)
 
 RegisterNetEvent('jp-meridian9:client:lootClearAll', function()
+    State.markerRunning = false
     for lootId in pairs(State.byLootId) do
         removeOne(lootId)
     end
@@ -178,6 +218,7 @@ AddEventHandler('onResourceStop', function(res)
     if res ~= resName then
         return
     end
+    State.markerRunning = false
     for lootId in pairs(State.byLootId) do
         removeOne(lootId)
     end
