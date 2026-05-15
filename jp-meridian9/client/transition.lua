@@ -264,15 +264,18 @@ function MRD9.Transition.Enter()
     end
     State.active = true
 
-    -- INSTRUCTION-020 v3: Config.SiteNine.island に応じて Cayo Perico / 北ヤンクトンを Enable
-    -- いずれもクライアントローカル。Cayo Perico は SetIslandEnabled、北ヤンクトンは bob74_ipl 経由。
-    -- 実際の同期ロード待ちは TeleportToSiteNine() で行う。
+    -- INSTRUCTION-020 v7: 島地形は mnr_cayo が常時ロード、jp-meridian9 側は何も呼ばない。
+    -- applyIsland は互換用（Config.SiteNine.island の値で no-op or 北ヤンクトン分岐）。
     applyIsland()
 
     applyClockOverride()
     applyWeather()
     applyTimecycle()
     applyBlackout()
+    if cfg().thunderEnabled then
+        startThunderLoop()
+    end
+    startWeatherKeeper()
 end
 
 ---@param sp vector4|{ x: number, y: number, z: number, w: number|nil }
@@ -468,11 +471,13 @@ function MRD9.Transition.Leave()
         return
     end
     State.active = false
+    stopWeatherKeeper()
+    stopThunderLoop()
     clearBlackout()
     clearTimecycle()
     clearWeather()
     clearClockOverride()
-    clearNorthYankton()
+    clearIsland()
 end
 
 AddEventHandler('onResourceStop', function(res)
