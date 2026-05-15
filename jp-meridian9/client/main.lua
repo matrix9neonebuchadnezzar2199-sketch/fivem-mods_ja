@@ -118,12 +118,12 @@ AddEventHandler('onClientResourceStart', function(res)
     if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
         MRD9.Transition.Leave()
     end
-    print('[jp-meridian9] onClientResourceStart: base state applied (Cayo Perico ON)')
+    print('[jp-meridian9] onClientResourceStart: base state applied (LS only, MAP切替 disabled, effects OFF)')
 end)
 
 AddEventHandler('playerSpawned', function()
     m9ApplyBaseClientState()
-    print('[jp-meridian9] playerSpawned: base state re-applied (Cayo Perico ON)')
+    print('[jp-meridian9] playerSpawned: base state re-applied (LS only, MAP切替 disabled)')
 end)
 
 CreateThread(function()
@@ -132,7 +132,7 @@ CreateThread(function()
     if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
         MRD9.Transition.Leave()
     end
-    print('[jp-meridian9] CreateThread+2s: base state applied (Cayo Perico ON)')
+    print('[jp-meridian9] CreateThread+2s: base state applied (LS only, MAP切替 disabled, effects OFF)')
 end)
 
 -- 緊急復旧コマンド: 世界が壊れたとき F8 で `m9_recover` を叩く
