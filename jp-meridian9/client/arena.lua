@@ -134,6 +134,10 @@ RegisterNetEvent('jp-meridian9:client:spawnZombie', function(data)
     local x = tonumber(data.x) or 0.0
     local y = tonumber(data.y) or 0.0
     local z = tonumber(data.z) or 0.0
+    local foundZ, gz = GetGroundZFor_3dCoord(x + 0.0, y + 0.0, z + 50.0, false)
+    if foundZ and gz then
+        z = gz + 0.5
+    end
     local ped = CreatePed(4, model, x, y, z, 0.0, true, true)
     SetModelAsNoLongerNeeded(model)
 

@@ -58,10 +58,10 @@ local function buildMembersArray(session, src)
         local hp, maxHp, armor = 0, 200, 0
         local alive = false
         if ped and ped ~= 0 then
-            hp = GetEntityHealth(ped)
-            maxHp = math.max(1, GetEntityMaxHealth(ped))
-            armor = GetPedArmour(ped)
-            alive = not IsPedDeadOrDying(ped, true)
+            hp = GetEntityHealth(ped) or 0
+            maxHp = math.max(1, GetEntityMaxHealth(ped) or 200)
+            armor = GetPedArmour(ped) or 0
+            alive = hp > 0
         end
         local name = GetPlayerName(m)
         if type(name) ~= 'string' or name == '' then
@@ -103,9 +103,9 @@ local function buildDto(session, recipientSrc)
     local ped = GetPlayerPed(recipientSrc)
     local shp, smax, sarm = 0, 200, 0
     if ped and ped ~= 0 then
-        shp = GetEntityHealth(ped)
-        smax = math.max(1, GetEntityMaxHealth(ped))
-        sarm = GetPedArmour(ped)
+        shp = GetEntityHealth(ped) or 0
+        smax = math.max(1, GetEntityMaxHealth(ped) or 200)
+        sarm = GetPedArmour(ped) or 0
     end
 
     local arena = { active = false, wave = 0, totalWaves = 3, zombiesAlive = 0 }

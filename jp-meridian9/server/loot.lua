@@ -98,12 +98,7 @@ local function pickRadialLootCoords(center, minR, maxR, existing, minGap, maxAtt
         local dist = minR + math.random() * (maxR - minR)
         local x = cx + math.cos(ang) * dist
         local y = cy + math.sin(ang) * dist
-        local z = cz + 80.0
-        local found, gz = GetGroundZFor_3dCoord(x + 0.0, y + 0.0, z + 0.0, false)
-        if not found or not gz then
-            gz = cz
-        end
-        local p = vector3(x, y, (gz or cz) + 0.12)
+        local p = vector3(x, y, cz + 0.12)
         local ok = true
         for _, q in ipairs(existing) do
             if #(p - q) < minGap then

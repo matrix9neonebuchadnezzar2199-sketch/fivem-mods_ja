@@ -38,19 +38,11 @@ function MRD9.Arena.Spawn.PickCoordsNearPlayer(src, attempts)
     if maxR < minR then
         maxR = minR + 1.0
     end
-    local n = attempts or (cfg and cfg.spawnRetryAttempts) or 5
-    for _ = 1, n do
-        local ang = math.random() * math.pi * 2
-        local dist = minR + math.random() * (maxR - minR)
-        local x = c.x + math.cos(ang) * dist
-        local y = c.y + math.sin(ang) * dist
-        local z = c.z + 50.0
-        local found, gz = GetGroundZFor_3dCoord(x + 0.0, y + 0.0, z + 0.0, false)
-        if found and gz then
-            return vector3(x, y, gz + 0.5)
-        end
-    end
-    return vector3(c.x + 10.0, c.y, c.z)
+    local ang = math.random() * math.pi * 2
+    local dist = minR + math.random() * (maxR - minR)
+    local x = c.x + math.cos(ang) * dist
+    local y = c.y + math.sin(ang) * dist
+    return vector3(x, y, c.z + 0.5)
 end
 
 ---@param sessionId string
