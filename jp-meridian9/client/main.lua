@@ -145,8 +145,13 @@ AddEventHandler('onClientResourceStart', function(res)
 end)
 
 AddEventHandler('playerSpawned', function()
+    -- qbx_spawn / qbx_core 等が死亡→再スポーンさせた時の保険。
+    -- Transition.Leave を呼んで天候・時間・island・thunder/weatherKeeper スレッドを停止。
+    if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
+        MRD9.Transition.Leave()
+    end
     m9ApplyBaseClientState()
-    print('[jp-meridian9] playerSpawned: base state re-applied (no MAP natives)')
+    print('[jp-meridian9] playerSpawned: base state re-applied (no MAP natives) + Transition.Leave')
 end)
 
 CreateThread(function()
