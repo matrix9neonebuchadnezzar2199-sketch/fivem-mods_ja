@@ -40,7 +40,7 @@ license 'MIT'
 repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
 ```
 
-INSTRUCTION-006 以降: `dependencies { 'oxmysql' }` を追加し、`server_scripts` の **先頭**に `'@oxmysql/lib/MySQL.lua'` を置く（`jp-tcgbook` 等のリポジトリ慣習に合わせる）。
+INSTRUCTION-006 以降: `dependencies { 'oxmysql', 'ox_lib', 'ox_target' }`（009 時点）を追加し、`server_scripts` の **先頭**に `'@oxmysql/lib/MySQL.lua'` を置く（`jp-tcgbook` 等のリポジトリ慣習に合わせる）。`@ox_lib/init.lua` は `shared_scripts` 先頭。
 
 ---
 
