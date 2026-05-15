@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jp-cooktree — P3a/P3b/P3c 開発日記（Glitch 連携）</title>
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.55; max-width: 52rem; margin: 1.5rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1 { font-size: 1.35rem; border-bottom: 1px solid #ccc; padding-bottom: 0.35rem; }
+    h2 { font-size: 1.1rem; margin-top: 1.75rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+    th, td { border: 1px solid #ccc; padding: 0.35rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f4f4f4; }
+    pre { background: #f6f8fa; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.85rem; border-radius: 6px; }
+    .ok { color: #0a7; }
+    .note { color: #555; font-size: 0.9rem; }
+    time { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>jp-cooktree 開発日記 — <time datetime="2026-05-11">2026-05-11</time> P3a / P3b / P3c</h1>
+      <p class="note">以降の追記は本 HTML に集約（旧 <code>.md</code> は履歴）。</p>
+    </header>
+
+    <section id="p3a">
+      <h2>P3a 完全クローズ</h2>
+      <p>調理パイプラインの<strong>正常経路</strong>および<strong>負経路 2 種</strong>を確認し、P3a をクローズ。</p>
+      <table>
+        <thead>
+          <tr><th>経路</th><th>入力</th><th>期待</th><th>結果</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>未知レシピ</td>
+            <td><code>Unknown recipe … recipe=nonexistent_recipe</code></td>
+            <td>付与・EXP なし</td>
+            <td class="ok">OK</td>
+          </tr>
+          <tr>
+            <td>Unlock 拒否</td>
+            <td><code>DummyLevel=0</code> で <code>omurice_special</code></td>
+            <td><code>Unlock denied</code>（<code>IsRecipeUnlocked</code> 連鎖）</td>
+            <td class="ok">OK</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">負経路テスト後は <code>config/config_main.lua</code> の <code>Config.DummyLevel</code> を運用値へ戻す（既定開発値は <strong>20</strong>。一時的に 0 にした場合は必ず復帰）。</p>
+    </section>
+
+    <section id="p3b">
+      <h2>P3b — レシピ別 ★（Resource KVP）</h2>
+      <p><strong>背景</strong>: 調理成功ごとにレシピ単位で ★ を加算し、サーバー Resource KVP で永続化。NUI はオープン時一括取得＋調理後プッシュで同期。上限は設けず表示のみ（パッシブ倍率は P3e）。</p>
+      <p><strong>方針確定</strong>: <strong>ox_lib 非依存</strong>の <code>GetResourceKvpInt</code> / <code>SetResourceKvpInt</code>、<code>jp-cooktree:requestStars</code>、成功後 <code>pushStarsToClient</code>。</p>
+
+      <h3>KVP キー形式（実装）</h3>
+      <p><code>server/stars.lua</code> 内: リソース名 + 正規化した識別子 + レシピ ID を連結（詳細はコード参照）。識別子は <code>GetPlayerIdentifier(src, 0)</code>、未取得時は <code>noid:&lt;src&gt;</code> フォールバック。</p>
+      <pre><code>&lt;GetCurrentResourceName()&gt;:star:&lt;safe_identifier&gt;:&lt;safe_recipeId&gt;</code></pre>
+
+      <h3>実装（5 ファイル）</h3>
+      <ul>
+        <li><code>server/stars.lua</code>（新規）— <code>CookTree.Stars</code></li>
+        <li><code>server/main.lua</code> — 成功時 <code>Increment</code>、<code>pushStarsToClient</code>、<code>jp-cooktree:requestStars</code></li>
+        <li><code>client/main.lua</code> — キャッシュ、<code>receiveStars</code> → NUI <code>updateStars</code>、open ペイロード</li>
+        <li><code>html/app.js</code> — ヘッダー合計、専門職行末 <code>★N</code>、「★パッシブ」一覧、合計ステータス連動</li>
+        <li><code>fxmanifest.lua</code> — <code>server/stars.lua</code> 読込、<code>version 0.5.0</code></li>
+      </ul>
+
+      <h3>P3b 完了宣言（<time datetime="2026-05-11">2026-05-11</time> 実機確認）</h3>
+      <p>ログ・スクリーンショットに基づき、下記 <strong>8 項目すべて PASS</strong>。KVP 永続化・NUI 一括送信・レシピ単位・上限なし表示が仕様通り。</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>項目</th><th>結果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>初回成功（<code>new=1</code>、ヘッダー ★1、専門職行に <code>★1</code>）</td><td class="ok">PASS</td></tr>
+          <tr><td>2</td><td>連続実行（<code>new=2…5</code>、ヘッダー連動）</td><td class="ok">PASS</td></tr>
+          <tr><td>3</td><td><code>restart jp-cooktree</code> 後も ★ 維持</td><td class="ok">PASS</td></tr>
+          <tr><td>4</td><td>効果パネル・専門職行末 <code>★N</code> の視認性</td><td class="ok">PASS</td></tr>
+          <tr><td>5</td><td>未知レシピ → ★ 増加なし</td><td class="ok">PASS</td></tr>
+          <tr><td>6</td><td>Unlock denied（Lv0）→ 専門職スキル空、★ 増加なし</td><td class="ok">PASS</td></tr>
+          <tr><td>7</td><td>「★パッシブ」セクションにレシピ別蓄積（例: 特製オムライス ★5）</td><td class="ok">PASS</td></tr>
+          <tr><td>8</td><td>合計ステータス（クリティカル・HP・重量・EXP 倍率など）表示</td><td class="ok">PASS</td></tr>
+        </tbody>
+      </table>
+
+      <h3>追加で確認できた挙動</h3>
+      <ul>
+        <li>Lv0（Unlock denied）でも、過去に貯めた ★ は「★パッシブ」一覧に残る（専門職スキル一覧は空になる対比で、ロックと蓄積の切り分けが一目で分かる）。</li>
+        <li>合計ステータスパネルが既存バフ集計と矛盾なく表示されている。</li>
+      </ul>
+
+      <h3>残課題（P3c 以降）</h3>
+      <ul>
+        <li><strong>P3c</strong>: ミニゲーム・成功/失敗分岐・失敗作付与フロー</li>
+        <li><strong>P3d</strong>: クリティカル時 ★×2 / EXP×2 等</li>
+        <li><strong>P3e</strong>: ★ 累積によるパッシブ強化</li>
+        <li>その他: SP 消費・汎用ランク UI・物理ステーション等（ロードマップ参照）</li>
+      </ul>
+    </section>
+
+    <section id="roadmap">
+      <h2>ロードマップメモ</h2>
+      <p>完了: P2.6.1〜P2.6.4、P2.7、P3a、P3b、<strong>P3c</strong>（Glitch・実機クローズ）、<strong>P3d</strong>（metadata 付与・<time datetime="2026-05-11">2026-05-11</time> 実装）。売却倍率の参照は P3g。次は下記「次ロードマップ」。</p>
+    </section>
+
+    <section id="p3c-impl">
+      <h2>P3c — ミニゲーム・分岐・確率クリティカル（現行）</h2>
+      <p><strong>ミニゲーム</strong>: モノレポの <strong>jp-glitch28</strong>（原作 GPL-3.0・日本語 UI）。他 MOD 互換でフォルダを <code>glitch-minigames</code> にリネームしている場合は <code>Config.GlitchMinigamesResource</code> と <code>fxmanifest.lua</code> の <code>dependencies</code> をその ensure 名に合わせる。<strong>クリティカル</strong>: Glitch の戻り値は boolean のみのため、<strong>Q-P3c-3 は案 C（成功後 <code>Config.CriticalChance</code>）</strong>で確定。perfect ゾーンは難易・演出用。</p>
+      <p><strong>レシピ</strong>: <code>stages[]</code> に <code>export</code>（例: <code>StartSkillCheckGame</code>）・<code>label</code>・<code>args</code>（配列のまま <code>table.unpack</code> で渡す）。初回は <strong>1 段階のみ</strong>（動作確認後に玉ねぎ→卵→焼き等へ拡張）。<code>stages</code> が空なら後方互換で即成功扱い（運営が一時的に外す場合）。</p>
+      <h3>変更ファイル（0.7.0 時点）</h3>
+      <ul>
+        <li><code>fxmanifest.lua</code> — <code>dependencies { 'jp-glitch28', 'ox_inventory' }</code>、<strong>ox_lib 削除</strong>、<code>version 0.7.0</code></li>
+        <li><code>config/config_main.lua</code> — <code>CriticalChance</code> / <code>CriticalMultiplier</code>、<code>GlitchMinigamesResource</code></li>
+        <li><code>config/config_recipes.lua</code> — <code>stages</code>（<code>StartSkillCheckGame</code> + README 準拠の args）</li>
+        <li><code>client/main.lua</code> — <code>runRecipeStages</code>、<code>cook_test</code> → <code>jp-cooktree:submitCookResult</code></li>
+        <li><code>server/main.lua</code> — <code>jp-cooktree:submitCookResult</code>（変更なし／コメントのみ Glitch 向け更新可）</li>
+        <li><code>server/stars.lua</code> — <code>Increment(..., delta?)</code></li>
+      </ul>
+      <h3>セキュリティメモ</h3>
+      <p class="note">ミニゲーム成否はクライアント報告の boolean。サーバーはクールダウン・解放・レシピ検証。報酬の権威はサーバー側（jp-glitch28 README の推奨と同じ考え方）。</p>
+    </section>
+
+    <section id="p3c-glitch-mapping">
+      <h2>Glitch 28 種 → 料理工程（割り当て案・メモ）</h2>
+      <p>実装は段階的に追加。以下は設計メモとして日記に残す。</p>
+      <table>
+        <thead>
+          <tr><th>工程イメージ</th><th>export 例</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>包丁・下ごしらえ</td><td><code>StartCircleClickGame</code>、<code>StartAimTestGame</code>、<code>StartFingerprintGame</code></td></tr>
+          <tr><td>火加減・タイミング</td><td><code>StartSkillCheckGame</code>、<code>StartBarHitGame</code>、<code>StartHoldZoneGame</code>、<code>StartBalanceGame</code></td></tr>
+          <tr><td>かき混ぜ・連打</td><td><code>StartCircuitRhythm</code>、<code>StartComboInputGame</code>、<code>StartSurgeOverride</code></td></tr>
+          <tr><td>手順・記憶</td><td><code>StartSimonSaysGame</code>、<code>StartSequenceMemoryGame</code>、<code>StartNumberedSequenceGame</code>、<code>StartMemoryColorsGame</code></td></tr>
+          <tr><td>盛り付け・仕上げ</td><td><code>StartUntangleGame</code>、<code>StartPairsGame</code></td></tr>
+        </tbody>
+      </table>
+      <p class="note"><strong>ライセンス</strong>: jp-glitch28 は GPL-3.0。配布・結合ポリシーは運営の判断で。Ensure 依存は一般的に jp-cooktree 本体のライセンス選択と独立して扱われることが多いが、再配布バンドルに含める場合は要件確認を推奨。</p>
+    </section>
+
+    <section id="log-p3c-prep">
+      <h2>追記 — P3c 決定表（確定版・Glitch 移行後）</h2>
+      <p><time datetime="2026-05-11">2026-05-11</time> 更新。</p>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>内容</th><th>選択</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Q-P3c-1</td><td>ミニゲーム</td><td><strong>jp-glitch28</strong>（Glitch Minigames 日本語版・exports）</td></tr>
+          <tr><td>Q-P3c-2</td><td>難易度</td><td>X: レシピ固定 <code>stages[].args</code></td></tr>
+          <tr><td>Q-P3c-3</td><td>クリティカル</td><td>C: 成功後確率（戻り値に perfect なし → 案 P は不採用）</td></tr>
+          <tr><td>Q-P3c-4</td><td>失敗時</td><td>I: <code>failureResult</code> のみ、EXP/★ なし</td></tr>
+          <tr><td>Q-P3c-5</td><td>起動</td><td>α: クライアント <code>cook_test</code></td></tr>
+          <tr><td>Q-P3c-6</td><td>レシピ定義</td><td><code>stages = { { export, label, args }, … }</code>、初回 1 段階</td></tr>
+          <tr><td>Q-P3c-7</td><td>補足</td><td>Q3 と同じ（★+2 / EXP×2 は <code>CriticalMultiplier</code>）</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="p3c-verification">
+      <h2>P3c 実機検証ログ（<time datetime="2026-05-11">2026-05-11</time>）</h2>
+      <h3>失敗経路（ミニゲーム失敗 → サーバー失敗分岐）</h3>
+      <pre><code>cook_test start recipe=omurice_special stages=1
+Stage 1/1: （label は下記「文字化け」参照）
+[SkillCheck] start() called
+Sound loaded successfully: sound-failure
+cook_test result success=false</code></pre>
+      <p>インベントリに <strong>失敗作（failed_dish）</strong> が付与されることを確認 → サーバー失敗分岐・<code>submitCookResult</code> 連携 OK。</p>
+
+      <h3>成功経路（連続成功・重量計算）</h3>
+      <pre><code>sound-buttonPress
+sound-click ×3
+sound-success
+cook_test result success=true</code></pre>
+      <p>特製オムライスが複数回付与され、ox_inventory の重量表示（例: 300g×7=2.10kg）と整合することを確認。</p>
+
+      <h3>軽微: <code>print(stage.label)</code> の「????」について</h3>
+      <p class="note">Windows コンソールのコードページ（CP932 等）で UTF-8 の日本語ログが化けることがある。ゲーム内 UI・データは UTF-8 のまま。対処は <code>chcp 65001</code> 等か、ログ用途で label を英字にするか（視認性低下のため任意）。<strong>動作不具合ではない</strong>。</p>
+    </section>
+
+    <section id="p3c-close">
+      <h2>P3c クローズ宣言</h2>
+      <p>クライアント <code>/cook_test</code> → <code>recipe.stages</code> → jp-glitch28 <code>StartSkillCheckGame</code> → <code>jp-cooktree:submitCookResult</code> → サーバー成功／失敗分岐・付与、まで実機で確認済み。</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>項目</th><th>結果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><code>ensure jp-cooktree</code> 起動エラーなし</td><td class="ok">PASS</td></tr>
+          <tr><td>2</td><td>SkillCheck UI 表示・入力受付</td><td class="ok">PASS</td></tr>
+          <tr><td>3</td><td>成功時 正規品付与・ログ（<code>Cook success</code> 等）</td><td class="ok">PASS</td></tr>
+          <tr><td>4</td><td>失敗時 <code>failed_dish</code>・<code>Cook failed</code> 系ログ</td><td class="ok">PASS</td></tr>
+          <tr><td>5</td><td>パイプライン安定（連続成功の実例あり）</td><td class="ok">PASS</td></tr>
+          <tr><td>6</td><td>クリティカル（10%・<code>CRITICAL</code> ログ）</td><td>確率のため未ログでも P3c 必須扱い外・後日体感可</td></tr>
+        </tbody>
+      </table>
+      <p><strong>主な変更ファイル（P3c）</strong>: <code>fxmanifest.lua</code>（<code>jp-glitch28</code>）、<code>config/config_main.lua</code>（Glitch・クリティカル）、<code>config/config_recipes.lua</code>（<code>stages</code>）、<code>client/main.lua</code>、<code>server/main.lua</code>（<code>submitCookResult</code>）／<code>server/stars.lua</code>。</p>
+      <p><strong>設計確定</strong>: ミニゲーム = jp-glitch28（日本語 UI・GPL-3.0 依存）。工程 = 当面 1 段（<code>stages</code> で増設可）。クリティカル = 成功後確率（perfect ゾーンは演出・難易）。失敗 = <code>failureResult</code> のみ（EXP/★ なし）。</p>
+    </section>
+
+    <section id="p3d-metadata">
+      <h2>P3d — 調理品 metadata（ox_inventory）</h2>
+      <p><strong>確定</strong>: Q-P3d β 相当＝アイテムに metadata。売却の実装は P3g（<code>Config.SellPriceMultiplier</code> は定数のみ先行）。NUI 通知なし。重量は ox 側定義のまま。失敗作にも同スキーマで <code>quality='failed'</code>。</p>
+      <pre><code>-- 通常成功
+{ quality = 'normal', star = false, cookedBy = string, cookedAt = unix }
+
+-- クリティカル
+{ quality = 'critical', star = true, cookedBy = string, cookedAt = unix }
+
+-- 失敗
+{ quality = 'failed', star = false, cookedBy = string, cookedAt = unix }</code></pre>
+      <p><strong>変更</strong>: <code>fxmanifest.lua</code> <code>version 0.7.1</code>。<code>config/config_main.lua</code> に <code>SellPriceMultiplier</code>。<code>server/inventory.lua</code> の <code>AddItem(src, item, count, metadata?)</code>。<code>server/main.lua</code> でクリティカル抽選<strong>後に</strong>付与（metadata と品質一致）。ログ: <code>quality=normal</code> / <code>quality=critical</code> / <code>quality=failed</code>。</p>
+      <p class="note">実機確認: インベントリ inspect で metadata、クリティカルは確率のため複数回試行。</p>
+    </section>
+
+    <section id="roadmap-next">
+      <h2>次ロードマップ候補（メモ）</h2>
+      <ul>
+        <li><strong>P3d</strong> — metadata 付与・<code>SellPriceMultiplier</code> 定数のみ（<strong>売却ロジックは P3g</strong>）</li>
+        <li><strong>P3e</strong> — ★累積パッシブ（閾値テーブル・効果パネル拡張）</li>
+        <li><strong>P3f</strong> — SP 消費・汎用ノードランク・KVP 永続化</li>
+        <li><strong>P3g</strong> — 物理ステーション・<code>ox_target</code> 等・NUI からの調理フロー・<code>/cook_test</code> は開発専用化可</li>
+        <li><strong>P3h</strong> — western 全レシピ / chinese・sweets 拡張・<code>stages</code> で Glitch 28 種の使い分け検証</li>
+      </ul>
+      <p><strong>優先順の例</strong>: 標準 <code>P3d→P3e→P3f→P3g→P3h</code>。早めにミニゲーム多様性を触るなら <strong>P3h（軽量追加）→P3f→P3g→P3d→P3e</strong>。店舗体験優先なら <strong>P3g→…</strong>。</p>
+    </section>
+  </article>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>2026-05-12 開発日記 - jp-cooktree</title>
+<link rel="stylesheet" href="../../.cursor/templates/diary-style.css">
+</head>
+<body class="diary">
+<header>
+  <h1>2026-05-12 開発日記</h1>
+  <p>ツール: <strong>jp-cooktree</strong></p>
+</header>
+
+<main>
+<section id="entry-2013" class="entry">
+  <h2>ext_xp（KVP 料理 XP / レベルテーブル / Lv アップで +SP）と NUI 調理ボタン横配置</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>20:13 JST</strong></span>
+    <span>Commit <strong class="commit-hash">708c343</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-cooktree/server/ext_xp.lua</code>（KVP 永続・<code>CookTree.ExtXP.GetAll</code> / <code>ConsumeSP</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/config/config_main.lua</code>（<code>Config.LevelTable</code> / <code>SpPerLevel</code>、Dummy 廃止）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/server/main.lua</code>（<code>pushPlayerStateToClient</code>、<code>jp-cooktree:requestPlayerState</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/client/main.lua</code>（<code>receivePlayerState</code>、オープン時状態取得）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/app.js</code>（<code>updatePlayerState</code>、横並び DOM）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/style.css</code>（横並びスタイル）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/fxmanifest.lua</code>（v0.8.0、server 読込順）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>料理成功時のみ <code>CookTree.ExtXP.AddXP</code> で累積 XP を KVP 保存し、<code>Config.LevelTable</code> からレベルを算出。レベル差分ごとに <code>Config.SpPerLevel</code> 分 SP を加算。NUI は <code>jp-cooktree:requestPlayerState</code> で Lv/SP/★/XP を同期し、効果パネルの調理ボタンをカード右端のコンパクト配置に変更。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>特になし（後続: P3f SP 消費・ノードランク）</li>
+  </ul>
+</section>
+
+<section id="entry-2030" class="entry">
+  <h2>調理前インベントリ検証（requestCookStart）とレシピ行フォント 1.5 倍</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>20:30 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-cooktree/server/main.lua</code>（<code>jp-cooktree:requestCookStart</code>、<code>CanCarryItem</code> / unlock）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/client/main.lua</code>（許可応答後に既存ミニゲーム→<code>submitCookResult</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/app.js</code>（<code>cookDenied</code>・<code>showFlashCookDenied</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/html/style.css</code>（<code>.recipe-title</code> / <code>.recipe-meta</code> 拡大、<code>.cook-result.denied</code>）</li>
+    <li><span class="op">📝</span> <code>jp-cooktree/fxmanifest.lua</code>（v0.8.1）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>ミニゲーム開始前にサーバーで <code>CookTree.IsRecipeUnlocked</code> と <code>exports.ox_inventory:CanCarryItem</code>（成功時付与アイテム＋本数）を検証。拒否時は <code>cookDenied</code> で #cook-result にオレンジ系 3 秒表示。専門職レシピ行のタイトル・メタのフォントを約 1.5 倍に。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: インベントリ満杯時にミニゲームに入らず拒否メッセージ・ログ <code>cook start denied … inventory_full</code></li>
+  </ul>
+</section>
+
+<section id="entry-2115" class="entry">
+  <h2>client: cookStartResponse で closeTree が nil（local 関数の宣言順）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>21:15 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-cooktree/client/main.lua</code>（<code>openTree</code> / <code>closeTree</code> / <code>runRecipeStages</code> を <code>cookStartResponse</code> より上へ移動）</li>
+  </ul>
+  <h3>概要</h3>
+  <p><code>local function</code> は宣言行より前のブロック内では未束縛のため、先に登録していた <code>jp-cooktree:cookStartResponse</code> 内の <code>closeTree</code> / <code>openTree</code> / <code>runRecipeStages</code> がグローバル参照になっていた。3 関数をすべてネットイベント登録より前に定義して解消。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機で調理フロー（許可→ミニゲーム→再オープン）の再確認</li>
+  </ul>
+</section>
+
+<section id="entry-2213" class="entry">
+  <h2>P3f（SP 消費 → ノードランクアップ）設計合意・実装は翌日</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>22:13 JST</strong></span>
+    <span>Commit <strong class="commit-hash">なし（議論のみ）</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li>なし（設計合意のみ）</li>
+  </ul>
+
+  <h3>本日の到達点</h3>
+  <ul>
+    <li>ext_xp 接続（XP / Level / SP の KVP 永続化）が実機で完全動作</li>
+    <li>UI 改修（横配置・フォント 1.5x・インベントリ満杯時の <code>cookDenied</code> オレンジ通知）動作確認</li>
+    <li><code>closeTree</code> の <code>local function</code> スコープ問題を修正（宣言順を <code>cookStartResponse</code> より上に移動）</li>
+    <li><code>jp-glitch28</code> の NUI 効果音音量を <code>config.NuiSoundVolume = 0.5</code> で 50% に</li>
+    <li>初のクリティカル観測（<code>quality=critical / exp=20 (x2) / ★+2</code>）。20 回中 1 回（5%）でサンプル不足だが機能としては正常</li>
+  </ul>
+
+  <h3>P3f 設計合意（推奨案ベース・翌日着手）</h3>
+  <ul>
+    <li><strong>Q-P3f-1 対象</strong>: 汎用パッシブのみ。専門職側は P3 後半で別概念として乗せる</li>
+    <li><strong>Q-P3f-2 段階</strong>: 既存 <code>config_general.lua</code> の <code>maxRank</code> をそのまま採用。<code>spCost</code> は段階別配列（<code>{1,2,3}</code>）に拡張可能な形で</li>
+    <li><strong>Q-P3f-3 効果適用</strong>: P3f は「SP 消費 → ランク永続化 → NUI 表示更新」までで止める。実バフ発火は P3e（★累積パッシブ）と同時に <code>exports.cooktree:GetEffectiveStats(src)</code> もしくは <code>Player(src).state.cooktreeStats</code> で一本化</li>
+    <li><strong>Q-P3f-4 UI</strong>: ノードクリック → 確認ポップアップ（次ランク効果・コスト・現 SP 表示） → 消費。<code>spec-popup</code> を流用</li>
+    <li><strong>Q-P3f-5 SP 不足</strong>: クリック自体は受けて詳細を表示し、ボタンで <code>cookDenied</code> 同経路のオレンジ通知（必要 SP / 現 SP）</li>
+    <li><strong>Q-P3f-6 永続キー</strong>: <code>cooktree:rank:&lt;safeId&gt;:&lt;nodeId&gt;</code> 形式の個別キー（<code>CookTree.Stars</code> と同パターン）。<code>CookTree.Ranks.GetAll(ident)</code> を新設</li>
+  </ul>
+
+  <h3>フェーズ順序合意</h3>
+  <ol>
+    <li><strong>P3f</strong>（SP 消費・ランク永続化・NUI 表示） ← 翌日着手</li>
+    <li><strong>P3e</strong>（★累積パッシブ） — P3f の <code>GetEffectiveStats</code> に乗せる形で設計</li>
+    <li><strong>P3g + P3d</strong>（売却フローと metadata 拡張をまとめて）</li>
+  </ol>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>翌日: P3f 実装（<code>server/ranks.lua</code> 新設、<code>config_general.lua</code> の <code>spCost</code> 形式確認、NUI 確認ポップアップ）</li>
+    <li>クリティカル確率の継続観測（50 回到達時に 10% 周辺へ収束しているか）</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>
