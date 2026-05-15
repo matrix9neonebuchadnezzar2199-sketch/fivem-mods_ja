@@ -91,6 +91,25 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 ---
 
+## サードパーティライセンス
+
+このリソースは以下のサードパーティコード／ライブラリを含みます。
+
+| プロジェクト | ライセンス | 用途 |
+|-------------|------------|------|
+| TP-Advanced-Zombies | Apache 2.0 | ゾンビ AI・スポーン制御の**派生実装**（`server/arena/spawn.lua`, `client/arena/zombie_ai.lua`） |
+| ox_lib | MIT | UI / `lib.callback` |
+| ox_target | MIT | NPC インタラクション |
+| oxmysql | MIT | データベース |
+
+詳細は **`LICENSE-APACHE-2.0`** および **`NOTICE`** を参照してください。派生ファイルの改変内容は各ファイル先頭のヘッダーに記載しています。
+
+### OneSync（推奨）
+
+ゾンビのネットワーク同期・ルーティングバケット連携は **OneSync** 前提です。`server.cfg` で `set onesync on`（または環境に応じた OneSync 有効化）を推奨します。
+
+---
+
 ## コマンド
 
 | コマンド | 内容 |
