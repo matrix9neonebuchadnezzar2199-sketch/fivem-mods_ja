@@ -51,7 +51,8 @@ dependencies {
     'oxmysql',
     'ox_lib',
     'ox_target',
-    'bob74_ipl',
+    -- INSTRUCTION-020 v7: bob74_ipl は撤去（mnr_cayo と重複ロードで GTA V クラッシュ）
+    -- 旧 v2 北ヤンクトン互換コードは bob74_ipl 未起動でも no-op で動作する
 }
 
 ui_page 'html/index.html'

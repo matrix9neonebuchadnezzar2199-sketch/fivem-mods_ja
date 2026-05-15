@@ -94,16 +94,12 @@ end)
 CreateThread(function()
     Wait(3000)
     -- INSTRUCTION-020 v7: Cayo Perico は専用 MAP リソース (mnr_cayo) で常時ロード。
-    -- 北ヤンクトン用 bob74_ipl は互換維持（現運用では未使用）。
+    -- bob74_ipl は撤去（mnr_cayo と重複ロードでクラッシュするため）。
     local cayoOk = GetResourceState('mnr_cayo') == 'started'
-    local nyOk = GetResourceState('bob74_ipl') == 'started'
     if cayoOk then
         print('[jp-meridian9] (server) mnr_cayo 起動確認 OK（Cayo Perico 常時ロード）')
     else
         print('[jp-meridian9] (server) [WARN] mnr_cayo 未起動。海上に Cayo Perico が表示されません。`git clone https://github.com/Monarch-Devs/mnr_cayo.git` で導入し server.cfg に ensure mnr_cayo を追加してください')
-    end
-    if nyOk then
-        print('[jp-meridian9] (server) bob74_ipl 起動確認 OK（北ヤンクトン互換）')
     end
 end)
 
