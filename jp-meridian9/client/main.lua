@@ -95,10 +95,11 @@ local function m9ApplyBaseClientState()
     pcall(function() SetTimecycleModifierStrength(1.0) end)
     pcall(function() SetArtificialLightsState(false) end)
     pcall(function() NewLoadSceneStop() end)
-    -- INSTRUCTION-020 v5: Cayo Perico は最初から常時 ON で固定（地形のみ）
-    -- EnableMpDlcMaps は v3 で ESC マップ崩壊の主犯と判明したため **絶対に呼ばない**。
-    -- これで Cayo Perico を遠景に追加表示しつつ、LS のミニマップ・ESC マップは正常に保つ。
-    pcall(function() SetIslandEnabled('HeistIsland', true) end)
+    -- INSTRUCTION-020 v6: SetIslandEnabled / EnableMpDlcMaps の **動的呼出を完全撤廃**。
+    -- これらは GTA V クライアントの内部状態を破壊する事例が複数報告されている。
+    -- Cayo Perico を追加表示したい場合は、専用 MAP リソース（ymap を stream/ で
+    -- 配信する形式）を別途 ensure する方式へ移行する（M0 環境構築の追加タスク）。
+    pcall(function() SetIslandEnabled('HeistIsland', false) end)
     pcall(function() if EnableMpDlcMaps then EnableMpDlcMaps(false) end end)
     if GetResourceState('bob74_ipl') == 'started' then
         local ok, NY = pcall(function()
@@ -120,12 +121,12 @@ AddEventHandler('onClientResourceStart', function(res)
     if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
         MRD9.Transition.Leave()
     end
-    print('[jp-meridian9] onClientResourceStart: base state applied (Cayo Perico ON, MpDlcMaps OFF)')
+    print('[jp-meridian9] onClientResourceStart: base state applied (no MAP natives, effects OFF)')
 end)
 
 AddEventHandler('playerSpawned', function()
     m9ApplyBaseClientState()
-    print('[jp-meridian9] playerSpawned: base state re-applied (Cayo Perico ON, MpDlcMaps OFF)')
+    print('[jp-meridian9] playerSpawned: base state re-applied (no MAP natives)')
 end)
 
 CreateThread(function()
@@ -134,7 +135,7 @@ CreateThread(function()
     if MRD9 and MRD9.Transition and MRD9.Transition.Leave then
         MRD9.Transition.Leave()
     end
-    print('[jp-meridian9] CreateThread+2s: base state applied (Cayo Perico ON, MpDlcMaps OFF)')
+    print('[jp-meridian9] CreateThread+2s: base state applied (no MAP natives, effects OFF)')
 end)
 
 -- 緊急復旧コマンド: 世界が壊れたとき F8 で `m9_recover` を叩く
@@ -146,8 +147,8 @@ RegisterCommand('m9_recover', function()
         Wait(0)
     end
 
-    -- INSTRUCTION-020 v5: Cayo Perico を強制 ON、EnableMpDlcMaps は OFF（ESC マップ崩壊回避）
-    pcall(function() SetIslandEnabled('HeistIsland', true) end)
+    -- INSTRUCTION-020 v6: MAP 切替ネイティブを完全撤廃（クライアント環境破壊回避）
+    pcall(function() SetIslandEnabled('HeistIsland', false) end)
     pcall(function() if EnableMpDlcMaps then EnableMpDlcMaps(false) end end)
     Wait(300)
 
