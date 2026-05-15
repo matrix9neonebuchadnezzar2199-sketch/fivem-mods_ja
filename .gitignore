@@ -50,3 +50,7 @@ polapaint/
 
 # jp-pola（ps-camera 日本語派生）: 凍結・GitHub 非公開（ローカルまたは別配布のみ）
 jp-pola/
+
+# jp-meridian9/map: 外部 MAP リソース（The Apocalypse Project 等）の clone 先。
+# 同梱しない方針（LICENSE 不明・再配布リスク回避）。GitHub には push しない。
+jp-meridian9/map/

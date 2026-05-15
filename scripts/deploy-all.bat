@@ -1,6 +1,6 @@
 @echo off
-SET DEV_ROOT=H:\CURSOR\Dev\fivem-mods
-SET SERVER_ROOT=C:\FiveMServer\server-data\resources\[jp-mods]
+SET DEV_ROOT=H:\CURSOR\Dev\fivem-mods_ja
+SET SERVER_ROOT=H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\[jp-mods]
 
 echo 全MODをデプロイ中...
 

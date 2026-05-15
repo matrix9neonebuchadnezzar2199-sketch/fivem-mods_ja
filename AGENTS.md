@@ -34,17 +34,20 @@ jp-<mod名>/ ├── fxmanifest.lua ├── config.lua ├── locales/ �
 
 ## 開発日記（必須・エージェント含む）
 
-- **作業のたびに、触った MOD ごと**にその MOD 配下へ**日時付き**で開発日記を追記する（再現・引継ぎ用。チャットだけに残さない）。
-- **日時の付け方**: 見出しに `YYYY-MM-DD HH:mm`（ローカル時刻）を書く、またはファイル名に `YYYY-MM-DD`（必要なら `_HHmm`）と「開発日記」を含める。
-- **置き場所の既定**
-  - **`jp-<mod名>/`** … 当該フォルダ直下の `YYYY-MM-DD_開発日記.md` を新規作成するか、**同日の既存**開発日記ファイルの末尾へ追記。すでに `docs/diary/` や `docs/` に日記がある MOD は、**既存の慣例のディレクトリを優先**する。
-  - **`RefBoard/`** … `RefBoard/docs/diary/` を用いる（例: `YYYY-MM-DD_開発日記.md` や `YYYY-MM-DD_題名_開発日記.md`）。リブート大きめの経緯は `2026-05-09_local_reboot.md` のような長文ファイルでもよい。
-- **追記する内容の例**: コミットハッシュ、変更要旨、未完了、次にやること、参照した issue/指示。
-- **Cursor の AI エージェント**は、本リポジトリで当該 MOD に変更を入れたセッションの**終了前**に、上記に従い開発日記へ追記する（ユーザーが明示しなくても遵守）。
+詳細仕様は `.cursor/rules/dev-diary-required.mdc` を正とする。要点：
+
+- **保存パス（MOD 作業）**: `<mod>/docs/YYYY-MM-DD_開発日記.html`
+- **保存パス（横断作業）**: `docs/diary/YYYY-MM-DD_開発日記.html`（`.cursor/` 編集や複数 MOD を同時に触る作業）
+- **1 日 1 ファイル**。同日に複数回作業した場合は内部に `<section id="entry-HHMM">` を追記
+- **フォーマット**: HTML のみ。`.md` で新規追加しない（既存 `.md` は履歴として保持）
+- **テンプレ**: `.cursor/templates/diary-template.html` を使う（CSS は `../../.cursor/templates/diary-style.css` が既定）
+- **記録内容**: コミットハッシュ、変更ファイル一覧（➕📝❌🔄）、概要、未完了、動作確認結果
+- **Cursor の AI エージェント**は、コード／設定／ドキュメントを変更したセッションの**終了前**に自律的に追記する（マスター指示を待たない）。実手順は `.cursor/skills/fivem-write-diary/SKILL.md`
 
 ## パス情報
-- 開発フォルダ: H:\CURSOR\Dev\fivem-mods\
-- テストサーバー: C:\FiveMServer\server-data\resources\[jp-mods]\
+- 開発フォルダ: H:\CURSOR\Dev\fivem-mods_ja\
+- テストサーバー: H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\[jp-mods]\
+  - 旧記載 `C:\FiveMServer\server-data\resources\[jp-mods]\` は誤情報（訂正 2026-05-15）
 
 ## イベント命名規則
 すべてのイベント名は `jp-<mod名>:アクション名` とする。
