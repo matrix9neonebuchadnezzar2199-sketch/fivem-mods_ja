@@ -25,30 +25,38 @@ local function lockTimeoutMs()
 end
 
 -- 将来: if Config.Loot.auditLogDenied and row.result ~= 'granted' then return end
+-- DB 障害（テーブル不在等）でも pickup フロー自体が止まらないよう pcall でラップ。
+-- 失敗時は MRD9.Log にフォールバック。サーバ運営が DB を復旧したら自動で書き戻る。
 local function writeLog(row)
     if not row then
         return
     end
-    MySQL.insert.await(
-        [[INSERT INTO mrd9_loot_logs
-            (player_identifier, session_id, mission_id, loot_id, tier, item_id, count,
-             coords_x, coords_y, coords_z, result, fail_reason)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]],
-        {
-            row.identifier or 'unknown',
-            row.sessionId or '',
-            row.missionId,
-            row.lootId or '',
-            row.tier or 'common',
-            row.itemId or '',
-            row.count or 1,
-            row.x,
-            row.y,
-            row.z,
-            row.result or 'failed_other',
-            row.failReason,
-        }
-    )
+    local ok, err = pcall(function()
+        MySQL.insert.await(
+            [[INSERT INTO mrd9_loot_logs
+                (player_identifier, session_id, mission_id, loot_id, tier, item_id, count,
+                 coords_x, coords_y, coords_z, result, fail_reason)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]],
+            {
+                row.identifier or 'unknown',
+                row.sessionId or '',
+                row.missionId,
+                row.lootId or '',
+                row.tier or 'common',
+                row.itemId or '',
+                row.count or 1,
+                row.x,
+                row.y,
+                row.z,
+                row.result or 'failed_other',
+                row.failReason,
+            }
+        )
+    end)
+    if not ok then
+        MRD9.Log('mrd9_loot_logs insert failed: %s (result=%s loot=%s)',
+            tostring(err), tostring(row.result), tostring(row.lootId))
+    end
 end
 
 ---@param session table|nil

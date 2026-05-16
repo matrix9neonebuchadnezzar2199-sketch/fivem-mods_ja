@@ -214,21 +214,13 @@ body.mrd9-hud-phasec-active #app .m9-hud__grid {
     display: flex; flex-direction: column; gap: 1.2vh;
 }
 
-.mrd9-clock-block, .mrd9-metrics-block {
+/* .mrd9-clock-block は撤去。.mrd9-metrics-block のスタイルは共通指定として維持。 */
+.mrd9-metrics-block {
     background: transparent;
     border-right: 2px solid rgba(120,140,160,0.45);
     padding: 1vh 1vw;
     text-align: right;
     text-shadow: 0 1px 2px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.6);
-}
-.mrd9-clock-time {
-    font-size: 2.2rem; font-weight: 300;
-    color: #f0f4f8; letter-spacing: 0.1em;
-    font-variant-numeric: tabular-nums;
-}
-.mrd9-clock-date {
-    font-size: 0.72rem; letter-spacing: 0.18em;
-    color: #a8b4c2; margin-top: 0.2vh;
 }
 
 .mrd9-metric-row {

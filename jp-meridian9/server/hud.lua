@@ -153,8 +153,9 @@ end
 ---@param recipientSrc integer
 ---@return table
 local function buildPhaseCPayload(session, recipientSrc)
-    local now = os.date('*t')
-    local clock = ('%02d:%02d'):format(now.hour, now.min)
+    -- 右上の現地時刻表示は撤去（OS 実時刻が露出していた問題＋世界観的に時間軸が
+    -- 切り離されたサイト・ナインで現実時刻を出す合理性がないため）。残り時間は
+    -- `metrics.extractSeconds` 側に集約する。
     return {
         mission = {
             title = missionTitleFor(session),
@@ -164,7 +165,6 @@ local function buildPhaseCPayload(session, recipientSrc)
         party = MRD9.HUD.GetPartyState(session, recipientSrc),
         loot = MRD9.HUD.GetLootList(session),
         metrics = MRD9.HUD.GetMetrics(session, recipientSrc),
-        clock = clock,
     }
 end
 

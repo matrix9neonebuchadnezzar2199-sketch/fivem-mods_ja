@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>2026-05-17 開発日記 - jp-meridian9</title>
+<link rel="stylesheet" href="../../.cursor/templates/diary-style.css">
+</head>
+<body class="diary">
+<header>
+  <h1>2026-05-17 開発日記</h1>
+  <p>ツール: <strong>jp-meridian9</strong></p>
+</header>
+
+<section class="diary-toc">
+  <h2>目次</h2>
+  <table>
+    <thead>
+      <tr><th>時刻</th><th>概要</th><th>Commit</th><th>詳細</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>00:14</td>
+        <td>DB 障害フォールバック（grant/stats）＋ HUD 右上時計を撤去</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-0014">詳細</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<main>
+<section id="entry-0014" class="entry">
+  <h2>DB 障害時のフォールバック実装と HUD 右上時計の撤去</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>00:14 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot/grant.lua</code>（<code>writeLog</code> を <code>pcall</code> + <code>MRD9.Log</code> 化）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/stats.lua</code>（<code>Update</code> / <code>LogMission</code> を <code>pcall</code> + <code>MRD9.Log</code> 化）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/hud.lua</code>（<code>buildPhaseCPayload</code> から <code>clock</code> を撤去）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/index.html</code>（<code>.mrd9-clock-block</code> を撤去）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud_preview.html</code>（同上）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.js</code>（<code>elClock</code> / <code>renderClock</code> 撤去）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud_preview.js</code>（<code>tickClock</code> 撤去）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.css</code>（<code>.mrd9-clock-block</code> / <code>.mrd9-clock-time</code> / <code>.mrd9-clock-date</code> を撤去、<code>.mrd9-metrics-block</code> 単独にスタイル）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/2026-05-17_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター実機ログで <code>Table 'fivem_db.mrd9_loot_logs' doesn't exist</code> / <code>'fivem_db.mrd9_result_logs' doesn't exist</code> が連続流出。原因はテーブル未作成（<code>sql/install.sql</code> 未投入または別 DB 投入）と判断。プレイは継続できる構造だが、運営デバッグの邪魔と監査ログ欠落を防ぐため、ホットパスの DB 書込を <code>pcall</code> 化して失敗を <code>MRD9.Log</code> にフォールバックさせた。範囲は <strong>ホットパス限定</strong>（<code>loot/grant.lua</code> の <code>writeLog</code>、<code>stats.lua</code> の <code>Update</code> / <code>LogMission</code>）。<code>contract.lua</code> は契約状態が DB 書込成功と一致する必要があるためフェイルファスト維持。</p>
+
+  <p>並行して、HUD 右上の現地時計（<code>#mrd9-clock</code>）を撤去。サーバ側で <code>os.date('*t')</code> から OS 実時間を埋めていた点が世界観に矛盾（ストーリー §「次元の歪みで時間軸が切り離された島」）し、また右下の「制限時間」と表示が重複していたため。<code>renderClock</code> / <code>tickClock</code> / CSS / プレビュー HTML まで一括整理。</p>
+
+  <h3>他コードへの影響と注意</h3>
+  <ul>
+    <li><strong>DB 復旧手順（マスター側作業）：</strong>
+      <ol>
+        <li><code>mysql -u &lt;user&gt; -p fivem_db &lt; jp-meridian9/sql/install.sql</code></li>
+        <li><code>mysql -u &lt;user&gt; -p fivem_db &lt; jp-meridian9/sql/migrations/2026-05-15_mrd9_result_logs_forced.sql</code></li>
+        <li><code>mysql -u &lt;user&gt; -p fivem_db &lt; jp-meridian9/sql/migrations/2026-05-16_mrd9_result_logs_timeout_outofzone.sql</code></li>
+        <li><code>SHOW CREATE TABLE mrd9_result_logs\G</code> で ENUM が <code>'extracted','died','disconnect','forced','timeout','out_of_zone','unknown'</code> になっていることを確認</li>
+      </ol>
+      <code>install.sql</code> は全 <code>CREATE TABLE IF NOT EXISTS</code> なので既存データは壊れない。
+    </li>
+    <li><strong>pcall 化の範囲限定理由：</strong><code>contract.lua</code> の <code>Sign / Suspend / Terminate</code> は <code>IsContracted</code> が DB の真実と一致する前提で機能している。pcall で失敗を握りつぶすと「DB 書込未完了で <code>active</code> 扱い」になり未契約者のセッション侵入を許す。<code>main.lua</code> の admin_list 系は運営の手動 SELECT で副作用が無く、エラーが出るほうがむしろ運営に異常を伝えやすいため pcall しない。</li>
+    <li><strong>NUI 後方互換：</strong>サーバが <code>clock</code> を送らなくなっても、<code>hud:state</code> の handler は <code>p.clock</code> を参照しないので問題なし。古いクライアントが新サーバから受信しても renderClock の null チェックがあるため害なし（ただし古いクライアントは古い <code>#mrd9-clock</code> に <code>--:--</code> が残る—deploy で同時更新前提）。</li>
+    <li><strong>DB 復旧後の挙動：</strong>テーブルが復活すれば pcall は成功側に戻り、自動でログ書込が再開する。コード再変更不要。</li>
+  </ul>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>マスター: DB 復旧 3 ファイル投入 + <code>SHOW CREATE TABLE</code> で ENUM 確認</li>
+    <li>実機: <code>refresh; restart jp-meridian9</code> 後、右上から時計が消え制限時間のみになっていること</li>
+    <li>実機: DB 接続を意図的に切って pickup・extract した時、サーバコンソールに <code>[jp-meridian9] mrd9_loot_logs insert failed: ...</code> が出てもプレイが継続すること（任意検証）</li>
+    <li>運営 DB 障害発生時の Discord Webhook 連携は別途検討（現状は <code>MRD9.Log</code>＝サーバコンソールのみ）</li>
+  </ul>
+</section>
+</main>
+
+</body>
+</html>

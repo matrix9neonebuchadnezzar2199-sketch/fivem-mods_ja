@@ -15,7 +15,6 @@
     var elPartyList = root.querySelector('#mrd9-party-list');
     var elLootList = root.querySelector('#mrd9-loot-list');
     var elLootEmpty = root.querySelector('#mrd9-loot-empty');
-    var elClock = root.querySelector('#mrd9-clock');
     var elKills = root.querySelector('#m-kills');
     var elKillsTarget = root.querySelector('#m-kills-target');
     var elLoot = root.querySelector('#m-loot');
@@ -220,12 +219,6 @@
     }
     setInterval(extractLocalTick, 250);
 
-    function renderClock(clock) {
-        if (elClock && clock) {
-            elClock.textContent = clock;
-        }
-    }
-
     function showPickup(item) {
         if (!elPickupArea) {
             return;
@@ -330,7 +323,6 @@
                 renderParty(p.party);
                 renderLoot(p.loot);
                 renderMetrics(p.metrics);
-                renderClock(p.clock);
                 break;
             case 'hud:selfHp':
                 renderSelfHp(p.hp || 0, p.maxHp || 100);

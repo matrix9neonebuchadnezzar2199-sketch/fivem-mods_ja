@@ -212,16 +212,6 @@
         }, delay);
     }
 
-    // ===== 時刻 =====
-    function tickClock() {
-        var el = document.getElementById('mrd9-clock');
-        if (!el) return;
-        var now = new Date();
-        var hh = String(now.getHours()).padStart(2, '0');
-        var mm = String(now.getMinutes()).padStart(2, '0');
-        el.textContent = hh + ':' + mm;
-    }
-
     // ===== 制限時間 =====
     var extractSeconds = 4 * 60 + 32;
 
@@ -309,8 +299,6 @@
     // ===== 初期化 =====
     renderParty();
     renderLoot();
-    tickClock();
-    setInterval(tickClock, 30 * 1000);
     setInterval(tickExtract, 1000);
 
     setTimeout(function () {

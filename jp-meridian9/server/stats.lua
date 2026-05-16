@@ -54,16 +54,25 @@ function MRD9.Stats.Update(identifier, params)
     local earnings = params.earnings or 0
     local extractSec = params.extractSeconds or 0
 
-    MySQL.update.await(sql, {
-        extractCount,
-        deathCount,
-        earnings,
-        earnings,
-        extractSec,
-        extractSec,
-        extractSec,
-        identifier,
-    })
+    -- DB 障害（テーブル不在等）でも extract/RemovePlayer フローを止めないため pcall でラップ。
+    local ok, err = pcall(function()
+        MySQL.update.await(sql, {
+            extractCount,
+            deathCount,
+            earnings,
+            earnings,
+            extractSec,
+            extractSec,
+            extractSec,
+            identifier,
+        })
+    end)
+    if not ok then
+        if MRD9 and MRD9.Log then
+            MRD9.Log('mrd9_stats update failed: %s (identifier=%s)', tostring(err), tostring(identifier))
+        end
+        return false
+    end
     return true
 end
 
@@ -92,23 +101,33 @@ function MRD9.Stats.LogMission(identifier, params)
     if type(startedAt) ~= 'string' or startedAt == '' then
         startedAt = os.date('%Y-%m-%d %H:%M:%S')
     end
-    MySQL.insert.await(
-        [[INSERT INTO mrd9_mission_logs
-            (session_id, identifier, started_at, ended_at, outcome,
-             items_recovered_json, earnings, mission_type, difficulty)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]],
-        {
-            params.sessionId,
-            identifier,
-            startedAt,
-            params.endedAt,
-            params.outcome,
-            itemsJson,
-            params.earnings or 0,
-            params.missionType,
-            params.difficulty,
-        }
-    )
+    -- DB 障害でも extract/RemovePlayer フローを止めないため pcall でラップ。
+    local ok, err = pcall(function()
+        MySQL.insert.await(
+            [[INSERT INTO mrd9_mission_logs
+                (session_id, identifier, started_at, ended_at, outcome,
+                 items_recovered_json, earnings, mission_type, difficulty)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]],
+            {
+                params.sessionId,
+                identifier,
+                startedAt,
+                params.endedAt,
+                params.outcome,
+                itemsJson,
+                params.earnings or 0,
+                params.missionType,
+                params.difficulty,
+            }
+        )
+    end)
+    if not ok then
+        if MRD9 and MRD9.Log then
+            MRD9.Log('mrd9_mission_logs insert failed: %s (session=%s outcome=%s)',
+                tostring(err), tostring(params.sessionId), tostring(params.outcome))
+        end
+        return false
+    end
     return true
 end
 
