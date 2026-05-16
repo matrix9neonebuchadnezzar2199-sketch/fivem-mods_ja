@@ -9,6 +9,20 @@ MRD9.Arena = MRD9.Arena or {}
 MRD9.ArenaClient = MRD9.ArenaClient or { zombies = {}, downSent = false, monitor = false }
 
 local State = MRD9.ArenaClient
+State.persistentZombies = State.persistentZombies or {}
+
+---@param ent integer
+---@return boolean
+local function zombieIsPersistedForCleanup(ent)
+    local e = State.persistentZombies[ent]
+    if e == true then
+        return true
+    end
+    if type(e) == 'table' and e.persistent == true then
+        return true
+    end
+    return false
+end
 
 local function modelFromName(name)
     if type(name) ~= 'string' or name == '' then
@@ -86,10 +100,20 @@ RegisterNetEvent('jp-meridian9:client:missionSuccess', function()
     end
 end)
 
-RegisterNetEvent('jp-meridian9:client:arenaCleanupZombies', function()
+RegisterNetEvent('jp-meridian9:client:arenaCleanupZombies', function(data)
+    local force = type(data) == 'table' and data.force == true
     for netId, ent in pairs(State.zombies) do
-        deleteZombieEntity(ent)
-        State.zombies[netId] = nil
+        if force or not zombieIsPersistedForCleanup(ent) then
+            deleteZombieEntity(ent)
+            State.zombies[netId] = nil
+            State.persistentZombies[ent] = nil
+        end
+    end
+    if force then
+        for ent in pairs(State.persistentZombies) do
+            deleteZombieEntity(ent)
+            State.persistentZombies[ent] = nil
+        end
     end
 end)
 
@@ -100,11 +124,17 @@ local function startDeathMonitor(netId, ent, sessionId)
         local e = ent
         while State.zombies[nid] == e and DoesEntityExist(e) do
             if IsPedDeadOrDying(e, true) then
-                local n = NetworkGetNetworkIdFromEntity(e)
-                if n and n ~= 0 then
+                local pe = State.persistentZombies[e]
+                local isFiction = type(pe) == 'table' and pe.fiction == true and type(pe.sessionId) == 'string'
+                if isFiction then
+                    TriggerServerEvent('jp-meridian9:server:fictionZombieKilled', { sessionId = pe.sessionId })
+                elseif nid and nid ~= 0 then
                     TriggerServerEvent('jp-meridian9:server:zombieKilled', { sessionId = sid, netId = nid })
                 end
                 State.zombies[nid] = nil
+                if e and e ~= 0 then
+                    State.persistentZombies[e] = nil
+                end
                 return
             end
             Wait(400)
@@ -163,18 +193,44 @@ RegisterNetEvent('jp-meridian9:client:spawnZombie', function(data)
     SetPedSeeingRange(ped, 100.0)
     SetPedHearingRange(ped, 100.0)
 
-    local netId = NetworkGetNetworkIdFromEntity(ped)
+    if not NetworkGetEntityIsNetworked(ped) then
+        NetworkRegisterEntityAsNetworked(ped)
+    end
+    local netId = 0
+    local netDeadline = GetGameTimer() + 5000
+    while GetGameTimer() < netDeadline do
+        if not DoesEntityExist(ped) then
+            return
+        end
+        if NetworkGetEntityIsNetworked(ped) then
+            netId = NetworkGetNetworkIdFromEntity(ped)
+            if netId and netId ~= 0 then
+                break
+            end
+        end
+        Wait(0)
+    end
+
     if not netId or netId == 0 then
         deleteZombieEntity(ped)
         return
     end
 
     State.zombies[netId] = ped
+    local isFiction = type(data.source) == 'string' and string.sub(data.source, 1, 8) == 'fiction:'
+    if (data.persistent == true or isFiction) and ped and ped ~= 0 then
+        State.persistentZombies[ped] = {
+            persistent = data.persistent == true,
+            fiction = isFiction,
+            sessionId = data.sessionId,
+        }
+    end
     TriggerServerEvent('jp-meridian9:server:zombieSpawned', {
         sessionId = data.sessionId,
         netId = netId,
         health = hp,
         isBoss = data.isBoss == true,
+        source = data.source,
     })
 
     local playerPed = PlayerPedId()
@@ -211,5 +267,10 @@ AddEventHandler('onResourceStop', function(res)
     for nid, ent in pairs(State.zombies) do
         deleteZombieEntity(ent)
         State.zombies[nid] = nil
+        State.persistentZombies[ent] = nil
+    end
+    for ent in pairs(State.persistentZombies) do
+        deleteZombieEntity(ent)
+        State.persistentZombies[ent] = nil
     end
 end)

@@ -1,56 +1,50 @@
 -- ============================================================
 -- jp-meridian9 / client/hud.lua
 -- ============================================================
--- 任務中 NUI HUD（INSTRUCTION-014）。フォーカスは取らない。
+-- 任務中 NUI: 旧 `#app` グリッド（ウェーブ帯）＋ Phase-C HUD（`#mrd9-hud-root`）。
+-- Phase-C はフォーカスを取らない。自分 HP はクライアントのみで NUI へ `hud:selfHp`。
 -- ============================================================
 
 MRD9 = MRD9 or {}
 MRD9.HUD = MRD9.HUD or {}
 
----@class Mrd9HudClientMember
----@field src integer
----@field name string
----@field hp integer
----@field maxHp integer
----@field armor integer
----@field alive boolean
----@field isLeader boolean
----@field isSelf boolean
-
 MRD9.HUDClient = MRD9.HUDClient or {
     visible = false,
-    session = { sessionId = '', timerSec = 0, endsAtMs = 0 },
-    self = { src = 0, hp = 0, maxHp = 200, armor = 0 },
-    members = {},
-    inventory = { total = 0, byRarity = { common = 0, uncommon = 0, rare = 0, legendary = 0 } },
-    arena = { active = false, wave = 0, totalWaves = 0, zombiesAlive = 0 },
-    extract = { active = false, label = '' },
 }
 
 local resName = GetCurrentResourceName()
 
 local State = {
-    lastDto = nil,
-    endsAtMs = 0,
-    tickRunning = false,
-    lastSentTimer = -1,
-    lastSentHp = -1,
-    lastSentArmor = -1,
+    phaseCVisible = false,
+    hpMonitorActive = false,
+    lastSelfHp = -1,
 }
+
+local ammoHudSuppressRunning = false
 
 local function hudCfg()
     return Config.HUD or {}
 end
 
-local function buildHudConfigPayload()
-    local c = hudCfg()
-    return {
-        showPartyHP = c.showPartyHP ~= false,
-        showTimer = c.showTimer ~= false,
-        showInventory = c.showInventory ~= false,
-        showWaveBanner = c.showWaveBanner ~= false,
-        inventoryMode = c.inventoryMode or 'byRarity',
-    }
+local function stopAmmoHudSuppress()
+    ammoHudSuppressRunning = false
+end
+
+---@return nil
+local function startAmmoHudSuppress()
+    if hudCfg().hideAmmoHud == false then
+        return
+    end
+    if ammoHudSuppressRunning then
+        return
+    end
+    ammoHudSuppressRunning = true
+    CreateThread(function()
+        while ammoHudSuppressRunning do
+            DisplayAmmoThisFrame(false)
+            Wait(0)
+        end
+    end)
 end
 
 local function buildLocalePayload()
@@ -79,96 +73,57 @@ local function buildLocalePayload()
     }
 end
 
----@param dto table
----@return table
-local function mergeLocalPedIntoDto(dto)
-    local ped = PlayerPedId()
-    local hp, maxHp, armor, alive = 0, 200, 0, false
-    if ped and ped ~= 0 then
-        hp = GetEntityHealth(ped)
-        maxHp = math.max(1, GetEntityMaxHealth(ped))
-        armor = GetPedArmour(ped)
-        alive = not IsPedDeadOrDying(ped, true)
-    end
-    local timerSec = math.max(0, math.floor((State.endsAtMs - GetGameTimer()) / 1000))
-
-    local members = {}
-    for _, row in ipairs(dto.members or {}) do
-        local copy = {
-            src = row.src,
-            name = row.name,
-            hp = row.hp,
-            maxHp = row.maxHp,
-            armor = row.armor,
-            alive = row.alive,
-            isLeader = row.isLeader == true,
-            isSelf = row.isSelf == true,
-        }
-        if copy.isSelf then
-            copy.hp, copy.maxHp, copy.armor, copy.alive = hp, maxHp, armor, alive
-        end
-        members[#members + 1] = copy
-    end
-
-    return {
-        sessionId = dto.sessionId,
-        timerSec = timerSec,
-        self = { hp = hp, maxHp = maxHp, armor = armor },
-        members = members,
-        inventory = dto.inventory or { total = 0, byRarity = {} },
-        arena = dto.arena
-            or { active = false, wave = 0, totalWaves = 0, zombiesAlive = 0 },
-        hudConfig = buildHudConfigPayload(),
-    }
-end
-
-local function syncHudClientFromDto(merged)
-    local c = MRD9.HUDClient
-    c.session.sessionId = merged.sessionId or ''
-    c.session.timerSec = merged.timerSec or 0
-    c.session.endsAtMs = State.endsAtMs
-    c.self.hp = merged.self.hp or 0
-    c.self.maxHp = merged.self.maxHp or 200
-    c.self.armor = merged.self.armor or 0
-    c.members = merged.members or {}
-    c.inventory = merged.inventory or c.inventory
-    c.arena = merged.arena or c.arena
-end
-
-local function stopClientTick()
-    State.tickRunning = false
-end
-
-local function startClientTick()
-    if State.tickRunning then
+---@param payload table|nil
+local function localizeHudLootRows(payload)
+    if type(payload) ~= 'table' or type(payload.loot) ~= 'table' then
         return
     end
-    State.tickRunning = true
-    CreateThread(function()
-        while State.tickRunning and MRD9.CurrentSession and hudCfg().enabled ~= false do
-            local ms = tonumber(hudCfg().tickClientMs) or 250
-            Wait(ms)
-            if not MRD9.CurrentSession or not State.tickRunning then
-                break
-            end
-            local dto = State.lastDto
-            if not dto then
-                goto continue
-            end
-            local merged = mergeLocalPedIntoDto(dto)
-            local timerSec = merged.timerSec
-            local hp = merged.self.hp
-            local armor = merged.self.armor
-            if timerSec ~= State.lastSentTimer or hp ~= State.lastSentHp or armor ~= State.lastSentArmor then
-                State.lastSentTimer = timerSec
-                State.lastSentHp = hp
-                State.lastSentArmor = armor
-                syncHudClientFromDto(merged)
-                SendNUIMessage({ type = 'm9_hud_state', payload = merged })
-            end
-            ::continue::
+    for _idx, row in ipairs(payload.loot) do
+        if type(row) == 'table' and type(row.nameKey) == 'string' and row.nameKey ~= '' then
+            row.label = _(row.nameKey)
         end
-        State.tickRunning = false
+    end
+end
+
+local function sendSelfHp(force)
+    if not State.phaseCVisible then
+        return
+    end
+    local ped = PlayerPedId()
+    if not ped or ped == 0 then
+        return
+    end
+    local rawHp = GetEntityHealth(ped)
+    local rawMax = GetEntityMaxHealth(ped)
+    local hp = math.max(0, rawHp - 100)
+    local maxHp = math.max(1, rawMax - 100)
+    local minDelta = tonumber(hudCfg().selfHpMinDelta) or 1
+    if not force and math.abs(hp - State.lastSelfHp) < minDelta then
+        return
+    end
+    State.lastSelfHp = hp
+    SendNUIMessage({
+        type = 'hud:selfHp',
+        payload = { hp = hp, maxHp = maxHp },
+    })
+end
+
+local function stopHpMonitor()
+    State.hpMonitorActive = false
+end
+
+local function startHpMonitor()
+    if State.hpMonitorActive then
+        return
+    end
+    State.hpMonitorActive = true
+    CreateThread(function()
+        local poll = tonumber(hudCfg().selfHpPollMs) or 250
+        while State.hpMonitorActive and State.phaseCVisible do
+            sendSelfHp(false)
+            Wait(poll)
+        end
+        State.hpMonitorActive = false
     end)
 end
 
@@ -177,22 +132,25 @@ function MRD9.HUD.OnMissionStart(data)
     if hudCfg().enabled == false then
         return
     end
+    stopAmmoHudSuppress()
     MRD9.HUDClient.visible = true
-    State.lastDto = nil
-    State.endsAtMs = 0
-    State.lastSentTimer = -1
-    State.lastSentHp = -1
-    State.lastSentArmor = -1
+    State.phaseCVisible = true
+    State.lastSelfHp = -1
     SendNUIMessage({ type = 'm9_hud_locale', payload = buildLocalePayload() })
     SendNUIMessage({ type = 'm9_hud_show', payload = {} })
-    startClientTick()
+    SendNUIMessage({ type = 'hud:show', payload = {} })
+    sendSelfHp(true)
+    startHpMonitor()
+    startAmmoHudSuppress()
 end
 
 ---@param data table|nil
 function MRD9.HUD.OnMissionEnd(data)
-    stopClientTick()
+    stopAmmoHudSuppress()
+    stopHpMonitor()
     MRD9.HUDClient.visible = false
-    State.lastDto = nil
+    State.phaseCVisible = false
+    State.lastSelfHp = -1
     if type(data) == 'table' and data.reason == 'extracted' then
         local ms = tonumber(hudCfg().waveEventMs) or 4500
         SendNUIMessage({
@@ -200,6 +158,7 @@ function MRD9.HUD.OnMissionEnd(data)
             payload = { kind = 'extract_success', ms = ms, label = '' },
         })
     end
+    SendNUIMessage({ type = 'hud:hide', payload = {} })
     SendNUIMessage({ type = 'm9_hud_hide', payload = {} })
 end
 
@@ -225,34 +184,49 @@ function MRD9.HUD.PushEvent(kind, opts)
     })
 end
 
-RegisterNetEvent('jp-meridian9:client:hud:state', function(dto)
+RegisterNetEvent('jp-meridian9:client:hud:state', function(payload)
+    if hudCfg().enabled == false or not State.phaseCVisible then
+        return
+    end
+    if type(payload) ~= 'table' then
+        return
+    end
+    localizeHudLootRows(payload)
+    SendNUIMessage({ type = 'hud:state', payload = payload })
+end)
+
+RegisterNetEvent('jp-meridian9:client:hud:pickup', function(payload)
     if hudCfg().enabled == false then
         return
     end
-    if type(dto) ~= 'table' then
+    if type(payload) ~= 'table' then
         return
     end
-    if not MRD9.CurrentSession then
-        return
+    if type(payload.nameKey) == 'string' and payload.nameKey ~= '' then
+        payload.label = _(payload.nameKey)
     end
-    State.lastDto = dto
-    State.endsAtMs = GetGameTimer() + (tonumber(dto.timerSec) or 0) * 1000
+    SendNUIMessage({ type = 'hud:pickup', payload = payload })
+end)
 
-    local merged = mergeLocalPedIntoDto(dto)
-    State.lastSentTimer = merged.timerSec
-    State.lastSentHp = merged.self.hp
-    State.lastSentArmor = merged.self.armor
-    syncHudClientFromDto(merged)
-    SendNUIMessage({ type = 'm9_hud_state', payload = merged })
+RegisterNetEvent('jp-meridian9:client:hud:partyLeave', function(payload)
+    if hudCfg().enabled == false or not State.phaseCVisible then
+        return
+    end
+    if type(payload) ~= 'table' then
+        return
+    end
+    SendNUIMessage({ type = 'hud:partyLeave', payload = payload })
 end)
 
 AddEventHandler('onResourceStop', function(res)
     if res ~= resName then
         return
     end
-    stopClientTick()
+    stopAmmoHudSuppress()
+    stopHpMonitor()
     MRD9.HUDClient.visible = false
-    State.lastDto = nil
+    State.phaseCVisible = false
+    SendNUIMessage({ type = 'hud:hide', payload = {} })
     SendNUIMessage({ type = 'm9_hud_hide', payload = {} })
     SetNuiFocus(false, false)
 end)

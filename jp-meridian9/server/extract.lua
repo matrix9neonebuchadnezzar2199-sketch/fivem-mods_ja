@@ -33,6 +33,9 @@ end
 ---@param inv table|nil
 ---@return table
 local function snapshotInventory(inv)
+    if MRD9.FlattenMissionInventory then
+        return MRD9.FlattenMissionInventory(inv)
+    end
     local out = {}
     if type(inv) ~= 'table' then
         return out
@@ -65,7 +68,8 @@ end
 ---@param session table
 ---@param src integer
 ---@param outcome string
-local function logMissionFor(session, src, outcome)
+---@param earningsOverride integer|nil
+local function logMissionFor(session, src, outcome, earningsOverride)
     if not MRD9.Stats or not MRD9.Stats.LogMission then
         return
     end
@@ -85,7 +89,7 @@ local function logMissionFor(session, src, outcome)
         endedAt = os.date('%Y-%m-%d %H:%M:%S'),
         outcome = outcome,
         items = items,
-        earnings = 0,
+        earnings = earningsOverride or 0,
         missionType = session.mission and session.mission.type or 'SAMPLE_RECOVERY',
         difficulty = session.mission and session.mission.difficulty or 'NORMAL',
     })
@@ -164,7 +168,16 @@ lib.callback.register('jp-meridian9:extract:request', function(source, pointIdx)
 
     lastExtractMs[src] = now
     recordExtractedSnapshot(session, src)
-    logMissionFor(session, src, 'extracted')
+
+    local finalizeEarnings = 0
+    if MRD9.Result and MRD9.Result.Finalize then
+        local okFin, info = MRD9.Result.Finalize(session, src)
+        if okFin and type(info) == 'table' and type(info.total) == 'number' then
+            finalizeEarnings = info.total
+        end
+    end
+
+    logMissionFor(session, src, 'extracted', finalizeEarnings)
 
     if MRD9.Stats and MRD9.Stats.Update then
         local identifier = MRD9.GetIdentifier(src)
@@ -174,7 +187,7 @@ lib.callback.register('jp-meridian9:extract:request', function(source, pointIdx)
             MRD9.Stats.Update(identifier, {
                 extracted = true,
                 died = false,
-                earnings = 0,
+                earnings = finalizeEarnings,
                 extractSeconds = elapsed > 0 and elapsed or nil,
             })
         end
@@ -203,7 +216,27 @@ if Config.Debug then
             return
         end
         recordExtractedSnapshot(s, source)
-        logMissionFor(s, source, 'extracted')
+        local finalizeEarnings = 0
+        if MRD9.Result and MRD9.Result.Finalize then
+            local okFin, info = MRD9.Result.Finalize(s, source)
+            if okFin and type(info) == 'table' and type(info.total) == 'number' then
+                finalizeEarnings = info.total
+            end
+        end
+        logMissionFor(s, source, 'extracted', finalizeEarnings)
+        if MRD9.Stats and MRD9.Stats.Update then
+            local identifier = MRD9.GetIdentifier(source)
+            if identifier and identifier ~= '' then
+                local startedAt = s.startedAt or GetGameTimer()
+                local elapsed = math.floor((GetGameTimer() - startedAt) / 1000)
+                MRD9.Stats.Update(identifier, {
+                    extracted = true,
+                    died = false,
+                    earnings = finalizeEarnings,
+                    extractSeconds = elapsed > 0 and elapsed or nil,
+                })
+            end
+        end
         MRD9.Session.RemovePlayer(source, 'extracted')
     end, false)
 end

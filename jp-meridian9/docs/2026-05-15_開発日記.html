@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>2026-05-15 開発日記 - jp-meridian9</title>
+<link rel="stylesheet" href="../../.cursor/templates/diary-style.css">
+</head>
+<body class="diary">
+<header>
+  <h1>2026-05-15 開発日記</h1>
+  <p>ツール: <strong>jp-meridian9</strong></p>
+</header>
+
+<section class="diary-toc">
+  <h2>目次</h2>
+  <table>
+    <thead>
+      <tr><th>時刻</th><th>概要</th><th>Commit</th><th>詳細</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>00:14</td>
+        <td>LootSpawns を Cayo 座標ダンプ 133 点へ一括反映</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-0014">詳細</a></td>
+      </tr>
+      <tr>
+        <td>00:24</td>
+        <td>セッション締め・ルート回収フロー実機確認メモ</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-0024">詳細</a></td>
+      </tr>
+      <tr>
+        <td>11:35</td>
+        <td>サブフェーズ B-a: リザルト NUI 骨組み（result.html 単体プレビュー・files 登録）</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1135">詳細</a></td>
+      </tr>
+      <tr>
+        <td>12:02</td>
+        <td>リザルト用アイコン: <code>image/item</code> を NUI <code>files</code> 登録・<code>item-icon-map.js</code></td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1202">詳細</a></td>
+      </tr>
+      <tr>
+        <td>12:00</td>
+        <td>ルート付与: roll/grant 分離・案A ロック・AddItem・mrd9_loot_logs</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1200">詳細</a></td>
+      </tr>
+      <tr>
+        <td>13:00</td>
+        <td>案γ fictionTag 近接演出・SpawnAt・永続ゾンビ（パターンB）・mrd9_fiction_events</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1300">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:00</td>
+        <td>サブフェーズ A: リザルト査定・論理在庫 main/safe・fiction 同時上限・mrd9_result_logs</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1400">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:09</td>
+        <td>サブフェーズ B-b: リザルト NUI を index 統合・<code>type: result:show</code>・<code>MRD9.Result.PickVegaLine</code></td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1409">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:16</td>
+        <td>実機テスト計画・ロードマップ・SQL 診断を <code>docs/*.md</code> に記録</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1416">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:25</td>
+        <td>ルート MAP: 固定スポーンの座標シャッフル・<code>maxPerSession=50</code>（ブリップ重複解消）</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1425">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:35</td>
+        <td>リザルト UI 2 倍化・死亡帰還の復活同期・ルート地面補正の注記</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1435">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:42</td>
+        <td><code>lootRegister</code>: <code>for _, e</code> がロケール <code>_()</code> をシャドウし F8 エラー</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1442">詳細</a></td>
+      </tr>
+      <tr>
+        <td>14:48</td>
+        <td><code>_()</code> シャドウ再発防止を <code>FORMAL_POLICIES</code>・ロードマップ G 行に追記</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1448">詳細</a></td>
+      </tr>
+      <tr>
+        <td>15:02</td>
+        <td>ルート黄マーカー Z・TextUI 右＆緑・リザルト中の発砲抑止</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1502">詳細</a></td>
+      </tr>
+      <tr>
+        <td>15:18</td>
+        <td>MAP ルートブリップ遅延: 順次 waitNetEntity と座標未同梱を解消</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1518">詳細</a></td>
+      </tr>
+      <tr>
+        <td>15:20</td>
+        <td>Cayo 監視塔周辺 LootSpawns 削除（屋根上クラスタ・実測 vector4 近傍）</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1520">詳細</a></td>
+      </tr>
+      <tr>
+        <td>15:34</td>
+        <td>lootSpawnBatch 地面探査の上限 ms を Config 化（MAP 表示 2 分超の直列遅延対策）</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1534">詳細</a></td>
+      </tr>
+      <tr>
+        <td>16:00</td>
+        <td>任務中 HUD 左カラム案: <code>hud_preview.html</code> ブラウザ単体プレビュー</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1600">詳細</a></td>
+      </tr>
+      <tr>
+        <td>18:30</td>
+        <td>回収アイテム: 英語 PNG 名・<code>nameKey</code> i18n・<code>locales/en.lua</code></td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1830">詳細</a></td>
+      </tr>
+      <tr>
+        <td>19:10</td>
+        <td>入手トーストを HUD 外レイヤーへ／脱出リザルト閲覧後に LS テレポート</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1910">詳細</a></td>
+      </tr>
+      <tr>
+        <td>19:06</td>
+        <td>Phase-C HUD: NUI アイコン URL（cfx-nui）・回収リスト差分描画・HUD zoom</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1906">詳細</a></td>
+      </tr>
+      <tr>
+        <td>19:46</td>
+        <td>ヴェガ再訪メニューから「回収物売却」WIP 項目を削除</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-1946">詳細</a></td>
+      </tr>
+      <tr>
+        <td>19:49</td>
+        <td>NUI スケールを 2 倍相当から 1.5 倍相当へ（zoom / uiScale / --m9-scale）</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1949">詳細</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<main>
+<section id="entry-0014" class="entry">
+  <h2>LootSpawns を Cayo 座標ダンプ 133 点へ一括反映</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>00:14 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/scripts/gen-lootspawns-snippet.mjs</code>（作成）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/scripts/merge-lootspawns-into-config.mjs</code>（作成）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/scripts/_loot_spawns_body.lua.txt</code>（生成物）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code>（作成）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.LootSpawns</code> 全面差し替え・手順コメント）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p><code>scripts/_loot_coords_block.txt</code> の <code>vector4</code> から xyz を抽出し、同一座標を除去して 133 スロット化。<code>gen-lootspawns-snippet.mjs</code> で UTF-8 直書き、<code>merge-lootspawns-into-config.mjs</code> で <code>config.lua</code> のアンカーブロックを置換。PowerShell リダイレクトは日本語 UTF-8 が壊れるため使用しない。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li><code>Config.Loot.maxPerSession</code>（既定 24）とプール 133 の関係で重複抽選が増える。運用で詰まるなら上限または <code>minDistanceBetween</code> の見直し。</li>
+    <li>実機でルート prop の地面補正・ピックアップ距離を確認。→ MAP 探索・回収・表示消去はマスター確認済み（アイテム中身は未実装のまま）。</li>
+  </ul>
+</section>
+
+<section id="entry-0024" class="entry">
+  <h2>セッション締め・ルート回収フロー実機確認メモ</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>00:24 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（本セッションのコード変更は未コミット）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code>（本エントリ追記）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター指示により本セッションの作業はここまでとする。実機確認として、MAP 上でルートを探し回収すると当該表示が消える一連のフローは問題なく動作している旨を記録する。アイテムの中身（報酬定義・連携など）は未実装のまま。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>次回以降: 報酬・インベントリのサーバー権威実装、<code>Config.Loot.maxPerSession</code> と 133 スロットの運用調整。</li>
+  </ul>
+</section>
+
+<section id="entry-1135" class="entry">
+  <h2>サブフェーズ B-a: リザルト NUI 骨組み（ブラウザ単体プレビュー）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>11:35 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/html/result.html</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/result.css</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/result.js</code>（<code>action: showResult</code> / 単体モック / ESC・Space で S2 スキップ）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（<code>files</code> に result 3 点追加。<code>ui_page</code> は HUD の <code>html/index.html</code> のみ維持）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>FiveM はリソースあたり <code>ui_page</code> が原則 1 つため、<code>result.html</code> を第二 <code>ui_page</code> にしない。<code>files</code> に列挙し、<code>python -m http.server</code> 等で <code>result.html</code> を開いてレイアウト・アニメ・<code>?dead</code> / <code>?empty</code> / <code>?disconnect</code> を確認可能にした。B-b で <code>index.html</code> から同じ CSS/JS を読み込むか、親へマウントする形で実機接続する。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>B-b: <code>client/result.lua</code> の <code>SendNUIMessage</code>・<code>SetNuiFocus</code>・<code>RegisterNUICallback('result:close')</code> と index 統合。</li>
+    <li>B-c 以降: 演出強化・<code>PickVegaLine</code>・ox アイコン・SFX。</li>
+  </ul>
+</section>
+
+<section id="entry-1202" class="entry">
+  <h2>リザルト用アイコン: <code>image/item</code> を NUI 配信・マップ化</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>12:02 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/html/item-icon-map.js</code>（<code>MRD9_ITEM_ICON_MAP</code>：<code>Config.LootTable</code> の <code>id</code> とモック用 id を仮割当）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.html</code>（マップを先読み）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.css</code> / <code>jp-meridian9/html/result.js</code>（<code>item.icon</code> またはマップ経由で <code>&lt;img&gt;</code>、失敗時は頭文字フォールバック）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（<code>image/item/*.png</code> と <code>item-icon-map.js</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター指定の <code>jp-meridian9/image/item/*.png</code>（16 枚）を <code>files</code> にワイルドカードで列挙。ハッシュ風ファイル名のため <code>itemId → 相対パス</code> は <code>html/item-icon-map.js</code> で管理。未割当の PNG はマップに未使用のまま残し、見た目の対応は後から差し替え可能。単体プレビューでは <code>../image/item/...</code> で読み込む。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実物アートと <code>id</code> の突合・未使用 PNG の割当または削除整理。</li>
+    <li>B-b 統合時に <code>index.html</code> 側でも <code>item-icon-map.js</code> を先に読み込む。</li>
+  </ul>
+</section>
+
+<section id="entry-1200" class="entry">
+  <h2>ルート付与: roll/grant 分離・案A ロック・AddItem・mrd9_loot_logs</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>12:00 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/server/loot/roll.lua</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/server/loot/grant.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/framework.lua</code>（<code>MRD9.Framework.AddItem</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/sql/install.sql</code>（<code>mrd9_loot_logs</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>pickupLockMs</code> / <code>standaloneItemEvent</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>設計合意に基づき、抽選を <code>roll.lua</code> に移管、付与・ロック・監査ログを <code>grant.lua</code> に集約。pickup は検証後 <code>RollAndGrant</code> のみ。案X で拒否も <code>mrd9_loot_logs</code> へ記録（<code>result</code> は 5 値 ENUM、細分は <code>fail_reason</code>）。<strong>#entry-1400</strong> 以降、実インベントリ即時付与は廃止し <code>MRD9.Result.Finalize</code> に移行（当時は <code>MRD9.Framework.AddItem</code> を grant から呼んでいた）。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>DB: <code>sql/install.sql</code> の <code>mrd9_loot_logs</code> を対象 DB に適用。</li>
+    <li>実機: 満杯時の <code>failed_inventory_full</code>・ロック・<code>lootRemoved</code> 単方向の回帰確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1300" class="entry">
+  <h2>案γ fictionTag 近接演出・MRD9.Arena.SpawnAt・永続ゾンビ（パターンB）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>13:00 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/server/loot/fiction.lua</code>（<code>lib.callback</code> <code>jp-meridian9:loot:fictionApproach</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/arena/spawn.lua</code>（<code>PickCoordsNearPoint</code> / <code>SpawnAt</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/arena/arena.lua</code>（fiction スポーンをウェーブ集計から除外、<code>force</code> 付き cleanup）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot.lua</code>（<code>fictionTag</code> / <code>spawnedFor</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/arena.lua</code>（<code>persistentZombies</code> / <code>arenaCleanupZombies</code> の <code>force</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/loot.lua</code>（ブリップ・target・近接→callback）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.FictionTags</code> / <code>subject_zero_cell</code> に <code>fictionTag</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/sql/install.sql</code>（<code>mrd9_fiction_events</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/CREDITS.md</code> / <code>NOTICE</code> / <code>README.md</code>（<code>zombie_ai.lua</code> 表記を <code>client/arena.lua</code> に整合）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>案γに沿い <code>fictionTag</code> をクライアントへ同梱し、<code>subject_zero</code> は赤点滅ブリップ・専用 target ラベル・20m 近接でゾンビ 3 体（loot 周囲 5〜10m、トリガー本人クライアントで <code>SpawnAt</code>）。永続は <code>State.persistentZombies</code> 並走（パターンB）、通常 <code>arenaCleanupZombies</code> は温存、セッション破棄・admin_kill のみ <code>force=true</code>。近接は連投抑止のため NetEvent ではなく <code>lib.callback</code> でサーバー権威判定。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>DB: <code>mrd9_fiction_events</code> を対象 DB に適用。</li>
+    <li>実機: legendary 抽選で <code>subject_zero</code> が出た場合のブリップ・スポーン・再接近抑止・任務終了後の残存／全消しの確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1400" class="entry">
+  <h2>サブフェーズ A: リザルト査定・論理在庫 main/safe・fiction 同時上限</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:00 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/server/result.lua</code>（<code>Finalize</code> / <code>Discard</code> / <code>m9_cashout</code>）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/client/result.lua</code>（暫定 <code>lib.alertDialog</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/shared/utils.lua</code>（<code>MRD9.FlattenMissionInventory</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/extract.lua</code>（<code>Finalize</code> 呼び出し・<code>logMissionFor</code> に earnings）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/session.lua</code>（<code>Discard</code>・在庫 <code>{main,safe}</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot/grant.lua</code>（<code>AddItem</code> 廃止・<code>.main</code> のみ加算）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot/fiction.lua</code>（同時上限・<code>spawnZombies_capped</code>・<code>fictionZombieKilled</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/hud.lua</code>（フラット化集計）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/arena.lua</code>（fiction 死亡通知）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.Result</code> / <code>Config.Currencies</code> / <code>maxConcurrentPerSession</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/sql/install.sql</code>（<code>mrd9_result_logs</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>選択肢 C に沿い、ルート取得は論理在庫 <code>.main</code> のみ加算、脱出時 <code>MRD9.Result.Finalize</code> で査定・<code>mrd9_credit</code> または現金付与。死亡/切断は <code>Discard</code> で <code>mrd9_result_logs</code> 記録と暫定ダイアログ。fiction ゾンビは <code>session.fictionAliveCount</code> と <code>fictionZombieKilled</code> で管理、上限で <code>spawnZombies_capped</code>。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>DB: <code>mrd9_result_logs</code> を適用。ox 運用なら <code>mrd9_credit</code> を <code>items</code> に定義。</li>
+    <li>サブフェーズ B: NUI 本実装（B-b 完了）。</li>
+  </ul>
+</section>
+
+<section id="entry-1409" class="entry">
+  <h2>サブフェーズ B-b: リザルト NUI 実機接続（<code>mrd9-</code> スコープ・<code>result:show</code>）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:09 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.js</code> / <code>result.css</code>（<code>#mrd9-result-root</code>・<code>type</code> 主／<code>action</code> 互換・ESC/Space 二段）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/index.html</code>（オーバレイ DOM・<code>result.css</code> / <code>item-icon-map.js</code> / <code>result.js</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.html</code>（ブラウザ単体プレビュー用に同一 DOM）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/result.lua</code>（<code>SetNuiFocus</code>・<code>result:close</code>・<code>result:hide</code>・旧 <code>showDialog</code> シム）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/result.lua</code>（<code>buildItemEntries</code>・<code>MRD9.Result.PickVegaLine</code>・<code>TriggerClientEvent('…:show')</code>・切断時 <code>GetPlayerPing</code> ガード）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>HUD の単一 <code>ui_page</code> にリザルトを埋め込み、CSS は <code>#mrd9-result-root</code> 配下に限定。NUI メッセージは <code>type: result:show</code> / <code>result:hide</code>（移行期間は <code>showResult</code> 等も受理）。サーバは査定済み行を <code>buildItemEntries</code> で組み、<code>def.name</code> をラベルに使用。切断でクライアント不在の可能性がある場合は <code>GetPlayerPing(src) &gt; 0</code> のときのみ NUI 送信。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 表の 5 パターン（通常・空・Subject-0・死亡・切断）と二重 <code>Finalize</code> 連打時の挙動。</li>
+    <li>B-c 以降: 演出・SFX・ox アイコン優先など。</li>
+  </ul>
+</section>
+
+<section id="entry-1416" class="entry">
+  <h2>実機テスト計画・ロードマップ・SQL 診断の文書化</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:16 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/sql_diagnostics.md</code>（確認用 SQL・<code>mrd9_result_logs.result</code> の ENUM 注記）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/TEST_PLAN_AND_ROADMAP.md</code>（A-1〜A-4 表・フェーズ 1〜4 手順・C〜G ロードマップ・依存図・判断メモ）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター提示の実機テスト項目（リザルト・NUI・fiction・loot）を影響度順に整理し、スモーク〜DB 集計の推奨手順を記載。今後の実装はフェーズ C（演出）→D（経済）→E（コンテンツ）→F（世界観）、G（負債解消）は並行可とする依存マップを同一文書にまとめた。SQL は <code>sql/install.sql</code> の列名に合わせ、DB の <code>disconnect</code> と NUI の <code>disconnected</code> の表記差を注記した。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>フェーズ 1 スモーク実施。逸脱時のみ報告。</li>
+    <li>マスター判断: テスト分担、C〜F の順序入れ替え、G の並行可否。</li>
+  </ul>
+</section>
+
+<section id="entry-1425" class="entry">
+  <h2>ルート MAP 表示: 固定座標の重複割当を解消・セッション本数 50</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:25 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot.lua</code>（<code>Config.LootSpawns</code> 使用時: シャッフル順で座標を消費、超過分はランダム＋ XY ジッター）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>maxPerSession = 50</code> とコメント）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>固定スロット時に毎回 <code>math.random(1, #fixed)</code> で座標を選んでいたため、多数のルートが同一 XY に重なり <code>AddBlipForEntity</code> が MAP 上で1点に見えていた。先頭 <code>#fixed</code> 本はシャッフル順で重複なしに割当、それを超える本数のみランダム＋微小オフセット。運用要望により <code>maxPerSession</code> を 50 に変更。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機でミニマップ／拡大 MAP に黄ブリップが期待本数出るか確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1435" class="entry">
+  <h2>リザルト UI 2 倍化・死亡帰還の復活同期・ルート地面補正の注記</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:35 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.css</code>（可読性のためフォント・ポートレイト・内訳表を約 2 倍）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/main.lua</code>（死亡系: <code>NetworkResurrectLocalPlayer</code>、帰還後の再復活・<code>SetPedCanSwitchWeapon</code>・<code>DisplayRadar(true)</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/result.lua</code>（<code>result:close</code> / <code>result:hide</code> / <code>onResourceStop</code> で <code>DisplayRadar(true)</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/transition.lua</code>（<code>TeleportToLosSantos</code> 完了時 <code>DisplayRadar(true)</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/loot.lua</code>（<code>resolveLootGroundZ</code>: 全ルート prop が本関数経由である旨のコメント）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>実機でリザルト画面の文字が小さかったため CSS を約 2 倍に調整。死亡→リザルト→LS 帰還後に武器装備失敗・MAP 不能となる報告に対し、任務終了時に <code>NetworkResurrectLocalPlayer</code> で内部死亡状態を明示的に解除し、テレポート完了後に再度同期＋ミニマップ復帰を入れた。ルートの地面補正は既に <code>lootSpawnBatch</code> の全 prop で <code>resolveLootGroundZ</code> を通しているため、コードコメントで明文化した。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 死亡フルパスで ox_inventory 装備・拡大マップ・リザルト可読性を再確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1442" class="entry">
+  <h2><code>lootRegister</code>: ループ変数 <code>_</code> がロケール関数 <code>_()</code> をシャドウ</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:42 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/client/loot.lua</code>（<code>for _, e in ipairs(data.entries)</code> → <code>for i, e in ...</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>F8: <code>attempt to call a number value (local '_')</code>。<code>ipairs</code> の第1戻り値はインデックス（数値）のため、<code>for _, e in ipairs(...)</code> ブロック内では <code>_('loot_pickup_label')</code> が「数値を関数呼び」になっていた。インデックス名を <code>i</code> に変更して解消。以降、ループとロケールで <code>_</code> を共有しない。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: <code>lootRegister</code> 後の ox_target・ブリップが全件載るか確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1448" class="entry">
+  <h2><code>_()</code> シャドウ再発防止を方針書・ロードマップに明文化</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>14:48 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/FORMAL_POLICIES.md</code>（INSTRUCTION-001 補足に <code>for _,</code> / <code>local _,</code> と <code>_()</code> の衝突禁止・grep 例・日記 <code>#entry-1442</code> リンク）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/TEST_PLAN_AND_ROADMAP.md</code>（フェーズ G 行に G-4 ドキュメント・慣習の一行）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター提案の予防策を最小限反映。新規 <code>CODING_GUIDELINES.md</code> は作らず、既存の正式方針に追記して単一の参照元にした。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>特になし（A-1〜A-4 スモークはマスター側継続）。</li>
+  </ul>
+</section>
+
+<section id="entry-1502" class="entry">
+  <h2>ルート黄マーカー Z・TextUI 右＆緑・リザルト中の発砲抑止</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>15:02 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.Loot</code> / <code>Config.Extract</code> に TextUI 位置・緑スタイル・円柱 Z オフセット）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/loot.lua</code>（DrawMarker の Z、<code>showTextUI</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/extract.lua</code>（同上）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/result.lua</code>（<code>DisablePlayerFiring</code> + <code>DisableControlAction</code> ガードスレッド）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.js</code>（オーバレイ上の右クリック <code>preventDefault</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>黄円柱が prop 原点より下に描かれ地中に沈んでいたため、<code>markerCylinderZOffset</code> で上方向へ。E 案内は <code>right-center</code> と緑背景を <code>Config</code> 化。リザルト NUI 表示中に右クリックで発砲する件は Lua 側で照準・攻撃系コントロールを抑止し、NUI 側でも右ボタンの伝播を抑える。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: マーカー高さ・TextUI 位置色・リザルト右クリックを再確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1518" class="entry">
+  <h2>MAP ルートブリップ遅延: 順次 <code>waitNetEntity</code> と座標未同梱を解消</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>15:18 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot.lua</code>（<code>lootRegister</code> エントリに <code>x,y,z</code> を同梱）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/loot.lua</code>（即 <code>AddBlipForCoord</code>、エントリごと並列登録、<code>pendingCoord</code> でマーカー／近接、entity 確定後に entity blip＋ox_target）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p><code>lootRegister</code> が <code>waitNetEntity(20s)</code> を<strong>順番</strong>に回しており、ストリーミング外の net entity が返るまで後続のブリップ登録が進まなかった。脱出付近まで進むと prop が載り一気に進む挙動と一致。対策: サーバーが設計／報告座標を同梱しクライアントは即座標 blip、各エントリは並列スレッドで entity 待ち後に差し替え。近接 E も <code>pendingCoord</code> 距離でサーバー権威ピックアップと整合。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 任務開始直後から ESC マップに黄点が並ぶか、リーダー／非リーダー両方で確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1520" class="entry">
+  <h2>Cayo 監視塔周辺 LootSpawns 削除（屋根上クラスタ・実測 vector4 近傍）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>15:20 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.LootSpawns</code> から 5211〜5216 / -5132〜-5122 帯 5 点、5187〜5195 帯 4 点、5183,-5148 付近 1 点を削除。理由をコメントで注記）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター実測の <code>m9_cayo coords</code>（vector4、足元 z 約 7〜10）に対応する XY 付近の固定スロットが、設定上の z（3〜6）より上にルートが乗り屋根上に見える／回収しづらいとの報告のため、同一建物周辺クラスタと南西の連続点、および <code>5183,-5148</code> 近傍 1 点をプールから除外した。プール本数は 9 本減。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 当該エリアでルートが地面付近に出るか、ブリップ・黄マーカー・回収を再確認。</li>
+  </ul>
+</section>
+
+<section id="entry-1534" class="entry">
+  <h2>lootSpawnBatch 地面探査の上限 ms を Config 化（MAP 表示 2 分超の直列遅延対策）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>15:34 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/client/loot.lua</code>（<code>resolveLootGroundZ</code> に <code>opts.deadlineMs</code>。<code>lootSpawnBatch</code> は <code>Config.Loot.batchGroundResolveMs</code> を使用）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>batchGroundResolveMs = 700</code> と日本語コメント）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター報告: アイテム MAP 表示まで約 2 分 40 秒。リーダーが <code>lootSpawnBatch</code> で <code>maxPerSession</code> 本を<strong>順番に</strong>処理し、各本で <code>resolveLootGroundZ</code> がコリジョン未ロード時に最大 3500ms まで回り得るため、理論上は <code>50×3.5s</code> 級の末尾遅延が起きうる。バッチ専用に 1 点あたりの探査上限を <code>batchGroundResolveMs</code>（既定 700）で切り、タイムアウト時は従来どおりヒント Z にフォールバック。非リーダー含む <code>lootRegister</code> は ack 完了後なので同じ壁にぶつかっていた。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 任務開始直後の MAP 黄点出現までの秒数と、袋が明らかに浮くスロットが増えないか（増えれば <code>batchGroundResolveMs</code> を 900〜1200 で様子見）。</li>
+  </ul>
+</section>
+
+<section id="entry-1600" class="entry">
+  <h2>任務中 HUD 左カラム案: <code>hud_preview.html</code> ブラウザ単体プレビュー</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>16:00 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/html/hud_preview.html</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/hud.css</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/hud_preview.js</code>（モック・<code>item-icon-map.js</code> 連携・URL 解決）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（<code>files</code> に上記 3 点を列挙）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター仕様に沿い、左カラム（任務・パーティ・RECOVERED）、右上（時計＋メトリクス）、中央下トースト、プレビュー用操作パネルを実装。<code>result.css</code> に近いスキャンラインを <code>.mrd9-hud-bg::before</code> で付与。アイコンは <code>new URL('../image/…', location)</code> で <code>jp-meridian9</code> を cwd にした <code>http.server</code> から <code>/html/hud_preview.html</code> で開く前提（<code>html/</code> のみ cwd だと画像 404）。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>プレビューでレイアウト確定後: <code>index.html</code> 統合・<code>client/hud.lua</code> からの <code>SendNUIMessage</code>・<code>Config.HUD.metrics</code> 等（マスター設計メモの 1〜6）。</li>
+  </ul>
+</section>
+
+<section id="entry-1730" class="entry">
+  <h2>HUD プレビュー改訂: 透明ブロック・日本語・離脱バナー・回収数（L2 注記）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>17:30 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong>（作業ツリー未コミット分あり）</span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud_preview.html</code>（日本語ラベル・WAVE 削除・離脱バナー領域・操作ボタン拡張・<code>item-icon-map.js</code> 維持）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.css</code>（透明ブロック・制限時間警告・離脱バナー・<code>tier-common</code>・スキャンライン・デバッグ <code>pointer-events</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud_preview.js</code>（<code>status</code> 遷移・<code>partyLeave</code>・<code>tickExtract</code> の null 安全・<code>HUD_PREVIEW</code> 定数）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター指摘を反映。右上メトリクスは「キル合計」「回収数」「制限時間」。回収数の意味は実装時に <code>Config.HUD</code> で切替できるようプレビュー JS 先頭に <code>HUD_PREVIEW.lootMetricMode = 'L2'</code>（案 L2: 任務全体の残り系）をコメント付きで置いた。バナー文言を「『戦死』により分隊を離脱」形式に統一。<code>jp-meridian9</code> を cwd にした <code>http.server</code> でアイコン解決を継続。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>LOOT 意味の最終確定（L1/L2/L3）と、実機で「強制終了」と「通信途絶」を分けるか統合するか。</li>
+  </ul>
+</section>
+
+<section id="entry-1800" class="entry">
+  <h2>Phase-C HUD 実機統合（L2・離脱バナー・forced DB・フレームワーク表示名）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>18:00 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/server/hud.lua</code>（Phase-C ペイロード配信・NotifyPartyLeave・NotifyPickup）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/hud.lua</code>（<code>hud:*</code>・自己 HP 監視・旧 m9 ウェーブ帯維持）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/hud.js</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.css</code>（プレビュー背景・デバッグパネル除去・<code>body.mrd9-hud-phasec-active</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/index.html</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/session.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/result.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot.lua</code>（<code>lootInitialCount</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/loot/grant.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/framework.lua</code>（<code>GetCharacterName</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/sql/install.sql</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/arena/arena.lua</code>（<code>zombieKilled</code> で <code>session.zombieState.totalKilled</code> 集計・アリーナ外デデュプ）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/sql/migrations/2026-05-15_mrd9_result_logs_forced.sql</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p><code>jp-meridian9:client:hud:state</code> を Phase-C 契約（<code>hud:state</code> / <code>hud:selfHp</code> / トースト・離脱）に差し替え。<code>session.lootInitialCount</code> と L2 で回収メトリクスを算出。<code>RemovePlayer</code> で members 除去前に離脱通知。<code>forced</code> は DB では <code>mrd9_result_logs.result</code> に残し、リザルト NUI は <code>disconnected</code> 系文言へ寄せる（既存 DB は migrations SQL）。<code>zombieKilled</code> はアリーナ登録ゾンビを <code>onZombieKilledInternal</code> 内で、未登録（サバイバル湧き等）は <code>session._hudKillSeen</code> で netId デデュプして <code>totalKilled</code> を増分。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機で <code>forced</code> 除去フローを <code>Session.RemovePlayer(..., 'forced')</code> から検証。</li>
+  </ul>
+</section>
+
+<section id="entry-1830" class="entry">
+  <h2>回収アイテム正式名: 英語素材ファイル名＋ <code>nameKey</code> 日英 i18n</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>18:30 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">🔄</span> <code>jp-meridian9/image/item/*.png</code>（和名ファイル → ASCII 英語名）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.Items</code> 24 件・<code>nameKey</code>・fiction は <code>data_chip</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/item-icon-map.js</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/locales/ja.lua</code>（<code>m9_item_*</code>・<code>_()</code> フォールバック）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/locales/en.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/hud.lua</code> / <code>server/loot.lua</code> / <code>server/result.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/hud.lua</code> / <code>client/loot.lua</code> / <code>client/result.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud_preview.*</code> / <code>html/result.js</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/ITEM_I18N.md</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/TEST_PLAN_AND_ROADMAP.md</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>マスター素材の和名 PNG を英語 <code>&lt;id&gt;.png</code> にリネーム。<code>Config.Items</code> を 24 アイテムに再編し <code>nameKey</code> で <code>locales/ja</code>/<code>en</code> を参照。HUD 状態・入手通知・リザルト・ルート通知でクライアント <code>_()</code> 解決。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>特になし</li></ul>
+</section>
+
+<section id="entry-1835" class="entry">
+  <h2>アイテム一括追加用ドキュメント・JSON シード・emit スクリプト</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>18:35 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/ITEM_I18N.md</code>（一括追加手順・手動テンプレ・JSON スキーマ）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/item-bulk-seed.example.json</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/scripts/emit-item-snippets.mjs</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>実運用で複数件（例: 24 件）を足すときの手順を <code>ITEM_I18N.md</code> に集約。JSON シードから <code>config.lua</code> / 両ロケール / <code>item-icon-map.js</code> 用の貼り付けブロックを <code>node scripts/emit-item-snippets.mjs</code> で stdout 生成する。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>特になし</li></ul>
+</section>
+
+<section id="entry-1910" class="entry">
+  <h2>入手トースト表示＋脱出リザルトが見えない問題の修正</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>19:10 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/html/index.html</code>（<code>#mrd9-toast-layer</code>・入手／離脱を <code>#mrd9-hud-root</code> 外へ）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.css</code>（<code>.mrd9-toast-layer</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.js</code>（トースト要素を <code>getElementById</code> で取得）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud_preview.html</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/main.lua</code>（<code>MRD9.RunPostExtractReturnIfPending</code>・脱出時テレポート遅延・90s フォールバック）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/result.lua</code>（<code>result:close</code> で帰還実行・<code>for _idx,it</code> で <code>_()</code> シャドウ回避）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/hud.lua</code>（<code>localizeHudLootRows</code> の <code>for _idx,row</code> で <code>_()</code> シャドウ回避）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/extract.lua</code>（脱出成功 <code>lib.notify</code> 削除）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>入手トーストが Phase-C ルート内にあり <code>mrd9-hidden</code>（<code>display:none</code>）の子になっていたため画像・名称が出ない状態を解消。脱出直後の <code>TeleportToLosSantos</code> フェードがリザルト NUI を隠していたため、<code>reason == 'extracted'</code> では LS 帰還をリザルト閉鎖（<code>result:close</code>）まで保留し、90 秒未操作時はフォールバックで帰還。追記: <code>for _, row</code> がループ内で <code>_()</code> を数値としてシャドウしていたため <code>for _idx, …</code> に修正。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>実機でリザルト閉鎖→テレポートの体感と 90s フォールバックの要否を確認</li></ul>
+</section>
+
+<section id="entry-1906" class="entry">
+  <h2>Phase-C HUD: アイコン cfx-nui URL・回収リストの再描画抑制・文字 zoom</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>19:06 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.js</code>（<code>cfx-nui-</code>・party/loot JSON シグネチャ一致時スキップ・<code>hud:show</code> でシグネチャリセット・入手ラベルフォールバック）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.js</code>（アイコン相対パスを <code>cfx-nui-</code> 解決）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.css</code>（<code>#mrd9-hud-root</code> / <code>.mrd9-toast-layer</code> に <code>zoom: 2</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>実機 NUI で <code>https://&lt;resource&gt;/…</code> だと画像が読めないケースがあるため、<code>https://cfx-nui-&lt;resource&gt;/…</code> に統一。1 秒周期の <code>hud:state</code> で回収物リストを毎回 <code>innerHTML</code> し直していた点を JSON 比較で抑え、リストの視覚的な点滅を軽減。Phase-C オーバーレイと入手／離脱トーストに <code>zoom: 2</code> を付与し可読性を上げた。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>実機で <code>uiScale</code> 4 と <code>zoom: 2</code> の併用で過大にならないか確認（必要なら <code>config.lua</code> 側を調整）</li></ul>
+</section>
+
+<section id="entry-1946" class="entry">
+  <h2>ヴェガ再訪: 「回収物を売却」メニュー削除</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>19:46 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/client/dialogue.lua</code>（再訪コンテキストから売却オプション除去）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/locales/ja.lua</code>（<code>vega_repeat_sell*</code> 3 キー削除）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>売却は未実装の WIP のみで、査定・支払いは脱出リザルト（サーバ権威）に一本化する方針のため、誤解を招くメニュー項目とロケールを削除した。チュートリアル台詞の「買い取る」は脱出成功時の自動査定の意味のまま。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>特になし</li></ul>
+</section>
+
+<section id="entry-1949" class="entry">
+  <h2>NUI: HUD スケールを約 1.5 倍に再調整</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>19:49 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.css</code>（<code>zoom: 2</code> → <code>1.5</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/style.css</code>（<code>--m9-scale: 4</code> → <code>3</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>uiScale</code> 4.0 → 3.0）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-15_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>マスター指摘で 2 倍相当は大きすぎたため、Phase-C の <code>zoom</code> とレガシー HUD の <code>--m9-scale</code> / <code>Config.HUD.uiScale</code> をいずれも基準 2.0 に対して 1.5 倍になるよう揃えた（4→3、zoom 2→1.5）。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>特になし</li></ul>
+</section>
+</main>
+
+</body>
+</html>

@@ -304,14 +304,6 @@ openRepeatVisit = function()
                     end,
                 },
                 {
-                    title = _('vega_repeat_sell'),
-                    icon = 'dollar-sign',
-                    description = _('vega_repeat_sell_sub'),
-                    onSelect = function()
-                        vegaSay(_('vega_repeat_sell_wip'))
-                    end,
-                },
-                {
                     title = _('vega_repeat_info'),
                     icon = 'info-circle',
                     onSelect = function()

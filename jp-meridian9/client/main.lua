@@ -3,6 +3,36 @@ local resName = GetCurrentResourceName()
 print(('[%s] resource loaded'):format(resName))
 
 MRD9.CurrentSession = nil
+MRD9.PendingPostExtractTeleport = nil
+
+---@return boolean
+function MRD9.RunPostExtractReturnIfPending()
+    local p = MRD9.PendingPostExtractTeleport
+    if type(p) ~= 'table' then
+        return false
+    end
+    local rp = p.returnPoint
+    MRD9.PendingPostExtractTeleport = nil
+    if not rp and Config and Config.Mission then
+        rp = Config.Mission.returnPoint
+    end
+    if MRD9.Transition and MRD9.Transition.TeleportToLosSantos and rp then
+        MRD9.Transition.TeleportToLosSantos(rp)
+    end
+    CreateThread(function()
+        Wait(400)
+        local ped = PlayerPedId()
+        if ped and ped ~= 0 then
+            pcall(function()
+                SetEntityInvincible(ped, false)
+            end)
+        end
+        pcall(function()
+            DisplayRadar(true)
+        end)
+    end)
+    return true
+end
 
 RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
     if type(data) ~= 'table' or not data.sessionId then
@@ -10,14 +40,14 @@ RegisterNetEvent('jp-meridian9:onMissionStart', function(data)
     end
     MRD9.Log('Mission started: %s', data.sessionId)
     MRD9.CurrentSession = data
+    if MRD9.HUD and MRD9.HUD.OnMissionStart then
+        MRD9.HUD.OnMissionStart(data)
+    end
     if MRD9.Transition and MRD9.Transition.Enter then
         MRD9.Transition.Enter()
     end
     if MRD9.Transition and MRD9.Transition.TeleportToSiteNine and data.spawnPoint then
         MRD9.Transition.TeleportToSiteNine(data.spawnPoint)
-    end
-    if MRD9.HUD and MRD9.HUD.OnMissionStart then
-        MRD9.HUD.OnMissionStart(data)
     end
     if MRD9.Arena and MRD9.Arena.ClientBeginMission then
         MRD9.Arena.ClientBeginMission()
@@ -46,6 +76,10 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
     if reason == 'died' or reason == 'all_lost' or reason == 'arena_wiped' then
         local ped = PlayerPedId()
         if ped and ped ~= 0 then
+            local c = GetEntityCoords(ped)
+            local h = GetEntityHeading(ped)
+            -- 内部「死亡」状態のまま LS へ戻ると ox_inventory の装備失敗・マップ不能などに繋がる
+            pcall(function() NetworkResurrectLocalPlayer(c.x, c.y, c.z, h, true, false, false) end)
             pcall(function() ClearPedTasksImmediately(ped) end)
             pcall(function() SetEntityHealth(ped, GetEntityMaxHealth(ped) or 200) end)
             pcall(function() SetEntityInvincible(ped, true) end)
@@ -63,20 +97,59 @@ RegisterNetEvent('jp-meridian9:onMissionEnd', function(data)
     end
     MRD9.CurrentSession = nil
 
+    -- INSTRUCTION-022（タイムアウト Result）: extracted 以外でも Result NUI を見せるため、
+    -- LS テレポートは Result NUI 閉鎖（`result:close`）で発火させる。フェードに NUI を覆われない。
+    -- ただしクライアントへ NUI を出さない reason（'left' 等）は即時帰還にフォールバックする。
+    local reasonsHoldingForResult = {
+        extracted = true,
+        died = true,
+        all_lost = true,
+        arena_wiped = true,
+        timeout = true,
+        out_of_zone = true,
+    }
+
     CreateThread(function()
         local rp = data.returnPoint
         if not rp and Config and Config.Mission then
             rp = Config.Mission.returnPoint
         end
+
+        if reasonsHoldingForResult[reason] then
+            MRD9.PendingPostExtractTeleport = { returnPoint = rp }
+            Wait(400)
+            local pedEarly = PlayerPedId()
+            if pedEarly and pedEarly ~= 0 then
+                pcall(function()
+                    SetEntityInvincible(pedEarly, false)
+                end)
+            end
+            pcall(function()
+                DisplayRadar(true)
+            end)
+            CreateThread(function()
+                Wait(90000)
+                if type(MRD9.PendingPostExtractTeleport) == 'table' and MRD9.RunPostExtractReturnIfPending then
+                    MRD9.RunPostExtractReturnIfPending()
+                end
+            end)
+            return
+        end
+
         if MRD9.Transition and MRD9.Transition.TeleportToLosSantos and rp then
             MRD9.Transition.TeleportToLosSantos(rp)
         end
 
-        -- フェード/テレポート完了後に Invincible 解除
+        Wait(400)
         local ped = PlayerPedId()
         if ped and ped ~= 0 then
-            pcall(function() SetEntityInvincible(ped, false) end)
+            pcall(function()
+                SetEntityInvincible(ped, false)
+            end)
         end
+        pcall(function()
+            DisplayRadar(true)
+        end)
     end)
 end)
 

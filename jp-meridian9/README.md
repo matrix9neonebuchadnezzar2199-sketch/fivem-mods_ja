@@ -162,7 +162,7 @@ ensure jp-meridian9
 
 | プロジェクト | ライセンス | 用途 |
 |-------------|------------|------|
-| TP-Advanced-Zombies | Apache 2.0 | ゾンビ AI・スポーン制御の**派生実装**（`server/arena/spawn.lua`, `client/arena/zombie_ai.lua`） |
+| TP-Advanced-Zombies | Apache 2.0 | ゾンビ AI・スポーン制御の**派生実装**（`server/arena/spawn.lua`, `client/arena.lua`） |
 | ox_lib | MIT | UI / `lib.callback` |
 | ox_target | MIT | NPC インタラクション |
 | oxmysql | MIT | データベース |
@@ -282,6 +282,7 @@ jp-meridian9/
 
 - **開発日記**：`jp-meridian9/YYYY-MM-DD_開発日記.md`（MOD 直下・Markdown）。リポジトリ既定の `docs/*.html` 日記は本 MOD では使わない。
 - **正式方針・例外規約・INSTRUCTION 前提**：`docs/FORMAL_POLICIES.md` を参照（日記配置、グローバル許容、`fxmanifest` 補足、画像暫定、INSTRUCTION-006/019 メモ）。
+- **任務リザルト（サブフェーズ A）**：DB に `mrd9_result_logs` を適用（`sql/install.sql`）。`ox_inventory` 運用では小切手アイテム `mrd9_credit` を `data/items.lua` 等に定義する。定義しない・standalone のみの場合は `config.lua` の `Config.Result.directCashout = true` で即現金のみ。小切手換金はゲーム内 `/m9_cashout`（暫定、ox_inventory 時のみ有効）。
 
 ---
 

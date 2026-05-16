@@ -1,0 +1,353 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: 'Segoe UI', 'Yu Gothic UI', 'Meiryo', sans-serif;
+    color: #d8dde4; user-select: none;
+}
+
+/* 実機: 旧 #app グリッドを隠しウェーブ帯のみ残す */
+body.mrd9-hud-phasec-active #app .m9-hud__grid {
+    display: none !important;
+}
+
+#mrd9-hud-root {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 100;
+    font-family: 'Segoe UI', 'Yu Gothic UI', 'Meiryo', sans-serif;
+    zoom: 1.5;
+}
+
+/* 入手・離脱通知（#mrd9-hud-root の display:none の外側。リザルト 9000 より下） */
+.mrd9-toast-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 8000;
+    zoom: 1.5;
+}
+
+/* === ブロック共通：背景透明、枠線のみ === */
+.mrd9-hud-block {
+    background: transparent;
+    border-left: 2px solid rgba(120,140,160,0.45);
+    padding: 1vh 1vw;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.6);
+}
+.mrd9-block-label {
+    font-size: 0.7rem; letter-spacing: 0.25em;
+    color: #a8b4c2; margin-bottom: 0.8vh;
+    padding-bottom: 0.4vh;
+    border-bottom: 1px solid rgba(168,180,194,0.2);
+}
+
+/* === 左カラム === */
+.mrd9-hud-left {
+    position: absolute;
+    left: 1.5vw; top: 2vh; bottom: 2vh;
+    width: 22vw; min-width: 280px; max-width: 360px;
+    display: flex; flex-direction: column; gap: 1.5vh;
+    overflow: hidden;
+}
+
+.mrd9-mission-title {
+    font-size: 1.05rem; color: #f0f4f8; font-weight: 500;
+    letter-spacing: 0.03em; margin-bottom: 0.3vh;
+}
+.mrd9-mission-id {
+    font-size: 0.7rem; color: #a8b4c2;
+    font-variant-numeric: tabular-nums; letter-spacing: 0.15em;
+}
+
+/* === 自分（HP のみクライアント同期） === */
+#mrd9-hud-root .mrd9-self-block {
+    background: transparent;
+    border-left: 2px solid rgba(255, 215, 106, 0.7);
+    padding: 1vh 1vw;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.6);
+}
+#mrd9-hud-root .mrd9-self-name {
+    font-size: 1.1rem; color: #ffd76a;
+    font-weight: 500; letter-spacing: 0.05em;
+    margin-bottom: 0.5vh;
+}
+#mrd9-hud-root .mrd9-self-hp-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 0.9rem; color: #e8eef6;
+    margin-bottom: 0.3vh;
+}
+#mrd9-hud-root .mrd9-self-hp-label {
+    font-size: 0.7rem; letter-spacing: 0.25em; color: #a8b4c2;
+}
+#mrd9-hud-root .mrd9-self-hp-value {
+    font-variant-numeric: tabular-nums;
+}
+#mrd9-hud-root .mrd9-self-hp-value .max {
+    color: #a8b4c2; font-size: 0.8rem;
+}
+#mrd9-hud-root .mrd9-self-hp-bar {
+    height: 10px;
+    background: rgba(20,24,32,0.55);
+    border: 1px solid rgba(168,180,194,0.3);
+    border-radius: 2px; overflow: hidden;
+}
+#mrd9-hud-root .mrd9-self-hp-fill {
+    height: 100%;
+    transition: width 0.25s ease, background 0.3s ease;
+    background: linear-gradient(90deg, #4a9d5e, #6ed47a);
+}
+#mrd9-hud-root .mrd9-self-hp-fill.warn   { background: linear-gradient(90deg, #c48a2a, #f0b54a); }
+#mrd9-hud-root .mrd9-self-hp-fill.danger { background: linear-gradient(90deg, #8a2a2a, #ff5a5a); }
+
+/* === パーティ === */
+.mrd9-party-list { list-style: none; }
+.mrd9-party-list li {
+    padding: 0.6vh 0;
+    border-bottom: 1px solid rgba(168,180,194,0.12);
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease, border 0.4s ease;
+}
+.mrd9-party-list li:last-child { border-bottom: none; }
+
+/* 名前のみレイアウト用（HP 行は未使用） */
+#mrd9-hud-root .mrd9-party-list li {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    padding: 0.5vh 0;
+}
+
+.mrd9-party-row-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.9rem; margin-bottom: 0.3vh;
+}
+.mrd9-party-name { color: #e8eef6; }
+.mrd9-party-name.leader::before {
+    content: '★ '; color: #ffc94a;
+}
+.mrd9-party-name.self {
+    color: #ffd76a; font-weight: 500;
+}
+.mrd9-party-hp-text {
+    font-size: 0.85rem; color: #d8dde4;
+    font-variant-numeric: tabular-nums;
+}
+.mrd9-party-hp-text .max {
+    color: #a8b4c2; font-size: 0.72rem;
+}
+
+.mrd9-party-hp-bar {
+    height: 6px;
+    background: rgba(20,24,32,0.55);
+    border: 1px solid rgba(168,180,194,0.25);
+    border-radius: 2px; overflow: hidden;
+}
+.mrd9-party-hp-fill {
+    height: 100%; transition: width 0.3s ease, background 0.3s ease;
+    background: linear-gradient(90deg, #4a9d5e, #6ed47a);
+}
+.mrd9-party-hp-fill.warn   { background: linear-gradient(90deg, #c48a2a, #f0b54a); }
+.mrd9-party-hp-fill.danger { background: linear-gradient(90deg, #8a2a2a, #ff5a5a); }
+
+.mrd9-party-list li.dead .mrd9-party-name::after {
+    content: ' 「戦死」'; color: #ff5a5a;
+    font-size: 0.72rem; letter-spacing: 0.1em;
+}
+.mrd9-party-list li.disconnected .mrd9-party-name::after {
+    content: ' 「通信途絶」'; color: #c48a2a;
+    font-size: 0.72rem; letter-spacing: 0.1em;
+}
+.mrd9-party-list li.forced .mrd9-party-name::after {
+    content: ' 「強制終了」'; color: #c48a2a;
+    font-size: 0.72rem; letter-spacing: 0.1em;
+}
+
+.mrd9-party-list li.leaving {
+    animation: partyLeave 1.6s ease forwards;
+}
+@keyframes partyLeave {
+    0%   { opacity: 1; max-height: 80px; }
+    40%  { opacity: 0.4; }
+    100% { opacity: 0; max-height: 0; padding: 0; margin: 0; border: none; }
+}
+
+/* === 回収物リスト === */
+.mrd9-loot-block {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+    min-height: 12vh;
+}
+.mrd9-loot-list {
+    list-style: none; overflow-y: auto; flex: 1;
+    padding-right: 0.3vw;
+}
+.mrd9-loot-list::-webkit-scrollbar { width: 4px; }
+.mrd9-loot-list::-webkit-scrollbar-thumb {
+    background: rgba(168,180,194,0.3);
+}
+
+.mrd9-loot-list li {
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: center; padding: 0.5vh 0.3vw;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(168,180,194,0.1);
+}
+
+.mrd9-loot-name { color: #e8eef6; }
+.mrd9-loot-name.tier-common   { color: #e8eef6; }
+.mrd9-loot-name.tier-uncommon  { color: #6ed47a; }
+.mrd9-loot-name.tier-rare      { color: #5fa8ff; }
+.mrd9-loot-name.tier-legendary { color: #ffc94a; }
+.mrd9-loot-name.confiscated    { color: #ff5a5a; }
+
+.mrd9-loot-count {
+    color: #a8b4c2; font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+}
+.mrd9-loot-empty {
+    color: #a8b4c2; font-size: 0.82rem;
+    font-style: italic; text-align: center; padding: 1.5vh 0;
+}
+
+/* === 右上 === */
+.mrd9-hud-right-top {
+    position: absolute;
+    right: 1.5vw; top: 2vh;
+    width: 18vw; min-width: 220px; max-width: 280px;
+    display: flex; flex-direction: column; gap: 1.2vh;
+}
+
+.mrd9-clock-block, .mrd9-metrics-block {
+    background: transparent;
+    border-right: 2px solid rgba(120,140,160,0.45);
+    padding: 1vh 1vw;
+    text-align: right;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.85), 0 0 4px rgba(0,0,0,0.6);
+}
+.mrd9-clock-time {
+    font-size: 2.2rem; font-weight: 300;
+    color: #f0f4f8; letter-spacing: 0.1em;
+    font-variant-numeric: tabular-nums;
+}
+.mrd9-clock-date {
+    font-size: 0.72rem; letter-spacing: 0.18em;
+    color: #a8b4c2; margin-top: 0.2vh;
+}
+
+.mrd9-metric-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 0.4vh 0;
+    border-bottom: 1px solid rgba(168,180,194,0.12);
+}
+.mrd9-metric-row:last-child { border-bottom: none; }
+.mrd9-metric-label {
+    font-size: 0.72rem; letter-spacing: 0.15em; color: #a8b4c2;
+}
+.mrd9-metric-value {
+    font-size: 1rem; color: #f0f4f8;
+    font-variant-numeric: tabular-nums; letter-spacing: 0.05em;
+}
+.mrd9-metric-extract .mrd9-metric-value {
+    color: #ffc94a;
+}
+.mrd9-metric-extract.warning .mrd9-metric-value {
+    color: #ff5a5a;
+    animation: blinkWarn 1s ease infinite;
+}
+@keyframes blinkWarn {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+}
+
+/* === 入手通知トースト === */
+.mrd9-pickup-toast-area {
+    position: absolute;
+    left: 50%; bottom: 18vh;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column-reverse;
+    gap: 0.5vh; align-items: center;
+    pointer-events: none;
+}
+
+.mrd9-pickup-toast {
+    display: flex; align-items: center; gap: 0.8vw;
+    background: linear-gradient(90deg,
+        rgba(10,12,16,0.0) 0%,
+        rgba(10,12,16,0.65) 20%,
+        rgba(10,12,16,0.65) 80%,
+        rgba(10,12,16,0.0) 100%);
+    padding: 0.8vh 2vw;
+    min-width: 22vw;
+    animation: toastIn 0.4s ease, toastOut 0.5s ease 4.5s forwards;
+}
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-10px); }
+}
+
+.mrd9-pickup-icon {
+    width: 44px; height: 44px;
+    border: 1px solid rgba(168,180,194,0.4); border-radius: 3px;
+    background: rgba(20,24,30,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 600; flex-shrink: 0;
+    overflow: hidden;
+}
+.mrd9-pickup-icon img { width: 100%; height: 100%; object-fit: contain; }
+.mrd9-pickup-icon.common   { border-color: rgba(168,180,194,0.4); color: #e8eef6; }
+.mrd9-pickup-icon.uncommon  { border-color: #3a6a44; color: #6ed47a; }
+.mrd9-pickup-icon.rare      { border-color: #2a5a90; color: #5fa8ff; }
+.mrd9-pickup-icon.legendary { border-color: #806022; color: #ffc94a; }
+.mrd9-pickup-icon.confiscated {
+    border-color: #803030; color: #ff5a5a;
+    background: rgba(31,10,10,0.5);
+}
+
+.mrd9-pickup-body { display: flex; flex-direction: column; }
+.mrd9-pickup-label {
+    font-size: 1.05rem; color: #f0f4f8; letter-spacing: 0.03em;
+}
+.mrd9-pickup-label.common   { color: #e8eef6; }
+.mrd9-pickup-label.uncommon  { color: #6ed47a; }
+.mrd9-pickup-label.rare      { color: #5fa8ff; }
+.mrd9-pickup-label.legendary { color: #ffc94a; }
+.mrd9-pickup-label.confiscated { color: #ff5a5a; }
+.mrd9-pickup-sub {
+    font-size: 0.72rem; color: #a8b4c2; letter-spacing: 0.18em;
+    margin-top: 0.2vh;
+}
+
+/* === パーティ離脱バナー === */
+.mrd9-leave-banner-area {
+    position: absolute;
+    left: 50%; top: 12vh;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column;
+    gap: 0.5vh; align-items: center;
+    pointer-events: none;
+    z-index: 110;
+}
+.mrd9-leave-banner {
+    background: linear-gradient(90deg,
+        rgba(60,20,20,0.0) 0%,
+        rgba(60,20,20,0.75) 20%,
+        rgba(60,20,20,0.75) 80%,
+        rgba(60,20,20,0.0) 100%);
+    color: #ffc8c8;
+    padding: 0.6vh 3vw;
+    font-size: 0.95rem; letter-spacing: 0.15em;
+    animation: bannerIn 0.4s ease, bannerOut 0.6s ease 3.5s forwards;
+}
+.mrd9-leave-banner .name { color: #ffd76a; font-weight: 500; }
+.mrd9-leave-banner .reason { color: #ffc8c8; }
+@keyframes bannerIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bannerOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+.mrd9-hidden { display: none !important; }

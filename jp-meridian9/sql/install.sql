@@ -74,6 +74,87 @@ CREATE TABLE IF NOT EXISTS `mrd9_mission_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='MERIDIAN-9 ミッション履歴';
 
+-- ------------------------------------------------------------
+-- ルート回収監査ログ（案X: 拒否含む全試行を記録。細分は fail_reason）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mrd9_loot_logs` (
+    `id`                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `player_identifier`  VARCHAR(64)   NOT NULL,
+    `session_id`         VARCHAR(64)   NOT NULL,
+    `mission_id`         VARCHAR(64)   NULL COMMENT '現状は session.mission.type を格納',
+    `loot_id`            VARCHAR(64)   NOT NULL,
+    `tier`               VARCHAR(16)   NOT NULL,
+    `item_id`            VARCHAR(64)   NOT NULL,
+    `count`              INT           NOT NULL DEFAULT 1,
+    `coords_x`           FLOAT         NULL,
+    `coords_y`           FLOAT         NULL,
+    `coords_z`           FLOAT         NULL,
+    `result`             ENUM(
+                              'granted',
+                              'failed_inventory_full',
+                              'failed_locked',
+                              'failed_distance',
+                              'failed_other'
+                          ) NOT NULL,
+    `fail_reason`        VARCHAR(128)  NULL,
+    `created_at`         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_loot_player`   (`player_identifier`),
+    INDEX `idx_loot_session`  (`session_id`),
+    INDEX `idx_loot_mission`  (`mission_id`),
+    INDEX `idx_loot_tier_res` (`tier`, `result`),
+    INDEX `idx_loot_created`  (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='MERIDIAN-9 ルート回収監査';
+
+-- ------------------------------------------------------------
+-- fictionTag 近接演出ログ（mrd9_loot_logs とは別軸）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mrd9_fiction_events` (
+    `id`              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `session_id`      VARCHAR(64)   NOT NULL,
+    `loot_id`         VARCHAR(64)   NOT NULL,
+    `fiction_tag`     VARCHAR(32)   NOT NULL,
+    `event_type`      VARCHAR(32)   NOT NULL,
+    `triggered_by`    VARCHAR(64)   NOT NULL,
+    `coords_x`        FLOAT         NULL,
+    `coords_y`        FLOAT         NULL,
+    `coords_z`        FLOAT         NULL,
+    `created_at`      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_fiction_session` (`session_id`),
+    INDEX `idx_fiction_tag` (`fiction_tag`),
+    INDEX `idx_fiction_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='MERIDIAN-9 fictionTag 演出ログ';
+
+-- ------------------------------------------------------------
+-- 任務リザルトログ（脱出査定 / 死亡 / 切断）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mrd9_result_logs` (
+    `id`                 BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `player_identifier`  VARCHAR(64)   NOT NULL,
+    `session_id`         VARCHAR(64)   NOT NULL,
+    `mission_id`         VARCHAR(64)   NULL,
+    `result`             ENUM('extracted', 'died', 'disconnect', 'forced', 'timeout', 'out_of_zone', 'unknown') NOT NULL DEFAULT 'unknown',
+    `items_subtotal`     INT           NOT NULL DEFAULT 0,
+    `fiction_bounty`     INT           NOT NULL DEFAULT 0,
+    `extraction_bonus`   INT           NOT NULL DEFAULT 0,
+    `total`              INT           NOT NULL DEFAULT 0,
+    `credit_count`       INT           NOT NULL DEFAULT 0,
+    `item_count`         INT           NOT NULL DEFAULT 0,
+    `fiction_item_count` INT           NOT NULL DEFAULT 0,
+    `payout_mode`        VARCHAR(32)   NOT NULL DEFAULT 'unknown',
+    `fail_reason`        VARCHAR(128)  NULL,
+    `created_at`         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_result_player`  (`player_identifier`),
+    INDEX `idx_result_session` (`session_id`),
+    INDEX `idx_result_outcome` (`result`),
+    INDEX `idx_result_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='MERIDIAN-9 任務リザルト';
+
 -- ============================================================
 -- インストール完了確認用クエリ（任意）
 -- ============================================================

@@ -387,6 +387,28 @@ RegisterCommand('m9_admin_check', function(source, args)
     end
 end, true)
 
+RegisterCommand('m9_admin_session_kick', function(source, args)
+    if not HasAdminAce(source) then
+        return
+    end
+    local targetId = tonumber(args[1])
+    if not targetId then
+        notifyAdmin(source, '使用方法: /m9_admin_session_kick <playerId>')
+        return
+    end
+    local s = MRD9.Session and MRD9.Session.GetByPlayer and MRD9.Session.GetByPlayer(targetId)
+    if not s then
+        notifyAdmin(source, '対象はセッション未所属: ' .. tostring(targetId))
+        return
+    end
+    local ok = MRD9.Session.RemovePlayer(targetId, 'forced')
+    if ok then
+        notifyAdmin(source, ('セッションから強制除外: %d (session=%s)'):format(targetId, tostring(s.id)))
+    else
+        notifyAdmin(source, '除外失敗: ' .. tostring(targetId))
+    end
+end, true)
+
 RegisterCommand('m9_admin_list', function(source, args)
     if not HasAdminAce(source) then
         return

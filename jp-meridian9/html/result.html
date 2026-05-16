@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>MERIDIAN-9 Result (preview)</title>
+  <link rel="stylesheet" href="result.css" />
+</head>
+<body>
+  <div id="mrd9-result-root" class="mrd9-hidden">
+    <header class="mrd9-result-header">
+      <div class="mrd9-brand">MERIDIAN-9 / PROJECT JANUS</div>
+      <h1 class="mrd9-result-title">EXTRACTION CONFIRMED</h1>
+      <div class="mrd9-result-subtitle">Site-9 Recovery Report</div>
+    </header>
+
+    <section class="mrd9-vega-block">
+      <div class="mrd9-vega-portrait"></div>
+      <div class="mrd9-vega-line-box">
+        <div class="mrd9-vega-name">Adrian Vega</div>
+        <div class="mrd9-vega-line"></div>
+      </div>
+    </section>
+
+    <section class="mrd9-items-block">
+      <div class="mrd9-section-label">RECOVERED ASSETS</div>
+      <ul class="mrd9-items-list"></ul>
+      <div class="mrd9-items-empty mrd9-hidden">— No recoverable assets —</div>
+    </section>
+
+    <section class="mrd9-breakdown-block">
+      <div class="mrd9-breakdown-row">
+        <span class="lbl">Item Subtotal</span>
+        <span class="val" data-bd="item">$0</span>
+      </div>
+      <div class="mrd9-breakdown-row">
+        <span class="lbl">Fiction Bounty</span>
+        <span class="val" data-bd="fiction">$0</span>
+      </div>
+      <div class="mrd9-breakdown-row">
+        <span class="lbl">Extraction Bonus</span>
+        <span class="val" data-bd="bonus">$0</span>
+      </div>
+      <div class="mrd9-breakdown-row mrd9-total-row">
+        <span class="lbl">TOTAL APPRAISAL</span>
+        <span class="val" data-bd="total">$0</span>
+      </div>
+      <div class="mrd9-payout-row">
+        <span class="lbl">Payout</span>
+        <span class="val" data-bd="payout">—</span>
+      </div>
+    </section>
+
+    <footer class="mrd9-result-footer">
+      <button type="button" class="mrd9-btn-continue" disabled>CONTINUE</button>
+      <div class="mrd9-hint">[ESC / SPACE] Skip animation, press again to close</div>
+    </footer>
+  </div>
+
+  <script src="item-icon-map.js"></script>
+  <script src="result.js"></script>
+</body>
+</html>

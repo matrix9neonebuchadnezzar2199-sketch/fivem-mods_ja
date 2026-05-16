@@ -1,0 +1,17 @@
+[
+  {
+    "id": "example_gadget",
+    "nameEn": "Example Gadget",
+    "nameJa": "サンプルガジェット",
+    "rarity": "common",
+    "value": 500
+  },
+  {
+    "id": "example_core",
+    "nameEn": "Example Core",
+    "nameJa": "サンプルコア",
+    "rarity": "rare",
+    "value": 20000,
+    "fictionTag": "subject_zero"
+  }
+]

@@ -80,6 +80,99 @@ function MRD9.Arena.Spawn.RequestZombie(sessionId, isBoss)
     return true
 end
 
+---@param center vector3|{ x: number, y: number, z: number }
+---@param rMin number|nil
+---@param rMax number|nil
+---@param attempts integer|nil
+---@return vector3|nil
+function MRD9.Arena.Spawn.PickCoordsNearPoint(center, rMin, rMax, attempts)
+    if not center then
+        return nil
+    end
+    local cx = center.x + 0.0
+    local cy = center.y + 0.0
+    local cz = center.z + 0.0
+    rMin = tonumber(rMin) or 5.0
+    rMax = tonumber(rMax) or 10.0
+    attempts = tonumber(attempts) or 8
+    if rMax < rMin then
+        rMax = rMin + 0.5
+    end
+    for _ = 1, attempts do
+        local ang = math.random() * math.pi * 2
+        local dist = rMin + math.random() * (rMax - rMin)
+        local x = cx + math.cos(ang) * dist
+        local y = cy + math.sin(ang) * dist
+        return vector3(x, y, cz + 0.5)
+    end
+    return nil
+end
+
+---@param sessionId string
+---@param center vector3|{ x: number, y: number, z: number }
+---@param count integer
+---@param opts table|nil
+---@return boolean, integer|string @ok, spawnedCount or error key
+function MRD9.Arena.SpawnAt(sessionId, center, count, opts)
+    if type(sessionId) ~= 'string' or sessionId == '' or not center then
+        return false, 'invalid_args'
+    end
+    opts = type(opts) == 'table' and opts or {}
+    local target = tonumber(opts.targetSrc)
+    if not target or target <= 0 then
+        return false, 'no_target'
+    end
+    local session = MRD9.Session.Get(sessionId)
+    if not session then
+        return false, 'no_session'
+    end
+
+    count = math.floor(tonumber(count) or 1)
+    if count < 1 then
+        return false, 'invalid_count'
+    end
+
+    local cfgA = Config.Arena or {}
+    local cfgS = Config.Survival or {}
+    local models
+    if type(cfgA.zombieModels) == 'table' and cfgA.zombieModels[1] then
+        models = cfgA.zombieModels
+    elseif type(cfgS.zombieModels) == 'table' and cfgS.zombieModels[1] then
+        models = cfgS.zombieModels
+    else
+        models = { 'u_m_y_zombie_01' }
+    end
+    local model = models[1] or 'u_m_y_zombie_01'
+    local health = tonumber(cfgA.zombieHealth) or tonumber(cfgS.zombieHealth) or 150
+
+    local rMin = tonumber(opts.rMin) or 5.0
+    local rMax = tonumber(opts.rMax) or 10.0
+    local persistent = opts.persistent ~= false
+    local tag = type(opts.tag) == 'string' and opts.tag ~= '' and opts.tag or 'fiction:generic'
+    local isBoss = opts.isBoss == true
+
+    local spawned = 0
+    for _ = 1, count do
+        local coords = MRD9.Arena.Spawn.PickCoordsNearPoint(center, rMin, rMax, 12)
+        if coords then
+            TriggerClientEvent('jp-meridian9:client:spawnZombie', target, {
+                sessionId = sessionId,
+                model = model,
+                isBoss = isBoss,
+                health = health,
+                bucket = session.bucket,
+                x = coords.x,
+                y = coords.y,
+                z = coords.z,
+                source = tag,
+                persistent = persistent,
+            })
+            spawned = spawned + 1
+        end
+    end
+    return spawned > 0, spawned
+end
+
 RegisterNetEvent('jp-meridian9:server:zombieSpawned', function(data)
     local src = source
     if type(src) ~= 'number' or src <= 0 or type(data) ~= 'table' then

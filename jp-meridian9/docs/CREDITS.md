@@ -17,7 +17,7 @@
 - **利用範囲**: AI コア・スポーン制御の**思想・パターンを参考にした派生実装**（ESX/QBCore 依存の除去、`MRD9.Arena` 統合、バケット対応、波制御分離）
 - **派生ファイル**:
   - `jp-meridian9/server/arena/spawn.lua`
-  - `jp-meridian9/client/arena/zombie_ai.lua`
+  - `jp-meridian9/client/arena.lua`
 - **改変概要**: jp-meridian9 向けに命名・構造を再構成し、フレームワーク抽象化を削除。サーバー主導のスポーン座標選定とクライアント側 `CreatePed` 委譲を組み合わせる。
 
 ## マップ素材

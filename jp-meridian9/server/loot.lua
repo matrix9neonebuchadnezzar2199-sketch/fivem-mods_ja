@@ -9,25 +9,17 @@ MRD9.Loot = MRD9.Loot or {}
 
 local lastPickupMs = {}
 
+-- 抽選・定義検索は server/loot/roll.lua
+local rollRarity = MRD9.Loot.Roll
+local pickItemForRarity = MRD9.Loot.PickItem
+local findItemDef = MRD9.Loot.FindItemDef
+
 ---@param session table
 ---@return boolean
 local function sessionAllowsLoot(session)
     return session and session.state == 'IN_MISSION'
 end
 
----@param itemId string
----@return table|nil
-local function findItemDef(itemId)
-    for _, it in ipairs(Config.Items or {}) do
-        if it.id == itemId then
-            return it
-        end
-    end
-    return nil
-end
-
----@param def table|nil
----@return string
 local function propModelForItem(def)
     local d = def and def.propModel
     if type(d) == 'string' and d ~= '' then
@@ -35,53 +27,6 @@ local function propModelForItem(def)
     end
     local cfg = Config.Loot
     return (cfg and cfg.defaultPropModel) or 'prop_paper_bag_01'
-end
-
----@param weights table|nil
----@return string
-local function rollRarity(weights)
-    local w = weights
-    if type(w) ~= 'table' or not next(w) then
-        w = Config.LootRarityWeight or { common = 70 }
-    end
-    local total = 0
-    for _, v in pairs(w) do
-        if type(v) == 'number' and v > 0 then
-            total = total + v
-        end
-    end
-    if total <= 0 then
-        return 'common'
-    end
-    local r = math.random() * total
-    local cum = 0.0
-    for tier, v in pairs(w) do
-        if type(v) == 'number' and v > 0 then
-            cum = cum + v
-            if r <= cum then
-                return type(tier) == 'string' and tier or 'common'
-            end
-        end
-    end
-    return 'common'
-end
-
----@param tier string
----@return table|nil
-local function pickItemForRarity(tier)
-    local pool = {}
-    for _, it in ipairs(Config.Items or {}) do
-        if it.rarity == tier then
-            pool[#pool + 1] = it
-        end
-    end
-    if #pool == 0 then
-        if tier ~= 'common' then
-            return pickItemForRarity('common')
-        end
-        return nil
-    end
-    return pool[math.random(1, #pool)]
 end
 
 ---@param center vector3|{ x: number, y: number, z: number }
@@ -113,6 +58,21 @@ local function pickRadialLootCoords(center, minR, maxR, existing, minGap, maxAtt
     return nil
 end
 
+--- 1..n のシャッフル順列（固定スポーンで座標の重複を避け、MAP 上のブリップが1点に重なるのを防ぐ）
+---@param n integer
+---@return integer[]
+local function shuffledIndices(n)
+    local t = {}
+    for i = 1, n do
+        t[i] = i
+    end
+    for i = n, 2, -1 do
+        local j = math.random(i)
+        t[i], t[j] = t[j], t[i]
+    end
+    return t
+end
+
 ---@param center vector3|{ x: number, y: number, z: number }
 ---@param count integer
 ---@return vector3[], table[] @positions, spawnMeta (weight source per index)
@@ -121,10 +81,21 @@ local function buildLootLayout(center, count)
     local meta = {}
     local fixed = Config.LootSpawns
     if type(fixed) == 'table' and #fixed > 0 and fixed[1] and fixed[1].coords then
+        local nFixed = #fixed
+        local order = shuffledIndices(nFixed)
         for i = 1, count do
-            local slot = fixed[math.random(1, #fixed)]
+            local slot
+            local jx, jy = 0.0, 0.0
+            if i <= nFixed then
+                slot = fixed[order[i]]
+            else
+                -- スロット数を超える本数はランダム枠＋微小 XY ジッター（同一座標ブリップ重複の緩和）
+                slot = fixed[math.random(1, nFixed)]
+                jx = (math.random() - 0.5) * 2.4
+                jy = (math.random() - 0.5) * 2.4
+            end
             local c = slot.coords
-            local p = vector3(c.x + 0.0, c.y + 0.0, c.z + 0.0)
+            local p = vector3(c.x + jx, c.y + jy, c.z + 0.0)
             positions[#positions + 1] = p
             meta[#meta + 1] = { weight = slot.weight }
         end
@@ -166,7 +137,7 @@ function MRD9.Loot.Spawn(sessionId)
         return
     end
     local center = vector3(sp.x + 0.0, sp.y + 0.0, sp.z + 0.0)
-    local maxN = math.floor(math.max(1, tonumber(Config.Loot.maxPerSession) or 24))
+    local maxN = math.floor(math.max(1, tonumber(Config.Loot.maxPerSession) or 50))
 
     local positions, meta = buildLootLayout(center, maxN)
     if #positions == 0 then
@@ -183,9 +154,15 @@ function MRD9.Loot.Spawn(sessionId)
             local lootId = ('L_%s_%d'):format(sessionId, i)
             lootMap[lootId] = {
                 itemId = def.id,
+                tier = tier,
                 coords = p,
                 picked = false,
                 propNetId = nil,
+                lockedBy = nil,
+                lockedAt = nil,
+                fictionTag = def.fictionTag,
+                spawnedFor = false,
+                spawnedAt = nil,
             }
             batch[#batch + 1] = {
                 lootId = lootId,
@@ -195,11 +172,19 @@ function MRD9.Loot.Spawn(sessionId)
                 z = p.z,
                 itemId = def.id,
                 itemName = def.name or def.id,
+                fictionTag = def.fictionTag,
             }
         end
     end
 
     session.loot = lootMap
+    do
+        local n = 0
+        for _ in pairs(lootMap) do
+            n = n + 1
+        end
+        session.lootInitialCount = n
+    end
     if #batch == 0 then
         return
     end
@@ -227,6 +212,10 @@ end
 
 RegisterNetEvent('jp-meridian9:server:lootSpawnAck', function(data)
     local src = source
+    if Config.Debug then
+        local cnt = (type(data) == 'table' and type(data.props) == 'table') and #data.props or -1
+        print(('[jp-meridian9] lootSpawnAck received: src=%d count=%d'):format(src, cnt))
+    end
     if type(src) ~= 'number' or src <= 0 or type(data) ~= 'table' then
         return
     end
@@ -247,6 +236,14 @@ RegisterNetEvent('jp-meridian9:server:lootSpawnAck', function(data)
             local slot = session.loot[row.lootId]
             if slot and not slot.picked then
                 slot.propNetId = row.netId
+                local px, py, pz = tonumber(row.x), tonumber(row.y), tonumber(row.z)
+                if px and py and pz then
+                    local reported = vector3(px + 0.0, py + 0.0, pz + 0.0)
+                    local maxShift = (Config.Loot and tonumber(Config.Loot.maxPickupReportShift)) or 35.0
+                    if slot.coords and #(reported - slot.coords) <= maxShift then
+                        slot.pickupCoords = reported
+                    end
+                end
             end
         end
     end
@@ -254,14 +251,27 @@ RegisterNetEvent('jp-meridian9:server:lootSpawnAck', function(data)
     local entries = {}
     for lootId, slot in pairs(session.loot) do
         if slot.propNetId and not slot.picked then
+            local c = slot.pickupCoords or slot.coords
+            local ex, ey, ez = nil, nil, nil
+            if c and c.x then
+                ex, ey, ez = c.x + 0.0, c.y + 0.0, c.z + 0.0
+            end
             entries[#entries + 1] = {
                 lootId = lootId,
                 netId = slot.propNetId,
                 itemId = slot.itemId,
+                fictionTag = slot.fictionTag,
+                x = ex,
+                y = ey,
+                z = ez,
             }
         end
     end
 
+    if Config.Debug then
+        print(('[jp-meridian9] lootRegister broadcast: session=%s entries=%d members=%d'):format(
+            sessionId, #entries, #session.members))
+    end
     for _, m in ipairs(session.members) do
         TriggerClientEvent('jp-meridian9:client:lootRegister', m, {
             sessionId = sessionId,
@@ -276,15 +286,17 @@ lib.callback.register('jp-meridian9:loot:pickup', function(source, lootId)
         return { ok = false, reason = 'invalid_args' }
     end
 
+    local session = MRD9.Session.GetByPlayer(src)
+    if not session or not sessionAllowsLoot(session) then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_other', 'no_session')
+        return { ok = false, reason = 'no_session' }
+    end
+
     local now = GetGameTimer()
     local cd = (Config.Loot and Config.Loot.cooldownMs) or 500
     if (lastPickupMs[src] or 0) + cd > now then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_other', 'cooldown')
         return { ok = false, reason = 'cooldown' }
-    end
-
-    local session = MRD9.Session.GetByPlayer(src)
-    if not session or not sessionAllowsLoot(session) then
-        return { ok = false, reason = 'no_session' }
     end
 
     local memberOk = false
@@ -295,52 +307,48 @@ lib.callback.register('jp-meridian9:loot:pickup', function(source, lootId)
         end
     end
     if not memberOk then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_other', 'not_member')
         return { ok = false, reason = 'not_member' }
     end
 
     local slot = session.loot and session.loot[lootId]
     if not slot or slot.picked then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_other', 'not_found')
         return { ok = false, reason = 'not_found' }
     end
 
     local ped = GetPlayerPed(src)
     if not ped or ped == 0 then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_other', 'no_ped')
         return { ok = false, reason = 'no_ped' }
     end
     local pc = GetEntityCoords(ped)
-    local lc = slot.coords
-    local maxDist = (Config.Loot and Config.Loot.pickupRadius) or 3.0
+    local lc = slot.pickupCoords or slot.coords
+    local maxDist = (Config.Loot and Config.Loot.pickupRadius) or 4.5
     if #(pc - lc) > maxDist + 0.75 then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_distance', 'too_far')
         return { ok = false, reason = 'too_far' }
     end
 
     local itemId = slot.itemId
     if type(itemId) ~= 'string' or not findItemDef(itemId) then
+        MRD9.Loot.LogFailure(src, session, lootId, 'failed_other', 'bad_item')
         return { ok = false, reason = 'bad_item' }
     end
 
     lastPickupMs[src] = now
-    slot.picked = true
 
-    session.inventory[src] = session.inventory[src] or {}
-    local inv = session.inventory[src]
-    inv[itemId] = (inv[itemId] or 0) + 1
-
-    for _, m in ipairs(session.members) do
-        TriggerClientEvent('jp-meridian9:client:lootRemoved', m, { lootId = lootId })
+    local result = MRD9.Loot.RollAndGrant(src, session, lootId)
+    if result.ok then
+        local def = findItemDef(result.itemId)
+        result.name = def and def.name or result.itemId
+        result.nameKey = def and def.nameKey or nil
+        if Config.Debug then
+            print(('[jp-meridian9] loot pickup src=%d session=%s item=%s qty=%d'):format(
+                src, session.id, result.itemId, result.count or 1))
+        end
     end
-
-    local def = findItemDef(itemId)
-    if Config.Debug then
-        print(('[jp-meridian9] loot pickup src=%d session=%s item=%s qty=%d'):format(src, session.id, itemId, inv[itemId]))
-    end
-
-    return {
-        ok = true,
-        itemId = itemId,
-        name = def and def.name or itemId,
-        count = inv[itemId],
-    }
+    return result
 end)
 
 AddEventHandler('playerDropped', function()

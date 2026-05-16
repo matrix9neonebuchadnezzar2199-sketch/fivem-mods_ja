@@ -13,6 +13,6 @@ This product includes software developed by:
 Modifications applied for jp-meridian9 integration are documented
 in the header of each derivative file under:
   - jp-meridian9/server/arena/spawn.lua
-  - jp-meridian9/client/arena/zombie_ai.lua
+  - jp-meridian9/client/arena.lua
 
 See LICENSE-APACHE-2.0 for the full Apache 2.0 license text.

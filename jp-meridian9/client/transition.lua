@@ -460,6 +460,8 @@ function MRD9.Transition.TeleportToLosSantos(rp)
     SetEntityVisible(ped, true, false)
     SetEntityInvincible(ped, false)
     SetPlayerControl(PlayerId(), true, 0)
+    -- 任務中ループが止まった直後は他 HUD が Radar OFF のままにすることがある
+    pcall(function() DisplayRadar(true) end)
 
     DoScreenFadeIn(1000)
     return true

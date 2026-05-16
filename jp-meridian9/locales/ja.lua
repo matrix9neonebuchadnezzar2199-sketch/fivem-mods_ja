@@ -55,9 +55,6 @@ Locales['ja'] = {
     ['vega_tutorial_end'] = '結構です。それでは、いつでもどうぞ。準備が整いましたら、再度お越しください。地下にゲートを用意しています。',
     ['vega_repeat_greeting'] = '……お戻りでしたか。ご用件は？',
     ['vega_repeat_start_mission'] = 'ゲートを起動してくれ',
-    ['vega_repeat_sell'] = '回収物を売却したい',
-    ['vega_repeat_sell_sub'] = '※ INSTRUCTION-015 で実装予定',
-    ['vega_repeat_sell_wip'] = '（売却機能は準備中です）',
     ['vega_repeat_info'] = '最近、何か情報は？',
     ['vega_repeat_leave'] = '帰る',
     ['vega_repeat_leave_response'] = 'お気をつけて。',
@@ -215,6 +212,32 @@ Locales['ja'] = {
     ['contract_required'] = '先にヴェガと契約を結ぶ必要があります',
     ['contract_signed'] = '契約が締結されました。JANUS プログラムへようこそ',
     ['debug_only'] = 'このコマンドはデバッグモード時のみ使用可能です',
+
+    -- ▼ 回収アイテム（`Config.Items[].nameKey` と対応。表示は `_()`、素材 PNG は英語ファイル名）
+    ['m9_item_field_tool_kit'] = 'フィールド工具キット',
+    ['m9_item_repair_drone'] = '修理ドローン',
+    ['m9_item_encrypted_keycard'] = '暗号化キーカード',
+    ['m9_item_dimensional_scanner'] = '次元スキャナー',
+    ['m9_item_energy_cell'] = 'エネルギーセル',
+    ['m9_item_ration_pack'] = '携行食料パック',
+    ['m9_item_thermal_goggles'] = '熱感知ゴーグル',
+    ['m9_item_motion_sensor'] = 'モーションセンサー',
+    ['m9_item_radiation_detector'] = '放射線検知器',
+    ['m9_item_biometric_scanner'] = 'バイオメトリックスキャナー',
+    ['m9_item_tactical_helmet'] = 'タクティカルヘルメット',
+    ['m9_item_protective_mask'] = '防護マスク',
+    ['m9_item_nanite_repair_paste'] = 'ナノ修復剤',
+    ['m9_item_hacking_device'] = 'ハッキングデバイス',
+    ['m9_item_tactical_gloves'] = '戦術グローブ',
+    ['m9_item_comms_unit'] = '通信デバイス',
+    ['m9_item_multitool'] = 'マルチツール',
+    ['m9_item_oxygen_cylinder'] = '酸素ボンベ',
+    ['m9_item_radiation_suit'] = '放射線防護スーツ',
+    ['m9_item_welding_torch'] = '溶接トーチ',
+    ['m9_item_combat_boots'] = 'コンバットブーツ',
+    ['m9_item_shield_booster'] = 'シールドブースター',
+    ['m9_item_data_chip'] = 'データチップ',
+    ['m9_item_tactical_vest'] = '戦術ベスト',
 }
 
 --- フレーバーセリフ（`_()` 非対象・テーブル参照）
@@ -237,9 +260,12 @@ Locales['ja'].vega_flavor = {
 function _(key, ...)
     local locale = Config and Config.Locale or 'ja'
     local pack = Locales[locale] or Locales['ja']
-    local str = pack and pack[key] or key
+    local str = pack and pack[key]
+    if type(str) ~= 'string' and locale ~= 'ja' then
+        str = Locales['ja'] and Locales['ja'][key]
+    end
     if type(str) ~= 'string' then
-        return tostring(key)
+        str = tostring(key)
     end
     if select('#', ...) > 0 then
         return string.format(str, ...)

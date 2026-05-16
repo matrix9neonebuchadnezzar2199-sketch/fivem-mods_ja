@@ -37,10 +37,12 @@ local function startMarkerLoop()
                         local d = #(pc - pt.coords)
                         if d < 200.0 then
                             local r = tonumber(pt.radius) or 3.0
-                            -- タイプ 1: 円柱マーカー。地面から少し上に描画。
+                            local ex = Config.Extract or {}
+                            local zOff = tonumber(ex.markerCylinderZOffset) or 0.2
+                            -- タイプ 1: 円柱。設定 z より少し上に中心（地中埋没を避ける）
                             DrawMarker(
                                 1,
-                                pt.coords.x + 0.0, pt.coords.y + 0.0, pt.coords.z - 0.95,
+                                pt.coords.x + 0.0, pt.coords.y + 0.0, pt.coords.z + zOff,
                                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                                 r * 2.0, r * 2.0, 1.5,
                                 220, 30, 30, 130,
@@ -221,10 +223,7 @@ local function runExtract(idx, pt)
 
     local res = lib.callback.await('jp-meridian9:extract:request', false, idx)
     if type(res) == 'table' and res.ok then
-        lib.notify({
-            type = 'success',
-            description = _('extract_success', pt.label or ''),
-        })
+        -- リザルト NUI が主通知。直後の lib.notify はフェード／フォーカスと競合しやすいため出さない。
     else
         local r = type(res) == 'table' and res.reason or 'unknown'
         local key = 'extract_err_' .. tostring(r)
@@ -251,14 +250,18 @@ local function startProximity()
                 if pt and not State.inProgress then
                     if not State.textUiOpen then
                         State.textUiOpen = true
+                        local ex = Config.Extract or {}
                         lib.showTextUI(_('extract_textui_prompt', pt.label or ''), {
-                            position = (Config.Extract and Config.Extract.textUiPosition) or 'bottom-center',
+                            position = ex.textUiPosition or 'right-center',
                             icon = 'right-from-bracket',
-                            style = {
-                                fontSize = '1.5em',
-                                padding = '12px 18px',
-                                borderRadius = '6px',
-                            },
+                            style = ex.textUiStyle
+                                or {
+                                    backgroundColor = '#2e7d32',
+                                    color = '#f1f8e9',
+                                    fontSize = '1.35em',
+                                    padding = '10px 18px',
+                                    borderRadius = '8px',
+                                },
                         })
                     end
                     if IsControlJustReleased(0, 38) then

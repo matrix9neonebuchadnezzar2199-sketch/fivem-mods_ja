@@ -35,6 +35,10 @@ function MRD9.Arena.OnClientZombieSpawned(src, data)
     if type(sessionId) ~= 'string' or type(data.netId) ~= 'number' then
         return
     end
+    -- fictionTag 近接スポーン等: ウェーブ進行・HUD 用の arenaStates に混ぜない
+    if type(data.source) == 'string' and string.sub(data.source, 1, 8) == 'fiction:' then
+        return
+    end
     local session = MRD9.Session.Get(sessionId)
     if not session then
         return
@@ -87,6 +91,11 @@ local function onZombieKilledInternal(sessionId, netId, killerSrc)
     st.zombies[netId] = nil
     st.killCount = (st.killCount or 0) + 1
 
+    local session = MRD9.Session.Get(sessionId)
+    if session and session.zombieState then
+        session.zombieState.totalKilled = math.floor(tonumber(session.zombieState.totalKilled) or 0) + 1
+    end
+
     local expected = st.expectedThisWave or 0
     local spawned = st.spawnedThisWave or 0
     if spawned >= expected and countKeys(st.zombies) == 0 then
@@ -118,7 +127,40 @@ RegisterNetEvent('jp-meridian9:server:zombieKilled', function(data)
     if not allowed then
         return
     end
-    onZombieKilledInternal(sessionId, netId, src)
+
+    local st = arenaStates[sessionId]
+    if st and st.zombies and st.zombies[netId] then
+        onZombieKilledInternal(sessionId, netId, src)
+        return
+    end
+
+    -- セッション中に増え続けないよう、最大件数で簡易 LRU 風に切り詰める。
+    -- netId は GTA 内で再利用されうるため、本当に厳密にやるなら time-based expire が必要だが、
+    -- HUD 表示のキル合計はあくまで概算で良いので 1000 件で頭打ち + 古い順削除で十分。
+    session._hudKillSeen = session._hudKillSeen or {}
+    session._hudKillSeenOrder = session._hudKillSeenOrder or {}
+    if session._hudKillSeen[netId] then
+        return
+    end
+    session._hudKillSeen[netId] = true
+    session._hudKillSeenOrder[#session._hudKillSeenOrder + 1] = netId
+    local cap = (Config and Config.HUD and tonumber(Config.HUD.killSeenCap)) or 1000
+    if #session._hudKillSeenOrder > cap then
+        local evictCount = math.max(1, math.floor(cap / 4))
+        for i = 1, evictCount do
+            local oldNet = session._hudKillSeenOrder[i]
+            if oldNet ~= nil then
+                session._hudKillSeen[oldNet] = nil
+            end
+        end
+        local kept = {}
+        for i = evictCount + 1, #session._hudKillSeenOrder do
+            kept[#kept + 1] = session._hudKillSeenOrder[i]
+        end
+        session._hudKillSeenOrder = kept
+    end
+    session.zombieState = session.zombieState or { currentWave = 0, totalKilled = 0 }
+    session.zombieState.totalKilled = math.floor(tonumber(session.zombieState.totalKilled) or 0) + 1
 end)
 
 ---@param sessionId string
@@ -284,7 +326,11 @@ function MRD9.Arena.Cleanup(sessionId, reason)
     local session = MRD9.Session.Get(sessionId)
     if session then
         for _, m in ipairs(session.members) do
-            TriggerClientEvent('jp-meridian9:client:arenaCleanupZombies', m, { sessionId = sessionId, reason = reason or 'cleanup' })
+            TriggerClientEvent('jp-meridian9:client:arenaCleanupZombies', m, {
+                sessionId = sessionId,
+                reason = reason or 'cleanup',
+                force = true,
+            })
         end
     end
     arenaStates[sessionId] = nil
@@ -349,7 +395,11 @@ function MRD9.Arena.ForceKillAllZombies(sessionId)
         return
     end
     for _, m in ipairs(session.members) do
-        TriggerClientEvent('jp-meridian9:client:arenaCleanupZombies', m, { sessionId = sessionId, reason = 'admin_kill' })
+        TriggerClientEvent('jp-meridian9:client:arenaCleanupZombies', m, {
+            sessionId = sessionId,
+            reason = 'admin_kill',
+            force = true,
+        })
     end
     local st = arenaStates[sessionId]
     if st then

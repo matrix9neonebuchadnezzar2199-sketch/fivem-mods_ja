@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>MERIDIAN-9 HUD Preview</title>
+    <!-- アイコン付き確認: jp-meridian9 を cwd に py -m http.server → http://localhost:8080/html/hud_preview.html -->
+    <link rel="stylesheet" href="hud.css">
+</head>
+<body>
+    <div class="mrd9-hud-bg"></div>
+
+    <div id="mrd9-hud-root">
+        <!-- ===== 左カラム ===== -->
+        <aside class="mrd9-hud-left">
+            <section class="mrd9-hud-block mrd9-mission-block">
+                <div class="mrd9-block-label">現在の契約</div>
+                <div class="mrd9-mission-title">サイト・ナイン / 回収任務</div>
+                <div class="mrd9-mission-id">JNS-2026-0517-04</div>
+            </section>
+
+            <section class="mrd9-hud-block mrd9-party-block">
+                <div class="mrd9-block-label">分隊</div>
+                <ul class="mrd9-party-list" id="mrd9-party-list"></ul>
+            </section>
+
+            <section class="mrd9-hud-block mrd9-loot-block">
+                <div class="mrd9-block-label">回収物</div>
+                <ul class="mrd9-loot-list" id="mrd9-loot-list"></ul>
+                <div class="mrd9-loot-empty mrd9-hidden" id="mrd9-loot-empty">— 回収物なし —</div>
+            </section>
+        </aside>
+
+        <!-- ===== 右上 ===== -->
+        <aside class="mrd9-hud-right-top">
+            <div class="mrd9-clock-block">
+                <div class="mrd9-clock-time" id="mrd9-clock">22:47</div>
+                <div class="mrd9-clock-date">サイト・ナイン / 47日目</div>
+            </div>
+            <div class="mrd9-metrics-block">
+                <div class="mrd9-metric-row">
+                    <span class="mrd9-metric-label">キル合計</span>
+                    <span class="mrd9-metric-value"><span id="m-kills">17</span> / <span id="m-kills-target">30</span></span>
+                </div>
+                <div class="mrd9-metric-row">
+                    <span class="mrd9-metric-label">回収数</span>
+                    <span class="mrd9-metric-value"><span id="m-loot">4</span> / <span id="m-loot-max">12</span></span>
+                </div>
+                <div class="mrd9-metric-row mrd9-metric-extract">
+                    <span class="mrd9-metric-label">制限時間</span>
+                    <span class="mrd9-metric-value" id="m-extract">04:32</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== 入手通知（実機 index と同様に root 外へ） ===== -->
+    </div>
+
+    <div id="mrd9-toast-layer" class="mrd9-toast-layer">
+        <div class="mrd9-pickup-toast-area" id="mrd9-pickup-toast-area"></div>
+        <div class="mrd9-leave-banner-area" id="mrd9-leave-banner-area"></div>
+    </div>
+
+    <!-- プレビュー操作パネル -->
+    <div class="mrd9-debug-panel">
+        <div class="mrd9-debug-title">プレビュー操作</div>
+        <button type="button" onclick="mockPickup('multitool', 'Multitool', 'common')">+ Multitool</button>
+        <button type="button" onclick="mockPickup('energy_cell', 'Energy Cell', 'rare')">+ Energy cell</button>
+        <button type="button" onclick="mockPickup('shield_booster', 'Shield Booster', 'rare')">+ Shield</button>
+        <button type="button" onclick="mockPickup('data_chip', 'Data Chip', 'legendary', true)">+ Fiction chip</button>
+        <button type="button" onclick="mockDamage()">ダメージ</button>
+        <button type="button" onclick="mockHeal()">全回復</button>
+        <button type="button" onclick="mockKill()">メンバー死亡</button>
+        <button type="button" onclick="mockDisconnect()">メンバー切断</button>
+        <button type="button" onclick="mockForceLeave()">強制終了</button>
+    </div>
+
+    <script src="item-icon-map.js"></script>
+    <script src="hud_preview.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>2026-05-16 開発日記 - jp-meridian9</title>
+<link rel="stylesheet" href="../../.cursor/templates/diary-style.css">
+</head>
+<body class="diary">
+<header>
+  <h1>2026-05-16 開発日記</h1>
+  <p>ツール: <strong>jp-meridian9</strong></p>
+</header>
+
+<section class="diary-toc">
+  <h2>目次</h2>
+  <table>
+    <thead>
+      <tr><th>時刻</th><th>概要</th><th>Commit</th><th>詳細</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>19:57</td>
+        <td>任務中にゲーム標準の弾薬 HUD を非表示</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-1957">詳細</a></td>
+      </tr>
+      <tr>
+        <td>20:01</td>
+        <td>リザルト用 BGM 置き場 <code>html/sounds/</code> と <code>files</code> ワイルドカード</td>
+        <td><span class="commit-hash">eb5f5e5</span></td>
+        <td><a href="#entry-2001">詳細</a></td>
+      </tr>
+      <tr>
+        <td>20:18</td>
+        <td>任務制限時間 HUD: <code>endsAt</code> を TransferIn で設定／HUD を転送前に有効化</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-2018">詳細</a></td>
+      </tr>
+      <tr>
+        <td>20:54</td>
+        <td>任務ライフサイクル レビュー反映：timeout Result、PlayArea 境界、admin kick、HUD ローカル補間 ほか</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-2054">詳細</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<main>
+<section id="entry-1957" class="entry">
+  <h2>任務中の残弾表示（標準 HUD）を抑制</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>19:57 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/client/hud.lua</code>（<code>DisplayAmmoThisFrame(false)</code> ループ・任務終了／リソース停止で停止）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.HUD.hideAmmoHud</code> 既定 true）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/2026-05-16_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>NUI 側に弾数 UI は無く、表示は GTA 標準の弾薬 HUD が任務中も出ていた。<code>MRD9.HUD.OnMissionStart</code>〜<code>OnMissionEnd</code> の間、毎ティック <code>DisplayAmmoThisFrame(false)</code> で非表示にする。運営が戻したい場合は <code>hideAmmoHud = false</code>。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>実機で武器持ち替え・リロード時も弾数が出ないこと、任務終了後に通常 HUD に戻ることを確認</li></ul>
+</section>
+
+<section id="entry-2001" class="entry">
+  <h2>リザルト BGM 用ディレクトリの枠だけ追加</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>20:01 JST</strong></span>
+    <span>Commit <strong class="commit-hash">eb5f5e5</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/html/sounds/.gitkeep</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（<code>html/sounds/*.mp3</code> を <code>files</code> に列挙）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-16_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>マスターが <code>.mp3</code> で BGM を用意する前提のため、配置先として <code>html/sounds/</code> を作成し、NUI から配信されるよう <code>files</code> にワイルドカードを追加。再生ロジックは未接続。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li><code>result.js</code> 等で <code>&lt;audio&gt;</code> または <code>Audio()</code> を接続し、任務終了時のみ再生・閉じるとき停止</li></ul>
+</section>
+
+<section id="entry-2018" class="entry">
+  <h2>制限時間カウント: サーバ <code>endsAt</code> 基準とクライアント HUD 受信のずれ修正</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>20:18 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/server/session.lua</code>（<code>endsAt</code> を <code>Create</code> から除去し <code>TransferIn</code> の <code>IN_MISSION</code> 時に <code>GetGameTimer() + timeLimit</code> で設定）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/main.lua</code>（<code>OnMissionStart</code> を <code>TeleportToSiteNine</code> より前に呼び、転送待ち中も <code>hud:state</code> を捨てない）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-16_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>マスター報告の「制限時間が進まないことがある」についてコードレビュー。<code>endsAt</code> が <code>Session.Create</code> 時点で固定されていたため、<code>TransferIn</code> までの遅延（デバッグ <code>Wait(1000)</code> 等）で任務開始前から秒が減る可能性があった。また <code>onMissionStart</code> で <code>TeleportToSiteNine</code> 完了後まで <code>HUD.OnMissionStart</code> が遅延し、その間 <code>phaseCVisible == false</code> のため <code>jp-meridian9:client:hud:state</code> が破棄され、NUI の <code>--:--</code> のまま止まって見えるレースがあった。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul><li>実機で長めの転送（初回 Cayo IPL）後も制限時間が毎秒更新されること</li></ul>
+</section>
+
+<section id="entry-2054" class="entry">
+  <h2>任務ライフサイクル コードレビュー反映：timeout Result／PlayArea 境界／admin kick ほか</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>20:54 JST</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/sql/install.sql</code>（<code>mrd9_result_logs.result</code> ENUM に <code>'timeout'</code> / <code>'out_of_zone'</code> を追加）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/sql/migrations/2026-05-16_mrd9_result_logs_timeout_outofzone.sql</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/result.lua</code>（<code>Discard</code> と <code>PickVegaLine</code> に <code>'timeout' / 'out_of_zone'</code> 分岐）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/session.lua</code>（<code>Destroy</code> 内で未脱出メンバーへ <code>Result.Discard</code> 連携・<code>RemovePlayer</code> の reason ガードに <code>'out_of_zone'</code> 追加）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/main.lua</code>（<code>extracted</code> 以外でも Result NUI を見せるためテレポート保留対象を拡張）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/result.js</code>（<code>'timeout' / 'out_of_zone'</code> のタイトル分岐）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/server/playarea.lua</code>（<code>Config.Mission.playArea</code> に基づく境界外監視・警告→ <code>Session.RemovePlayer(..., 'out_of_zone')</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（<code>server/playarea.lua</code> を <code>survival.lua</code> の後に登録）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.Mission.playArea</code> 追加・<code>cleanupIntervalSeconds 60→5</code>・<code>Config.HUD.killSeenCap=1000</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/main.lua</code>（<code>/m9_admin_session_kick &lt;playerId&gt;</code> 追加・ACE 必須）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/server/arena/arena.lua</code>（<code>session._hudKillSeen</code> を <code>killSeenCap</code> で簡易 LRU 切り詰め）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/hud.js</code>（制限時間タイマーのクライアントローカル補間。<code>hud:state</code> 受信で同期、<code>setInterval 250ms</code> で減算）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-16_開発日記.html</code></li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター依頼の「ヴェガ出発 → 戦闘 → 脱出／時間切れ／死亡／DC／パワープレイ」全シナリオのコードレビュー（前段会話）で挙げた優先度高〜中項目を順に反映した。</p>
+
+  <ul>
+    <li><strong>#1 タイムアウト時の Result：</strong><code>Session.Destroy('timeout')</code> から未脱出メンバーごとに <code>Result.Discard(s, src, 'timeout')</code> を呼び、<code>mrd9_result_logs.result='timeout'</code> を残す。<code>arena_wiped/all_lost</code> でも同じ経路で <code>'died'</code> を Discard する。<code>extractedInventory</code> がある脱出済みプレイヤーは二重記録しない。</li>
+    <li><strong>#1 続き：</strong><code>client/main.lua</code> で <code>extracted</code> 以外（<code>died / all_lost / arena_wiped / timeout / out_of_zone</code>）でも Result NUI を見せ終わるまで LS 帰還を保留（90s フォールバック付き）。死亡演出 <code>NetworkResurrectLocalPlayer</code> は従来通り即実行。</li>
+    <li><strong>#2 PlayArea：</strong><code>Config.Mission.playArea</code>（center / maxRadius=1200 / warnSec=20 / graceSec=30）と新規 <code>server/playarea.lua</code> を追加。境界外にいるプレイヤーへ警告 → 50 秒で <code>Session.RemovePlayer(src, 'out_of_zone')</code>。範囲内に戻ればカウンタリセット。</li>
+    <li><strong>#3 admin kick：</strong><code>/m9_admin_session_kick &lt;playerId&gt;</code> を追加。ACE <code>jp-meridian9.admin</code> 必須。<code>Session.RemovePlayer(target, 'forced')</code> 経由で既存の <code>Result.Discard 'forced'</code> に乗る。</li>
+    <li><strong>#4 タイムアウト検出：</strong><code>cleanupIntervalSeconds</code> を 60→5 に短縮（負荷は無視できる）。endsAt 到達からの遅延を最大 5 秒に。</li>
+    <li><strong>#6 <code>_hudKillSeen</code> 肥大化：</strong>セッション中の累積を <code>Config.HUD.killSeenCap=1000</code> で頭打ち、古い順 1/4 を削除する LRU 風。netId 再利用による誤集計はリスク低下、HUD のキル合計は概算で十分のため許容。</li>
+    <li><strong>#8 タイマー補間：</strong><code>html/hud.js</code> で <code>hud:state</code> の <code>extractSeconds</code> を <code>performance.now()</code> 基準でローカル補間。<code>setInterval(250ms)</code> で減算、次の broadcast で上書き同期。サーバ broadcast 抜けで秒が止まって見える事故を緩和。</li>
+  </ul>
+
+  <h3>スキップ項目（後ほど検討）</h3>
+  <ul>
+    <li><strong>#5 死亡時 NUI とフェードの競合：</strong>#1 のテレポート保留拡張で「Result NUI を見せてから帰還」になったため、競合自体は緩和されている見込み。実機で「死亡 → Resurrect → Result NUI → ESC で帰還」が滑らかか目視確認が必要。問題が出たら別途調整。</li>
+    <li><strong>#7 境界外ゾンビ湧き：</strong>#2 の <code>out_of_zone</code> 排除で境界外滞在自体が 50 秒で終わるため自然解決見込み。Survival の <code>spawnAroundPlayer</code> ロジック自体には手を入れていない。</li>
+  </ul>
+
+  <h3>他コードへの影響と注意</h3>
+  <ul>
+    <li><strong>SQL マイグレーション必須：</strong>運営環境では <code>2026-05-16_mrd9_result_logs_timeout_outofzone.sql</code> を適用しないと <code>Result.Discard('timeout')</code> 実行時に ENUM 制約違反で INSERT 失敗する。</li>
+    <li><strong>Config 後方互換：</strong>新フィールド（<code>playArea</code> / <code>killSeenCap</code>）はいずれも nil チェック＋デフォルトを実装側で持つため、運営の旧 <code>config.lua</code> のままでも動作する。<code>cleanupIntervalSeconds</code> も nil 時は 60 にフォールバック。</li>
+    <li><strong>playArea 中心座標は暫定値：</strong><code>vector3(4790.0, -5170.0, 10.0)</code> は Cayo 概略中心。<code>ExtractPoints</code> 5 ヶ所（監視塔 / ヘリポート / テント / 飛行場 / 配電施設）が全て maxRadius=1200 内にあるかは実機要確認。外れていれば運営が <code>config.lua</code> で調整。</li>
+    <li><strong>Result.Discard の二重発火回避：</strong><code>Session.RemovePlayer(src, 'out_of_zone')</code> が最後の 1 人なら直後に <code>Destroy('all_lost')</code> が走るが、members から既に除外されているため Destroy 内の Discard ループは空回り。二重 INSERT は起きない。</li>
+  </ul>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>SQL マイグレーション <code>2026-05-16_mrd9_result_logs_timeout_outofzone.sql</code> を運営 DB に適用</li>
+    <li>実機: <strong>20 分タイムアウト</strong>で Result NUI に「TIME EXPIRED」が出て ESC で帰還できること</li>
+    <li>実機: <strong>境界外（例: ヘリで本島側へ 1500m）</strong>でカウントダウン警告 → 50 秒で強制排除されること</li>
+    <li>実機: <strong><code>/m9_admin_session_kick &lt;playerId&gt;</code></strong>で別プレイヤーがセッションから外れ Result NUI（disconnected 系）を受け取ること</li>
+    <li>#5 の死亡演出 → NUI → 帰還の流れが滑らかか目視確認</li>
+    <li><code>Config.Mission.playArea.center</code> と <code>maxRadius</code> の実機調整（ExtractPoints が全て内側に入っているか）</li>
+  </ul>
+</section>
+</main>
+
+</body>
+</html>

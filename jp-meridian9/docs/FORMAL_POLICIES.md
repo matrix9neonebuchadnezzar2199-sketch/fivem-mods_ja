@@ -22,6 +22,8 @@
 
 これら **以外** の関数・変数は **`local` 必須**。将来的にモジュール分割（`exports` ベース）への移行余地は残すが、現段階では開発速度を優先する。
 
+**`_()` シャドウ禁止**：`_` は上記のロケール関数を指す。`for _, x in ipairs(t)` や `local _, foo = ...` では第1変数が `_` に束縛され、同一ブロック内の `_('key')` が **数値を関数呼び出し**する事故になる（実例: `2026-05-15_開発日記.html#entry-1442`）。捨て変数は `i` / `k` / `_idx` 等にする。手動チェック例: `grep -rn "for _," jp-meridian9/client jp-meridian9/server` と `grep -rn "local _," jp-meridian9/client jp-meridian9/server` でヒットを確認し、同関数内に `_(` があればレビューする。
+
 ---
 
 ## INSTRUCTION-001 補足：`fxmanifest.lua` ヘッダ
@@ -217,6 +219,26 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 | アリーナ連携 | `client/arena.lua` が `MRD9.HUD.PushEvent` でウェーブ系トースト（`lib.notify` と併用）。 |
 | NUI | `html/index.html` / `style.css` / `app.js`。`#m9-toasts` は `#app` 外に配置し、任務終了後も短時間トーストを表示可能。 |
 | fxmanifest | **`server/hud.lua` は `server/arena/arena.lua` の直後**（`GetHudSnapshot` 依存）。**`client/hud.lua` は `client/main.lua` より前**。 |
+
+## INSTRUCTION-014.1：ルートアイテム可視化（net object タイミング・実装済み）
+
+| 項目 | 内容 |
+|------|------|
+| 症状 | `CreateObject(..., isNetwork=true)` 直後に `NetworkGetNetworkIdFromEntity` を呼ぶと OneSync で net object 未確定のため `netId=0` / F8 に `NETWORK_GET_NETWORK_ID_FROM_ENTITY: no net object` が出る。`lootSpawnAck` の `props` が空になり全員へ `lootRegister` が空配列 → ブリップ・マーカー・ox_target が一切載らない |
+| クライアント修正 | `client/loot.lua` の `lootSpawnBatch`：`NetworkRegisterEntityAsNetworked`（未 network のときのみ）→ `NetworkGetEntityIsNetworked` が true になるまで最大 2s `Wait(0)` → その後 `NetworkGetNetworkIdFromEntity`。`SetNetworkIdCanMigrate(netId, false)` でリーダー側ホスト固定。`netId==0` なら `DeleteEntity` で残骸除去。`FreezeEntityPosition` で転がり防止（任意） |
+| サーバー遅延 | `server/session.lua` の `TransferIn` 末尾：`Loot.Spawn` を `CreateThread` + `Wait(5000)` 後に実行。遷移中に prop 生成が走らないよう保険。セッションが `IN_MISSION` でなくなっていたら `Loot.Spawn` をスキップして `MRD9.Log` |
+| デバッグ | `Config.Debug` 時のみ：`lootSpawnBatch` 受信・prop 成功・`lootSpawnAck` 送信、`lootSpawnAck` 受信・`lootRegister` broadcast、`lootRegister` 受信を `print` |
+| 規約本文 | 下記「ネットワークエンティティ生成規約」を正とする |
+
+### ネットワークエンティティ生成規約（INSTRUCTION-014.1 由来）
+
+クライアントで `CreateObject(model, x, y, z, true, true, false)` のように `isNetwork=true` で生成した直後は、`NetworkGetNetworkIdFromEntity` を即呼び出さないこと。net object 化は 1〜数フレーム遅延する。
+
+1. `NetworkRegisterEntityAsNetworked(entity)` を明示呼出（**既に network 化済みなら呼ばない**。`NetworkGetEntityIsNetworked` でガード）
+2. `NetworkGetEntityIsNetworked(entity)` が true を返すまで `Wait(0)` ループで最大 2 秒待機
+3. その後 `NetworkGetNetworkIdFromEntity(entity)` で netId を取得
+4. `netId == 0` のときは生成失敗とみなし `DeleteEntity` で残骸を消す
+5. 他クライアントへ同期するルート prop では `SetNetworkIdCanMigrate(netId, false)` を推奨（リーダー固定）。リーダー切断時の挙動は INSTRUCTION-015 以降で再評価可
 
 ## INSTRUCTION-020：サイト・ナイン MAP 導入（v4 / LS 内 Sandy Shores 北部・確定運用）
 

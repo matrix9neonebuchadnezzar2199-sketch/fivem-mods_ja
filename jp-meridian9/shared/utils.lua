@@ -33,3 +33,30 @@ end
 function MRD9.GenerateSessionId()
     return ('S_%d_%d'):format(os.time(), math.random(1000, 9999))
 end
+
+--- 任務論理在庫をフラット化する。案S2: `{ main = {}, safe = {} }` と旧 `{ itemId = count }` の両対応。
+---@param inv table|nil
+---@return table<string, integer>
+function MRD9.FlattenMissionInventory(inv)
+    local flat = {}
+    if type(inv) ~= 'table' then
+        return flat
+    end
+    local function merge(t)
+        if type(t) ~= 'table' then
+            return
+        end
+        for itemId, qty in pairs(t) do
+            if type(itemId) == 'string' and type(qty) == 'number' and qty > 0 then
+                flat[itemId] = (flat[itemId] or 0) + qty
+            end
+        end
+    end
+    if type(inv.main) == 'table' or type(inv.safe) == 'table' then
+        merge(inv.main)
+        merge(inv.safe)
+        return flat
+    end
+    merge(inv)
+    return flat
+end

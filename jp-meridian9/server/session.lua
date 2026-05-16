@@ -100,7 +100,6 @@ function MRD9.Session.Create(params)
 
     local sessionId = MRD9.GenerateSessionId()
     local now = GetGameTimer()
-    local limitMs = (Config.Mission.timeLimitSeconds or 1200) * 1000
 
     ---@type table
     local session = {
@@ -111,7 +110,7 @@ function MRD9.Session.Create(params)
         state = 'CREATED',
         startedAt = now,
         startedAtIso = os.date('%Y-%m-%d %H:%M:%S'),
-        endsAt = now + limitMs,
+        -- endsAt: TransferIn で IN_MISSION 遷移時に設定（Create〜転送待ちで秒が削れないようにする）
         mission = {
             type = params.missionType or 'SAMPLE_RECOVERY',
             difficulty = params.difficulty or 'NORMAL',
@@ -124,7 +123,7 @@ function MRD9.Session.Create(params)
     for _, src in ipairs(params.members) do
         session.members[#session.members + 1] = src
         memberToSession[src] = sessionId
-        session.inventory[src] = {}
+        session.inventory[src] = { main = {}, safe = {} }
     end
 
     sessions[sessionId] = session
@@ -173,6 +172,11 @@ function MRD9.Session.TransferIn(sessionId)
     end
 
     s.state = 'IN_MISSION'
+    local tlSec = math.floor(tonumber(Config.Mission.timeLimitSeconds) or 1200)
+    if tlSec < 1 then
+        tlSec = 1
+    end
+    s.endsAt = GetGameTimer() + tlSec * 1000
     MRD9.Log('Session transferred in: id=%s', sessionId)
 
     local arenaEnabled = Config.Arena and Config.Arena.enabled ~= false
@@ -183,8 +187,17 @@ function MRD9.Session.TransferIn(sessionId)
         MRD9.Survival.Start(sessionId)
     end
 
+    -- INSTRUCTION-014.1: リーダーのテレポート・コリジョン待ち完了後に Loot.Spawn を呼ぶ。
     if MRD9.Loot and MRD9.Loot.Spawn then
-        MRD9.Loot.Spawn(sessionId)
+        CreateThread(function()
+            Wait(5000)
+            local s2 = MRD9.Session.Get(sessionId)
+            if s2 and s2.state == 'IN_MISSION' then
+                MRD9.Loot.Spawn(sessionId)
+            else
+                MRD9.Log('Loot.Spawn skipped: session=%s no longer IN_MISSION', sessionId)
+            end
+        end)
     end
 
     return true, nil
@@ -215,8 +228,24 @@ function MRD9.Session.RemovePlayer(src, reason)
     -- フェード・LoadScene・コリジョン待ちを経て安全に北ヤンクトン→LS へ戻す。
     -- ただし disconnect の場合はクライアントが既に居ないため何もしない。
 
-    if reason == 'died' or reason == 'disconnect' then
-        s.inventory[src] = {}
+    -- Phase-C HUD: members から外す前に残員へ離脱バナー（本人以外）
+    if MRD9.HUD and MRD9.HUD.NotifyPartyLeave then
+        local nuiReason = nil
+        if reason == 'died' then
+            nuiReason = 'dead'
+        elseif reason == 'disconnect' or reason == 'forced' or reason == 'out_of_zone' then
+            nuiReason = 'disconnected'
+        end
+        if nuiReason then
+            MRD9.HUD.NotifyPartyLeave(s, src, nuiReason)
+        end
+    end
+
+    if reason == 'died' or reason == 'disconnect' or reason == 'forced' or reason == 'out_of_zone' then
+        if MRD9.Result and MRD9.Result.Discard then
+            MRD9.Result.Discard(s, src, reason)
+        end
+        s.inventory[src] = { main = {}, safe = {} }
     end
 
     for i, m in ipairs(s.members) do
@@ -261,6 +290,29 @@ function MRD9.Session.Destroy(sessionId, reason)
 
     if MRD9.Extract and MRD9.Extract.OnSessionDestroy then
         MRD9.Extract.OnSessionDestroy(sessionId, reason)
+    end
+
+    -- 未脱出メンバーへの Result.Discard 連携（mrd9_result_logs に timeout 等を残す）
+    -- `extracted` で抜けたプレイヤーは Extract.OnSessionDestroy の前段で
+    -- `session.extractedInventory[identifier]` を持っているため除外する。
+    if MRD9.Result and MRD9.Result.Discard then
+        local discardReason = nil
+        if reason == 'timeout' then
+            discardReason = 'timeout'
+        elseif reason == 'arena_wiped' or reason == 'all_lost' then
+            discardReason = 'died'
+        end
+        if discardReason then
+            for _, src in ipairs(s.members or {}) do
+                local identifier = MRD9.GetIdentifier and MRD9.GetIdentifier(src) or nil
+                local extracted = identifier and s.extractedInventory and s.extractedInventory[identifier]
+                if not extracted then
+                    pcall(function()
+                        MRD9.Result.Discard(s, src, discardReason)
+                    end)
+                end
+            end
+        end
     end
 
     if MRD9.Arena and MRD9.Arena.Cleanup then
