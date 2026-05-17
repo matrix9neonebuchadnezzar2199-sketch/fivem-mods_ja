@@ -14,6 +14,7 @@ shared_scripts {
     'locales/ja.lua',
     'locales/en.lua',
     'config.lua',
+    'shared/portal_defs.lua',
 }
 
 client_scripts {
@@ -22,6 +23,7 @@ client_scripts {
     'client/result.lua',
     'client/arena.lua',
     'client/npc.lua',
+    'client/portal.lua',
     'client/dialogue.lua',
     'client/party.lua',
     'client/loot.lua',
@@ -33,6 +35,7 @@ client_scripts {
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/framework.lua',
+    'server/npc.lua',
     'server/contract.lua',
     'server/stats.lua',
     'server/session.lua',
@@ -49,6 +52,7 @@ server_scripts {
     'server/survival.lua',
     'server/playarea.lua',
     'server/party.lua',
+    'server/portal.lua',
     'server/main.lua',
     'server/mission.lua',
     'server/reward.lua',

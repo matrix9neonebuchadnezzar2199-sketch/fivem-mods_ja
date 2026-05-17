@@ -69,6 +69,11 @@ Locales['ja'] = {
     ['vega_flavor_none'] = '……特に新しい情報はありません。',
     ['vega_target_label'] = 'ヴェガと話す',
 
+    -- ▼ NPC 近接プロンプト（INSTRUCTION-022 / Config.NPC.interact.hud.text より `_('npc_prompt_talk')` を優先可）
+    ['npc_prompt_talk'] = '[E] 話しかける',
+    ['npc_prompt_busy'] = '（応対中）',
+    ['npc_prompt_cooldown'] = '少し待ってください',
+
     -- ▼ ブリップ（INSTRUCTION-010）
     ['npc_blip_label'] = 'Vega & Associates 法律事務所',
 

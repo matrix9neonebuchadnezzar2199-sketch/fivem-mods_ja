@@ -7,6 +7,10 @@
 
 Locales = Locales or {}
 Locales['en'] = {
+    ['npc_prompt_talk'] = '[E] Talk',
+    ['npc_prompt_busy'] = '(Busy)',
+    ['npc_prompt_cooldown'] = 'Please wait a moment',
+
     ['m9_item_field_tool_kit'] = 'Field Tool Kit',
     ['m9_item_repair_drone'] = 'Repair Drone',
     ['m9_item_encrypted_keycard'] = 'Encrypted Keycard',

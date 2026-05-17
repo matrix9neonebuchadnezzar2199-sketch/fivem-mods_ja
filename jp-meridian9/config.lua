@@ -20,7 +20,28 @@ Config.NPC = {
     invincible = true,                  -- 無敵化
     freeze = true,                      -- 移動禁止
     blockEvents = true,                 -- AIイベントブロック
-    targetDistance = 2.5,               -- ox_target 有効距離
+    -- INSTRUCTION-022: サーバ側距離検証用。coords 省略時は上記 `coords` の xyz を使用する。
+    points = {
+        vega = { enabled = true },
+    },
+    -- INSTRUCTION-022: NPC は E キー＋TextUI。任務受注フロー本体は変更せず呼び出しのみ差し替え。
+    interact = {
+        mode = 'key',
+        key = 38,
+        keyLabel = 'E',
+        promptDistance = 3.0,
+        triggerDistance = 2.0,
+        facingDotMin = 0.5,
+        cooldownMs = 800,
+        hud = {
+            style = 'bottom_center',
+            text = '[E] 話しかける',
+            subText = nil,
+            showOutline = true,
+            outlineColor = { r = 140, g = 60, b = 220, a = 180 },
+        },
+        entryEvent = 'mrd9:npc:interact',
+    },
     blip = {
         enabled = true,                 -- INSTRUCTION-010: 短距離マーカー表示
         sprite = 498,                   -- 書類系アイコン
@@ -29,6 +50,34 @@ Config.NPC = {
         shortRange = true,              -- 近距離のみ
         labelKey = 'npc_blip_label',    -- locales のキー（`_()` 参照）
         label = 'Vega & Associates',    -- labelKey 未使用時のフォールバック
+    },
+}
+
+-- ▼ ポータル演出（INSTRUCTION-022）--------------------------------
+-- 紫の渦／靄は**目印のみ**。インタラクション・ox_target は付けない。ON/OFF はサーバが `mrd9:portal:setState` で同期。
+Config.Portals = {
+    enabled = true,
+    lod = {
+        maxDrawDistance = 85.0,
+    },
+    -- 各要素の label はブリップ／ログ用（インタラクション文言ではない）
+    points = {
+        {
+            id = 'vega_gate',
+            coords = vector3(426.4, -978.8, 29.65),
+            label = '次元境界（演出）',
+        },
+    },
+    haze = {
+        enabled = true,
+        markerType = 28,
+        scale = { x = 1.9, y = 1.9, z = 0.45 },
+        rgba = { r = 140, g = 60, b = 220, a = 100 },
+        bobHz = 0.35,
+        bobAmp = 0.12,
+    },
+    gate = {
+        enabled = false,
     },
 }
 
