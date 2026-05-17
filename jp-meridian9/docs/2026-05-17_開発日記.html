@@ -26,9 +26,33 @@
       </tr>
       <tr>
         <td>—</td>
-        <td>INSTRUCTION-022: NPC を E キー化、ポータルを演出専用に追加</td>
+        <td>INSTRUCTION-022: NPC を E キー化（ポータル演出は後日撤去）</td>
         <td><span class="commit-hash">9b34e21, 322c607</span></td>
         <td><a href="#entry-022">詳細</a></td>
+      </tr>
+      <tr>
+        <td>—</td>
+        <td>ヴェガ未出現・紫マーカーのみ（スポーン＋靄描画ガード）</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-vega-spawn-fix">詳細</a></td>
+      </tr>
+      <tr>
+        <td>—</td>
+        <td>NPC TextUI をルート／脱出と同系の緑帯に統一</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-npc-textui-green">詳細</a></td>
+      </tr>
+      <tr>
+        <td>—</td>
+        <td>ポータル演出（紫靄）一式撤去</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-portal-remove">詳細</a></td>
+      </tr>
+      <tr>
+        <td>—</td>
+        <td>ヴェガ選択肢メニューを自前 NUI にし約 2 倍表示（ox_lib context はサイズ不可）</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-vega-menu-nui">詳細</a></td>
       </tr>
     </tbody>
   </table>
@@ -109,12 +133,102 @@
 
   <h3>概要</h3>
   <p>マスター仕様 INSTRUCTION-022 に従い、ヴェガ NPC の会話開始を <code>ox_target</code> から <strong>E キー＋TextUI</strong>へ変更。サーバで距離・クールダウンを再検証したうえで既存の <code>jp-meridian9:client:openDialogue</code> を発火し、対話・契約フロー本体は触らない方針。</p>
-  <p>ポータルは本リポに未実装だったため、<code>Config.Portals</code> とクライアント描画・サーバ状態同期・<code>/m9_portal*</code> を新規追加。インタラクションと <code>mrd9:portal:requestStart</code> 系は実装しない（演出のみ）。</p>
+  <p>（履歴）一時期 <code>Config.Portals</code> と紫靄マーカー・<code>/m9_portal*</code> を追加したが、マスター判断で <strong>2026-05-17 に演出一式を撤去</strong>した（<a href="#entry-portal-remove">別エントリ</a>）。</p>
 
   <h3>未完了 / 次タスク</h3>
   <ul>
     <li>実機: 3m/2m/向き/車両/クールダウン/リソース再起動後の TextUI 残留なし</li>
-    <li>実機: <code>/m9_portal vega_gate off</code> でマーカー演出のみ消灯すること</li>
+    <li>（後追記）ポータル演出は撤去済み。旧 <code>/m9_portal*</code> は存在しない</li>
+  </ul>
+</section>
+
+<section id="entry-vega-spawn-fix" class="entry">
+  <h2>ヴェガ未出現・床だけ紫マーカー問題の修正</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>（追記）</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/client/npc.lua</code>（地表 <code>GetGroundZFor_3dCoord</code>、<code>RequestCollisionAtCoord</code>、ネットワーク ped 既定 ON、リトライ、<code>MRD9.NPC.IsVegaSpawned</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.NPC.spawn</code>）</li>
+  </ul>
+  <h3>概要</h3>
+  <p>実機スクリーンショットで「ヴェガがいない・床に紫の円だけ」の報告。<code>CreatePed(..., z = coords.z - 1)</code> とコリジョン未ロードの組み合わせで床下／非表示になり得る。地表補正＋衝突待ち＋（既定）ネットワーク ped＋最大 8 回リトライで対処。当初は靄マーカーも入れたが、マスター判断で<strong>ポータル演出一式を後日撤去</strong>した（<a href="#entry-portal-remove">別エントリ</a>）。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 警察署前でヴェガが立つこと・F8 に CRITICAL が出ないこと</li>
+    <li>万一 <code>CreatePed</code> が環境で拒否される場合は <code>Config.NPC.spawn.networkPed = false</code> を試す</li>
+    <li>（後追記）紫靄演出は撤去済み。本エントリの「紫マーカー」は当時の症状記録</li>
+  </ul>
+</section>
+
+<section id="entry-npc-textui-green" class="entry">
+  <h2>NPC「[E] 話しかける」TextUI をルート／脱出と同系の緑帯に統一</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>（追記）</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.NPC.interact.textUiPosition</code> / <code>textUiStyle</code> / <code>textUiIcon</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/npc.lua</code>（<code>getNpcInteractTextUiOptions</code>、応対中プロンプトも同スタイル）</li>
+  </ul>
+  <h3>概要</h3>
+  <p><code>Config.Loot.textUiStyle</code> / <code>Config.Extract.textUiStyle</code> と同一の緑背景（<code>#2e7d32</code>）を <code>lib.showTextUI</code> の <code>style</code> に渡す。<code>interact.textUiStyle</code> 未設定時は <code>Config.Loot.textUiStyle</code> を流用し、運営がルート側だけ色を変えた場合も揃いやすくした。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 画面下の「[E] 話しかける」がルート取得の緑帯と見た目が揃っていること</li>
+  </ul>
+</section>
+
+<section id="entry-portal-remove" class="entry">
+  <h2>ポータル演出（紫靄・<code>/m9_portal*</code>）一式撤去</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>（追記）</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">❌</span> <code>jp-meridian9/client/portal.lua</code></li>
+    <li><span class="op">❌</span> <code>jp-meridian9/server/portal.lua</code></li>
+    <li><span class="op">❌</span> <code>jp-meridian9/shared/portal_defs.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（上記 3 本の参照削除）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.Portals</code> ブロック削除）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/README.md</code> / <code>docs/INSTRUCTION-022.1（NPC会話Eキー化＆ポータル演出化）.md</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-17_開発日記.html</code>（本エントリ・過去エントリの整合）</li>
+  </ul>
+  <h3>概要</h3>
+  <p>マスター判断: 紫の演出は実装・調整コストに対し効果が限定的で邪魔になりやすいため、描画・サーバ同期・運営コマンド・設定をまとめて削除。任務受注は引き続き NPC の E キーのみ。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: <code>refresh; restart jp-meridian9</code> 後、紫マーカーが出ず F8 に portal 関連エラーが無いこと</li>
+  </ul>
+</section>
+
+<section id="entry-vega-menu-nui" class="entry">
+  <h2>ヴェガ選択肢メニューを自前 NUI にし拡大表示（既定 2 倍）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>（追記）</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">➕</span> <code>jp-meridian9/client/vega_context.lua</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/vega_context.css</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/html/vega_context.js</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/dialogue.lua</code>（<code>lib.registerContext</code> / <code>showContext</code> を <code>MRD9.VegaContextShow</code> へ）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.NPC.contextMenuScale</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/html/index.html</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/README.md</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-17_開発日記.html</code></li>
+  </ul>
+  <h3>概要</h3>
+  <p>マスター要望: ヴェガの選択肢メニューを約 2 倍の大きさに。調査の結果、<code>ox_lib</code> の <code>lib.registerContext</code> には幅・フォント倍率の API が無く Lua からは拡大できない。対策として <code>index.html</code> 配下に ox_lib 風のパネルを追加し、<code>SetNuiFocus</code> ＋ <code>RegisterNUICallback</code> で選択を <code>client/dialogue.lua</code> の既存 <code>onSelect</code> に返す。拡大率は <code>Config.NPC.contextMenuScale</code>（既定 2.0）。パーティ招待など他の <code>registerContext</code> は未変更。</p>
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 選択肢の文字・ボタンが従来の ox context より明確に大きいこと、戻る／×／背景クリック／ESC で閉じること</li>
   </ul>
 </section>
 </main>

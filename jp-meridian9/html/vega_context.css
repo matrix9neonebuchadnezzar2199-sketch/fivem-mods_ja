@@ -1,0 +1,148 @@
+/* ヴェガ選択肢（ox_lib context 風・拡大表示。--mrd9-vega-ctx-scale は JS で設定） */
+.mrd9-vega-ctx {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  pointer-events: none;
+}
+
+.mrd9-vega-ctx:not(.mrd9-hidden) {
+  pointer-events: auto;
+}
+
+.mrd9-vega-ctx__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.mrd9-vega-ctx__panel {
+  --mrd9-vega-ctx-scale: 2;
+  position: absolute;
+  top: 8vh;
+  right: 2.5vw;
+  width: min(92vw, calc(22rem * var(--mrd9-vega-ctx-scale, 2)));
+  max-height: 86vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: calc(6px * var(--mrd9-vega-ctx-scale, 2));
+  box-shadow: 0 calc(8px * var(--mrd9-vega-ctx-scale, 2)) calc(40px * var(--mrd9-vega-ctx-scale, 2)) rgba(0, 0, 0, 0.55);
+  background: rgba(30, 32, 38, 0.97);
+  color: #f3f4f6;
+  font-family: system-ui, 'Segoe UI', sans-serif;
+  font-size: calc(0.95rem * var(--mrd9-vega-ctx-scale, 2));
+  line-height: 1.35;
+}
+
+.mrd9-vega-ctx__titlebar {
+  display: flex;
+  align-items: center;
+  gap: calc(0.35rem * var(--mrd9-vega-ctx-scale, 2));
+  padding: calc(0.45rem * var(--mrd9-vega-ctx-scale, 2)) calc(0.5rem * var(--mrd9-vega-ctx-scale, 2));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.mrd9-vega-ctx__back,
+.mrd9-vega-ctx__close {
+  flex: 0 0 auto;
+  width: calc(2.2rem * var(--mrd9-vega-ctx-scale, 2));
+  height: calc(2.2rem * var(--mrd9-vega-ctx-scale, 2));
+  border: none;
+  border-radius: calc(4px * var(--mrd9-vega-ctx-scale, 2));
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: calc(1rem * var(--mrd9-vega-ctx-scale, 2));
+  cursor: pointer;
+  line-height: 1;
+}
+
+.mrd9-vega-ctx__back:hover,
+.mrd9-vega-ctx__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mrd9-vega-ctx__back.mrd9-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mrd9-vega-ctx__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: calc(1.05rem * var(--mrd9-vega-ctx-scale, 2));
+  font-weight: 600;
+  padding: 0 calc(0.25rem * var(--mrd9-vega-ctx-scale, 2));
+  line-height: 1.25;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  white-space: normal;
+}
+
+.mrd9-vega-ctx__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: calc(0.35rem * var(--mrd9-vega-ctx-scale, 2));
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.mrd9-vega-ctx__opt {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(0.55rem * var(--mrd9-vega-ctx-scale, 2));
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: calc(5px * var(--mrd9-vega-ctx-scale, 2));
+  margin-bottom: calc(0.35rem * var(--mrd9-vega-ctx-scale, 2));
+  padding: calc(0.55rem * var(--mrd9-vega-ctx-scale, 2)) calc(0.65rem * var(--mrd9-vega-ctx-scale, 2));
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.mrd9-vega-ctx__opt:last-child {
+  margin-bottom: 0;
+}
+
+.mrd9-vega-ctx__opt:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mrd9-vega-ctx__opt:disabled,
+.mrd9-vega-ctx__opt--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mrd9-vega-ctx__opt-icon {
+  flex: 0 0 auto;
+  width: calc(1.6em * var(--mrd9-vega-ctx-scale, 2));
+  text-align: center;
+  opacity: 0.9;
+  font-size: calc(0.95em * var(--mrd9-vega-ctx-scale, 2));
+  line-height: 1.2;
+}
+
+.mrd9-vega-ctx__opt-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mrd9-vega-ctx__opt-title {
+  font-weight: 600;
+}
+
+.mrd9-vega-ctx__opt-desc {
+  margin-top: calc(0.2rem * var(--mrd9-vega-ctx-scale, 2));
+  font-size: 0.88em;
+  opacity: 0.82;
+  white-space: pre-wrap;
+}

@@ -40,7 +40,34 @@ Config.NPC = {
             showOutline = true,
             outlineColor = { r = 140, g = 60, b = 220, a = 180 },
         },
+        -- lib.showTextUI（ルート取得・脱出と同系の緑帯。未指定時は Config.Loot.textUiStyle を流用）
+        textUiPosition = 'bottom-center',
+        textUiIcon = 'comment-dots',
+        textUiStyle = {
+            backgroundColor = '#2e7d32',
+            color = '#f1f8e9',
+            fontSize = '1.35em',
+            padding = '10px 18px',
+            borderRadius = '8px',
+        },
         entryEvent = 'mrd9:npc:interact',
+    },
+    -- ヴェガの選択肢メニュー（自前 NUI）の拡大率。ox_lib の context はサイズ指定不可のため本 MOD 側で表示。1.0 ≈ 従来に近い、既定 2.0。
+    contextMenuScale = 2.0,
+    -- スポーン失敗・床下埋まり対策（Mission Row はコリジョン遅延が出やすい）
+    spawn = {
+        waitBeforeMs = 2000,
+        collisionWaitMs = 450,
+        groundProbeZ = 120.0,
+        -- 地表検出はメッシュより低めに出ることがある。シナリオ（クリップボード）でも足が沈みやすいため余裕を持たせる。
+        footAboveGround = 0.55,
+        -- 計算 Z が Config.NPC.coords.z よりこれ以上下に行かないようクランプ（歩道「の下」への埋没防止）
+        minZGuardBelowConfig = -0.05,
+        -- TaskStartScenarioInPlace 直後の再補正（ms）。0 で無効。
+        postScenarioSettleMs = 120,
+        networkPed = true,
+        maxAttempts = 8,
+        retryMs = 5000,
     },
     blip = {
         enabled = true,                 -- INSTRUCTION-010: 短距離マーカー表示
@@ -50,34 +77,6 @@ Config.NPC = {
         shortRange = true,              -- 近距離のみ
         labelKey = 'npc_blip_label',    -- locales のキー（`_()` 参照）
         label = 'Vega & Associates',    -- labelKey 未使用時のフォールバック
-    },
-}
-
--- ▼ ポータル演出（INSTRUCTION-022）--------------------------------
--- 紫の渦／靄は**目印のみ**。インタラクション・ox_target は付けない。ON/OFF はサーバが `mrd9:portal:setState` で同期。
-Config.Portals = {
-    enabled = true,
-    lod = {
-        maxDrawDistance = 85.0,
-    },
-    -- 各要素の label はブリップ／ログ用（インタラクション文言ではない）
-    points = {
-        {
-            id = 'vega_gate',
-            coords = vector3(426.4, -978.8, 29.65),
-            label = '次元境界（演出）',
-        },
-    },
-    haze = {
-        enabled = true,
-        markerType = 28,
-        scale = { x = 1.9, y = 1.9, z = 0.45 },
-        rgba = { r = 140, g = 60, b = 220, a = 100 },
-        bobHz = 0.35,
-        bobAmp = 0.12,
-    },
-    gate = {
-        enabled = false,
     },
 }
 

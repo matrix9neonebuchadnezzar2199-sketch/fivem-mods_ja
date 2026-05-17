@@ -6,6 +6,7 @@
   <title>MERIDIAN-9 HUD</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="hud.css" />
+  <link rel="stylesheet" href="vega_context.css" />
   <link rel="stylesheet" href="result.css" />
 </head>
 <body>
@@ -137,6 +138,20 @@
     </footer>
   </div>
 
+  <!-- ヴェガ選択肢（ox_lib context 代替・拡大表示） -->
+  <div id="mrd9-vega-ctx" class="mrd9-vega-ctx mrd9-hidden" aria-hidden="true">
+    <div class="mrd9-vega-ctx__backdrop"></div>
+    <div class="mrd9-vega-ctx__panel" role="dialog" aria-modal="true">
+      <header class="mrd9-vega-ctx__titlebar">
+        <button type="button" class="mrd9-vega-ctx__back mrd9-hidden" aria-label="戻る">←</button>
+        <h1 class="mrd9-vega-ctx__title"></h1>
+        <button type="button" class="mrd9-vega-ctx__close" aria-label="閉じる">×</button>
+      </header>
+      <div class="mrd9-vega-ctx__list" role="list"></div>
+    </div>
+  </div>
+
+  <script src="vega_context.js"></script>
   <script src="app.js"></script>
   <script src="item-icon-map.js"></script>
   <script src="hud.js"></script>

@@ -1,5 +1,7 @@
 -- ============================================================
--- ヴェガ対話システム（ox_lib context）
+-- ヴェガ対話システム
+-- 選択肢は ox_lib の registerContext ではサイズ変更不可のため自前 NUI（vega_context）を使用。
+-- 台詞モーダルは引き続き lib.alertDialog。
 -- ============================================================
 
 MRD9 = MRD9 or {}
@@ -26,8 +28,9 @@ local openContractPrompt
 local executeContractSign
 local openTutorial
 local openTutorialQuestions
-local openRepeatVisit
+local openRepeatMainPanel
 local openGateSubmenu
+local openRepeatVisit
 local openFlavorTalk
 
 local function openFirstVisitFlow()
@@ -35,8 +38,7 @@ local function openFirstVisitFlow()
         vegaSay(_('vega_first_greeting'))
         Wait(2000)
 
-        lib.registerContext({
-            id = 'm9_first_greeting',
+        MRD9.VegaContextShow({
             title = _('vega_ui_title'),
             options = {
                 {
@@ -60,7 +62,6 @@ local function openFirstVisitFlow()
                 },
             },
         })
-        lib.showContext('m9_first_greeting')
     end)
 end
 
@@ -69,8 +70,7 @@ openFirstPitch = function()
         vegaSay(_('vega_first_how_did_you_know'))
         Wait(2000)
 
-        lib.registerContext({
-            id = 'm9_first_source',
+        MRD9.VegaContextShow({
             title = _('vega_first_how_did_you_know'),
             options = {
                 { title = _('vega_source_bar'), onSelect = function() openPitchDetail() end },
@@ -78,7 +78,6 @@ openFirstPitch = function()
                 { title = _('vega_source_intuition'), onSelect = function() openPitchDetail() end },
             },
         })
-        lib.showContext('m9_first_source')
     end)
 end
 
@@ -93,8 +92,7 @@ openPitchDetail = function()
         vegaSay(_('vega_first_pitch_4'), 3000)
         Wait(3500)
 
-        lib.registerContext({
-            id = 'm9_first_interest',
+        MRD9.VegaContextShow({
             title = _('vega_first_pitch_4'),
             options = {
                 {
@@ -113,7 +111,6 @@ openPitchDetail = function()
                 },
             },
         })
-        lib.showContext('m9_first_interest')
     end)
 end
 
@@ -126,8 +123,7 @@ openContractPrompt = function()
         vegaSay(_('vega_first_contract_prompt'), 3000)
         Wait(3500)
 
-        lib.registerContext({
-            id = 'm9_first_sign',
+        MRD9.VegaContextShow({
             title = _('vega_first_contract_prompt'),
             options = {
                 {
@@ -146,7 +142,6 @@ openContractPrompt = function()
                 },
             },
         })
-        lib.showContext('m9_first_sign')
     end)
 end
 
@@ -184,8 +179,7 @@ openTutorial = function()
 end
 
 openTutorialQuestions = function()
-    lib.registerContext({
-        id = 'm9_tutorial_questions',
+    MRD9.VegaContextShow({
         title = _('vega_tutorial_7'),
         options = {
             {
@@ -237,7 +231,6 @@ openTutorialQuestions = function()
             },
         },
     })
-    lib.showContext('m9_tutorial_questions')
 end
 
 openGateSubmenu = function()
@@ -278,48 +271,50 @@ openGateSubmenu = function()
         end,
     }
 
-    lib.registerContext({
-        id = 'm9_gate',
+    MRD9.VegaContextShow({
         title = _('vega_repeat_start_mission'),
-        menu = 'm9_repeat_main',
+        showBack = true,
+        onBack = function()
+            openRepeatMainPanel()
+        end,
         options = opts,
     })
-    lib.showContext('m9_gate')
+end
+
+openRepeatMainPanel = function()
+    MRD9.VegaContextShow({
+        title = _('vega_ui_title'),
+        options = {
+            {
+                title = _('vega_repeat_start_mission'),
+                icon = 'play',
+                onSelect = function()
+                    openGateSubmenu()
+                end,
+            },
+            {
+                title = _('vega_repeat_info'),
+                icon = 'info-circle',
+                onSelect = function()
+                    openFlavorTalk()
+                end,
+            },
+            {
+                title = _('vega_repeat_leave'),
+                icon = 'door-open',
+                onSelect = function()
+                    vegaSay(_('vega_repeat_leave_response'))
+                end,
+            },
+        },
+    })
 end
 
 openRepeatVisit = function()
     CreateThread(function()
         vegaSay(_('vega_repeat_greeting'), 3000)
         Wait(1500)
-
-        lib.registerContext({
-            id = 'm9_repeat_main',
-            title = _('vega_ui_title'),
-            options = {
-                {
-                    title = _('vega_repeat_start_mission'),
-                    icon = 'play',
-                    onSelect = function()
-                        openGateSubmenu()
-                    end,
-                },
-                {
-                    title = _('vega_repeat_info'),
-                    icon = 'info-circle',
-                    onSelect = function()
-                        openFlavorTalk()
-                    end,
-                },
-                {
-                    title = _('vega_repeat_leave'),
-                    icon = 'door-open',
-                    onSelect = function()
-                        vegaSay(_('vega_repeat_leave_response'))
-                    end,
-                },
-            },
-        })
-        lib.showContext('m9_repeat_main')
+        openRepeatMainPanel()
     end)
 end
 
@@ -336,6 +331,7 @@ end
 
 RegisterNetEvent('jp-meridian9:client:openDialogue', function()
     CreateThread(function()
+        MRD9.VegaContextHide()
         local contracted = lib.callback.await('jp-meridian9:server:isContracted', false)
         if contracted then
             openRepeatVisit()

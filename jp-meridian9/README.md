@@ -4,7 +4,7 @@
 現段階（v0.1.0-jp）は **設定・FW 検出・NUI・oxmysql（契約/統計/ログ）・セッション・契約キャッシュ／運営コマンド・ヴェガ対話・パーティ編成（ゲート〜セッション転送）** までを含む **M0〜M3 入口** であり、任務内の戦闘・ルート等はロードマップ（`docs/milestones.md`）に従い順次実装します。
 
 **ESX / QBCore / Qbox は必須にしません。** 未導入環境では Standalone として起動し、報酬は `Config.Reward.standaloneMoneyEvent` または手動付与案内にフォールバックします。  
-**永続化のため oxmysql は必須**です。対話 UI のため **ox_lib**、任務中ルート prop の取得 UI のため **ox_target** も必須です（`fxmanifest.lua` の `dependencies` に記載）。**ヴェガ NPC の会話開始は E キー＋ox_lib TextUI**（INSTRUCTION-022）で、NPC への `ox_target` は使用しません。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
+**永続化のため oxmysql は必須**です。**ox_lib**（`lib.alertDialog` で台詞、`lib.notify` / `lib.callback`）、任務中ルート等の **ox_target** も必須です（`fxmanifest.lua` の `dependencies` に記載）。**ヴェガの選択肢メニューは本リソースの NUI**（`html/vega_context.*`・拡大率は `Config.NPC.contextMenuScale`）。**会話開始は E キー＋`lib.showTextUI`**（INSTRUCTION-022）で、ヴェガへの `ox_target` は使用しません。MySQL / MariaDB には **`sql/install.sql` を手動適用を推奨**（下記のとおり、契約テーブル未作成時は起動時に自動適用も試みます）。
 
 ---
 
@@ -12,11 +12,12 @@
 
 - FiveM サーバー（`fx_version` `cerulean` 以上）
 - **oxmysql**（必須）：DB 接続に使用。未導入の場合は [overextended/oxmysql](https://github.com/overextended/oxmysql) を `resources` に配置し、`server.cfg` で `ensure oxmysql` を **jp-meridian9 より前**に記述すること。
-- **ox_lib**（必須）：通知・コンテキストメニュー・`lib.callback`。 [overextended/ox_lib](https://github.com/overextended/ox_lib) を配置し、`ensure ox_lib` を **jp-meridian9 より前**に記述。
+- **ox_lib**（必須）：通知・`lib.alertDialog`・`lib.callback`、パーティ編成などの **`lib.registerContext` / `lib.showContext`**（ヴェガの選択肢は自前 NUI のためここには含まれない）。 [overextended/ox_lib](https://github.com/overextended/ox_lib) を配置し、`ensure ox_lib` を **jp-meridian9 より前**に記述。
 - **ox_target**（必須）：任務中ルート等のインタラクション。 [overextended/ox_target](https://github.com/overextended/ox_target) を配置し、`ensure ox_target` を **jp-meridian9 より前**に記述（`ox_lib` の後が無難）。NPC 受注は E キー方式のため **ヴェガへの ox_target は不要**。
-- **bob74_ipl**（必須）：北ヤンクトン IPL ロード基盤（INSTRUCTION-020）。 [Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl) を `resources/[gamemodes]/[maps]/bob74_ipl/` 等に配置し、`ensure bob74_ipl` を **jp-meridian9 より前**に記述。
+- **mnr_cayo**（サイト・ナイン Cayo 運用で必須）：Cayo Perico IPL 常時ロード。 [Monarch-Devs/mnr_cayo](https://github.com/Monarch-Devs/mnr_cayo) を配置し、`ensure mnr_cayo` を **jp-meridian9 より前**に記述。`jp-meridian9` の `dependencies` には含めない（起動順は `server.cfg` で担保）。
+- **bob74_ipl**（**不要**）：INSTRUCTION-020 v7 以降、`jp-meridian9` は **`bob74_ipl` を依存に含めない**（`mnr_cayo` と重複ロードでクライアントクラッシュする前例のため）。北ヤンクトン検証用に別途入れる場合は自己責任で起動順を調整すること。
 - MySQL 5.7.8+ または MariaDB 10.3+（`JSON` 型利用のため）
-- 初回導入時に **`sql/install.sql`** を対象データベースに流し込むこと（v0.1.0-jp 以降は **`mrd9_contracts` 未作成時に起動時自動適用**）。
+- 初回導入時に **`sql/install.sql`** を対象データベースに流し込むことを推奨。`mrd9_contracts` が無い状態で起動した場合、サーバが **`sql/install.sql` 全文を自動実行**してスキーマ作成を試みます（失敗時は手動適用）。
 
 ### DB スキーマ初期化
 
@@ -24,7 +25,7 @@
 mysql -u <ユーザー> -p <DB名> < sql/install.sql
 ```
 
-実行後、`mrd9_contracts` / `mrd9_stats` / `mrd9_mission_logs` の 3 テーブルが作成されます。
+実行後、`mrd9_contracts` / `mrd9_stats` / `mrd9_mission_logs` / `mrd9_loot_logs` / `mrd9_fiction_events` / `mrd9_result_logs` など `install.sql` 内のテーブルが作成されます。
 
 ---
 
@@ -32,7 +33,7 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 - **Standalone（フレームワーク）** … ESX / QB / Qbox は **必須にしない**。`dependencies` にフレームワークは書かない。
 - **oxmysql 必須** … 契約・統計・ミッション履歴の永続化のため **`dependencies { 'oxmysql', 'ox_lib', 'ox_target' }`** を採用する（フレームワークではなく **Overextended ライブラリ群**）。NPC 受注は E キー、ルート等は `ox_target`。
-- **ox_lib / ox_target 必須** … ヴェガ対話（`lib.notify`・context menu）と任務中ルートの `ox_target`。NPC への会話開始は **E キー**（`Config.NPC.interact`）。方針は `docs/FORMAL_POLICIES.md`（INSTRUCTION-009）および `docs/INSTRUCTION-022.1（NPC会話Eキー化＆ポータル演出化）.md` を参照。
+- **ox_lib / ox_target 必須** … ヴェガ台詞は `lib.alertDialog`、**選択肢メニューは自前 NUI**（`Config.NPC.contextMenuScale` で拡大率。ox_lib の `registerContext` はサイズ指定不可のため）。通知は `lib.notify`、任務中ルートは `ox_target`。NPC への会話開始は **E キー**（`Config.NPC.interact`）。方針は `docs/FORMAL_POLICIES.md`（INSTRUCTION-009）および `docs/INSTRUCTION-022.1（NPC会話Eキー化＆ポータル演出化）.md`（ファイル名は履歴のためそのまま。**ポータル演出は撤去済み**）を参照。
 - **ソフト検出** … `server/framework.lua` が ESX / QB / Qbox を検出し、通貨付与を切り替え
 - **運営者向け `config.lua` 集約** … 座標・難易度・報酬方式を 1 ファイルで調整可能（各項目に日本語コメント）
 - **イベント命名** … `jp-meridian9:アクション名`
@@ -43,13 +44,13 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 ## 導入
 
 1. 本フォルダを `resources` 配下に配置する（例: `resources/[jp-mods]/jp-meridian9/`）。
-2. **oxmysql / ox_lib / ox_target / bob74_ipl** を導入済みであること。`server.cfg` の例（順序重要）:
+2. **oxmysql / ox_lib / ox_target / mnr_cayo** を導入済みであること（サイト・ナインを Cayo で運用する前提）。`server.cfg` の例（順序重要）:
 
    ```cfg
    ensure oxmysql
    ensure ox_lib
    ensure ox_target
-   ensure bob74_ipl
+   ensure mnr_cayo
    ensure jp-meridian9
    ```
 
@@ -59,9 +60,9 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 
 ### NPC受注
 
-NPC に近づき、画面下部に表示される `[E] 話しかける` のプロンプトが出た状態で **E キー**を押すと任務受注メニューが開きます。ポータル（紫の渦／靄）は受注地点の**目印・演出**であり、ポータル自体には触れる必要はありません。
+NPC に近づき、画面下部に表示される `[E] 話しかける` のプロンプトが出た状態で **E キー**を押すと任務受注メニューが開きます。
 
-**フレームワーク依存はありません。** ヴェガ対話は **ox_lib**（通知・メニュー）。NPC に近づき **E キー**で会話を開始します。任務中のルート取得などは引き続き **ox_target** を使用します。
+**フレームワーク依存はありません。** ヴェガ台詞は **ox_lib** の `lib.alertDialog`、選択肢は **本リソース NUI**（`vega_context`）、通知は **`lib.notify`**。NPC に近づき **E キー**で会話を開始します。任務中のルート取得などは引き続き **ox_target** を使用します。
 
 ---
 
@@ -81,19 +82,18 @@ NPC に近づき、画面下部に表示される `[E] 話しかける` のプ�
 
 ```powershell
 cd "<server_resources>\[gamemodes]\[maps]"
-# 1. Cayo Perico IPL ローダー（必須・MAP の本体）
+# Cayo Perico IPL ローダー（必須・サイト・ナイン MAP の本体）
 git clone https://github.com/Monarch-Devs/mnr_cayo.git mnr_cayo
-# 2. bob74_ipl（旧 v2 北ヤンクトン互換用、現運用では未使用だが jp-meridian9 dependencies で参照）
-git clone https://github.com/Bob74/bob74_ipl.git bob74_ipl
 ```
 
-`server.cfg` に **`ensure jp-meridian9` より前**に追加：
+`server.cfg` に **`ensure jp-meridian9` より前**に追加（`oxmysql` / `ox_lib` / `ox_target` の後で可）：
 
 ```
 ensure mnr_cayo
-ensure bob74_ipl
 ensure jp-meridian9
 ```
+
+北ヤンクトン（`island = 'northYankton'`）検証用に `bob74_ipl` を入れる場合は **jp-meridian9 と同時 ensure しない**こと（重複 IPL でクラッシュする前例あり）。
 
 `sv_enforceGameBuild` は **2189 以上**（推奨 3258 以上）。Cayo Perico DLC を含むビルド要件。
 
@@ -167,7 +167,7 @@ ensure jp-meridian9
 | プロジェクト | ライセンス | 用途 |
 |-------------|------------|------|
 | TP-Advanced-Zombies | Apache 2.0 | ゾンビ AI・スポーン制御の**派生実装**（`server/arena/spawn.lua`, `client/arena.lua`） |
-| ox_lib | MIT | UI / `lib.callback` |
+| ox_lib | MIT | UI（`lib.alertDialog` / `lib.notify` / `lib.callback` / パーティ等の `registerContext`）。ヴェガ選択肢は本 MOD NUI |
 | ox_target | MIT | 任務中ルート等のインタラクション（NPC 受注は E キー方式） |
 | oxmysql | MIT | データベース |
 
@@ -208,10 +208,6 @@ ensure jp-meridian9
 | `/m9_admin_terminate <playerId> <reason>` | 契約解除 |
 | `/m9_admin_check <playerId>` | 契約・統計の確認 |
 | `/m9_admin_list [active\|suspended\|terminated]` | 契約者一覧（件数上限は `Config.Admin.contractListLimit`） |
-| `/m9_portal <id> on\|off` | 演出ポータル（`Config.Portals.points` の `id`）を個別 ON/OFF |
-| `/m9_portal_all on\|off` | 全ポータル一括 ON/OFF |
-| `/m9_portal_list` | ポータル状態一覧（チャット） |
-| `/m9_portal_tp <id>` | ポータル座標へテレポート（**`Config.Debug` かつ ACE**・ゲーム内のみ） |
 
 予定（README 追記予定）:
 
@@ -225,8 +221,7 @@ ensure jp-meridian9
 
 | セクション | 内容 |
 | ---------- | ---- |
-| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ・**ブリップ**（`blip.*`）、**E キー会話**（`interact`）、サーバ検証用（`points`） |
-| `Config.Portals` | 事務所付近などの**演出用**ポータル（靄マーカー）。`interact` なし。運営 `/m9_portal*` で ON/OFF |
+| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ・**ブリップ**（`blip.*`）、**E キー会話**（`interact`）、**選択肢メニュー拡大**（`contextMenuScale`）、サーバ検証用（`points`） |
 | `Config.Gate` / `Config.SiteNine` | 転送・天候・時刻演出 |
 | `Config.Party` | 招待距離・タイムアウト・ソロ可否・リーダー自動譲渡（**ゲート／パーティ編成**） |
 | `Config.Mission` | 時間・バケット帯・**spawnPoint / returnPoint**（セッション転送） |
@@ -266,9 +261,9 @@ jp-meridian9/
 ├── config.lua
 ├── locales/ja.lua
 ├── shared/utils.lua
-├── client/          … クライアント各モジュール（プレースホルダ含む）
+├── client/          … クライアント各モジュール（HUD・ヴェガ `vega_context`・任務クライアント等）
 ├── server/          … サーバー（framework.lua で FW 検出）
-├── html/            … NUI（ロゴ・将来 HUD）
+├── html/            … NUI（Phase-C HUD・リザルト・`vega_context` 選択肢 UI）
 ├── sql/install.sql  … DB スキーマ（手動適用）
 ├── image/           … 素材保管（ビルド用コピー元）
 └── docs/            … 設計・マイルストーン・台本・`FORMAL_POLICIES.md`・`CREDITS.md`
@@ -280,7 +275,8 @@ jp-meridian9/
 
 | 現象 | 確認 |
 | ---- | ---- |
-| NUI が真っ白 | `fxmanifest.lua` の `files` に `html/*` と `html/assets/*` が含まれているか |
+| NUI が真っ白 | `fxmanifest.lua` の `files` に `html/*`（`vega_context.css` / `vega_context.js` 含む）と `html/assets/*` が含まれているか |
+| ヴェガメニュー後にマウスが残る | `restart jp-meridian9` で `SetNuiFocus` が外れるか確認。ESC／背景クリックで閉じる実装あり |
 | Linux 本番で画像が出ない | パス・拡張子の大文字小文字、`files` 列挙漏れ |
 | Standalone で報酬が入らない | 想定どおり。`Config.Reward.standaloneMoneyEvent` を設定するか手動付与 |
 | フレームワーク検出が想定と違う | 起動順・リソース名（`es_extended` / `qb-core` / `qbx_core`）を確認 |
@@ -289,7 +285,7 @@ jp-meridian9/
 
 ## 開発運用（本 MOD 専用）
 
-- **開発日記**：`jp-meridian9/YYYY-MM-DD_開発日記.md`（MOD 直下・Markdown）。リポジトリ既定の `docs/*.html` 日記は本 MOD では使わない。
+- **開発日記**：リポジトリ既定に従い **`jp-meridian9/docs/YYYY-MM-DD_開発日記.html`**（UTF-8・BOM なし）。MOD 直下の旧 `.md` 日記は履歴として残置。
 - **正式方針・例外規約・INSTRUCTION 前提**：`docs/FORMAL_POLICIES.md` を参照（日記配置、グローバル許容、`fxmanifest` 補足、画像暫定、INSTRUCTION-006/019 メモ）。
 - **任務リザルト（サブフェーズ A）**：DB に `mrd9_result_logs` を適用（`sql/install.sql`）。`ox_inventory` 運用では小切手アイテム `mrd9_credit` を `data/items.lua` 等に定義する。定義しない・standalone のみの場合は `config.lua` の `Config.Result.directCashout = true` で即現金のみ。小切手換金はゲーム内 `/m9_cashout`（暫定、ox_inventory 時のみ有効）。
 

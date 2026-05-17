@@ -134,8 +134,8 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 
 | ID | 決定 |
 |----|------|
-| D7 | **ox_lib** の `lib.registerContext` / `lib.showContext` と `lib.notify` で対話。NUI は INSTRUCTION-014/015 で本格化。 |
-| D8 | **ox_target** の `addLocalEntity` で「ヴェガと話す」。 |
+| D7 | **ox_lib** の `lib.alertDialog`（ヴェガ台詞）・`lib.notify`。ヴェガの**選択肢**は `client/vega_context.lua` ＋ `html/vega_context.*` の自前 NUI（`lib.registerContext` はサイズ指定不可のため）。パーティ等は引き続き `lib.registerContext` / `lib.showContext`。HUD/リザルト NUI は INSTRUCTION-014/015。 |
+| D8 | **E キー＋`lib.showTextUI`**（`Config.NPC.interact`）で会話開始。サーバで `mrd9:npc:interact` 検証後 `openDialogue`。**ox_target** はヴェガには使わない（ルート取得等で引き続き使用）。 |
 | D9 | NPC 座標は **暫定** `vector4(427.5, -979.3, 30.7, 90.0)`（Mission Row 警察署付近）。路地裏オフィス MLO は別フェーズで `config.lua` 差し替え。 |
 
 | 依存 | 内容 |
@@ -147,7 +147,7 @@ FiveM 公式（ルーティングバケット Cookbook）では **`SetPlayerRout
 |----------|
 | NPC 対話時の `IsContracted` は **キャッシュ＋DB フォールバック**の既存実装のまま。NPC 側から明示 `LoadCache` は不要（INSTRUCTION-008 方針）。 |
 | `client/npc.lua` でスポーン・`onResourceStop` で `removeLocalEntity`＋`DeleteEntity`・ブリップ削除。 |
-| `client/dialogue.lua` で初回／リピート分岐・署名コールバック・チュートリアル。ゲートは「ソロ／パーティ」分岐（`openGateSubmenu`）。パーティ UI は `client/party.lua` の `jp-meridian9:client:openPartyMenu`。 |
+| `client/dialogue.lua` で初回／リピート分岐・署名コールバック・チュートリアル。選択肢は `MRD9.VegaContextShow`（自前 NUI）。ゲートは「ソロ／パーティ」分岐（`openGateSubmenu`）。パーティ UI は `client/party.lua` の `jp-meridian9:client:openPartyMenu`。 |
 
 ## INSTRUCTION-010：パーティ編成（実装済み・正本追記）
 

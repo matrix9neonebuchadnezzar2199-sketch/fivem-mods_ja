@@ -14,7 +14,6 @@ shared_scripts {
     'locales/ja.lua',
     'locales/en.lua',
     'config.lua',
-    'shared/portal_defs.lua',
 }
 
 client_scripts {
@@ -23,7 +22,7 @@ client_scripts {
     'client/result.lua',
     'client/arena.lua',
     'client/npc.lua',
-    'client/portal.lua',
+    'client/vega_context.lua',
     'client/dialogue.lua',
     'client/party.lua',
     'client/loot.lua',
@@ -52,7 +51,6 @@ server_scripts {
     'server/survival.lua',
     'server/playarea.lua',
     'server/party.lua',
-    'server/portal.lua',
     'server/main.lua',
     'server/mission.lua',
     'server/reward.lua',
@@ -81,7 +79,9 @@ files {
     -- HUD 左カラム案: ブラウザ単体プレビュー（将来 index 統合時も files 列挙を維持）
     'html/hud_preview.html',
     'html/hud.css',
+    'html/vega_context.css',
     'html/hud.js',
+    'html/vega_context.js',
     'html/hud_preview.js',
     -- リザルト BGM 等（NUI から `html/sounds/*.mp3` を参照する想定。ファイル名は Linux 本番向けに小文字推奨）
     'html/sounds/*.mp3',
