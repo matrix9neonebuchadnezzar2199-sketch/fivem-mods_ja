@@ -77,7 +77,8 @@ def process_images(
 
 
 def build_app() -> gr.Blocks:
-    with gr.Blocks(title="背景削除くん") as app:
+    # Gradio 5.x: theme は launch() ではなく Blocks 側に渡す
+    with gr.Blocks(title="背景削除くん", theme=gr.themes.Soft()) as app:
         gr.Markdown(
             "# 背景削除くん\n"
             "複数画像をアップロードして、背景削除 → リサイズ → PNG保存します。"
@@ -124,4 +125,4 @@ def build_app() -> gr.Blocks:
 
 
 if __name__ == "__main__":
-    build_app().launch(inbrowser=True, theme=gr.themes.Soft())
+    build_app().launch(inbrowser=True)
