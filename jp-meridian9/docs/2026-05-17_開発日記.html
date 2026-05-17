@@ -24,6 +24,12 @@
         <td><span class="commit-hash">pending</span></td>
         <td><a href="#entry-0014">詳細</a></td>
       </tr>
+      <tr>
+        <td>—</td>
+        <td>INSTRUCTION-022: NPC を E キー化、ポータルを演出専用に追加</td>
+        <td><span class="commit-hash">pending</span></td>
+        <td><a href="#entry-022">詳細</a></td>
+      </tr>
     </tbody>
   </table>
 </section>
@@ -76,6 +82,39 @@
     <li>実機: <code>refresh; restart jp-meridian9</code> 後、右上から時計が消え制限時間のみになっていること</li>
     <li>実機: DB 接続を意図的に切って pickup・extract した時、サーバコンソールに <code>[jp-meridian9] mrd9_loot_logs insert failed: ...</code> が出てもプレイが継続すること（任意検証）</li>
     <li>運営 DB 障害発生時の Discord Webhook 連携は別途検討（現状は <code>MRD9.Log</code>＝サーバコンソールのみ）</li>
+  </ul>
+</section>
+
+<section id="entry-022" class="entry">
+  <h2>INSTRUCTION-022（NPC 会話 E キー化・ポータル演出化）</h2>
+  <div class="entry-meta">
+    <span>時刻 <strong>（セッション追記）</strong></span>
+    <span>Commit <strong class="commit-hash">pending</strong></span>
+  </div>
+
+  <h3>変更ファイル</h3>
+  <ul class="changes">
+    <li><span class="op">📝</span> <code>jp-meridian9/config.lua</code>（<code>Config.NPC.interact</code> / <code>points</code>、<code>Config.Portals</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/fxmanifest.lua</code>（<code>portal_defs</code>、<code>client/portal.lua</code>、<code>server/npc.lua</code>、<code>server/portal.lua</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/client/npc.lua</code>（<code>ox_target</code> 撤去、距離スキャン＋E キー）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/client/portal.lua</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/server/npc.lua</code>（<code>mrd9:npc:interact</code> 検証）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/server/portal.lua</code>（ON/OFF・運営コマンド・同期）</li>
+    <li><span class="op">➕</span> <code>jp-meridian9/shared/portal_defs.lua</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/locales/ja.lua</code> / <code>locales/en.lua</code>（<code>npc_prompt_*</code>）</li>
+    <li><span class="op">📝</span> <code>jp-meridian9/README.md</code></li>
+    <li><span class="op">➕</span> <code>jp-meridian9/docs/INSTRUCTION-022.1（NPC会話Eキー化＆ポータル演出化）.md</code></li>
+    <li><span class="op">📝</span> <code>jp-meridian9/docs/2026-05-17_開発日記.html</code>（本エントリ）</li>
+  </ul>
+
+  <h3>概要</h3>
+  <p>マスター仕様 INSTRUCTION-022 に従い、ヴェガ NPC の会話開始を <code>ox_target</code> から <strong>E キー＋TextUI</strong>へ変更。サーバで距離・クールダウンを再検証したうえで既存の <code>jp-meridian9:client:openDialogue</code> を発火し、対話・契約フロー本体は触らない方針。</p>
+  <p>ポータルは本リポに未実装だったため、<code>Config.Portals</code> とクライアント描画・サーバ状態同期・<code>/m9_portal*</code> を新規追加。インタラクションと <code>mrd9:portal:requestStart</code> 系は実装しない（演出のみ）。</p>
+
+  <h3>未完了 / 次タスク</h3>
+  <ul>
+    <li>実機: 3m/2m/向き/車両/クールダウン/リソース再起動後の TextUI 残留なし</li>
+    <li>実機: <code>/m9_portal vega_gate off</code> でマーカー演出のみ消灯すること</li>
   </ul>
 </section>
 </main>

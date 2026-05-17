@@ -4,7 +4,7 @@
 現段階（v0.1.0-jp）は **設定・FW 検出・NUI・oxmysql（契約/統計/ログ）・セッション・契約キャッシュ／運営コマンド・ヴェガ対話・パーティ編成（ゲート〜セッション転送）** までを含む **M0〜M3 入口** であり、任務内の戦闘・ルート等はロードマップ（`docs/milestones.md`）に従い順次実装します。
 
 **ESX / QBCore / Qbox は必須にしません。** 未導入環境では Standalone として起動し、報酬は `Config.Reward.standaloneMoneyEvent` または手動付与案内にフォールバックします。  
-**永続化のため oxmysql は必須**です。対話 UI と NPC ターゲットのため **ox_lib / ox_target も必須**です（`fxmanifest.lua` の `dependencies` に記載）。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
+**永続化のため oxmysql は必須**です。対話 UI のため **ox_lib**、任務中ルート prop の取得 UI のため **ox_target** も必須です（`fxmanifest.lua` の `dependencies` に記載）。**ヴェガ NPC の会話開始は E キー＋ox_lib TextUI**（INSTRUCTION-022）で、NPC への `ox_target` は使用しません。MySQL / MariaDB に `sql/install.sql` を手動適用してください。
 
 ---
 
@@ -13,7 +13,7 @@
 - FiveM サーバー（`fx_version` `cerulean` 以上）
 - **oxmysql**（必須）：DB 接続に使用。未導入の場合は [overextended/oxmysql](https://github.com/overextended/oxmysql) を `resources` に配置し、`server.cfg` で `ensure oxmysql` を **jp-meridian9 より前**に記述すること。
 - **ox_lib**（必須）：通知・コンテキストメニュー・`lib.callback`。 [overextended/ox_lib](https://github.com/overextended/ox_lib) を配置し、`ensure ox_lib` を **jp-meridian9 より前**に記述。
-- **ox_target**（必須）：NPC への視線ターゲット。 [overextended/ox_target](https://github.com/overextended/ox_target) を配置し、`ensure ox_target` を **jp-meridian9 より前**に記述（`ox_lib` の後が無難）。
+- **ox_target**（必須）：任務中ルート等のインタラクション。 [overextended/ox_target](https://github.com/overextended/ox_target) を配置し、`ensure ox_target` を **jp-meridian9 より前**に記述（`ox_lib` の後が無難）。NPC 受注は E キー方式のため **ヴェガへの ox_target は不要**。
 - **bob74_ipl**（必須）：北ヤンクトン IPL ロード基盤（INSTRUCTION-020）。 [Bob74/bob74_ipl](https://github.com/Bob74/bob74_ipl) を `resources/[gamemodes]/[maps]/bob74_ipl/` 等に配置し、`ensure bob74_ipl` を **jp-meridian9 より前**に記述。
 - MySQL 5.7.8+ または MariaDB 10.3+（`JSON` 型利用のため）
 - 初回導入時に **`sql/install.sql`** を対象データベースに流し込むこと（v0.1.0-jp 以降は **`mrd9_contracts` 未作成時に起動時自動適用**）。
@@ -31,8 +31,8 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 ## 特徴
 
 - **Standalone（フレームワーク）** … ESX / QB / Qbox は **必須にしない**。`dependencies` にフレームワークは書かない。
-- **oxmysql 必須** … 契約・統計・ミッション履歴の永続化のため **`dependencies { 'oxmysql', 'ox_lib', 'ox_target' }`** を採用する（フレームワークではなく **Overextended ライブラリ群**）。
-- **ox_lib / ox_target 必須** … ヴェガ NPC の対話（`lib.notify`・context menu）とターゲット。方針は `docs/FORMAL_POLICIES.md`（INSTRUCTION-009）を参照。
+- **oxmysql 必須** … 契約・統計・ミッション履歴の永続化のため **`dependencies { 'oxmysql', 'ox_lib', 'ox_target' }`** を採用する（フレームワークではなく **Overextended ライブラリ群**）。NPC 受注は E キー、ルート等は `ox_target`。
+- **ox_lib / ox_target 必須** … ヴェガ対話（`lib.notify`・context menu）と任務中ルートの `ox_target`。NPC への会話開始は **E キー**（`Config.NPC.interact`）。方針は `docs/FORMAL_POLICIES.md`（INSTRUCTION-009）および `docs/INSTRUCTION-022.1（NPC会話Eキー化＆ポータル演出化）.md` を参照。
 - **ソフト検出** … `server/framework.lua` が ESX / QB / Qbox を検出し、通貨付与を切り替え
 - **運営者向け `config.lua` 集約** … 座標・難易度・報酬方式を 1 ファイルで調整可能（各項目に日本語コメント）
 - **イベント命名** … `jp-meridian9:アクション名`
@@ -57,7 +57,11 @@ mysql -u <ユーザー> -p <DB名> < sql/install.sql
 4. サーバーで `refresh` のあと `ensure jp-meridian9`（またはサーバー再起動）。
 5. クライアント接続後、F8 に `[jp-meridian9] resource loaded` が出ることを確認。
 
-**フレームワーク依存はありません。** ヴェガ対話は **ox_lib**（通知・メニュー）、NPC 操作は **ox_target** を使用。
+### NPC受注
+
+NPC に近づき、画面下部に表示される `[E] 話しかける` のプロンプトが出た状態で **E キー**を押すと任務受注メニューが開きます。ポータル（紫の渦／靄）は受注地点の**目印・演出**であり、ポータル自体には触れる必要はありません。
+
+**フレームワーク依存はありません。** ヴェガ対話は **ox_lib**（通知・メニュー）。NPC に近づき **E キー**で会話を開始します。任務中のルート取得などは引き続き **ox_target** を使用します。
 
 ---
 
@@ -164,7 +168,7 @@ ensure jp-meridian9
 |-------------|------------|------|
 | TP-Advanced-Zombies | Apache 2.0 | ゾンビ AI・スポーン制御の**派生実装**（`server/arena/spawn.lua`, `client/arena.lua`） |
 | ox_lib | MIT | UI / `lib.callback` |
-| ox_target | MIT | NPC インタラクション |
+| ox_target | MIT | 任務中ルート等のインタラクション（NPC 受注は E キー方式） |
 | oxmysql | MIT | データベース |
 
 詳細は **`LICENSE-APACHE-2.0`** および **`NOTICE`** を参照してください。派生ファイルの改変内容は各ファイル先頭のヘッダーに記載しています。
@@ -204,6 +208,10 @@ ensure jp-meridian9
 | `/m9_admin_terminate <playerId> <reason>` | 契約解除 |
 | `/m9_admin_check <playerId>` | 契約・統計の確認 |
 | `/m9_admin_list [active\|suspended\|terminated]` | 契約者一覧（件数上限は `Config.Admin.contractListLimit`） |
+| `/m9_portal <id> on\|off` | 演出ポータル（`Config.Portals.points` の `id`）を個別 ON/OFF |
+| `/m9_portal_all on\|off` | 全ポータル一括 ON/OFF |
+| `/m9_portal_list` | ポータル状態一覧（チャット） |
+| `/m9_portal_tp <id>` | ポータル座標へテレポート（**`Config.Debug` かつ ACE**・ゲーム内のみ） |
 
 予定（README 追記予定）:
 
@@ -217,7 +225,8 @@ ensure jp-meridian9
 
 | セクション | 内容 |
 | ---------- | ---- |
-| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ・**ブリップ**（`blip.*`） |
+| `Config.NPC` | ヴェガ NPC のモデル・座標・シナリオ・**ブリップ**（`blip.*`）、**E キー会話**（`interact`）、サーバ検証用（`points`） |
+| `Config.Portals` | 事務所付近などの**演出用**ポータル（靄マーカー）。`interact` なし。運営 `/m9_portal*` で ON/OFF |
 | `Config.Gate` / `Config.SiteNine` | 転送・天候・時刻演出 |
 | `Config.Party` | 招待距離・タイムアウト・ソロ可否・リーダー自動譲渡（**ゲート／パーティ編成**） |
 | `Config.Mission` | 時間・バケット帯・**spawnPoint / returnPoint**（セッション転送） |
