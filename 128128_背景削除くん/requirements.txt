@@ -1,0 +1,4 @@
+gradio>=5.45,<6.0
+rembg>=2.0.65,<2.0.70
+Pillow>=10.0,<12.0
+onnxruntime>=1.18
