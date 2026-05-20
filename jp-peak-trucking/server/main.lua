@@ -22,6 +22,27 @@ AddEventHandler("playerDropped", function()
   activeJobSessions[playerId] = nil
 end)
 
+--- Creates peak_trucking if the server never imported install/install.sql.
+local function EnsurePeakTruckingTable()
+  ExecuteSql([[
+    CREATE TABLE IF NOT EXISTS `peak_trucking` (
+      `identifier` longtext DEFAULT NULL,
+      `points` longtext DEFAULT NULL,
+      `unlockedMissions` longtext DEFAULT NULL,
+      `dailymissions` longtext DEFAULT NULL,
+      `level` int(11) DEFAULT NULL,
+      `xp` int(11) DEFAULT NULL,
+      `totalEarnings` int(11) DEFAULT NULL,
+      `completedJobs` int(11) DEFAULT NULL,
+      `name` longtext DEFAULT NULL,
+      `avatar` longtext DEFAULT NULL,
+      `history` longtext DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  ]])
+
+  Peak.Utils.print('Database table ^5peak_trucking^0 is ready.')
+end
+
 -- Core Initialization
 CreateThread(function()
   while Core == nil do
@@ -30,6 +51,8 @@ CreateThread(function()
 
   Core = GetCore()
   Config.Framework = select(2, GetCore())
+
+  EnsurePeakTruckingTable()
 
   -- Register callback for checking mission unlock status
   RegisterCallback("peak-trucking:CheckMissionUnlocked", function(playerId, cb, missionId)

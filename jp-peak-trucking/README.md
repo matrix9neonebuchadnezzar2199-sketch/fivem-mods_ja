@@ -95,12 +95,16 @@ resources/
 
 ### 2. データベース
 
-`install/install.sql` を MySQL / MariaDB に実行します。
+`install/install.sql` を MySQL / MariaDB に実行するか、**リソース初回起動時にテーブルを自動作成**します（`peak_trucking`）。
+
+手動で入れる場合:
 
 ```sql
--- テーブル: peak_trucking
--- プレイヤーごとに level, xp, 信頼ポイント, 解放ミッション, デイリー, 履歴 などを保存
+-- install/install.sql の内容（DB 名は server.cfg の mysql_connection_string に合わせる）
 ```
+
+テーブルが無いとサーバーログに `Table '....peak_trucking' doesn't exist` が出ます。  
+`restart jp-peak-trucking` で自動作成されるようになっています。
 
 初回ログイン時にプレイヤー行が作成されます。
 
