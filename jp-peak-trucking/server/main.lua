@@ -254,6 +254,23 @@ function AddToHistory(playerId, label, supply, earnings)
   end
 end
 
+--- Decodes JSON columns on a DB row into the in-memory player record shape.
+local function DecodePlayerRecord(row)
+  if type(row.unlockedMissions) == 'string' then
+    row.unlockedMissions = json.decode(row.unlockedMissions)
+  end
+  if type(row.dailymissions) == 'string' then
+    row.dailymissions = json.decode(row.dailymissions)
+  end
+  if type(row.history) == 'string' then
+    row.history = json.decode(row.history)
+  end
+  if type(row.points) == 'string' then
+    row.points = json.decode(row.points)
+  end
+  return row
+end
+
 -- Create New Player Data
 function CreatePlayerData(playerId)
   local identifier = GetIdentifier(playerId)
@@ -309,8 +326,19 @@ function CreatePlayerData(playerId)
       { identifier = identifier }
   )
   if existingData[1] then
+      for _, cached in pairs(playerJobDataCache) do
+          if cached.identifier == identifier then
+              LoadPlayerData(playerId)
+              return
+          end
+      end
+
+      local record = DecodePlayerRecord(existingData[1])
+      table.insert(playerJobDataCache, record)
+      LoadPlayerData(playerId)
+
       if Config.Debug then
-          print('[peak-trucking] Player ' .. identifier .. ' already exists in database — skipping insert.')
+          print('[peak-trucking] Player ' .. identifier .. ' loaded from database into cache.')
       end
       return
   end

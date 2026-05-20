@@ -41,7 +41,10 @@ CreateThread(function()
   Config.Framework = select(2, GetCore())
 
   InitNPCInteraction()
-  SetPlayerJob()
+  CreateThread(function()
+    WaitPlayer()
+    SetPlayerJob()
+  end)
 end)
 
 -- ============================================================
@@ -79,7 +82,7 @@ function TriggerCallback(callbackName, data)
         status = "SUCCESS"
         result = response
       end, data)
-    else
+  else
       Peak.Utils.Warn('TriggerCallback failed: Core.Functions.TriggerCallback is nil. Framework:', Config.Framework)
       status = "FAILED"
     end
@@ -257,6 +260,7 @@ end)
 RegisterNetEvent("peak-trucking:OpenMenu")
 AddEventHandler("peak-trucking:OpenMenu", function()
   if canOpenMenu() then
+    TriggerServerEvent("peak-trucking:LoadPlayerData")
     TriggerServerEvent("peak-trucking:CheckDailyMission")
     NuiMessage("open")
     SetNuiFocus(true, true)
@@ -294,6 +298,12 @@ end
 
 function Close()
   NuiMessage("close")
+  SetNuiFocus(false, false)
+  if DoesCamExist(cam) then
+    RenderScriptCams(false, true, 500, true, true)
+    DestroyCam(cam, true)
+    cam = false
+  end
 end
 
 CreateThread(function()
@@ -482,7 +492,7 @@ RegisterNUICallback("startJob", function(data, cb)
   isProcessingJob = true
 
   if isJobActive then
-    createNotification("You already have active mission.")
+    createNotification(Config.Language.already_have_mission or L('already_have_mission'))
     isProcessingJob = false
     ResolveNuiCallback(cb, { ok = false, error = "active_job" })
     return
@@ -493,14 +503,14 @@ RegisterNUICallback("startJob", function(data, cb)
   selectedMission = data.mission
 
   if not selectedRoute then
-    createNotification("Route not found.")
+    createNotification(Config.Language.route_not_found or L('route_not_found'))
     isProcessingJob = false
     ResolveNuiCallback(cb, { ok = false, error = "missing_route" })
     return
   end
 
   if not selectedTruck then
-    createNotification("Truck not found.")
+    createNotification(Config.Language.truck_not_found or L('truck_not_found'))
     isProcessingJob = false
     ResolveNuiCallback(cb, { ok = false, error = "missing_truck" })
     return
@@ -508,6 +518,13 @@ RegisterNUICallback("startJob", function(data, cb)
 
   isAcceptedIllegal = false
   local isMissionUnlocked = TriggerCallback("peak-trucking:CheckMissionUnlocked", selectedMission.id)
+
+  if isMissionUnlocked == false and selectedMission and selectedMission.id == 1 then
+    -- First mission should always be available once player data is loaded; retry after sync.
+    TriggerServerEvent("peak-trucking:LoadPlayerData")
+    Wait(300)
+    isMissionUnlocked = TriggerCallback("peak-trucking:CheckMissionUnlocked", selectedMission.id)
+  end
 
   trailerAttached = false
   local trailerSpawnLocation = TrailerSpawnCoords(selectedRoute.trailerSpawnAvaliableCoords)
@@ -1004,7 +1021,6 @@ RegisterNUICallback("startJob", function(data, cb)
     createNotification(Config.Language.mission_locked)
   end
 
-  Wait(5000)
   isProcessingJob = false
   ResolveNuiCallback(cb)
 end)

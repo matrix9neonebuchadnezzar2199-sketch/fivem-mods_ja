@@ -86,6 +86,9 @@ local translations = {
         ['special_freight_call']     = 'Special freight request',
         ['phone_accept_decline']     = 'Y accept / N decline',
         ['talk_to_dealer']           = 'Talk to Dealer',
+        ['already_have_mission']     = 'You already have an active mission.',
+        ['route_not_found']          = 'Route not found.',
+        ['truck_not_found']          = 'Truck not found.',
     },
     ja = {
         -- インタラクション
@@ -181,6 +184,9 @@ local translations = {
         ['special_freight_call']     = '特別貨物の依頼',
         ['phone_accept_decline']     = 'Y 受ける / N 断る',
         ['talk_to_dealer']           = 'E - 闇の仲介人と話す',
+        ['already_have_mission']     = 'すでに進行中の仕事があります。',
+        ['route_not_found']          = 'ルートが見つかりません。',
+        ['truck_not_found']          = 'トラックが見つかりません。',
     },
 }
 

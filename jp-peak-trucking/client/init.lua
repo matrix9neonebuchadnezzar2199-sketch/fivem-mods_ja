@@ -140,18 +140,24 @@ function Peak.Client.GetPlayerJob()
     local fw = Peak.Client.FrameworkName
     if fw == 'qbcore' or fw == 'qbox' then
         local job = data.job
+        if not job then
+            return { name = 'unemployed', label = 'Unemployed', grade = 0, grade_name = '' }
+        end
         return {
-            name       = job.name,
-            label      = job.label,
-            grade      = job.grade.level or 0,
-            grade_name = job.grade.name or '',
+            name       = job.name or 'unemployed',
+            label      = job.label or '',
+            grade      = (job.grade and job.grade.level) or 0,
+            grade_name = (job.grade and job.grade.name) or '',
         }
     elseif fw == 'esx' then
         local job = data.job
+        if not job then
+            return { name = 'unemployed', label = 'Unemployed', grade = 0, grade_name = '' }
+        end
         return {
-            name       = job.name,
-            label      = job.label,
-            grade      = job.grade,
+            name       = job.name or 'unemployed',
+            label      = job.label or '',
+            grade      = tonumber(job.grade) or 0,
             grade_name = job.grade_name or '',
         }
     end

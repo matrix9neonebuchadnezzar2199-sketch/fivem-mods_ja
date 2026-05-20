@@ -122,6 +122,13 @@ AddEventHandler('esx:setJob', function()
     SetPlayerJob()
 end)
 
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded')
+AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+    Wait(1000)
+    SetPlayerJob()
+    TriggerServerEvent("peak-trucking:LoadPlayerData")
+end)
+
 RegisterNetEvent('QBCore:Client:OnJobUpdate')
 AddEventHandler('QBCore:Client:OnJobUpdate', function()
     Wait(1000)
@@ -135,21 +142,12 @@ end)
 --- Reads the player's current job from the framework and caches it in jobData.
 function SetPlayerJob()
     WaitCore()
-    Wait(500)
 
-    local data = Peak.Client.GetPlayerData()
-    if not data then return end
-
-    local fw = Peak.Client.FrameworkName
-    if fw == 'esx' then
-        jobData.jobname        = data.job.name
-        jobData.job_grade_name = data.job.label
-        jobData.job_grade      = tonumber(data.job.grade)
-    else
-        jobData.jobname        = data.job.name
-        jobData.job_grade_name = data.job.label
-        jobData.job_grade      = data.job.grade.level
-    end
+    local job = Peak.Client.GetPlayerJob()
+    jobData.jobname        = job.name
+    jobData.job_label      = job.label
+    jobData.job_grade      = job.grade
+    jobData.job_grade_name = job.grade_name
 end
 
 --- Returns true if the local player is allowed to open the trucking menu.
