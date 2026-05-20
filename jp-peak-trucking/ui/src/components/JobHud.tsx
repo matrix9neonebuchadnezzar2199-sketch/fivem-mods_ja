@@ -81,7 +81,7 @@ export function JobHud({ jobInfo, language, keybinds, isEditing }: Props) {
         <h2>{jobInfo.routeHeader ?? (isEditing ? 'HUD Edit Mode' : 'Active Route')}</h2>
         
         {isEditing ? (
-          <button className="primary-action" onClick={handleSave} style={{ height: '36px', fontSize: '11px' }}>
+          <button className="primary-action" onClick={handleSave} style={{ height: '36px', fontSize: 'calc(11px * var(--ui-text-scale, 1.5))' }}>
             Save Position
           </button>
         ) : (

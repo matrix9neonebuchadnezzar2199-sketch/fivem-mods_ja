@@ -1,4 +1,5 @@
 :root {
+  --ui-text-scale: 1.5;
   color: #f6f1e8;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: transparent;
@@ -31,6 +32,7 @@ body,
   margin: 0;
   overflow: hidden;
   background: transparent;
+  font-size: calc(16px * var(--ui-text-scale));
 }
 
 button {
@@ -110,7 +112,7 @@ img {
 .company-title p {
   display: block;
   color: var(--accent);
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-text-scale));
   font-weight: 800;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -126,7 +128,7 @@ img {
 
 .brand strong {
   margin-top: 3px;
-  font-size: 18px;
+  font-size: calc(18px * var(--ui-text-scale));
   line-height: 1;
 }
 
@@ -147,7 +149,7 @@ img {
   color: var(--muted);
   background: transparent;
   cursor: pointer;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-text-scale));
   font-weight: 800;
 }
 
@@ -164,7 +166,7 @@ img {
 
 .driver-mini span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 800;
 }
 
@@ -230,7 +232,7 @@ img {
 .section-heading h2,
 .company-title h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: calc(22px * var(--ui-text-scale));
   line-height: 1.1;
   letter-spacing: 0;
 }
@@ -241,7 +243,7 @@ img {
   border-radius: 999px;
   padding: 7px 10px;
   background: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
 }
 
@@ -270,7 +272,7 @@ img {
 .mission-hero__content p {
   margin: 0 0 10px;
   color: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -278,7 +280,7 @@ img {
 
 .mission-hero__content h1 {
   margin: 0;
-  font-size: clamp(32px, 4vw, 58px);
+  font-size: clamp(calc(32px * var(--ui-text-scale)), 4vw, calc(58px * var(--ui-text-scale)));
   line-height: 0.95;
   letter-spacing: 0;
 }
@@ -306,7 +308,7 @@ img {
   padding: 8px 10px;
   color: rgba(255, 255, 255, 0.88);
   background: rgba(255, 255, 255, 0.08);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 800;
 }
 
@@ -414,7 +416,7 @@ img {
 .history-row time,
 .stat span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   line-height: 1.4;
 }
 
@@ -427,7 +429,7 @@ img {
 .route-card > span {
   white-space: nowrap;
   color: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
 }
 
@@ -504,7 +506,7 @@ img {
 
 .driver-card span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
 }
 
 .step-list {
@@ -519,7 +521,7 @@ img {
   gap: 10px;
   min-height: 46px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-text-scale));
   font-weight: 800;
 }
 
@@ -543,7 +545,7 @@ img {
   border-radius: 12px;
   color: #111610;
   background: var(--accent);
-  font-size: 14px;
+  font-size: calc(14px * var(--ui-text-scale));
   font-weight: 950;
   text-transform: uppercase;
 }
@@ -566,7 +568,7 @@ img {
 .daily-panel__head span,
 .daily-row > span {
   color: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
 }
 
@@ -602,7 +604,7 @@ img {
   color: #fff;
   background: transparent;
   text-align: left;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-text-scale));
   font-weight: 850;
 }
 
@@ -651,7 +653,7 @@ img {
 
 .company-mission span {
   color: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
 }
 
@@ -660,7 +662,7 @@ img {
   border-radius: 10px;
   color: #111610;
   background: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 950;
   text-transform: uppercase;
 }
@@ -692,14 +694,14 @@ img {
 
 .stat p {
   color: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .stat h2 {
   margin: 8px 0;
-  font-size: 36px;
+  font-size: calc(36px * var(--ui-text-scale));
   line-height: 1;
 }
 
@@ -765,7 +767,7 @@ img {
   display: block;
   margin-top: 12px;
   color: var(--accent);
-  font-size: 28px;
+  font-size: calc(28px * var(--ui-text-scale));
   font-weight: 950;
 }
 
@@ -838,13 +840,13 @@ img {
 
 .job-hud__media span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
 }
 
 .job-hud h2 {
   margin: 4px 0 12px;
-  font-size: 20px;
+  font-size: calc(20px * var(--ui-text-scale));
 }
 
 .metric-row {
@@ -859,7 +861,7 @@ img {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
 }
 
 .meter strong {
@@ -885,7 +887,7 @@ img {
   gap: 7px;
   margin-top: 14px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
 }
 
 kbd {
@@ -898,7 +900,7 @@ kbd {
   color: #fff;
   background: rgba(255, 255, 255, 0.07);
   font-family: inherit;
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-text-scale));
   font-weight: 900;
 }
 
@@ -938,7 +940,7 @@ kbd {
 
 .notification p {
   margin: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-text-scale));
   font-weight: 800;
 }
 
@@ -989,20 +991,20 @@ kbd {
 
 .phone-call p {
   color: var(--accent);
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-text-scale));
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .phone-call h2 {
   margin: 8px 0;
-  font-size: 26px;
+  font-size: calc(26px * var(--ui-text-scale));
   line-height: 1.04;
 }
 
 .phone-call span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-text-scale));
   font-weight: 800;
 }
 
@@ -1107,7 +1109,7 @@ kbd {
   .mission-hero__content h1 {
     max-width: calc(100vw - 96px);
     overflow-wrap: anywhere;
-    font-size: 32px;
+    font-size: calc(32px * var(--ui-text-scale));
     line-height: 1;
   }
 
