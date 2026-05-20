@@ -75,6 +75,7 @@ local function InitializeSQLDriver()
         Peak.Utils.Warn('No SQL driver detected — defaulting to oxmysql.')
     end
 
+    Peak.Server.SQLDriver = sqlDriver
     Peak.Utils.Debug('SQL driver:', sqlDriver)
 end
 
@@ -137,7 +138,7 @@ end
 -- EXPORTS
 -- ============================================================
 
-exports('GetSQLDriver',      function() return sqlDriver                   end)
+exports('GetSQLDriver',      function() return Peak.Server.SQLDriver or sqlDriver end)
 exports('GetFramework',      function() return Peak.Server.FrameworkObject end)
 exports('GetFrameworkName',  function() return Peak.Server.FrameworkName   end)
 exports('IsServerReady',     function() return Peak.Server.Ready           end)
@@ -153,12 +154,13 @@ end
 -- STARTUP
 -- ============================================================
 
+InitializeSQLDriver()
+
 CreateThread(function()
     Wait(100)
     InitializeFramework()
-    InitializeSQLDriver()
 
-    Peak.Utils.print('Peak Trucking initialized. Framework: ^5' .. Peak.Server.FrameworkName .. '^0 | SQL: ^5' .. sqlDriver .. '^0')
+    Peak.Utils.print('Peak Trucking initialized. Framework: ^5' .. Peak.Server.FrameworkName .. '^0 | SQL: ^5' .. (Peak.Server.SQLDriver or sqlDriver) .. '^0')
 
     Wait(5000)
     StartVersionChecker()

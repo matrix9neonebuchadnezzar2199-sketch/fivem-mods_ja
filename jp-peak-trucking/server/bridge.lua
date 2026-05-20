@@ -83,7 +83,12 @@ end
 function ExecuteSql(query, params)
     local waiting = true
     local result  = {}
-    local driver  = exports['peak-trucking']:GetSQLDriver()
+
+    while not Peak.Server.SQLDriver do
+        Wait(0)
+    end
+
+    local driver = Peak.Server.SQLDriver
 
     if driver == 'oxmysql' then
         exports.oxmysql:execute(query, params or {}, function(data)
@@ -135,7 +140,7 @@ function addMoney(source, amount)
         return true
     end
 
-    return player.Functions.AddMoney('cash', amount, 'peak-trucking')
+    return player.Functions.AddMoney('cash', amount, GetCurrentResourceName())
 end
 
 --- Adds an item to a player's inventory.
