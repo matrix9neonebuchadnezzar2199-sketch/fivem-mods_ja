@@ -1,0 +1,6 @@
+{
+  "jp-peak-trucking": {
+    "version": "0.2.4-ja.1",
+    "changelog": "- 完全日本語化（locales / config / NUI）\n- Peak Trucking 0.2.4 ベースの jp-mods フォーク\n- 上流バージョンチェック無効化"
+  }
+}
