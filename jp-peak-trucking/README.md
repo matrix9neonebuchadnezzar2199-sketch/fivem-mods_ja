@@ -33,7 +33,6 @@
 - [ディレクトリ構成](#ディレクトリ構成)
 - [UI の再ビルド](#ui-の再ビルド)
 - [クレジット・ライセンス](#クレジットライセンス)
-- [GitHub リポジトリ用タグ](#github-リポジトリ用タグ)
 
 ---
 
@@ -354,48 +353,7 @@ npm run build
 
 再配布・改変時は **Peak Studios の著作表示と MIT 条件** を維持してください。
 
----
+**関連リンク**
 
-## GitHub リポジトリ用タグ
-
-リポジトリの **Topics**（設定 → Topics）に次を入れると、検索・一覧性が上がります。
-
-```text
-fivem
-fivem-resource
-fivem-script
-gta5
-roleplay
-qbcore
-esx
-oxmysql
-trucking
-trucker-job
-lua
-react
-typescript
-nui
-japanese
-localization
-open-source
-```
-
-**単独リポジトリとして切り出す場合** の Description 例:
-
-```text
-🇯🇵 Peak Trucking の完全日本語版。トラック配送・成長・企業信頼・デイリー・ランキング・React 配車タブレット対応の FiveM リソース。
-```
-
-**推奨リリースタグ**（GitHub Releases）:
-
-| タグ | 意味 |
-|------|------|
-| `v0.2.4-ja.1` | 初回日本語化（peak-trucking 0.2.4 ベース） |
-
----
-
-## 関連リンク
-
-- 原作: https://github.com/Peak-Studios/peak-trucking  
-- 日本語版ホストリポジトリ: https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja/tree/main/jp-peak-trucking  
+- 原作: https://github.com/Peak-Studios/peak-trucking
 - FiveM ドキュメント: https://docs.fivem.net/
