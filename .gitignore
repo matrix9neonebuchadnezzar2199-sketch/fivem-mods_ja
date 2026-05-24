@@ -24,6 +24,8 @@ docs/
 !jp-cooktree/docs/**
 !jp-meridian9/docs/
 !jp-meridian9/docs/**
+!jp-lunar_fishing/docs/
+!jp-lunar_fishing/docs/**
 
 # 一時・ログ
 *.log
