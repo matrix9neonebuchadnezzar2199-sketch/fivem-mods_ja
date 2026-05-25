@@ -53,7 +53,7 @@ local function updateZones(level)
                     coords = coords,
                     radius = data.radius,
                     onEnter = function()
-                        if currentZone?.index == index and currentZone?.locationIndex == index then return end
+                        if currentZone?.index == index and currentZone?.locationIndex == locationIndex then return end
 
                         currentZone = { index = index, locationIndex = locationIndex }
     
@@ -123,13 +123,13 @@ end)
 local function setCanRagdoll(state)
     SetPedCanRagdoll(cache.ped, state)
     SetPedCanRagdollFromPlayerImpact(cache.ped, state)
-    SetPedRagdollOnCollision(cache.ped,statefalse)
+    SetPedRagdollOnCollision(cache.ped, state, false)
 end
 
 ---@param bait FishingBait
 ---@param fish Fish
 lib.callback.register('lunar_fishing:itemUsed', function(bait, fish)
-    local zone = Config.fishingZones[currentZone] or Config.outside
+    local zone = (currentZone and Config.fishingZones[currentZone.index]) or Config.outside
 
     local object = createRodObject()
     lib.requestAnimDict('mini@tennis')

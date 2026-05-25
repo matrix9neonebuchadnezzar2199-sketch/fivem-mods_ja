@@ -6,6 +6,29 @@
 
 ---
 
+## [1.0.1-ja1.1] - 2026-05-25
+
+### Fixed
+
+- **C-1**: `client/main.lua` の `setCanRagdoll` 関数内タイポ `statefalse` を `state, false` に修正。釣り開始時の native 呼び出しエラーを解消。
+- **C-2**: `client/main.lua` の `lunar_fishing:itemUsed` callback でゾーン参照を `Config.fishingZones[currentZone]` から `Config.fishingZones[currentZone.index]` に修正。深海域・沼地の `waitTime` 設定が正しく適用されるようになった。
+- **C-3**: `client/main.lua` の zone `onEnter` における比較式 `currentZone?.locationIndex == index` を `currentZone?.locationIndex == locationIndex` に修正。同一ゾーン内の地点切替判定の不具合を解消。
+- **A-2**: `server/ped.lua` の `lunar_fishing:sellFish` callback で nil チェックを price 計算より前に移動。不正な `fishName` 渡された際のサーバーエラーを防止。
+- **A-4**: `server/rent.lua` の `lunar_fishing:rentVehicle` callback に `boat` の nil チェックを追加。範囲外 `index` でのサーバーエラーを防止。
+- **C-5**: `config/cl_edit.lua` の `SetVehicleFuel` で `ox_fuel` 状態チェックを `GetResourceState('ox_fuel') == 'started'` に統一。ox_fuel 未導入環境での意図しない state 書き込みを防止。
+
+### Changed
+
+- **E-2**: `fxmanifest.lua` から不要な `'locales/*.lua'` 参照を削除。locales ディレクトリは JSON のみで運用されているため。
+
+### Notes
+
+- C-1〜C-5 は上流 `Lunar-Scripts/lunar_fishing` v1.0.1 から継承されたバグ。upstream への報告予定。
+- E-2 は本派生プロジェクト固有の整理。
+- 詳細なコードレビューは内部実施（L2 標準レベル、20 ファイル確認）。
+
+---
+
 ## [1.0.1-ja1] - 2026-05-24
 
 ### Modified by

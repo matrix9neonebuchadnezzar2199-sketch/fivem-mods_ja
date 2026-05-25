@@ -3,11 +3,12 @@
 ---@param amount integer
 lib.callback.register('lunar_fishing:sellFish', function(source, fishName, amount)
     local item = Config.fish[fishName]
+
+    if not item or amount <= 0 then return end
+
     local price = type(item.price) == 'number' and item.price or math.random(item.price.min, item.price.max)
 
     ---@cast price number
-
-    if not item or amount <= 0 then return end
 
     local player = Framework.getPlayerFromId(source)
     

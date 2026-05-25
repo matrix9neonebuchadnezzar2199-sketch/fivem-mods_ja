@@ -5,7 +5,7 @@ lua54 'yes'
 
 author 'Lunar Scripts (original) / matrix9neonebuchadnezzar2199-sketch (Japanese localization)'
 description 'Advanced Fishing (Japanese Localization) - based on lunar_fishing v1.0.1, GPL-3.0'
-version '1.0.1-ja1'
+version '1.0.1-ja1.1'
 
 files {
     'locales/*.json'
@@ -28,6 +28,5 @@ server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'utils/sv_main.lua',
     'config/sv_config.lua',
-    'locales/*.lua',
     'server/*.lua'
 }
