@@ -1,0 +1,59 @@
+---
+description: USE WHEN the user requests user operation tracing or flow analysis in code review context. Trigger phrases include "操作トレース", "フロー解析", "operation trace", "flow analysis", "ユーザー操作を追跡", or when "操作:" prefix is used in a code review request.
+alwaysApply: false
+---
+
+# Code Review - Operation Flow Trace Rule
+
+This rule extends the main code review rule (`code-review.mdc`) for
+operation tracing tasks.
+
+## Activation
+
+Triggered when user requests trace of a specific user operation, e.g.:
+- "魚を売却するフローをトレースして"
+- "操作: 銀行から金を引き出す"
+- "Trace the operation: ATM withdrawal"
+
+## Required Output (in addition to §0 confirmed files)
+
+For each traced operation, output:
+
+### Flow Diagram
+
+```
+[Entry Point] User action description
+  ↓ <file>:<line> (<function_name>)
+  ↓ Event/call: <event_name or function call>
+[Next Stage] What happens
+  ↓ <file>:<line> (<function_name>)
+  ↓ State change: <variable / DB / UI>
+...
+[Exit] Final state
+```
+
+### State Changes Table
+
+| Stage | Variable | Before | After | Persistence |
+|---|---|---|---|---|
+| 1 | xPlayer.money | 1000 | 1500 | DB updated |
+| 2 | inventory['fish'] | 5 | 4 | DB updated |
+
+### Failure Paths
+
+| Trigger | Where caught | Response |
+|---|---|---|
+| Not enough money | server/main.lua:120 | notify("not_enough_money") |
+| Invalid amount | server/main.lua:115 | early return |
+
+### Network Round-trips
+
+Count: N (client→server: X, server→client: Y)
+
+## Confidence Requirements
+
+Same as main rule:
+- Every step must have file path + line number
+- Tag with `[確認済]` if directly read
+- Tag with `[推測]` only with stated reasoning
+- Stop if `[推測]` exceeds 30%
