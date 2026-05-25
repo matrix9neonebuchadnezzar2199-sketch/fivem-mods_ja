@@ -103,6 +103,7 @@
 | [jp-koban](jp-koban/README.md) | 警察向け住宅地巡回パトロール（Qbox・完遂ボーナス） |
 | [jp-LetterCarrier](jp-LetterCarrier/README.md) | 配達ジョブ（NUI・配送車・報酬） |
 | [jp-losmon](jp-losmon/README.md) | 育成型 Los-Mon（クライアント完結・サーバー負荷ほぼなし） |
+| [jp-lunar_fishing](jp-lunar_fishing/README.md) | lunar_fishing 日本語化 + 日本魚 10 種（ESX/QBCore・ox_lib・GPL-3.0・`v1.0.1-ja1`） |
 | [jp-mch](jp-mch/README.md) | ミニマルクリーン HUD（クライアント完結・ESX/QB/Qbox/standalone・日本語 UI・Munlay HUD 系フォーク） |
 | [jp-mbt_emote_menu](jp-mbt_emote_menu/README.ja.md) | MBT Emote Menu 日本語対応（rpemotes-reborn・NUI・**`README.ja.md`** 参照・原作 PolyForm Noncommercial） |
 | [jp-mechanic](jp-mechanic/README.md) | 整備工場 伝票整理内職（NUI・部品照合・Qbox） |
