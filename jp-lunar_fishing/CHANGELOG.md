@@ -41,8 +41,10 @@ Lunar-Scripts/lunar_fishing v1.0.1
 - 元のライセンス `LICENSE`（GNU GPL-3.0）
 - 元のゾーン座標・出現確率・スキルチェック難易度の数値バランス
 
-### Not Yet Implemented
-- AI 生成魚アイコン画像（`assets/fish_images/`）— STEP 7 で実施予定
+### Added (2026-05-25)
+- AI 生成魚アイコン画像 15 枚（`assets/fish_images/`，Stable Diffusion / CC0 1.0）
+- 画像ライセンス文書 `assets/fish_images/LICENSE_IMAGES.md`
+- 予備アイコン退避 `assets/fish_images/extras/`（salmon.png, cod.png）
 
 ---
 

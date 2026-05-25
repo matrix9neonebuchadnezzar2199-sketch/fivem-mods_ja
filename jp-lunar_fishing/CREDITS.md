@@ -57,9 +57,10 @@
 
 ## 画像アセット
 
-`assets/fish_images/` 配下の魚アイコン画像は AI 画像生成サービスを用いて
-生成されたものです。詳細は `assets/fish_images/LICENSE_IMAGES.md`
-（STEP 7 完了時に追加）を参照してください。
+`assets/fish_images/` 配下の魚アイコン画像は **Stable Diffusion** を用いて
+生成されたものです（CC0 1.0）。詳細は
+[`assets/fish_images/LICENSE_IMAGES.md`](assets/fish_images/LICENSE_IMAGES.md)
+を参照してください。
 
 ---
 

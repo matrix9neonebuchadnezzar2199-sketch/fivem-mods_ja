@@ -111,8 +111,8 @@ jp-lunar_fishing/
 - 改変履歴：[`CHANGELOG.md`](CHANGELOG.md)
 - 原作者クレジット：[`CREDITS.md`](CREDITS.md)
 
-画像アセット（`assets/fish_images/`）は CC0 1.0 で配布予定です。
-詳細は STEP 7 完了後に `assets/fish_images/LICENSE_IMAGES.md` に明記します。
+画像アセット（`assets/fish_images/`）は CC0 1.0 で配布します。
+詳細は [`assets/fish_images/LICENSE_IMAGES.md`](assets/fish_images/LICENSE_IMAGES.md) を参照してください。
 
 ---
 
