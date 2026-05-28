@@ -4,6 +4,16 @@ All notable changes to **jp-mi-train** are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- `mi-train/DBuz747/` — passenger wagon stream (`dbuz747.yft` / `dbuz747_hi.yft` / `dbuz747.ytd`) and `data/vehicles.meta` bundled in repo.
+
+### Changed
+
+- Top-level `README.md` and `docs/03_dbuz747_setup.md`: deploy from `mi-train/DBuz747/` instead of manual MOD export only.
+
 ## [0.3.1] - 2026-05-28
 
 ### Fixed

@@ -9,7 +9,7 @@
 | パス（本リポジトリ） | サーバーへの配置 | 役割 |
 |---|---|---|
 | **`jp-mi-train/`** | `resources/.../jp-mi-train/` | ヘイスト脚本（Lua・設定） |
-| **`DBuz747/`**（別途作成） | `resources/.../DBuz747/` | 客車モデル・meta（stream） |
+| **`DBuz747/`** | `resources/.../DBuz747/` | 客車モデル・meta（stream）— **本 repo に同梱** |
 
 詳細な使い方・設定: [`jp-mi-train/README.md`](jp-mi-train/README.md)  
 変更履歴: [`CHANGELOG.md`](CHANGELOG.md)
@@ -25,7 +25,7 @@ FiveM サーバーでは **リソースが 2 つ** 必要です。フォルダ�
 ```
 <server>/resources/
 └── [jp-mods]/
-    ├── DBuz747/                    ← ① 列車モデル（add-on・手動配置）
+    ├── DBuz747/                    ← ① 列車モデル（mi-train/DBuz747/ をコピー）
     │   ├── fxmanifest.lua
     │   ├── stream/                   ← OpenIV から Export した単体ファイル
     │   │   ├── dbuz747.yft
@@ -50,9 +50,9 @@ FiveM サーバーでは **リソースが 2 つ** 必要です。フォルダ�
 
 | 種類 | 置き場所 | 中身 | 入手元 |
 |---|---|---|---|
-| **客車メッシュ** | `DBuz747/stream/` | `.yft` / `.ytd` | GTA5-Mods → OpenIV → `dlc.rpf` → `x64/vehicles.rpf` から **Export** |
-| **車両 meta** | `DBuz747/data/` | `vehicles.meta` | 同上 `common/data/levels/gta5/vehicles.meta` |
-| **ヘイスト脚本** | `jp-mi-train/` | `.lua` / `config.lua` | 本 repo の **`mi-train/jp-mi-train/`** をそのままコピー |
+| **客車メッシュ** | `DBuz747/stream/` | `.yft` / `.ytd` | **`mi-train/DBuz747/stream/`**（同梱済み） |
+| **車両 meta** | `DBuz747/data/` | `vehicles.meta` | **`mi-train/DBuz747/data/`**（同梱済み） |
+| **ヘイスト脚本** | `jp-mi-train/` | `.lua` / `config.lua` | **`mi-train/jp-mi-train/`** をそのままコピー |
 | **走行用 freight** | （配置不要） | — | ゲーム標準。スクリプトが `CreateMissionTrain` で生成 |
 
 **注意**
@@ -74,18 +74,18 @@ ensure jp-mi-train        # ②
 
 | Git（`fivem-mods_ja`） | サーバーにコピーするもの |
 |---|---|
+| `mi-train/DBuz747/` 一式 | `resources/[jp-mods]/DBuz747/` |
 | `mi-train/jp-mi-train/` 一式 | `resources/[jp-mods]/jp-mi-train/` |
 | `mi-train/docs/03_dbuz747_setup.md` | 参照用（配置不要） |
 | `mi-train/research/` | 参照用（**配置不要**） |
 
-`DBuz747` リソース本体は MOD 著作権のため **本 repo には含めません**。手順は [`docs/03_dbuz747_setup.md`](docs/03_dbuz747_setup.md)。
+モデル再取得・OpenIV 手順: [`docs/03_dbuz747_setup.md`](docs/03_dbuz747_setup.md)。再配布は [`DBuz747/CREDITS.md`](DBuz747/CREDITS.md) の原作者規約に従うこと。
 
 ---
 
 ## クイックスタート
 
-1. `DBuz747` を上記ツリーどおり配置（またはテストサーバーで既に配置済みならスキップ）
-2. `mi-train/jp-mi-train/` を `resources/[jp-mods]/jp-mi-train/` にコピー
+1. `mi-train/DBuz747/` と `mi-train/jp-mi-train/` を `resources/[jp-mods]/` にそれぞれコピー
 3. `server.cfg` に `ensure` を追加
 4. ゲーム内: 埠頭の依頼人 → ヘイスト開始 → ヘリで最後尾 → **`[E] 車内に飛び込む`**
 

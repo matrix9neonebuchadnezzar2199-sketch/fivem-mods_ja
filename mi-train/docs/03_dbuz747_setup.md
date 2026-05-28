@@ -10,7 +10,7 @@ jp-mi-train Phase 2 は **freight ミッション列車 + DBuz747 を最後尾�
 ```
 [server.cfg]
    ensure ox_lib
-   ensure dbuz747          ← add-on 車両ストリーム（新規作成）
+   ensure DBuz747          ← add-on 車両ストリーム（mi-train/DBuz747/）
    ensure jp-mi-train      ← ヘイスト本体（既存）
 
 [ヘイスト開始時・ホストクライアントのみ]
@@ -44,9 +44,11 @@ jp-mi-train Phase 2 は **freight ミッション列車 + DBuz747 を最後尾�
 
 ---
 
-## 2. FiveM 用リソース `dbuz747` の作成
+## 2. FiveM 用リソース `DBuz747`
 
-現状、サーバー `resources/` 下に `dbuz747` は **まだ無い** 想定です。SP 用 OpenIV パッケージを **FiveM stream リソース**に変換します。
+**通常は再作成不要。** 本リポジトリの **`mi-train/DBuz747/`**（`stream/` + `data/vehicles.meta` + `fxmanifest.lua`）をサーバーの `resources/[jp-mods]/DBuz747/` にコピーするだけでよい。
+
+以下は **ファイルを差し替えたい・同梱版が無い環境** のときの OpenIV 手順です。
 
 ### 2.1 MOD をダウンロード・展開
 
