@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>2026-05-27 開発日記 - mi-train</title>
+<style>
+/* ===== GitHub Dark v2 — 開発日記テンプレート ===== */
+:root {
+  --gh-canvas: #0d1117;
+  --gh-canvas-subtle: #161b22;
+  --gh-canvas-inset: #010409;
+  --gh-border: #30363d;
+  --gh-border-muted: #21262d;
+  --gh-fg: #e6edf3;
+  --gh-fg-muted: #8b949e;
+  --gh-fg-subtle: #6e7681;
+  --gh-accent: #58a6ff;
+  --gh-accent-emphasis: #1f6feb;
+  --gh-success: #3fb950;
+  --gh-attention: #d29922;
+  --gh-danger: #f85149;
+  --gh-done-bg: rgba(35, 134, 54, 0.15);
+  --gh-code-bg: #161b22;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body.diary.diary-v2 {
+  margin: 0;
+  padding: 32px 16px 64px;
+  max-width: 1012px;
+  margin-inline: auto;
+  background: var(--gh-canvas);
+  color: var(--gh-fg);
+  font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Header */
+.gh-repo-header {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--gh-border);
+}
+.gh-repo-header .eyebrow {
+  font-size: 12px;
+  color: var(--gh-fg-muted);
+  margin: 0 0 8px;
+}
+.gh-repo-header h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--gh-accent);
+}
+.gh-repo-header .subtitle {
+  margin: 0 0 16px;
+  color: var(--gh-fg-muted);
+  font-size: 14px;
+}
+.gh-repo-header .header-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Labels */
+.gh-label {
+  display: inline-block;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 22px;
+  border-radius: 2em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.gh-label-scope { background: rgba(136, 87, 255, 0.15); color: #a371f7; border-color: rgba(163, 113, 247, 0.4); }
+.gh-label-type { background: rgba(110, 118, 129, 0.2); color: var(--gh-fg-muted); border-color: var(--gh-border); }
+.gh-label-ok { background: rgba(63, 185, 80, 0.15); color: var(--gh-success); border-color: rgba(63, 185, 80, 0.4); }
+.gh-label-warn { background: rgba(210, 153, 34, 0.15); color: var(--gh-attention); border-color: rgba(210, 153, 34, 0.4); }
+.gh-label-err { background: rgba(248, 81, 73, 0.15); color: var(--gh-danger); border-color: rgba(248, 81, 73, 0.4); }
+
+/* TOC */
+.gh-toc {
+  margin-bottom: 24px;
+  border: 1px solid var(--gh-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--gh-canvas-subtle);
+}
+.gh-toc-title {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--gh-border-muted);
+  border-bottom: 1px solid var(--gh-border);
+  color: var(--gh-fg);
+}
+.gh-toc table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.gh-toc th {
+  text-align: left;
+  padding: 8px 16px;
+  color: var(--gh-fg-muted);
+  font-weight: 600;
+  font-size: 12px;
+  border-bottom: 1px solid var(--gh-border);
+  background: var(--gh-canvas-subtle);
+}
+.gh-toc td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gh-border-muted);
+  vertical-align: middle;
+}
+.gh-toc tr:last-child td { border-bottom: none; }
+.gh-toc tr:hover td { background: rgba(88, 166, 255, 0.04); }
+.gh-toc td:first-child {
+  font-family: ui-monospace, "JetBrains Mono", Consolas, monospace;
+  color: var(--gh-fg-muted);
+  white-space: nowrap;
+}
+
+/* Entry */
+.gh-entry {
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid var(--gh-border);
+  border-radius: 6px;
+  background: var(--gh-canvas-subtle);
+}
+.gh-entry h2 {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  font-size: 20px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--gh-border);
+  color: var(--gh-fg);
+}
+.gh-entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--gh-fg-muted);
+}
+.gh-entry-meta .commit-hash {
+  font-family: ui-monospace, Consolas, monospace;
+  padding: 2px 6px;
+  background: var(--gh-code-bg);
+  border: 1px solid var(--gh-border);
+  border-radius: 4px;
+  color: var(--gh-accent);
+}
+.gh-entry-meta .pending { color: var(--gh-attention); font-style: italic; }
+
+.gh-entry h3 {
+  margin: 20px 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gh-fg-muted);
+}
+.gh-entry h3:first-of-type { margin-top: 0; }
+.gh-entry p { margin: 8px 0; }
+.gh-entry p.lead { color: var(--gh-fg-muted); font-size: 15px; }
+
+/* Tables */
+.gh-table-wrap {
+  border: 1px solid var(--gh-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+.gh-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.gh-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--gh-border-muted);
+  color: var(--gh-fg-muted);
+  font-weight: 600;
+  font-size: 12px;
+  border-bottom: 1px solid var(--gh-border);
+}
+.gh-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gh-border-muted);
+  vertical-align: top;
+}
+.gh-table tr:last-child td { border-bottom: none; }
+.gh-table tbody tr:hover td { background: rgba(88, 166, 255, 0.04); }
+
+/* Flow (horizontal) */
+.flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 16px;
+  background: var(--gh-canvas-inset);
+  border: 1px solid var(--gh-border);
+  border-radius: 6px;
+}
+.flow-box {
+  padding: 8px 14px;
+  background: var(--gh-canvas-subtle);
+  border: 1px solid var(--gh-border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gh-fg);
+}
+.flow-box.accent { border-color: var(--gh-accent-emphasis); color: var(--gh-accent); }
+.flow-box.done { border-color: var(--gh-success); background: var(--gh-done-bg); color: var(--gh-success); }
+.flow-arrow { color: var(--gh-fg-subtle); font-size: 16px; user-select: none; }
+
+/* Pipeline (vertical, GitHub Actions style) */
+.pipeline { margin: 12px 0; }
+.pipeline-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.pipeline-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+  border: 2px solid var(--gh-border);
+  background: var(--gh-canvas);
+}
+.pipeline-step.done .pipeline-marker { background: var(--gh-success); border-color: var(--gh-success); }
+.pipeline-step.active .pipeline-marker { background: var(--gh-accent); border-color: var(--gh-accent); box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3); }
+.pipeline-step.pending .pipeline-marker { background: transparent; }
+.pipeline-step.failed .pipeline-marker { background: var(--gh-danger); border-color: var(--gh-danger); }
+.pipeline-body {
+  flex: 1;
+  padding-bottom: 16px;
+  border-left: 2px solid var(--gh-border);
+  margin-left: 5px;
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+.pipeline-step:last-child .pipeline-body { border-left-color: transparent; padding-bottom: 0; }
+.pipeline-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.pipeline-desc { font-size: 13px; color: var(--gh-fg-muted); margin: 0; }
+
+/* Diff list */
+.diff-list { list-style: none; padding: 0; margin: 12px 0; font-family: ui-monospace, Consolas, monospace; font-size: 12px; border: 1px solid var(--gh-border); border-radius: 6px; overflow: hidden; }
+.diff-list li { padding: 4px 12px; border-bottom: 1px solid var(--gh-border-muted); display: flex; gap: 8px; align-items: baseline; }
+.diff-list li:last-child { border-bottom: none; }
+.diff-mark { width: 16px; font-weight: 700; flex-shrink: 0; }
+.diff-add { background: rgba(63, 185, 80, 0.08); }
+.diff-add .diff-mark { color: var(--gh-success); }
+.diff-mod { background: rgba(210, 153, 34, 0.06); }
+.diff-mod .diff-mark { color: var(--gh-attention); }
+.diff-del { background: rgba(248, 81, 73, 0.08); }
+.diff-del .diff-mark { color: var(--gh-danger); }
+
+/* Callout */
+.gh-callout {
+  margin: 12px 0;
+  padding: 12px 16px;
+  border: 1px solid var(--gh-border);
+  border-left: 3px solid var(--gh-accent-emphasis);
+  border-radius: 0 6px 6px 0;
+  background: rgba(88, 166, 255, 0.06);
+  font-size: 13px;
+}
+.gh-callout.warn { border-left-color: var(--gh-attention); background: rgba(210, 153, 34, 0.06); }
+.gh-callout .callout-tag { font-size: 11px; font-weight: 600; color: var(--gh-accent); margin-right: 8px; }
+
+/* Code */
+code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  padding: 2px 6px;
+  background: var(--gh-code-bg);
+  border: 1px solid var(--gh-border);
+  border-radius: 4px;
+  color: var(--gh-fg);
+}
+a { color: var(--gh-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: 600; color: var(--gh-fg); }
+
+footer.gh-footer {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gh-border);
+  font-size: 12px;
+  color: var(--gh-fg-subtle);
+  text-align: center;
+}
+</style>
+</head>
+<body class="diary diary-v2">
+
+<header class="gh-repo-header">
+  <p class="eyebrow">Development Log / 2026-05-27</p>
+  <h1>mi-train</h1>
+  <p class="subtitle">MI 風走行中ヘイスト MOD — 調査 → 設計 → Phase 1 MVP 実装</p>
+  <div class="header-labels">
+    <span class="gh-label gh-label-type">dev</span>
+    <span class="gh-label gh-label-scope">mi-train</span>
+    <span class="gh-label gh-label-scope">fivem</span>
+  </div>
+</header>
+
+<section class="gh-toc">
+  <h2 class="gh-toc-title">Timeline</h2>
+  <table>
+    <thead>
+      <tr><th>時刻</th><th>概要</th><th>種別</th><th>Status</th><th>詳細</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>20:30</td>
+        <td>exp_trainheist 全ファイル解析（README → server まで）</td>
+        <td>analysis</td>
+        <td><span class="gh-label gh-label-ok">ok</span></td>
+        <td><a href="#entry-2030">詳細</a></td>
+      </tr>
+      <tr>
+        <td>20:50</td>
+        <td>3 つの「走り続ける列車」既存実装の比較解析</td>
+        <td>analysis</td>
+        <td><span class="gh-label gh-label-ok">ok</span></td>
+        <td><a href="#entry-2050">詳細</a></td>
+      </tr>
+      <tr>
+        <td>21:10</td>
+        <td>jp-mi-train Phase 1 MVP 実装（8 ファイル）</td>
+        <td>dev</td>
+        <td><span class="gh-label gh-label-warn">warn (未テスト)</span></td>
+        <td><a href="#entry-2110">詳細</a></td>
+      </tr>
+      <tr>
+        <td>21:35</td>
+        <td>受注中の MAP 列車位置 Blip 追加（座標 broadcast 方式）</td>
+        <td>dev</td>
+        <td><span class="gh-label gh-label-warn">warn (未テスト)</span></td>
+        <td><a href="#entry-2135">詳細</a></td>
+      </tr>
+      <!-- TOC_ROWS_INSERT_HERE -->
+    </tbody>
+  </table>
+</section>
+
+<main>
+  <section class="gh-entry entry" id="entry-2030">
+    <h2>exp_trainheist 全ファイル解析</h2>
+    <div class="gh-entry-meta">
+      <span class="gh-label gh-label-type">analysis</span>
+      <span>20:30 JST</span>
+      <span class="commit-hash pending">pending</span>
+    </div>
+
+    <h3>概要</h3>
+    <p>マスター方針「MI 風走行中ヘイスト」の土台候補として <code>GTA-EXPLORE/exp_trainheist</code> (commit <code>b61a68b</code>) を <code>mi-train/research/</code> にクローンし、全 11 ファイル（README / fxmanifest / config / client × 6 / server × 2 / locales/en）を精読した。</p>
+
+    <h3>変更ファイル</h3>
+    <ul class="diff-list">
+      <li class="diff-add"><span class="diff-mark">+</span> mi-train/docs/01_exp_trainheist_analysis.md（575 行の解析レポート）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> mi-train/research/exp_trainheist/（git clone）</li>
+    </ul>
+
+    <h3>主要発見</h3>
+    <div class="gh-table-wrap">
+      <table class="gh-table">
+        <thead>
+          <tr><th>ID</th><th>重要度</th><th>内容</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>F-01</td>
+            <td><span class="gh-label gh-label-err">致命</span></td>
+            <td><code>SpawnWagon</code> は <code>CreateMissionTrain</code> ではなく <code>CreateVehicle</code> + <code>FreezeEntityPosition(true)</code>。**停止した編成貨物列車前提**で作られている</td>
+          </tr>
+          <tr>
+            <td>B-01</td>
+            <td><span class="gh-label gh-label-err">Critical</span></td>
+            <td><code>server/main.lua::GiveGold</code> はクライアントから直接トリガー可能で検証なし。<strong>ヘイスト未参加でも gold_ingot×25 がもらえる脆弱性</strong></td>
+          </tr>
+          <tr>
+            <td>B-02</td>
+            <td><span class="gh-label gh-label-warn">High</span></td>
+            <td><code>GetPoliceCount</code> がループ変数 <code>sid</code> ではなく <code>source</code> を渡している。POLICE_REQUIRED=0 デフォルトでは露呈しないが、設定すると即座にバグ</td>
+          </tr>
+          <tr>
+            <td>B-03</td>
+            <td><span class="gh-label gh-label-warn">High</span></td>
+            <td><code>CanCarryGold</code> が常に <code>true</code>、<code>QB_MAX_WEIGHT</code> が dead config</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>設計判断</h3>
+    <p>exp_trainheist の <strong>列車生成部だけ</strong>全面書き換えれば、警備兵 / コンテナ・金庫アニメ / 報酬フローはほぼ流用可能と判明。ただし GPL-3.0 ライセンスへの感染リスクから、後段の方針転換で「ゼロから書く」を採用。</p>
+  </section>
+
+  <section class="gh-entry entry" id="entry-2050">
+    <h2>3 つの「走り続ける列車」既存実装の比較解析</h2>
+    <div class="gh-entry-meta">
+      <span class="gh-label gh-label-type">analysis</span>
+      <span>20:50 JST</span>
+      <span class="commit-hash pending">pending</span>
+    </div>
+
+    <h3>概要</h3>
+    <p>マスター質問「走り続ける列車のコードは既存にないか？」を受けて、前段リサーチで挙げた 3 つの OSS を実機クローン → ソース解析。</p>
+
+    <h3>変更ファイル</h3>
+    <ul class="diff-list">
+      <li class="diff-add"><span class="diff-mark">+</span> mi-train/docs/02_existing_moving_train_implementations.md</li>
+      <li class="diff-add"><span class="diff-mark">+</span> mi-train/research/blumlaut/ (Blumlaut/FiveM-Trains, depth=1)</li>
+      <li class="diff-add"><span class="diff-mark">+</span> mi-train/research/nickoos/ (TheNickoos/FiveM-Trains, depth=1)</li>
+      <li class="diff-add"><span class="diff-mark">+</span> mi-train/research/venomxnl/ (VenomXNL/XNL-FiveM-Trains-U3, depth=1)</li>
+    </ul>
+
+    <h3>3 戦略の比較</h3>
+    <div class="gh-table-wrap">
+      <table class="gh-table">
+        <thead>
+          <tr><th>リソース</th><th>戦略</th><th>MI 用途</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Blumlaut</td>
+            <td><code>CreateMissionTrain</code> をホスト 1 人が呼ぶ、速度指定なし</td>
+            <td>❌ ホスト切断で消える、旧 <code>__resource.lua</code></td>
+          </tr>
+          <tr>
+            <td>TheNickoos</td>
+            <td>Blumlaut ベース + <code>SetTrainCruiseSpeed</code> 明示 + サーバー側ホスト再選出 + 駅停止</td>
+            <td>⭐ <strong>最良のベース</strong></td>
+          </tr>
+          <tr>
+            <td>VenomXNL</td>
+            <td><code>SetRandomTrains(true)</code> + <code>SwitchTrainTrack</code> でゲームエンジン任せ</td>
+            <td>△ 列車ハンドルが取れず MI に不適</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>設計判断</h3>
+    <p>方針転換: <code>exp_trainheist</code> フォークではなく <strong>jp-mi-train をゼロから書く</strong>。理由は (1) GPL-3.0 感染回避、(2) グローバル変数多用などの古い設計を引き継がない、(3) MI 用途に特化した state machine を最初から設計可能。3 OSS の API パターンだけ参考にし、コードコピーは行わない。</p>
+  </section>
+
+  <section class="gh-entry entry" id="entry-2110">
+    <h2>jp-mi-train Phase 1 MVP 実装</h2>
+    <div class="gh-entry-meta">
+      <span class="gh-label gh-label-type">dev</span>
+      <span>21:10 JST</span>
+      <span class="commit-hash pending">pending</span>
+    </div>
+
+    <h3>概要</h3>
+    <p>マスター指示の MVP スコープ「① ヘイスト開始 → 列車スポーン → ループ走行 / ② ヘリ最後尾接近 → E で侵入 / ③ 内部 MOD は事前用意」のうち ①② を完全実装。③ は Phase 2 で DBuz747 attach 統合の方針（Karpathy Simplicity First）。</p>
+
+    <h3>設計判断</h3>
+    <div class="gh-callout">
+      <span class="callout-tag">DECISION</span>
+      DBuz747 add-on は vehicle カテゴリで <code>CreateMissionTrain</code> の variation から直接呼べない。Phase 1 は標準 freight 編成で MI 風の流れを確実に動かし、Phase 2 で <code>AttachEntityToEntity</code> で最後尾に追従させる方針とした。
+    </div>
+
+    <h3>変更ファイル</h3>
+    <ul class="diff-list">
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/fxmanifest.lua（standalone, ox_lib 必須）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/config.lua（StartNpc / Train / HeliBoard / Heist / Commands）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/server/main.lua（ホスト管理・participants・/mitrain コマンド・playerDropped 再選出）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/client/train.lua（CreateMissionTrain + SetTrainCruiseSpeed + 運転手 ped + maintenance loop）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/client/heli_board.lua（ヘリ判定 + E 検出 + AttachEntityToEntity）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/client/start_npc.lua（ox_target + フォールバック E プロンプト）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/client/main.lua（ステートマシン統合 / cleanup）</li>
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/README.md（GitHub 風、目次・要件・トラブルシューティング）</li>
+    </ul>
+
+    <h3>ステートマシン</h3>
+    <div class="flow">
+      <div class="flow-box">idle</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">requestStart</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">becomeHost</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">列車スポーン</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">heli_approach</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">E 押下 / boarding</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box done">on_train (Phase 1 終着)</div>
+    </div>
+
+    <h3>採用 API（TheNickoos / Blumlaut / VenomXNL から学んだ）</h3>
+    <div class="gh-table-wrap">
+      <table class="gh-table">
+        <thead>
+          <tr><th>API</th><th>用途</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>CreateMissionTrain(variation, x, y, z, dir)</code></td><td>ヘイスト用列車生成</td></tr>
+          <tr><td><code>SetTrainCruiseSpeed(train, mps)</code></td><td>クルーズ速度。一度設定すれば Track 0 を周回し続ける</td></tr>
+          <tr><td><code>GetTrainCarriage(train, idx)</code></td><td>各車両ハンドル取得</td></tr>
+          <tr><td><code>NetworkRequestControlOfEntity(train)</code></td><td>ホスト権限維持</td></tr>
+          <tr><td><code>SetEntityAsMissionEntity(train, true, true)</code></td><td>自動削除防止</td></tr>
+          <tr><td><code>CreatePedInsideVehicle(train, 26, model, -1, ...)</code></td><td>運転手 ped を運転席に</td></tr>
+          <tr><td><code>SetBlockingOfNonTemporaryEvents(driver, true)</code></td><td>戦闘時運転手の逃走防止</td></tr>
+          <tr><td><code>DeleteAllTrains() / SetRandomTrains(false) / SwitchTrainTrack(0, false)</code></td><td>既存列車一掃・トラフィック退避</td></tr>
+          <tr><td><code>AttachEntityToEntity(ped, wagon, 0, ...)</code></td><td>屋根着地時のアタッチ</td></tr>
+          <tr><td><code>DeleteMissionTrain(train)</code></td><td>クリーンアップ</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>検証</h3>
+    <div class="gh-callout warn">
+      <span class="callout-tag">PENDING</span>
+      <strong>未テスト</strong>。マスターのテストサーバーへのデプロイは別途指示待ち（<code>60-fivem-workflow.mdc</code>: エージェントは自動で deploy.bat を叩かない）。F8 / サーバーコンソールでの動作確認はマスター環境で実施予定。
+    </div>
+    <p>テスト手順（マスター環境）:</p>
+    <ol>
+      <li><code>jp-mi-train</code> を <code>resources/[jp-mods]/</code> に配置</li>
+      <li><code>server.cfg</code> に <code>ensure ox_lib</code> → <code>ensure jp-mi-train</code> 追加</li>
+      <li>サーバー再起動 → F8 で <code>[jp-mi-train/*]</code> ログ確認</li>
+      <li>埠頭の倉庫前（-687, -2417）の「謎の依頼人」を ox_target → ヘイスト開始</li>
+      <li>Sandy Shores 北東 (2533, 2833) に列車スポーン確認</li>
+      <li>列車を 5 分以上観察してループ走行を確認</li>
+      <li>ヘリを取得 → 最後尾車両上空 1.5〜12m に接近 → E キー反応確認</li>
+      <li>屋根着地 → <code>/mitrain stop</code> でクリーンアップ</li>
+    </ol>
+
+    <h3>残課題</h3>
+    <ul>
+      <li>Phase 2: DBuz747 を最後尾に <code>AttachEntityToEntity</code> で取り付け</li>
+      <li>Phase 3: 警備兵 NPC、金庫切断・金塊取得アニメ</li>
+      <li>Phase 4: 報酬・警察通報・脱出条件</li>
+      <li>未対応の MVP フェイルセーフ:
+        <ul>
+          <li>列車エンティティのストリーミング解除（ホストが遠ざかった時）→ MVP では <code>train_lost</code> でヘイスト終了する設計</li>
+          <li>屋根から落下した時の状態復帰</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <section class="gh-entry entry" id="entry-2135">
+    <h2>受注中の MAP 列車位置 Blip 追加</h2>
+    <div class="gh-entry-meta">
+      <span class="gh-label gh-label-type">dev</span>
+      <span>21:35 JST</span>
+      <span class="commit-hash pending">pending</span>
+    </div>
+
+    <h3>背景</h3>
+    <p>マスター要望「車両が出現したら受注中は MAP に列車の位置を表示」。Phase 1 MVP 初版では <code>AddBlipForEntity</code> を Debug ガード付きでホストのみが作成していたが、これだと:</p>
+    <ul>
+      <li>本番設定（<code>Debug=false</code>）だと表示されない</li>
+      <li>ローカル参照なのでストリーミング範囲外（数百m 以上離れた）プレイヤーには見えない</li>
+    </ul>
+
+    <h3>設計判断</h3>
+    <div class="gh-callout">
+      <span class="callout-tag">DECISION</span>
+      <strong>座標 broadcast 方式</strong>を採用。ホストが 1 秒ごとに列車・最後尾の座標をサーバー経由で全クライアントに送り、各クライアントが <code>AddBlipForCoord</code> + <code>SetBlipCoords</code> で更新する。これでマップ全域から列車位置が見える。
+    </div>
+
+    <h3>変更ファイル</h3>
+    <ul class="diff-list">
+      <li class="diff-add"><span class="diff-mark">+</span> jp-mi-train/client/blip.lua（新規、座標 Blip 管理モジュール）</li>
+      <li class="diff-mod"><span class="diff-mark">M</span> jp-mi-train/fxmanifest.lua（blip.lua を client_scripts 先頭に追加）</li>
+      <li class="diff-mod"><span class="diff-mark">M</span> jp-mi-train/config.lua（Config.Blip 追加: sprite / color / scale / updateIntervalMs）</li>
+      <li class="diff-mod"><span class="diff-mark">M</span> jp-mi-train/client/train.lua（Debug ガード Blip 撤去、maintenance loop に座標 broadcast 追加）</li>
+      <li class="diff-mod"><span class="diff-mark">M</span> jp-mi-train/server/main.lua（reportTrainCoords リレーイベント追加、ホスト権威チェック付き）</li>
+      <li class="diff-mod"><span class="diff-mark">M</span> jp-mi-train/client/main.lua（cleanup 統合に MiTrainBlip.Cleanup 追加）</li>
+    </ul>
+
+    <h3>データフロー</h3>
+    <div class="flow">
+      <div class="flow-box">host: maintenance loop (1s)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">reportTrainCoords (server)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">trainCoordsUpdate (-1, broadcast)</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box accent">全クライアント blip.Update()</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box done">AddBlipForCoord / SetBlipCoords</div>
+    </div>
+
+    <h3>セキュリティ考慮</h3>
+    <p><code>reportTrainCoords</code> イベントは <strong>ホスト以外からの送信を無視</strong>するチェックを入れた（<code>src ~= State.host</code> でサイレント reject）。これでクライアント改ざんによる偽座標 Blip スポーン攻撃を防げる（<code>60-fivem-server-authority.mdc §2</code> の引数検証）。</p>
+
+    <h3>検証</h3>
+    <div class="gh-table-wrap">
+      <table class="gh-table">
+        <thead>
+          <tr><th>項目</th><th>方法</th><th>期待</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ヘイスト開始時に Blip 出現</td>
+            <td>ox_target で受注後、MAP 確認</td>
+            <td>青の列車アイコン（機関車）と赤い矢印（最後尾）が表示</td>
+          </tr>
+          <tr>
+            <td>Blip が列車に追従</td>
+            <td>マップを 1 分以上観察</td>
+            <td>列車進行に合わせて Blip が滑らかに移動</td>
+          </tr>
+          <tr>
+            <td>非ホストでも見える</td>
+            <td>別プレイヤーでサーバー参加して MAP 確認</td>
+            <td>同じ Blip が表示される</td>
+          </tr>
+          <tr>
+            <td>ストリーミング範囲外でも見える</td>
+            <td>列車から 2km 以上離れて MAP 確認</td>
+            <td>座標ベースなので継続表示</td>
+          </tr>
+          <tr>
+            <td>ヘイスト終了で Blip 消失</td>
+            <td><code>/mitrain stop</code> 実行 → MAP 確認</td>
+            <td>両 Blip 消える</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>残課題</h3>
+    <ul>
+      <li>updateIntervalMs = 1000ms はネットワーク負荷とのバランスで暫定値。実プレイで違和感あれば 500ms / 2000ms に調整</li>
+      <li>ホスト再選出（playerDropped）時の Blip 連続性は未検証。新ホストが座標を送り始めるまで最大 1〜2 秒空白の可能性</li>
+    </ul>
+  </section>
+
+  <!-- ENTRIES_INSERT_HERE -->
+</main>
+
+<footer class="gh-footer">
+  <p>Cursor Dev Diary · style v2 (GitHub) · 2026-05-27</p>
+</footer>
+</body>
+</html>

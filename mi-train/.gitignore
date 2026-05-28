@@ -1,0 +1,7 @@
+# 参照用クローン（ネスト .git あり・配布対象外）
+research/
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+*.swp
