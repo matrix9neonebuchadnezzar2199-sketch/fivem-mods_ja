@@ -321,6 +321,7 @@ footer.gh-footer {
     </thead>
     <tbody>
       <tr><td>21:11</td><td>Phase 2 完了・README/CHANGELOG・初回コミット</td><td><span class="gh-label gh-label-type">dev</span></td><td><span class="gh-label gh-label-ok">ok</span></td><td><a href="#entry-2111">詳細</a></td></tr>
+      <tr><td>21:24</td><td>DBuz747 列車データを mi-train リポ同梱</td><td><span class="gh-label gh-label-type">dev</span></td><td><span class="gh-label gh-label-ok">ok</span></td><td><a href="#entry-2124">詳細</a></td></tr>
     </tbody>
   </table>
 </section>
@@ -366,6 +367,47 @@ footer.gh-footer {
 
     <h3>残課題</h3>
     <p>Phase 3: 警備兵・金庫・報酬。DBuz747 <code>attachOffset</code> / <code>interiorEntry.offset</code> の実機微調整。</p>
+  </section>
+
+  <section class="gh-entry entry" id="entry-2124">
+    <h2>DBuz747 を mi-train リポジトリ内に同梱</h2>
+    <div class="gh-entry-meta">
+      <span class="gh-label gh-label-type">開発日記</span>
+      <time>21:24</time>
+      <span class="gh-label gh-label-scope">tool</span>
+      <code>7b8ecdd</code>
+    </div>
+
+    <h3>概要</h3>
+    <p>テストサーバーで動作確認済みの <strong>DBuz747</strong>（stream 3 ファイル + <code>vehicles.meta</code>）を <code>mi-train/DBuz747/</code> として Git に含めた。配置は従来どおり FiveM 上は <strong>2 リソース</strong>（<code>ensure DBuz747</code> → <code>ensure jp-mi-train</code>）だが、入手元はリポジトリ 1 ツリーに統一。</p>
+
+    <h3>変更ファイル</h3>
+    <ul class="diff-list">
+      <li class="add"><code>mi-train/DBuz747/stream/*.yft</code> · <code>dbuz747.ytd</code></li>
+      <li class="add"><code>mi-train/DBuz747/data/vehicles.meta</code></li>
+      <li class="add"><code>mi-train/DBuz747/fxmanifest.lua</code> · <code>CREDITS.md</code></li>
+      <li class="mod"><code>mi-train/README.md</code> · <code>docs/03_dbuz747_setup.md</code> · <code>CHANGELOG.md</code></li>
+    </ul>
+
+    <h3>設計判断</h3>
+    <p>脚本とモデルを <strong>1 リソースにマージしない</strong>。FiveM の <code>dependencies</code> / 起動順を維持し、再配布注意は <code>CREDITS.md</code> に分離。</p>
+
+    <div class="flow">
+      <div class="flow-step"><span class="flow-num">1</span><span class="flow-text">clone <code>mi-train/</code></span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-num">2</span><span class="flow-text">copy <code>DBuz747/</code> + <code>jp-mi-train/</code> → <code>[jp-mods]/</code></span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-num">3</span><span class="flow-text"><code>ensure DBuz747</code> then <code>jp-mi-train</code></span></div>
+    </div>
+
+    <h3>検証</h3>
+    <table class="gh-table">
+      <thead><tr><th>項目</th><th>方法</th><th>結果</th></tr></thead>
+      <tbody>
+        <tr><td>Git push</td><td><code>7b8ecdd</code> on main</td><td>ok</td></tr>
+        <tr><td>stream サイズ</td><td>約 24 MB（3 ファイル）</td><td>ok</td></tr>
+      </tbody>
+    </table>
   </section>
 </main>
 
