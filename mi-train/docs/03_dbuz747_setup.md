@@ -74,21 +74,24 @@ OpenIV または展開済み `dlcpacks/dbuz747/dlc.rpf` から、車両モデル
 
 ### 2.3 リソースフォルダ構成（推奨）
 
+**一覧はリポジトリ TOP [`README.md`](../README.md#列車データの配置サーバー側) を正とする。**
+
 マスターのサーバー例:
 
 ```
-H:\CURSOR\FiveMServer\txData\FiveMBasicServerCFXDefault_EC2B5A.base\resources\
-  [vehicles]\dbuz747\          ← 新規（[jp-mods] でも可）
+<server>/resources/[jp-mods]/
+  DBuz747/                         ← ensure 名とフォルダ名を一致
     fxmanifest.lua
-    stream\
+    stream/                          ← 直下に yft/ytd のみ（単体 Export）
       dbuz747.yft
       dbuz747_hi.yft
       dbuz747.ytd
-      ...
-    data\
-      vehicles.meta
-      handling.meta
-      carvariations.meta
+    data/
+      vehicles.meta                  ← handling 無しでも可（vehicles.meta のみ）
+  jp-mi-train/                       ← 別リソース（本 repo の jp-mi-train/ をコピー）
+    fxmanifest.lua
+    config.lua
+    client/ …
 ```
 
 ### 2.4 `fxmanifest.lua` 例
