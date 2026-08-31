@@ -221,8 +221,4 @@ GPL-3.0。元の Gl1tchStudios/glitch-minigames の派生物として、本日�
 - 元作者: [Gl1tchStudios](https://github.com/Gl1tchStudios) / Luma
 - 各ミニゲームの基礎を提供した utkuali, BerkieBb, TimothyDexter, TransitNode, MxttDev, SezayK の各氏
 
-## 日本語化担当
-
-[@eiho_tsukuyomi](https://x.com/eiho_tsukuyomi)
-
-不具合報告・改善提案は GitHub Issues または X（Twitter）へ。
+不具合報告・改善提案は GitHub Issues へ。

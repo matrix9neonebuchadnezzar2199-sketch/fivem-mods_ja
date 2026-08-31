@@ -308,7 +308,7 @@ GitHub 上で **画像ファイルそのもの**を開いた状態にします�
 
 ## ライセンス
 
-MIT License（[LICENSE](./LICENSE)）。著作権表示: **えいほー**（2026）。
+MIT License（[LICENSE](./LICENSE)）。著作権表示: **JP-Mods**（2026）。
 
 <a id="contributing"></a>
 

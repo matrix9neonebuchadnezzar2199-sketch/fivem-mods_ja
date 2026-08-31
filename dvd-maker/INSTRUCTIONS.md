@@ -24,7 +24,7 @@ FiveM（GTA V マルチプレイヤーMOD）用のリソース。プレイヤー
 - サーバー/クライアント: Lua 5.4
 - UI: HTML5 + CSS3 + Vanilla JavaScript（フレームワーク不使用）
 - 外部依存: ox_inventory のみ
-- ライセンス: MIT（著作権者名: **えいほー**、年は `2026`）
+- ライセンス: MIT（著作権者名: **JP-Mods**、年は `2026`）
 - コメント言語: **日本語**
 - README言語: **日本語**
 - コードは他人のコードをコピーせず、ゼロから書くこと
@@ -148,7 +148,7 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-author 'えいほー'
+author 'JP-Mods'
 description 'DVD recording and playback system for FiveM'
 version '1.0.0'
 license 'MIT'
@@ -259,7 +259,7 @@ dependency 'ox_inventory'
 
 標準のMITライセンス全文を記載。著作権表記は:
 ```
-Copyright (c) 2026 えいほー
+Copyright (c) 2026 JP-Mods
 ```
 
 ---
@@ -299,7 +299,7 @@ node_modules/
 - [ ] NUIで title が `escapeHtml` を通って表示される
 - [ ] YouTube ID抽出が `youtube.com/watch?v=`、`youtu.be/`、`m.youtube.com` の3形式で動く
 - [ ] 「停止してメニューに戻る」で再生メニューに戻る
-- [ ] LICENSE が MIT で著作権者は **えいほー**、年は `2026`
+- [ ] LICENSE が MIT で著作権者は **JP-Mods**、年は `2026`
 - [ ] README が日本語で全セクション記載されている
 - [ ] コードコメントが日本語
 

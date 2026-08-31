@@ -8,8 +8,6 @@
 | **ルート LICENSE** | [`LICENSE`](LICENSE) は **MIT**（**個別フォルダに LICENSE / `fxmanifest` の `license` がある場合はそちらが優先**） |
 | **開発ガイド** | [`AGENTS.md`](AGENTS.md) · [`CONTRIBUTING_JP.md`](CONTRIBUTING_JP.md) |
 
-作成者: [@eiho_tsukuyomi](https://x.com/eiho_tsukuyomi)　／　使用する際はフォロー＆リツイートなどで応援いただけると嬉しいです。
-
 ---
 
 ## 目次

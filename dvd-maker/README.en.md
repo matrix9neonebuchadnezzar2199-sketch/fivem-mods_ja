@@ -306,7 +306,7 @@ Older setups used a **single** item `dvd_recorded`. This version uses **three** 
 
 ## License
 
-[MIT License](./LICENSE). Copyright **えいほー** (2026).
+[MIT License](./LICENSE). Copyright **JP-Mods** (2026).
 
 <a id="contributing"></a>
 

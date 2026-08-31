@@ -1,7 +1,7 @@
 fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
-author 'Kakarot (Original) / eiho_tsukuyomi (Japanese Localization & Bug Fixes)'
+author 'Kakarot (Original) / Japanese Localization & Bug Fixes'
 description 'Allows players to rob various stores on the map for money and items - 日本語化 & バグ修正版'
 version '1.2.0-ja.1'
 repository 'https://github.com/matrix9neonebuchadnezzar2199-sketch/fivem-mods_ja'
